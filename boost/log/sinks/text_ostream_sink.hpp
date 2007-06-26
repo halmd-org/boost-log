@@ -1,0 +1,121 @@
+/*!
+ * (C) 2007 Andrey Semashev
+ *
+ * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+ * 
+ * \file   text_ostream_sink.hpp
+ * \author Andrey Semashev
+ * \date   22.04.2007
+ * 
+ * \brief  This header is the Boost.Log library implementation, see the library documentation
+ *         at http://www.boost.org/libs/log/doc/log.html.
+ */
+
+#if (defined(_MSC_VER) && _MSC_VER > 1000)
+#pragma once
+#endif // _MSC_VER > 1000
+
+#ifndef BOOST_LOG_TEXT_OSTREAM_SINK_HPP_INCLUDED_
+#define BOOST_LOG_TEXT_OSTREAM_SINK_HPP_INCLUDED_
+
+#include <ostream>
+#include <boost/shared_ptr.hpp>
+#include <boost/noncopyable.hpp>
+#include <boost/function/function3.hpp>
+#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/ostream_aggregate.hpp>
+#include <boost/log/sinks/basic_sink.hpp>
+#include <boost/log/formatters/basic_formatters.hpp>
+
+#ifdef _MSC_VER
+#pragma warning(push)
+// 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
+#pragma warning(disable: 4251)
+// non dll-interface class 'A' used as base for dll-interface class 'B'
+#pragma warning(disable: 4275)
+#endif // _MSC_VER
+
+namespace boost {
+
+namespace log {
+
+//! A basic implementation of a text output stream logging sink
+template< typename CharT >
+class BOOST_LOG_EXPORT BOOST_LOG_NO_VTABLE basic_text_ostream_sink : noncopyable,
+    public basic_sink< CharT >
+{
+    //! Base type
+    typedef basic_sink< CharT > base_type;
+
+public:
+    //! Character type
+    typedef typename base_type::char_type char_type;
+    //! String type to be used as a message text holder
+    typedef typename base_type::string_type string_type;
+    //! Attribute values view type
+    typedef typename base_type::attribute_values_view attribute_values_view;
+    //! Filter function type
+    typedef typename base_type::filter_type filter_type;
+
+    //! Mutex type
+    typedef typename base_type::mutex_type mutex_type;
+    //! Scoped read lock type
+    typedef typename base_type::scoped_read_lock scoped_read_lock;
+    //! Scoped write lock type
+    typedef typename base_type::scoped_write_lock scoped_write_lock;
+
+    //! Output stream type
+    typedef std::basic_ostream< char_type > stream_type;
+
+private:
+    //! Output stream list type
+    typedef aux::basic_ostream_aggregate< char_type > ostream_aggregate;
+
+private:
+    //! Output stream list
+    ostream_aggregate m_Streams;
+    //! Formatter functor
+    boost::function3<
+        void,
+        ostream_aggregate&,
+        attribute_values_view const&,
+        string_type const&
+    > m_Formatter;
+
+public:
+    //! Constructor
+    basic_text_ostream_sink();
+    //! Destructor
+    ~basic_text_ostream_sink();
+
+    //! The method adds a new stream to the sink
+    void add_stream(shared_ptr< stream_type > const& strm);
+    //! The method removes a stream from the sink
+    void remove_stream(shared_ptr< stream_type > const& strm);
+
+    //! The method sets formatter functor object
+    template< typename T >
+    void set_formatter(T const& fmt)
+    {
+        m_Formatter = fmt;
+    }
+
+    //! The method returns true if the attribute values pass the filter
+    bool will_write_message(attribute_values_view const& attributes);
+    //! The method writes the message to the sink
+    void write_message(attribute_values_view const& attributes, string_type const& message);
+};
+
+typedef basic_text_ostream_sink< char > text_ostream_sink;
+typedef basic_text_ostream_sink< wchar_t > wtext_ostream_sink;
+
+} // namespace log
+
+} // namespace boost
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
+
+#endif // BOOST_LOG_TEXT_OSTREAM_SINK_HPP_INCLUDED_

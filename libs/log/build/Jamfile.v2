@@ -1,0 +1,27 @@
+# Copyright 2007 Andrey Semashev.
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+import lib ;
+
+project boost/log
+    : source-location ../src
+    : requirements
+        <threading>multi
+        <library>../../thread/build//boost_thread
+        <library>../../regex/build//boost_regex
+    ;
+
+lib boost_log
+    : ## sources ##
+        attribute_set.cpp
+        attribute_values_view.cpp
+        basic_logger.cpp
+        logging_core.cpp
+        named_scope.cpp
+        text_ostream_sink.cpp
+    : ## requirements ##
+        <define>BOOST_LOG_BUILDING_THE_LIB=1
+    ;
+    

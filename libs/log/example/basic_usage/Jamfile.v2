@@ -1,0 +1,5 @@
+
+exe basic_usage 
+    : main.cpp ../../build/boost_log
+    ;
+
