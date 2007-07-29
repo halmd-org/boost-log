@@ -18,69 +18,6 @@ namespace boost {
 
 namespace log {
 
-namespace aux {
-
-//! Constructor
-template< typename CharT >
-basic_ostream_writer< CharT >::basic_ostream_writer(string_type& message) : m_Message(message)
-{
-    base_type::setp(m_Buffer, m_Buffer + (sizeof(m_Buffer) / sizeof(*m_Buffer)));
-}
-
-//! Destructor
-template< typename CharT >
-basic_ostream_writer< CharT >::~basic_ostream_writer() {}
-
-
-//! Puts all buffered data to the string
-template< typename CharT >
-int basic_ostream_writer< CharT >::sync()
-{
-    register char_type* pBase = this->pbase();
-    register char_type* pPtr = this->pptr();
-    if (pBase != pPtr)
-    {
-        m_Message.append(pBase, pPtr);
-        this->pbump(int(pBase - pPtr));
-    }
-    return 0;
-}
-
-//! Puts an unbuffered character to the string
-template< typename CharT >
-typename basic_ostream_writer< CharT >::int_type basic_ostream_writer< CharT >::overflow(int_type c)
-{
-    basic_ostream_writer::sync();
-    if (!traits_type::eq_int_type(c, traits_type::eof()))
-    {
-        m_Message.push_back(traits_type::to_char_type(c));
-        return c;
-    }
-    else
-        return traits_type::not_eof(c);
-}
-
-//! Puts a character sequence to the string
-template< typename CharT >
-std::streamsize basic_ostream_writer< CharT >::xsputn(const char_type* s, std::streamsize n)
-{
-    basic_ostream_writer::sync();
-    register typename string_type::size_type max_storage_left =
-        m_Message.max_size() - m_Message.size();
-    if (n < (std::streamsize)max_storage_left)
-    {
-        m_Message.append(s, typename string_type::size_type(n));
-        return n;
-    }
-    else
-    {
-        m_Message.append(s, max_storage_left);
-        return (std::streamsize)max_storage_left;
-    }
-}
-
-} // namespace aux
-
 //! Constructor
 template< typename CharT >
 basic_logger< CharT >::basic_logger() :
@@ -149,7 +86,5 @@ void basic_logger< CharT >::push_record()
 } // namespace boost
 
 //! Explicitly instantiate logger implementation
-template class BOOST_LOG_EXPORT boost::log::aux::basic_ostream_writer< char >;
-template class BOOST_LOG_EXPORT boost::log::aux::basic_ostream_writer< wchar_t >;
 template class boost::log::basic_logger< char >;
 template class boost::log::basic_logger< wchar_t >;

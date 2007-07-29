@@ -20,13 +20,14 @@
 #define BOOST_LOG_TEXT_OSTREAM_SINK_HPP_INCLUDED_
 
 #include <ostream>
+#include <vector>
+#include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/function/function3.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/ostream_aggregate.hpp>
 #include <boost/log/sinks/basic_sink.hpp>
-#include <boost/log/formatters/basic_formatters.hpp>
+#include <boost/log/detail/attachable_sstream_buf.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -42,7 +43,7 @@ namespace log {
 
 //! A basic implementation of a text output stream logging sink
 template< typename CharT >
-class BOOST_LOG_EXPORT BOOST_LOG_NO_VTABLE basic_text_ostream_sink : noncopyable,
+class BOOST_LOG_EXPORT basic_text_ostream_sink : noncopyable,
     public basic_sink< CharT >
 {
     //! Base type
@@ -69,19 +70,27 @@ public:
     typedef std::basic_ostream< char_type > stream_type;
 
 private:
-    //! Output stream list type
-    typedef aux::basic_ostream_aggregate< char_type > ostream_aggregate;
+    //! Type of the container that holds all aggregated streams
+    typedef std::vector< shared_ptr< stream_type > > ostream_sequence;
 
 private:
-    //! Output stream list
-    ostream_aggregate m_Streams;
+    //! Formatted log record storage
+    string_type m_FormattedRecord;
+    //! Stream buffer to fill the storage
+    aux::basic_ostringstreambuf< char_type > m_StreamBuf;
+    //! Formatting stream
+    stream_type m_FormattingStream;
+
     //! Formatter functor
     boost::function3<
         void,
-        ostream_aggregate&,
+        stream_type&,
         attribute_values_view const&,
         string_type const&
     > m_Formatter;
+
+    //! Output stream list
+    ostream_sequence m_Streams;
 
 public:
     //! Constructor
@@ -100,6 +109,9 @@ public:
     {
         m_Formatter = fmt;
     }
+
+    //! The method sets the locale used during formatting
+    std::locale imbue(std::locale const& loc);
 
     //! The method returns true if the attribute values pass the filter
     bool will_write_message(attribute_values_view const& attributes);

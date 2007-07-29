@@ -20,7 +20,7 @@ namespace boost {
 
 namespace log {
 
-namespace aux {
+namespace {
 
     //! A helper struct that holds line feed char constant
     template< typename >
@@ -40,12 +40,14 @@ namespace aux {
     };
     const wchar_t endl_literal< wchar_t >::value;
 
-} // namespace aux
+} // namespace
 
 //! Constructor
 template< typename CharT >
-basic_text_ostream_sink< CharT >::basic_text_ostream_sink()
-    : m_Formatter(formatters::fmt_message< char_type >() << aux::endl_literal< char_type >::value)
+basic_text_ostream_sink< CharT >::basic_text_ostream_sink() :
+    m_StreamBuf(m_FormattedRecord),
+    m_FormattingStream(&m_StreamBuf),
+    m_Formatter(formatters::fmt_message< char_type >() << endl_literal< char_type >::value)
 {
 }
 
@@ -59,7 +61,9 @@ template< typename CharT >
 void basic_text_ostream_sink< CharT >::add_stream(shared_ptr< stream_type > const& strm)
 {
     scoped_write_lock lock(this->mutex());
-    m_Streams.add_stream(strm);
+    typename ostream_sequence::iterator it = std::find(m_Streams.begin(), m_Streams.end(), strm);
+    if (it == m_Streams.end())
+        m_Streams.push_back(strm);
 }
 
 //! The method removes a stream from the sink
@@ -67,7 +71,16 @@ template< typename CharT >
 void basic_text_ostream_sink< CharT >::remove_stream(shared_ptr< stream_type > const& strm)
 {
     scoped_write_lock lock(this->mutex());
-    m_Streams.remove_stream(strm);
+    typename ostream_sequence::iterator it = std::find(m_Streams.begin(), m_Streams.end(), strm);
+    if (it != m_Streams.end())
+        m_Streams.erase(it);
+}
+
+//! The method sets the locale used during formatting
+template< typename CharT >
+std::locale basic_text_ostream_sink< CharT >::imbue(std::locale const& loc)
+{
+    return m_FormattingStream.imbue(loc);
 }
 
 //! The method returns true if the attribute values pass the filter
@@ -75,11 +88,26 @@ template< typename CharT >
 bool basic_text_ostream_sink< CharT >::will_write_message(attribute_values_view const& attributes)
 {
     scoped_read_lock lock(this->mutex());
-    if (!m_Streams.empty())
+    if (m_FormattingStream.good() && !m_Streams.empty())
         return this->will_write_message_unlocked(attributes);
     else
         return false;
 }
+
+namespace {
+
+    //! Scope guard to automatically clear the storage
+    template< typename T >
+    class clear_invoker
+    {
+        T& m_T;
+
+    public:
+        explicit clear_invoker(T& t) : m_T(t) {}
+        ~clear_invoker() { m_T.clear(); }
+    };
+
+} // namespace
 
 //! The method writes the message to the sink
 template< typename CharT >
@@ -87,13 +115,30 @@ void basic_text_ostream_sink< CharT >::write_message(
     attribute_values_view const& attributes, string_type const& message)
 {
     scoped_write_lock lock(this->mutex());
-    m_Formatter(m_Streams, attributes, message);
+    clear_invoker< string_type > storage_cleanup(m_FormattedRecord);
+
+    m_Formatter(m_FormattingStream, attributes, message);
+
+    typename const string_type::const_pointer p = m_FormattedRecord.data();
+    typename const string_type::size_type s = m_FormattedRecord.size();
+    typename ostream_sequence::const_iterator it = m_Streams.begin();
+    for (; it != m_Streams.end(); ++it)
+    {
+        register stream_type* const strm = it->get();
+        if (strm->good()) try
+        {
+            strm->write(p, s);
+        }
+        catch (std::exception&)
+        {
+        }
+    }
 }
+
+//! Explicitly instantiate sink implementation
+template class BOOST_LOG_EXPORT basic_text_ostream_sink< char >;
+template class BOOST_LOG_EXPORT basic_text_ostream_sink< wchar_t >;
 
 } // namespace log
 
 } // namespace boost
-
-//! Explicitly instantiate sink implementation
-template class BOOST_LOG_EXPORT boost::log::basic_text_ostream_sink< char >;
-template class BOOST_LOG_EXPORT boost::log::basic_text_ostream_sink< wchar_t >;

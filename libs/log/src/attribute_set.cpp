@@ -253,12 +253,14 @@ void basic_attribute_set< CharT >::erase(iterator begin, iterator end)
     }
 }
 
+//! Explicitly instantiate container implementation
+namespace aux {
+    template class unordered_multimap_facade< attribute_set_descr< char > >;
+    template class unordered_multimap_facade< attribute_set_descr< wchar_t > >;
+} // namespace aux
+template class basic_attribute_set< char >;
+template class basic_attribute_set< wchar_t >;
+
 } // namespace log
 
 } // namespace boost
-
-//! Explicitly instantiate container implementation
-template class boost::log::aux::unordered_multimap_facade< boost::log::aux::attribute_set_descr< char > >;
-template class boost::log::aux::unordered_multimap_facade< boost::log::aux::attribute_set_descr< wchar_t > >;
-template class boost::log::basic_attribute_set< char >;
-template class boost::log::basic_attribute_set< wchar_t >;

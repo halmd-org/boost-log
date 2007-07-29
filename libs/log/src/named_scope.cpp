@@ -122,12 +122,12 @@ void basic_named_scope< CharT >::pop_scope()
     s.pop_back();
 }
 
+//! Explicitly instantiate named_scope implementation
+template class BOOST_LOG_EXPORT basic_named_scope< char >;
+template class BOOST_LOG_EXPORT basic_named_scope< wchar_t >;
+
 } // namespace attributes
 
 } // namespace log
 
 } // namespace boost
-
-//! Explicitly instantiate named_scope implementation
-template class BOOST_LOG_EXPORT boost::log::attributes::basic_named_scope< char >;
-template class BOOST_LOG_EXPORT boost::log::attributes::basic_named_scope< wchar_t >;

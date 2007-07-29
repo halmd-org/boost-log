@@ -20,17 +20,11 @@
 #define BOOST_LOG_BASIC_LOGGER_HPP_INCLUDED_
 
 #include <ostream>
-#include <streambuf>
 #include <boost/shared_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/logging_core.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-
-#ifndef BOOST_LOG_DEFAULT_LOGGER_BUFFER_SIZE
-//! The size (in chars) of a stream buffer used by logger. It affects logger object size.
-//! \note The Boost.Log library should be rebuilt once this value is modified.
-#define BOOST_LOG_DEFAULT_LOGGER_BUFFER_SIZE 16
-#endif // BOOST_LOG_DEFAULT_LOGGER_BUFFER_SIZE
+#include <boost/log/detail/attachable_sstream_buf.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -44,57 +38,12 @@ namespace log {
 
 namespace aux {
 
-    //! An output streambuf
-    template< typename CharT >
-    class BOOST_LOG_EXPORT basic_ostream_writer :
-        public std::basic_streambuf< CharT >
-    {
-        //! Base type
-        typedef std::basic_streambuf< CharT > base_type;
-
-    public:
-        //! Character type
-        typedef typename base_type::char_type char_type;
-        //! String type
-        typedef std::basic_string< char_type > string_type;
-        //! Traits type
-        typedef typename base_type::traits_type traits_type;
-        //! Int type
-        typedef typename base_type::int_type int_type;
-
-    private:
-        //! A reference to the string that will hold the message
-        string_type& m_Message;
-        //! A buffer used to temporarily store output
-        char_type m_Buffer[BOOST_LOG_DEFAULT_LOGGER_BUFFER_SIZE];
-
-    private:
-        //! Copy constructor (closed)
-        basic_ostream_writer(basic_ostream_writer const& that);
-        //! Assignment (closed)
-        basic_ostream_writer& operator= (basic_ostream_writer const& that);
-
-    public:
-        //! Constructor
-        explicit basic_ostream_writer(string_type& message);
-        //! Destructor
-        ~basic_ostream_writer();
-
-    protected:
-        //! Puts all buffered data to the string
-        int sync();
-        //! Puts an unbuffered character to the string
-        int_type overflow(int_type c);
-        //! Puts a character sequence to the string
-        std::streamsize xsputn(const char_type* s, std::streamsize n);
-    };
-
     //! Record pump implementation
     template< typename LoggerT >
     class record_pump
     {
     public:
-        //! The metafunction allows to adopt the pump to anothe logger type
+        //! The metafunction allows to adopt the pump to another logger type
         template< typename T >
         struct rebind
         {
@@ -159,7 +108,7 @@ public:
 
 protected:
     //! Stream device type
-    typedef aux::basic_ostream_writer< char_type > ostream_writer;
+    typedef aux::basic_ostringstreambuf< char_type > ostream_writer;
     //! Record pump type
     typedef aux::record_pump< basic_logger< char_type > > record_pump_type;
 
@@ -204,7 +153,7 @@ public:
     //! The method pushes the constructed message to the sinks and closes the record
     BOOST_LOG_EXPORT void push_record();
 
-    //! Implementation detail - an accessor to the logging stream for th pump
+    //! Implementation detail - an accessor to the logging stream for the pump
     ostream_type& _pump_stream() { return m_Stream; }
 
 protected:

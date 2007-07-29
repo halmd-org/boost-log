@@ -324,10 +324,10 @@ void basic_logging_core< CharT >::push_record(string_type const& message_text)
     tsd.RecordAttributeValues.clear();
 }
 
+//! Explicitly instantiate logging_core implementation
+template class BOOST_LOG_EXPORT basic_logging_core< char >;
+template class BOOST_LOG_EXPORT basic_logging_core< wchar_t >;
+
 } // namespace log
 
 } // namespace boost
-
-//! Explicitly instantiate logging_core implementation
-template class BOOST_LOG_EXPORT boost::log::basic_logging_core< char >;
-template class BOOST_LOG_EXPORT boost::log::basic_logging_core< wchar_t >;
