@@ -118,6 +118,7 @@ void basic_text_ostream_sink< CharT >::write_message(
     clear_invoker< string_type > storage_cleanup(m_FormattedRecord);
 
     m_Formatter(m_FormattingStream, attributes, message);
+    m_FormattingStream.flush();
 
     typename const string_type::const_pointer p = m_FormattedRecord.data();
     typename const string_type::size_type s = m_FormattedRecord.size();
