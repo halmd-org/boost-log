@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
         logging::attributes::constant< std::string > TagAttr("IMPORTANT MESSAGES");
 
         logging::scoped_attribute a1 =
-            logging::add_scoped_thread_attribute("Tag", TagAttr);
+            logging::add_scoped_thread_attribute< char >("Tag", TagAttr);
 
         // We may omit the severity and use the shorter BOOST_LOG macro. The logger "slg"
         // has the default severity that may be specified on its construction. We didn't

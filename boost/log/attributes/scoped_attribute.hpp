@@ -89,28 +89,28 @@ namespace aux {
 
 //  Generator helper functions
 template< typename CharT >
-aux::scoped_logger_attribute< CharT > add_scoped_logger_attribute(
+inline aux::scoped_logger_attribute< CharT > add_scoped_logger_attribute(
     basic_logger< CharT >& l, std::basic_string< CharT > const& name, shared_ptr< attribute > const& attr)
 {
     return aux::scoped_logger_attribute< CharT >(l, name, attr);
 }
 
 template< typename CharT >
-aux::scoped_logger_attribute< CharT > add_scoped_logger_attribute(
+inline aux::scoped_logger_attribute< CharT > add_scoped_logger_attribute(
     basic_logger< CharT >& l, const CharT* name, shared_ptr< attribute > const& attr)
 {
     return aux::scoped_logger_attribute< CharT >(l, name, attr);
 }
 
 template< typename CharT, typename AttributeT >
-aux::scoped_logger_attribute< CharT > add_scoped_logger_attribute(
+inline aux::scoped_logger_attribute< CharT > add_scoped_logger_attribute(
     basic_logger< CharT >& l, std::basic_string< CharT > const& name, AttributeT& attr)
 {
     return aux::scoped_logger_attribute< CharT >(l, name, shared_ptr< attribute >(addressof(attr), empty_deleter()));
 }
 
 template< typename CharT, typename AttributeT >
-aux::scoped_logger_attribute< CharT > add_scoped_logger_attribute(
+inline aux::scoped_logger_attribute< CharT > add_scoped_logger_attribute(
     basic_logger< CharT >& l, const CharT* name, AttributeT& attr)
 {
     return aux::scoped_logger_attribute< CharT >(l, name, shared_ptr< attribute >(addressof(attr), empty_deleter()));
@@ -166,7 +166,7 @@ namespace aux {
 
 //  Generator helper functions
 template< typename CharT >
-aux::scoped_core_attribute<
+inline aux::scoped_core_attribute<
     CharT,
     &basic_logging_core< CharT >::add_thread_attribute,
     &basic_logging_core< CharT >::remove_thread_attribute
@@ -180,7 +180,7 @@ aux::scoped_core_attribute<
 }
 
 template< typename CharT >
-aux::scoped_core_attribute<
+inline aux::scoped_core_attribute<
     CharT,
     &basic_logging_core< CharT >::add_thread_attribute,
     &basic_logging_core< CharT >::remove_thread_attribute
@@ -194,7 +194,7 @@ aux::scoped_core_attribute<
 }
 
 template< typename CharT, typename AttributeT >
-aux::scoped_core_attribute<
+inline aux::scoped_core_attribute<
     CharT,
     &basic_logging_core< CharT >::add_thread_attribute,
     &basic_logging_core< CharT >::remove_thread_attribute
@@ -208,7 +208,7 @@ aux::scoped_core_attribute<
 }
 
 template< typename CharT, typename AttributeT >
-aux::scoped_core_attribute<
+inline aux::scoped_core_attribute<
     CharT,
     &basic_logging_core< CharT >::add_thread_attribute,
     &basic_logging_core< CharT >::remove_thread_attribute
@@ -224,7 +224,7 @@ aux::scoped_core_attribute<
 
 //  Generator helper functions
 template< typename CharT >
-aux::scoped_core_attribute<
+inline aux::scoped_core_attribute<
     CharT,
     &basic_logging_core< CharT >::add_global_attribute,
     &basic_logging_core< CharT >::remove_global_attribute
@@ -238,7 +238,7 @@ aux::scoped_core_attribute<
 }
 
 template< typename CharT >
-aux::scoped_core_attribute<
+inline aux::scoped_core_attribute<
     CharT,
     &basic_logging_core< CharT >::add_global_attribute,
     &basic_logging_core< CharT >::remove_global_attribute
@@ -252,7 +252,7 @@ aux::scoped_core_attribute<
 }
 
 template< typename CharT, typename AttributeT >
-aux::scoped_core_attribute<
+inline aux::scoped_core_attribute<
     CharT,
     &basic_logging_core< CharT >::add_global_attribute,
     &basic_logging_core< CharT >::remove_global_attribute
@@ -266,7 +266,7 @@ aux::scoped_core_attribute<
 }
 
 template< typename CharT, typename AttributeT >
-aux::scoped_core_attribute<
+inline aux::scoped_core_attribute<
     CharT,
     &basic_logging_core< CharT >::add_global_attribute,
     &basic_logging_core< CharT >::remove_global_attribute

@@ -23,6 +23,9 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/joint_view.hpp>
 #include <boost/log/detail/prologue.hpp>
+#ifdef BOOST_NO_INTRINSIC_WCHAR_T
+#include <boost/mpl/push_back.hpp>
+#endif // BOOST_NO_INTRINSIC_WCHAR_T
 
 namespace boost {
 
@@ -74,13 +77,27 @@ typedef basic_string_types< wchar_t > wstring_types;
 //! An auxiliary type sequence maker. The sequence contains all
 //! attribute value types that are supported by the library by default.
 template< typename CharT >
-struct make_default_attribute_types
-{
-    typedef typename mpl::joint_view<
+struct make_default_attribute_types :
+    public mpl::joint_view<
         numeric_types,
         basic_string_types< CharT >
-    >::type type;
+    >
+{
 };
+
+#ifdef BOOST_NO_INTRINSIC_WCHAR_T
+
+//! Remove wchar_t from the list since it's a typedef
+template< >
+struct make_default_attribute_types< wchar_t > :
+    public mpl::push_back<
+        numeric_types,
+        std::basic_string< wchar_t >
+    >
+{
+};
+
+#endif // BOOST_NO_INTRINSIC_WCHAR_T
 
 } // namespace log
 

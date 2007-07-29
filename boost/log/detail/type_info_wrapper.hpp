@@ -78,11 +78,17 @@ namespace aux {
         }
 #endif // BOOST_NO_UNSPECIFIED_BOOL
 
-        //! Initialized state checker
-        bool operator! () const { return (*info == typeid(uninitialized_state)); }
-
         //! Type info getter
         std::type_info const& get() const { return *info; }
+
+#ifdef _MSC_VER
+#pragma warning(push)
+// 'int' : forcing value to bool 'true' or 'false' (performance warning)
+#pragma warning(disable: 4800)
+#endif
+
+        //! Initialized state checker
+        bool operator! () const { return (*info == typeid(uninitialized_state)); }
 
         //! Equality comparison
         bool operator== (type_info_wrapper const& that) const
@@ -92,18 +98,13 @@ namespace aux {
         //! Ordering operator
         bool operator< (type_info_wrapper const& that) const
         {
-#ifdef _MSC_VER
-#pragma warning(push)
-// 'int' : forcing value to bool 'true' or 'false' (performance warning)
-#pragma warning(disable: 4800)
-#endif
-
-            return (bool)info->before(*that.info);
+            return static_cast< bool >(info->before(*that.info));
+        }
 
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-        }
+
     };
 
 #undef BOOST_NO_UNSPECIFIED_BOOL

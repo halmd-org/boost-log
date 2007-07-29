@@ -223,7 +223,7 @@ namespace aux {
         typename AttributeValueTypesT,
         typename EndT
     >
-    struct flt_attr_multiple_type_dispatcher< FunT, AttributeValueTypesT, EndT, EndT > :
+    class flt_attr_multiple_type_dispatcher< FunT, AttributeValueTypesT, EndT, EndT > :
         public static_type_dispatcher< AttributeValueTypesT >
     {
         mutable bool m_Result;
