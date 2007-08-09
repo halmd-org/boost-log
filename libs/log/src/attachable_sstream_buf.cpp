@@ -68,7 +68,7 @@ std::streamsize basic_ostringstreambuf< CharT >::xsputn(const char_type* s, std:
     typedef typename string_type::size_type string_size_type;
     register const string_size_type max_storage_left =
         m_Storage.max_size() - m_Storage.size();
-    if (n < max_storage_left)
+    if (static_cast< string_size_type >(n) < max_storage_left)
     {
         m_Storage.append(s, static_cast< string_size_type >(n));
         return n;

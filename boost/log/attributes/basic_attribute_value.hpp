@@ -61,18 +61,6 @@ public:
         else
             return false;
     }
-
-    //  Memory allocation functions
-    static void* operator new(std::size_t)
-    {
-        underlying_allocator alloc;
-        return alloc.allocate(1);
-    }
-    static void operator delete(void* p)
-    {
-        underlying_allocator alloc;
-        alloc.deallocate(reinterpret_cast< typename underlying_allocator::pointer >(p), 1);
-    }
 };
 
 } // namespace attributes

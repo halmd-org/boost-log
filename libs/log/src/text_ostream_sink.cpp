@@ -120,15 +120,15 @@ void basic_text_ostream_sink< CharT >::write_message(
     m_Formatter(m_FormattingStream, attributes, message);
     m_FormattingStream.flush();
 
-    typename const string_type::const_pointer p = m_FormattedRecord.data();
-    typename const string_type::size_type s = m_FormattedRecord.size();
+    typename string_type::const_pointer const p = m_FormattedRecord.data();
+    typename string_type::size_type const s = m_FormattedRecord.size();
     typename ostream_sequence::const_iterator it = m_Streams.begin();
     for (; it != m_Streams.end(); ++it)
     {
         register stream_type* const strm = it->get();
         if (strm->good()) try
         {
-            strm->write(p, s);
+            strm->write(p, static_cast< std::streamsize >(s));
         }
         catch (std::exception&)
         {

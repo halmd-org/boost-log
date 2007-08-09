@@ -54,19 +54,6 @@ namespace aux {
         {
             m_Fun(value);
         }
-
-        //! Memory allocation function
-        static void* operator new (std::size_t)
-        {
-            underlying_allocator alloc;
-            return alloc.allocate(1);
-        }
-        //! Memory deallocation function
-        static void operator delete (void* p, std::size_t)
-        {
-            underlying_allocator alloc;
-            alloc.deallocate(reinterpret_cast< dynamic_type_dispatcher_visitor* >(p), 1);
-        }
     };
 
 } // namespace aux

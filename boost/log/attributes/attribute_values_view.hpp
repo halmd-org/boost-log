@@ -82,8 +82,6 @@ namespace aux {
             >
         {
             friend class ::boost::iterator_core_access;
-            template< typename >
-            friend class iterator;
             friend struct attribute_values_view_descr< CharT >;
 
         private:
@@ -121,9 +119,6 @@ namespace aux {
 
                 return *this->base();
             }
-
-            //  Hide internals from the user
-            using base_type::base;
         };
 
         //! Node iterator extractor
