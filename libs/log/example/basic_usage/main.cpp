@@ -13,6 +13,7 @@
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sinks/text_ostream_sink.hpp>
+#include <boost/log/sinks/NTEventLog_sink.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/attr.hpp>
 #include <boost/log/attributes/counter.hpp>
@@ -34,20 +35,27 @@ int main(int argc, char* argv[])
     // The first thing we have to do to get using the library is
     // to set up the logging sinks - i.e. where the logs will be written to.
     // For now we only create a text output sink:
-    shared_ptr< logging::text_ostream_sink > pSink(new logging::text_ostream_sink);
+    
+	
+	shared_ptr< logging::text_ostream_sink > pSink(new logging::text_ostream_sink);
+	
+	shared_ptr< logging::eventLogSink > pNTSink(new logging::eventLogSink);
 
+	pNTSink->add_source("test");
+
+	
     // Next we add streams to which logging records should be output
     shared_ptr< std::ostream > pStream(&std::clog, boost::empty_deleter());
     pSink->add_stream(pStream);
 
     // We can add more than one stream to the sink
-    shared_ptr< std::ostream > pStream2(new std::ofstream("sample.log"));
+    shared_ptr< std::ofstream > pStream2(new std::ofstream("sample.log"));
     assert(pStream2->is_open());
     pSink->add_stream(pStream2);
 
     // Ok, we're ready to add the sink to the logging library
     logging::logging_core::get()->add_sink(pSink);
-
+	logging::logging_core::get()->add_sink(pNTSink);
     // Now our logs will be written both to the console and to the file.
     // Let's do a quick test and output something. We have to create a logger for this.
     logging::logger lg;
@@ -55,7 +63,8 @@ int main(int argc, char* argv[])
     // And output...
     BOOST_LOG(lg) << "Hello, World!";
 
-    // Nice, huh? That's pretty much equivalent to writing the string to both the file
+   
+	// Nice, huh? That's pretty much equivalent to writing the string to both the file
     // and the console. Now let's define the different way of formatting log records.
     // Each logging record may have a number of attributes in addition to the
     // message body itself. By setting up formatter we define which of them
@@ -189,8 +198,9 @@ int main(int argc, char* argv[])
         // Next we try if the second condition of the filter works
         logging::attributes::constant< std::string > TagAttr("IMPORTANT MESSAGES");
 
-        logging::scoped_attribute a1 =
-            logging::add_scoped_thread_attribute< char >("Tag", TagAttr);
+		//LUCA REGINI: ERRORE
+        //logging::scoped_attribute a1 =
+        //    logging::add_scoped_thread_attribute< char >("Tag", TagAttr);
 
         // We may omit the severity and use the shorter BOOST_LOG macro. The logger "slg"
         // has the default severity that may be specified on its construction. We didn't
@@ -198,6 +208,6 @@ int main(int argc, char* argv[])
         // The only reason this record will be output is the "Tag" attribute we added above.
         BOOST_LOG(slg) << "Some really urgent line";
     }
-
+	
     return 0;
 }
