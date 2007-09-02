@@ -13,7 +13,7 @@
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sinks/text_ostream_sink.hpp>
-#include <boost/log/sinks/NTEventLog_sink.hpp>
+#include <boost/log/sinks/nt_eventlog_sink.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/attr.hpp>
 #include <boost/log/attributes/counter.hpp>
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 	
 	shared_ptr< logging::text_ostream_sink > pSink(new logging::text_ostream_sink);
 	
-	shared_ptr< logging::eventLogSink > pNTSink(new logging::eventLogSink);
+	shared_ptr< logging::eventlog_sink > pNTSink(new logging::eventlog_sink);
 
 	pNTSink->add_source("test");
 
@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
         critical
     };
 
-    // Now we can set the filter. A filter is essentially a functor that returns
+	// Now we can set the filter. A filter is essentially a functor that returns
     // boolean value that tells whether to write the record or not.
     pSink->set_filter(
         flt::attr< int >("Severity") >= warning // Write all records with "warning" severity or higher
