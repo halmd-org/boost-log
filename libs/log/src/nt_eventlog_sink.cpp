@@ -42,55 +42,6 @@ namespace {
     };
     const wchar_t endl_literal< wchar_t >::value;
 
-} // namespace
-
-
-template< typename CharT >
-    nt_eventlog_sink< CharT >::nt_eventlog_sink() :
-    m_StreamBuf(m_FormattedRecord),
-    m_FormattingStream(&m_StreamBuf),
-    m_Formatter(formatters::fmt_message< char_type >() << endl_literal< char_type >::value)
-    {
-    }
-
-template< typename CharT >
- nt_eventlog_sink< CharT >::~nt_eventlog_sink() 
-{
-    for(size_t i=0;i<m_source_handlers.size();i++)
-        DeregisterEventSource(m_source_handlers[i]);
-}
-
- template< typename CharT >
- bool nt_eventlog_sink< CharT >::add_source(const char* source,const char* server)
- {
-    HANDLE h;
-    scoped_write_lock lock(this->mutex());
-    h= RegisterEventSource(TEXT(server),TEXT(source));
-    if(h==NULL)
-        return false;
-    m_source_handlers.push_back(h);
-    return true;
- }
-
-//! The method sets the locale used during formatting
-template< typename CharT >
-std::locale nt_eventlog_sink< CharT >::imbue(std::locale const& loc)
-{
-    return m_FormattingStream.imbue(loc);
-}
-
-template< typename CharT >
-bool nt_eventlog_sink< CharT >::will_write_message(attribute_values_view const& attributes)
-{
-    scoped_read_lock lock(this->mutex());
-    if (m_FormattingStream.good() && m_source_handlers.size()>0 )
-        return this->will_write_message_unlocked(attributes);
-    else
-        return false;
-}
-
-namespace {
-
     //! Scope guard to automatically clear the storage
     template< typename T >
     class clear_invoker
@@ -102,40 +53,99 @@ namespace {
         ~clear_invoker() { m_T.clear(); }
     };
 
+    inline void report_event(HANDLE event_handler, const char* message, WORD information, WORD category)
+    {
+        ReportEventA(event_handler,
+            EVENTLOG_SUCCESS, // information event
+            0, // No custom category
+            0, // No eventID
+            NULL, //No sid
+            1, //Number of messages in the message array
+            0, //No binary data to log
+            &message, //Pointer to string array LPCWSTR if UNICODE is defined LPCSTR otherwise
+            NULL //Pointer to data
+            );
+    }
+
+    inline void report_event(HANDLE event_handler, const wchar_t* message, WORD information, WORD category)
+    {
+        ReportEventW(event_handler,
+            EVENTLOG_SUCCESS, // information event
+            0, // No custom category
+            0, // No eventID
+            NULL, //No sid
+            1, //Number of messages in the message array
+            0, //No binary data to log
+            &message, //Pointer to string array LPCWSTR if UNICODE is defined LPCSTR otherwise
+            NULL //Pointer to data
+            );
+    }
+
+    inline HANDLE register_event_source(const char* source, const char* server)
+    {
+        return RegisterEventSourceA(server, source);
+    }
+
+    inline HANDLE register_event_source(const wchar_t* source, const wchar_t* server)
+    {
+        return RegisterEventSourceW(server, source);
+    }
+
 } // namespace
 
-template< >
-void nt_eventlog_sink< char >::
-report_event(size_t event_handler,typename string_type::const_pointer const message,WORD information,WORD category)
+template< typename CharT >
+nt_eventlog_sink< CharT >::nt_eventlog_sink() :
+    m_StreamBuf(m_FormattedRecord),
+    m_FormattingStream(&m_StreamBuf),
+    m_Formatter(formatters::fmt_message< char_type >() << endl_literal< char_type >::value)
 {
-	        ReportEventA(m_source_handlers[event_handler],
-                    EVENTLOG_SUCCESS, // information event
-                    0, // No custom category
-                    0, // No eventID
-                    NULL, //No sid
-                    1, //Number of messages in the message array
-                    0, //No binary data to log
-                    (LPCTSTR*) &message, //Pointer to string array LPCWSTR if UNICODE is defined LPCSTR otherwhise
-                    NULL //Pointer to data
-                    );
 }
 
-template< >
-void nt_eventlog_sink< wchar_t >::
-report_event(size_t event_handler,typename string_type::const_pointer const message,WORD information,WORD category)
+template< typename CharT >
+nt_eventlog_sink< CharT >::~nt_eventlog_sink() 
 {
-            ReportEventW(m_source_handlers[event_handler],
-                    EVENTLOG_SUCCESS, // information event
-                    0, // No custom category
-                    0, // No eventID
-                    NULL, //No sid
-                    1, //Number of messages in the message array
-                    0, //No binary data to log
-                    (LPCWSTR*) &message, //Pointer to string array LPCWSTR if UNICODE is defined LPCSTR otherwhise
-                    NULL //Pointer to data
-                    );
+    std::for_each(m_source_handlers.begin(), m_source_handlers.end(), &DeregisterEventSource);
 }
 
+ template< typename CharT >
+ bool nt_eventlog_sink< CharT >::add_source(const char_type* source, const char_type* server)
+ {
+    scoped_write_lock lock(this->mutex());
+
+    const HANDLE h = register_event_source(server, source);
+    if (h == NULL)
+        return false;
+
+    try
+    {
+        m_source_handlers.push_back(h);
+    }
+    catch (std::exception&)
+    {
+        DeregisterEventSource(h);
+        return false;
+    }
+
+    return true;
+ }
+
+//! The method sets the locale used during formatting
+template< typename CharT >
+std::locale nt_eventlog_sink< CharT >::imbue(std::locale const& loc)
+{
+    scoped_write_lock lock(this->mutex());
+    return m_FormattingStream.imbue(loc);
+}
+
+template< typename CharT >
+bool nt_eventlog_sink< CharT >::will_write_message(attribute_values_view const& attributes)
+{
+    scoped_read_lock lock(this->mutex());
+    if (m_FormattingStream.good() && m_source_handlers.size() > 0)
+        return this->will_write_message_unlocked(attributes);
+    else
+        return false;
+}
 
 //! The method writes the message to the sink
 template< typename CharT >
@@ -151,16 +161,15 @@ void nt_eventlog_sink< CharT >::write_message(
 	typename string_type::const_pointer const p = m_FormattedRecord.data();
     typename string_type::size_type const s = m_FormattedRecord.size();
 
-    for(size_t i=0;i<m_source_handlers.size();i++)
+    for(std::size_t i = 0; i < m_source_handlers.size(); ++i)
     {
-        report_event(i,p,EVENTLOG_SUCCESS,0);
+        report_event(m_source_handlers[i], p, EVENTLOG_SUCCESS, 0);
     }
 }
 
-
 //! Explicitly instantiate sink implementation
-template class BOOST_LOG_EXPORT  nt_eventlog_sink< char >;
-template class BOOST_LOG_EXPORT  nt_eventlog_sink< wchar_t >;
+template class BOOST_LOG_EXPORT nt_eventlog_sink< char >;
+template class BOOST_LOG_EXPORT nt_eventlog_sink< wchar_t >;
 
 } //namespace log
 
