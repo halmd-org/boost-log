@@ -107,9 +107,9 @@ nt_eventlog_sink< CharT >::~nt_eventlog_sink()
     std::for_each(m_source_handlers.begin(), m_source_handlers.end(), &DeregisterEventSource);
 }
 
- template< typename CharT >
- bool nt_eventlog_sink< CharT >::add_source(const char_type* source, const char_type* server)
- {
+template< typename CharT >
+bool nt_eventlog_sink< CharT >::add_source(const char_type* source, const char_type* server)
+{
     scoped_write_lock lock(this->mutex());
 
     const HANDLE h = register_event_source(server, source);
@@ -127,7 +127,7 @@ nt_eventlog_sink< CharT >::~nt_eventlog_sink()
     }
 
     return true;
- }
+}
 
 //! The method sets the locale used during formatting
 template< typename CharT >
