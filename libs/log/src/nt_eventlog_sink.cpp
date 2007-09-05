@@ -158,7 +158,7 @@ void nt_eventlog_sink< CharT >::write_message(
     m_Formatter(m_FormattingStream, attributes, message);
     m_FormattingStream.flush();
 
-	typename string_type::const_pointer const p = m_FormattedRecord.data();
+    typename string_type::const_pointer const p = m_FormattedRecord.data();
     typename string_type::size_type const s = m_FormattedRecord.size();
 
     for(std::size_t i = 0; i < m_source_handlers.size(); ++i)

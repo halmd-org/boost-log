@@ -87,7 +87,7 @@ private:
     > m_Formatter;
 
     std::vector< void* > m_source_handlers;
-	
+
 public:
     //! Constructor
     nt_eventlog_sink();
