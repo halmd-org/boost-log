@@ -80,6 +80,7 @@ void basic_text_ostream_sink< CharT >::remove_stream(shared_ptr< stream_type > c
 template< typename CharT >
 std::locale basic_text_ostream_sink< CharT >::imbue(std::locale const& loc)
 {
+    scoped_write_lock lock(this->mutex());
     return m_FormattingStream.imbue(loc);
 }
 
