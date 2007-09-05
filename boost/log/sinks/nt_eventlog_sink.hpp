@@ -70,8 +70,6 @@ public:
     typedef std::basic_ostream< char_type > stream_type;
 
 private:
-
-private:
     //! Formatted log record storage
     string_type m_FormattedRecord;
     //! Stream buffer to fill the storage
@@ -88,18 +86,15 @@ private:
         string_type const&
     > m_Formatter;
 
-	std::vector<void*> m_source_handlers;
+    std::vector< void* > m_source_handlers;
 	
-	inline void report_event(size_t event_handler,typename string_type::const_pointer const message,WORD information,WORD category);
-	
-
 public:
     //! Constructor
     nt_eventlog_sink();
     //! Destructor
     ~nt_eventlog_sink();
 
-	bool add_source(const char* source,const char* server=NULL);
+    bool add_source(const char_type* source, const char_type* server = NULL);
   
     //! The method sets formatter functor object
     template< typename T >
