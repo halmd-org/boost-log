@@ -28,6 +28,12 @@ namespace flt = boost::log::filters;
 
 using boost::shared_ptr;
 
+int foo(logging::logger& lg)
+{
+    BOOST_LOG(lg) << "foo is being called";
+    return 10;
+}
+
 int main(int argc, char* argv[])
 {
     // This is a simple tutorial/example of Boost.Log usage
@@ -35,15 +41,15 @@ int main(int argc, char* argv[])
     // The first thing we have to do to get using the library is
     // to set up the logging sinks - i.e. where the logs will be written to.
     // For now we only create a text output sink:
-    
-	
-	shared_ptr< logging::text_ostream_sink > pSink(new logging::text_ostream_sink);
-	
-	shared_ptr< logging::eventlog_sink > pNTSink(new logging::eventlog_sink);
 
-	pNTSink->add_source("test");
 
-	
+    shared_ptr< logging::text_ostream_sink > pSink(new logging::text_ostream_sink);
+
+    shared_ptr< logging::eventlog_sink > pNTSink(new logging::eventlog_sink);
+
+    pNTSink->add_source("test");
+
+
     // Next we add streams to which logging records should be output
     shared_ptr< std::ostream > pStream(&std::clog, boost::empty_deleter());
     pSink->add_stream(pStream);
@@ -55,7 +61,7 @@ int main(int argc, char* argv[])
 
     // Ok, we're ready to add the sink to the logging library
     logging::logging_core::get()->add_sink(pSink);
-	logging::logging_core::get()->add_sink(pNTSink);
+    logging::logging_core::get()->add_sink(pNTSink);
     // Now our logs will be written both to the console and to the file.
     // Let's do a quick test and output something. We have to create a logger for this.
     logging::logger lg;
@@ -63,8 +69,8 @@ int main(int argc, char* argv[])
     // And output...
     BOOST_LOG(lg) << "Hello, World!";
 
-   
-	// Nice, huh? That's pretty much equivalent to writing the string to both the file
+
+    // Nice, huh? That's pretty much equivalent to writing the string to both the file
     // and the console. Now let's define the different way of formatting log records.
     // Each logging record may have a number of attributes in addition to the
     // message body itself. By setting up formatter we define which of them
@@ -163,7 +169,7 @@ int main(int argc, char* argv[])
         critical
     };
 
-	// Now we can set the filter. A filter is essentially a functor that returns
+    // Now we can set the filter. A filter is essentially a functor that returns
     // boolean value that tells whether to write the record or not.
     pSink->set_filter(
         flt::attr< int >("Severity") >= warning // Write all records with "warning" severity or higher
@@ -198,7 +204,7 @@ int main(int argc, char* argv[])
         // Next we try if the second condition of the filter works
         logging::attributes::constant< std::string > TagAttr("IMPORTANT MESSAGES");
 
-		//LUCA REGINI: ERRORE
+        //LUCA REGINI: ERRORE
         //logging::scoped_attribute a1 =
         //    logging::add_scoped_thread_attribute< char >("Tag", TagAttr);
 
@@ -208,6 +214,12 @@ int main(int argc, char* argv[])
         // The only reason this record will be output is the "Tag" attribute we added above.
         BOOST_LOG(slg) << "Some really urgent line";
     }
-	
+
+    pSink->reset_filter();
+
+    // And moreover, it is possible to nest logging records. For example, this will
+    // be processed in the order of evaluation:
+    BOOST_LOG(lg) << "The result of foo is " << foo(lg);
+
     return 0;
 }

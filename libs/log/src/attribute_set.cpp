@@ -33,32 +33,13 @@ basic_attribute_set< CharT >::operator= (basic_attribute_set const& that)
     return *this;
 }
 
-//! The method finds the attribute by name
-template< typename CharT >
-typename basic_attribute_set< CharT >::iterator
-basic_attribute_set< CharT >::find(key_type const& key)
-{
-    return base_type::BOOST_NESTED_TEMPLATE find_impl< iterator >(this, key);
-}
-
-//! The method returns a range of the same named attributes
-template< typename CharT >
-std::pair<
-    typename basic_attribute_set< CharT >::iterator,
-    typename basic_attribute_set< CharT >::iterator
-> basic_attribute_set< CharT >::equal_range(key_type const& key)
-{
-    typedef std::pair< iterator, iterator > result_type;
-    return base_type::BOOST_NESTED_TEMPLATE equal_range_impl< result_type >(this, key);
-}
-
 //! Insertion method
 template< typename CharT >
 typename basic_attribute_set< CharT >::iterator
 basic_attribute_set< CharT >::insert(key_type const& key, mapped_type const& data)
 {
     typename node_container::iterator Result;
-    unsigned char HTIndex = static_cast< unsigned char >(::boost::hash_value(key));
+    unsigned char HTIndex = static_cast< unsigned char >(aux::hash_string(key.data(), key.size()));
     typename hash_table::reference HTEntry = this->buckets()[HTIndex];
 
     if (HTEntry.first != this->nodes().end())
@@ -69,13 +50,13 @@ basic_attribute_set< CharT >::insert(key_type const& key, mapped_type const& dat
 
         // First roughly find an element with equal sized key
         const std::size_t key_size = key.size();
-        for (++end; it != end && descriptor::get_key(*it).size() < key_size; ++it);
+        for (++end; it != end && it->first.size() < key_size; ++it);
 
         // Then find the one that has equal or greater key
         for (;
             it != end &&
-                descriptor::get_key(*it).size() == key_size &&
-                key.compare(descriptor::get_key(*it)) < 0;
+                it->first.size() == key_size &&
+                key.compare(it->first) < 0;
             ++it);
 
         // We found the place where to insert new node
@@ -134,7 +115,7 @@ basic_attribute_set< CharT >::erase(key_type const& key)
             this->erase(it++);
             ++Result;
         }
-        while (it != this->end() && descriptor::get_key(*it) == key);
+        while (it != this->end() && it->first == key);
     }
 
     return Result;
@@ -144,7 +125,7 @@ basic_attribute_set< CharT >::erase(key_type const& key)
 template< typename CharT >
 void basic_attribute_set< CharT >::erase(iterator it)
 {
-    typename node_container::iterator itNode = descriptor::get_node_iterator(it);
+    typename node_container::iterator itNode = it.base();
     typename hash_table::reference HTEntry = this->buckets()[itNode->m_HTIndex];
     if (HTEntry.first == HTEntry.second)
     {
@@ -171,13 +152,11 @@ void basic_attribute_set< CharT >::erase(iterator begin, iterator end)
 {
     if (begin != end)
     {
-        typename node_container::iterator itFirstNode =
-            descriptor::get_node_iterator(begin);
+        typename node_container::iterator itFirstNode = begin.base();
 
         iterator last = end;
         --last;
-        typename node_container::iterator itLastNode =
-            descriptor::get_node_iterator(last);
+        typename node_container::iterator itLastNode = last.base();
 
         if (itFirstNode->m_HTIndex != itLastNode->m_HTIndex)
         {
@@ -249,7 +228,19 @@ void basic_attribute_set< CharT >::erase(iterator begin, iterator end)
         }
 
         // Erase the nodes
-        this->nodes().erase(itFirstNode, descriptor::get_node_iterator(end));
+        this->nodes().erase(itFirstNode, end.base());
+    }
+}
+
+//! The method clears the container
+template< typename CharT >
+void basic_attribute_set< CharT >::clear()
+{
+    if (!this->nodes().empty())
+    {
+        this->nodes().clear();
+        std::fill_n(this->buckets().begin(), this->buckets().size(),
+            std::make_pair(this->nodes().end(), this->nodes().end()));
     }
 }
 

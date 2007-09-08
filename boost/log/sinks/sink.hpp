@@ -52,6 +52,11 @@ struct BOOST_LOG_NO_VTABLE sink
     {
         this->set_filter_impl(filter_type(filter));
     }
+    //! The method moves the sink-specific filter
+    void reset_filter()
+    {
+        this->set_filter_impl(filter_type());
+    }
 
     //! The method returns true if the attribute values pass the filter
     virtual bool will_write_message(attribute_values_view const& attributes) = 0;

@@ -14,13 +14,32 @@
 
 #include <limits>
 #include <algorithm>
-#include <boost/functional/hash/hash.hpp>
 
 namespace boost {
 
 namespace log {
 
 namespace aux {
+
+//! Hash function
+template< typename CharT >
+inline std::size_t hash_string(const CharT* str, std::size_t len)
+{
+    // Algorithm taken from Bob Jenkins' article:
+    // http://www.burtleburtle.net/bob/hash/doobs.html
+    register std::size_t hash = 0;
+    for (register std::size_t i = 0; i < len; ++i)
+    {
+        hash += str[i];
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+    return hash;
+}
+
 
 //! Default constructor
 template< typename DescriptorT >
@@ -62,18 +81,13 @@ void unordered_multimap_facade< DescriptorT >::rehash()
 
 //! Find method implementation
 template< typename DescriptorT >
-template< typename ResultT, typename ThisT >
-BOOST_LOG_FORCEINLINE ResultT
-unordered_multimap_facade< DescriptorT >::find_impl(ThisT* pthis, key_type const& key)
+typename unordered_multimap_facade< DescriptorT >::iterator
+unordered_multimap_facade< DescriptorT >::find_impl(const char_type* key, size_type key_len)
 {
-    typedef typename mpl::if_<
-        is_const< ThisT >,
-        typename node_container::const_iterator,
-        typename node_container::iterator
-    >::type nodes_iterator;
-    nodes_iterator Result = pthis->m_Nodes.end();
-    unsigned char HTIndex = static_cast< unsigned char >(::boost::hash_value(key));
-    typename hash_table::const_reference HTEntry = pthis->m_HashTable[HTIndex];
+    typedef typename node_container::iterator nodes_iterator;
+    nodes_iterator Result = this->m_Nodes.end();
+    unsigned char HTIndex = static_cast< unsigned char >(aux::hash_string(key, key_len));
+    typename hash_table::const_reference HTEntry = this->m_HashTable[HTIndex];
 
     if (HTEntry.first != Result)
     {
@@ -82,14 +96,13 @@ unordered_multimap_facade< DescriptorT >::find_impl(ThisT* pthis, key_type const
         nodes_iterator end = HTEntry.second;
 
         // First roughly find an element with equal sized key
-        const std::size_t key_size = key.size();
-        for (++end; it != end && descriptor::get_key(*it).size() < key_size; ++it);
+        for (++end; it != end && it->first.size() < key_len; ++it);
 
         // Then find the one that has equal key
-        for (; it != end && descriptor::get_key(*it).size() == key_size; ++it)
+        for (; it != end && it->first.size() == key_len; ++it)
         {
             register int ComparisonResult;
-            if ((ComparisonResult = key.compare(descriptor::get_key(*it))) >= 0)
+            if ((ComparisonResult = it->first.compare(key, key_len)) <= 0)
             {
                 if (ComparisonResult == 0)
                     Result = it;
@@ -99,27 +112,19 @@ unordered_multimap_facade< DescriptorT >::find_impl(ThisT* pthis, key_type const
         }
     }
 
-    return ResultT(Result);
+    return iterator(Result);
 }
 
-//! The method finds the attribute by name
-template< typename DescriptorT >
-typename unordered_multimap_facade< DescriptorT >::const_iterator
-unordered_multimap_facade< DescriptorT >::find(key_type const& key) const
-{
-    return find_impl< const_iterator >(this, key);
-}
-
-//! The method returns the number of the same named attributes in the container
+//! Count method implementation
 template< typename DescriptorT >
 typename unordered_multimap_facade< DescriptorT >::size_type
-unordered_multimap_facade< DescriptorT >::count(key_type const& key) const
+unordered_multimap_facade< DescriptorT >::count_impl(const char_type* key, size_type key_len) const
 {
-    const_iterator it = this->find(key);
+    const_iterator it = const_cast< unordered_multimap_facade* >(this)->find_impl(key, key_len);
     size_type Result = size_type(it != this->end());
     if (Result)
     {
-        for (++it; it != this->end() && descriptor::get_key(*it) == key; ++it, ++Result);
+        for (++it; it != this->end() && it->first.compare(key, key_len) == 0; ++it, ++Result);
     }
 
     return Result;
@@ -127,44 +132,22 @@ unordered_multimap_facade< DescriptorT >::count(key_type const& key) const
 
 //! Equal_range method implementation
 template< typename DescriptorT >
-template< typename ResultT, typename ThisT >
-BOOST_LOG_FORCEINLINE ResultT
-unordered_multimap_facade< DescriptorT >::equal_range_impl(ThisT* pthis, key_type const& key)
+std::pair<
+    typename unordered_multimap_facade< DescriptorT >::iterator,
+    typename unordered_multimap_facade< DescriptorT >::iterator
+> unordered_multimap_facade< DescriptorT >::equal_range_impl(const char_type* key, size_type key_len)
 {
-    ResultT Result(pthis->find(key), pthis->end());
+    std::pair< iterator, iterator > Result(this->find_impl(key, key_len), iterator(m_Nodes.end()));
 
     if (Result.first != Result.second)
     {
         Result.second = Result.first;
         for (++Result.second;
-            Result.second != pthis->end() && descriptor::get_key(*Result.second) == key;
+            Result.second != this->end() && Result.second->first.compare(key, key_len) == 0;
             ++Result.second);
     }
 
     return Result;
-}
-
-//! The method returns a range of the same named attributes
-template< typename DescriptorT >
-std::pair<
-    typename unordered_multimap_facade< DescriptorT >::const_iterator,
-    typename unordered_multimap_facade< DescriptorT >::const_iterator
-> unordered_multimap_facade< DescriptorT >::equal_range(key_type const& key) const
-{
-    typedef std::pair< const_iterator, const_iterator > result_type;
-    return equal_range_impl< result_type >(this, key);
-}
-
-//! The method clears the container
-template< typename DescriptorT >
-void unordered_multimap_facade< DescriptorT >::clear()
-{
-    if (!m_Nodes.empty())
-    {
-        m_Nodes.clear();
-        std::fill_n(m_HashTable.begin(), m_HashTable.size(),
-            std::make_pair(m_Nodes.end(), m_Nodes.end()));
-    }
 }
 
 } // namespace aux

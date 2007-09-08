@@ -19,13 +19,12 @@
 #ifndef BOOST_LOG_ATTRIBUTE_VALUES_VIEW_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTE_VALUES_VIEW_HPP_INCLUDED_
 
-#include <string>
-#include <vector>
-#include <boost/ref.hpp>
+#include <new>
+#include <memory>
+#include <cassert>
 #include <boost/shared_ptr.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/tuple/tuple.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/slim_string.hpp>
 #include <boost/log/detail/unordered_mmap_facade.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
@@ -40,100 +39,123 @@ namespace aux {
     template< typename CharT >
     struct attribute_values_view_descr
     {
-        //! Attribute name type
-        typedef std::basic_string< CharT > key_type;
+        //! Char type
+        typedef CharT char_type;
         //! Mapped attribute value type
         typedef shared_ptr< attribute_value > mapped_type;
-        //! Value type
-        typedef std::pair< reference_wrapper< const key_type >, mapped_type > value_type;
-        //! Internal value type used to actually store container value along with some additional data
-        struct internal_value_type :
-            public value_type
-        {
-            //! An attribute_set iterator
-            typedef typename basic_attribute_set< CharT >::const_iterator attribute_set_iterator;
-            attribute_set_iterator m_itAttribute;
-
-            //! Transparent constructor
-            internal_value_type(key_type const& key, mapped_type const& data)
-                : value_type(cref(key), data) {}
-        };
 
         //! Metafunction to make node container
         template< typename T >
         struct make_node_container
         {
-            typedef std::vector< T > type;
-        };
-
-        //! Container iterator type
-        template< typename NodeIteratorT >
-        class iterator :
-            public iterator_adaptor<
-                iterator< NodeIteratorT >,
-                NodeIteratorT,
-                value_type,
-                typename iterator_category< NodeIteratorT >::type,
-                typename mpl::if_<
-                    is_const_iterator< NodeIteratorT >,
-                    value_type const&,
-                    value_type&
-                >::type
-            >
-        {
-            friend class ::boost::iterator_core_access;
-            friend struct attribute_values_view_descr< CharT >;
-
-        private:
-            //! Base type
-            typedef typename iterator::iterator_adaptor_ base_type;
-
-        public:
-            //! Constructor
-            iterator() {}
-            //! Copy constructor
-            iterator(iterator const& that) : base_type(static_cast< base_type const& >(that)) {}
-            //! Conversion constructor
-            template< typename AnotherNodeIteratorT >
-            iterator(iterator< AnotherNodeIteratorT > const& that) : base_type(that.base()) {}
-            //! Constructor
-            explicit iterator(NodeIteratorT const& it) : base_type(it) {}
-
-            //! Assignment
-            iterator& operator= (NodeIteratorT const& it)
+            //! A simple vector-like container that does not require value_type to be assignable
+            class type :
+                private std::allocator< T >
             {
-                this->base_reference() = it;
-                return *this;
-            }
+            public:
+                //  Standard typedefs
+                typedef std::allocator< T > allocator_type;
+                typedef typename allocator_type::value_type value_type;
+                typedef typename allocator_type::pointer pointer;
+                typedef typename allocator_type::const_pointer const_pointer;
+                typedef typename allocator_type::reference reference;
+                typedef typename allocator_type::const_reference const_reference;
+                typedef typename allocator_type::size_type size_type;
+                typedef typename allocator_type::difference_type difference_type;
+                typedef pointer iterator;
+                typedef const_pointer const_iterator;
 
-        private:
-            //! Dereferencing
-            typename base_type::reference dereference() const
-            {
-                if (!this->base()->second)
+            private:
+                //! Pointer to the beginning of the storage
+                pointer m_pBegin;
+                //! Pointer to the after-the-last element
+                pointer m_pEnd;
+                //! Pointer to the end of storage
+                pointer m_pEOS;
+
+            public:
+                //  Structors
+                type() : m_pBegin(0), m_pEnd(0), m_pEOS(0) {}
+                type(type const& that)
+                    : m_pBegin(allocator_type::allocate(that.size())), m_pEnd(m_pBegin), m_pEOS(m_pBegin + that.size())
                 {
-                    // The attribute value is not generated yet
-                    const_cast< mapped_type& >(this->base()->second) =
-                        this->base()->m_itAttribute->second->get_value();
+                    for (const_iterator it = that.begin(); it != that.end(); ++it)
+                        this->push_back(*it); // won't throw
+                }
+                ~type()
+                {
+                    for (pointer p = m_pBegin; p != m_pEnd; ++p)
+                        p->~value_type();
+                    allocator_type::deallocate(m_pBegin, m_pEOS - m_pBegin);
                 }
 
-                return *this->base();
-            }
+                //! Assignment
+                type& operator= (type const& that)
+                {
+                    type tmp(that);
+                    this->swap(tmp);
+                    return *this;
+                }
+
+                //  Iterator acquirement
+                iterator begin() { return m_pBegin; }
+                iterator end() { return m_pEnd; }
+                const_iterator begin() const { return m_pBegin; }
+                const_iterator end() const { return m_pEnd; }
+
+                //  Accessors
+                size_type size() const { return (m_pEnd - m_pBegin); }
+                bool empty() const { return (size() == 0); }
+
+                //! Swaps two containers
+                void swap(type& that)
+                {
+                    using std::swap;
+                    swap(m_pBegin, that.m_pBegin);
+                    swap(m_pEnd, that.m_pEnd);
+                    swap(m_pEOS, that.m_pEOS);
+                }
+
+                //! Storage reservation
+                void reserve(size_type n)
+                {
+                    // Should be called once, before any insertions
+                    assert(m_pBegin == 0);
+                    m_pBegin = m_pEnd = allocator_type::allocate(n);
+                    m_pEOS = m_pBegin + n;
+                }
+
+                //! Appends a new value to the end of the container
+                void push_back(const_reference x)
+                {
+                    // Should be called after reservation
+                    assert(m_pBegin != 0);
+                    assert(m_pEnd < m_pEOS);
+                    new (m_pEnd) value_type(x);
+                    ++m_pEnd;
+                }
+
+                //! The method extracts attribute values and arranges them in the container
+                template< typename IteratorT >
+                void adopt_nodes(IteratorT& it, IteratorT end, unsigned char HTIndex)
+                {
+                    for (; it != end && it->m_HTIndex == HTIndex; ++it, ++m_pEnd)
+                    {
+                        new (m_pEnd) value_type(it->first, it->second->get_value(), HTIndex);
+                    }
+                }
+            };
         };
-
-        //! Node iterator extractor
-        template< typename NodeIteratorT >
-        static NodeIteratorT get_node_iterator(iterator< NodeIteratorT > const& it)
-        {
-            return it.base();
-        }
-
-        //! Key extractor
-        static key_type const& get_key(value_type const& value)
-        {
-            return value.first;
-        }
     };
+
+    //! A free-standing swap for node container
+    template< typename CharT, typename T >
+    inline void swap(
+        typename attribute_values_view_descr< CharT >::BOOST_NESTED_TEMPLATE make_node_container< T >::type& left,
+        typename attribute_values_view_descr< CharT >::BOOST_NESTED_TEMPLATE make_node_container< T >::type& right)
+    {
+        left.swap(right);
+    }
 
 } // namespace aux
 
@@ -188,11 +210,8 @@ protected:
     typedef typename base_type::hash_table hash_table;
 
 public:
-    //! Constructor
-    basic_attribute_values_view() {}
-
-    //! The method adopts three attribute sets to the view
-    BOOST_LOG_EXPORT void adopt(
+    //! The constructor adopts three attribute sets to the view
+    BOOST_LOG_EXPORT basic_attribute_values_view(
         attribute_set const& source_attrs,
         attribute_set const& thread_attrs,
         attribute_set const& global_attrs);

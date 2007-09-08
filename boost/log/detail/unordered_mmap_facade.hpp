@@ -19,10 +19,13 @@
 #ifndef BOOST_LOG_UNORDERED_MMAP_FACADE_HPP_INCLUDED_
 #define BOOST_LOG_UNORDERED_MMAP_FACADE_HPP_INCLUDED_
 
+#include <string>
 #include <vector>
 #include <utility>
+#include <iterator>
 #include <boost/mpl/if.hpp>
 #include <boost/iterator/iterator_traits.hpp>
+#include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/type_traits/is_const.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -61,8 +64,17 @@ namespace aux {
         typedef DescriptorT descriptor;
 
     public:
+        //! Char type
+        typedef typename descriptor::char_type char_type;
+        //! String type
+        typedef std::basic_string< char_type > string_type;
+        //! Key type
+        typedef basic_slim_string< char_type > key_type;
+        //! Mapped type
+        typedef typename descriptor::mapped_type mapped_type;
+
         //! Value type
-        typedef typename descriptor::value_type value_type;
+        typedef std::pair< const key_type, mapped_type > value_type;
         //! Reference type
         typedef value_type& reference;
         //! Const reference type
@@ -76,22 +88,14 @@ namespace aux {
         //! Difference type
         typedef std::ptrdiff_t difference_type;
 
-        //! Key type
-        typedef typename descriptor::key_type key_type;
-        //! Mapped type
-        typedef typename descriptor::mapped_type mapped_type;
-
-        //! Character type
-        typedef typename key_type::value_type char_type;
-
     protected:
         //! Container node
         struct node :
-            public descriptor::internal_value_type
+            public value_type
         {
         private:
             //! Base type
-            typedef typename descriptor::internal_value_type base_type;
+            typedef value_type base_type;
 
         public:
             //! Its hash table index
@@ -111,13 +115,53 @@ namespace aux {
             >
         > hash_table;
 
+        //! Container iterator type
+        template< typename NodeIteratorT >
+        class iter :
+            public iterator_adaptor<
+                iter< NodeIteratorT >,
+                NodeIteratorT,
+                value_type,
+                typename iterator_category< NodeIteratorT >::type,
+                typename mpl::if_<
+                    is_const_iterator< NodeIteratorT >,
+                    value_type const&,
+                    value_type&
+                >::type
+            >
+        {
+            friend class ::boost::iterator_core_access;
+
+        private:
+            //! Base type
+            typedef typename iter::iterator_adaptor_ base_type;
+
+        public:
+            //! Constructor
+            iter() {}
+            //! Copy constructor
+            iter(iter const& that) : base_type(static_cast< base_type const& >(that)) {}
+            //! Conversion constructor
+            template< typename AnotherNodeIteratorT >
+            iter(iter< AnotherNodeIteratorT > const& that) : base_type(that.base()) {}
+            //! Constructor
+            explicit iter(NodeIteratorT const& it) : base_type(it) {}
+
+            //! Assignment
+            iter& operator= (NodeIteratorT const& it)
+            {
+                this->base_reference() = it;
+                return *this;
+            }
+        };
+
     public:
         //! Forward iterator type
-        typedef typename descriptor::BOOST_NESTED_TEMPLATE iterator<
+        typedef iter<
             typename node_container::iterator
         > iterator;
         //! Forward const iterator type
-        typedef typename descriptor::BOOST_NESTED_TEMPLATE iterator<
+        typedef iter<
             typename node_container::const_iterator
         > const_iterator;
 
@@ -145,16 +189,58 @@ namespace aux {
         bool empty() const { return m_Nodes.empty(); }
 
         //! The method finds the attribute by name
-        BOOST_LOG_EXPORT const_iterator find(key_type const& key) const;
+        const_iterator find(key_type const& key) const
+        {
+            return const_iterator(const_cast< unordered_multimap_facade* >(this)->find_impl(key.data(), key.size()));
+        }
+        //! The method finds the attribute by name
+        const_iterator find(string_type const& key) const
+        {
+            return const_iterator(const_cast< unordered_multimap_facade* >(this)->find_impl(key.data(), key.size()));
+        }
+        //! The method finds the attribute by name
+        const_iterator find(const char_type* key) const
+        {
+            typedef std::char_traits< char_type > traits_type;
+            return const_iterator(const_cast< unordered_multimap_facade* >(this)->find_impl(key, traits_type::length(key)));
+        }
 
         //! The method returns the number of the same named attributes in the container
-        BOOST_LOG_EXPORT size_type count(key_type const& key) const;
+        size_type count(key_type const& key) const
+        {
+            return count_impl(key.data(), key.size());
+        }
+        //! The method returns the number of the same named attributes in the container
+        size_type count(string_type const& key) const
+        {
+            return count_impl(key.data(), key.size());
+        }
+        //! The method returns the number of the same named attributes in the container
+        size_type count(const char_type* key) const
+        {
+            typedef std::char_traits< char_type > traits_type;
+            return count_impl(key, traits_type::length(key));
+        }
 
         //! The method returns a range of the same named attributes
-        BOOST_LOG_EXPORT std::pair< const_iterator, const_iterator > equal_range(key_type const& key) const;
-
-        //! The method clears the container
-        BOOST_LOG_EXPORT void clear();
+        std::pair< const_iterator, const_iterator > equal_range(key_type const& key) const
+        {
+            typedef std::pair< const_iterator, const_iterator > result_type;
+            return result_type(const_cast< unordered_multimap_facade* >(this)->equal_range_impl(key.data(), key.size()));
+        }
+        //! The method returns a range of the same named attributes
+        std::pair< const_iterator, const_iterator > equal_range(string_type const& key) const
+        {
+            typedef std::pair< const_iterator, const_iterator > result_type;
+            return result_type(const_cast< unordered_multimap_facade* >(this)->equal_range_impl(key.data(), key.size()));
+        }
+        //! The method returns a range of the same named attributes
+        std::pair< const_iterator, const_iterator > equal_range(const char_type* key) const
+        {
+            typedef std::pair< const_iterator, const_iterator > result_type;
+            typedef std::char_traits< char_type > traits_type;
+            return result_type(const_cast< unordered_multimap_facade* >(this)->equal_range_impl(key, traits_type::length(key)));
+        }
 
     protected:
         //! Accessor to node container
@@ -171,11 +257,11 @@ namespace aux {
         void rehash();
 
         //! Find method implementation
-        template< typename ResultT, typename ThisT >
-        static ResultT find_impl(ThisT* pthis, key_type const& key);
+        BOOST_LOG_EXPORT iterator find_impl(const char_type* key, size_type key_len);
+        //! Count method implementation
+        BOOST_LOG_EXPORT size_type count_impl(const char_type* key, size_type key_len) const;
         //! Equal_range method implementation
-        template< typename ResultT, typename ThisT >
-        static ResultT equal_range_impl(ThisT* pthis, key_type const& key);
+        BOOST_LOG_EXPORT std::pair< iterator, iterator > equal_range_impl(const char_type* key, size_type key_len);
     };
 
 } // namespace aux

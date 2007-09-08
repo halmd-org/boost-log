@@ -20,13 +20,9 @@
 #define BOOST_LOG_ATTRIBUTE_SET_HPP_INCLUDED_
 
 #include <list>
-#include <string>
-#include <utility>
-#include <iterator>
 #include <boost/shared_ptr.hpp>
-#include <boost/mpl/if.hpp>
-#include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/slim_string.hpp>
 #include <boost/log/detail/unordered_mmap_facade.hpp>
 #include <boost/log/attributes/attribute.hpp>
 
@@ -43,76 +39,168 @@ namespace aux {
     template< typename CharT >
     struct attribute_set_descr
     {
-        //! Attribute name type
-        typedef std::basic_string< CharT > key_type;
+        //! Char type
+        typedef CharT char_type;
         //! Mapped attribute type
         typedef shared_ptr< attribute > mapped_type;
-        //! Value type
-        typedef std::pair< const key_type, mapped_type > value_type;
-        //! Internal value type used to actually store container value along with some additional data
-        typedef value_type internal_value_type;
 
         //! Metafunction to make node container
         template< typename T >
         struct make_node_container
         {
-            typedef std::list< T > type;
-        };
-
-        //! Container iterator type
-        template< typename NodeIteratorT >
-        class iterator :
-            public iterator_adaptor<
-                iterator< NodeIteratorT >,
-                NodeIteratorT,
-                value_type,
-                typename iterator_category< NodeIteratorT >::type,
-                typename mpl::if_<
-                    is_const_iterator< NodeIteratorT >,
-                    value_type const&,
-                    value_type&
-                >::type
-            >
-        {
-            friend class ::boost::iterator_core_access;
-            friend struct attribute_set_descr< CharT >;
-
-        private:
-            //! Base type
-            typedef typename iterator::iterator_adaptor_ base_type;
-
-        public:
-            //! Constructor
-            iterator() {}
-            //! Copy constructor
-            iterator(iterator const& that) : base_type(static_cast< base_type const& >(that)) {}
-            //! Conversion constructor
-            template< typename AnotherNodeIteratorT >
-            iterator(iterator< AnotherNodeIteratorT > const& that) : base_type(that.base()) {}
-            //! Constructor
-            explicit iterator(NodeIteratorT const& it) : base_type(it) {}
-
-            //! Assignment
-            iterator& operator= (NodeIteratorT const& it)
+            //! A wrapper around std::list to cache the size of the container
+            class type :
+                private std::list< T >
             {
-                this->base_reference() = it;
-                return *this;
-            }
+                //! Base type
+                typedef std::list< T > base_type;
+
+            public:
+                //  Standard typedefs
+                typedef typename base_type::value_type value_type;
+                typedef typename base_type::pointer pointer;
+                typedef typename base_type::const_pointer const_pointer;
+                typedef typename base_type::reference reference;
+                typedef typename base_type::const_reference const_reference;
+                typedef typename base_type::size_type size_type;
+                typedef typename base_type::difference_type difference_type;
+                typedef typename base_type::allocator_type allocator_type;
+                typedef typename base_type::iterator iterator;
+                typedef typename base_type::const_iterator const_iterator;
+                typedef typename base_type::reverse_iterator reverse_iterator;
+                typedef typename base_type::const_reverse_iterator const_reverse_iterator;
+
+            private:
+                //! Container size
+                size_type m_Size;
+
+            public:
+                //! Default constructor
+                type() : m_Size(0) {}
+                //! Copy constructor
+                type(type const& that) : base_type(static_cast< base_type const& >(that)), m_Size(that.m_Size) {}
+                //! Ñonstructor from the range of values
+                template< typename IteratorT >
+                type(IteratorT first, IteratorT last) : m_Size(0)
+                {
+                    this->insert(this->end(), first, last);
+                }
+
+                //! Assignment
+                type& operator= (type const& that)
+                {
+                    base_type::operator= (static_cast< base_type const& >(that));
+                    m_Size = that.m_Size;
+                    return *this;
+                }
+
+                using base_type::begin;
+                using base_type::end;
+                using base_type::rbegin;
+                using base_type::rend;
+                using base_type::front;
+                using base_type::back;
+                using base_type::max_size;
+
+                //! Size accessor
+                size_type size() const { return m_Size; }
+                //! Empty checker
+                bool empty() const { return (m_Size == 0); }
+
+                //! Clears the container
+                void clear()
+                {
+                    base_type::clear();
+                    m_Size = 0;
+                }
+
+                //! Swaps two containers
+                void swap(type& that)
+                {
+                    using std::swap;
+                    base_type::swap(static_cast< base_type& >(that));
+                    swap(m_Size, that.m_Size);
+                }
+
+                //  Insertion
+                iterator insert(iterator pos, const_reference x)
+                {
+                    iterator it = base_type::insert(pos, x);
+                    ++m_Size;
+                    return it;
+                }
+                template< typename IteratorT >
+                void insert(iterator pos, IteratorT first, IteratorT last)
+                {
+                    for (; first != last; ++first)
+                        this->insert(pos, *first);
+                }
+
+                //  Erasure
+                iterator erase(iterator pos)
+                {
+                    iterator it = base_type::erase(pos);
+                    --m_Size;
+                    return it;
+                }
+                iterator erase(iterator first, iterator last)
+                {
+                    while (first != last)
+                        this->erase(first++);
+                    return last;
+                }
+
+                //  Push/pop front/back
+                void push_front(const_reference x)
+                {
+                    base_type::push_front(x);
+                    ++m_Size;
+                }
+                void push_back(const_reference x)
+                {
+                    base_type::push_back(x);
+                    ++m_Size;
+                }
+                void pop_front()
+                {
+                    base_type::pop_front();
+                    --m_Size;
+                }
+                void pop_back()
+                {
+                    base_type::pop_back();
+                    --m_Size;
+                }
+
+                //  Assign, resize, etc.
+                void resize(size_type new_size, const_reference x)
+                {
+                    base_type::resize(new_size, x);
+                    m_Size = new_size;
+                }
+                void assign(size_type n, const_reference val)
+                {
+                    base_type::assign(n, val);
+                    m_Size = n;
+                }
+                template< typename IteratorT >
+                void assign(IteratorT first, IteratorT last)
+                {
+                    type tmp(first, last);
+                    this->swap(tmp);
+                }
+            };
         };
-
-        //! Node iterator extractor
-        template< typename NodeIteratorT >
-        static NodeIteratorT get_node_iterator(iterator< NodeIteratorT > const& it)
-        {
-            return it.base();
-        }
-
-        //! Key extractor
-        static key_type const& get_key(value_type const& value)
-        {
-            return value.first;
-        }
     };
+
+    //! A free-standing swap for node container
+    template< typename CharT, typename T >
+    inline void swap(
+        typename attribute_set_descr< CharT >::BOOST_NESTED_TEMPLATE make_node_container< T >::type& left,
+        typename attribute_set_descr< CharT >::BOOST_NESTED_TEMPLATE make_node_container< T >::type& right)
+    {
+        left.swap(right);
+    }
 
 } // namespace aux
 
@@ -145,6 +233,8 @@ public:
     //! Difference type
     typedef typename base_type::difference_type difference_type;
 
+    //! String type
+    typedef typename base_type::string_type string_type;
     //! Key type
     typedef typename base_type::key_type key_type;
     //! Mapped type
@@ -200,9 +290,38 @@ public:
     }
 
     //! The method finds the attribute by name
-    BOOST_LOG_EXPORT iterator find(key_type const& key);
+    iterator find(key_type const& key)
+    {
+        return this->find_impl(key.data(), key.size());
+    }
+    //! The method finds the attribute by name
+    iterator find(string_type const& key)
+    {
+        return this->find_impl(key.data(), key.size());
+    }
+    //! The method finds the attribute by name
+    iterator find(const char_type* key)
+    {
+        typedef std::char_traits< char_type > traits_type;
+        return this->find_impl(key, traits_type::length(key));
+    }
+
     //! The method returns a range of the same named attributes
-    BOOST_LOG_EXPORT std::pair< iterator, iterator > equal_range(key_type const& key);
+    std::pair< iterator, iterator > equal_range(key_type const& key)
+    {
+        return this->equal_range_impl(key.data(), key.size());
+    }
+    //! The method returns a range of the same named attributes
+    std::pair< iterator, iterator > equal_range(string_type const& key)
+    {
+        return this->equal_range_impl(key.data(), key.size());
+    }
+    //! The method returns a range of the same named attributes
+    std::pair< iterator, iterator > equal_range(const char_type* key)
+    {
+        typedef std::char_traits< char_type > traits_type;
+        return this->equal_range_impl(key, traits_type::length(key));
+    }
 
     //! Insertion method
     BOOST_LOG_EXPORT iterator insert(key_type const& key, mapped_type const& data);
@@ -225,11 +344,8 @@ public:
     template< typename FwdIteratorT, typename OutputIteratorT >
     void insert(FwdIteratorT begin, FwdIteratorT end, OutputIteratorT out)
     {
-        for (; begin != end; ++begin)
-        {
+        for (; begin != end; ++begin, ++out)
             *out = insert(*begin);
-            ++out;
-        }
     }
 
     //! The method erases all attributes with the specified name
@@ -238,6 +354,9 @@ public:
     BOOST_LOG_EXPORT void erase(iterator it);
     //! The method erases all attributes within the specified range
     BOOST_LOG_EXPORT void erase(iterator begin, iterator end);
+
+    //! The method clears the container
+    BOOST_LOG_EXPORT void clear();
 };
 
 typedef basic_attribute_set< char > attribute_set;

@@ -84,6 +84,8 @@ public:
     {
         this->set_filter_impl(filter_type(filter));
     }
+    //! The method removes the global logging filter
+    void reset_filter();
 
     //! The method adds a new sink
     void add_sink(shared_ptr< sink_type > const& s);
@@ -106,6 +108,8 @@ public:
     bool open_record(attribute_set const& source_attributes);
     //! The method pushes the record and closes it
     void push_record(string_type const& message_text);
+    //! The method cancels the record
+    void cancel_record();
 
 private:
     //! An internal method to set the global filter

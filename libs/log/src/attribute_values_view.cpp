@@ -20,24 +20,9 @@ namespace boost {
 
 namespace log {
 
-namespace {
-
-template< typename IteratorT, typename NodeContainerT, typename MappedTypeT >
-void import_nodes(IteratorT& it, IteratorT const& end, NodeContainerT& Nodes, unsigned char HTIndex, MappedTypeT const& pNULL)
-{
-    typedef typename NodeContainerT::value_type node;
-    for (; it != end && it->m_HTIndex == HTIndex; ++it)
-    {
-        Nodes.push_back(node(it->first, pNULL, HTIndex));
-        Nodes.back().m_itAttribute = it;
-    }
-}
-
-} // namespace
-
-//! The method adopts three attribute sets to the view
+//! The constructor adopts three attribute sets to the view
 template< typename CharT >
-void basic_attribute_values_view< CharT >::adopt(
+basic_attribute_values_view< CharT >::basic_attribute_values_view(
     attribute_set const& source_attrs,
     attribute_set const& thread_attrs,
     attribute_set const& global_attrs)
@@ -61,7 +46,6 @@ void basic_attribute_values_view< CharT >::adopt(
     attribute_set_nodes_iterator itGlobal = GlobalAttrs.begin();
     attribute_set_nodes_iterator itGlobalEnd = GlobalAttrs.end();
 
-    const mapped_type pNULL;
     while (itSource != itSourceEnd || itThread != itThreadEnd || itGlobal != itGlobalEnd)
     {
         // Determine the least hash value of the current elements in each container
@@ -74,10 +58,10 @@ void basic_attribute_values_view< CharT >::adopt(
             HTIndex = itGlobal->m_HTIndex;
 
         // Insert nodes to the view that correspond to the selected bucket
-        // It is safe since no reallocations will occur because memory reservation above
-        import_nodes(itSource, itSourceEnd, Nodes, HTIndex, pNULL);
-        import_nodes(itThread, itThreadEnd, Nodes, HTIndex, pNULL);
-        import_nodes(itGlobal, itGlobalEnd, Nodes, HTIndex, pNULL);
+        // It is safe since no reallocations will occur because of memory reservation above
+        Nodes.adopt_nodes(itSource, itSourceEnd, HTIndex);
+        Nodes.adopt_nodes(itThread, itThreadEnd, HTIndex);
+        Nodes.adopt_nodes(itGlobal, itGlobalEnd, HTIndex);
     }
 
     // Rebuild hash table
