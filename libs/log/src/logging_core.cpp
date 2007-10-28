@@ -21,7 +21,8 @@
 #include <boost/none.hpp>
 #include <boost/thread/tss.hpp>
 #include <boost/thread/once.hpp>
-#include <boost/thread/read_write_mutex.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/locks.hpp>
 #include <boost/log/logging_core.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 
@@ -87,9 +88,9 @@ public:
     //! Front-end class type
     typedef basic_logging_core< char_type > logging_core_type;
     //! Read lock type
-    typedef read_write_mutex::scoped_read_lock scoped_read_lock;
+    typedef shared_lock< shared_mutex > scoped_read_lock;
     //! Write lock type
-    typedef read_write_mutex::scoped_write_lock scoped_write_lock;
+    typedef unique_lock< shared_mutex > scoped_write_lock;
 
     //! Sinks container type
     typedef std::vector< shared_ptr< sink_type > > sink_list;
@@ -123,7 +124,7 @@ public:
 
 public:
     //! Synchronization mutex
-    read_write_mutex Mutex;
+    shared_mutex Mutex;
 
     //! List of sinks involved into output
     sink_list Sinks;

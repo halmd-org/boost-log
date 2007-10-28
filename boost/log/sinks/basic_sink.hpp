@@ -20,7 +20,8 @@
 #define BOOST_LOG_BASIC_SINK_HPP_INCLUDED_
 
 #include <string>
-#include <boost/thread/read_write_mutex.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
@@ -48,11 +49,11 @@ public:
     typedef typename base_type::filter_type filter_type;
 
     //! Mutex type
-    typedef read_write_mutex mutex_type;
+    typedef shared_mutex mutex_type;
     //! Scoped read lock type
-    typedef mutex_type::scoped_read_lock scoped_read_lock;
+    typedef shared_lock< mutex_type > scoped_read_lock;
     //! Scoped write lock type
-    typedef mutex_type::scoped_write_lock scoped_write_lock;
+    typedef unique_lock< mutex_type > scoped_write_lock;
 
 private:
     //! Synchronization mutex

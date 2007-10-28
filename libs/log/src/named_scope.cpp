@@ -58,7 +58,7 @@ private:
     static implementation* init_named_scope()
     {
         static once_flag flag = BOOST_ONCE_INIT;
-        call_once(&implementation::get_instance, flag);
+        call_once(&implementation::init_instance, flag);
         return get_instance().get();
     }
     //! The reference holder function
@@ -66,6 +66,11 @@ private:
     {
         static shared_ptr< implementation > p(new implementation);
         return p;
+    }
+    //! Instance initializer
+    static void init_instance()
+    {
+        get_instance();
     }
 };
 
