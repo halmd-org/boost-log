@@ -36,6 +36,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/type_dispatch/static_type_dispatcher.hpp>
+#include <boost/log/attributes/attribute_values_view.hpp>
 
 namespace boost {
 
@@ -130,7 +131,7 @@ namespace aux {
         //! String type
         typedef std::basic_string< char_type > string_type;
         //! Attribute values container type
-        typedef typename basic_attribute_values_view< char_type > attribute_values_view;
+        typedef basic_attribute_values_view< char_type > attribute_values_view;
         //! Size type
         typedef typename attribute_values_view::size_type size_type;
         //! Supported attribute value type
@@ -185,6 +186,7 @@ namespace aux {
     {
         //! Base type
         typedef flt_attr_multiple_type_dispatcher<
+            FunT,
             AttributeValueTypesT,
             typename mpl::next< ItT >::type,
             EndT
@@ -306,7 +308,7 @@ namespace aux {
         //! String type
         typedef std::basic_string< char_type > string_type;
         //! Attribute values container type
-        typedef typename basic_attribute_values_view< char_type > attribute_values_view;
+        typedef basic_attribute_values_view< char_type > attribute_values_view;
         //! Size type
         typedef typename attribute_values_view::size_type size_type;
         //! Supported attribute value types

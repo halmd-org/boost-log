@@ -45,10 +45,12 @@ int main(int argc, char* argv[])
 
     shared_ptr< logging::text_ostream_sink > pSink(new logging::text_ostream_sink);
 
-    shared_ptr< logging::eventlog_sink > pNTSink(new logging::eventlog_sink);
+#ifdef WIN32
 
+    shared_ptr< logging::eventlog_sink > pNTSink(new logging::eventlog_sink);
     pNTSink->add_source("test");
 
+#endif
 
     // Next we add streams to which logging records should be output
     shared_ptr< std::ostream > pStream(&std::clog, boost::empty_deleter());
@@ -61,7 +63,10 @@ int main(int argc, char* argv[])
 
     // Ok, we're ready to add the sink to the logging library
     logging::logging_core::get()->add_sink(pSink);
+#ifdef WIN32
     logging::logging_core::get()->add_sink(pNTSink);
+#endif
+
     // Now our logs will be written both to the console and to the file.
     // Let's do a quick test and output something. We have to create a logger for this.
     logging::logger lg;
