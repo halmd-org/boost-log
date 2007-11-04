@@ -79,7 +79,7 @@ namespace aux {
                 type() : m_Size(0) {}
                 //! Copy constructor
                 type(type const& that) : base_type(static_cast< base_type const& >(that)), m_Size(that.m_Size) {}
-                //! Ñonstructor from the range of values
+                //! ï¿½onstructor from the range of values
                 template< typename IteratorT >
                 type(IteratorT first, IteratorT last) : m_Size(0)
                 {
@@ -282,13 +282,6 @@ public:
     iterator begin() { return iterator(this->nodes().begin()); }
     iterator end() { return iterator(this->nodes().end()); }
 
-    //! The method swaps two containers
-    void swap(basic_attribute_set& that)
-    {
-        this->nodes().swap(that.nodes());
-        this->buckets().swap(that.buckets());
-    }
-
     //! The method finds the attribute by name
     iterator find(key_type const& key)
     {
@@ -358,6 +351,13 @@ public:
     //! The method clears the container
     BOOST_LOG_EXPORT void clear();
 };
+
+//! Free swap overload
+template< typename CharT >
+inline void swap(basic_attribute_set< CharT >& left, basic_attribute_set< CharT >& right)
+{
+    left.swap(right);
+}
 
 typedef basic_attribute_set< char > attribute_set;
 typedef basic_attribute_set< wchar_t > wattribute_set;

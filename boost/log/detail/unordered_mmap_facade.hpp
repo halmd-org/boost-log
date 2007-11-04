@@ -23,6 +23,7 @@
 #include <vector>
 #include <utility>
 #include <iterator>
+#include <algorithm>
 #include <boost/mpl/if.hpp>
 #include <boost/iterator/iterator_traits.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
@@ -242,6 +243,13 @@ namespace aux {
             return result_type(const_cast< unordered_multimap_facade* >(this)->equal_range_impl(key, traits_type::length(key)));
         }
 
+        //! Swap method
+        void swap(unordered_multimap_facade& that)
+        {
+            m_Nodes.swap(that.m_Nodes);
+            m_HashTable.swap(that.m_HashTable);
+        }
+
     protected:
         //! Accessor to node container
         node_container& nodes() { return m_Nodes; }
@@ -262,6 +270,10 @@ namespace aux {
         BOOST_LOG_EXPORT size_type count_impl(const char_type* key, size_type key_len) const;
         //! Equal_range method implementation
         BOOST_LOG_EXPORT std::pair< iterator, iterator > equal_range_impl(const char_type* key, size_type key_len);
+
+    private:
+        //! Assignment (closed). Should be provided in derived classes if needed.
+        unordered_multimap_facade& operator= (unordered_multimap_facade const&);
     };
 
 } // namespace aux

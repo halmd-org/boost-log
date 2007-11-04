@@ -20,6 +20,18 @@ namespace boost {
 
 namespace log {
 
+//! Assignment
+template< typename CharT >
+basic_attribute_values_view< CharT >& basic_attribute_values_view< CharT >::operator= (basic_attribute_values_view const& that)
+{
+    if (this != &that)
+    {
+		basic_attribute_values_view tmp(that);
+		this->swap(tmp);
+    }
+	return *this;
+}
+
 //! The constructor adopts three attribute sets to the view
 template< typename CharT >
 basic_attribute_values_view< CharT >::basic_attribute_values_view(

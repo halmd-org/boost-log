@@ -51,7 +51,7 @@ public:
     //! Attribute values view type
     typedef basic_attribute_values_view< char_type > attribute_values_view;
     //! Sink interface type
-    typedef sink< char_type > sink_type;
+    typedef sinks::sink< char_type > sink_type;
     //! Filter function type
     typedef function1< bool, attribute_values_view const& > filter_type;
 

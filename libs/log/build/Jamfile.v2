@@ -19,7 +19,7 @@ feature.set-default logapi : [ default_logapi ] ;
 
 alias platform_log_sources
     : ## winnt sources ##
-       nt_eventlog_sink.cpp
+       nt_eventlog_backend.cpp
     : ## requirements ##
       <logapi>winnt
     ;
@@ -46,7 +46,8 @@ lib boost_log
        basic_logger.cpp
        logging_core.cpp
        named_scope.cpp
-       text_ostream_sink.cpp
+       sink.cpp
+       text_ostream_backend.cpp
        platform_log_sources
     : ## requirements ##
         <define>BOOST_LOG_BUILDING_THE_LIB=1

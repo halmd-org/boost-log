@@ -216,12 +216,22 @@ public:
         attribute_set const& thread_attrs,
         attribute_set const& global_attrs);
 
-private:
-    //! Copy constructor (closed)
-    basic_attribute_values_view(basic_attribute_values_view const&);
-    //! Assignment (closed)
-    basic_attribute_values_view& operator= (basic_attribute_values_view const&);
+    //! Copy constructor
+	basic_attribute_values_view(basic_attribute_values_view const& that)
+        : base_type(static_cast< base_type const& >(that))
+    {
+    }
+
+	//! Assignment
+    BOOST_LOG_EXPORT basic_attribute_values_view& operator= (basic_attribute_values_view const& that);
 };
+
+//! Free swap overload
+template< typename CharT >
+inline void swap(basic_attribute_values_view< CharT >& left, basic_attribute_values_view< CharT >& right)
+{
+    left.swap(right);
+}
 
 typedef basic_attribute_values_view< char > attribute_values_view;
 typedef basic_attribute_values_view< wchar_t > wattribute_values_view;

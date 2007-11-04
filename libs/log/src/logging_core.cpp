@@ -139,7 +139,7 @@ public:
 
 public:
     //! Constructor
-    implementation() : Mutex(/*read_write_scheduling_policy::writer_priority*/) {}
+    implementation() : Mutex() {}
 
     //! The method initializes thread-specific data
     void init_thread_data()
