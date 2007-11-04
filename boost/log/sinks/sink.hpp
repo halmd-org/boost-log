@@ -94,7 +94,7 @@ public:
     void reset_filter()
     {
         scoped_write_lock _(m_FilterMutex);
-        m_Filter.reset();
+        m_Filter.clear();
     }
 
     //! The method returns true if the attribute values pass the filter
@@ -247,7 +247,7 @@ private:
     shared_ptr< sink_backend_type > m_pBackend;
 
     //! A temporary storage to allow locked_backend_ptr to work
-    optional< aux::shared_backend_lock > m_SharedBackendLock;
+    mutable optional< aux::shared_backend_lock > m_SharedBackendLock;
 
 public:
     //! Default constructor - requires the backend to be default-constructible

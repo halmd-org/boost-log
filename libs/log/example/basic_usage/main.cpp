@@ -12,8 +12,11 @@
 #include <boost/log/logging_core.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sinks/text_ostream_sink.hpp>
-#include <boost/log/sinks/nt_eventlog_sink.hpp>
+#include <boost/log/sinks/sink.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
+#ifdef WIN32
+#include <boost/log/sinks/nt_eventlog_backend.hpp>
+#endif
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/attr.hpp>
 #include <boost/log/attributes/counter.hpp>
@@ -25,6 +28,7 @@
 namespace logging = boost::log;
 namespace fmt = boost::log::formatters;
 namespace flt = boost::log::filters;
+namespace sinks = boost::log::sinks;
 
 using boost::shared_ptr;
 
@@ -40,26 +44,56 @@ int main(int argc, char* argv[])
 
     // The first thing we have to do to get using the library is
     // to set up the logging sinks - i.e. where the logs will be written to.
+    // Each sink is composed from frontend and backend. Frontend deals with
+    // general sink behavior, like filtering (see below) and threading model.
+    // Backend implements formatting and, actually, storing log records.
+    // Not every frontend/backend combinations are compatible (mostly because of
+    // threading models incompatibilities), but if they are not, the code will
+    // simply not compile.
+
     // For now we only create a text output sink:
+    typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
+    shared_ptr< text_sink > pSink(new text_sink);
 
-
-    shared_ptr< logging::text_ostream_sink > pSink(new logging::text_ostream_sink);
+    // Here synchronous_sink is a sink frontend that performs thread synchronization
+    // before passing log records to the backend (the text_ostream_backend class).
+    // The backend formats each record and outputs it to one or several streams.
+    // This approach makes implementing backends a lot simplier, because you don't
+    // need to worry about multithreading.
 
 #ifdef WIN32
 
-    shared_ptr< logging::eventlog_sink > pNTSink(new logging::eventlog_sink);
-    pNTSink->add_source("test");
+    // And just to test it on Windows, an Event Log sink
+    typedef sinks::synchronous_sink< sinks::nt_eventlog_backend > eventlog_sink;
+    shared_ptr< eventlog_sink > pNTSink(new eventlog_sink);
 
 #endif
 
-    // Next we add streams to which logging records should be output
-    shared_ptr< std::ostream > pStream(&std::clog, boost::empty_deleter());
-    pSink->add_stream(pStream);
+    {
+        // The good thing about sink frontends is that they are provided out-of-box and
+        // take away thread-safety burden from the sink backend implementors. Even if you
+        // have to call a custom backend method, the frontend gives you a convenient way
+        // to do it in a thread safe manner. All you need is to acquire a locking pointer
+        // to the backend.
+        text_sink::locked_backend_ptr pBackend = pSink->locked_backend();
 
-    // We can add more than one stream to the sink
-    shared_ptr< std::ofstream > pStream2(new std::ofstream("sample.log"));
-    assert(pStream2->is_open());
-    pSink->add_stream(pStream2);
+        // Now, as long as pBackend lives, you may work with the backend without
+        // interference of other threads that might be trying to log.
+
+        // Next we add streams to which logging records should be output
+        shared_ptr< std::ostream > pStream(&std::clog, boost::empty_deleter());
+        pBackend->add_stream(pStream);
+    
+        // We can add more than one stream to the sink backend
+        shared_ptr< std::ofstream > pStream2(new std::ofstream("sample.log"));
+        assert(pStream2->is_open());
+        pBackend->add_stream(pStream2);
+    }
+
+#ifdef WIN32
+    // Same goes with other sinks
+    pNTSink->locked_backend()->add_source("Boost.Log");
+#endif
 
     // Ok, we're ready to add the sink to the logging library
     logging::logging_core::get()->add_sink(pSink);
@@ -80,7 +114,7 @@ int main(int argc, char* argv[])
     // Each logging record may have a number of attributes in addition to the
     // message body itself. By setting up formatter we define which of them
     // will be written to log and in what way they will look there.
-    pSink->set_formatter(
+    pSink->locked_backend()->set_formatter(
         fmt::attr("LineNumber") // First an attribute "LineNumber" is written to the log
         << ": [" // then this delimiter separates it from the rest of the line
         << fmt::attr< std::string >("Tag") // then goes another attribute named "Tag"

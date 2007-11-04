@@ -41,7 +41,7 @@ namespace sinks {
 
 //! An implementation of a Windows NT event logging sink backend
 template< typename CharT >
-class BOOST_LOG_EXPORT basic_nt_eventlog_backend
+class BOOST_LOG_EXPORT basic_nt_eventlog_backend :
     public basic_formatting_sink_backend< CharT >
 {
     //! Base type

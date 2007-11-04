@@ -79,7 +79,7 @@ private:
     //! Formatted log record storage
     string_type m_FormattedRecord;
     //! Stream buffer to fill the storage
-    aux::basic_ostringstreambuf< char_type > m_StreamBuf;
+    log::aux::basic_ostringstreambuf< char_type > m_StreamBuf;
     //! Formatting stream
     stream_type m_FormattingStream;
 
