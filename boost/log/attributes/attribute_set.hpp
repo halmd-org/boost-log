@@ -20,6 +20,7 @@
 #define BOOST_LOG_ATTRIBUTE_SET_HPP_INCLUDED_
 
 #include <list>
+#include <algorithm>
 #include <boost/shared_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/slim_string.hpp>
@@ -71,21 +72,26 @@ namespace aux {
         reduced_list& operator= (reduced_list const& that);
 
         //  Iterator acquirement
-        iterator begin();
-        iterator end();
-        const_iterator begin() const;
-        const_iterator end() const;
+        iterator begin() { return m_Container.begin(); }
+        iterator end() { return m_Container.end(); }
+        const_iterator begin() const { return m_Container.begin(); }
+        const_iterator end() const { return m_Container.end(); }
 
         //! Size accessor
-        size_type size() const;
+        size_type size() const { return m_Size; }
         //! Empty checker
-        bool empty() const;
+        bool empty() const { return (m_Size == 0); }
 
         //! Clears the container
         void clear();
 
         //! Swaps two containers
-        void swap(reduced_list& that);
+        void swap(reduced_list& that)
+        {
+            using std::swap;
+            m_Container.swap(that.m_Container);
+            swap(m_Size, that.m_Size);
+        }
 
         //  Insertion
         iterator insert(iterator pos, const_reference x);

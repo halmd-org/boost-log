@@ -20,6 +20,7 @@
 #define BOOST_LOG_ATTRIBUTE_VALUES_VIEW_HPP_INCLUDED_
 
 #include <memory>
+#include <algorithm>
 #include <boost/shared_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/slim_string.hpp>
@@ -69,17 +70,23 @@ namespace aux {
         reduced_vector& operator= (reduced_vector const& that);
 
         //  Iterator acquirement
-        iterator begin();
-        iterator end();
-        const_iterator begin() const;
-        const_iterator end() const;
+        iterator begin() { return m_pBegin; }
+        iterator end() { return m_pEnd; }
+        const_iterator begin() const { return m_pBegin; }
+        const_iterator end() const { return m_pEnd; }
 
         //  Accessors
-        size_type size() const;
-        bool empty() const;
+        size_type size() const { return (m_pEnd - m_pBegin); }
+        bool empty() const { return (m_pEnd == m_pBegin); }
 
         //! Swaps two containers
-        void swap(reduced_vector& that);
+        void swap(reduced_vector& that)
+        {
+            using std::swap;
+            swap(m_pBegin, that.m_pBegin);
+            swap(m_pEnd, that.m_pEnd);
+            swap(m_pEOS, that.m_pEOS);
+        }
 
         //! Storage reservation
         void reserve(size_type n);
@@ -176,12 +183,12 @@ public:
         attribute_set const& global_attrs);
 
     //! Copy constructor
-	basic_attribute_values_view(basic_attribute_values_view const& that)
+    basic_attribute_values_view(basic_attribute_values_view const& that)
         : base_type(static_cast< base_type const& >(that))
     {
     }
 
-	//! Assignment
+    //! Assignment
     BOOST_LOG_EXPORT basic_attribute_values_view& operator= (basic_attribute_values_view const& that);
 };
 

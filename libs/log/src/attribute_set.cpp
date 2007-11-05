@@ -43,53 +43,12 @@ namespace aux {
         return *this;
     }
 
-    //  Iterator acquirement
-    template< typename T >
-    inline typename reduced_list< T >::iterator reduced_list< T >::begin()
-    {
-        return m_Container.begin();
-    }
-    template< typename T >
-    inline typename reduced_list< T >::iterator reduced_list< T >::end()
-    {
-        return m_Container.end();
-    }
-    template< typename T >
-    inline typename reduced_list< T >::const_iterator reduced_list< T >::begin() const
-    {
-        return m_Container.begin();
-    }
-    template< typename T >
-    inline typename reduced_list< T >::const_iterator reduced_list< T >::end() const
-    {
-        return m_Container.end();
-    }
-
-    //! Size accessor
-    template< typename T >
-    inline typename reduced_list< T >::size_type reduced_list< T >::size() const
-    {
-        return m_Size;
-    }
-    //! Empty checker
-    template< typename T >
-    inline bool reduced_list< T >::empty() const { return (m_Size == 0); }
-
     //! Clears the container
     template< typename T >
     inline void reduced_list< T >::clear()
     {
         m_Container.clear();
         m_Size = 0;
-    }
-
-    //! Swaps two containers
-    template< typename T >
-    inline void reduced_list< T >::swap(reduced_list& that)
-    {
-        using std::swap;
-        m_Container.swap(that.m_Container);
-        swap(m_Size, that.m_Size);
     }
 
     //  Insertion
@@ -380,8 +339,6 @@ void basic_attribute_set< CharT >::clear()
 
 //! Explicitly instantiate container implementation
 namespace aux {
-    template class reduced_list< unordered_multimap_facade< attribute_set_descr< char > >::node >;
-    template class reduced_list< unordered_multimap_facade< attribute_set_descr< wchar_t > >::node >;
     template class unordered_multimap_facade< attribute_set_descr< char > >;
     template class unordered_multimap_facade< attribute_set_descr< wchar_t > >;
 } // namespace aux

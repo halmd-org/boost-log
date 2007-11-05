@@ -54,32 +54,6 @@ namespace aux {
         return *this;
     }
 
-    //  Iterator acquirement
-    template< typename T >
-    inline typename reduced_vector< T >::iterator reduced_vector< T >::begin() { return m_pBegin; }
-    template< typename T >
-    inline typename reduced_vector< T >::iterator reduced_vector< T >::end() { return m_pEnd; }
-    template< typename T >
-    inline typename reduced_vector< T >::const_iterator reduced_vector< T >::begin() const { return m_pBegin; }
-    template< typename T >
-    inline typename reduced_vector< T >::const_iterator reduced_vector< T >::end() const { return m_pEnd; }
-
-    //  Accessors
-    template< typename T >
-    inline typename reduced_vector< T >::size_type reduced_vector< T >::size() const { return (m_pEnd - m_pBegin); }
-    template< typename T >
-    inline bool reduced_vector< T >::empty() const { return (size() == 0); }
-
-    //! Swaps two containers
-    template< typename T >
-    inline void reduced_vector< T >::swap(reduced_vector& that)
-    {
-        using std::swap;
-        swap(m_pBegin, that.m_pBegin);
-        swap(m_pEnd, that.m_pEnd);
-        swap(m_pEOS, that.m_pEOS);
-    }
-
     //! Storage reservation
     template< typename T >
     inline void reduced_vector< T >::reserve(size_type n)
@@ -120,10 +94,10 @@ basic_attribute_values_view< CharT >& basic_attribute_values_view< CharT >::oper
 {
     if (this != &that)
     {
-		basic_attribute_values_view tmp(that);
-		this->swap(tmp);
+        basic_attribute_values_view tmp(that);
+        this->swap(tmp);
     }
-	return *this;
+    return *this;
 }
 
 //! The constructor adopts three attribute sets to the view
@@ -176,8 +150,6 @@ basic_attribute_values_view< CharT >::basic_attribute_values_view(
 
 //! Explicitly instantiate container implementation
 namespace aux {
-    template class reduced_vector< unordered_multimap_facade< attribute_values_view_descr< char > >::node >;
-    template class reduced_vector< unordered_multimap_facade< attribute_values_view_descr< wchar_t > >::node >;
     template class unordered_multimap_facade< attribute_values_view_descr< char > >;
     template class unordered_multimap_facade< attribute_values_view_descr< wchar_t > >;
 } // namespace aux
