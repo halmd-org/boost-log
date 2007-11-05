@@ -37,50 +37,44 @@ namespace aux {
 
     //! A wrapper around std::list to cache the size of the container
     template< typename T >
-    class size_caching_list :
-        private std::list< T >
+    class reduced_list
     {
-        //! Base type
-        typedef std::list< T > base_type;
+        //! Container type
+        typedef std::list< T > container_type;
 
     public:
         //  Standard typedefs
-        typedef typename base_type::value_type value_type;
-        typedef typename base_type::pointer pointer;
-        typedef typename base_type::const_pointer const_pointer;
-        typedef typename base_type::reference reference;
-        typedef typename base_type::const_reference const_reference;
-        typedef typename base_type::size_type size_type;
-        typedef typename base_type::difference_type difference_type;
-        typedef typename base_type::allocator_type allocator_type;
-        typedef typename base_type::iterator iterator;
-        typedef typename base_type::const_iterator const_iterator;
-        typedef typename base_type::reverse_iterator reverse_iterator;
-        typedef typename base_type::const_reverse_iterator const_reverse_iterator;
+        typedef typename container_type::value_type value_type;
+        typedef typename container_type::pointer pointer;
+        typedef typename container_type::const_pointer const_pointer;
+        typedef typename container_type::reference reference;
+        typedef typename container_type::const_reference const_reference;
+        typedef typename container_type::size_type size_type;
+        typedef typename container_type::difference_type difference_type;
+        typedef typename container_type::allocator_type allocator_type;
+        typedef typename container_type::iterator iterator;
+        typedef typename container_type::const_iterator const_iterator;
 
     private:
+        //! Underlying container
+        container_type m_Container;
         //! Container size
         size_type m_Size;
 
     public:
         //! Default constructor
-        size_caching_list();
+        reduced_list();
         //! Copy constructor
-        size_caching_list(size_caching_list const& that);
-        //! Constructor from the range of values
-        template< typename IteratorT >
-        size_caching_list(IteratorT first, IteratorT last);
+        reduced_list(reduced_list const& that);
 
         //! Assignment
-        size_caching_list& operator= (size_caching_list const& that);
+        reduced_list& operator= (reduced_list const& that);
 
-        using base_type::begin;
-        using base_type::end;
-        using base_type::rbegin;
-        using base_type::rend;
-        using base_type::front;
-        using base_type::back;
-        using base_type::max_size;
+        //  Iterator acquirement
+        iterator begin();
+        iterator end();
+        const_iterator begin() const;
+        const_iterator end() const;
 
         //! Size accessor
         size_type size() const;
@@ -91,12 +85,10 @@ namespace aux {
         void clear();
 
         //! Swaps two containers
-        void swap(size_caching_list& that);
+        void swap(reduced_list& that);
 
         //  Insertion
         iterator insert(iterator pos, const_reference x);
-        template< typename IteratorT >
-        void insert(iterator pos, IteratorT first, IteratorT last);
 
         //  Erasure
         iterator erase(iterator pos);
@@ -108,16 +100,13 @@ namespace aux {
         void pop_front();
         void pop_back();
 
-        //  Assign, resize, etc.
+        //! Resize
         void resize(size_type new_size, const_reference x);
-        void assign(size_type n, const_reference val);
-        template< typename IteratorT >
-        void assign(IteratorT first, IteratorT last);
     };
 
     //! A free-standing swap for node container
     template< typename T >
-    inline void swap(size_caching_list< T >& left, size_caching_list< T >& right)
+    inline void swap(reduced_list< T >& left, reduced_list< T >& right)
     {
         left.swap(right);
     }
@@ -135,7 +124,7 @@ namespace aux {
         template< typename T >
         struct make_node_container
         {
-            typedef size_caching_list< T > type;
+            typedef reduced_list< T > type;
         };
     };
 

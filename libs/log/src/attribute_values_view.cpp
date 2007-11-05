@@ -176,6 +176,8 @@ basic_attribute_values_view< CharT >::basic_attribute_values_view(
 
 //! Explicitly instantiate container implementation
 namespace aux {
+    template class reduced_vector< unordered_multimap_facade< attribute_values_view_descr< char > >::node >;
+    template class reduced_vector< unordered_multimap_facade< attribute_values_view_descr< wchar_t > >::node >;
     template class unordered_multimap_facade< attribute_values_view_descr< char > >;
     template class unordered_multimap_facade< attribute_values_view_descr< wchar_t > >;
 } // namespace aux
