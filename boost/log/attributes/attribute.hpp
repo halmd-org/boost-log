@@ -35,13 +35,43 @@ namespace log {
 //! A base class for an attribute value
 struct BOOST_LOG_NO_VTABLE attribute_value
 {
+private:
+    //! A simple type dispatcher to support the get method
+    template< typename T >
+    struct extractor :
+        public type_dispatcher,
+        public type_visitor< T >
+    {
+        //! Constructor
+        explicit extractor(optional< T const& >& res) : res_(res) {}
+        //! Returns itself if the value type matches the requested type
+        void* get_visitor(std::type_info const& type)
+        {
+            BOOST_LOG_ASSUME(this != 0);
+            if (type == typeid(T))
+                return static_cast< type_visitor< T >* >(this);
+            else
+                return 0;
+        }
+        //! Extracts the value
+        void visit(T const& value)
+        {
+            res_ = value;
+        }
+
+    private:
+        //! The reference to the extracted value
+        optional< T const& >& res_;
+    };
+
+public:
     virtual ~attribute_value() {}
 
     //! The method dispatches the value to the given object. It returns true if the
     //! object was capable to consume the real attribute value type and false otherwise.
     virtual bool dispatch(type_dispatcher& dispatcher) = 0;
 
-    //! A simplier way to get attribute value in case if one knows its exact type
+    //! A simpler way to get attribute value in case if one knows its exact type
     template< typename T >
     optional<
         typename add_reference<
@@ -62,29 +92,8 @@ struct BOOST_LOG_NO_VTABLE attribute_value
             >::type
         > result_type;
 
-        struct local_type_dispatcher :
-            public type_dispatcher,
-            public type_visitor< requested_type >
-        {
-            explicit local_type_dispatcher(result_type& res) : res_(res) {}
-            void* get_visitor(std::type_info const& type)
-            {
-                if (type == typeid(requested_type))
-                    return static_cast< type_visitor< requested_type >* >(this);
-                else
-                    return 0;
-            }
-            void visit(requested_type const& value)
-            {
-                res_ = value;
-            }
-
-        private:
-            result_type& res_;
-        };
-
         result_type res;
-        local_type_dispatcher disp(res);
+        extractor< requested_type > disp(res);
         this->dispatch(disp);
         return res;
     }

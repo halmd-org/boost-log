@@ -35,6 +35,93 @@ class basic_attribute_values_view;
 
 namespace aux {
 
+    //! A wrapper around std::list to cache the size of the container
+    template< typename T >
+    class size_caching_list :
+        private std::list< T >
+    {
+        //! Base type
+        typedef std::list< T > base_type;
+
+    public:
+        //  Standard typedefs
+        typedef typename base_type::value_type value_type;
+        typedef typename base_type::pointer pointer;
+        typedef typename base_type::const_pointer const_pointer;
+        typedef typename base_type::reference reference;
+        typedef typename base_type::const_reference const_reference;
+        typedef typename base_type::size_type size_type;
+        typedef typename base_type::difference_type difference_type;
+        typedef typename base_type::allocator_type allocator_type;
+        typedef typename base_type::iterator iterator;
+        typedef typename base_type::const_iterator const_iterator;
+        typedef typename base_type::reverse_iterator reverse_iterator;
+        typedef typename base_type::const_reverse_iterator const_reverse_iterator;
+
+    private:
+        //! Container size
+        size_type m_Size;
+
+    public:
+        //! Default constructor
+        size_caching_list();
+        //! Copy constructor
+        size_caching_list(size_caching_list const& that);
+        //! Constructor from the range of values
+        template< typename IteratorT >
+        size_caching_list(IteratorT first, IteratorT last);
+
+        //! Assignment
+        size_caching_list& operator= (size_caching_list const& that);
+
+        using base_type::begin;
+        using base_type::end;
+        using base_type::rbegin;
+        using base_type::rend;
+        using base_type::front;
+        using base_type::back;
+        using base_type::max_size;
+
+        //! Size accessor
+        size_type size() const;
+        //! Empty checker
+        bool empty() const;
+
+        //! Clears the container
+        void clear();
+
+        //! Swaps two containers
+        void swap(size_caching_list& that);
+
+        //  Insertion
+        iterator insert(iterator pos, const_reference x);
+        template< typename IteratorT >
+        void insert(iterator pos, IteratorT first, IteratorT last);
+
+        //  Erasure
+        iterator erase(iterator pos);
+        iterator erase(iterator first, iterator last);
+
+        //  Push/pop front/back
+        void push_front(const_reference x);
+        void push_back(const_reference x);
+        void pop_front();
+        void pop_back();
+
+        //  Assign, resize, etc.
+        void resize(size_type new_size, const_reference x);
+        void assign(size_type n, const_reference val);
+        template< typename IteratorT >
+        void assign(IteratorT first, IteratorT last);
+    };
+
+    //! A free-standing swap for node container
+    template< typename T >
+    inline void swap(size_caching_list< T >& left, size_caching_list< T >& right)
+    {
+        left.swap(right);
+    }
+
     //! A value descriptor for unordered_multimap_facade
     template< typename CharT >
     struct attribute_set_descr
@@ -48,159 +135,9 @@ namespace aux {
         template< typename T >
         struct make_node_container
         {
-            //! A wrapper around std::list to cache the size of the container
-            class type :
-                private std::list< T >
-            {
-                //! Base type
-                typedef std::list< T > base_type;
-
-            public:
-                //  Standard typedefs
-                typedef typename base_type::value_type value_type;
-                typedef typename base_type::pointer pointer;
-                typedef typename base_type::const_pointer const_pointer;
-                typedef typename base_type::reference reference;
-                typedef typename base_type::const_reference const_reference;
-                typedef typename base_type::size_type size_type;
-                typedef typename base_type::difference_type difference_type;
-                typedef typename base_type::allocator_type allocator_type;
-                typedef typename base_type::iterator iterator;
-                typedef typename base_type::const_iterator const_iterator;
-                typedef typename base_type::reverse_iterator reverse_iterator;
-                typedef typename base_type::const_reverse_iterator const_reverse_iterator;
-
-            private:
-                //! Container size
-                size_type m_Size;
-
-            public:
-                //! Default constructor
-                type() : m_Size(0) {}
-                //! Copy constructor
-                type(type const& that) : base_type(static_cast< base_type const& >(that)), m_Size(that.m_Size) {}
-                //! �onstructor from the range of values
-                template< typename IteratorT >
-                type(IteratorT first, IteratorT last) : m_Size(0)
-                {
-                    this->insert(this->end(), first, last);
-                }
-
-                //! Assignment
-                type& operator= (type const& that)
-                {
-                    base_type::operator= (static_cast< base_type const& >(that));
-                    m_Size = that.m_Size;
-                    return *this;
-                }
-
-                using base_type::begin;
-                using base_type::end;
-                using base_type::rbegin;
-                using base_type::rend;
-                using base_type::front;
-                using base_type::back;
-                using base_type::max_size;
-
-                //! Size accessor
-                size_type size() const { return m_Size; }
-                //! Empty checker
-                bool empty() const { return (m_Size == 0); }
-
-                //! Clears the container
-                void clear()
-                {
-                    base_type::clear();
-                    m_Size = 0;
-                }
-
-                //! Swaps two containers
-                void swap(type& that)
-                {
-                    using std::swap;
-                    base_type::swap(static_cast< base_type& >(that));
-                    swap(m_Size, that.m_Size);
-                }
-
-                //  Insertion
-                iterator insert(iterator pos, const_reference x)
-                {
-                    iterator it = base_type::insert(pos, x);
-                    ++m_Size;
-                    return it;
-                }
-                template< typename IteratorT >
-                void insert(iterator pos, IteratorT first, IteratorT last)
-                {
-                    for (; first != last; ++first)
-                        this->insert(pos, *first);
-                }
-
-                //  Erasure
-                iterator erase(iterator pos)
-                {
-                    iterator it = base_type::erase(pos);
-                    --m_Size;
-                    return it;
-                }
-                iterator erase(iterator first, iterator last)
-                {
-                    while (first != last)
-                        this->erase(first++);
-                    return last;
-                }
-
-                //  Push/pop front/back
-                void push_front(const_reference x)
-                {
-                    base_type::push_front(x);
-                    ++m_Size;
-                }
-                void push_back(const_reference x)
-                {
-                    base_type::push_back(x);
-                    ++m_Size;
-                }
-                void pop_front()
-                {
-                    base_type::pop_front();
-                    --m_Size;
-                }
-                void pop_back()
-                {
-                    base_type::pop_back();
-                    --m_Size;
-                }
-
-                //  Assign, resize, etc.
-                void resize(size_type new_size, const_reference x)
-                {
-                    base_type::resize(new_size, x);
-                    m_Size = new_size;
-                }
-                void assign(size_type n, const_reference val)
-                {
-                    base_type::assign(n, val);
-                    m_Size = n;
-                }
-                template< typename IteratorT >
-                void assign(IteratorT first, IteratorT last)
-                {
-                    type tmp(first, last);
-                    this->swap(tmp);
-                }
-            };
+            typedef size_caching_list< T > type;
         };
     };
-
-    //! A free-standing swap for node container
-    template< typename CharT, typename T >
-    inline void swap(
-        typename attribute_set_descr< CharT >::BOOST_NESTED_TEMPLATE make_node_container< T >::type& left,
-        typename attribute_set_descr< CharT >::BOOST_NESTED_TEMPLATE make_node_container< T >::type& right)
-    {
-        left.swap(right);
-    }
 
 } // namespace aux
 

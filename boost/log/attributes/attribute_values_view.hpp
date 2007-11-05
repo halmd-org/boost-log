@@ -19,9 +19,7 @@
 #ifndef BOOST_LOG_ATTRIBUTE_VALUES_VIEW_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTE_VALUES_VIEW_HPP_INCLUDED_
 
-#include <new>
 #include <memory>
-#include <cassert>
 #include <boost/shared_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/slim_string.hpp>
@@ -34,6 +32,72 @@ namespace boost {
 namespace log {
 
 namespace aux {
+
+    //! A simple vector-like container that does not require value_type to be assignable
+    template< typename T >
+    class reduced_vector :
+        private std::allocator< T >
+    {
+    public:
+        //  Standard typedefs
+        typedef std::allocator< T > allocator_type;
+        typedef typename allocator_type::value_type value_type;
+        typedef typename allocator_type::pointer pointer;
+        typedef typename allocator_type::const_pointer const_pointer;
+        typedef typename allocator_type::reference reference;
+        typedef typename allocator_type::const_reference const_reference;
+        typedef typename allocator_type::size_type size_type;
+        typedef typename allocator_type::difference_type difference_type;
+        typedef pointer iterator;
+        typedef const_pointer const_iterator;
+
+    private:
+        //! Pointer to the beginning of the storage
+        pointer m_pBegin;
+        //! Pointer to the after-the-last element
+        pointer m_pEnd;
+        //! Pointer to the end of storage
+        pointer m_pEOS;
+
+    public:
+        //  Structors
+        reduced_vector();
+        reduced_vector(reduced_vector const& that);
+        ~reduced_vector();
+
+        //! Assignment
+        reduced_vector& operator= (reduced_vector const& that);
+
+        //  Iterator acquirement
+        iterator begin();
+        iterator end();
+        const_iterator begin() const;
+        const_iterator end() const;
+
+        //  Accessors
+        size_type size() const;
+        bool empty() const;
+
+        //! Swaps two containers
+        void swap(reduced_vector& that);
+
+        //! Storage reservation
+        void reserve(size_type n);
+
+        //! Appends a new value to the end of the container
+        void push_back(const_reference x);
+
+        //! The method extracts attribute values and arranges them in the container
+        template< typename IteratorT >
+        void adopt_nodes(IteratorT& it, IteratorT end, unsigned char HTIndex);
+    };
+
+    //! A free-standing swap for node container
+    template< typename T >
+    inline void swap(reduced_vector< T >& left, reduced_vector< T >& right)
+    {
+        left.swap(right);
+    }
 
     //! A value descriptor for unordered_multimap_facade
     template< typename CharT >
@@ -48,114 +112,9 @@ namespace aux {
         template< typename T >
         struct make_node_container
         {
-            //! A simple vector-like container that does not require value_type to be assignable
-            class type :
-                private std::allocator< T >
-            {
-            public:
-                //  Standard typedefs
-                typedef std::allocator< T > allocator_type;
-                typedef typename allocator_type::value_type value_type;
-                typedef typename allocator_type::pointer pointer;
-                typedef typename allocator_type::const_pointer const_pointer;
-                typedef typename allocator_type::reference reference;
-                typedef typename allocator_type::const_reference const_reference;
-                typedef typename allocator_type::size_type size_type;
-                typedef typename allocator_type::difference_type difference_type;
-                typedef pointer iterator;
-                typedef const_pointer const_iterator;
-
-            private:
-                //! Pointer to the beginning of the storage
-                pointer m_pBegin;
-                //! Pointer to the after-the-last element
-                pointer m_pEnd;
-                //! Pointer to the end of storage
-                pointer m_pEOS;
-
-            public:
-                //  Structors
-                type() : m_pBegin(0), m_pEnd(0), m_pEOS(0) {}
-                type(type const& that)
-                    : m_pBegin(allocator_type::allocate(that.size())), m_pEnd(m_pBegin), m_pEOS(m_pBegin + that.size())
-                {
-                    for (const_iterator it = that.begin(); it != that.end(); ++it)
-                        this->push_back(*it); // won't throw
-                }
-                ~type()
-                {
-                    for (pointer p = m_pBegin; p != m_pEnd; ++p)
-                        p->~value_type();
-                    allocator_type::deallocate(m_pBegin, m_pEOS - m_pBegin);
-                }
-
-                //! Assignment
-                type& operator= (type const& that)
-                {
-                    type tmp(that);
-                    this->swap(tmp);
-                    return *this;
-                }
-
-                //  Iterator acquirement
-                iterator begin() { return m_pBegin; }
-                iterator end() { return m_pEnd; }
-                const_iterator begin() const { return m_pBegin; }
-                const_iterator end() const { return m_pEnd; }
-
-                //  Accessors
-                size_type size() const { return (m_pEnd - m_pBegin); }
-                bool empty() const { return (size() == 0); }
-
-                //! Swaps two containers
-                void swap(type& that)
-                {
-                    using std::swap;
-                    swap(m_pBegin, that.m_pBegin);
-                    swap(m_pEnd, that.m_pEnd);
-                    swap(m_pEOS, that.m_pEOS);
-                }
-
-                //! Storage reservation
-                void reserve(size_type n)
-                {
-                    // Should be called once, before any insertions
-                    assert(m_pBegin == 0);
-                    m_pBegin = m_pEnd = allocator_type::allocate(n);
-                    m_pEOS = m_pBegin + n;
-                }
-
-                //! Appends a new value to the end of the container
-                void push_back(const_reference x)
-                {
-                    // Should be called after reservation
-                    assert(m_pBegin != 0);
-                    assert(m_pEnd < m_pEOS);
-                    new (m_pEnd) value_type(x);
-                    ++m_pEnd;
-                }
-
-                //! The method extracts attribute values and arranges them in the container
-                template< typename IteratorT >
-                void adopt_nodes(IteratorT& it, IteratorT end, unsigned char HTIndex)
-                {
-                    for (; it != end && it->m_HTIndex == HTIndex; ++it, ++m_pEnd)
-                    {
-                        new (m_pEnd) value_type(it->first, it->second->get_value(), HTIndex);
-                    }
-                }
-            };
+            typedef reduced_vector< T > type;
         };
     };
-
-    //! A free-standing swap for node container
-    template< typename CharT, typename T >
-    inline void swap(
-        typename attribute_values_view_descr< CharT >::BOOST_NESTED_TEMPLATE make_node_container< T >::type& left,
-        typename attribute_values_view_descr< CharT >::BOOST_NESTED_TEMPLATE make_node_container< T >::type& right)
-    {
-        left.swap(right);
-    }
 
 } // namespace aux
 

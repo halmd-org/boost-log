@@ -12,6 +12,7 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#include <new>
 #include <cassert>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include "unordered_mmap_facade.hpp"
@@ -19,6 +20,99 @@
 namespace boost {
 
 namespace log {
+
+namespace aux {
+
+    //! Default constructor
+    template< typename T >
+    inline reduced_vector< T >::reduced_vector() : m_pBegin(0), m_pEnd(0), m_pEOS(0) {}
+
+    //! Copy constructor
+    template< typename T >
+    inline reduced_vector< T >::reduced_vector(reduced_vector const& that)
+        : m_pBegin(allocator_type::allocate(that.size())), m_pEnd(m_pBegin), m_pEOS(m_pBegin + that.size())
+    {
+        for (const_iterator it = that.begin(); it != that.end(); ++it)
+            this->push_back(*it); // won't throw
+    }
+
+    //! Destructor
+    template< typename T >
+    inline reduced_vector< T >::~reduced_vector()
+    {
+        for (pointer p = m_pBegin; p != m_pEnd; ++p)
+            p->~value_type();
+        allocator_type::deallocate(m_pBegin, m_pEOS - m_pBegin);
+    }
+
+    //! Assignment
+    template< typename T >
+    inline reduced_vector< T >& reduced_vector< T >::operator= (reduced_vector const& that)
+    {
+        reduced_vector tmp(that);
+        this->swap(tmp);
+        return *this;
+    }
+
+    //  Iterator acquirement
+    template< typename T >
+    inline typename reduced_vector< T >::iterator reduced_vector< T >::begin() { return m_pBegin; }
+    template< typename T >
+    inline typename reduced_vector< T >::iterator reduced_vector< T >::end() { return m_pEnd; }
+    template< typename T >
+    inline typename reduced_vector< T >::const_iterator reduced_vector< T >::begin() const { return m_pBegin; }
+    template< typename T >
+    inline typename reduced_vector< T >::const_iterator reduced_vector< T >::end() const { return m_pEnd; }
+
+    //  Accessors
+    template< typename T >
+    inline typename reduced_vector< T >::size_type reduced_vector< T >::size() const { return (m_pEnd - m_pBegin); }
+    template< typename T >
+    inline bool reduced_vector< T >::empty() const { return (size() == 0); }
+
+    //! Swaps two containers
+    template< typename T >
+    inline void reduced_vector< T >::swap(reduced_vector& that)
+    {
+        using std::swap;
+        swap(m_pBegin, that.m_pBegin);
+        swap(m_pEnd, that.m_pEnd);
+        swap(m_pEOS, that.m_pEOS);
+    }
+
+    //! Storage reservation
+    template< typename T >
+    inline void reduced_vector< T >::reserve(size_type n)
+    {
+        // Should be called once, before any insertions
+        assert(m_pBegin == 0);
+        m_pBegin = m_pEnd = allocator_type::allocate(n);
+        m_pEOS = m_pBegin + n;
+    }
+
+    //! Appends a new value to the end of the container
+    template< typename T >
+    inline void reduced_vector< T >::push_back(const_reference x)
+    {
+        // Should be called after reservation
+        assert(m_pBegin != 0);
+        assert(m_pEnd < m_pEOS);
+        new (m_pEnd) value_type(x);
+        ++m_pEnd;
+    }
+
+    //! The method extracts attribute values and arranges them in the container
+    template< typename T >
+    template< typename IteratorT >
+    inline void reduced_vector< T >::adopt_nodes(IteratorT& it, IteratorT end, unsigned char HTIndex)
+    {
+        for (; it != end && it->m_HTIndex == HTIndex; ++it, ++m_pEnd)
+        {
+            new (m_pEnd) value_type(it->first, it->second->get_value(), HTIndex);
+        }
+    }
+
+} // namespace aux
 
 //! Assignment
 template< typename CharT >

@@ -76,6 +76,15 @@ public:
     typedef std::basic_ostream< char_type > stream_type;
 
 private:
+    //! A simple scope guard to clear the formatted record storage
+    struct clear_invoker
+    {
+        string_type& m_T;
+        explicit clear_invoker(string_type& t) : m_T(t) {}
+        ~clear_invoker() { m_T.clear(); }
+    };
+
+private:
     //! Formatted log record storage
     string_type m_FormattedRecord;
     //! Stream buffer to fill the storage
@@ -117,12 +126,6 @@ public:
     void write_message(attribute_values_view const& attributes, string_type const& message)
     {
         // Scope guard to automatically clear the storage
-        struct clear_invoker
-        {
-            string_type& m_T;
-            explicit clear_invoker(string_type& t) : m_T(t) {}
-            ~clear_invoker() { m_T.clear(); }
-        };
         clear_invoker _(m_FormattedRecord);
 
         // Perform the formatting

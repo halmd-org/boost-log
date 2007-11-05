@@ -19,6 +19,142 @@ namespace boost {
 
 namespace log {
 
+namespace aux {
+
+    //! Default constructor
+    template< typename T >
+    inline size_caching_list< T >::size_caching_list() : m_Size(0) {}
+    //! Copy constructor
+    template< typename T >
+    inline size_caching_list< T >::size_caching_list(size_caching_list const& that)
+        : base_type(static_cast< base_type const& >(that)), m_Size(that.m_Size)
+    {
+    }
+    //! Constructor from the range of values
+    template< typename T >
+    template< typename IteratorT >
+    inline size_caching_list< T >::size_caching_list(IteratorT first, IteratorT last) : m_Size(0)
+    {
+        this->insert(this->end(), first, last);
+    }
+
+    //! Assignment
+    template< typename T >
+    inline size_caching_list< T >& size_caching_list< T >::operator= (size_caching_list const& that)
+    {
+        base_type::operator= (static_cast< base_type const& >(that));
+        m_Size = that.m_Size;
+        return *this;
+    }
+
+    //! Size accessor
+    template< typename T >
+    inline typename size_caching_list< T >::size_type size_caching_list< T >::size() const
+    {
+        return m_Size;
+    }
+    //! Empty checker
+    template< typename T >
+    inline bool size_caching_list< T >::empty() const { return (m_Size == 0); }
+
+    //! Clears the container
+    template< typename T >
+    inline void size_caching_list< T >::clear()
+    {
+        base_type::clear();
+        m_Size = 0;
+    }
+
+    //! Swaps two containers
+    template< typename T >
+    inline void size_caching_list< T >::swap(size_caching_list& that)
+    {
+        using std::swap;
+        base_type::swap(static_cast< base_type& >(that));
+        swap(m_Size, that.m_Size);
+    }
+
+    //  Insertion
+    template< typename T >
+    inline typename size_caching_list< T >::iterator size_caching_list< T >::insert(iterator pos, const_reference x)
+    {
+        iterator it = base_type::insert(pos, x);
+        ++m_Size;
+        return it;
+    }
+    template< typename T >
+    template< typename IteratorT >
+    inline void size_caching_list< T >::insert(iterator pos, IteratorT first, IteratorT last)
+    {
+        for (; first != last; ++first)
+            this->insert(pos, *first);
+    }
+
+    //  Erasure
+    template< typename T >
+    inline typename size_caching_list< T >::iterator size_caching_list< T >::erase(iterator pos)
+    {
+        iterator it = base_type::erase(pos);
+        --m_Size;
+        return it;
+    }
+    template< typename T >
+    inline typename size_caching_list< T >::iterator size_caching_list< T >::erase(iterator first, iterator last)
+    {
+        while (first != last)
+            this->erase(first++);
+        return last;
+    }
+
+    //  Push/pop front/back
+    template< typename T >
+    inline void size_caching_list< T >::push_front(const_reference x)
+    {
+        base_type::push_front(x);
+        ++m_Size;
+    }
+    template< typename T >
+    inline void size_caching_list< T >::push_back(const_reference x)
+    {
+        base_type::push_back(x);
+        ++m_Size;
+    }
+    template< typename T >
+    inline void size_caching_list< T >::pop_front()
+    {
+        base_type::pop_front();
+        --m_Size;
+    }
+    template< typename T >
+    inline void size_caching_list< T >::pop_back()
+    {
+        base_type::pop_back();
+        --m_Size;
+    }
+
+    //  Assign, resize, etc.
+    template< typename T >
+    inline void size_caching_list< T >::resize(size_type new_size, const_reference x)
+    {
+        base_type::resize(new_size, x);
+        m_Size = new_size;
+    }
+    template< typename T >
+    inline void size_caching_list< T >::assign(size_type n, const_reference val)
+    {
+        base_type::assign(n, val);
+        m_Size = n;
+    }
+    template< typename T >
+    template< typename IteratorT >
+    inline void size_caching_list< T >::assign(IteratorT first, IteratorT last)
+    {
+        size_caching_list tmp(first, last);
+        this->swap(tmp);
+    }
+
+} // namespace aux
+
 //! Assignment
 template< typename CharT >
 basic_attribute_set< CharT >&

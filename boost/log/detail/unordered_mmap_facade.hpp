@@ -206,6 +206,34 @@ namespace aux {
             return const_iterator(const_cast< unordered_multimap_facade* >(this)->find_impl(key, traits_type::length(key)));
         }
 
+        //! Alternative lookup syntax
+        mapped_type operator[] (key_type const& key) const
+        {
+            const_iterator it = this->find(key);
+            if (it != this->end())
+                return it->second;
+            else
+                return mapped_type();
+        }
+        //! Alternative lookup syntax
+        mapped_type operator[] (string_type const& key) const
+        {
+            const_iterator it = this->find(key);
+            if (it != this->end())
+                return it->second;
+            else
+                return mapped_type();
+        }
+        //! Alternative lookup syntax
+        mapped_type operator[] (const char_type* key) const
+        {
+            const_iterator it = this->find(key);
+            if (it != this->end())
+                return it->second;
+            else
+                return mapped_type();
+        }
+
         //! The method returns the number of the same named attributes in the container
         size_type count(key_type const& key) const
         {
