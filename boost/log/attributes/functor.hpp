@@ -35,7 +35,7 @@ namespace log {
 
 namespace attributes {
 
-//! A class of an attribute that counts an integral value
+//! A class of an attribute that acquires its value from a third-party functor
 template< typename R, typename T >
 class functor :
     public attribute
@@ -46,19 +46,10 @@ public:
 
 private:
     //! Attribute value type
-    class functor_result_value :
-        public basic_attribute_value< R >
-    {
-        //! Base class type
-        typedef basic_attribute_value< R > base_type;
-
-    public:
-        //! Constructor
-        explicit functor_result_value(held_type const& fun) : base_type(fun()) {}
-    };
+    typedef basic_attribute_value< R > functor_result_value;
 
 private:
-    //! Initial value
+    //! Functor that returns attribute values
     const held_type m_Functor;
 
 public:

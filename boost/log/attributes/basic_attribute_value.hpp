@@ -34,8 +34,6 @@ class basic_attribute_value :
     public attribute_value
 {
 private:
-    //! Underlying allocator type
-    typedef std::allocator< basic_attribute_value > underlying_allocator;
     //! Value type
     typedef T held_type;
 

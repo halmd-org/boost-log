@@ -44,6 +44,10 @@ public:
     typedef T held_type;
 
 private:
+    //! Counter value type
+    typedef basic_attribute_value< held_type > counter_value;
+
+private:
     //! Initial value
     const held_type m_InitialValue;
     //! The counter
@@ -60,9 +64,9 @@ public:
 
         shared_ptr< attribute_value > p;
         if (fDescending)
-            p.reset(new basic_attribute_value< held_type >(m_InitialValue + NextValue));
+            p.reset(new counter_value(m_InitialValue + NextValue));
         else
-            p.reset(new basic_attribute_value< held_type >(m_InitialValue - NextValue));
+            p.reset(new counter_value(m_InitialValue - NextValue));
 
         return p;
     }

@@ -21,7 +21,6 @@
 
 #include <vector>
 #include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <boost/current_function.hpp>
 #include <boost/detail/workaround.hpp>
 #include <boost/preprocessor/cat.hpp>
@@ -46,9 +45,7 @@ namespace attributes {
 //! A class of an attribute that holds stack of named scopes of the current thread
 template< typename CharT >
 class BOOST_LOG_EXPORT basic_named_scope :
-    public attribute,
-    public attribute_value,
-    public enable_shared_from_this< basic_named_scope< CharT > >
+    public attribute
 {
 public:
     //! Character type
@@ -92,10 +89,6 @@ public:
 
     //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value();
-
-    //! The method dispatches the value to the given object. It returns true if the
-    //! object was capable to consume the real attribute value type and false otherwise.
-    bool dispatch(type_dispatcher& dispatcher);
 
     //! The method pushes the scope to the stack
     static void push_scope(scope_name const& name);

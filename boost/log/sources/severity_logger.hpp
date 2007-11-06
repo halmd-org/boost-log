@@ -21,10 +21,9 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/empty_deleter.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sources/basic_logger.hpp>
-#include <boost/log/attributes/attribute.hpp>
+#include <boost/log/attributes/mutable_constant.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -36,62 +35,7 @@ namespace boost {
 
 namespace log {
 
-template< typename >
-class basic_severity_logger;
-
 namespace aux {
-
-    //! Severity attribute type
-    class severity_attribute :
-        public attribute,
-        public attribute_value,
-        public enable_shared_from_this< severity_attribute >
-    {
-    public:
-        //! A severity value type
-        typedef int held_type;
-
-    private:
-        //! The default severity
-        held_type m_Default;
-        //! The actual severity
-        held_type m_Value;
-
-    public:
-        //! Constructor
-        severity_attribute(held_type default_svty = 0)
-            : m_Default(default_svty), m_Value(default_svty)
-        {
-        }
-
-        //! The method returns the actual attribute value. It must not return NULL.
-        shared_ptr< attribute_value > get_value()
-        {
-            return this->shared_from_this();
-        }
-
-        //! The method dispatches the value to the given object. It returns true if the
-        //! object was capable to consume the real attribute value type and false otherwise.
-        bool dispatch(type_dispatcher& dispatcher)
-        {
-            register type_visitor< held_type >* visitor =
-                dispatcher.get_visitor< held_type >();
-            if (visitor)
-            {
-                visitor->visit(m_Value);
-                return true;
-            }
-            else
-                return false;
-        }
-
-        //! The method returns the actual severity
-        held_type get() const { return m_Value; }
-        //! The method sets the severity
-        void set(held_type svty) { m_Value = svty; }
-        //! The method resets the severity to the default value
-        void reset() { m_Value = m_Default; }
-    };
 
     //! A helper traits to get severity attribute name constant in the proper type
     template< typename >
@@ -125,6 +69,9 @@ public:
     //! Output stream type
     typedef typename base_type::ostream_type ostream_type;
 
+    //! Severity attribute type
+    typedef attributes::mutable_constant< int > severity_attribute;
+
 protected:
     //! Record pump type
     typedef typename base_type::record_pump_type::BOOST_NESTED_TEMPLATE rebind<
@@ -133,12 +80,14 @@ protected:
 
 private:
     //! Severity attribute
-    aux::severity_attribute m_Severity;
+    severity_attribute m_Severity;
+    //! Default severity
+    severity_attribute::held_type m_DefaultSeverity;
 
 public:
     //! Constructor
-    basic_severity_logger(aux::severity_attribute::held_type default_svty = 0)
-        : m_Severity(default_svty)
+    basic_severity_logger(severity_attribute::held_type default_svty = 0)
+        : m_Severity(default_svty), m_DefaultSeverity(default_svty)
     {
         base_type::add_attribute(
             aux::severity_attribute_name< char_type >::get(),
@@ -150,18 +99,19 @@ public:
     {
         base_type::operator= (static_cast< base_type const& >(that));
         m_Severity = that.m_Severity;
+        m_DefaultSeverity = that.m_DefaultSeverity;
         return *this;
     }
 
     using base_type::open_record;
 
     //! The method allows to assign a severity to the opening record
-    bool open_record(aux::severity_attribute::held_type svty)
+    bool open_record(severity_attribute::held_type svty)
     {
-        m_Severity.set(svty);
+        m_Severity.set_value(svty);
         const bool Result = base_type::open_record();
         if (!Result)
-            m_Severity.reset();
+            m_Severity.set_value(m_DefaultSeverity);
 
         return Result;
     }
@@ -169,7 +119,7 @@ public:
     void push_record()
     {
         base_type::push_record();
-        m_Severity.reset();
+        m_Severity.set_value(m_DefaultSeverity);
     }
 
     //! Logging stream getter
@@ -180,9 +130,11 @@ public:
 
 protected:
     //! Severity attribute accessor
-    aux::severity_attribute& severity() { return m_Severity; }
+    severity_attribute& severity() { return m_Severity; }
     //! Severity attribute accessor
-    aux::severity_attribute const& severity() const { return m_Severity; }
+    severity_attribute const& severity() const { return m_Severity; }
+    //! Default severity value getter
+    severity_attribute::held_type default_severity() const { return m_DefaultSeverity; }
 };
 
 typedef basic_severity_logger< char > severity_logger;

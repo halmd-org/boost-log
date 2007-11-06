@@ -14,9 +14,11 @@
 
 #include <memory>
 #include <vector>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/thread/tss.hpp>
 #include <boost/thread/once.hpp>
 #include <boost/log/attributes/named_scope.hpp>
+#include <boost/log/attributes/basic_attribute_value.hpp>
 
 namespace boost {
 
@@ -91,24 +93,12 @@ basic_named_scope< CharT >::basic_named_scope()
 template< typename CharT >
 shared_ptr< attribute_value > basic_named_scope< CharT >::get_value()
 {
-    return this->shared_from_this();
-}
-
-//! The method dispatches the value to the given object
-template< typename CharT >
-bool basic_named_scope< CharT >::dispatch(type_dispatcher& dispatcher)
-{
-    scope_stack& s = pImpl->get_scope_stack();
-
-    register type_visitor< scope_stack >* visitor =
-        dispatcher.get_visitor< scope_stack >();
-    if (visitor)
-    {
-        visitor->visit(s);
-        return true;
-    }
-    else
-        return false;
+    // We need the copy since the attribute value may get passed to another thread
+    // in case of asynchronous logging, and while being logged the thread may
+    // eventually change its scope and even finish. The copy is supposed to be
+    // cheap, since there are only pointers to string literals in the scope stack.
+    return shared_ptr< attribute_value >(
+        new basic_attribute_value< scope_stack >(pImpl->get_scope_stack()));
 }
 
 //! The method pushes the scope to the stack
