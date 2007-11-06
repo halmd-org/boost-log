@@ -1,0 +1,43 @@
+[library Boost.Log
+    [quickbook 1.3]
+    [authors [Semashev, Andrey], [Regini, Luca]]
+    [copyright 2007 Andrey Semashev]
+    [license
+        Distributed under the Boost Software License, Version 1.0.
+        (See accompanying file LICENSE_1_0.txt or copy at
+        [@http://www.boost.org/LICENSE_1_0.txt]).
+    ]
+    [id log]
+    [last-revision $Date: 2007-11-06 16:02:21 $]
+]
+
+[section:moti Motivation]
+
+[c++]
+
+Today applications grow rapidly, becoming complicated and difficult to test and debug. Most of the time applications run on a remote site, leaving the developer little chance to monitor its execution and figure out the reason of its failure, once it should happen. Moreover, even the local debugging may become problematic if the application behavior depends heavilly on some asynchronous third-party events, like device feedback or another process messages.
+
+This is where logging may help. The application should store all essential information of its run time to log, and once something goes wrong this information can be used to analyse program behavior and make necessary corrections. There are other useful applications of logging, such as gathering execution statistics and alarming (i.e. indicating that the application is experiencing some problems). These tasks have proven to be vital for many applications.
+
+This library aims to make logging significantly easier for the application developer. It provides a wide range of out-of-box tools, along with public interfaces ready to be used to extend the library. The main goals of the library are:
+
+* Simplicity. A small example code snippet should be enough to get the feel of the library and be ready to use its basic features.
+* Extensibility. A user should be able to extend library's functionality in ways of collecting and storing information into logs.
+* Performance. The library should make as least performance impact on the user's application as possible.
+
+[endsect]
+
+[section:defs Definitions]
+
+Here are definitions of some terms that will be used widely throughout the documentation:
+
+* Log record. A single pack of information, collected from the user's application, that is candidate to be put in log. In a simple case the log record will be represented as a line of text in the log file after being processed by the logging library.
+* Log attribute. An "attribute" is basically a piece of information of which the logging record consists. Attributes may have different types (integrals, strings and more complex, including user defined types). Some examples of attributes: current time stamp, file name, line number, current scope name, etc..
+* Log sink. A target, to which all log records are fed after being collected from user's application. It is sink's nature that defines where and how the log is going to be stored.
+* Log source. An entry point for user's application to put log records to. In a simple case it is an object (logger) which maintains a set of attributes that will form a log record upon user's request. Hovewer, one can surely create a source that would emit log records on some third-party events (for example, by intercepting another application's console output).
+* Log filter. A predicate that takes a log record and tells weither this record should be passed through or discarded.
+* Log formatter. A functor that forms up the final shape of the output. Some sinks, like binary logging sink, may not need it although almost any text-based sink would use a formatter to compose its output.
+* Logging core. The global entity that maintains connection between sources and sinks and applies filters to records. It is mainly used on the logging library initialization stage.
+* i18n. Internationalization. The ability to manipulate wide characters.
+
+[endsect]
