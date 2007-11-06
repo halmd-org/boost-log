@@ -8,7 +8,7 @@
         [@http://www.boost.org/LICENSE_1_0.txt]).
     ]
     [id log]
-    [last-revision $Date: 2007-11-06 16:02:21 $]
+    [last-revision $Date: 2007-11-06 16:06:57 $]
 ]
 
 [section:moti Motivation]
@@ -17,7 +17,7 @@
 
 Today applications grow rapidly, becoming complicated and difficult to test and debug. Most of the time applications run on a remote site, leaving the developer little chance to monitor its execution and figure out the reason of its failure, once it should happen. Moreover, even the local debugging may become problematic if the application behavior depends heavilly on some asynchronous third-party events, like device feedback or another process messages.
 
-This is where logging may help. The application should store all essential information of its run time to log, and once something goes wrong this information can be used to analyse program behavior and make necessary corrections. There are other useful applications of logging, such as gathering execution statistics and alarming (i.e. indicating that the application is experiencing some problems). These tasks have proven to be vital for many applications.
+This is where logging may help. The application should store all essential information of its run time to log, and once something goes wrong this information can be used to analyse program behavior and make necessary corrections. There are other useful applications of logging, such as gathering execution statistics and alarming (i.e. indicating that the application is experiencing some problems). These tasks have proven to be vital for many real-world industrial applications.
 
 This library aims to make logging significantly easier for the application developer. It provides a wide range of out-of-box tools, along with public interfaces ready to be used to extend the library. The main goals of the library are:
 
