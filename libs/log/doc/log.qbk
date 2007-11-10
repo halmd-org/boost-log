@@ -8,16 +8,16 @@
         [@http://www.boost.org/LICENSE_1_0.txt]).
     ]
     [id log]
-    [last-revision $Date: 2007-11-06 16:06:57 $]
+    [last-revision $Date: 2007-11-10 18:03:40 $]
 ]
-
-[section:moti Motivation]
 
 [c++]
 
-Today applications grow rapidly, becoming complicated and difficult to test and debug. Most of the time applications run on a remote site, leaving the developer little chance to monitor its execution and figure out the reason of its failure, once it should happen. Moreover, even the local debugging may become problematic if the application behavior depends heavilly on some asynchronous third-party events, like device feedback or another process messages.
+[section:moti Motivation]
 
-This is where logging may help. The application should store all essential information of its run time to log, and once something goes wrong this information can be used to analyse program behavior and make necessary corrections. There are other useful applications of logging, such as gathering execution statistics and alarming (i.e. indicating that the application is experiencing some problems). These tasks have proven to be vital for many real-world industrial applications.
+Today applications grow rapidly, becoming complicated and difficult to test and debug. Most of the time applications run on a remote site, leaving the developer little chance to monitor its execution and figure out the reason of its failure, once it should happen. Moreover, even the local debugging may become problematic if the application behavior depends heavilly on asynchronous third-party events, like device feedback or another process messages.
+
+This is where logging may help. The application stores all essential information of its run time to log, and once something goes wrong this information can be used to analyse program behavior and make necessary corrections. There are other very useful applications of logging, such as gathering statistics and alarming (i.e. indicating that the application is experiencing some problems). These tasks have proven to be vital for many real-world industrial applications.
 
 This library aims to make logging significantly easier for the application developer. It provides a wide range of out-of-box tools, along with public interfaces ready to be used to extend the library. The main goals of the library are:
 
@@ -32,12 +32,88 @@ This library aims to make logging significantly easier for the application devel
 Here are definitions of some terms that will be used widely throughout the documentation:
 
 * Log record. A single pack of information, collected from the user's application, that is candidate to be put in log. In a simple case the log record will be represented as a line of text in the log file after being processed by the logging library.
-* Log attribute. An "attribute" is basically a piece of information of which the logging record consists. Attributes may have different types (integrals, strings and more complex, including user defined types). Some examples of attributes: current time stamp, file name, line number, current scope name, etc..
+* Log attribute. An "attribute" is basically a piece of information of which the logging record consists. Attributes may have different types (integers, strings and more complex, including user defined types). Some examples of attributes: current time stamp, file name, line number, current scope name, etc..
 * Log sink. A target, to which all log records are fed after being collected from user's application. It is sink's nature that defines where and how the log is going to be stored.
 * Log source. An entry point for user's application to put log records to. In a simple case it is an object (logger) which maintains a set of attributes that will form a log record upon user's request. Hovewer, one can surely create a source that would emit log records on some third-party events (for example, by intercepting another application's console output).
 * Log filter. A predicate that takes a log record and tells weither this record should be passed through or discarded.
 * Log formatter. A functor that forms up the final shape of the output. Some sinks, like binary logging sink, may not need it although almost any text-based sink would use a formatter to compose its output.
 * Logging core. The global entity that maintains connection between sources and sinks and applies filters to records. It is mainly used on the logging library initialization stage.
 * i18n. Internationalization. The ability to manipulate wide characters.
+
+[endsect]
+
+
+[section:tutorial Tutorial]
+
+In this section we shall walk through the essential steps to get started with the library. After reading this part you should be able to initialize the library and add logging to your application. The code of this tutorial is also available in a single example resided in the `libs/log/examples/basic_usage` directory. You may feel free to play around with it, compile and see the result.
+
+For simplicity in the code snippets in this tutorial it shall be assumed that the following namespace aliases were defined:
+
+    namespace logging = boost::log;
+    namespace sinks = boost::log::sinks;
+    namespace fmt = boost::log::formatters;
+    namespace flt = boost::log::filters;
+
+[section:tutorial_1 Step 1: Picking sinks]
+
+The first thing you'll have to do is to decide where and how you want logs to be stored. In terms of the library you have to construct logging sinks and register them into the logging core. This should be done only once somewhere in the startup code of your application. For instance, registering a sink that would write logs into a text file may look like this:
+
+    // Construct the sink
+    typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
+    boost::shared_ptr< text_sink > pSink(new text_sink);
+
+    // Add a stream to write log to
+    boost::shared_ptr< std::ofstream > pStream(new std::ofstream("sample.log"));
+    pSink->locked_backend()->add_stream(pStream);
+
+    // Register the sink in the logging core
+    logging::logging_core::get()->add_sink(pSink);
+
+Ok, the first thing you may have noticed about sinks is that they are composed from two classes: the frontend and the backend. The frontend (which is the `synchronous_sink` class template in the snippet above) is responsible for various common tasks for all sinks, such as thread synchronization model and filtering. The backend (the `text_ostream_backend` class above) implements everything specific to the sink nature, text formatting and writing to a file being in this case. Every log record first gets to the frontend, which decides if it is going to be stored and, if it is, passes the record to the backend. There are a number of both frontends and backends provided by the library out of box that may be used with each other. This approach significantly reduces backends complexity (which is one of the most probable place of the library extension) and improves code reusability.
+
+The `synchronous_sink` class template above indicates that the sink is synchronous, that is, it allows several threads to log simultaneously and will block in case of contention. This means that the backend `text_ostream_backend` need not to worry about multithreading at all. There are two other sink frontends available out of box: `unlocked_sink` and `asynchronous_sink`.
+
+The `text_ostream_backend` class implements storing text records into STL-compatible streams. We have used a file stream above but we could have used any type of stream. For example, adding output to console could look as follows:
+
+    // We have to provide an empty deleter to avoid destroying the global stream
+    boost::shared_ptr< std::ostream > pStream(&std::clog, boost::empty_deleter());
+    pSink->locked_backend()->add_stream(pStream);
+
+The `text_ostream_backend` supports adding several streams. In that case its output will be duplicated to all added streams. This may be useful to duplicate output to console and file, since all the filtering, formatting and other overhead the library makes are done only once per record for the sink.
+
+The last thing worth noting here is that `locked_backend` member function call to access the sink backend. It is used to get a thread-safe access to the backend and is provided by all sink frontends. This function returns a smart-pointer to the backend and as long as it exists the backend is locked (which means even if another thread tries to log and the log record is passed to the sink, it will not be logged until you release the backend). The only exception is the `unlocked_sink` frontend which does not synchronize at all and simply returns an unlocked pointer to the backend.
+
+[endsect]
+
+[section:tutorial_2 Step 2: Creating loggers and writing logs]
+
+Now that we defined where the log is to be stored it's time to go on and try logging. In order to do this one has to create a logging source. This would be a logger object in our case and it is as simple as that:
+
+    logging::logger lg;
+
+Note that unlike sinks sources need not to be registered anywhere since they interact directly with logging core. Also note that [*logging sources are not thread-safe] and thus there should be a separate logger for each thread that writes logs. This is to improve library performance and scalability.
+
+To write a log record into a logger one could write something like this:
+
+    if (lg.open_record())
+        lg.strm() << "Hello world!";
+
+Here the `open_record` function call determines if the record to be constructed is going to be written by at least one sink. Filtering is applied at this stage. Then the `strm` function returns an object with a defined `operator <<` that can be used to form the logging record message. You may output to log everything that has a well-defined output operator to an STL stream.
+
+Of course, the above syntax can easily be wrapped into a macro and, in fact, users are encouraged to write their own macros instead of direct C++ logger interface usage. The log record above can be written like this:
+
+    BOOST_LOG(lg) << "Hello, World!";
+
+Looks a bit nicer, huh? The `BOOST_LOG` macro, along with other similar ones, is defined by the library. Having all that code written, compiled and executed you should be able to see the "Hello, World!" record in the "sample.log" file and/or on your console if you added the `clog` stream in the [link log.tutorial.tutorial_1 Step 1] of this tutorial.
+
+[endsect]
+
+[section:tutorial_3 Step 3: Getting deeper. Attributes.]
+
+Hey, all the fuss is just to have a string in the file, you say? That's right, you don't need a logging library to have something written into a file. But the library is capable of doing more: formatting and filtering are yet to come and these features are tightly coupled with the concept of attributes.
+
+
+
+[endsect]
 
 [endsect]
