@@ -8,7 +8,7 @@
         [@http://www.boost.org/LICENSE_1_0.txt]).
     ]
     [id log]
-    [last-revision $Date: 2007-11-10 18:03:40 $]
+    [last-revision $Date: 2007-11-11 18:34:46 $]
 ]
 
 [c++]
@@ -53,6 +53,7 @@ For simplicity in the code snippets in this tutorial it shall be assumed that th
     namespace sinks = boost::log::sinks;
     namespace fmt = boost::log::formatters;
     namespace flt = boost::log::filters;
+    namespace attrs = boost::log::attributes;
 
 [section:tutorial_1 Step 1: Picking sinks]
 
@@ -71,7 +72,7 @@ The first thing you'll have to do is to decide where and how you want logs to be
 
 Ok, the first thing you may have noticed about sinks is that they are composed from two classes: the frontend and the backend. The frontend (which is the `synchronous_sink` class template in the snippet above) is responsible for various common tasks for all sinks, such as thread synchronization model and filtering. The backend (the `text_ostream_backend` class above) implements everything specific to the sink nature, text formatting and writing to a file being in this case. Every log record first gets to the frontend, which decides if it is going to be stored and, if it is, passes the record to the backend. There are a number of both frontends and backends provided by the library out of box that may be used with each other. This approach significantly reduces backends complexity (which is one of the most probable place of the library extension) and improves code reusability.
 
-The `synchronous_sink` class template above indicates that the sink is synchronous, that is, it allows several threads to log simultaneously and will block in case of contention. This means that the backend `text_ostream_backend` need not to worry about multithreading at all. There are two other sink frontends available out of box: `unlocked_sink` and `asynchronous_sink`.
+The `synchronous_sink` class template above indicates that the sink is synchronous, that is, it allows several threads to log simultaneously and will block in case of contention. This means that the backend `text_ostream_backend` need not to worry about multithreading at all. There are two other sink frontends available out of box: `unlocked_sink` and `asynchronous_sink`. The `unlocked_sink` makes no synchronization at all and `asynchronous_sink` performs writing in a separate thread.
 
 The `text_ostream_backend` class implements storing text records into STL-compatible streams. We have used a file stream above but we could have used any type of stream. For example, adding output to console could look as follows:
 
@@ -112,8 +113,92 @@ Looks a bit nicer, huh? The `BOOST_LOG` macro, along with other similar ones, is
 
 Hey, all the fuss is just to have a string in the file, you say? That's right, you don't need a logging library to have something written into a file. But the library is capable of doing more: formatting and filtering are yet to come and these features are tightly coupled with the concept of attributes.
 
+Each log record may have a number of attributes attached. Attributes may contain any essental information about conditions in which the log record occurred, such as position in code, executable module name, current date and time, or any piece of data relevant to your particular application and execution environment. An attribute may behave as a value generator, in which case it would return a different value for each log record it's involved in. As soon as the attribute generates its value, the latter becomes independent from the former and may be used by different filters, formatters and sinks. But in order to do so one has to know the type of the value, or at least what types it may have. There are a number of commonly used attributes implemented in the library, you may find types of their values in the documentation.
 
+Aside from that, there are three possible scopes of attributes: source-specific, thread-specific and global. The source-specific attributes are registered in sources (loggers, for instance) and are attached only to log records that are written through these particular sources. The thread-specific and global attributes should be registered directly in the logging core and, as follows from the naming, are attached to records made in a particular thread or to every record ever made, respectively. When a log record is made attribute values from these three sets are accumulated into a single view and passed to sinks, so there is no difference for them where the attribute was registered. Any attribute may be registered in any scope. Upon registering an attribute is given a name in order to make it possible to search for it. It is possible to have multiple same-named attributes in one scope or in different scopes, although users are advised to avoid this situation since it may lead to undesired results.
+
+Getting back to our tutorial, let's add a couple of attributes to our application. First, adding identifiers of log records would be a good idea in order to make it easier to look for them in logs. There is a `counter` attribute that fits perfectly for this task and making it global would be a good idea.
+
+    // The attribute value type vould be 'unsigned int'
+    // and the counter would start incrementing from value 1
+    boost::shared_ptr< logging::attribute > pCounter(new attrs::counter< unsigned int >(1));
+    logging::logging_core::get()->add_global_attribute("LineID", pCounter);
+
+Next, let's add named scopes support. It's implemented with the `named_scope` attribute and thread-specific scope would be a good place for it.
+
+    boost::shared_ptr< logging::attribute > pNamedScope(new attrs::named_scope());
+    logging::logging_core::get()->add_thread_attribute("Scope", pNamedScope);
+
+Now we can mark execution scopes with macros `BOOST_LOG_FUNCTION` and `BOOST_LOG_NAMED_SCOPE` (the latter accepts a string literal as an argument).
+
+Finally, let's add a logging severity level that would show how important each log record is. We can do it in a straightforward way by adding an appropriate attribute to the logger, but that would made it inconvenient to change the severity level of each log record and would require us to explicitly add the attribute in each logger we construct. Luckily, the library provides a `severity_logger` source that is similar to the logger we have used before except that it does just what we need by providing support for severity levels.
+
+    // We define our own severity levels
+    enum severity_level
+    {
+        normal,
+        notification,
+        warning,
+        error,
+        critical
+    };
+
+    // The logger implicitly adds a source-specific attribute 'Severity' of type 'int' on construction
+    logging::severity_logger slg;
+
+By the way, this is a good place to note that the best way to support attributes that have to be automatically registered in the logger, like severity level or channel name, is to make your own logger by deriving it from `basic_logger`, just what `severity_logger` does. This is better explained in the [link log.extension.sources Extending the library] section.
+
+Now we can write logging records with a specific severity level like that:
+
+    BOOST_LOG_SEV(slg, normal) << "A normal severity message";
+    BOOST_LOG_SEV(slg, error) << "An error severity message";
+
+[endsect]
+
+[section:tutorial_4 Step 4: Formatting]
+
+If you run the resulting code above you will see no difference between the two log records. That's because all these attributes we so carefully registered are not involved in formatting. By default the library just puts your message to the log file without examining any attributes. This behavior can easily be changed.
+
+You can add a custom formatter to a sink backend that supports it (`text_ostream_backend` we used above being the one). The formatter is actually a functor that supports the following signature:
+
+    void (ostream_type& strm, attribute_values_view const& attrs, string_type const& msg);
+
+The formatter will be invoked whenever a log record passes filtering and is to be stored in log. The formatted record should be composed by insertion into STL-compatible output stream `strm`. The `attrs` argument contains all attributes attached to the record, and `msg` represents message text acquired by the logger.
+
+While it is perfectly fine if you just write your own formatter function, the library provides a way to automatically generate it with a lambda-style expression like this:
+
+    // This makes the sink to write log records that look like this:
+    // 1: <0> [main] A normal severity message
+    // 2: <3> [main] An error severity message
+    pSink->locked_backend()->set_formatter(
+        fmt::attr< unsigned int >("LineID")
+        << ": <" << fmt::attr< int >("Severity")
+        << "> [" << fmt::named_scope("Scope")
+        << "] " << fmt::message() << "\n");
+
+[endsect]
+
+[section:tutorial_5 Step 5: Filtering]
 
 [endsect]
 
 [endsect]
+
+
+
+[section:extension Extending the library]
+
+[section:sinks Writing your own sinks]
+
+[endsect]
+
+[section:sources Writing your own sources]
+
+[endsect]
+
+[section:attributes Writing your own attributes]
+
+[endsect]
+
+[endsect]
+

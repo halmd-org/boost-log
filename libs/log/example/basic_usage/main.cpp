@@ -1,3 +1,18 @@
+/*!
+ * (C) 2007 Andrey Semashev
+ *
+ * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+ * 
+ * \file   main.cpp
+ * \author Andrey Semashev
+ * \date   11.11.2007
+ * 
+ * \brief  An example of basic library usage. See the library tutorial for expanded
+ *         comments on this code. It may also be worthwile reading the Wiki requirements page:
+ *         http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Boost.Logging
+ */
+
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS 1
 #endif // _CRT_SECURE_NO_WARNINGS
@@ -22,6 +37,7 @@
 #include <boost/log/attributes/counter.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
+#include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>
 
@@ -29,11 +45,13 @@ namespace logging = boost::log;
 namespace fmt = boost::log::formatters;
 namespace flt = boost::log::filters;
 namespace sinks = boost::log::sinks;
+namespace attrs = boost::log::attributes;
 
 using boost::shared_ptr;
 
 int foo(logging::logger& lg)
 {
+    BOOST_LOG_FUNCTION();
     BOOST_LOG(lg) << "foo is being called";
     return 10;
 }
@@ -115,7 +133,7 @@ int main(int argc, char* argv[])
     // message body itself. By setting up formatter we define which of them
     // will be written to log and in what way they will look there.
     pSink->locked_backend()->set_formatter(
-        fmt::attr("LineNumber") // First an attribute "LineNumber" is written to the log
+        fmt::attr("LineID") // First an attribute "LineID" is written to the log
         << ": [" // then this delimiter separates it from the rest of the line
         << fmt::attr< std::string >("Tag") // then goes another attribute named "Tag"
                                            // Note here we explicitly stated that its type
@@ -145,23 +163,29 @@ int main(int argc, char* argv[])
     // you may create another sink for that purpose.
 
     // Now we're going to set up the attributes.
-    // Remember that "LineNumber" attribute in the formatter? There is a counter
+    // Remember that "LineID" attribute in the formatter? There is a counter
     // attribute in the library that increments or decrements the value each time
     // it is output. Let's create it with a starting value 1.
-    shared_ptr< logging::attribute > pCounter(
-        new logging::attributes::counter< unsigned int >(1));
+    shared_ptr< logging::attribute > pCounter(new attrs::counter< unsigned int >(1));
 
     // Since we intend to count all logging records ever made by the application,
     // this attribute should clearly be global.
-    logging::logging_core::get()->add_global_attribute("LineNumber", pCounter);
+    logging::logging_core::get()->add_global_attribute("LineID", pCounter);
 
-    // Attributes may have two other scopes: thread scope and logger scope. Attributes of thread
+    // Attributes may have two other scopes: thread scope and source scope. Attributes of thread
     // scope are output with each record made by the thread (regardless of the logger object), and
-    // attributes of the logger scope are output with each record made by the logger. On output
-    // all attributes of global, thread and logger scopes are merged into a one record and passed to
+    // attributes of the source scope are output with each record made by the logger. On output
+    // all attributes of global, thread and source scopes are merged into a one record and passed to
     // the sinks as one view. There is no difference between attributes of different scopes from the
     // sinks' perspective.
 
+    // Let's also track the execution scope from which the records are made
+    boost::shared_ptr< logging::attribute > pNamedScope(new attrs::named_scope());
+    logging::logging_core::get()->add_thread_attribute("Scope", pNamedScope);
+
+    // We can mark the current execution scope now - it's the 'main' function
+    BOOST_LOG_FUNCTION();
+    
     // Let's try out the counter attribute and formatting
     BOOST_LOG(lg) << "Some log line with a counter";
     BOOST_LOG(lg) << "Another log line with the counter";
@@ -169,9 +193,11 @@ int main(int argc, char* argv[])
     // Ok, remember the "Tag" attribute we added in the formatter? It is absent in these
     // two lines above, so it is empty in the output. Let's try to tag some log records with it.
     {
+        BOOST_LOG_NAMED_SCOPE("Tagging scope");
+        
         // The library has an attribute which simply returns its value
         // on each record. It perfectly fits to be used as a tag.
-        logging::attributes::constant< std::string > TagAttr("Tagged line");
+        attrs::constant< std::string > TagAttr("Tagged line");
 
         // Now lets add this attribute to the logger, but just temporarily
         logging::scoped_attribute a1 =
@@ -189,17 +215,11 @@ int main(int argc, char* argv[])
     // And this line is not highlighted anymore
     BOOST_LOG(lg) << "Now the tag is removed";
 
-    // Please note, that this scoped attribute technique is not intended to
-    // replace the scope logging which was required in the Wiki
-    // (http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Boost.Logging)
-    // This functionality is just not implemented yet.
-
-
     // Now let's try to apply filtering to the output. Filtering is based on
     // attributes being output with the record. One of the common filtering use cases
     // is filtering based on the record severity level. Here we define our
     // application severity levels.
-    enum severity_values
+    enum severity_level
     {
         normal,
         notification,
@@ -241,7 +261,7 @@ int main(int argc, char* argv[])
 
     {
         // Next we try if the second condition of the filter works
-        logging::attributes::constant< std::string > TagAttr("IMPORTANT MESSAGES");
+        attrs::constant< std::string > TagAttr("IMPORTANT MESSAGES");
 
         //LUCA REGINI: ERRORE
         //logging::scoped_attribute a1 =
