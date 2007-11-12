@@ -132,8 +132,8 @@ int main(int argc, char* argv[])
     // Each logging record may have a number of attributes in addition to the
     // message body itself. By setting up formatter we define which of them
     // will be written to log and in what way they will look there.
-    pSink->locked_backend()->set_formatter(
-        fmt::attr("LineID") // First an attribute "LineID" is written to the log
+    pSink->locked_backend()->set_formatter(fmt::ostrm
+        << fmt::attr("LineID") // First an attribute "LineID" is written to the log
         << ": [" // then this delimiter separates it from the rest of the line
         << fmt::attr< std::string >("Tag") // then goes another attribute named "Tag"
                                            // Note here we explicitly stated that its type

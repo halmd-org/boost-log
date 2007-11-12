@@ -8,7 +8,7 @@
         [@http://www.boost.org/LICENSE_1_0.txt]).
     ]
     [id log]
-    [last-revision $Date: 2007-11-11 18:34:46 $]
+    [last-revision $Date: 2007-11-12 20:26:31 $]
 ]
 
 [c++]
@@ -170,8 +170,8 @@ While it is perfectly fine if you just write your own formatter function, the li
     // This makes the sink to write log records that look like this:
     // 1: <0> [main] A normal severity message
     // 2: <3> [main] An error severity message
-    pSink->locked_backend()->set_formatter(
-        fmt::attr< unsigned int >("LineID")
+    pSink->locked_backend()->set_formatter(fmt::_
+        << fmt::attr< unsigned int >("LineID")
         << ": <" << fmt::attr< int >("Severity")
         << "> [" << fmt::named_scope("Scope")
         << "] " << fmt::message() << "\n");

@@ -22,8 +22,7 @@
 #include <iosfwd>
 #include <string>
 #include <boost/static_assert.hpp>
-#include <boost/mpl/if.hpp>
-#include <boost/mpl/bool.hpp>
+#include <boost/mpl/not.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_base_and_derived.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -58,6 +57,85 @@ struct basic_formatter : public formatter_base
     typedef void result_type;
 };
 
+//! Formatter fmt_wrapper to output objects into streams
+template< typename CharT, typename T >
+class fmt_wrapper :
+    public basic_formatter< CharT, fmt_wrapper< CharT, T > >
+{
+private:
+    //! Base type
+    typedef basic_formatter< CharT, fmt_wrapper< CharT, T > > base_type;
+
+public:
+    //! String type
+    typedef typename base_type::string_type string_type;
+    //! Stream type
+    typedef typename base_type::ostream_type ostream_type;
+    //! Attribute values set type
+    typedef typename base_type::attribute_values_view attribute_values_view;
+
+private:
+    //! Object to be output
+    T m_T;
+
+public:
+    //! Constructor
+    explicit fmt_wrapper(T const& obj) : m_T(obj) {}
+
+    //! Output operator
+    void operator() (ostream_type& strm, attribute_values_view const&, string_type const&) const
+    {
+        strm << m_T;
+    }
+};
+
+//! A convenience class that conditionally wrapst the type into a formatter
+template< typename CharT, typename T, bool >
+struct wrap_if_c
+{
+    typedef fmt_wrapper< CharT, T > type;
+};
+
+template< typename CharT, typename T >
+struct wrap_if_c< CharT, T, false >
+{
+    typedef T type;
+};
+
+template< typename CharT, typename T, typename PredT >
+struct wrap_if : public wrap_if_c< CharT, T, PredT::value >
+{
+};
+
+template< typename CharT, typename T >
+struct wrap_if_not_formatter : public wrap_if< CharT, T, mpl::not_< is_formatter< T > > >
+{
+};
+
+//! A placeholder class to represent a stream in formatters lambda expressions
+template< typename CharT >
+struct stream_placeholder
+{
+    //! Trap operator to begin building the lambda expression
+    template< typename T >
+    typename wrap_if_not_formatter< CharT, T >::type operator<< (T const& fmt) const
+    {
+        typedef typename wrap_if_not_formatter< CharT, T >::type result_type;
+        return result_type(fmt);
+    }
+
+    //! C-style strings need a special treatment
+    fmt_wrapper< CharT, std::basic_string< CharT > > operator<< (const CharT* s) const
+    {
+        return fmt_wrapper< CharT, std::basic_string< CharT > >(s);
+    }
+};
+
+//  Placeholders to begin lambda expresions
+const stream_placeholder< char > ostrm = {};
+const stream_placeholder< wchar_t > wostrm = {};
+
+
 //! A formatter compound that encapsulates two other formatters
 template< typename LeftFmtT, typename RightFmtT >
 class fmt_chain :
@@ -89,7 +167,8 @@ private:
 
 public:
     //! Constructor
-    fmt_chain(LeftFmtT const& left, RightFmtT const& right) : m_Left(left), m_Right(right) {}
+    template< typename RightT >
+    fmt_chain(LeftFmtT const& left, RightT const& right) : m_Left(left), m_Right(right) {}
 
     //! Output operator
     void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const& msg) const
@@ -99,82 +178,25 @@ public:
     }
 };
 
-//! Formatter wrapper to output objects into streams
-template< typename CharT, typename T >
-class fmt_wrap :
-    public basic_formatter< CharT, fmt_wrap< CharT, T > >
-{
-private:
-    //! Base type
-    typedef basic_formatter< CharT, fmt_wrap< CharT, T > > base_type;
-
-public:
-    //! String type
-    typedef typename base_type::string_type string_type;
-    //! Stream type
-    typedef typename base_type::ostream_type ostream_type;
-    //! Attribute values set type
-    typedef typename base_type::attribute_values_view attribute_values_view;
-
-private:
-    //! Object to be output
-    T m_T;
-
-public:
-    //! Constructor
-    explicit fmt_wrap(T const& obj) : m_T(obj) {}
-
-    //! Output operator
-    void operator() (ostream_type& strm, attribute_values_view const&, string_type const&) const
-    {
-        strm << m_T;
-    }
-};
-
-namespace aux {
-
-    template< typename LeftFmtT, typename RightFmtT >
-    inline fmt_chain< LeftFmtT, RightFmtT > make_fmt_chain(
-        LeftFmtT const& left, RightFmtT const& right, mpl::true_ const&)
-    {
-        return fmt_chain< LeftFmtT, RightFmtT >(left, right);
-    }
-    template< typename LeftFmtT, typename RightT >
-    inline fmt_chain<
-        LeftFmtT,
-        fmt_wrap< typename LeftFmtT::char_type, RightT >
-    > make_fmt_chain(LeftFmtT const& left, RightT const& right, mpl::false_ const&)
-    {
-        return fmt_chain<
-            LeftFmtT,
-            fmt_wrap< typename LeftFmtT::char_type, RightT >
-        >(left, fmt_wrap< typename LeftFmtT::char_type, RightT >(right));
-    }
-
-} // namespace aux
-
 //! An ADL-reachable operator to generate fmt_chain
 template< typename CharT, typename LeftFmtT, typename RightT >
-inline typename mpl::if_<
-    is_formatter< RightT >,
-    fmt_chain< LeftFmtT, RightT >,
-    fmt_chain<
-        LeftFmtT,
-        fmt_wrap< typename LeftFmtT::char_type, RightT >
-    >
->::type operator<< (basic_formatter< CharT, LeftFmtT > const& left, RightT const& right)
+inline fmt_chain<
+    LeftFmtT,
+    typename wrap_if_not_formatter< CharT, RightT >::type
+> operator<< (basic_formatter< CharT, LeftFmtT > const& left, RightT const& right)
 {
-    return aux::make_fmt_chain(
-        static_cast< LeftFmtT const& >(left),
-        right,
-        typename is_formatter< RightT >::type());
+    typedef fmt_chain<
+        LeftFmtT,
+        typename wrap_if_not_formatter< CharT, RightT >::type
+    > result_type;
+    return result_type(static_cast< LeftFmtT const& >(left), right);
 }
 
-//! A helper operator to automatically generate fmt_wrap from string literals
+//! A helper operator to automatically generate fmt_wrapper from C-strings
 template< typename FmtT, typename CharT >
 inline fmt_chain<
     FmtT,
-    fmt_wrap<
+    fmt_wrapper<
         CharT,
         std::basic_string< CharT >
     >
@@ -182,51 +204,12 @@ inline fmt_chain<
 {
     return fmt_chain<
         FmtT,
-        fmt_wrap<
+        fmt_wrapper<
             CharT,
             std::basic_string< CharT >
         >
-    >(static_cast< FmtT const& >(left), fmt_wrap< CharT, std::basic_string< CharT > >(str));
+    >(static_cast< FmtT const& >(left), fmt_wrapper< CharT, std::basic_string< CharT > >(str));
 }
-//! A helper operator to automatically generate fmt_wrap from STL strings
-template< typename FmtT, typename CharT >
-inline fmt_chain<
-    FmtT,
-    fmt_wrap<
-        CharT,
-        std::basic_string< CharT >
-    >
-> operator<< (basic_formatter< CharT, FmtT > const& left, std::basic_string< CharT > const& str)
-{
-    return fmt_chain<
-        FmtT,
-        fmt_wrap<
-            CharT,
-            std::basic_string< CharT >
-        >
-    >(static_cast< FmtT const& >(left), fmt_wrap< CharT, std::basic_string< CharT > >(str));
-}
-
-//! Formatter generator
-template< typename CharT >
-inline fmt_wrap< CharT, std::basic_string< CharT > > string_constant(const CharT* str)
-{
-    return fmt_wrap< CharT, std::basic_string< CharT > >(str);
-}
-//! Formatter generator
-template< typename CharT >
-inline fmt_wrap< CharT, std::basic_string< CharT > > string_constant(std::basic_string< CharT > const& str)
-{
-    return fmt_wrap< CharT, std::basic_string< CharT > >(str);
-}
-
-//! Formatter generator
-template< typename CharT, typename T >
-inline fmt_wrap< CharT, T > wrap(T const& obj BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(CharT))
-{
-    return fmt_wrap< CharT, T >(obj);
-}
-
 
 //! Message formatter class
 template< typename CharT >
