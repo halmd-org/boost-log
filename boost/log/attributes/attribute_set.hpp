@@ -115,8 +115,8 @@ private:
     {
         node_base* pPrev;
         node_base* pNext;
-        node_base() : pPrev(this), pNext(this) {}
-        node_base(node_base const&) : pPrev(this), pNext(this) {}
+        node_base() { pPrev = pNext = this; }
+        node_base(node_base const&) { pPrev = pNext = this; }
 
     private:
         node_base& operator= (node_base const&);
