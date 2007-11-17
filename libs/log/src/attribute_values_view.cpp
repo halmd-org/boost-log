@@ -77,12 +77,15 @@ private:
 
 public:
     //! Constructor
-    implementation(node* b, size_type n) : m_RefCount(1), m_pBegin(b), m_pEnd(b), m_pEOS(b + n) {}
+    implementation(node* b, size_type n)
+        : m_RefCount(1), m_pBegin(b), m_pEnd(b), m_pEOS(b + n)
+    {
+    }
     //! Destructor
     ~implementation()
     {
-        for (; m_pBegin != m_pEnd; ++m_pBegin)
-            m_pBegin->~node();
+        for (node* p = m_pBegin, *e = m_pEnd; p != e; ++p)
+            p->~node();
     }
 
     //! Returns the pointer to the first element
@@ -191,11 +194,12 @@ public:
         if (pImpl->release() == 0)
         {
             enum { alignment_gap = alignment_gap_between< implementation, node >::value };
-            size_type cap = pImpl->capacity();
+            const size_type size =
+                sizeof(implementation) + (pImpl->capacity() * sizeof(node)) + alignment_gap;
             pImpl->~implementation();
             pAlloc->deallocate(
                 reinterpret_cast< typename internal_allocator_type::pointer >(pImpl),
-                sizeof(implementation) + (cap * sizeof(node)) + alignment_gap);
+                size);
         }
     }
 };
