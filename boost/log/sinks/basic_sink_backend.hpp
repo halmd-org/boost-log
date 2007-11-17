@@ -104,8 +104,7 @@ public:
     //! Default constructor
     basic_formatting_sink_backend() :
         m_StreamBuf(m_FormattedRecord),
-        m_FormattingStream(&m_StreamBuf),
-        m_Formatter(&basic_formatting_sink_backend::default_formatter)
+        m_FormattingStream(&m_StreamBuf)
     {
     }
 
@@ -114,6 +113,11 @@ public:
     void set_formatter(T const& fmt)
     {
         m_Formatter = fmt;
+    }
+    //! The method resets the formatter
+    void reset_formatter()
+    {
+        m_Formatter.clear();
     }
 
     //! The method sets the locale used during formatting
@@ -125,27 +129,25 @@ public:
     //! The method writes the message to the sink - do not override in derived classes
     void write_message(attribute_values_view const& attributes, string_type const& message)
     {
-        // Scope guard to automatically clear the storage
-        clear_invoker _(m_FormattedRecord);
-
         // Perform the formatting
-        m_Formatter(m_FormattingStream, attributes, message);
-        m_FormattingStream.flush();
+        if (!m_Formatter.empty())
+        {
+            // Scope guard to automatically clear the storage
+            clear_invoker _(m_FormattedRecord);
 
-        // Pass the formatted string to the backend implementation
-        do_write_message(m_FormattedRecord, attributes);
+            m_Formatter(m_FormattingStream, attributes, message);
+            m_FormattingStream.flush();
+
+            // Pass the formatted string to the backend implementation
+            do_write_message(attributes, m_FormattedRecord);
+        }
+        else
+            do_write_message(attributes, message);
     }
 
 protected:
     //! A backend-defined implementation of the formatted message storing
-    virtual void do_write_message(string_type const& formatted_message, attribute_values_view const& attributes) = 0;
-
-private:
-    //! Default formatter
-    static void default_formatter(stream_type& strm, attribute_values_view const&, string_type const& message)
-    {
-        strm << message << '\n';
-    }
+    virtual void do_write_message(attribute_values_view const& attributes, string_type const& formatted_message) = 0;
 };
 
 } // namespace sinks

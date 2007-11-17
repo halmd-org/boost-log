@@ -90,14 +90,10 @@ public:
     {
         m_Result = false;
 
-        // Find all values of the attribute
-        typedef typename attribute_values_view::const_iterator attribute_values_iterator;
-        std::pair< attribute_values_iterator, attribute_values_iterator > Values =
-            values.equal_range(m_AttributeName);
-
-        // Find the one of them which complies the checker functor
-        for (; Values.first != Values.second && !m_Result; ++Values.first)
-            Values.first->second->dispatch(*const_cast< flt_attr_single* >(this));
+        // Find attribute value
+        typename attribute_values_view::const_iterator it = values.find(m_AttributeName);
+        if (it != values.end())
+            it->second->dispatch(*const_cast< flt_attr_single* >(this));
 
         return m_Result;
     }
@@ -283,14 +279,10 @@ public:
         bool& Result = m_Dispatcher.m_Result;
         Result = false;
 
-        // Find all values of the attribute
-        typedef typename attribute_values_view::const_iterator attribute_values_iterator;
-        std::pair< attribute_values_iterator, attribute_values_iterator > Values =
-            values.equal_range(m_AttributeName);
-
-        // Find the one of them which complies the checker functor
-        for (; Values.first != Values.second && !Result; ++Values.first)
-            Values.first->second->dispatch(m_Dispatcher);
+        // Find attribute value
+        typename attribute_values_view::const_iterator it = values.find(m_AttributeName);
+        if (it != values.end())
+            it->second->dispatch(m_Dispatcher);
 
         return Result;
     }

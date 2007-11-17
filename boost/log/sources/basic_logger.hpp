@@ -19,6 +19,8 @@
 #ifndef BOOST_LOG_BASIC_LOGGER_HPP_INCLUDED_
 #define BOOST_LOG_BASIC_LOGGER_HPP_INCLUDED_
 
+#include <string>
+#include <utility>
 #include <ostream>
 #include <boost/shared_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -143,10 +145,12 @@ public:
     }
 
     //! The method adds an attribute to the logger
-    BOOST_LOG_EXPORT typename attribute_set::iterator add_attribute(
+    BOOST_LOG_EXPORT std::pair< typename attribute_set::iterator, bool > add_attribute(
         string_type const& name, shared_ptr< attribute > const& attr);
     //! The method removes an attribute from the logger
     BOOST_LOG_EXPORT void remove_attribute(typename attribute_set::iterator it);
+    //! The method removes all attributes from the logger
+    BOOST_LOG_EXPORT void remove_all_attributes();
 
     //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
     BOOST_LOG_EXPORT bool open_record();

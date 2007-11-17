@@ -8,7 +8,7 @@
         [@http://www.boost.org/LICENSE_1_0.txt]).
     ]
     [id log]
-    [last-revision $Date: 2007-11-12 20:26:31 $]
+    [last-revision $Date: 2007-11-17 20:13:32 $]
 ]
 
 [c++]
@@ -115,7 +115,7 @@ Hey, all the fuss is just to have a string in the file, you say? That's right, y
 
 Each log record may have a number of attributes attached. Attributes may contain any essental information about conditions in which the log record occurred, such as position in code, executable module name, current date and time, or any piece of data relevant to your particular application and execution environment. An attribute may behave as a value generator, in which case it would return a different value for each log record it's involved in. As soon as the attribute generates its value, the latter becomes independent from the former and may be used by different filters, formatters and sinks. But in order to do so one has to know the type of the value, or at least what types it may have. There are a number of commonly used attributes implemented in the library, you may find types of their values in the documentation.
 
-Aside from that, there are three possible scopes of attributes: source-specific, thread-specific and global. The source-specific attributes are registered in sources (loggers, for instance) and are attached only to log records that are written through these particular sources. The thread-specific and global attributes should be registered directly in the logging core and, as follows from the naming, are attached to records made in a particular thread or to every record ever made, respectively. When a log record is made attribute values from these three sets are accumulated into a single view and passed to sinks, so there is no difference for them where the attribute was registered. Any attribute may be registered in any scope. Upon registering an attribute is given a name in order to make it possible to search for it. It is possible to have multiple same-named attributes in one scope or in different scopes, although users are advised to avoid this situation since it may lead to undesired results.
+Aside from that, there are three possible scopes of attributes: source-specific, thread-specific and global. The source-specific attributes are registered in sources (loggers, for instance) and are attached only to log records that are written through these particular sources. The thread-specific and global attributes should be registered directly in the logging core and, as follows from the naming, are attached to records made in a particular thread or to every record ever made, respectively. When a log record is made attribute values from these three sets are accumulated into a single view and passed to sinks, so there is no difference for them where the attribute was registered. Any attribute may be registered in any scope. Upon registering an attribute is given a unique name in order to make it possible to search for it. If it happens that the same named attribute is found in several scopes, the attribute from the most specific scope is taken into consideration in any further processing, including filtering and formatting. Such behavior makes it possible to override global or thread-scoped attributes with the ones registered in your local logger, thus reducing thread interference.
 
 Getting back to our tutorial, let's add a couple of attributes to our application. First, adding identifiers of log records would be a good idea in order to make it easier to look for them in logs. There is a `counter` attribute that fits perfectly for this task and making it global would be a good idea.
 
@@ -170,11 +170,11 @@ While it is perfectly fine if you just write your own formatter function, the li
     // This makes the sink to write log records that look like this:
     // 1: <0> [main] A normal severity message
     // 2: <3> [main] An error severity message
-    pSink->locked_backend()->set_formatter(fmt::_
+    pSink->locked_backend()->set_formatter(fmt::ostrm
         << fmt::attr< unsigned int >("LineID")
         << ": <" << fmt::attr< int >("Severity")
         << "> [" << fmt::named_scope("Scope")
-        << "] " << fmt::message() << "\n");
+        << "] " << fmt::message());
 
 [endsect]
 

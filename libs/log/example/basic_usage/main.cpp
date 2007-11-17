@@ -154,8 +154,7 @@ int main(int argc, char* argv[])
                                            // boost/log/type_dispatch/standard_types.hpp for the list
                                            // of the supported out-of-box types).
         << "] " // yet another delimiter
-        << fmt::message() // here goes the log record text
-        << "\n"); // and finally a line feed
+        << fmt::message()); // here goes the log record text
 
     // Now the sink will output in the following format:
     // 1: [Tag value] Hello World!

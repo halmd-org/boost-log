@@ -99,7 +99,7 @@ bool basic_nt_eventlog_backend< CharT >::add_source(const char_type* source, con
 //! The method writes the message to the sink
 template< typename CharT >
 void basic_nt_eventlog_backend< CharT >::do_write_message(
-    string_type const& message, attribute_values_view const& attributes)
+    attribute_values_view const& attributes, string_type const& message)
 {
     typename string_type::const_pointer const p = message.data();
     typename string_type::size_type const s = message.size();

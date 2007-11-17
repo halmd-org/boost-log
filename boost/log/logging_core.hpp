@@ -20,6 +20,7 @@
 #define BOOST_LOG_LOGGING_CORE_HPP_INCLUDED_
 
 #include <string>
+#include <utility>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/function/function1.hpp>
@@ -93,16 +94,24 @@ public:
     void remove_sink(shared_ptr< sink_type > const& s);
 
     //! The method adds an attribute to the global attribute set
-    typename attribute_set::iterator add_global_attribute(
+    std::pair< typename attribute_set::iterator, bool > add_global_attribute(
         string_type const& name, shared_ptr< attribute > const& attr);
     //! The method removes an attribute from the global attribute set
     void remove_global_attribute(typename attribute_set::iterator it);
+    //! The method returns the complete set of currently registered global attributes
+    attribute_set get_global_attributes() const;
+    //! The method replaces the complete set of currently registered global attributes with the provided set
+    void set_global_attributes(attribute_set const& attrs) const;
 
     //! The method adds an attribute to the thread-specific attribute set
-    typename attribute_set::iterator add_thread_attribute(
+    std::pair< typename attribute_set::iterator, bool > add_thread_attribute(
         string_type const& name, shared_ptr< attribute > const& attr);
     //! The method removes an attribute from the thread-specific attribute set
     void remove_thread_attribute(typename attribute_set::iterator it);
+    //! The method returns the complete set of currently registered thread-specific attributes
+    attribute_set get_thread_attributes() const;
+    //! The method replaces the complete set of currently registered thread-specific attributes with the provided set
+    void set_thread_attributes(attribute_set const& attrs) const;
 
     //! The method opens a new record to be written and returns true if the record was opened
     bool open_record(attribute_set const& source_attributes);

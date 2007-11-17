@@ -124,20 +124,11 @@ public:
     //! Output operator
     void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const&) const
     {
-        std::pair<
-            typename attribute_values_view::const_iterator,
-            typename attribute_values_view::const_iterator
-        > values = attrs.equal_range(m_AttributeName);
-        if (values.first != values.second)
+        typename attribute_values_view::const_iterator it = attrs.find(m_AttributeName);
+        if (it != attrs.end())
         {
             m_Dispatcher.m_pStream = &strm;
-            values.first->second->dispatch(m_Dispatcher);
-
-            for (++values.first; values.first != values.second; ++values.first)
-            {
-                strm << ", ";
-                values.first->second->dispatch(m_Dispatcher);
-            }
+            it->second->dispatch(m_Dispatcher);
         }
     }
 };

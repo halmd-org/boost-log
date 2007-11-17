@@ -52,7 +52,7 @@ basic_logger< CharT >& basic_logger< CharT >::operator= (basic_logger const& tha
 
 //! The method adds an attribute to the global attribute set
 template< typename CharT >
-typename basic_logger< CharT >::attribute_set::iterator
+std::pair< typename basic_logger< CharT >::attribute_set::iterator, bool >
 basic_logger< CharT >::add_attribute(string_type const& name, shared_ptr< attribute > const& attr)
 {
     return m_Attributes.insert(std::make_pair(name, attr));
@@ -63,6 +63,13 @@ template< typename CharT >
 void basic_logger< CharT >::remove_attribute(typename attribute_set::iterator it)
 {
     m_Attributes.erase(it);
+}
+
+//! The method removes all attributes from the logger
+template< typename CharT >
+void basic_logger< CharT >::remove_all_attributes()
+{
+    m_Attributes.clear();
 }
 
 //! The method checks if the message will pass filters to be output by at least one sink

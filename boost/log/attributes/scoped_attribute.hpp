@@ -56,6 +56,8 @@ namespace aux {
         mutable logger_type* m_pLogger;
         //! An iterator to the added attribute
         typename logger_type::attribute_set::iterator m_itAttribute;
+        //! A saved attribute, if it was already registered
+        shared_ptr< attribute > m_pSavedAttribute;
 
     public:
         //! Constructor
@@ -63,12 +65,22 @@ namespace aux {
             logger_type& l,
             typename logger_type::string_type const& name,
             shared_ptr< attribute > const& attr
-        ) : m_pLogger(&l), m_itAttribute(l.add_attribute(name, attr))
+        ) : m_pLogger(&l)
         {
+            std::pair<
+                typename logger_type::attribute_set::iterator,
+                bool
+            > res = l.add_attribute(name, attr);
+            m_itAttribute = res.first;
+            if (!res.second)
+            {
+                m_pSavedAttribute = attr;
+                m_pSavedAttribute.swap(m_itAttribute->second);
+            }
         }
         //! Copy constructor (implemented as move)
         scoped_logger_attribute(scoped_logger_attribute const& that)
-            : m_pLogger(that.m_pLogger), m_itAttribute(that.m_itAttribute)
+            : m_pLogger(that.m_pLogger), m_itAttribute(that.m_itAttribute), m_pSavedAttribute(that.m_pSavedAttribute)
         {
             that.m_pLogger = 0;
         }
@@ -77,7 +89,12 @@ namespace aux {
         ~scoped_logger_attribute()
         {
             if (m_pLogger)
-                m_pLogger->remove_attribute(m_itAttribute);
+            {
+                if (!m_pSavedAttribute)
+                    m_pLogger->remove_attribute(m_itAttribute);
+                else
+                    m_pSavedAttribute.swap(m_itAttribute->second);
+            }
         }
 
     private:
@@ -116,6 +133,7 @@ inline aux::scoped_logger_attribute< CharT > add_scoped_logger_attribute(
     return aux::scoped_logger_attribute< CharT >(l, name, shared_ptr< attribute >(addressof(attr), empty_deleter()));
 }
 
+/*  === Not ready yet. This code has multithreading issues. ===
 
 namespace aux {
 
@@ -278,6 +296,8 @@ inline aux::scoped_core_attribute<
         &basic_logging_core< CharT >::remove_global_attribute
     >(name, shared_ptr< attribute >(addressof(attr), empty_deleter()));
 }
+
+*/
 
 } // namespace log
 

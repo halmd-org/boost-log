@@ -70,7 +70,7 @@ public:
 
 private:
     //! The method writes the message to the sink
-    void do_write_message(string_type const& message, attribute_values_view const& attributes);
+    void do_write_message(attribute_values_view const& attributes, string_type const& message);
 };
 
 typedef basic_nt_eventlog_backend< char > nt_eventlog_backend;

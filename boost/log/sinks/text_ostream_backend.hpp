@@ -65,6 +65,8 @@ private:
 private:
     //! Output stream list
     ostream_sequence m_Streams;
+    //! Auto-flush flag
+    bool m_fAutoFlush;
 
 public:
     //! Constructor
@@ -77,9 +79,12 @@ public:
     //! The method removes a stream from the sink
     void remove_stream(shared_ptr< stream_type > const& strm);
 
+    //! Sets the flag to automatically flush buffers after each logged line
+    void auto_flush(bool f = true);
+
 private:
     //! The method writes the message to the sink
-    void do_write_message(string_type const& formatted_message, attribute_values_view const& attributes);
+    void do_write_message(attribute_values_view const& attributes, string_type const& formatted_message);
 };
 
 typedef basic_text_ostream_backend< char > text_ostream_backend;

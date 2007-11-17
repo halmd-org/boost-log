@@ -13,92 +13,192 @@
  */
 
 #include <new>
-#include <cassert>
+#include <boost/assert.hpp>
+#include <boost/detail/atomic_count.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
-#include "unordered_mmap_facade.hpp"
+#include "attribute_set_impl.hpp"
 
 namespace boost {
 
 namespace log {
 
-namespace aux {
+namespace {
 
-    //! Default constructor
-    template< typename T >
-    inline reduced_vector< T >::reduced_vector() : m_pBegin(0), m_pEnd(0), m_pEOS(0) {}
-
-    //! Copy constructor
-    template< typename T >
-    inline reduced_vector< T >::reduced_vector(reduced_vector const& that)
-        : m_pBegin(allocator_type::allocate(that.size())), m_pEnd(m_pBegin), m_pEOS(m_pBegin + that.size())
+//! The metafunction computes the minimu gap between objects t1 and t2 of types T1 and T2
+//! that would be needed to maintain the alignment of t2
+template< typename T1, typename T2 >
+struct alignment_gap_between
+{
+private:
+    struct both
     {
-        for (const_iterator it = that.begin(); it != that.end(); ++it)
-            this->push_back(*it); // won't throw
-    }
+        T1 m1;
+        T2 m2;
+    };
 
+public:
+    enum { value = sizeof(both) - (sizeof(T1) + sizeof(T2)) };
+};
+
+} // namespace
+
+//! Container implementation
+template< typename CharT >
+struct basic_attribute_values_view< CharT >::implementation
+{
+public:
+    //! Light generic key type
+    typedef aux::light_key< char_type, size_type > light_key_type;
+
+private:
+    //! Ordering predicate to support light key in lookup
+    struct light_key_less
+    {
+        typedef bool result_type;
+        bool operator() (light_key_type const& left, node const& right) const
+        {
+            return (right.m_Value.first.compare(left.pKey, left.KeyLen) > 0);
+        }
+        bool operator() (node const& left, light_key_type const& right) const
+        {
+            return (left.m_Value.first.compare(right.pKey, right.KeyLen) < 0);
+        }
+    };
+
+private:
+    //! Reference counter
+    detail::atomic_count m_RefCount;
+    //! Points to the first element in the container
+    node* m_pBegin;
+    //! Points after the last element of the container
+    node* m_pEnd;
+    //! Points after the end of storage
+    node* m_pEOS;
+
+public:
+    //! Constructor
+    implementation(node* b, size_type n) : m_RefCount(1), m_pBegin(b), m_pEnd(b), m_pEOS(b + n) {}
     //! Destructor
-    template< typename T >
-    inline reduced_vector< T >::~reduced_vector()
+    ~implementation()
     {
-        for (pointer p = m_pBegin; p != m_pEnd; ++p)
-            p->~value_type();
-        allocator_type::deallocate(m_pBegin, m_pEOS - m_pBegin);
+        for (; m_pBegin != m_pEnd; ++m_pBegin)
+            m_pBegin->~node();
     }
 
-    //! Assignment
-    template< typename T >
-    inline reduced_vector< T >& reduced_vector< T >::operator= (reduced_vector const& that)
-    {
-        reduced_vector tmp(that);
-        this->swap(tmp);
-        return *this;
-    }
+    //! Returns the pointer to the first element
+    node* begin() { return m_pBegin; }
+    //! Returns the pointer after the last element
+    node* end() { return m_pEnd; }
 
-    //! Storage reservation
-    template< typename T >
-    inline void reduced_vector< T >::reserve(size_type n)
-    {
-        // Should be called once, before any insertions
-        assert(m_pBegin == 0);
-        m_pBegin = m_pEnd = allocator_type::allocate(n);
-        m_pEOS = m_pBegin + n;
-    }
+    //! Returns the number of elements in the container
+    size_type size() const { return size_type(m_pEnd - m_pBegin); }
+    //! Returns true if there are no elements in the container
+    size_type capacity() const { return size_type(m_pEOS - m_pBegin); }
 
-    //! Appends a new value to the end of the container
-    template< typename T >
-    inline void reduced_vector< T >::push_back(const_reference x)
+    //! Constructs an element at the end of the container. Does not check the storage or reallocate.
+    void push_back(key_type const& key, attribute* attr)
     {
-        // Should be called after reservation
-        assert(m_pBegin != 0);
-        assert(m_pEnd < m_pEOS);
-        new (m_pEnd) value_type(x);
+        BOOST_ASSERT(m_pEnd != m_pEOS);
+        new (m_pEnd) node(key, attr);
         ++m_pEnd;
     }
 
-    //! The method extracts attribute values and arranges them in the container
-    template< typename T >
-    template< typename IteratorT >
-    inline void reduced_vector< T >::adopt_nodes(IteratorT& it, IteratorT end, unsigned char HTIndex)
+    //! Looks for the element with an equivalent key
+    node* find(light_key_type const& key) const
     {
-        for (; it != end && it->m_HTIndex == HTIndex; ++it, ++m_pEnd)
+        node* p = std::lower_bound(m_pBegin, m_pEnd, key, light_key_less());
+        if (p != m_pEnd && p->m_Value.first.compare(key.pKey, key.KeyLen) != 0)
+            return m_pEnd;
+        else
+            return p;
+    }
+
+    //! Increments the reference counter
+    void add_ref() { ++m_RefCount; }
+    //! Decrements the reference counter
+    unsigned long release() { return static_cast< unsigned long >(--m_RefCount); }
+
+    //! Constructs elements at the end of the view that correspond to the elements of the specified sequence
+    void adopt_nodes(
+        typename attribute_set::implementation::node_container::const_iterator& it,
+        typename attribute_set::implementation::node_container::const_iterator end)
+    {
+        for (; it != end; ++it)
+            push_back(it->m_Value.first, it->m_Value.second.get());
+    }
+    //! Constructs elements at the end of the view that correspond to the elements of the specified sequences.
+    //! The function ensures the order of the created nodes and discards elements from [it2, end2) that have
+    //! keys equivalent to the corresponding elements in [it1, end1).
+    void adopt_nodes(
+        typename attribute_set::implementation::node_container::const_iterator& it1,
+        typename attribute_set::implementation::node_container::const_iterator end1,
+        typename attribute_set::implementation::node_container::const_iterator& it2,
+        typename attribute_set::implementation::node_container::const_iterator end2)
+    {
+        while (true)
         {
-            new (m_pEnd) value_type(it->first, it->second->get_value(), HTIndex);
+            unsigned int cond =
+                (static_cast< unsigned int >(it1 != end1) << 1)
+                | static_cast< unsigned int >(it2 != end2);
+
+            switch (cond)
+            {
+            case 1:
+                adopt_nodes(it2, end2);
+                return;
+
+            case 2:
+                adopt_nodes(it1, end1);
+                return;
+
+            case 3:
+            {
+                register int cmp = it1->compare(it2->m_Value.first);
+                if (cmp > 0)
+                {
+                    push_back(it2->m_Value.first, it2->m_Value.second.get());
+                    ++it2;
+                }
+                else
+                {
+                    push_back(it1->m_Value.first, it1->m_Value.second.get());
+                    ++it1;
+
+                    if (cmp == 0) // we skip equivalent-keyed elements in the lesser priority sets
+                        ++it2;
+                }
+                break;
+            }
+
+            default:
+                return;
+            }
         }
     }
 
-} // namespace aux
-
-//! Assignment
-template< typename CharT >
-basic_attribute_values_view< CharT >& basic_attribute_values_view< CharT >::operator= (basic_attribute_values_view const& that)
-{
-    if (this != &that)
+    //! Allocates the needed memory to accomodate n nodes and constructs implementation object with m_RefCount == 1.
+    static implementation* allocate_and_add_ref(internal_allocator_type* pAlloc, size_type n)
     {
-        basic_attribute_values_view tmp(that);
-        this->swap(tmp);
+        enum { alignment_gap = alignment_gap_between< implementation, node >::value };
+        typename internal_allocator_type::pointer p =
+            pAlloc->allocate(sizeof(implementation) + (n * sizeof(node)) + alignment_gap);
+        new (p) implementation(reinterpret_cast< node* >(p + sizeof(implementation) + alignment_gap), n);
+        return reinterpret_cast< implementation* >(p);
     }
-    return *this;
-}
+    //! Releases the implementation object and if its ref. counter drops to 0, destroys it and deallocates memory.
+    static void release_and_dispose(implementation* pImpl, internal_allocator_type* pAlloc)
+    {
+        if (pImpl->release() == 0)
+        {
+            enum { alignment_gap = alignment_gap_between< implementation, node >::value };
+            size_type cap = pImpl->capacity();
+            pImpl->~implementation();
+            pAlloc->deallocate(
+                reinterpret_cast< typename internal_allocator_type::pointer >(pImpl),
+                sizeof(implementation) + (cap * sizeof(node)) + alignment_gap);
+        }
+    }
+};
 
 //! The constructor adopts three attribute sets to the view
 template< typename CharT >
@@ -107,52 +207,162 @@ basic_attribute_values_view< CharT >::basic_attribute_values_view(
     attribute_set const& thread_attrs,
     attribute_set const& global_attrs)
 {
-    typedef typename attribute_set::node_container attribute_set_nodes;
-    typedef typename attribute_set_nodes::const_iterator attribute_set_nodes_iterator;
+    // Allocate the implementation container
+    typedef typename attribute_set::implementation::node_container attribute_set_nodes;
+    attribute_set_nodes const& source_nodes = source_attrs.m_pImpl->Nodes;
+    attribute_set_nodes const& thread_nodes = thread_attrs.m_pImpl->Nodes;
+    attribute_set_nodes const& global_nodes = global_attrs.m_pImpl->Nodes;
+    size_type max_size = source_nodes.size() + thread_nodes.size() + global_nodes.size();
+    m_pImpl = implementation::allocate_and_add_ref(
+        this, source_nodes.size() + thread_nodes.size() + global_nodes.size());
 
-    node_container& Nodes = this->nodes();
-
-    // The view should be empty when the method is being called
-    assert(Nodes.empty());
-    Nodes.reserve(source_attrs.size() + thread_attrs.size() + global_attrs.size());
-
-    attribute_set_nodes const& SourceAttrs = source_attrs.nodes();
-    attribute_set_nodes_iterator itSource = SourceAttrs.begin();
-    attribute_set_nodes_iterator itSourceEnd = SourceAttrs.end();
-    attribute_set_nodes const& ThreadAttrs = thread_attrs.nodes();
-    attribute_set_nodes_iterator itThread = ThreadAttrs.begin();
-    attribute_set_nodes_iterator itThreadEnd = ThreadAttrs.end();
-    attribute_set_nodes const& GlobalAttrs = global_attrs.nodes();
-    attribute_set_nodes_iterator itGlobal = GlobalAttrs.begin();
-    attribute_set_nodes_iterator itGlobalEnd = GlobalAttrs.end();
-
-    while (itSource != itSourceEnd || itThread != itThreadEnd || itGlobal != itGlobalEnd)
+    if (max_size > 0)
     {
-        // Determine the least hash value of the current elements in each container
-        register unsigned char HTIndex = (std::numeric_limits< unsigned char >::max)();
-        if (itSource != itSourceEnd && itSource->m_HTIndex < HTIndex)
-            HTIndex = itSource->m_HTIndex;
-        if (itThread != itThreadEnd && itThread->m_HTIndex < HTIndex)
-            HTIndex = itThread->m_HTIndex;
-        if (itGlobal != itGlobalEnd && itGlobal->m_HTIndex < HTIndex)
-            HTIndex = itGlobal->m_HTIndex;
+        // Compose the view. All copies performed bellow don't throw, so we are safe now.
+        typename attribute_set_nodes::const_iterator
+            src = source_nodes.begin(),
+            esrc = source_nodes.end(),
+            trd = thread_nodes.begin(),
+            etrd = thread_nodes.end(),
+            glb = global_nodes.begin(),
+            eglb = global_nodes.end();
+    
+        while (true)
+        {
+            unsigned int cond =
+                (static_cast< unsigned int >(src != esrc) << 2)
+                | (static_cast< unsigned int >(trd != etrd) << 1)
+                | static_cast< unsigned int >(glb != eglb);
 
-        // Insert nodes to the view that correspond to the selected bucket
-        // It is safe since no reallocations will occur because of memory reservation above
-        Nodes.adopt_nodes(itSource, itSourceEnd, HTIndex);
-        Nodes.adopt_nodes(itThread, itThreadEnd, HTIndex);
-        Nodes.adopt_nodes(itGlobal, itGlobalEnd, HTIndex);
+            switch (cond)
+            {
+            case 1:
+                // Only global attributes left
+                m_pImpl->adopt_nodes(glb, eglb);
+                return;
+
+            case 2:
+                // Only thread attributes left
+                m_pImpl->adopt_nodes(trd, etrd);
+                return;
+
+            case 3:
+                // Only thread and global attributes left
+                m_pImpl->adopt_nodes(trd, etrd, glb, eglb);
+                return;
+
+            case 4:
+                // Only source attributes left
+                m_pImpl->adopt_nodes(src, esrc);
+                return;
+
+            case 5:
+                // Only source and global attributes left
+                m_pImpl->adopt_nodes(src, esrc, glb, eglb);
+                return;
+
+            case 6:
+                // Only source and thread attributes left
+                m_pImpl->adopt_nodes(src, esrc, trd, etrd);
+                return;
+
+            case 7:
+            {
+                // Source, thread and global attributes left
+                // Select the least-keyed attribute
+                register typename attribute_set_nodes::const_iterator* pIt = &src;
+                register int cmp = (*pIt)->compare(trd->m_Value.first);
+                if (cmp > 0)
+                    pIt = &trd;
+                else if (cmp == 0) // we skip equivalent-keyed elements in the lesser priority sets
+                    ++trd;
+                cmp = (*pIt)->compare(glb->m_Value.first);
+                if (cmp > 0)
+                    pIt = &glb;
+                else if (cmp == 0) // we skip equivalent-keyed elements in the lesser priority sets
+                    ++glb;
+
+                // Adopt the attribute
+                m_pImpl->push_back((*pIt)->m_Value.first, (*pIt)->m_Value.second.get());
+                ++(*pIt);
+
+                break;
+            }
+
+            default:
+                // No attributes left to adopt
+                return;
+            }
+        }
     }
+}
 
-    // Rebuild hash table
-    this->rehash();
+//! Copy constructor
+template< typename CharT >
+basic_attribute_values_view< CharT >::basic_attribute_values_view(basic_attribute_values_view const& that)
+    : internal_allocator_type(static_cast< internal_allocator_type const& >(that)), m_pImpl(that.m_pImpl)
+{
+    m_pImpl->add_ref();
+}
+
+//! Destructor
+template< typename CharT >
+basic_attribute_values_view< CharT >::~basic_attribute_values_view()
+{
+    implementation::release_and_dispose(m_pImpl, this);
+}
+
+//! Assignment
+template< typename CharT >
+basic_attribute_values_view< CharT >& basic_attribute_values_view< CharT >::operator= (basic_attribute_values_view const& that)
+{
+    if (this != &that)
+    {
+        basic_attribute_values_view tmp(that);
+        swap(tmp);
+    }
+    return *this;
+}
+
+//  Iterator generators
+template< typename CharT >
+typename basic_attribute_values_view< CharT >::const_iterator
+basic_attribute_values_view< CharT >::begin() const
+{
+    return const_iterator(m_pImpl->begin());
+}
+
+template< typename CharT >
+typename basic_attribute_values_view< CharT >::const_iterator
+basic_attribute_values_view< CharT >::end() const
+{
+    return const_iterator(m_pImpl->end());
+}
+
+//! The method returns number of elements in the container
+template< typename CharT >
+typename basic_attribute_values_view< CharT >::size_type basic_attribute_values_view< CharT >::size() const
+{
+    return m_pImpl->size();
+}
+
+//! Internal lookup implementation
+template< typename CharT >
+typename basic_attribute_values_view< CharT >::const_iterator
+basic_attribute_values_view< CharT >::find_impl(const char_type* key, size_type len) const
+{
+    return const_iterator(m_pImpl->find(typename implementation::light_key_type(key, len)));
+}
+
+//! The method acquires values of all adopted attributes. Users don't need to call it, since will always get an already frozen view.
+template< typename CharT >
+void basic_attribute_values_view< CharT >::freeze()
+{
+    for (const_iterator it = begin(), e = end(); it != e; ++it)
+        it.freeze_element();
 }
 
 //! Explicitly instantiate container implementation
-namespace aux {
-    template class unordered_multimap_facade< attribute_values_view_descr< char > >;
-    template class unordered_multimap_facade< attribute_values_view_descr< wchar_t > >;
-} // namespace aux
 template class basic_attribute_values_view< char >;
 template class basic_attribute_values_view< wchar_t >;
 

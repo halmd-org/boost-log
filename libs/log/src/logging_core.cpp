@@ -30,7 +30,7 @@ namespace boost {
 
 namespace log {
 
-namespace {
+namespace aux {
 
     //! A simple exclusive ownership smart-pointer with moving copy semantics
     template< typename T >
@@ -78,7 +78,7 @@ namespace {
         element_type* get() const { return this->m_p; }
     };
 
-} // namespace
+} // namespace aux
 
 //! Logging system implementation
 template< typename CharT >
@@ -116,7 +116,7 @@ public:
             }
         };
         //! A stack of records being validated and pushed to the sinks
-        std::stack< exclusive_ptr< pending_record >, std::vector< exclusive_ptr< pending_record > > > PendingRecords;
+        std::stack< aux::exclusive_ptr< pending_record >, std::vector< aux::exclusive_ptr< pending_record > > > PendingRecords;
 
         //! Thread-specific attribute set
         attribute_set ThreadAttributes;
@@ -141,17 +141,16 @@ public:
     //! Constructor
     implementation() : Mutex() {}
 
-    //! The method initializes thread-specific data
-    void init_thread_data()
+    //! The method returns the current therad-specific data
+    thread_data* get_thread_data()
     {
-        scoped_write_lock lock(Mutex);
-
-        if (!pThreadData.get())
+        thread_data* p = pThreadData.get();
+        if (!p)
         {
-            std::auto_ptr< thread_data > p(new thread_data());
-            pThreadData.reset(p.get());
-            p.release();
+            init_thread_data();
+            p = pThreadData.get();
         }
+        return p;
     }
 
     //! The function holds the reference to the logging system singleton
@@ -164,6 +163,20 @@ public:
     static void init_logging_core()
     {
         get_instance().reset(new logging_core_type());
+    }
+
+private:
+    //! The method initializes thread-specific data
+    void init_thread_data()
+    {
+        scoped_write_lock lock(Mutex);
+
+        if (!pThreadData.get())
+        {
+            std::auto_ptr< thread_data > p(new thread_data());
+            pThreadData.reset(p.get());
+            p.release();
+        }
     }
 };
 
@@ -224,7 +237,7 @@ void basic_logging_core< CharT >::remove_sink(shared_ptr< sink_type > const& s)
 
 //! The method adds an attribute to the global attribute set
 template< typename CharT >
-typename basic_logging_core< CharT >::attribute_set::iterator
+std::pair< typename basic_logging_core< CharT >::attribute_set::iterator, bool >
 basic_logging_core< CharT >::add_global_attribute(string_type const& name, shared_ptr< attribute > const& attr)
 {
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
@@ -239,15 +252,28 @@ void basic_logging_core< CharT >::remove_global_attribute(typename attribute_set
     pImpl->GlobalAttributes.erase(it);
 }
 
+//! The method returns the complete set of currently registered global attributes
+template< typename CharT >
+typename basic_logging_core< CharT >::attribute_set basic_logging_core< CharT >::get_global_attributes() const
+{
+    typename implementation::scoped_write_lock lock(pImpl->Mutex);
+    return pImpl->GlobalAttributes;
+}
+//! The method replaces the complete set of currently registered global attributes with the provided set
+template< typename CharT >
+void basic_logging_core< CharT >::set_global_attributes(attribute_set const& attrs) const
+{
+    typename implementation::scoped_write_lock lock(pImpl->Mutex);
+    pImpl->GlobalAttributes = attrs;
+}
+
 //! The method adds an attribute to the thread-specific attribute set
 template< typename CharT >
-typename basic_logging_core< CharT >::attribute_set::iterator
+std::pair< typename basic_logging_core< CharT >::attribute_set::iterator, bool >
 basic_logging_core< CharT >::add_thread_attribute(string_type const& name, shared_ptr< attribute > const& attr)
 {
-    if (!pImpl->pThreadData.get())
-        pImpl->init_thread_data();
-
-    return pImpl->pThreadData->ThreadAttributes.insert(typename attribute_set::key_type(name), attr);
+    typename implementation::thread_data* p = pImpl->get_thread_data();
+    return p->ThreadAttributes.insert(typename attribute_set::key_type(name), attr);
 }
 
 //! The method removes an attribute from the thread-specific attribute set
@@ -257,6 +283,21 @@ void basic_logging_core< CharT >::remove_thread_attribute(typename attribute_set
     typename implementation::thread_data* p = pImpl->pThreadData.get();
     if (p)
         p->ThreadAttributes.erase(it);
+}
+
+//! The method returns the complete set of currently registered thread-specific attributes
+template< typename CharT >
+typename basic_logging_core< CharT >::attribute_set basic_logging_core< CharT >::get_thread_attributes() const
+{
+    typename implementation::thread_data* p = pImpl->get_thread_data();
+    return p->ThreadAttributes;
+}
+//! The method replaces the complete set of currently registered thread-specific attributes with the provided set
+template< typename CharT >
+void basic_logging_core< CharT >::set_thread_attributes(attribute_set const& attrs) const
+{
+    typename implementation::thread_data* p = pImpl->get_thread_data();
+    p->ThreadAttributes = attrs;
 }
 
 //! An internal method to set the global filter
@@ -279,50 +320,44 @@ void basic_logging_core< CharT >::reset_filter()
 template< typename CharT >
 bool basic_logging_core< CharT >::open_record(attribute_set const& source_attributes)
 {
-    typename implementation::thread_data* tsd = pImpl->pThreadData.get();
-    if (!tsd) try
+    try
     {
-        pImpl->init_thread_data();
-        tsd = pImpl->pThreadData.get();
-    }
-    catch (std::exception&)
-    {
-        return false;
-    }
-
-    // Lock the core to be safe against any attribute or sink set modifications
-    typename implementation::scoped_read_lock lock(pImpl->Mutex);
-
-    if (!pImpl->Sinks.empty()) try
-    {
-        // Construct a record
-        typedef typename implementation::thread_data::pending_record pending_record;
-        exclusive_ptr< pending_record > record(new pending_record(
-            source_attributes, tsd->ThreadAttributes, pImpl->GlobalAttributes));
-
-        if ((pImpl->Filter.empty() || pImpl->Filter(record->AttributeValues)))
+        typename implementation::thread_data* tsd = pImpl->get_thread_data();
+        // Lock the core to be safe against any attribute or sink set modifications
+        typename implementation::scoped_read_lock lock(pImpl->Mutex);
+    
+        if (!pImpl->Sinks.empty())
         {
-            // The global filter passed, trying the sinks
-            record->AcceptingSinks.reserve(pImpl->Sinks.size());
-            typename implementation::sink_list::iterator it = pImpl->Sinks.begin(), end = pImpl->Sinks.end();
-            for (; it != end; ++it)
-            {
-                try
-                {
-                    if (it->get()->will_write_message(record->AttributeValues))
-                        record->AcceptingSinks.push_back(*it);
-                }
-                catch (...)
-                {
-                    // Assume that the sink is incapable to receive messages now
-                }
-            }
+            // Construct a record
+            typedef typename implementation::thread_data::pending_record pending_record;
+            aux::exclusive_ptr< pending_record > record(new pending_record(
+                source_attributes, tsd->ThreadAttributes, pImpl->GlobalAttributes));
 
-            if (!record->AcceptingSinks.empty())
+            if ((pImpl->Filter.empty() || pImpl->Filter(record->AttributeValues)))
             {
-                // Some sinks are willing to process the record
-                tsd->PendingRecords.push(record);
-                return true;
+                // The global filter passed, trying the sinks
+                record->AcceptingSinks.reserve(pImpl->Sinks.size());
+                typename implementation::sink_list::iterator it = pImpl->Sinks.begin(), end = pImpl->Sinks.end();
+                for (; it != end; ++it)
+                {
+                    try
+                    {
+                        if (it->get()->will_write_message(record->AttributeValues))
+                            record->AcceptingSinks.push_back(*it);
+                    }
+                    catch (...)
+                    {
+                        // Assume that the sink is incapable to receive messages now
+                    }
+                }
+
+                if (!record->AcceptingSinks.empty())
+                {
+                    // Some sinks are willing to process the record
+                    record->AttributeValues.freeze();
+                    tsd->PendingRecords.push(record);
+                    return true;
+                }
             }
         }
     }
@@ -339,13 +374,7 @@ bool basic_logging_core< CharT >::open_record(attribute_set const& source_attrib
 template< typename CharT >
 void basic_logging_core< CharT >::push_record(string_type const& message_text)
 {
-    typename implementation::thread_data* tsd = pImpl->pThreadData.get();
-    if (!tsd)
-    {
-        pImpl->init_thread_data();
-        tsd = pImpl->pThreadData.get();
-    }
-
+    typename implementation::thread_data* tsd = pImpl->get_thread_data();
     try
     {
         if (tsd->PendingRecords.empty())
@@ -361,15 +390,12 @@ void basic_logging_core< CharT >::push_record(string_type const& message_text)
 
         typename implementation::sink_list::iterator it = record->AcceptingSinks.begin(),
             end = record->AcceptingSinks.end();
-        for (; it != end; ++it)
+        for (; it != end; ++it) try
         {
-            try
-            {
-                (*it)->write_message(record->AttributeValues, message_text);
-            }
-            catch (...)
-            {
-            }
+            (*it)->write_message(record->AttributeValues, message_text);
+        }
+        catch (...)
+        {
         }
     }
     catch (...)
