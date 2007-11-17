@@ -49,6 +49,13 @@ void basic_text_ostream_backend< CharT >::remove_stream(shared_ptr< stream_type 
         m_Streams.erase(it);
 }
 
+//! Sets the flag to automatically flush buffers after each logged line
+template< typename CharT >
+void basic_text_ostream_backend< CharT >::auto_flush(bool f)
+{
+    m_fAutoFlush = f;
+}
+
 //! The method writes the message to the sink
 template< typename CharT >
 void basic_text_ostream_backend< CharT >::do_write_message(
