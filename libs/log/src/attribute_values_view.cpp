@@ -109,11 +109,21 @@ public:
     //! Looks for the element with an equivalent key
     node* find(light_key_type const& key) const
     {
-        node* p = std::lower_bound(m_pBegin, m_pEnd, key, light_key_less());
-        if (p != m_pEnd && p->m_Value.first.compare(key.pKey, key.KeyLen) != 0)
-            return m_pEnd;
-        else
-            return p;
+        register node* b = m_pBegin;
+        register node* e = m_pEnd;
+        while (b != e)
+        {
+            register node* p = b + ((e - b) >> 1);
+            register const int cmp = p->m_Value.first.compare(key.pKey, key.KeyLen);
+            if (cmp == 0)
+                return p;
+            else if (cmp < 0)
+                b = p + 1;
+            else
+                e = p;
+        }
+
+        return m_pEnd;
     }
 
     //! Increments the reference counter
