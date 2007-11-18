@@ -16,7 +16,7 @@
 #include <boost/assert.hpp>
 #include <boost/detail/atomic_count.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
-#include "attribute_set_impl.hpp"
+#include "light_key.hpp"
 
 namespace boost {
 
@@ -24,7 +24,7 @@ namespace log {
 
 namespace {
 
-//! The metafunction computes the minimu gap between objects t1 and t2 of types T1 and T2
+//! The metafunction computes the minimal gap between objects t1 and t2 of types T1 and T2
 //! that would be needed to maintain the alignment of t2
 template< typename T1, typename T2 >
 struct alignment_gap_between
@@ -123,20 +123,20 @@ public:
 
     //! Constructs elements at the end of the view that correspond to the elements of the specified sequence
     void adopt_nodes(
-        typename attribute_set::implementation::node_container::const_iterator& it,
-        typename attribute_set::implementation::node_container::const_iterator end)
+        typename attribute_set::const_iterator& it,
+        typename attribute_set::const_iterator end)
     {
         for (; it != end; ++it)
-            push_back(it->m_Value.first, it->m_Value.second.get());
+            push_back(it->first, it->second.get());
     }
     //! Constructs elements at the end of the view that correspond to the elements of the specified sequences.
     //! The function ensures the order of the created nodes and discards elements from [it2, end2) that have
     //! keys equivalent to the corresponding elements in [it1, end1).
     void adopt_nodes(
-        typename attribute_set::implementation::node_container::const_iterator& it1,
-        typename attribute_set::implementation::node_container::const_iterator end1,
-        typename attribute_set::implementation::node_container::const_iterator& it2,
-        typename attribute_set::implementation::node_container::const_iterator end2)
+        typename attribute_set::const_iterator& it1,
+        typename attribute_set::const_iterator end1,
+        typename attribute_set::const_iterator& it2,
+        typename attribute_set::const_iterator end2)
     {
         while (true)
         {
@@ -156,15 +156,15 @@ public:
 
             case 3:
             {
-                register int cmp = it1->compare(it2->m_Value.first);
+                register int cmp = it1->first.compare(it2->first);
                 if (cmp > 0)
                 {
-                    push_back(it2->m_Value.first, it2->m_Value.second.get());
+                    push_back(it2->first, it2->second.get());
                     ++it2;
                 }
                 else
                 {
-                    push_back(it1->m_Value.first, it1->m_Value.second.get());
+                    push_back(it1->first, it1->second.get());
                     ++it1;
 
                     if (cmp == 0) // we skip equivalent-keyed elements in the lesser priority sets
@@ -212,24 +212,19 @@ basic_attribute_values_view< CharT >::basic_attribute_values_view(
     attribute_set const& global_attrs)
 {
     // Allocate the implementation container
-    typedef typename attribute_set::implementation::node_container attribute_set_nodes;
-    attribute_set_nodes const& source_nodes = source_attrs.m_pImpl->Nodes;
-    attribute_set_nodes const& thread_nodes = thread_attrs.m_pImpl->Nodes;
-    attribute_set_nodes const& global_nodes = global_attrs.m_pImpl->Nodes;
-    size_type max_size = source_nodes.size() + thread_nodes.size() + global_nodes.size();
-    m_pImpl = implementation::allocate_and_add_ref(
-        this, source_nodes.size() + thread_nodes.size() + global_nodes.size());
+    size_type max_size = source_attrs.size() + thread_attrs.size() + global_attrs.size();
+    m_pImpl = implementation::allocate_and_add_ref(this, max_size);
 
     if (max_size > 0)
     {
         // Compose the view. All copies performed bellow don't throw, so we are safe now.
-        typename attribute_set_nodes::const_iterator
-            src = source_nodes.begin(),
-            esrc = source_nodes.end(),
-            trd = thread_nodes.begin(),
-            etrd = thread_nodes.end(),
-            glb = global_nodes.begin(),
-            eglb = global_nodes.end();
+        typename attribute_set::const_iterator
+            src = source_attrs.begin(),
+            esrc = source_attrs.end(),
+            trd = thread_attrs.begin(),
+            etrd = thread_attrs.end(),
+            glb = global_attrs.begin(),
+            eglb = global_attrs.end();
     
         while (true)
         {
@@ -274,20 +269,20 @@ basic_attribute_values_view< CharT >::basic_attribute_values_view(
             {
                 // Source, thread and global attributes left
                 // Select the least-keyed attribute
-                register typename attribute_set_nodes::const_iterator* pIt = &src;
-                register int cmp = (*pIt)->compare(trd->m_Value.first);
+                register typename attribute_set::const_iterator* pIt = &src;
+                register int cmp = (*pIt)->first.compare(trd->first);
                 if (cmp > 0)
                     pIt = &trd;
                 else if (cmp == 0) // we skip equivalent-keyed elements in the lesser priority sets
                     ++trd;
-                cmp = (*pIt)->compare(glb->m_Value.first);
+                cmp = (*pIt)->first.compare(glb->first);
                 if (cmp > 0)
                     pIt = &glb;
                 else if (cmp == 0) // we skip equivalent-keyed elements in the lesser priority sets
                     ++glb;
 
                 // Adopt the attribute
-                m_pImpl->push_back((*pIt)->m_Value.first, (*pIt)->m_Value.second.get());
+                m_pImpl->push_back((*pIt)->first, (*pIt)->second.get());
                 ++(*pIt);
 
                 break;

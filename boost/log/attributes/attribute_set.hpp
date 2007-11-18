@@ -113,10 +113,13 @@ private:
     //! A base class for the container nodes
     struct node_base
     {
-        node_base* pPrev;
-        node_base* pNext;
-        node_base() { pPrev = pNext = this; }
-        node_base(node_base const&) { pPrev = pNext = this; }
+        value_type m_Value;
+        node_base* m_pPrev;
+        node_base* m_pNext;
+
+        node_base() { m_pPrev = m_pNext = this; }
+        node_base(node_base const& that) : m_Value(that.m_Value) { m_pPrev = m_pNext = this; }
+        node_base(key_type const& key, mapped_type const& data) : m_Value(key, data) { m_pPrev = m_pNext = this; }
 
     private:
         node_base& operator= (node_base const&);
@@ -170,33 +173,30 @@ private:
         //  Modification
         iter& operator++ ()
         {
-            m_pNode = m_pNode->pNext;
+            m_pNode = m_pNode->m_pNext;
             return *this;
         }
         iter& operator-- ()
         {
-            m_pNode = m_pNode->pPrev;
+            m_pNode = m_pNode->m_pPrev;
             return *this;
         }
         iter operator++ (int)
         {
             iter tmp(*this);
-            m_pNode = m_pNode->pNext;
+            m_pNode = m_pNode->m_pNext;
             return tmp;
         }
         iter operator-- (int)
         {
             iter tmp(*this);
-            m_pNode = m_pNode->pPrev;
+            m_pNode = m_pNode->m_pPrev;
             return tmp;
         }
 
         //  Dereferencing
-        pointer operator-> () const { return addressof(dereference()); }
-        reference operator* () const { return dereference(); }
-
-    private:
-        BOOST_LOG_EXPORT reference dereference() const;
+        pointer operator-> () const { return addressof(m_pNode->m_Value); }
+        reference operator* () const { return m_pNode->m_Value; }
 
     private:
         node_base* m_pNode;
