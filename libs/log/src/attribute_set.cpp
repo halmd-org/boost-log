@@ -290,19 +290,19 @@ public:
 
         bool operator< (node const& that) const
         {
-            return (m_Value.first.compare(that.m_Value.first.c_str(), that.m_Value.first.size()) < 0);
+            return (this->m_Value.first.compare(that.m_Value.first.c_str(), that.m_Value.first.size()) < 0);
         }
         int compare(light_key_type const& that) const
         {
-            return m_Value.first.compare(that.pKey, that.KeyLen);
+            return this->m_Value.first.compare(that.pKey, that.KeyLen);
         }
         int compare(key_type const& that) const
         {
-            return m_Value.first.compare(that.c_str(), that.size());
+            return this->m_Value.first.compare(that.c_str(), that.size());
         }
         bool is_equivalent(node const& that) const
         {
-            return (m_Value.first == that.m_Value.first);
+            return (this->m_Value.first == that.m_Value.first);
         }
     };
 
