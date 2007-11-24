@@ -17,30 +17,11 @@
 #include <boost/detail/atomic_count.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include "light_key.hpp"
+#include "alignment_gap_between.hpp"
 
 namespace boost {
 
 namespace log {
-
-namespace {
-
-//! The metafunction computes the minimal gap between objects t1 and t2 of types T1 and T2
-//! that would be needed to maintain the alignment of t2
-template< typename T1, typename T2 >
-struct alignment_gap_between
-{
-private:
-    struct both
-    {
-        T1 m1;
-        T2 m2;
-    };
-
-public:
-    enum { value = sizeof(both) - (sizeof(T1) + sizeof(T2)) };
-};
-
-} // namespace
 
 //! Container implementation
 template< typename CharT >
@@ -192,7 +173,7 @@ public:
     //! Allocates the needed memory to accomodate n nodes and constructs implementation object with m_RefCount == 1.
     static implementation* allocate_and_add_ref(internal_allocator_type* pAlloc, size_type n)
     {
-        enum { alignment_gap = alignment_gap_between< implementation, node >::value };
+        enum { alignment_gap = aux::alignment_gap_between< implementation, node >::value };
         typename internal_allocator_type::pointer p =
             pAlloc->allocate(sizeof(implementation) + (n * sizeof(node)) + alignment_gap);
         new (p) implementation(reinterpret_cast< node* >(p + sizeof(implementation) + alignment_gap), n);
@@ -203,7 +184,7 @@ public:
     {
         if (pImpl->release() == 0)
         {
-            enum { alignment_gap = alignment_gap_between< implementation, node >::value };
+            enum { alignment_gap = aux::alignment_gap_between< implementation, node >::value };
             const size_type size =
                 sizeof(implementation) + (pImpl->capacity() * sizeof(node)) + alignment_gap;
             pImpl->~implementation();
