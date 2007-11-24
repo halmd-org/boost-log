@@ -43,6 +43,7 @@ lib boost_log
        attribute_set.cpp
        attribute_values_view.cpp
        attachable_sstream_buf.cpp
+       slim_string.cpp
        basic_logger.cpp
        logging_core.cpp
        named_scope.cpp
