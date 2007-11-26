@@ -129,12 +129,18 @@ struct stream_placeholder
     {
         return fmt_wrapper< CharT, std::basic_string< CharT > >(s);
     }
+
+    static const stream_placeholder instance;
 };
 
-//  Placeholders to begin lambda expresions
-const stream_placeholder< char > ostrm = {};
-const stream_placeholder< wchar_t > wostrm = {};
+template< typename CharT >
+const stream_placeholder< CharT > stream_placeholder< CharT >::instance = {};
 
+//  Placeholders to begin lambda expresions
+namespace {
+    stream_placeholder< char > const& ostrm = stream_placeholder< char >::instance;
+    stream_placeholder< wchar_t > const& wostrm = stream_placeholder< wchar_t >::instance;
+}
 
 //! A formatter compound that encapsulates two other formatters
 template< typename LeftFmtT, typename RightFmtT >

@@ -34,6 +34,7 @@
 #endif
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/attr.hpp>
+#include <boost/log/formatters/named_scope.hpp>
 #include <boost/log/attributes/counter.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
@@ -153,7 +154,8 @@ int main(int argc, char* argv[])
                                            // it anyway if the library is not familiar with it (see
                                            // boost/log/type_dispatch/standard_types.hpp for the list
                                            // of the supported out-of-box types).
-        << "] " // yet another delimiter
+        << "] [" // yet another delimiter
+        << fmt::named_scope("Scope", fmt::keywords::scope_iteration = fmt::keywords::reverse) << "] "
         << fmt::message()); // here goes the log record text
 
     // Now the sink will output in the following format:
