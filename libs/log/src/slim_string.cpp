@@ -19,6 +19,12 @@
 #include <boost/log/detail/slim_string.hpp>
 #include "alignment_gap_between.hpp"
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// 'this' : used in base member initializer list
+#pragma warning(disable: 4355)
+#endif // _MSC_VER
+
 namespace boost {
 
 namespace log {
@@ -593,17 +599,21 @@ template< typename CharT, typename TraitsT >
 int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, basic_slim_string const& that, size_type pos2, size_type n2) const
 {
     const size_type that_size = that.m_pImpl->size();
-    if (that_size < pos2 || that_size < (pos2 + n2))
+    // Check that both position and length don't exceed the whole string length
+    if (that_size >= (pos2 + n2))
+        return m_pImpl->compare(pos1, n1, that.m_pImpl->begin() + pos2, n2);
+    else
         throw std::out_of_range("basic_slim_string::compare: the position is out of range");
-    return m_pImpl->compare(pos1, n1, that.m_pImpl->begin() + pos2, n2);
 }
 template< typename CharT, typename TraitsT >
 int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, string_type const& s, size_type pos2, size_type n2) const
 {
     const size_type that_size = s.size();
-    if (that_size < pos2 || that_size < (pos2 + n2))
+    // Check that both position and length don't exceed the whole string length
+    if (that_size >= (pos2 + n2))
+        return m_pImpl->compare(pos1, n1, s.data() + pos2, n2);
+    else
         throw std::out_of_range("basic_slim_string::compare: the position is out of range");
-    return m_pImpl->compare(pos1, n1, s.data() + pos2, n2);
 }
 template< typename CharT, typename TraitsT >
 int basic_slim_string< CharT, TraitsT >::compare(const_pointer s) const
@@ -616,7 +626,7 @@ int basic_slim_string< CharT, TraitsT >::compare(const_pointer s, size_type n2) 
     register const size_type size = m_pImpl->size();
     register const int res = traits_type::compare(m_pImpl->begin(), s, (std::min)(n2, size));
     if (res == 0)
-        return (size - n2);
+        return static_cast< int >(size - n2);
     else
         return res;
 }
@@ -624,25 +634,33 @@ template< typename CharT, typename TraitsT >
 int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, const_pointer s) const
 {
     const size_type size = m_pImpl->size();
-    if (size < pos1 || size < (pos1 + n1))
-        throw std::out_of_range("basic_slim_string::compare: the position is out of range");
-    register const int res = traits_type::compare(m_pImpl->begin(), s, n1);
-    if (res == 0)
-        return -((int)s[n1]);
+    // Check that both position and length don't exceed the whole string length
+    if (size >= (pos1 + n1))
+    {
+        register const int res = traits_type::compare(m_pImpl->begin() + pos1, s, n1);
+        if (res == 0)
+            return (s[n1] == 0 ? 0 : -1);
+        else
+            return res;
+    }
     else
-        return res;
+        throw std::out_of_range("basic_slim_string::compare: the position is out of range");
 }
 template< typename CharT, typename TraitsT >
 int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, const_pointer s, size_type n2) const
 {
     const size_type size = m_pImpl->size();
-    if (size < pos1 || size < (pos1 + n1))
-        throw std::out_of_range("basic_slim_string::compare: the position is out of range");
-    register const int res = traits_type::compare(m_pImpl->begin(), s, (std::min)(n1, n2));
-    if (res == 0)
-        return (n1 - n2);
+    // Check that both position and length don't exceed the whole string length
+    if (size >= (pos1 + n1))
+    {
+        register const int res = traits_type::compare(m_pImpl->begin() + pos1, s, (std::min)(n1, n2));
+        if (res == 0)
+            return static_cast< int >(n1 - n2);
+        else
+            return res;
+    }
     else
-        return res;
+        throw std::out_of_range("basic_slim_string::compare: the position is out of range");
 }
 
 template class basic_slim_string< char, std::char_traits< char > >;
@@ -653,3 +671,7 @@ template class basic_slim_string< wchar_t, std::char_traits< wchar_t > >;
 } // namespace log
 
 } // namespace boost
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
