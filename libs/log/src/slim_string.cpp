@@ -313,16 +313,16 @@ basic_slim_string< CharT, TraitsT >::basic_slim_string(string_type const& s, siz
 template< typename CharT, typename TraitsT >
 basic_slim_string< CharT, TraitsT >::basic_slim_string(basic_slim_string const& that, size_type pos, size_type n)
 {
-    if (pos == 0 && n >= that.m_pImpl->size())
+    const size_type that_size = that.m_pImpl->size();
+    if (pos == 0 && n >= that_size)
     {
         m_pImpl = that.m_pImpl;
         m_pImpl->add_ref();
     }
     else
     {
-        const size_type size = that.size();
-        const size_type actual_pos = (pos == npos) ? 0 : (std::min)(size, pos);
-        const size_type len = ((actual_pos + n) < size) ? n : (size - actual_pos);
+        const size_type actual_pos = (pos == npos) ? 0 : (std::min)(that_size, pos);
+        const size_type len = ((actual_pos + n) < that_size) ? n : (that_size - actual_pos);
         m_pImpl = implementation::allocate_and_add_ref(this, that.data() + actual_pos, len);
     }
 }
