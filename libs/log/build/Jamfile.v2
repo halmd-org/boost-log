@@ -47,6 +47,7 @@ lib boost_log
        basic_logger.cpp
        logging_core.cpp
        named_scope.cpp
+       timer.cpp
        sink.cpp
        text_ostream_backend.cpp
        platform_log_sources

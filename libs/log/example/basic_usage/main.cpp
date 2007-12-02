@@ -24,6 +24,7 @@
 #include <fstream>
 #include <boost/shared_ptr.hpp>
 #include <boost/empty_deleter.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/logging_core.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/severity_logger.hpp>
@@ -39,6 +40,7 @@
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/attributes/named_scope.hpp>
+#include <boost/log/attributes/clock.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>
 
@@ -135,7 +137,8 @@ int main(int argc, char* argv[])
     // will be written to log and in what way they will look there.
     pSink->locked_backend()->set_formatter(fmt::ostrm
         << fmt::attr("LineID") // First an attribute "LineID" is written to the log
-        << ": [" // then this delimiter separates it from the rest of the line
+        << " [" << fmt::attr< boost::posix_time::ptime >("TimeStamp") 
+        << "] [" // then this delimiter separates it from the rest of the line
         << fmt::attr< std::string >("Tag") // then goes another attribute named "Tag"
                                            // Note here we explicitly stated that its type
                                            // should be std::string. We could omit it just
@@ -159,7 +162,7 @@ int main(int argc, char* argv[])
         << fmt::message()); // here goes the log record text
 
     // Now the sink will output in the following format:
-    // 1: [Tag value] Hello World!
+    // 1 [Current time] [Tag value] Hello World!
     // The output will be the same for all streams we add to the sink. If you want something different,
     // you may create another sink for that purpose.
 
@@ -172,6 +175,10 @@ int main(int argc, char* argv[])
     // Since we intend to count all logging records ever made by the application,
     // this attribute should clearly be global.
     logging::logging_core::get()->add_global_attribute("LineID", pCounter);
+
+    // And similarly add a time stamp
+    shared_ptr< logging::attribute > pTimeStamp(new attrs::local_clock());
+    logging::logging_core::get()->add_global_attribute("TimeStamp", pTimeStamp);
 
     // Attributes may have two other scopes: thread scope and source scope. Attributes of thread
     // scope are output with each record made by the thread (regardless of the logger object), and

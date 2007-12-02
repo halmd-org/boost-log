@@ -59,7 +59,7 @@ public:
     //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value()
     {
-        return shared_ptr< attribute_value >(new functor_result_value(m_Functor));
+        return shared_ptr< attribute_value >(new functor_result_value(m_Functor()));
     }
 };
 
