@@ -40,8 +40,10 @@ namespace attributes {
 
 #ifdef _MSC_VER
 #pragma warning(push)
- // non dll-interface class 'A' used as base for dll-interface class 'B'
+// non dll-interface class 'A' used as base for dll-interface class 'B'
 #pragma warning(disable: 4275)
+// class 'boost::mutex' needs to have dll-interface to be used by clients of class 'boost::log::attributes::timer'
+#pragma warning(disable: 4251)
 #endif // _MSC_VER
 
 /*!

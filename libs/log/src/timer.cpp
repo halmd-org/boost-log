@@ -32,7 +32,7 @@ namespace attributes {
 timer::timer()
 {
     LARGE_INTEGER li;
-    QueryPerformanceFrequence(&li);
+    QueryPerformanceFrequency(&li);
     BOOST_ASSERT(li.QuadPart != 0LL);
     m_FrequencyFactor = static_cast< uint64_t >(li.QuadPart);
 
@@ -50,28 +50,28 @@ shared_ptr< attribute_value > timer::get_value()
 
     const uint64_t counts = static_cast< uint64_t >(li.QuadPart) - m_LastCounter;
     const uint64_t sec_total = counts / m_FrequencyFactor;
-    const uint64_t usec = ((counts % m_FrequencyFactor) * 10e6ULL) / m_FrequencyFactor;
+    const uint64_t usec = ((counts % m_FrequencyFactor) * 1000000ULL) / m_FrequencyFactor;
 
     if (sec_total < static_cast< uint64_t >((std::numeric_limits< long >::max)()))
     {
         // Seconds downcasting won't truncate the duration, microseconds will always fit into a 32 bit value, which long is on Windows
-        m_Duration += date_time::seconds(static_cast< long >(sec_total)) + date_time::microseconds(static_cast< long >(usec));
+        m_Duration += posix_time::seconds(static_cast< long >(sec_total)) + posix_time::microseconds(static_cast< long >(usec));
     }
     else
     {
         // Seems like the previous call to the function was ages ago.
         // Here hours may still get truncated on down-casting, but that would happen
-        // if the function was last called about 245 ceturies ago. I guess,
+        // if the function was last called about 245 centuries ago. I guess,
         // m_Duration would overflow even sooner, so there's no use to try to
         // avoid truncating gracefully. So I'll just leave this to the progeny. :)
         const uint64_t hours = sec_total / 3600ULL;
         const uint64_t sec = sec_total % 3600ULL;
         m_Duration +=
-            date_time::hours(static_cast< long >(hours))
-            + date_time::seconds(static_cast< long >(sec))
-            + date_time::microseconds(static_cast< long >(usec));
+            posix_time::hours(static_cast< long >(hours))
+            + posix_time::seconds(static_cast< long >(sec))
+            + posix_time::microseconds(static_cast< long >(usec));
     }
-    m_LastCounter = counts;
+    m_LastCounter = static_cast< uint64_t >(li.QuadPart);
 
     return shared_ptr< attribute_value >(new result_value(m_Duration));
 }
