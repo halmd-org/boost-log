@@ -159,7 +159,10 @@ namespace aux {
         boost::detail::atomic_count m_RefCounter;
         scoped_lock m_Lock;
 
-        shared_backend_lock(scoped_lock& l) : m_RefCounter(0), m_Lock(move(l)) {}
+        shared_backend_lock(scoped_lock& l) : m_RefCounter(0), m_Lock(*l.mutex(), boost::defer_lock_t())
+        {
+            m_Lock.swap(l);
+        }
     };
 
     //! A pointer type that locks the backend until it's destroyed
