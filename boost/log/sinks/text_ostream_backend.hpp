@@ -25,6 +25,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
+#include <boost/log/sinks/record_writer.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -59,8 +60,14 @@ public:
     typedef typename base_type::stream_type stream_type;
 
 private:
+    //! Structure with data regarding a single stream
+    struct stream_info
+    {
+        shared_ptr< stream_type > strm;
+        record_writer* record_listener;
+    };
     //! Type of the container that holds all aggregated streams
-    typedef std::vector< shared_ptr< stream_type > > ostream_sequence;
+    typedef std::vector< stream_info > ostream_sequence;
 
 private:
     //! Output stream list

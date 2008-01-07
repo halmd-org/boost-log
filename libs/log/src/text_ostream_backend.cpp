@@ -21,6 +21,34 @@ namespace log {
 
 namespace sinks {
 
+namespace {
+
+//! A simple lookup predicate
+template< typename StreamT >
+struct stream_lookup_fun
+{
+    typedef bool return_type;
+
+    explicit stream_lookup_fun(shared_ptr< StreamT > const& strm) : m_Stream(strm) {}
+
+    template< typename T >
+    return_type operator() (T const& that) const
+    {
+        return (that.strm == m_Stream);
+    }
+
+private:
+    shared_ptr< StreamT > const& m_Stream;
+};
+
+template< typename StreamT >
+static inline stream_lookup_fun< StreamT > stream_lookup(shared_ptr< StreamT > const& strm)
+{
+    return stream_lookup_fun< StreamT >(strm);
+}
+
+} // namespace
+
 //! Constructor
 template< typename CharT >
 basic_text_ostream_backend< CharT >::basic_text_ostream_backend() : m_fAutoFlush(false)
@@ -35,16 +63,19 @@ basic_text_ostream_backend< CharT >::~basic_text_ostream_backend() {}
 template< typename CharT >
 void basic_text_ostream_backend< CharT >::add_stream(shared_ptr< stream_type > const& strm)
 {
-    typename ostream_sequence::iterator it = std::find(m_Streams.begin(), m_Streams.end(), strm);
+    typename ostream_sequence::iterator it = std::find_if(m_Streams.begin(), m_Streams.end(), stream_lookup(strm));
     if (it == m_Streams.end())
-        m_Streams.push_back(strm);
+    {
+        stream_info info = { strm, dynamic_cast< record_writer* >(strm.get()) };
+        m_Streams.push_back(info);
+    }
 }
 
 //! The method removes a stream from the sink
 template< typename CharT >
 void basic_text_ostream_backend< CharT >::remove_stream(shared_ptr< stream_type > const& strm)
 {
-    typename ostream_sequence::iterator it = std::find(m_Streams.begin(), m_Streams.end(), strm);
+    typename ostream_sequence::iterator it = std::find_if(m_Streams.begin(), m_Streams.end(), stream_lookup(strm));
     if (it != m_Streams.end())
         m_Streams.erase(it);
 }
@@ -66,14 +97,20 @@ void basic_text_ostream_backend< CharT >::do_write_message(
     typename ostream_sequence::const_iterator it = m_Streams.begin();
     for (; it != m_Streams.end(); ++it)
     {
-        register stream_type* const strm = it->get();
+        register stream_type* const strm = it->strm.get();
         if (strm->good()) try
         {
+            if (it->record_listener)
+                it->record_listener->on_start_record();
+
             strm->write(p, static_cast< std::streamsize >(s));
-            if (!m_fAutoFlush)
-                (*strm) << '\n';
-            else
-                (*strm) << std::endl;
+            (*strm) << '\n';
+
+            if (it->record_listener)
+                it->record_listener->on_end_record();
+
+            if (m_fAutoFlush)
+                strm->flush();
         }
         catch (std::exception&)
         {
