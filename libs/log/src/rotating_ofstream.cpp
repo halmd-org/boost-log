@@ -12,6 +12,10 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <ctype.h>
 #include <wctype.h>
 #include <ctime>
@@ -113,7 +117,11 @@ namespace {
         static lazy_sprintf get_lazy_sprintf()
         {
             using namespace std;
+#ifndef _MSC_VER
             return &snprintf;
+#else
+            return &_snprintf;
+#endif
         }
     };
 
@@ -173,6 +181,7 @@ namespace {
             typedef date_time::time_facet< posix_time::ptime, char_type > time_facet_type;
             time_facet_type* m_pFacet;
             std::basic_ostringstream< char_type > m_Stream;
+            const string_type m_EmptyString;
 
         public:
             //! Constructor
@@ -184,12 +193,11 @@ namespace {
                 pFacet.release();
                 m_Stream.imbue(loc);
             }
-            //! The method formats the current date and time accorting to the format string str and writes the result into it
+            //! The method formats the current date and time according to the format string str and writes the result into it
             void format(string_type& str)
             {
                 m_pFacet->format(str.c_str());
-                static const char_type empty_string[] = { 0 };
-                m_Stream.str(empty_string);
+                m_Stream.str(m_EmptyString);
                 m_Stream << boost::log::attributes::local_time_traits::get_clock();
                 if (m_Stream.good())
                     str = m_Stream.str();
@@ -544,6 +552,11 @@ void basic_rotating_ofstreambuf< CharT, DeviceT, TraitsT >::clear_close_handler(
 }
 
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// 'this' : used in base member initializer list
+#pragma warning(disable: 4355)
+#endif
 
 //! Default constructor
 template< typename CharT, typename TraitsT >
@@ -551,6 +564,10 @@ basic_rotating_ofstream< CharT, TraitsT >::basic_rotating_ofstream()
     : streambuf_base(), stream_base(&this->streambuf_base::member)
 {
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 //! Destructor
 template< typename CharT, typename TraitsT >
@@ -605,18 +622,18 @@ void basic_rotating_ofstream< CharT, TraitsT >::clear_close_handler()
 
 
 //! Explicitly instantiate implementation
-template class BOOST_LOG_EXPORT basic_rotating_ofstreambuf<
+template class basic_rotating_ofstreambuf<
     char,
     rotating_file_sink,
     std::char_traits< char >
 >;
-template class BOOST_LOG_EXPORT basic_rotating_ofstreambuf<
+template class basic_rotating_ofstreambuf<
     wchar_t,
     iostreams::code_converter< rotating_file_sink >,
     std::char_traits< wchar_t >
 >;
-template class BOOST_LOG_EXPORT basic_rotating_ofstream< char, std::char_traits< char > >;
-template class BOOST_LOG_EXPORT basic_rotating_ofstream< wchar_t, std::char_traits< wchar_t > >;
+template class basic_rotating_ofstream< char, std::char_traits< char > >;
+template class basic_rotating_ofstream< wchar_t, std::char_traits< wchar_t > >;
 
 } // namespace sinks
 

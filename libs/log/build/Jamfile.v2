@@ -19,15 +19,15 @@ feature.set-default logapi : [ default_logapi ] ;
 
 alias platform_log_sources
     : ## winnt sources ##
-       nt_eventlog_backend.cpp
+        nt_eventlog_backend.cpp
     : ## requirements ##
-      <logapi>winnt
+        <logapi>winnt
     ;
 
 alias platform_log_sources
     : ## unix sources ##
     : ## requirements ##
-      <logapi>unix
+        <logapi>unix
     ;
 
 project boost/log
@@ -36,21 +36,24 @@ project boost/log
         <threading>multi
         <library>../../thread/build//boost_thread
         <library>../../regex/build//boost_regex
+        <library>../../filesystem/build//boost_filesystem
+        <library>../../date_time/build//boost_date_time
     ;
 
 lib boost_log
     : ## sources ##
-       attribute_set.cpp
-       attribute_values_view.cpp
-       attachable_sstream_buf.cpp
-       slim_string.cpp
-       basic_logger.cpp
-       logging_core.cpp
-       named_scope.cpp
-       timer.cpp
-       sink.cpp
-       text_ostream_backend.cpp
-       platform_log_sources
+        attribute_set.cpp
+        attribute_values_view.cpp
+        attachable_sstream_buf.cpp
+        slim_string.cpp
+        basic_logger.cpp
+        logging_core.cpp
+        named_scope.cpp
+        timer.cpp
+        sink.cpp
+        text_ostream_backend.cpp
+        rotating_ofstream.cpp
+        platform_log_sources
     : ## requirements ##
         <define>BOOST_LOG_BUILDING_THE_LIB=1
     ;

@@ -27,7 +27,6 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/parameter/keyword.hpp>
 #include <boost/function/function1.hpp>
-#include <boost/iostreams/concepts.hpp>
 #include <boost/iostreams/categories.hpp>
 #include <boost/iostreams/positioning.hpp>
 #include <boost/iostreams/code_converter.hpp>
@@ -43,6 +42,8 @@
 #pragma warning(push)
 // 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
 #pragma warning(disable: 4251)
+// non dll-interface struct 'A' used as base for dll-interface class 'B'
+#pragma warning(disable: 4275)
 #endif // _MSC_VER
 
 namespace boost {
@@ -60,12 +61,11 @@ namespace keywords {
 } // namespace keywords
 
 //! A logical device that implements writing and rotation detection
-class BOOST_LOG_EXPORT rotating_file_sink :
-    public iostreams::sink
+class BOOST_LOG_EXPORT rotating_file_sink
 {
+public:
     struct implementation;
 
-public:
     //! Device category
     struct category :
         virtual public iostreams::device_tag,
@@ -74,6 +74,9 @@ public:
         virtual public iostreams::output_seekable
     {
     };
+
+    //! Character type
+    typedef char char_type;
 
     //! The type of the handler of the event of opening of a new file
     typedef function1< void, std::ostream& > open_handler_type;
@@ -161,7 +164,7 @@ private:
 
 //! A rotating file output stream buffer class
 template< typename CharT, typename DeviceT, typename TraitsT = std::char_traits< CharT > >
-class BOOST_LOG_EXPORT basic_rotating_ofstreambuf :
+class basic_rotating_ofstreambuf :
     public iostreams::stream_buffer< DeviceT, TraitsT >
 {
     //! Base type
@@ -173,7 +176,7 @@ public:
 
 public:
     //! Default constructor
-    basic_rotating_ofstreambuf();
+    BOOST_LOG_EXPORT basic_rotating_ofstreambuf();
 
 #ifndef BOOST_FILESYSTEM_NARROW_ONLY
 
@@ -217,16 +220,16 @@ public:
 #undef BOOST_LOG_ROTATING_OFSTREAMBUF_CTOR
 
     //! Destructor
-    ~basic_rotating_ofstreambuf();
+    BOOST_LOG_EXPORT ~basic_rotating_ofstreambuf();
 
     //! Sets a new handler for opening a new file
-    void set_open_handler(open_handler_type const& handler);
+    BOOST_LOG_EXPORT void set_open_handler(open_handler_type const& handler);
     //! Resets the handler for opening a new file
-    void clear_open_handler();
+    BOOST_LOG_EXPORT void clear_open_handler();
     //! Sets a new handler for closing a file
-    void set_close_handler(close_handler_type const& handler);
+    BOOST_LOG_EXPORT void set_close_handler(close_handler_type const& handler);
     //! Resets the handler for closing a file
-    void clear_close_handler();
+    BOOST_LOG_EXPORT void clear_close_handler();
 
 private:
     //! Device construction helper
@@ -235,6 +238,10 @@ private:
     {
         return rotating_file_sink(pattern, args);
     }
+
+    //! Copying and assignment are closed
+    basic_rotating_ofstreambuf(basic_rotating_ofstreambuf const&);
+    basic_rotating_ofstreambuf& operator= (basic_rotating_ofstreambuf const&);
 };
 
 //! A helper streambuf type generator to aid metaprogramming
