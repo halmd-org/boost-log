@@ -120,6 +120,11 @@ public:
         m_Formatter.clear();
     }
 
+    //! The method returns the current locale
+    std::locale getloc() const
+    {
+        return m_FormattingStream.getloc();
+    }
     //! The method sets the locale used during formatting
     std::locale imbue(std::locale const& loc)
     {

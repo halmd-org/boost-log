@@ -26,6 +26,7 @@ alias platform_log_sources
 
 alias platform_log_sources
     : ## unix sources ##
+        syslog_backend.cpp
     : ## requirements ##
         <logapi>unix
     ;
