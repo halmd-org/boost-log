@@ -130,7 +130,7 @@ namespace syslog {
 
         public:
             //! Constructor
-            explicit reference_proxy(mapping_type& mapping, attribute_value_type const& key) : m_Mapping(mapping), m_Key(key) {}
+            reference_proxy(mapping_type& mapping, attribute_value_type const& key) : m_Mapping(mapping), m_Key(key) {}
             //! Insertion
             reference_proxy const& operator= (level_t const& val) const
             {
@@ -212,9 +212,9 @@ private:
 
 public:
     //! Constructor
-	explicit basic_syslog_backend(
-	    syslog::facility_t facility = syslog::user,
-	    syslog::options_t options = syslog::no_delay);
+    explicit basic_syslog_backend(
+        syslog::facility_t facility = syslog::user,
+        syslog::options_t options = syslog::no_delay);
     //! Destructor
     ~basic_syslog_backend();
 
