@@ -20,7 +20,7 @@
 #define BOOST_LOG_FORMATTERS_IF_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/formatters/basic_formatter.hpp>
+#include <boost/log/formatters/basic_formatters.hpp>
 
 namespace boost {
 
