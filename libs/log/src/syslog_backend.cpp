@@ -173,6 +173,8 @@ struct basic_syslog_backend< CharT >::implementation
 
     //! Formatter
     formatter_type m_Formatter;
+    //! Level extractor
+    level_extractor_type m_LevelExtractor;
 
     //! Logging facility
     const syslog::facility_t m_Facility;
@@ -216,6 +218,13 @@ void basic_syslog_backend< CharT >::reset_formatter()
     m_pImpl->m_Formatter.clear();
 }
 
+//! The method installs the syslog record level extraction function object
+template< typename CharT >
+void basic_syslog_backend< CharT >::set_level_extractor(level_extractor_type const& extractor)
+{
+    m_pImpl->m_LevelExtractor = extractor;
+}
+
 //! The method returns the current locale
 template< typename CharT >
 std::locale basic_syslog_backend< CharT >::getloc() const
@@ -244,7 +253,9 @@ void basic_syslog_backend< CharT >::write_message(
     m_pImpl->m_FormattingStream.flush();
 
     const int facility = m_pImpl->m_Facility;
-    const int level = LOG_INFO;
+    const int level =
+        m_pImpl->m_LevelExtractor.empty() ? syslog::info : m_pImpl->m_LevelExtractor(attributes);
+
     ::syslog(LOG_MAKEPRI(facility, level), "%s", m_pImpl->m_FormattedRecord.c_str());
 }
 
