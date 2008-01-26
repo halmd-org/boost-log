@@ -55,7 +55,7 @@ namespace aux {
             void operator() (pointer p) const
             {
                 m_pAlloc->destroy(p);
-                m_pAlloc->deallocate(p);
+                m_pAlloc->deallocate(p, 1);
             }
 
         private:
