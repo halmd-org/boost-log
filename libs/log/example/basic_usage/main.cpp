@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
         // Next we add streams to which logging records should be output
         shared_ptr< std::ostream > pStream(&std::clog, boost::empty_deleter());
         pBackend->add_stream(pStream);
-    
+
         // We can add more than one stream to the sink backend
         shared_ptr< std::ofstream > pStream2(new std::ofstream("sample.log"));
         assert(pStream2->is_open());
@@ -193,7 +193,7 @@ int main(int argc, char* argv[])
 
     // We can mark the current execution scope now - it's the 'main' function
     BOOST_LOG_FUNCTION();
-    
+
     // Let's try out the counter attribute and formatting
     BOOST_LOG(lg) << "Some log line with a counter";
     BOOST_LOG(lg) << "Another log line with the counter";
@@ -202,7 +202,7 @@ int main(int argc, char* argv[])
     // two lines above, so it is empty in the output. Let's try to tag some log records with it.
     {
         BOOST_LOG_NAMED_SCOPE("Tagging scope");
-        
+
         // The library has an attribute which simply returns its value
         // on each record. It perfectly fits to be used as a tag.
         attrs::constant< std::string > TagAttr("Tagged line");
