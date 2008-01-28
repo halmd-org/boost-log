@@ -19,7 +19,6 @@ feature.set-default logapi : [ default_logapi ] ;
 
 alias platform_log_sources
     : ## winnt sources ##
-        nt_eventlog_backend.cpp
     : ## requirements ##
         <logapi>winnt
     ;
