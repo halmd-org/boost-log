@@ -114,9 +114,9 @@ public:
                         if (it != scopes.begin())
                             strm << "..." << m_ScopeDelimiter;
 
-                        strm << *it;
+                        strm << it->scope_name;
                         for (++it; it != end; ++it)
-                            strm << m_ScopeDelimiter << *it;
+                            strm << m_ScopeDelimiter << it->scope_name;
                     }
                 }
                 else
@@ -127,9 +127,9 @@ public:
 
                     if (it != end)
                     {
-                        strm << *it;
+                        strm << it->scope_name;
                         for (++it; it != end; ++it)
-                            strm << m_ScopeDelimiter << *it;
+                            strm << m_ScopeDelimiter << it->scope_name;
 
                         if (it != scopes.rend())
                             strm << m_ScopeDelimiter << "...";

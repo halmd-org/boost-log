@@ -129,10 +129,16 @@ public:
     //! The method puts the record into the queue
     void enqueue_message(attribute_values_view const& attributes, string_type const& message)
     {
+        // Make sure that no references to the thread-specific data is left in attribute values
+        for (typename attribute_values_view::const_iterator it = attributes.begin(), end = attributes.end(); it != end; ++it)
+            it->second->detach_from_thread();
+
+        // Put the record into the queue
         {
             scoped_lock _(m_Mutex);
             m_EnqueuedRecords.push_back(enqueued_record(attributes, message));
         }
+
         m_Condition.notify_one();
     }
 

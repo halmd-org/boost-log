@@ -13,12 +13,12 @@
  */
 
 #include <memory>
-#include <vector>
+#include <boost/optional.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/thread/tss.hpp>
 #include <boost/thread/once.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/named_scope.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
 
 namespace boost {
 
@@ -26,25 +26,111 @@ namespace log {
 
 namespace attributes {
 
+namespace {
+
+    //! Actual implementation of the named scope list
+    template< typename CharT >
+    class basic_writeable_named_scope_list :
+        public basic_named_scope_list< CharT >
+    {
+        //! Base type
+        typedef basic_named_scope_list< CharT > base_type;
+    
+    public:
+        //! Const reference type
+        typedef typename base_type::const_reference const_reference;
+    
+    public:
+        //! The method pushes the scope to the back of the list
+        void push_back(const_reference entry)
+        {
+            const_reference top = this->back();
+            entry._m_pPrev = const_cast< aux::named_scope_list_node* >(static_cast< const aux::named_scope_list_node* >(&top));
+            top._m_pNext = const_cast< aux::named_scope_list_node* >(static_cast< const aux::named_scope_list_node* >(&entry));
+            entry._m_pNext = &this->m_RootNode;
+            this->m_RootNode._m_pPrev = const_cast< aux::named_scope_list_node* >(static_cast< const aux::named_scope_list_node* >(&entry));
+            ++this->m_Size;
+        }
+        //! The method removes the top scope entry from the list
+        void pop_back()
+        {
+            const_reference top = this->back();
+            top._m_pPrev->_m_pNext = top._m_pNext;
+            top._m_pNext->_m_pPrev = top._m_pPrev;
+            --this->m_Size;
+        }
+    };
+    
+    //! Named scope attribute value
+    template< typename CharT >
+    class basic_named_scope_value :
+        public attribute_value
+    {
+        //! Character type
+        typedef CharT char_type;
+        //! Scope names stack
+        typedef basic_named_scope_list< char_type > scope_stack;
+    
+        //! Pointer to the actual scope value
+        scope_stack* m_pValue;
+        //! A thread-independent value
+        optional< scope_stack > m_DetachedValue;
+    
+    public:
+        //! Constructor
+        explicit basic_named_scope_value(scope_stack* p) : m_pValue(p) {}
+    
+        //! The method dispatches the value to the given object. It returns true if the
+        //! object was capable to consume the real attribute value type and false otherwise.
+        bool dispatch(type_dispatcher& dispatcher)
+        {
+            register type_visitor< scope_stack >* visitor =
+                dispatcher.get_visitor< scope_stack >();
+            if (visitor)
+            {
+                visitor->visit(*m_pValue);
+                return true;
+            }
+            else
+                return false;
+        }
+    
+        //! The method is called when the attribute value is passed to another thread (e.g.
+        //! in case of asynchronous logging). The value should ensure it properly owns all thread-specific data.
+        void detach_from_thread()
+        {
+            if (!m_DetachedValue)
+            {
+                m_DetachedValue = *m_pValue;
+                m_pValue = m_DetachedValue.get_ptr();
+            }
+        }
+    };
+
+} // namespace
+
 //! Named scope attribute implementation
 template< typename CharT >
 struct basic_named_scope< CharT >::implementation :
     public enable_shared_from_this< implementation >
 {
+    //! Writeable scope list type
+    typedef basic_writeable_named_scope_list< char_type > scope_list;
+
     //! Pointer to the thread-specific scope stack
-    thread_specific_ptr< scope_stack > pStacks;
+    thread_specific_ptr< scope_list > pScopes;
 
     //! Pointer to implementation instance
     static implementation* const pInstance;
 
     //! The method returns current thread scope stack
-    scope_stack& get_scope_stack()
+    scope_list& get_scope_list()
     {
-        register scope_stack* p = pStacks.get();
+        register scope_list* p = pScopes.get();
         if (!p)
         {
-            std::auto_ptr< scope_stack > pNew(new scope_stack);
-            pStacks.reset(pNew.get());
+            std::auto_ptr< scope_list > pNew(new scope_list());
+            pScopes.reset(pNew.get());
             p = pNew.release();
         }
 
@@ -82,6 +168,42 @@ basic_named_scope< CharT >::implementation::pInstance =
     basic_named_scope< CharT >::implementation::init_named_scope();
 
 
+//! Copy constructor
+template< typename CharT >
+basic_named_scope_list< CharT >::basic_named_scope_list(basic_named_scope_list const& that)
+    : allocator_type(static_cast< allocator_type const& >(that)), m_Size(that.size()), m_fNeedToDeallocate(!that.empty())
+{
+    if (m_Size > 0)
+    {
+        // Copy the container contents
+        register pointer p = allocator_type::allocate(that.size());
+        register aux::named_scope_list_node* prev = &m_RootNode;
+        for (const_iterator src = that.begin(), end = that.end(); src != end; ++src, ++p)
+        {
+            allocator_type::construct(p, *src); // won't throw
+            p->_m_pPrev = prev;
+            prev->_m_pNext = p;
+            prev = p;
+        }
+        m_RootNode._m_pPrev = prev;
+        prev->_m_pNext = &m_RootNode;
+    }
+}
+
+//! Destructor
+template< typename CharT >
+basic_named_scope_list< CharT >::~basic_named_scope_list()
+{
+    if (m_fNeedToDeallocate)
+    {
+        iterator it(m_RootNode._m_pNext);
+        iterator end(&m_RootNode);
+        for (; it != end; ++it)
+            allocator_type::destroy(&*it);
+        allocator_type::deallocate(static_cast< pointer >(m_RootNode._m_pNext), m_Size);
+    }
+}
+
 //! Constructor
 template< typename CharT >
 basic_named_scope< CharT >::basic_named_scope()
@@ -93,33 +215,38 @@ basic_named_scope< CharT >::basic_named_scope()
 template< typename CharT >
 shared_ptr< attribute_value > basic_named_scope< CharT >::get_value()
 {
-    // We need the copy since the attribute value may get passed to another thread
-    // in case of asynchronous logging, and while being logged the thread may
-    // eventually change its scope and even finish. The copy is supposed to be
-    // cheap, since there are only pointers to string literals in the scope stack.
     return shared_ptr< attribute_value >(
-        new basic_attribute_value< scope_stack >(pImpl->get_scope_stack()));
+        new basic_named_scope_value< char_type >(&pImpl->get_scope_list()));
 }
 
 //! The method pushes the scope to the stack
 template< typename CharT >
-void basic_named_scope< CharT >::push_scope(scope_name const& name)
+void basic_named_scope< CharT >::push_scope(scope_entry const& entry)
 {
-    scope_stack& s = implementation::pInstance->get_scope_stack();
-    s.push_back(name);
+    typename implementation::scope_list& s = implementation::pInstance->get_scope_list();
+    s.push_back(entry);
 }
 
 //! The method pops the top scope
 template< typename CharT >
 void basic_named_scope< CharT >::pop_scope()
 {
-    scope_stack& s = implementation::pInstance->get_scope_stack();
+    typename implementation::scope_list& s = implementation::pInstance->get_scope_list();
     s.pop_back();
+}
+
+//! Returns the current thread's scope stack
+template< typename CharT >
+typename basic_named_scope< CharT >::scope_stack const& basic_named_scope< CharT >::get_scopes()
+{
+    return implementation::pInstance->get_scope_list();
 }
 
 //! Explicitly instantiate named_scope implementation
 template class BOOST_LOG_EXPORT basic_named_scope< char >;
 template class BOOST_LOG_EXPORT basic_named_scope< wchar_t >;
+template class basic_named_scope_list< char >;
+template class basic_named_scope_list< wchar_t >;
 
 } // namespace attributes
 
