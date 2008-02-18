@@ -134,12 +134,14 @@ public:
     //! Thread-specific data
     thread_specific_ptr< thread_data > pThreadData;
 
+    //! The global state of logging
+    volatile bool Enabled;
     //! Global filter
     filter_type Filter;
 
 public:
     //! Constructor
-    implementation() : Mutex() {}
+    implementation() : Mutex(), Enabled(true) {}
 
     //! The method returns the current therad-specific data
     thread_data* get_thread_data()
@@ -204,12 +206,14 @@ shared_ptr< basic_logging_core< CharT > > basic_logging_core< CharT >::get()
     return implementation::get_instance();
 }
 
-//! The method should be called in every non-boost thread on its finish to cleanup some thread-specific data
+//! The method enables or disables logging and returns the previous state of logging flag
 template< typename CharT >
-void basic_logging_core< CharT >::thread_cleanup()
+bool basic_logging_core< CharT >::set_logging_enabled(bool enabled)
 {
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
-    pImpl->pThreadData.reset();
+    const bool old_value = pImpl->Enabled;
+    pImpl->Enabled = enabled;
+    return old_value;
 }
 
 //! The method adds a new sink
@@ -320,20 +324,21 @@ void basic_logging_core< CharT >::reset_filter()
 template< typename CharT >
 bool basic_logging_core< CharT >::open_record(attribute_set const& source_attributes)
 {
-    try
+    // Try a quick win first
+    if (pImpl->Enabled) try
     {
         typename implementation::thread_data* tsd = pImpl->get_thread_data();
         // Lock the core to be safe against any attribute or sink set modifications
         typename implementation::scoped_read_lock lock(pImpl->Mutex);
     
-        if (!pImpl->Sinks.empty())
+        if (pImpl->Enabled && !pImpl->Sinks.empty())
         {
             // Construct a record
             typedef typename implementation::thread_data::pending_record pending_record;
             aux::exclusive_ptr< pending_record > record(new pending_record(
                 source_attributes, tsd->ThreadAttributes, pImpl->GlobalAttributes));
 
-            if ((pImpl->Filter.empty() || pImpl->Filter(record->AttributeValues)))
+            if (pImpl->Filter.empty() || pImpl->Filter(record->AttributeValues))
             {
                 // The global filter passed, trying the sinks
                 record->AcceptingSinks.reserve(pImpl->Sinks.size());

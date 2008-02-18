@@ -76,8 +76,22 @@ public:
     //! The method returns a pointer to the logging system instance
     static shared_ptr< basic_logging_core > get();
 
-    //! The method should be called in every non-boost thread on its finish to cleanup some thread-specific data
-    void thread_cleanup();
+    /*!
+     *  \brief The method enables or disables logging
+     * 
+     *  Setting this status to false allows you to completely wipe out any logging activity, including
+     *  filtering and generation of attribute values. It is useful if you want to completely disable logging
+     *  in a running application. The state of logging does not alter any other properties of the logging
+     *  library, such as filters or sinks, so you can enable logging with the very same settings that you had
+     *  when the logging was disabled.
+     *  This feature may also be useful if you want to perform major changes to logging configuration and
+     *  don't want your application to block on opening or pushing a log record.
+     * 
+     *  By default logging is enabled.
+     * 
+     *  \return the previous value of enabled/disabled logging flag
+     */
+    bool set_logging_enabled(bool enabled = true);
 
     //! The method sets the global logging filter
     template< typename T >
