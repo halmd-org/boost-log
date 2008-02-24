@@ -147,7 +147,8 @@ public:
         return *this;
     }
 
-    using base_type::open_record;
+    //! The method opens a new logging record with the default severity
+    bool open_record() { return base_type::open_record(); }
 
     //! The method allows to assign a severity to the opening record
     template< typename ArgsT >

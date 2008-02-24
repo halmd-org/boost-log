@@ -130,7 +130,7 @@ public:
 
 protected:
     //! Stream device type
-    typedef aux::basic_ostringstreambuf< char_type > ostream_writer;
+    typedef boost::log::aux::basic_ostringstreambuf< char_type > ostream_writer;
     //! Record pump type
     typedef aux::record_pump< final_type > record_pump_type;
 
@@ -258,7 +258,7 @@ public:
     wlogger& operator= (wlogger const& that)
     {
         if (this != &that)
-            basic_logger< wchar_t, logger >::operator= (that);
+            basic_logger< wchar_t, wlogger >::operator= (that);
         return *this;
     }
 };

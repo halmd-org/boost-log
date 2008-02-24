@@ -30,9 +30,6 @@
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
-#ifdef WIN32
-#include <boost/log/sinks/nt_eventlog_backend.hpp>
-#endif
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/attr.hpp>
 #include <boost/log/formatters/named_scope.hpp>
@@ -41,6 +38,7 @@
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/attributes/clock.hpp>
+#include <boost/log/attributes/timer.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>
 
@@ -49,11 +47,11 @@ namespace fmt = boost::log::formatters;
 namespace flt = boost::log::filters;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
-namespace src = boost::sources;
+namespace src = boost::log::sources;
 
 using boost::shared_ptr;
 
-int foo(logging::logger& lg)
+int foo(src::logger& lg)
 {
     BOOST_LOG_FUNCTION();
     BOOST_LOG(lg) << "foo is being called";
@@ -83,14 +81,6 @@ int main(int argc, char* argv[])
     // This approach makes implementing backends a lot simplier, because you don't
     // need to worry about multithreading.
 
-#ifdef WIN32
-
-    // And just to test it on Windows, an Event Log sink
-    typedef sinks::synchronous_sink< sinks::nt_eventlog_backend > eventlog_sink;
-    shared_ptr< eventlog_sink > pNTSink(new eventlog_sink);
-
-#endif
-
     {
         // The good thing about sink frontends is that they are provided out-of-box and
         // take away thread-safety burden from the sink backend implementors. Even if you
@@ -112,16 +102,8 @@ int main(int argc, char* argv[])
         pBackend->add_stream(pStream2);
     }
 
-#ifdef WIN32
-    // Same goes with other sinks
-    pNTSink->locked_backend()->add_source("Boost.Log");
-#endif
-
     // Ok, we're ready to add the sink to the logging library
     logging::logging_core::get()->add_sink(pSink);
-#ifdef WIN32
-    logging::logging_core::get()->add_sink(pNTSink);
-#endif
 
     // Now our logs will be written both to the console and to the file.
     // Let's do a quick test and output something. We have to create a logger for this.
@@ -139,6 +121,7 @@ int main(int argc, char* argv[])
     pSink->locked_backend()->set_formatter(fmt::ostrm
         << fmt::attr("LineID") // First an attribute "LineID" is written to the log
         << " [" << fmt::attr< boost::posix_time::ptime >("TimeStamp") 
+        << "] [" << fmt::attr< boost::posix_time::time_duration >("Uptime") 
         << "] [" // then this delimiter separates it from the rest of the line
         << fmt::attr< std::string >("Tag") // then goes another attribute named "Tag"
                                            // Note here we explicitly stated that its type
@@ -180,6 +163,9 @@ int main(int argc, char* argv[])
     // And similarly add a time stamp
     shared_ptr< logging::attribute > pTimeStamp(new attrs::local_clock());
     logging::logging_core::get()->add_global_attribute("TimeStamp", pTimeStamp);
+
+    shared_ptr< logging::attribute > pUptime(new attrs::timer());
+    logging::logging_core::get()->add_global_attribute("Uptime", pUptime);
 
     // Attributes may have two other scopes: thread scope and source scope. Attributes of thread
     // scope are output with each record made by the thread (regardless of the logger object), and

@@ -43,13 +43,13 @@ typedef aux::attribute_scope_guard const& scoped_attribute;
 namespace aux {
 
     //! A scoped logger attribute guard
-    template< typename CharT >
+    template< typename LoggerT >
     class scoped_logger_attribute :
         public attribute_scope_guard
     {
     private:
         //! Logger type
-        typedef basic_logger< CharT > logger_type;
+        typedef LoggerT logger_type;
 
     private:
         //! A reference to the logger
@@ -65,7 +65,8 @@ namespace aux {
             logger_type& l,
             typename logger_type::string_type const& name,
             shared_ptr< attribute > const& attr
-        ) : m_pLogger(&l)
+        ) :
+            m_pLogger(boost::addressof(l))
         {
             std::pair<
                 typename logger_type::attribute_set::iterator,
@@ -79,8 +80,10 @@ namespace aux {
             }
         }
         //! Copy constructor (implemented as move)
-        scoped_logger_attribute(scoped_logger_attribute const& that)
-            : m_pLogger(that.m_pLogger), m_itAttribute(that.m_itAttribute), m_pSavedAttribute(that.m_pSavedAttribute)
+        scoped_logger_attribute(scoped_logger_attribute const& that) :
+            m_pLogger(that.m_pLogger),
+            m_itAttribute(that.m_itAttribute),
+            m_pSavedAttribute(that.m_pSavedAttribute)
         {
             that.m_pLogger = 0;
         }
@@ -105,32 +108,34 @@ namespace aux {
 } // namespace aux
 
 //  Generator helper functions
-template< typename CharT >
-inline aux::scoped_logger_attribute< CharT > add_scoped_logger_attribute(
-    basic_logger< CharT >& l, std::basic_string< CharT > const& name, shared_ptr< attribute > const& attr)
+template< typename LoggerT >
+inline aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attribute(
+    LoggerT& l, typename LoggerT::string_type const& name, shared_ptr< attribute > const& attr)
 {
-    return aux::scoped_logger_attribute< CharT >(l, name, attr);
+    return aux::scoped_logger_attribute< LoggerT >(l, name, attr);
 }
 
-template< typename CharT >
-inline aux::scoped_logger_attribute< CharT > add_scoped_logger_attribute(
-    basic_logger< CharT >& l, const CharT* name, shared_ptr< attribute > const& attr)
+template< typename LoggerT >
+inline aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attribute(
+    LoggerT& l, typename LoggerT::char_type const* name, shared_ptr< attribute > const& attr)
 {
-    return aux::scoped_logger_attribute< CharT >(l, name, attr);
+    return aux::scoped_logger_attribute< LoggerT >(l, name, attr);
 }
 
-template< typename CharT, typename AttributeT >
-inline aux::scoped_logger_attribute< CharT > add_scoped_logger_attribute(
-    basic_logger< CharT >& l, std::basic_string< CharT > const& name, AttributeT& attr)
+template< typename LoggerT, typename AttributeT >
+inline aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attribute(
+    LoggerT& l, typename LoggerT::string_type const& name, AttributeT& attr)
 {
-    return aux::scoped_logger_attribute< CharT >(l, name, shared_ptr< attribute >(addressof(attr), empty_deleter()));
+    return aux::scoped_logger_attribute< LoggerT >(
+        l, name, shared_ptr< attribute >(boost::addressof(attr), empty_deleter()));
 }
 
-template< typename CharT, typename AttributeT >
-inline aux::scoped_logger_attribute< CharT > add_scoped_logger_attribute(
-    basic_logger< CharT >& l, const CharT* name, AttributeT& attr)
+template< typename LoggerT, typename AttributeT >
+inline aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attribute(
+    LoggerT& l, typename LoggerT::char_type const* name, AttributeT& attr)
 {
-    return aux::scoped_logger_attribute< CharT >(l, name, shared_ptr< attribute >(addressof(attr), empty_deleter()));
+    return aux::scoped_logger_attribute< LoggerT >(
+        l, name, shared_ptr< attribute >(boost::addressof(attr), empty_deleter()));
 }
 
 /*  === Not ready yet. This code has multithreading issues. ===
