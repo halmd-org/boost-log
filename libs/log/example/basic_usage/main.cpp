@@ -49,6 +49,7 @@ namespace fmt = boost::log::formatters;
 namespace flt = boost::log::filters;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
+namespace src = boost::sources;
 
 using boost::shared_ptr;
 
@@ -124,7 +125,7 @@ int main(int argc, char* argv[])
 
     // Now our logs will be written both to the console and to the file.
     // Let's do a quick test and output something. We have to create a logger for this.
-    logging::logger lg;
+    src::logger lg;
 
     // And output...
     BOOST_LOG(lg) << "Hello, World!";
@@ -261,7 +262,7 @@ int main(int argc, char* argv[])
     // But no make it more convenient and efficient there is a special extended logger class.
     // Its implementation may serve as an example of extending basic library functionality.
     // You may add your specific capabilities to the logger by deriving your class from it.
-    logging::severity_logger slg;
+    src::severity_logger slg;
 
     // These two lines test filtering based on severity
     BOOST_LOG_SEV(slg, normal) << "A normal severity message, will not pass to the output";

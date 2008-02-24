@@ -23,6 +23,12 @@
 #include <utility>
 #include <ostream>
 #include <boost/shared_ptr.hpp>
+#include <boost/utility/addressof.hpp>
+#include <boost/preprocessor/repetition/enum_params.hpp>
+#include <boost/preprocessor/repetition/enum_binary_params.hpp>
+#include <boost/preprocessor/repetition/repeat_from_to.hpp>
+#include <boost/preprocessor/seq/enum.hpp>
+#include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/logging_core.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
@@ -37,6 +43,11 @@
 namespace boost {
 
 namespace log {
+
+namespace sources {
+
+template< typename CharT, typename FinalT >
+class basic_logger;
 
 namespace aux {
 
@@ -55,6 +66,10 @@ namespace aux {
     private:
         //! Logger type
         typedef LoggerT logger_type;
+        //! Character type
+        typedef typename logger_type::char_type char_type;
+        //! Basic logger type
+        typedef basic_logger< char_type, logger_type > basic_logger_type;
         //! Output stream type
         typedef typename logger_type::ostream_type ostream_type;
 
@@ -81,7 +96,7 @@ namespace aux {
         template< typename T >
         record_pump const& operator<< (T const& value) const
         {
-            m_pLogger->_pump_stream() << value;
+            static_cast< basic_logger_type* >(m_pLogger)->stream() << value;
             return *this;
         }
 
@@ -93,12 +108,17 @@ namespace aux {
 } // namespace aux
 
 //! Logger class
-template< typename CharT >
+template< typename CharT, typename FinalT >
 class basic_logger
 {
+    friend class aux::record_pump< FinalT >;
+
 public:
     //! Character type
     typedef CharT char_type;
+    //! Final logger type
+    typedef FinalT final_type;
+
     //! String type to be used as a message text holder
     typedef std::basic_string< char_type > string_type;
     //! Attribute set type
@@ -112,7 +132,7 @@ protected:
     //! Stream device type
     typedef aux::basic_ostringstreambuf< char_type > ostream_writer;
     //! Record pump type
-    typedef aux::record_pump< basic_logger< char_type > > record_pump_type;
+    typedef aux::record_pump< final_type > record_pump_type;
 
 private:
     //! A pointer to the logging system
@@ -130,35 +150,80 @@ private:
 
 public:
     //! Constructor
-    BOOST_LOG_EXPORT basic_logger();
+    basic_logger() :
+        m_pLoggingSystem(logging_core_type::get()),
+        m_StreamBuf(m_Message),
+        m_Stream(&m_StreamBuf)
+    {
+    }
     //! Copy constructor
-    BOOST_LOG_EXPORT basic_logger(basic_logger const& that);
+    basic_logger(basic_logger const& that) :
+        m_pLoggingSystem(logging_core_type::get()),
+        m_StreamBuf(m_Message),
+        m_Stream(&m_StreamBuf),
+        m_Attributes(that.m_Attributes)
+    {
+    }
+    //! Constructor with arguments
+    template< typename ArgsT >
+    explicit basic_logger(ArgsT const& args) :
+        m_pLoggingSystem(logging_core_type::get()),
+        m_StreamBuf(m_Message),
+        m_Stream(&m_StreamBuf)
+    {
+    }
     //! Destructor
-    BOOST_LOG_EXPORT ~basic_logger();
+    virtual ~basic_logger() {}
     //! Assignment
-    BOOST_LOG_EXPORT basic_logger& operator= (basic_logger const& that);
+    basic_logger& operator= (basic_logger const& that)
+    {
+        m_Attributes = that.m_Attributes;
+        return *this;
+    }
 
     //! Logging stream getter
     record_pump_type strm()
     {
-        return record_pump_type(this);
+        BOOST_LOG_ASSUME(this != NULL);
+        return record_pump_type(static_cast< final_type* >(this));
     }
 
     //! The method adds an attribute to the logger
-    BOOST_LOG_EXPORT std::pair< typename attribute_set::iterator, bool > add_attribute(
-        string_type const& name, shared_ptr< attribute > const& attr);
+    std::pair< typename attribute_set::iterator, bool > add_attribute(
+        string_type const& name, shared_ptr< attribute > const& attr)
+    {
+        return m_Attributes.insert(std::make_pair(name, attr));
+    }
     //! The method removes an attribute from the logger
-    BOOST_LOG_EXPORT void remove_attribute(typename attribute_set::iterator it);
+    void remove_attribute(typename attribute_set::iterator it)
+    {
+        m_Attributes.erase(it);
+    }
+
     //! The method removes all attributes from the logger
-    BOOST_LOG_EXPORT void remove_all_attributes();
+    void remove_all_attributes()
+    {
+        m_Attributes.clear();
+    }
 
     //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
-    BOOST_LOG_EXPORT bool open_record();
+    bool open_record()
+    {
+        return m_pLoggingSystem->open_record(m_Attributes);
+    }
+    //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
+    template< typename ArgsT >
+    bool open_record(ArgsT const& args)
+    {
+        return m_pLoggingSystem->open_record(m_Attributes);
+    }
     //! The method pushes the constructed message to the sinks and closes the record
-    BOOST_LOG_EXPORT void push_record();
-
-    //! Implementation detail - an accessor to the logging stream for the pump
-    ostream_type& _pump_stream() { return m_Stream; }
+    void push_record()
+    {
+        m_Stream.flush();
+        m_pLoggingSystem->push_record(m_Message);
+        m_Message.clear();
+    }
 
 protected:
     //! An accessor to the logging system pointer
@@ -173,8 +238,32 @@ protected:
     attribute_set const& attributes() const { return m_Attributes; }
 };
 
-typedef basic_logger< char > logger;
-typedef basic_logger< wchar_t > wlogger;
+//! Narrow-char logger
+class logger :
+    public basic_logger< char, logger >
+{
+public:
+    logger& operator= (logger const& that)
+    {
+        if (this != &that)
+            basic_logger< char, logger >::operator= (that);
+        return *this;
+    }
+};
+//! Wide-char logger
+class wlogger :
+    public basic_logger< wchar_t, wlogger >
+{
+public:
+    wlogger& operator= (wlogger const& that)
+    {
+        if (this != &that)
+            basic_logger< wchar_t, logger >::operator= (that);
+        return *this;
+    }
+};
+
+} // namespace sources
 
 } // namespace log
 
@@ -184,10 +273,78 @@ typedef basic_logger< wchar_t > wlogger;
 #pragma warning(pop)
 #endif // _MSC_VER
 
+//! The macro writes a record to the log
 #define BOOST_LOG(logger)\
-    if (!logger.open_record())\
+    if (!(logger).open_record())\
         ((void)0);\
     else\
-        logger.strm()
+        (logger).strm()
+
+//! The macro writes a record to the log and allows to pass additional arguments to the logger
+#define BOOST_LOG_WITH_PARAMS(logger, params_seq)\
+    if (!(logger).open_record((BOOST_PP_SEQ_ENUM(params_seq))))\
+        ((void)0);\
+    else\
+        (logger).strm()
+
+
+#define BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL1(r, data, elem) elem<
+#define BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL2(r, data, elem) >
+
+#ifndef BOOST_LOG_MAX_CTOR_FORWARD_ARGS
+//! The maximum number of arguments that can be forwarded by the logger constructor to its bases
+#define BOOST_LOG_MAX_CTOR_FORWARD_ARGS 16
+#endif
+
+#define BOOST_LOG_CTOR_FORWARD(z, n, data)\
+    template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
+    explicit data(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) : base_type((BOOST_PP_ENUM_PARAMS(n, arg))) {}
+
+/*!
+ *  \brief The macro declares a logger class that inherits a number of base classes
+ * 
+ *  \param type_name The name of the logger class to declare
+ *  \param char_type The character type of the logger. Either char or wchar_t expected.
+ *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
+ */
+#define BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char_type, base_seq)\
+    class type_name :\
+        public BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL1, ~, base_seq)\
+            ::boost::log::sources::basic_logger< char_type, type_name >\
+            BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL2, ~, base_seq)\
+    {\
+        typedef BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL1, ~, base_seq)\
+            ::boost::log::sources::basic_logger< char_type, type_name >\
+            BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL2, ~, base_seq) base_type;\
+    public:\
+        type_name() {}\
+        type_name(type_name const& that) : base_type(static_cast< base_type const& >(that)) {}\
+        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD, type_name)\
+        type_name& operator= (type_name const& that)\
+        {\
+            if (this != ::boost::addressof(that))\
+                base_type::operator= (static_cast< base_type const& >(that));\
+            return *this;\
+        }\
+    }
+
+/*!
+ *  \brief The macro declares a narrow-char logger class that inherits a number of base classes
+ * 
+ *  Equivalent to BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq)
+ * 
+ *  \param type_name The name of the logger class to declare
+ *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
+ */
+#define BOOST_LOG_DECLARE_LOGGER(type_name, base_seq) BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq)
+/*!
+ *  \brief The macro declares a wide-char logger class that inherits a number of base classes
+ * 
+ *  Equivalent to BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq)
+ * 
+ *  \param type_name The name of the logger class to declare
+ *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
+ */
+#define BOOST_LOG_DECLARE_WLOGGER(type_name, base_seq) BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq)
 
 #endif // BOOST_LOG_BASIC_LOGGER_HPP_INCLUDED_
