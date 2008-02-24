@@ -306,7 +306,7 @@ void basic_logging_core< CharT >::set_thread_attributes(attribute_set const& att
 
 //! An internal method to set the global filter
 template< typename CharT >
-void basic_logging_core< CharT >::set_filter_impl(filter_type const& filter)
+void basic_logging_core< CharT >::set_filter(filter_type const& filter)
 {
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
     pImpl->Filter = filter;

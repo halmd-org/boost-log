@@ -57,7 +57,7 @@ namespace aux {
         //! An iterator to the added attribute
         typename logger_type::attribute_set::iterator m_itAttribute;
         //! A saved attribute, if it was already registered
-        shared_ptr< attribute > m_pSavedAttribute;
+        mutable shared_ptr< attribute > m_pSavedAttribute;
 
     public:
         //! Constructor
@@ -82,10 +82,10 @@ namespace aux {
         //! Copy constructor (implemented as move)
         scoped_logger_attribute(scoped_logger_attribute const& that) :
             m_pLogger(that.m_pLogger),
-            m_itAttribute(that.m_itAttribute),
-            m_pSavedAttribute(that.m_pSavedAttribute)
+            m_itAttribute(that.m_itAttribute)
         {
             that.m_pLogger = 0;
+            m_pSavedAttribute.swap(that.m_pSavedAttribute);
         }
 
         //! Destructor
@@ -138,19 +138,11 @@ inline aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attribute(
         l, name, shared_ptr< attribute >(boost::addressof(attr), empty_deleter()));
 }
 
-/*  === Not ready yet. This code has multithreading issues. ===
-
 namespace aux {
 
-    //! A scoped thread or global attribute guard
-    template<
-        typename CharT,
-        typename basic_logging_core< CharT >::attribute_set::iterator
-            (basic_logging_core< CharT >::*adder)(
-                typename basic_logging_core< CharT >::string_type const&, shared_ptr< attribute > const&),
-        void (basic_logging_core< CharT >::*remover)(typename basic_logging_core< CharT >::attribute_set::iterator)
-    >
-    class scoped_core_attribute :
+    //! A scoped thread-specific attribute guard
+    template< typename CharT >
+    class scoped_thread_attribute :
         public attribute_scope_guard
     {
     private:
@@ -162,26 +154,43 @@ namespace aux {
         mutable shared_ptr< logging_core_type > m_pCore;
         //! An iterator to the added attribute
         typename logging_core_type::attribute_set::iterator m_itAttribute;
+        //! A saved attribute, if it was already registered
+        mutable shared_ptr< attribute > m_pSavedAttribute;
 
     public:
         //! Constructor
-        scoped_core_attribute(
+        scoped_thread_attribute(
             typename logging_core_type::string_type const& name, shared_ptr< attribute > const& attr) :
-            m_pCore(logging_core_type::get()),
-            m_itAttribute(((m_pCore.get())->*(adder))(name, attr))
+            m_pCore(logging_core_type::get())
         {
+            std::pair<
+                typename logging_core_type::attribute_set::iterator,
+                bool
+            > res = m_pCore->add_thread_attribute(name, attr);
+            m_itAttribute = res.first;
+            if (!res.second)
+            {
+                m_pSavedAttribute = attr;
+                m_pSavedAttribute.swap(m_itAttribute->second);
+            }
         }
         //! Copy constructor (implemented as move)
-        scoped_core_attribute(scoped_core_attribute const& that) : m_itAttribute(that.m_itAttribute)
+        scoped_thread_attribute(scoped_thread_attribute const& that) : m_itAttribute(that.m_itAttribute)
         {
             m_pCore.swap(that.m_pCore);
+            m_pSavedAttribute.swap(that.m_pSavedAttribute);
         }
 
         //! Destructor
-        ~scoped_core_attribute()
+        ~scoped_thread_attribute()
         {
             if (m_pCore)
-                ((m_pCore.get())->*(remover))(m_itAttribute);
+            {
+                if (!m_pSavedAttribute)
+                    m_pCore->remove_thread_attribute(m_itAttribute);
+                else
+                    m_pSavedAttribute.swap(m_itAttribute->second);
+            }
         }
     };
 
@@ -189,120 +198,34 @@ namespace aux {
 
 //  Generator helper functions
 template< typename CharT >
-inline aux::scoped_core_attribute<
-    CharT,
-    &basic_logging_core< CharT >::add_thread_attribute,
-    &basic_logging_core< CharT >::remove_thread_attribute
-> add_scoped_thread_attribute(std::basic_string< CharT > const& name, shared_ptr< attribute > const& attr)
+inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
+    std::basic_string< CharT > const& name, shared_ptr< attribute > const& attr)
 {
-    return aux::scoped_core_attribute<
-        CharT,
-        &basic_logging_core< CharT >::add_thread_attribute,
-        &basic_logging_core< CharT >::remove_thread_attribute
-    >(name, attr);
+    return aux::scoped_thread_attribute< CharT >(name, attr);
 }
 
 template< typename CharT >
-inline aux::scoped_core_attribute<
-    CharT,
-    &basic_logging_core< CharT >::add_thread_attribute,
-    &basic_logging_core< CharT >::remove_thread_attribute
-> add_scoped_thread_attribute(const CharT* name, shared_ptr< attribute > const& attr)
+inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
+    const CharT* name, shared_ptr< attribute > const& attr)
 {
-    return aux::scoped_core_attribute<
-        CharT,
-        &basic_logging_core< CharT >::add_thread_attribute,
-        &basic_logging_core< CharT >::remove_thread_attribute
-    >(name, attr);
+    return aux::scoped_thread_attribute< CharT >(name, attr);
 }
 
 template< typename CharT, typename AttributeT >
-inline aux::scoped_core_attribute<
-    CharT,
-    &basic_logging_core< CharT >::add_thread_attribute,
-    &basic_logging_core< CharT >::remove_thread_attribute
-> add_scoped_thread_attribute(std::basic_string< CharT > const& name, AttributeT& attr)
+inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
+    std::basic_string< CharT > const& name, AttributeT& attr)
 {
-    return aux::scoped_core_attribute<
-        CharT,
-        &basic_logging_core< CharT >::add_thread_attribute,
-        &basic_logging_core< CharT >::remove_thread_attribute
-    >(name, shared_ptr< attribute >(addressof(attr), empty_deleter()));
+    return aux::scoped_thread_attribute< CharT >(
+        name, shared_ptr< attribute >(boost::addressof(attr), empty_deleter()));
 }
 
 template< typename CharT, typename AttributeT >
-inline aux::scoped_core_attribute<
-    CharT,
-    &basic_logging_core< CharT >::add_thread_attribute,
-    &basic_logging_core< CharT >::remove_thread_attribute
-> add_scoped_thread_attribute(const CharT* name, AttributeT& attr)
+inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
+    const CharT* name, AttributeT& attr)
 {
-    return aux::scoped_core_attribute<
-        CharT,
-        &basic_logging_core< CharT >::add_thread_attribute,
-        &basic_logging_core< CharT >::remove_thread_attribute
-    >(name, shared_ptr< attribute >(addressof(attr), empty_deleter()));
+    return aux::scoped_thread_attribute< CharT >(
+        name, shared_ptr< attribute >(boost::addressof(attr), empty_deleter()));
 }
-
-
-//  Generator helper functions
-template< typename CharT >
-inline aux::scoped_core_attribute<
-    CharT,
-    &basic_logging_core< CharT >::add_global_attribute,
-    &basic_logging_core< CharT >::remove_global_attribute
-> add_scoped_global_attribute(std::basic_string< CharT > const& name, shared_ptr< attribute > const& attr)
-{
-    return aux::scoped_core_attribute<
-        CharT,
-        &basic_logging_core< CharT >::add_global_attribute,
-        &basic_logging_core< CharT >::remove_global_attribute
-    >(name, attr);
-}
-
-template< typename CharT >
-inline aux::scoped_core_attribute<
-    CharT,
-    &basic_logging_core< CharT >::add_global_attribute,
-    &basic_logging_core< CharT >::remove_global_attribute
-> add_scoped_global_attribute(const CharT* name, shared_ptr< attribute > const& attr)
-{
-    return aux::scoped_core_attribute<
-        CharT,
-        &basic_logging_core< CharT >::add_global_attribute,
-        &basic_logging_core< CharT >::remove_global_attribute
-    >(name, attr);
-}
-
-template< typename CharT, typename AttributeT >
-inline aux::scoped_core_attribute<
-    CharT,
-    &basic_logging_core< CharT >::add_global_attribute,
-    &basic_logging_core< CharT >::remove_global_attribute
-> add_scoped_global_attribute(std::basic_string< CharT > const& name, AttributeT& attr)
-{
-    return aux::scoped_core_attribute<
-        CharT,
-        &basic_logging_core< CharT >::add_global_attribute,
-        &basic_logging_core< CharT >::remove_global_attribute
-    >(name, shared_ptr< attribute >(addressof(attr), empty_deleter()));
-}
-
-template< typename CharT, typename AttributeT >
-inline aux::scoped_core_attribute<
-    CharT,
-    &basic_logging_core< CharT >::add_global_attribute,
-    &basic_logging_core< CharT >::remove_global_attribute
-> add_scoped_global_attribute(const CharT* name, AttributeT& attr)
-{
-    return aux::scoped_core_attribute<
-        CharT,
-        &basic_logging_core< CharT >::add_global_attribute,
-        &basic_logging_core< CharT >::remove_global_attribute
-    >(name, shared_ptr< attribute >(addressof(attr), empty_deleter()));
-}
-
-*/
 
 } // namespace log
 

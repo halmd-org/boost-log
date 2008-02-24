@@ -94,11 +94,7 @@ public:
     bool set_logging_enabled(bool enabled = true);
 
     //! The method sets the global logging filter
-    template< typename T >
-    void set_filter(T const& filter)
-    {
-        this->set_filter_impl(filter_type(filter));
-    }
+    void set_filter(filter_type const& filter);
     //! The method removes the global logging filter
     void reset_filter();
 
@@ -114,7 +110,11 @@ public:
     void remove_global_attribute(typename attribute_set::iterator it);
     //! The method returns the complete set of currently registered global attributes
     attribute_set get_global_attributes() const;
-    //! The method replaces the complete set of currently registered global attributes with the provided set
+    /*!
+     *  \brief The method replaces the complete set of currently registered global attributes with the provided set
+     *  \note The method invalidates all iterators that may have been returned
+     *        from the add_global_attribute method.
+     */
     void set_global_attributes(attribute_set const& attrs) const;
 
     //! The method adds an attribute to the thread-specific attribute set
@@ -124,19 +124,19 @@ public:
     void remove_thread_attribute(typename attribute_set::iterator it);
     //! The method returns the complete set of currently registered thread-specific attributes
     attribute_set get_thread_attributes() const;
-    //! The method replaces the complete set of currently registered thread-specific attributes with the provided set
+    /*!
+     *  \brief The method replaces the complete set of currently registered thread-specific attributes with the provided set
+     *  \note The method invalidates all iterators that may have been returned
+     *        from the add_thread_attribute method.
+     */
     void set_thread_attributes(attribute_set const& attrs) const;
 
     //! The method opens a new record to be written and returns true if the record was opened
     bool open_record(attribute_set const& source_attributes);
     //! The method pushes the record and closes it
     void push_record(string_type const& message_text);
-    //! The method cancels the record
+    //! The method cancels the currently opened record
     void cancel_record();
-
-private:
-    //! An internal method to set the global filter
-    void set_filter_impl(filter_type const& filter);
 };
 
 typedef basic_logging_core< char > logging_core;
