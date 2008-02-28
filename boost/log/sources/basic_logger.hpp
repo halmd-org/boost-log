@@ -16,8 +16,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_BASIC_LOGGER_HPP_INCLUDED_
-#define BOOST_LOG_BASIC_LOGGER_HPP_INCLUDED_
+#ifndef BOOST_LOG_SOURCES_BASIC_LOGGER_HPP_INCLUDED_
+#define BOOST_LOG_SOURCES_BASIC_LOGGER_HPP_INCLUDED_
 
 #include <string>
 #include <utility>
@@ -172,8 +172,6 @@ public:
         m_Stream(&m_StreamBuf)
     {
     }
-    //! Destructor
-    virtual ~basic_logger() {}
     //! Assignment
     basic_logger& operator= (basic_logger const& that)
     {
@@ -347,4 +345,4 @@ public:
  */
 #define BOOST_LOG_DECLARE_WLOGGER(type_name, base_seq) BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq)
 
-#endif // BOOST_LOG_BASIC_LOGGER_HPP_INCLUDED_
+#endif // BOOST_LOG_SOURCES_BASIC_LOGGER_HPP_INCLUDED_

@@ -258,10 +258,8 @@ int main(int argc, char* argv[])
     {
         // Next we try if the second condition of the filter works
         attrs::constant< std::string > TagAttr("IMPORTANT MESSAGES");
-
-        //LUCA REGINI: ERRORE
-        //logging::scoped_attribute a1 =
-        //    logging::add_scoped_thread_attribute< char >("Tag", TagAttr);
+        logging::scoped_attribute a1 =
+            logging::add_scoped_thread_attribute("Tag", TagAttr);
 
         // We may omit the severity and use the shorter BOOST_LOG macro. The logger "slg"
         // has the default severity that may be specified on its construction. We didn't

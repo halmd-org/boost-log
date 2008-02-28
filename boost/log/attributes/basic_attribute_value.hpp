@@ -41,7 +41,7 @@ public:
 
 private:
     //! Attribute value
-    const held_type m_Value;
+    held_type m_Value;
 
 public:
     //! Constructor
@@ -68,6 +68,9 @@ public:
     {
         return this->shared_from_this< basic_attribute_value< held_type > >();
     }
+
+    //! Returns the contained value
+    held_type const& get() const { return m_Value; }
 };
 
 } // namespace attributes

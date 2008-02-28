@@ -16,8 +16,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_SEVERITY_LOGGER_HPP_INCLUDED_
-#define BOOST_LOG_SEVERITY_LOGGER_HPP_INCLUDED_
+#ifndef BOOST_LOG_SOURCES_SEVERITY_LOGGER_HPP_INCLUDED_
+#define BOOST_LOG_SOURCES_SEVERITY_LOGGER_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
 #include <boost/empty_deleter.hpp>
@@ -77,8 +77,6 @@ public:
     typedef typename base_type::final_type final_type;
     //! Attribute set type
     typedef typename base_type::attribute_set attribute_set;
-    //! Output stream type
-    typedef typename base_type::ostream_type ostream_type;
 
     //! Severity attribute type
     typedef attributes::mutable_constant< int > severity_attribute;
@@ -196,4 +194,4 @@ BOOST_LOG_DECLARE_WLOGGER(wseverity_logger, (basic_severity_logger));
 #define BOOST_LOG_SEV(logger, svty)\
     BOOST_LOG_WITH_PARAMS((logger), (::boost::log::sources::keywords::severity = (svty)))
 
-#endif // BOOST_LOG_SEVERITY_LOGGER_HPP_INCLUDED_
+#endif // BOOST_LOG_SOURCES_SEVERITY_LOGGER_HPP_INCLUDED_
