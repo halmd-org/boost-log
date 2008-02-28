@@ -64,7 +64,8 @@ namespace {
     //! Named scope attribute value
     template< typename CharT >
     class basic_named_scope_value :
-        public attribute_value
+        public attribute_value,
+        public enable_shared_from_this< basic_named_scope_value< CharT > >
     {
         //! Character type
         typedef CharT char_type;
@@ -97,13 +98,15 @@ namespace {
     
         //! The method is called when the attribute value is passed to another thread (e.g.
         //! in case of asynchronous logging). The value should ensure it properly owns all thread-specific data.
-        void detach_from_thread()
+        shared_ptr< attribute_value > detach_from_thread()
         {
             if (!m_DetachedValue)
             {
                 m_DetachedValue = *m_pValue;
                 m_pValue = m_DetachedValue.get_ptr();
             }
+
+            return this->shared_from_this();
         }
     };
 

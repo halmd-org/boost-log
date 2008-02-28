@@ -21,6 +21,7 @@
 
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
+#include <boost/log/detail/templated_shared_from_this.hpp>
 
 namespace boost {
 
@@ -31,9 +32,10 @@ namespace attributes {
 //! Basic attribute value class
 template< typename T >
 class basic_attribute_value :
-    public attribute_value
+    public attribute_value,
+    public aux::templated_shared_from_this
 {
-private:
+public:
     //! Value type
     typedef T held_type;
 
@@ -58,6 +60,13 @@ public:
         }
         else
             return false;
+    }
+
+    //! The method is called when the attribute value is passed to another thread (e.g.
+    //! in case of asynchronous logging). The value should ensure it properly owns all thread-specific data.
+    shared_ptr< attribute_value > detach_from_thread()
+    {
+        return this->shared_from_this< basic_attribute_value< held_type > >();
     }
 };
 

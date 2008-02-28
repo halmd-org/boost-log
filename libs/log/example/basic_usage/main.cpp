@@ -51,6 +51,17 @@ namespace src = boost::log::sources;
 
 using boost::shared_ptr;
 
+// Here we define our application severity levels.
+enum severity_level
+{
+    normal,
+    notification,
+    warning,
+    error,
+    critical
+};
+
+
 int foo(src::logger& lg)
 {
     BOOST_LOG_FUNCTION();
@@ -212,17 +223,7 @@ int main(int argc, char* argv[])
 
     // Now let's try to apply filtering to the output. Filtering is based on
     // attributes being output with the record. One of the common filtering use cases
-    // is filtering based on the record severity level. Here we define our
-    // application severity levels.
-    enum severity_level
-    {
-        normal,
-        notification,
-        warning,
-        error,
-        critical
-    };
-
+    // is filtering based on the record severity level. We've already defined severity levels.
     // Now we can set the filter. A filter is essentially a functor that returns
     // boolean value that tells whether to write the record or not.
     pSink->set_filter(

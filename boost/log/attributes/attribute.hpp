@@ -73,7 +73,7 @@ public:
 
     //! The method is called when the attribute value is passed to another thread (e.g.
     //! in case of asynchronous logging). The value should ensure it properly owns all thread-specific data.
-    virtual void detach_from_thread() {}
+    virtual shared_ptr< attribute_value > detach_from_thread() = 0;
 
     //! A simpler way to get attribute value in case if one knows its exact type
     template< typename T >

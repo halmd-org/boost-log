@@ -131,7 +131,11 @@ public:
     {
         // Make sure that no references to the thread-specific data is left in attribute values
         for (typename attribute_values_view::const_iterator it = attributes.begin(), end = attributes.end(); it != end; ++it)
-            it->second->detach_from_thread();
+        {
+            // Yep, a bit hackish. I'll need a better backdoor to do it gacefully.
+            it->second->detach_from_thread().swap(
+                    const_cast< typename attribute_values_view::mapped_type& >(it->second));
+        }
 
         // Put the record into the queue
         {

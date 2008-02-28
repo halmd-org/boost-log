@@ -20,9 +20,9 @@
 #define BOOST_LOG_ATTRIBUTES_CONSTANT_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
+#include <boost/log/attributes/basic_attribute_value.hpp>
 
 namespace boost {
 
@@ -34,40 +34,31 @@ namespace attributes {
 template< typename T >
 class constant :
     public attribute,
-    public attribute_value,
-    public enable_shared_from_this< constant< T > >
+    public basic_attribute_value< T >
 {
+    //! Base type
+    typedef basic_attribute_value< T > base_type;
+
 public:
     //! A held constant type
-    typedef T held_type;
-
-private:
-    //! The constant
-    const held_type m_Value;
+    typedef typename base_type::held_type held_type;
 
 public:
     //! Constructor
-    explicit constant(held_type const& value) : m_Value(value) {}
+    explicit constant(held_type const& value) : base_type(value) {}
 
     //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value()
     {
-        return this->shared_from_this();
+        return this->BOOST_NESTED_TEMPLATE shared_from_this< base_type >();
     }
 
-    //! The method dispatches the value to the given object. It returns true if the
-    //! object was capable to consume the real attribute value type and false otherwise.
-    bool dispatch(type_dispatcher& dispatcher)
+    //! The method is called when the attribute value is passed to another thread
+    shared_ptr< attribute_value > detach_from_thread()
     {
-        register type_visitor< held_type >* visitor =
-            dispatcher.get_visitor< held_type >();
-        if (visitor)
-        {
-            visitor->visit(m_Value);
-            return true;
-        }
-        else
-            return false;
+        // We have to create a copy of the constant because the attribute object
+        // can be created on the stack and get destroyed even if there are shared_ptrs that point to it.
+        return shared_ptr< attribute_value >(new base_type(static_cast< base_type const& >(*this)));
     }
 };
 
