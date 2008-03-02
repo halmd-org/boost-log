@@ -19,7 +19,9 @@
 #ifndef BOOST_LOG_STATIC_TYPE_DISPATCHER_HPP_INCLUDED_
 #define BOOST_LOG_STATIC_TYPE_DISPATCHER_HPP_INCLUDED_
 
+#include <cstddef>
 #include <utility>
+#include <iterator>
 #include <algorithm>
 #include <functional>
 #include <boost/array.hpp>
@@ -28,6 +30,7 @@
 #include <boost/mpl/next.hpp>
 #include <boost/mpl/deref.hpp>
 #include <boost/mpl/size.hpp>
+#include <boost/thread/once.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/type_dispatch/type_dispatcher.hpp>
 #include <boost/log/detail/type_info_wrapper.hpp>
@@ -59,13 +62,15 @@ namespace aux {
 
     protected:
         //! Visitor registrar
-        void init(std::pair< type_info_wrapper, void* >* p)
+        void init(void* pthis, std::pair< type_info_wrapper, std::ptrdiff_t >* p)
         {
             p->first = typeid(supported_type);
             BOOST_LOG_ASSUME(this != NULL);
-            p->second = static_cast< type_visitor< supported_type >* >(this);
+            p->second = std::distance(
+                    pthis,
+                    static_cast< void* >(static_cast< type_visitor< supported_type >* >(this)));
 
-            base_type::init(++p);
+            base_type::init(pthis, ++p);
         }
     };
 
@@ -75,7 +80,7 @@ namespace aux {
     {
     protected:
         //! Visitor registrar
-        void init(std::pair< type_info_wrapper, void* >*)
+        void init(void*, std::pair< type_info_wrapper, std::ptrdiff_t >*)
         {
         }
     };
@@ -83,8 +88,8 @@ namespace aux {
     //! An ordering predicate for the dispatching map
     struct dispatching_map_order :
         public std::binary_function<
-            std::pair< type_info_wrapper, void* >,
-            std::pair< type_info_wrapper, void* >,
+            std::pair< type_info_wrapper, std::ptrdiff_t >,
+            std::pair< type_info_wrapper, std::ptrdiff_t >,
             bool
         >
     {
@@ -118,48 +123,71 @@ public:
 private:
     //! The dispatching map
     typedef array<
-        std::pair< aux::type_info_wrapper, void* >,
+        std::pair< aux::type_info_wrapper, std::ptrdiff_t >,
         mpl::size< supported_types >::value
     > dispatching_map;
-    dispatching_map m_DispatchingMap;
+
+    //! Dunction delegate to implement one-time initialization
+    struct delegate
+    {
+        typedef void result_type;
+        explicit delegate(static_type_dispatcher* pthis, void (static_type_dispatcher::*pfun)())
+            : m_pThis(pthis), m_pFun(pfun)
+        {
+        }
+        result_type operator()() const
+        {
+            (m_pThis->*m_pFun)();
+        }
+
+    private:
+        static_type_dispatcher* m_pThis;
+        void (static_type_dispatcher::*m_pFun)();
+    };
 
 public:
     //! Constructor
     static_type_dispatcher()
     {
-        base_type::init(m_DispatchingMap.c_array());
-        std::sort(m_DispatchingMap.begin(), m_DispatchingMap.end(), aux::dispatching_map_order());
-    }
-    //! Copying constructor
-    static_type_dispatcher(static_type_dispatcher const&)
-    {
-        base_type::init(m_DispatchingMap.c_array());
-        std::sort(m_DispatchingMap.begin(), m_DispatchingMap.end(), aux::dispatching_map_order());
-    }
-
-    //! Assignment
-    static_type_dispatcher& operator= (static_type_dispatcher const&)
-    {
-        return *this;
+        static once_flag flag = BOOST_ONCE_INIT;
+        boost::call_once(flag, delegate(this, &static_type_dispatcher::init_dispatching_map));
     }
 
 private:
     //! The get_visitor method implementation
     void* get_visitor(std::type_info const& type)
     {
+        dispatching_map const& disp_map = get_dispatching_map();
         aux::type_info_wrapper wrapper(type);
-        typename dispatching_map::iterator it =
+        typename dispatching_map::const_iterator it =
             std::lower_bound(
-                m_DispatchingMap.begin(),
-                m_DispatchingMap.end(),
-                std::make_pair(wrapper, (void*)NULL),
+                disp_map.begin(),
+                disp_map.end(),
+                std::make_pair(wrapper, std::ptrdiff_t(0)),
                 aux::dispatching_map_order()
             );
 
-        if (it != m_DispatchingMap.end() && it->first == wrapper)
-            return it->second;
+        if (it != disp_map.end() && it->first == wrapper)
+        {
+            void* pthis = this;
+            std::advance(pthis, it->second);
+            return pthis;
+        }
         else
             return NULL;
+    }
+    //! The method initializes the dispatching map
+    void init_dispatching_map()
+    {
+        dispatching_map& disp_map = get_dispatching_map();
+        base_type::init(this, disp_map.c_array());
+        std::sort(disp_map.begin(), disp_map.end(), aux::dispatching_map_order());
+    }
+    //! The method returns the dispatching map instance
+    static dispatching_map& get_dispatching_map()
+    {
+        static dispatching_map instance;
+        return instance;
     }
 };
 
