@@ -66,9 +66,10 @@ namespace aux {
         {
             p->first = typeid(supported_type);
             BOOST_LOG_ASSUME(this != NULL);
+            // To honor GCC bugs we have to operate on pointers other than void*
             p->second = std::distance(
-                    pthis,
-                    static_cast< void* >(static_cast< type_visitor< supported_type >* >(this)));
+                    reinterpret_cast< char* >(pthis),
+                    reinterpret_cast< char* >(static_cast< type_visitor< supported_type >* >(this)));
 
             base_type::init(pthis, ++p);
         }
@@ -169,7 +170,8 @@ private:
 
         if (it != disp_map.end() && it->first == wrapper)
         {
-            void* pthis = this;
+            // To honor GCC bugs we have to operate on pointers other than void*
+            char* pthis = reinterpret_cast< char* >(this);
             std::advance(pthis, it->second);
             return pthis;
         }
