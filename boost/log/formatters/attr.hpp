@@ -51,11 +51,6 @@ public:
     //! Attribute values set type
     typedef typename base_type::attribute_values_view attribute_values_view;
 
-    //! Stream output function object type
-    typedef fmt_attr< char_type, AttributeValueTypesT > ostream_putter_type;
-    //! Boost.Format output function object type
-    typedef fmt_attr< char_type, AttributeValueTypesT > format_putter_type;
-
 private:
     //! Output stream operator
     struct ostream_op
@@ -93,9 +88,6 @@ private:
 public:
     //! Constructor
     explicit fmt_attr(string_type const& name) : m_Extractor(name) {}
-
-    ostream_putter_type const& get_ostream_putter() { return *this; }
-    format_putter_type const& get_format_putter() { return *this; }
 
     //! Output stream operator
     void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const&) const
@@ -167,11 +159,6 @@ public:
     //! Attribute values set type
     typedef typename base_type::attribute_values_view attribute_values_view;
 
-    //! Stream output function object type
-    typedef fmt_attr_formatted< char_type, AttributeValueTypesT > ostream_putter_type;
-    //! Boost.Format output function object type
-    typedef fmt_attr_formatted< char_type, AttributeValueTypesT > format_putter_type;
-
 private:
     //! Boost.Format binding operator
     struct format_op
@@ -206,9 +193,6 @@ private:
 public:
     //! Constructor
     explicit fmt_attr_formatted(string_type const& name, string_type const& fmt) : m_Extractor(name), m_Formatter(fmt) {}
-
-    ostream_putter_type const& get_ostream_putter() { return *this; }
-    format_putter_type const& get_format_putter() { return *this; }
 
     //! Output stream operator
     void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const&) const

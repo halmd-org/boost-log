@@ -42,6 +42,8 @@ public:
     typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
+    //! Boost.Format type
+    typedef typename base_type::format_type format_type;
     //! Attribute values set type
     typedef typename base_type::attribute_values_view attribute_values_view;
 
@@ -62,6 +64,14 @@ public:
         else
             m_Else(strm, values, message);
     }
+    //! Format operator
+    void operator() (format_type& fmt, attribute_values_view const& values, string_type const& message) const
+    {
+        if (m_Filter(values))
+            m_Then(fmt, values, message);
+        else
+            m_Else(fmt, values, message);
+    }
 };
 
 //! Conditional 'if' formatter
@@ -78,6 +88,8 @@ public:
     typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
+    //! Boost.Format type
+    typedef typename base_type::format_type format_type;
     //! Attribute values set type
     typedef typename base_type::attribute_values_view attribute_values_view;
 
@@ -114,6 +126,12 @@ public:
     {
         if (else_.m_Filter(values))
             else_.m_Formatter(strm, values, message);
+    }
+    //! Format operator
+    void operator() (format_type& fmt, attribute_values_view const& values, string_type const& message) const
+    {
+        if (else_.m_Filter(values))
+            else_.m_Formatter(fmt, values, message);
     }
 };
 
