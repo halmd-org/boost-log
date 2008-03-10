@@ -128,7 +128,7 @@ private:
 
 public:
     //! Constructor
-    explicit fixed_type_value_extractor(string_type const& name) : m_Name(name) {}
+    explicit type_list_value_extractor(string_type const& name) : m_Name(name) {}
 
     //! Extraction operator
     template< typename ReceiverT >

@@ -22,6 +22,7 @@
 #include <iosfwd>
 #include <string>
 #include <boost/static_assert.hpp>
+#include <boost/format/format_fwd.hpp>
 #include <boost/mpl/not.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_base_and_derived.hpp>
@@ -50,6 +51,8 @@ struct basic_formatter : public formatter_base
     typedef std::basic_string< char_type > string_type;
     //! Stream type
     typedef std::basic_ostream< char_type > ostream_type;
+    //! Boost.Format object type
+    typedef boost::basic_format< char_type > format_type;
     //! Attribute values set type
     typedef basic_attribute_values_view< char_type > attribute_values_view;
 

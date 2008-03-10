@@ -20,16 +20,11 @@
 #define BOOST_LOG_FORMATTERS_ATTR_HPP_INCLUDED_
 
 #include <string>
-#include <boost/mpl/eval_if.hpp>
-#include <boost/mpl/begin.hpp>
-#include <boost/mpl/end.hpp>
-#include <boost/mpl/next.hpp>
-#include <boost/mpl/is_sequence.hpp>
-#include <boost/mpl/vector/vector10.hpp>
+#include <boost/format.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/attributes/extractors.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/type_dispatch/standard_types.hpp>
-#include <boost/log/type_dispatch/static_type_dispatcher.hpp>
 
 namespace boost {
 
@@ -37,160 +32,236 @@ namespace log {
 
 namespace formatters {
 
-namespace aux {
-
-    //! An attribute type dispatcher visitor
-    template<
-        typename OstreamT,
-        typename AttributeValueTypesT,
-        typename ItT = typename mpl::begin< AttributeValueTypesT >::type,
-        typename EndT = typename mpl::end< AttributeValueTypesT >::type
-    >
-    struct fmt_attribute_simple_type_dispatcher :
-        public fmt_attribute_simple_type_dispatcher<
-            OstreamT,
-            AttributeValueTypesT,
-            typename mpl::next< ItT >::type,
-            EndT
-        >
-    {
-        //! An attribute value type
-        typedef typename mpl::deref< ItT >::type attribute_value_type;
-
-        //! The method invokes the visitor-specific logic with the given value
-        void visit(attribute_value_type const& value)
-        {
-            (*(this->m_pStream)) << value;
-        }
-    };
-
-    //! Attribute type dispatcher base type
-    template<
-        typename OstreamT,
-        typename AttributeValueTypesT,
-        typename EndT
-    >
-    struct fmt_attribute_simple_type_dispatcher< OstreamT, AttributeValueTypesT, EndT, EndT > :
-        public static_type_dispatcher< AttributeValueTypesT >
-    {
-        OstreamT* m_pStream;
-
-        fmt_attribute_simple_type_dispatcher() : m_pStream(0) {}
-    };
-
-} // namespace aux
-
-//! Simple attribute formatter
-template<
-    typename CharT,
-    typename AttributeValueTypesT = typename make_default_attribute_types< CharT >::type
->
-class fmt_attribute_simple :
-    public basic_formatter< CharT, fmt_attribute_simple< CharT, AttributeValueTypesT > >
+//! Abstract type attribute formatter
+template< typename CharT, typename AttributeValueTypesT >
+class fmt_attr :
+    public basic_formatter< CharT, fmt_attr< CharT, AttributeValueTypesT > >
 {
-private:
     //! Base type
-    typedef basic_formatter< CharT, fmt_attribute_simple< CharT, AttributeValueTypesT > > base_type;
+    typedef basic_formatter< CharT, fmt_attr< CharT, AttributeValueTypesT > > base_type;
 
 public:
-    //! Char type
     typedef typename base_type::char_type char_type;
     //! String type
     typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
+    //! Boost.Format object type
+    typedef typename base_type::format_type format_type;
     //! Attribute values set type
     typedef typename base_type::attribute_values_view attribute_values_view;
 
-private:
-    //! An attribute type dispatcher type
-    typedef aux::fmt_attribute_simple_type_dispatcher<
-        ostream_type,
-        AttributeValueTypesT
-    > dispatcher_type;
+    //! Stream output function object type
+    typedef fmt_attr< char_type, AttributeValueTypesT > ostream_putter_type;
+    //! Boost.Format output function object type
+    typedef fmt_attr< char_type, AttributeValueTypesT > format_putter_type;
 
 private:
-    //! Attribute name
-    string_type m_AttributeName;
-    //! Attribute type dispatcher
-    mutable dispatcher_type m_Dispatcher;
+    //! Output stream operator
+    struct ostream_op
+    {
+        typedef void result_type;
+        explicit ostream_op(ostream_type& strm) : m_Stream(strm) {}
+        template< typename T >
+        void operator() (T const& value) const
+        {
+            m_Stream << value;
+        }
+
+    private:
+        ostream_type& m_Stream;
+    };
+    //! Boost.Format binding operator
+    struct format_op
+    {
+        typedef void result_type;
+        explicit format_op(format_type& fmt) : m_Format(fmt) {}
+        template< typename T >
+        void operator() (T const& value) const
+        {
+            m_Format % value;
+        }
+
+    private:
+        format_type& m_Format;
+    };
+
+private:
+    //! Attribute value extractor
+    attributes::attribute_value_extractor< char_type, AttributeValueTypesT > m_Extractor;
 
 public:
     //! Constructor
-    explicit fmt_attribute_simple(const char_type* name) : m_AttributeName(name) {}
-    //! Constructor
-    explicit fmt_attribute_simple(string_type const& name) : m_AttributeName(name) {}
+    explicit fmt_attr(string_type const& name) : m_Extractor(name) {}
 
-    //! Output operator
+    ostream_putter_type const& get_ostream_putter() { return *this; }
+    format_putter_type const& get_format_putter() { return *this; }
+
+    //! Output stream operator
     void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const&) const
     {
-        typename attribute_values_view::const_iterator it = attrs.find(m_AttributeName);
-        if (it != attrs.end())
-        {
-            m_Dispatcher.m_pStream = &strm;
-            it->second->dispatch(m_Dispatcher);
-        }
+        ostream_op op(strm);
+        m_Extractor(attrs, op);
+    }
+    //! Output stream operator
+    void operator() (format_type& fmt, attribute_values_view const& attrs, string_type const&) const
+    {
+        format_op op(fmt);
+        m_Extractor(attrs, op);
     }
 };
 
 //! Formatter generator
-inline fmt_attribute_simple< char > attr(const char* name)
+inline fmt_attr<
+    char,
+    make_default_attribute_types< char >::type
+> attr(std::basic_string< char > const& name)
 {
-    return fmt_attribute_simple< char >(name);
+    return fmt_attr< char, make_default_attribute_types< char >::type >(name);
 }
 //! Formatter generator
-inline fmt_attribute_simple< char > attr(std::basic_string< char > const& name)
+inline fmt_attr<
+    wchar_t,
+    make_default_attribute_types< wchar_t >::type
+> attr(std::basic_string< wchar_t > const& name)
 {
-    return fmt_attribute_simple< char >(name);
-}
-//! Formatter generator
-inline fmt_attribute_simple< wchar_t > attr(const wchar_t* name)
-{
-    return fmt_attribute_simple< wchar_t >(name);
-}
-//! Formatter generator
-inline fmt_attribute_simple< wchar_t > attr(std::basic_string< wchar_t > const& name)
-{
-    return fmt_attribute_simple< wchar_t >(name);
+    return fmt_attr< wchar_t, make_default_attribute_types< wchar_t >::type >(name);
 }
 
 //! Formatter generator with ability to specify an exact attribute value type(s)
-template< typename AttributeValueTypesT, typename CharT >
-inline fmt_attribute_simple<
-    CharT,
-    typename mpl::eval_if<
-        mpl::is_sequence< AttributeValueTypesT >,
-        AttributeValueTypesT,
-        mpl::vector1< AttributeValueTypesT >
-    >::type
-> attr(const CharT* name)
+template< typename AttributeValueTypesT >
+inline fmt_attr<
+    char,
+    AttributeValueTypesT
+> attr(std::basic_string< char > const& name)
 {
-    typedef typename mpl::eval_if<
-        mpl::is_sequence< AttributeValueTypesT >,
-        AttributeValueTypesT,
-        mpl::vector1< AttributeValueTypesT >
-    >::type types;
-
-    return fmt_attribute_simple< CharT, types >(name);
+    return fmt_attr< char, AttributeValueTypesT >(name);
 }
 //! Formatter generator with ability to specify an exact attribute value type(s)
-template< typename AttributeValueTypesT, typename CharT >
-inline fmt_attribute_simple<
-    CharT,
-    typename mpl::eval_if<
-        mpl::is_sequence< AttributeValueTypesT >,
-        AttributeValueTypesT,
-        mpl::vector1< AttributeValueTypesT >
-    >::type
-> attr(std::basic_string< CharT > const& name)
+template< typename AttributeValueTypesT >
+inline fmt_attr<
+    wchar_t,
+    AttributeValueTypesT
+> attr(std::basic_string< wchar_t > const& name)
 {
-    typedef typename mpl::eval_if<
-        mpl::is_sequence< AttributeValueTypesT >,
-        AttributeValueTypesT,
-        mpl::vector1< AttributeValueTypesT >
-    >::type types;
+    return fmt_attr< wchar_t, AttributeValueTypesT >(name);
+}
 
-    return fmt_attribute_simple< CharT, types >(name);
+
+//! Abstract type attribute formatter with format specifier
+template< typename CharT, typename AttributeValueTypesT >
+class fmt_attr_formatted :
+    public basic_formatter< CharT, fmt_attr_formatted< CharT, AttributeValueTypesT > >
+{
+    //! Base type
+    typedef basic_formatter< CharT, fmt_attr_formatted< CharT, AttributeValueTypesT > > base_type;
+
+public:
+    typedef typename base_type::char_type char_type;
+    //! String type
+    typedef typename base_type::string_type string_type;
+    //! Stream type
+    typedef typename base_type::ostream_type ostream_type;
+    //! Boost.Format object type
+    typedef typename base_type::format_type format_type;
+    //! Attribute values set type
+    typedef typename base_type::attribute_values_view attribute_values_view;
+
+    //! Stream output function object type
+    typedef fmt_attr_formatted< char_type, AttributeValueTypesT > ostream_putter_type;
+    //! Boost.Format output function object type
+    typedef fmt_attr_formatted< char_type, AttributeValueTypesT > format_putter_type;
+
+private:
+    //! Boost.Format binding operator
+    struct format_op
+    {
+        typedef void result_type;
+        explicit format_op(format_type& fmt) : m_Format(fmt) {}
+        template< typename T >
+        void operator() (T const& value) const
+        {
+            m_Format % value;
+        }
+
+    private:
+        format_type& m_Format;
+    };
+    //! Cleanup scope guard
+    struct cleanup_guard
+    {
+        explicit cleanup_guard(format_type& fmt) : m_Format(fmt) {}
+        ~cleanup_guard() { m_Format.clear(); }
+
+    private:
+        format_type& m_Format;
+    };
+
+private:
+    //! Attribute value extractor
+    attributes::attribute_value_extractor< char_type, AttributeValueTypesT > m_Extractor;
+    //! Formatter object
+    mutable format_type m_Formatter;
+
+public:
+    //! Constructor
+    explicit fmt_attr_formatted(string_type const& name, string_type const& fmt) : m_Extractor(name), m_Formatter(fmt) {}
+
+    ostream_putter_type const& get_ostream_putter() { return *this; }
+    format_putter_type const& get_format_putter() { return *this; }
+
+    //! Output stream operator
+    void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const&) const
+    {
+        cleanup_guard _(m_Formatter);
+        format_op op(m_Formatter);
+        m_Extractor(attrs, op);
+        strm << m_Formatter;
+    }
+    //! Output stream operator
+    void operator() (format_type& fmt, attribute_values_view const& attrs, string_type const&) const
+    {
+        cleanup_guard _(m_Formatter);
+        format_op op(m_Formatter);
+        m_Extractor(attrs, op);
+        fmt % m_Formatter.str();
+    }
+};
+
+//! Formatter generator
+inline fmt_attr_formatted<
+    char,
+    make_default_attribute_types< char >::type
+> attr(std::basic_string< char > const& name, std::basic_string< char > const& fmt)
+{
+    return fmt_attr_formatted< char, make_default_attribute_types< char >::type >(name, fmt);
+}
+//! Formatter generator
+inline fmt_attr_formatted<
+    wchar_t,
+    make_default_attribute_types< wchar_t >::type
+> attr(std::basic_string< wchar_t > const& name, std::basic_string< wchar_t > const& fmt)
+{
+    return fmt_attr_formatted< wchar_t, make_default_attribute_types< wchar_t >::type >(name, fmt);
+}
+
+//! Formatter generator with ability to specify an exact attribute value type(s)
+template< typename AttributeValueTypesT >
+inline fmt_attr_formatted<
+    char,
+    AttributeValueTypesT
+> attr(std::basic_string< char > const& name, std::basic_string< char > const& fmt)
+{
+    return fmt_attr_formatted< char, AttributeValueTypesT >(name, fmt);
+}
+//! Formatter generator with ability to specify an exact attribute value type(s)
+template< typename AttributeValueTypesT >
+inline fmt_attr_formatted<
+    wchar_t,
+    AttributeValueTypesT
+> attr(std::basic_string< wchar_t > const& name, std::basic_string< wchar_t > const& fmt)
+{
+    return fmt_attr_formatted< wchar_t, AttributeValueTypesT >(name, fmt);
 }
 
 } // namespace formatters
