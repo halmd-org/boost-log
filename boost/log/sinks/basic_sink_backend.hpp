@@ -27,6 +27,7 @@
 #include <boost/mpl/or.hpp>
 #include <boost/function/function3.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/sinks/threading_models.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
@@ -74,15 +75,6 @@ public:
 
     //! Output stream type
     typedef std::basic_ostream< char_type > stream_type;
-
-private:
-    //! A simple scope guard to clear the formatted record storage
-    struct clear_invoker
-    {
-        string_type& m_T;
-        explicit clear_invoker(string_type& t) : m_T(t) {}
-        ~clear_invoker() { m_T.clear(); }
-    };
 
 private:
     //! Formatted log record storage
@@ -137,8 +129,7 @@ public:
         // Perform the formatting
         if (!m_Formatter.empty())
         {
-            // Scope guard to automatically clear the storage
-            clear_invoker _(m_FormattedRecord);
+            log::aux::cleanup_guard< string_type > _(m_FormattedRecord);
 
             m_Formatter(m_FormattingStream, attributes, message);
             m_FormattingStream.flush();
