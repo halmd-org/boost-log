@@ -24,7 +24,6 @@
 #include <fstream>
 #include <boost/shared_ptr.hpp>
 #include <boost/empty_deleter.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/logging_core.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/severity_logger.hpp>
@@ -32,6 +31,7 @@
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/attr.hpp>
+#include <boost/log/formatters/date_time.hpp>
 #include <boost/log/formatters/named_scope.hpp>
 #include <boost/log/attributes/counter.hpp>
 #include <boost/log/attributes/constant.hpp>
@@ -131,8 +131,8 @@ int main(int argc, char* argv[])
     // will be written to log and in what way they will look there.
     pSink->locked_backend()->set_formatter(fmt::ostrm
         << fmt::attr("LineID") // First an attribute "LineID" is written to the log
-        << " [" << fmt::attr< boost::posix_time::ptime >("TimeStamp") 
-        << "] [" << fmt::attr< boost::posix_time::time_duration >("Uptime") 
+        << " [" << fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %T%f") 
+        << "] [" << fmt::time_duration< boost::posix_time::time_duration >("Uptime") 
         << "] [" // then this delimiter separates it from the rest of the line
         << fmt::attr< std::string >("Tag") // then goes another attribute named "Tag"
                                            // Note here we explicitly stated that its type

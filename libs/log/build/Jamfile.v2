@@ -53,7 +53,6 @@ lib boost_log
         text_ostream_backend.cpp
         rotating_ofstream.cpp
 	thread_specific.cpp
-	date_time_formatters.cpp
         platform_log_sources
     : ## requirements ##
         <define>BOOST_LOG_BUILDING_THE_LIB=1
