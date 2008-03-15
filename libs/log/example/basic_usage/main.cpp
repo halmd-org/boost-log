@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
     // will be written to log and in what way they will look there.
     pSink->locked_backend()->set_formatter(fmt::ostrm
         << fmt::attr("LineID") // First an attribute "LineID" is written to the log
-        << " [" << fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %T%f") 
+        << " [" << fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %T.%f") 
         << "] [" << fmt::time_duration< boost::posix_time::time_duration >("Uptime") 
         << "] [" // then this delimiter separates it from the rest of the line
         << fmt::attr< std::string >("Tag") // then goes another attribute named "Tag"

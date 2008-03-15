@@ -22,6 +22,10 @@
 #include <ctime>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/joint_view.hpp>
+#include <boost/mpl/copy.hpp>
+#include <boost/mpl/back_inserter.hpp>
+#include <boost/date_time/gregorian/gregorian_types.hpp>
+#include <boost/date_time/local_time/local_time_types.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/detail/prologue.hpp>
 
@@ -37,7 +41,8 @@ typedef mpl::vector<
 
 //! An MPL-sequence of Boost date and time types of attributes
 typedef mpl::vector<
-    posix_time::ptime
+    posix_time::ptime,
+    local_time::local_date_time
 >::type boost_date_time_types;
 
 //! An MPL-sequence with the complete list of the supported date and time types
@@ -46,6 +51,20 @@ typedef mpl::joint_view<
     boost_date_time_types
 >::type date_time_types;
 
+//! An MPL-sequence of Boost date types of attributes
+typedef mpl::vector<
+    gregorian::date
+>::type boost_date_types;
+
+//! An MPL-sequence with the complete list of the supported date types
+typedef mpl::copy<
+    date_time_types,
+    mpl::back_inserter< boost_date_types >
+>::type date_types;
+
+//! An MPL-sequence with the complete list of the supported time types
+typedef date_time_types time_types;
+
 //! An MPL-sequence of natively supported time duration types of attributes
 typedef mpl::vector<
     double // result of difftime
@@ -53,7 +72,8 @@ typedef mpl::vector<
 
 //! An MPL-sequence of Boost time duration types of attributes
 typedef mpl::vector<
-    posix_time::time_duration
+    posix_time::time_duration,
+    gregorian::date_duration
 >::type boost_time_duration_types;
 
 //! An MPL-sequence with the complete list of the supported time duration types
@@ -61,6 +81,16 @@ typedef mpl::joint_view<
     native_time_duration_types,
     boost_time_duration_types
 >::type time_duration_types;
+
+//! An MPL-sequence of Boost time duration types of attributes
+typedef mpl::vector<
+    posix_time::time_period,
+    local_time::local_time_period,
+    gregorian::date_period
+>::type boost_time_period_types;
+
+//! An MPL-sequence with the complete list of the supported time period types
+typedef boost_time_period_types time_period_types;
 
 } // namespace log
 
