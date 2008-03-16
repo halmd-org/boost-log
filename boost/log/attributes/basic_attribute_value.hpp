@@ -33,7 +33,7 @@ namespace attributes {
 template< typename T >
 class basic_attribute_value :
     public attribute_value,
-    public aux::templated_shared_from_this
+    public log::aux::templated_shared_from_this
 {
 public:
     //! Value type
