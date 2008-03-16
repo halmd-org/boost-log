@@ -101,7 +101,13 @@ public:
     void operator() (format_type& fmt, attribute_values_view const& attrs, string_type const&) const
     {
         format_op op(fmt);
-        m_Extractor(attrs, op);
+        if (!m_Extractor(attrs, op))
+        {
+            // Not very nice but we have to put something
+            // into the formatter if there is no attribute value found
+            const char_type empty_string[1] = { 0 };
+            fmt % empty_string;
+        }
     }
 };
 

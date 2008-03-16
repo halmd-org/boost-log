@@ -25,20 +25,27 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/empty_deleter.hpp>
 #include <boost/log/logging_core.hpp>
+
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/severity_logger.hpp>
+
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
-#include <boost/log/formatters/basic_formatters.hpp>
+
+#include <boost/log/formatters/ostream.hpp>
+// #include <boost/log/formatters/format.hpp>
 #include <boost/log/formatters/attr.hpp>
 #include <boost/log/formatters/date_time.hpp>
 #include <boost/log/formatters/named_scope.hpp>
+#include <boost/log/formatters/message.hpp>
+
 #include <boost/log/attributes/counter.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/attributes/clock.hpp>
 #include <boost/log/attributes/timer.hpp>
+
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>
 
@@ -155,6 +162,18 @@ int main(int argc, char* argv[])
         << "] [" // yet another delimiter
         << fmt::named_scope("Scope", fmt::keywords::scope_iteration = fmt::keywords::reverse) << "] "
         << fmt::message()); // here goes the log record text
+
+/*
+    // There is an alternative way of specifying formatters
+    pSink->locked_backend()->set_formatter(
+        fmt::format("%1% @ %2% [%3%] >%4%< Scope: %5%: %6%")
+            % fmt::attr("LineID")
+            % fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %T.%f")
+            % fmt::time_duration< boost::posix_time::time_duration >("Uptime")
+            % fmt::attr< std::string >("Tag")
+            % fmt::named_scope("Scope", fmt::keywords::scope_iteration = fmt::keywords::reverse, fmt::keywords::scope_depth = 2)
+            % fmt::message());
+*/
 
     // Now the sink will output in the following format:
     // 1 [Current time] [Tag value] Hello World!
