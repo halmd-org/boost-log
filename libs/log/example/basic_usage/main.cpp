@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
     // will be written to log and in what way they will look there.
     pSink->locked_backend()->set_formatter(fmt::ostrm
         << fmt::attr("LineID") // First an attribute "LineID" is written to the log
-        << " [" << fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %T.%f") 
+        << " [" << fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f") 
         << "] [" << fmt::time_duration< boost::posix_time::time_duration >("Uptime") 
         << "] [" // then this delimiter separates it from the rest of the line
         << fmt::attr< std::string >("Tag") // then goes another attribute named "Tag"
@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
     pSink->locked_backend()->set_formatter(
         fmt::format("%1% @ %2% [%3%] >%4%< Scope: %5%: %6%")
             % fmt::attr("LineID")
-            % fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %T.%f")
+            % fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f")
             % fmt::time_duration< boost::posix_time::time_duration >("Uptime")
             % fmt::attr< std::string >("Tag")
             % fmt::named_scope("Scope", fmt::keywords::scope_iteration = fmt::keywords::reverse, fmt::keywords::scope_depth = 2)
