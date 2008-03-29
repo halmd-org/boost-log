@@ -224,6 +224,7 @@ namespace aux {
     class flt_attr_multiple_type_dispatcher< FunT, AttributeValueTypesT, EndT, EndT > :
         public static_type_dispatcher< AttributeValueTypesT >
     {
+    public:
         mutable bool m_Result;
 
         template< typename T >
@@ -265,7 +266,7 @@ private:
     //! Attribute name
     string_type m_AttributeName;
     //! Attribute value types dispatcher
-    dispatcher_type m_Dispatcher;
+    mutable dispatcher_type m_Dispatcher;
 
 public:
     template< typename T >
