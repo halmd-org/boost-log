@@ -42,7 +42,7 @@ private:
     //! Char type
     typedef typename base_type::char_type char_type;
     //! String type
-    typedef std::basic_string< char_type > string_type;
+    typedef typename base_type::string_type string_type;
 
 private:
     //! Attribute name

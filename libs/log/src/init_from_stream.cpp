@@ -46,6 +46,7 @@
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>
+#include <boost/log/detail/functional.hpp>
 
 namespace boost {
 
@@ -443,7 +444,7 @@ struct filter_grammar :
     > arg_type;
 
     //! A visitor for the arg_type actual type detection
-    template< template< typename > class RelationT >
+    template< typename RelationT >
     struct binary_relation_visitor :
         public boost::static_visitor< >
     {
@@ -451,27 +452,24 @@ struct filter_grammar :
 
         void operator() (long int& val) const
         {
-            m_Grammar.m_Subexpression = boost::log::filters::flt_attr_multiple<
-                char_type,
-                RelationT,
-                boost::log::integral_types
-            >(m_Grammar.m_AttributeName.get(), val);
+            m_Grammar.m_Subexpression =
+                boost::log::filters::attr<
+                    boost::log::integral_types
+                >(m_Grammar.m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), val));
         }
         void operator() (double& val) const
         {
-            m_Grammar.m_Subexpression = boost::log::filters::flt_attr_multiple<
-                char_type,
-                RelationT,
-                boost::log::floating_point_types
-            >(m_Grammar.m_AttributeName.get(), val);
+            m_Grammar.m_Subexpression =
+                boost::log::filters::attr<
+                    boost::log::floating_point_types
+                >(m_Grammar.m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), val));
         }
         void operator() (string_type& val) const
         {
-            m_Grammar.m_Subexpression = boost::log::filters::flt_attr_single<
-                char_type,
-                std::binder2nd< RelationT< string_type > >,
-                string_type
-            >(m_Grammar.m_AttributeName.get(), std::bind2nd(RelationT< string_type >(), val));
+            m_Grammar.m_Subexpression =
+                boost::log::filters::attr<
+                    string_type
+                >(m_Grammar.m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), val));
         }
 
     private:
@@ -561,7 +559,7 @@ struct filter_grammar :
         }
     }
     //! The binary relation handler
-    template< template< typename > class RelationT >
+    template< typename RelationT >
     void on_binary_relation(const char_type* begin, const char_type* end) const
     {
         if (!!m_AttributeName && !!m_Operand)
@@ -580,18 +578,17 @@ struct filter_grammar :
     }
 
     //! The binary relation handler for string operands
-    template< template< typename > class RelationT >
+    template< typename RelationT >
     void on_binary_string_relation(const char_type* begin, const char_type* end) const
     {
         if (!!m_AttributeName && !!m_Operand)
         {
             if (string_type* operand = boost::get< string_type >(m_Operand.get_ptr()))
             {
-                m_Subexpression = boost::log::filters::flt_attr_single<
-                    char_type,
-                    std::binder2nd< RelationT< string_type > >,
-                    string_type
-                >(m_AttributeName.get(), std::bind2nd(RelationT< string_type >(), *operand));
+                m_Subexpression =
+                    boost::log::filters::attr<
+                        string_type
+                    >(m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), *operand));
                 m_AttributeName = none;
                 m_Operand = none;
             }
@@ -617,10 +614,10 @@ struct filter_grammar :
         {
             if (string_type* operand = boost::get< string_type >(m_Operand.get_ptr()))
             {
-                typedef basic_regex< char_type, regex_traits< char_type > > regex_t;
-                m_Subexpression = boost::log::filters::attr<
-                    string_type
-                >(m_AttributeName.get()).matches(regex_t(operand->c_str()));
+                m_Subexpression =
+                    boost::log::filters::attr<
+                        string_type
+                    >(m_AttributeName.get()).matches(*operand);
                 m_AttributeName = none;
                 m_Operand = none;
             }
@@ -720,23 +717,23 @@ struct filter_grammar< CharT >::definition
 
         term = factor >> *(
             (constants::char_equal >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< std::equal_to >, g, _1, _2)] |
+                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::equal_to >, g, _1, _2)] |
             (constants::char_greater >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< std::greater >, g, _1, _2)] |
+                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::greater >, g, _1, _2)] |
             (constants::char_less >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< std::less >, g, _1, _2)] |
+                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::less >, g, _1, _2)] |
             (spirit::str_p(constants::not_equal_keyword()) >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< std::not_equal_to >, g, _1, _2)] |
+                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::not_equal_to >, g, _1, _2)] |
             (spirit::str_p(constants::greater_or_equal_keyword()) >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< std::greater_equal >, g, _1, _2)] |
+                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::greater_equal >, g, _1, _2)] |
             (spirit::str_p(constants::less_or_equal_keyword()) >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< std::less_equal >, g, _1, _2)] |
+                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::less_equal >, g, _1, _2)] |
             (spirit::str_p(constants::begins_with_keyword()) >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::filters::aux::begins_with_fun >, g, _1, _2)] |
+                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::aux::begins_with_fun >, g, _1, _2)] |
             (spirit::str_p(constants::ends_with_keyword()) >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::filters::aux::ends_with_fun >, g, _1, _2)] |
+                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::aux::ends_with_fun >, g, _1, _2)] |
             (spirit::str_p(constants::contains_keyword()) >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::filters::aux::contains_fun >, g, _1, _2)] |
+                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::aux::contains_fun >, g, _1, _2)] |
             (spirit::str_p(constants::matches_keyword()) >> factor)
                 [bind(&filter_grammar_type::on_match_relation, g, _1, _2)]
             );

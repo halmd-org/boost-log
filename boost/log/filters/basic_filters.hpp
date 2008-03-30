@@ -51,6 +51,8 @@ struct basic_filter : public filter_base
 {
     //! Character type
     typedef CharT char_type;
+    //! String type
+    typedef std::basic_string< char_type > string_type;
     //! Attribute values view type
     typedef basic_attribute_values_view< char_type > attribute_values_view;
 
