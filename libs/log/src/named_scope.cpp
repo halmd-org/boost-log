@@ -42,21 +42,25 @@ namespace {
     
     public:
         //! The method pushes the scope to the back of the list
-        void push_back(const_reference entry)
+        BOOST_LOG_FORCEINLINE void push_back(const_reference entry)
         {
-            const_reference top = this->back();
-            entry._m_pPrev = const_cast< aux::named_scope_list_node* >(static_cast< const aux::named_scope_list_node* >(&top));
-            top._m_pNext = const_cast< aux::named_scope_list_node* >(static_cast< const aux::named_scope_list_node* >(&entry));
+            register aux::named_scope_list_node* top = this->m_RootNode._m_pPrev;
+            entry._m_pPrev = top;
             entry._m_pNext = &this->m_RootNode;
-            this->m_RootNode._m_pPrev = const_cast< aux::named_scope_list_node* >(static_cast< const aux::named_scope_list_node* >(&entry));
+
+            BOOST_LOG_ASSUME(&entry != 0);
+            this->m_RootNode._m_pPrev = top->_m_pNext =
+                const_cast< aux::named_scope_list_node* >(
+                    static_cast< const aux::named_scope_list_node* >(&entry));
+
             ++this->m_Size;
         }
         //! The method removes the top scope entry from the list
-        void pop_back()
+        BOOST_LOG_FORCEINLINE void pop_back()
         {
-            const_reference top = this->back();
-            top._m_pPrev->_m_pNext = top._m_pNext;
-            top._m_pNext->_m_pPrev = top._m_pPrev;
+            register aux::named_scope_list_node* top = this->m_RootNode._m_pPrev;
+            top->_m_pPrev->_m_pNext = top->_m_pNext;
+            top->_m_pNext->_m_pPrev = top->_m_pPrev;
             --this->m_Size;
         }
     };
