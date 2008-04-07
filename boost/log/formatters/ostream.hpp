@@ -65,11 +65,13 @@ namespace {
 //! An ADL-reachable operator to generate fmt_chain
 template< typename CharT, typename LeftFmtT, typename RightT >
 inline fmt_chain<
+    CharT,
     LeftFmtT,
     typename wrap_if_not_formatter< CharT, RightT >::type
 > operator<< (basic_formatter< CharT, LeftFmtT > const& left, RightT const& right)
 {
     typedef fmt_chain<
+        CharT,
         LeftFmtT,
         typename wrap_if_not_formatter< CharT, RightT >::type
     > result_type;
@@ -79,6 +81,7 @@ inline fmt_chain<
 //! A helper operator to automatically generate fmt_wrapper from C-strings
 template< typename FmtT, typename CharT >
 inline fmt_chain<
+    CharT,
     FmtT,
     fmt_wrapper<
         CharT,
@@ -87,6 +90,7 @@ inline fmt_chain<
 > operator<< (basic_formatter< CharT, FmtT > const& left, const CharT* str)
 {
     return fmt_chain<
+        CharT,
         FmtT,
         fmt_wrapper<
             CharT,

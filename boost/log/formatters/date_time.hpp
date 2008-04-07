@@ -769,9 +769,9 @@ inline fmt_date_time_facade<
         BOOST_LOG_ITERATION_DEFAULT_ATTR_TYPES,
         BOOST_LOG_ITERATION_FORMATTER_IMPL
     >(
-        name BOOST_PP_COMMA_IF(BOOST_PP_ITERATION())
+        name
 #if BOOST_PP_ITERATION() > 0
-        boost::parameter::parameters<
+        , boost::parameter::parameters<
             BOOST_PP_SEQ_FOR_EACH_I(BOOST_LOG_ITERATION_MAKE_KEYWORD_TYPES, ~, BOOST_LOG_ITERATION_KEYWORDS)
         >()(BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg))
 #endif
@@ -797,9 +797,9 @@ inline fmt_date_time_facade<
         AttributeValueTypesT,
         BOOST_LOG_ITERATION_FORMATTER_IMPL
     >(
-        name BOOST_PP_COMMA_IF(BOOST_PP_ITERATION())
+        name
 #if BOOST_PP_ITERATION() > 0
-        boost::parameter::parameters<
+        , boost::parameter::parameters<
             BOOST_PP_SEQ_FOR_EACH_I(BOOST_LOG_ITERATION_MAKE_KEYWORD_TYPES, ~, BOOST_LOG_ITERATION_KEYWORDS)
         >()(BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg))
 #endif

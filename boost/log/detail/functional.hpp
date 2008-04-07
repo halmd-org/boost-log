@@ -222,21 +222,8 @@ private:
     template< typename T, typename U >
     bool operator() (T const& value, std::pair< U, U > const& rng, mpl::true_ const&) const
     {
-        typedef typename mpl::eval_if_c<
-            (sizeof(T) > sizeof(U)),
-            mpl::identity< T >,
-            mpl::eval_if_c<
-                (sizeof(U) > sizeof(T)),
-                mpl::identity< U >,
-                mpl::if_<
-                    is_unsigned< T >,
-                    T,
-                    U
-                >
-            >
-        >::type actual_type;
-        return (static_cast< actual_type >(value) >= static_cast< actual_type >(rng.first)
-            && static_cast< actual_type >(value) < static_cast< actual_type >(rng.second));
+        return (compare_integral< std::greater_equal >(value, rng.first)
+            && compare_integral< std::less >(value, rng.second));
     }
 };
 

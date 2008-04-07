@@ -19,6 +19,7 @@
 #ifndef BOOST_LOG_ATTRIBUTES_NAMED_SCOPE_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_NAMED_SCOPE_HPP_INCLUDED_
 
+#include <ostream>
 #include <memory>
 #include <iterator>
 #include <boost/shared_ptr.hpp>
@@ -237,6 +238,18 @@ public:
     const_reference front() const { return *begin(); }
 };
 
+//! Stream output operator
+template< typename CharT, typename TraitsT >
+inline std::basic_ostream< CharT, TraitsT >& operator<< (
+    std::basic_ostream< CharT, TraitsT >& strm, basic_named_scope_list< CharT > const& sl)
+{
+    typename basic_named_scope_list< CharT >::const_iterator it = sl.begin(), end = sl.end();
+    if (it != end)
+        strm << (it++)->scope_name;
+    for (; it != end; ++it)
+        strm << "->" << it->scope_name;
+    return strm;
+}
 
 //! A class of an attribute that holds stack of named scopes of the current thread
 template< typename CharT >

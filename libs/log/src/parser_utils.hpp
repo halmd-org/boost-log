@@ -37,6 +37,7 @@ struct char_constants< char >
 {
     typedef char char_type;
     static const char_type char_comment = '#';
+    static const char_type char_comma = ',';
     static const char_type char_quote = '"';
     static const char_type char_percent = '%';
     static const char_type char_exclamation = '!';
@@ -60,6 +61,8 @@ struct char_constants< char >
     static const char_type* ends_with_keyword() { return "ends_with"; }
     static const char_type* contains_keyword() { return "contains"; }
     static const char_type* matches_keyword() { return "matches"; }
+
+    static const char_type* message_text_keyword() { return "_"; }
 
     static const char_type* core_section_name() { return "Core"; }
 
@@ -144,6 +147,7 @@ struct char_constants< wchar_t >
 {
     typedef wchar_t char_type;
     static const char_type char_comment = L'#';
+    static const char_type char_comma = L',';
     static const char_type char_quote = L'"';
     static const char_type char_percent = L'%';
     static const char_type char_exclamation = L'!';
@@ -167,6 +171,8 @@ struct char_constants< wchar_t >
     static const char_type* ends_with_keyword() { return L"ends_with"; }
     static const char_type* contains_keyword() { return L"contains"; }
     static const char_type* matches_keyword() { return L"matches"; }
+
+    static const char_type* message_text_keyword() { return L"_"; }
 
     static const char_type* core_section_name() { return L"Core"; }
 

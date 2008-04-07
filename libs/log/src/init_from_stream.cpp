@@ -25,6 +25,7 @@
 #include <boost/log/logging_core.hpp>
 #include <boost/log/init/from_stream.hpp>
 #include <boost/log/init/filter_parser.hpp>
+#include <boost/log/init/formatter_parser.hpp>
 #include "parser_utils.hpp"
 
 namespace boost {

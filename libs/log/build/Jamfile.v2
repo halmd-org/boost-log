@@ -55,6 +55,7 @@ lib boost_log
 	thread_specific.cpp
 	init_from_stream.cpp
 	filter_parser.cpp
+	formatter_parser.cpp
         platform_log_sources
     : ## requirements ##
         <define>BOOST_LOG_BUILDING_THE_LIB=1

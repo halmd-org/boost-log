@@ -31,21 +31,20 @@ namespace log {
 namespace formatters {
 
 //! A formatter compound that encapsulates two other formatters
-template< typename LeftFmtT, typename RightFmtT >
+template< typename CharT, typename LeftFmtT, typename RightFmtT >
 class fmt_chain :
-    public basic_formatter< typename LeftFmtT::char_type, fmt_chain< LeftFmtT, RightFmtT > >
+    public basic_formatter< CharT, fmt_chain< CharT, LeftFmtT, RightFmtT > >
 {
 private:
     //! Base type
     typedef basic_formatter<
-        typename LeftFmtT::char_type,
-        fmt_chain< LeftFmtT, RightFmtT >
+        CharT,
+        fmt_chain< CharT, LeftFmtT, RightFmtT >
     > base_type;
 
 public:
     //! Char type
     typedef typename base_type::char_type char_type;
-    BOOST_STATIC_ASSERT((is_same< char_type, typename RightFmtT::char_type >::value));
     //! String type
     typedef typename base_type::string_type string_type;
     //! Attribute values set type

@@ -75,6 +75,7 @@ public:
     fmt_format<
         char_type,
         fmt_chain<
+            char_type,
             ArgsT,
             typename wrap_if_not_formatter< char_type, NextArgT >::type
         >
