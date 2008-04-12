@@ -53,6 +53,7 @@ lib boost_log
         text_ostream_backend.cpp
         rotating_ofstream.cpp
 	thread_specific.cpp
+	parser_utils.cpp
 	init_from_stream.cpp
 	filter_parser.cpp
 	formatter_parser.cpp

@@ -21,7 +21,7 @@
 
 #include <cctype>
 #include <string>
-#include <iterator>
+#include <iostream>
 
 namespace boost {
 
@@ -64,10 +64,27 @@ struct char_constants< char >
 
     static const char_type* message_text_keyword() { return "_"; }
 
+    static const char_type* default_level_attribute_name() { return "Severity"; }
+
     static const char_type* core_section_name() { return "Core"; }
+    static const char_type* sink_section_name_prefix() { return "Sink:"; }
 
     static const char_type* core_disable_logging_param_name() { return "DisableLogging"; }
     static const char_type* filter_param_name() { return "Filter"; }
+
+    static const char_type* sink_destination_param_name() { return "Destination"; }
+    static const char_type* file_name_param_name() { return "FileName"; }
+    static const char_type* rotation_size_param_name() { return "RotationSize"; }
+    static const char_type* rotation_interval_param_name() { return "RotationInterval"; }
+    static const char_type* auto_flush_param_name() { return "AutoFlush"; }
+    static const char_type* asynchronous_param_name() { return "Asynchronous"; }
+    static const char_type* format_param_name() { return "Format"; }
+
+    static const char_type* text_file_destination() { return "TextFile"; }
+    static const char_type* console_destination() { return "Console"; }
+    static const char_type* syslog_destination() { return "Syslog"; }
+
+    static std::ostream& get_console_log_stream() { return std::clog; }
 
     static int to_number(char_type c)
     {
@@ -82,66 +99,9 @@ struct char_constants< char >
         return n;
     }
 
-    static void translate_escape_sequences(std::basic_string< char_type >& str)
-    {
-        using namespace std; // to make sure we can use C functions unqualified
-
-        std::basic_string< char_type >::iterator it = str.begin();
-        while (it != str.end())
-        {
-            it = std::find(it, str.end(), '\\');
-            if (std::distance(it, str.end()) >= 2)
-            {
-                str.erase(it);
-                switch (*it)
-                {
-                    case 'n':
-                        *it = '\n'; break;
-                    case 'r':
-                        *it = '\r'; break;
-                    case 'a':
-                        *it = '\a'; break;
-                    case '\\':
-                        ++it; break;
-                    case 't':
-                        *it = '\t'; break;
-                    case 'b':
-                        *it = '\b'; break;
-                    case 'x':
-                    {
-                        std::basic_string< char_type >::iterator b = it;
-                        if (std::distance(++b, str.end()) >= 2)
-                        {
-                            char_type c1 = *b++, c2 = *b++;
-                            if (isxdigit(c1) && isxdigit(c2))
-                            {
-                                *it++ = char_type((to_number(c1) << 4) | to_number(c2));
-                                str.erase(it, b);
-                            }
-                        }
-                        break;
-                    }
-                    default:
-                    {
-                        if (*it >= '0' && *it <= '7')
-                        {
-                            std::basic_string< char_type >::iterator b = it;
-                            int c = (*b++) - '0';
-                            if (*b >= '0' && *b <= '7')
-                                c = c * 8 + (*b++) - '0';
-                            if (*b >= '0' && *b <= '7')
-                                c = c * 8 + (*b++) - '0';
-
-                            *it++ = char_type(c);
-                            str.erase(it, b);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    static void translate_escape_sequences(std::basic_string< char_type >& str);
 };
+
 template< >
 struct char_constants< wchar_t >
 {
@@ -174,10 +134,27 @@ struct char_constants< wchar_t >
 
     static const char_type* message_text_keyword() { return L"_"; }
 
+    static const char_type* default_level_attribute_name() { return L"Severity"; }
+
     static const char_type* core_section_name() { return L"Core"; }
+    static const char_type* sink_section_name_prefix() { return L"Sink:"; }
 
     static const char_type* core_disable_logging_param_name() { return L"DisableLogging"; }
     static const char_type* filter_param_name() { return L"Filter"; }
+
+    static const char_type* sink_destination_param_name() { return L"Destination"; }
+    static const char_type* file_name_param_name() { return L"FileName"; }
+    static const char_type* rotation_size_param_name() { return L"RotationSize"; }
+    static const char_type* rotation_interval_param_name() { return L"RotationInterval"; }
+    static const char_type* auto_flush_param_name() { return L"AutoFlush"; }
+    static const char_type* asynchronous_param_name() { return L"Asynchronous"; }
+    static const char_type* format_param_name() { return L"Format"; }
+
+    static const char_type* text_file_destination() { return L"TextFile"; }
+    static const char_type* console_destination() { return L"Console"; }
+    static const char_type* syslog_destination() { return L"Syslog"; }
+
+    static std::wostream& get_console_log_stream() { return std::wclog; }
 
     static int to_number(char_type c)
     {
@@ -196,105 +173,7 @@ struct char_constants< wchar_t >
         return (c >= L'0' && c <= L'9') || (c >= L'a' && c <= L'f') || (c >= L'A' && c <= L'F');
     }
 
-    static void translate_escape_sequences(std::basic_string< char_type >& str)
-    {
-        std::basic_string< char_type >::iterator it = str.begin();
-        while (it != str.end())
-        {
-            it = std::find(it, str.end(), L'\\');
-            if (std::distance(it, str.end()) >= 2)
-            {
-                str.erase(it);
-                switch (*it)
-                {
-                    case L'n':
-                        *it = L'\n'; break;
-                    case L'r':
-                        *it = L'\r'; break;
-                    case L'a':
-                        *it = L'\a'; break;
-                    case L'\\':
-                        ++it; break;
-                    case L't':
-                        *it = L'\t'; break;
-                    case L'b':
-                        *it = L'\b'; break;
-                    case L'x':
-                    {
-                        std::basic_string< char_type >::iterator b = it;
-                        if (std::distance(++b, str.end()) >= 2)
-                        {
-                            char_type c1 = *b++, c2 = *b++;
-                            if (iswxdigit(c1) && iswxdigit(c2))
-                            {
-                                *it++ = char_type((to_number(c1) << 4) | to_number(c2));
-                                str.erase(it, b);
-                            }
-                        }
-                        break;
-                    }
-                    case L'u':
-                    {
-                        std::basic_string< char_type >::iterator b = it;
-                        if (std::distance(++b, str.end()) >= 4)
-                        {
-                            char_type c1 = *b++, c2 = *b++, c3 = *b++, c4 = *b++;
-                            if (iswxdigit(c1) && iswxdigit(c2) && iswxdigit(c3) && iswxdigit(c4))
-                            {
-                                *it++ = char_type(
-                                    (to_number(c1) << 12) |
-                                    (to_number(c2) << 8) |
-                                    (to_number(c3) << 4) |
-                                    to_number(c4));
-                                str.erase(it, b);
-                            }
-                        }
-                        break;
-                    }
-                    case L'U':
-                    {
-                        std::basic_string< char_type >::iterator b = it;
-                        if (std::distance(++b, str.end()) >= 8)
-                        {
-                            char_type c1 = *b++, c2 = *b++, c3 = *b++, c4 = *b++;
-                            char_type c5 = *b++, c6 = *b++, c7 = *b++, c8 = *b++;
-                            if (iswxdigit(c1) && iswxdigit(c2) && iswxdigit(c3) && iswxdigit(c4) &&
-                                iswxdigit(c5) && iswxdigit(c6) && iswxdigit(c7) && iswxdigit(c8))
-                            {
-                                *it++ = char_type(
-                                    (to_number(c1) << 28) |
-                                    (to_number(c2) << 24) |
-                                    (to_number(c3) << 20) |
-                                    (to_number(c4) << 16) |
-                                    (to_number(c5) << 12) |
-                                    (to_number(c6) << 8) |
-                                    (to_number(c7) << 4) |
-                                    to_number(c8));
-                                str.erase(it, b);
-                            }
-                        }
-                        break;
-                    }
-                    default:
-                    {
-                        if (*it >= L'0' && *it <= L'7')
-                        {
-                            std::basic_string< char_type >::iterator b = it;
-                            int c = (*b++) - L'0';
-                            if (*b >= L'0' && *b <= L'7')
-                                c = c * 8 + (*b++) - L'0';
-                            if (*b >= L'0' && *b <= L'7')
-                                c = c * 8 + (*b++) - L'0';
-
-                            *it++ = char_type(c);
-                            str.erase(it, b);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    static void translate_escape_sequences(std::basic_string< char_type >& str);
 };
 
 } // namespace aux

@@ -31,7 +31,6 @@
 #include <boost/iostreams/positioning.hpp>
 #include <boost/iostreams/code_converter.hpp>
 #include <boost/iostreams/stream_buffer.hpp>
-#include <boost/utility/base_from_member.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
@@ -183,21 +182,21 @@ public:
 #define BOOST_LOG_ROTATING_OFSTREAMBUF_CTOR(z, it, data)\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     basic_rotating_ofstreambuf(filesystem::path const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
-        : base_type(construct(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))), static_cast< std::streamsize >(0), static_cast< std::streamsize >(0))\
+        : base_type(construct(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))))\
     {}\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     basic_rotating_ofstreambuf(filesystem::wpath const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
-        : base_type(construct(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))), static_cast< std::streamsize >(0), static_cast< std::streamsize >(0))\
+        : base_type(construct(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))))\
     {}\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     void open(filesystem::path const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
     {\
-        base_type::open(construct(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))), static_cast< std::streamsize >(0), static_cast< std::streamsize >(0));\
+        base_type::open(construct(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))));\
     }\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     void open(filesystem::wpath const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
     {\
-        base_type::open(construct(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))), static_cast< std::streamsize >(0), static_cast< std::streamsize >(0));\
+        base_type::open(construct(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))));\
     }
 
 #else
@@ -205,12 +204,12 @@ public:
 #define BOOST_LOG_ROTATING_OFSTREAMBUF_CTOR(z, it, data)\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     basic_rotating_ofstreambuf(filesystem::path const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
-        : base_type(construct(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))), static_cast< std::streamsize >(0), static_cast< std::streamsize >(0))\
+        : base_type(construct(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))))\
     {}\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     void open(filesystem::path const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
     {\
-        base_type::open(construct(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))), static_cast< std::streamsize >(0), static_cast< std::streamsize >(0));\
+        base_type::open(construct(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))));\
     }
 
 #endif // BOOST_FILESYSTEM_NARROW_ONLY
@@ -236,7 +235,7 @@ private:
     template< typename PathT, typename ArgsT >
     static DeviceT construct(PathT const& pattern, ArgsT const& args)
     {
-        return rotating_file_sink(pattern, args);
+        return DeviceT(rotating_file_sink(pattern, args));
     }
 
     //! Copying and assignment are closed
@@ -268,17 +267,18 @@ typedef make_rotating_ofstreambuf< wchar_t >::type rotating_wofstreambuf;
 template< typename CharT, typename TraitsT = std::char_traits< CharT > >
 class BOOST_LOG_EXPORT basic_rotating_ofstream :
     public record_writer,
-    private base_from_member< typename make_rotating_ofstreambuf< CharT, TraitsT >::type >,
     public std::basic_ostream< CharT, TraitsT >
 {
-    //! Base class containing stream buffer
-    typedef base_from_member< typename make_rotating_ofstreambuf< CharT, TraitsT >::type > streambuf_base;
     //! Base class of the stream
     typedef std::basic_ostream< CharT, TraitsT > stream_base;
 
 public:
     typedef rotating_file_sink::open_handler_type open_handler_type;
     typedef rotating_file_sink::close_handler_type close_handler_type;
+
+private:
+    //! Stream buffer
+    typename make_rotating_ofstreambuf< CharT, TraitsT >::type m_Buf;
 
 public:
     //! Default constructor
@@ -289,21 +289,21 @@ public:
 #define BOOST_LOG_ROTATING_OFSTREAM_CTOR(z, it, data)\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     basic_rotating_ofstream(filesystem::path const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
-        : streambuf_base(pattern, BOOST_PP_ENUM_PARAMS(it, arg)), stream_base(&this->streambuf_base::member)\
-    {}\
+        : stream_base(NULL), m_Buf(pattern, BOOST_PP_ENUM_PARAMS(it, arg))\
+    { stream_base::init(&m_Buf); }\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     basic_rotating_ofstream(filesystem::wpath const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
-        : streambuf_base(pattern, BOOST_PP_ENUM_PARAMS(it, arg)), stream_base(&this->streambuf_base::member)\
-    {}\
+        : stream_base(NULL), m_Buf(pattern, BOOST_PP_ENUM_PARAMS(it, arg))\
+    { stream_base::init(&m_Buf); }\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     void open(filesystem::path const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
     {\
-        this->streambuf_base::member.open(pattern, BOOST_PP_ENUM_PARAMS(it, arg));\
+        m_Buf.open(pattern, BOOST_PP_ENUM_PARAMS(it, arg));\
     }\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     void open(filesystem::wpath const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
     {\
-        this->streambuf_base::member.open(pattern, BOOST_PP_ENUM_PARAMS(it, arg));\
+        m_Buf.open(pattern, BOOST_PP_ENUM_PARAMS(it, arg));\
     }
 
 #else
@@ -311,12 +311,12 @@ public:
 #define BOOST_LOG_ROTATING_OFSTREAM_CTOR(z, it, data)\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     basic_rotating_ofstreambuf(filesystem::path const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
-        : streambuf_base(pattern, BOOST_PP_ENUM_PARAMS(it, arg)), stream_base(&this->streambuf_base::member)\
-    {}\
+        : stream_base(NULL), m_Buf(pattern, BOOST_PP_ENUM_PARAMS(it, arg))\
+    { stream_base::init(&m_Buf); }\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     void open(filesystem::path const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
     {\
-        this->streambuf_base::member.open(pattern, BOOST_PP_ENUM_PARAMS(it, arg));\
+        m_Buf.open(pattern, BOOST_PP_ENUM_PARAMS(it, arg));\
     }
 
 #endif // BOOST_FILESYSTEM_NARROW_ONLY

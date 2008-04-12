@@ -12,17 +12,34 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#include <cstdlib>
+#include <cwchar>
 #include <map>
+#include <vector>
 #include <string>
 #include <sstream>
 #include <iostream>
 #include <locale>
+#include <memory>
 #include <utility>
 #include <stdexcept>
 #include <algorithm>
+#include <boost/cstdint.hpp>
+#include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/thread/once.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/empty_deleter.hpp>
 #include <boost/log/logging_core.hpp>
+#include <boost/log/sinks/sink.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
+#include <boost/log/sinks/syslog_backend.hpp>
+#include <boost/log/sinks/rotating_ofstream.hpp>
 #include <boost/log/init/from_stream.hpp>
 #include <boost/log/init/filter_parser.hpp>
 #include <boost/log/init/formatter_parser.hpp>
@@ -138,6 +155,292 @@ public:
     sections_t const& sections() const { return m_Sections; }
 };
 
+#ifndef BOOST_FILESYSTEM_NARROW_ONLY
+//! A helper trait to generate the appropriate Boost.Filesystem path type
+template< typename > struct make_filesystem_path;
+template< > struct make_filesystem_path< char > { typedef filesystem::path type; };
+template< > struct make_filesystem_path< wchar_t > { typedef filesystem::wpath type; };
+#else
+//! A helper function to create a narrow path
+inline filesystem::path create_narrow_path(std::string const& str)
+{
+    return filesystem::path(str);
+}
+//! A helper function to create a narrow path
+inline filesystem::path create_narrow_path(std::wstring const& wstr)
+{
+    using namespace std; // make sure we can use C functions unqualified
+    mbstate_t state = mbstate_t();
+    size_t len = wcsrtombs(NULL, wstr.c_str(), 0, &state);
+    if (len != size_t(-1))
+    {
+        state = mbstate_t();
+        std::string str(len, '\0');
+        wcsrtombs(&str[0], wstr.c_str(), len, &state);
+        return filesystem::path(str);
+    }
+    else
+        boost::throw_exception(std::runtime_error("Failed to convert wide file name to the narrow encoding"));
+}
+#endif // BOOST_FILESYSTEM_NARROW_ONLY
+
+//! The supported sinks repository
+template< typename CharT >
+struct sinks_repository
+{
+    typedef CharT char_type;
+    typedef std::basic_string< char_type > string_type;
+    typedef aux::char_constants< char_type > constants;
+    typedef std::map< string_type, string_type > params_t;
+    typedef function1< shared_ptr< sinks::sink< char_type > >, params_t const& > sink_factory;
+    typedef std::map< string_type, sink_factory > sink_factories;
+
+    //! Synchronization mutex
+    shared_mutex m_Mutex;
+    //! Map of the sink factories
+    sink_factories m_Factories;
+
+    //! Returns an instance of the repository
+    static sinks_repository& get()
+    {
+        static once_flag flag = BOOST_ONCE_INIT;
+        call_once(flag, &sinks_repository< char_type >::init);
+        return get_instance();
+    }
+
+    //! The function constructs a sink from the settings
+    shared_ptr< sinks::sink< char_type > > construct_sink_from_settings(params_t const& params)
+    {
+        typename params_t::const_iterator dest = params.find(constants::sink_destination_param_name());
+        if (dest != params.end())
+        {
+            shared_lock< shared_mutex > _(m_Mutex);
+            typename sink_factories::const_iterator it = m_Factories.find(dest->second);
+            if (it != m_Factories.end())
+            {
+                return it->second(params);
+            }
+            else
+            {
+                boost::throw_exception(std::runtime_error("The sink destination is not supported"));
+            }
+        }
+        else
+        {
+            boost::throw_exception(std::runtime_error("The sink destination is not set"));
+        }
+        // To silence compiler warnings. This return never gets executed.
+        return shared_ptr< sinks::sink< char_type > >();
+    }
+
+private:
+    sinks_repository() {}
+    sinks_repository(sinks_repository const&);
+    sinks_repository& operator= (sinks_repository const&);
+
+    static void init()
+    {
+        sinks_repository& instance = get_instance();
+        instance.m_Factories[constants::text_file_destination()] =
+            &sinks_repository< char_type >::default_text_file_sink_factory;
+        instance.m_Factories[constants::console_destination()] =
+            &sinks_repository< char_type >::default_console_sink_factory;
+        instance.m_Factories[constants::syslog_destination()] =
+            &sinks_repository< char_type >::default_syslog_sink_factory;
+    }
+
+    static sinks_repository& get_instance()
+    {
+        static sinks_repository instance;
+        return instance;
+    }
+
+    //! The function constructs a sink that writes log records to a text file
+    static shared_ptr< sinks::sink< char_type > > default_text_file_sink_factory(params_t const& params)
+    {
+        typedef std::basic_istringstream< char_type > isstream;
+        typedef sinks::basic_text_ostream_backend< char_type > backend_t;
+        shared_ptr< backend_t > backend(new backend_t());
+
+        // FileName
+#ifndef BOOST_FILESYSTEM_NARROW_ONLY
+        typename make_filesystem_path< char_type >::type file_name;
+#else
+        filesystem::path file_name;
+#endif // BOOST_FILESYSTEM_NARROW_ONLY
+        typename params_t::const_iterator it = params.find(constants::file_name_param_name());
+        if (it != params.end())
+        {
+#ifndef BOOST_FILESYSTEM_NARROW_ONLY
+            file_name = it->second;
+#else
+            file_name = create_narrow_path(it->second);
+#endif // BOOST_FILESYSTEM_NARROW_ONLY
+        }
+        else
+            boost::throw_exception(std::runtime_error("File name is not specified"));
+
+        // File rotation params
+        shared_ptr< typename backend_t::stream_type > file_stream;
+        typename params_t::const_iterator
+            rotation_size_param = params.find(constants::rotation_size_param_name()),
+            rotation_interval_param = params.find(constants::rotation_interval_param_name());
+        unsigned int cond =
+            (static_cast< unsigned int >(rotation_size_param != params.end()) << 1)
+            | static_cast< unsigned int >(rotation_interval_param != params.end());
+
+        switch (cond)
+        {
+            case 1:
+            {
+                // Only rotation interval is set
+                unsigned int interval = 0;
+                isstream strm(rotation_interval_param->second);
+                strm >> interval;
+
+                file_stream.reset(new sinks::basic_rotating_ofstream< char_type >(
+                    file_name, sinks::keywords::rotation_interval = interval));
+            }
+            break;
+
+            case 2:
+            {
+                // Only rotation size is set
+                uintmax_t size = ~static_cast< uintmax_t >(0);
+                isstream strm(rotation_size_param->second);
+                strm >> size;
+
+                file_stream.reset(new sinks::basic_rotating_ofstream< char_type >(
+                    file_name, sinks::keywords::rotation_size = size));
+            }
+            break;
+
+            case 3:
+            {
+                // Both rotation interval and size are set
+                unsigned int interval = 0;
+                isstream strm_interval(rotation_interval_param->second);
+                strm_interval >> interval;
+
+                uintmax_t size = ~static_cast< uintmax_t >(0);
+                isstream strm_size(rotation_size_param->second);
+                strm_size >> size;
+
+                file_stream.reset(new sinks::basic_rotating_ofstream< char_type >(
+                    file_name, sinks::keywords::rotation_interval = interval, sinks::keywords::rotation_size = size));
+            }
+            break;
+
+            default:
+            {
+                // No rotation required, we can use a simple stream
+                typedef filesystem::basic_ofstream< char_type > stream_t;
+                std::auto_ptr< stream_t > p(new filesystem::basic_ofstream< char_type >(
+                    file_name, std::ios_base::out | std::ios_base::trunc));
+                if (!p->is_open())
+                    boost::throw_exception(std::runtime_error("Failed to open the destination file"));
+                file_stream.reset(p.release());
+            }
+        }
+
+        backend->add_stream(file_stream);
+
+        return init_text_ostream_sink(backend, params);
+    }
+
+    //! The function constructs a sink that writes log records to the console
+    static shared_ptr< sinks::sink< char_type > > default_console_sink_factory(params_t const& params)
+    {
+        // Construct the backend
+        typedef sinks::basic_text_ostream_backend< char_type > backend_t;
+        shared_ptr< backend_t > backend(new backend_t());
+        backend->add_stream(
+            shared_ptr< typename backend_t::stream_type >(&constants::get_console_log_stream(), empty_deleter()));
+
+        return init_text_ostream_sink(backend, params);
+    }
+
+    //! The function constructs a sink that writes log records to the syslog service
+    static shared_ptr< sinks::sink< char_type > > default_syslog_sink_factory(params_t const& params)
+    {
+        // Construct the backend
+        typedef sinks::basic_syslog_backend< char_type > backend_t;
+        shared_ptr< backend_t > backend(new backend_t());
+
+        // For now we use only the default level mapping. Will add support for configuration later.
+        backend->set_level_extractor(
+            sinks::syslog::straightforward_level_mapping< char_type >(constants::default_level_attribute_name()));
+
+        return init_sink(backend, params);
+    }
+
+    //! The function initializes common parameters of text stream sink and returns the constructed sink
+    static shared_ptr< sinks::sink< char_type > > init_text_ostream_sink(
+        shared_ptr< sinks::basic_text_ostream_backend< char_type > > const& backend, params_t const& params)
+    {
+        typedef sinks::basic_text_ostream_backend< char_type > backend_t;
+
+        // AutoFlush
+        typedef std::basic_istringstream< char_type > isstream;
+        typename params_t::const_iterator it = params.find(constants::auto_flush_param_name());
+        if (it != params.end())
+        {
+            isstream strm(it->second);
+            strm.setf(std::ios_base::boolalpha);
+            bool f = false;
+            strm >> f;
+            backend->auto_flush(f);
+        }
+
+        return init_sink(backend, params);
+    }
+
+    //! The function initializes common parameters of a formatting sink and returns the constructed sink
+    template< typename BackendT >
+    static shared_ptr< sinks::sink< char_type > > init_sink(shared_ptr< BackendT > const& backend, params_t const& params)
+    {
+        typedef BackendT backend_t;
+        typedef std::basic_istringstream< char_type > isstream;
+
+        // Filter
+        typedef typename sinks::sink< char_type >::filter_type filter_type;
+        filter_type filt;
+        typename params_t::const_iterator it = params.find(constants::filter_param_name());
+        if (it != params.end())
+        {
+            filt = parse_filter(it->second);
+        }
+
+        // Formatter
+        it = params.find(constants::format_param_name());
+        if (it != params.end())
+        {
+            backend->set_formatter(parse_formatter(it->second));
+        }
+
+        // Asynchronous
+        bool async = false;
+        it = params.find(constants::asynchronous_param_name());
+        if (it != params.end())
+        {
+            isstream strm(it->second);
+            strm.setf(std::ios_base::boolalpha);
+            strm >> async;
+        }
+
+        // Construct the frontend, considering Asynchronous parameter
+        shared_ptr< sinks::sink< char_type > > p;
+        if (!async)
+            p.reset(new sinks::synchronous_sink< backend_t >(backend));
+        else
+            p.reset(new sinks::asynchronous_sink< backend_t >(backend));
+
+        p->set_filter(filt);
+
+        return p;
+    }
+};
+
 //! The function applies the settings to the logging core
 template< typename CharT >
 void apply_core_settings(std::map< std::basic_string< CharT >, std::basic_string< CharT > > const& params)
@@ -178,6 +481,11 @@ void apply_core_settings(std::map< std::basic_string< CharT >, std::basic_string
 template< typename CharT >
 void init_from_stream(std::basic_istream< CharT >& strm)
 {
+    typedef CharT char_type;
+    typedef std::basic_string< char_type > string_type;
+    typedef basic_logging_core< char_type > core_t;
+    typedef sinks_repository< char_type > sinks_repo_t;
+
     // Parse the settings
     typedef settings< CharT > settings_t;
     typedef typename settings_t::constants constants;
@@ -185,10 +493,21 @@ void init_from_stream(std::basic_istream< CharT >& strm)
 
     // Apply core settings
     typename settings_t::sections_t const& sections = setts.sections();
-    typename settings_t::sections_t::const_iterator core_params =
+    typename settings_t::sections_t::const_iterator it =
         sections.find(constants::core_section_name());
-    if (core_params != sections.end())
-        apply_core_settings(core_params->second);
+    if (it != sections.end())
+        apply_core_settings(it->second);
+
+    // Construct and initialize sinks
+    sinks_repo_t& sinks_repo = sinks_repo_t::get();
+    string_type sink_prefix = constants::sink_section_name_prefix();
+    std::vector< shared_ptr< sinks::sink< char_type > > > new_sinks;
+    for (it = setts.sections().begin(); it != setts.sections().end(); ++it)
+    {
+        if (it->first.compare(0, sink_prefix.size(), sink_prefix) == 0)
+            new_sinks.push_back(sinks_repo.construct_sink_from_settings(it->second));
+    }
+    std::for_each(new_sinks.begin(), new_sinks.end(), bind(&core_t::add_sink, core_t::get(), _1));
 }
 
 template void init_from_stream< char >(std::basic_istream< char >& strm);

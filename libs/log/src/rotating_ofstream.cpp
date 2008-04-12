@@ -552,22 +552,12 @@ void basic_rotating_ofstreambuf< CharT, DeviceT, TraitsT >::clear_close_handler(
 }
 
 
-#ifdef _MSC_VER
-#pragma warning(push)
-// 'this' : used in base member initializer list
-#pragma warning(disable: 4355)
-#endif
-
 //! Default constructor
 template< typename CharT, typename TraitsT >
-basic_rotating_ofstream< CharT, TraitsT >::basic_rotating_ofstream()
-    : streambuf_base(), stream_base(&this->streambuf_base::member)
+basic_rotating_ofstream< CharT, TraitsT >::basic_rotating_ofstream() : stream_base(NULL)
 {
+    stream_base::init(&m_Buf);
 }
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 //! Destructor
 template< typename CharT, typename TraitsT >
@@ -579,7 +569,7 @@ basic_rotating_ofstream< CharT, TraitsT >::~basic_rotating_ofstream()
 template< typename CharT, typename TraitsT >
 void basic_rotating_ofstream< CharT, TraitsT >::close()
 {
-    this->streambuf_base::member.close();
+    m_Buf.close();
 }
 
 //! The method is called after all data of the record is written to the stream
@@ -588,7 +578,7 @@ void basic_rotating_ofstream< CharT, TraitsT >::on_end_record()
 {
     try
     {
-        get_sink(this->streambuf_base::member).flush_record();
+        get_sink(m_Buf).flush_record();
     }
     catch (std::exception&)
     {
@@ -599,25 +589,25 @@ void basic_rotating_ofstream< CharT, TraitsT >::on_end_record()
 template< typename CharT, typename TraitsT >
 void basic_rotating_ofstream< CharT, TraitsT >::set_open_handler(open_handler_type const& handler)
 {
-    get_sink(this->streambuf_base::member).set_open_handler(handler);
+    get_sink(m_Buf).set_open_handler(handler);
 }
 //! Resets the handler for opening a new file
 template< typename CharT, typename TraitsT >
 void basic_rotating_ofstream< CharT, TraitsT >::clear_open_handler()
 {
-    get_sink(this->streambuf_base::member).clear_open_handler();
+    get_sink(m_Buf).clear_open_handler();
 }
 //! Sets a new handler for closing a file
 template< typename CharT, typename TraitsT >
 void basic_rotating_ofstream< CharT, TraitsT >::set_close_handler(close_handler_type const& handler)
 {
-    get_sink(this->streambuf_base::member).set_close_handler(handler);
+    get_sink(m_Buf).set_close_handler(handler);
 }
 //! Resets the handler for closing a file
 template< typename CharT, typename TraitsT >
 void basic_rotating_ofstream< CharT, TraitsT >::clear_close_handler()
 {
-    get_sink(this->streambuf_base::member).clear_close_handler();
+    get_sink(m_Buf).clear_close_handler();
 }
 
 
