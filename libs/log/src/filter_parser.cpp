@@ -54,7 +54,7 @@ struct filter_grammar :
     typedef CharT char_type;
     typedef std::basic_string< char_type > string_type;
     typedef typename basic_logging_core< char_type >::filter_type filter_type;
-    typedef aux::char_constants< char_type > constants;
+    typedef boost::log::aux::char_constants< char_type > constants;
     typedef filter_grammar< char_type > filter_grammar_type;
 
     template< typename ScannerT >

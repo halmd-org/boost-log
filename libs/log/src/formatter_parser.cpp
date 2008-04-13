@@ -18,6 +18,9 @@
 #include <iterator> // Ticket #1788.
 #include <stdexcept>
 
+#undef BOOST_MPL_LIMIT_VECTOR_SIZE
+#define BOOST_MPL_LIMIT_VECTOR_SIZE 50
+
 #ifndef BOOST_SPIRIT_THREADSAFE
 #define BOOST_SPIRIT_THREADSAFE
 #endif // BOOST_SPIRIT_THREADSAFE
@@ -129,7 +132,7 @@ struct formatter_grammar :
     typedef CharT char_type;
     typedef typename formatter_types< char_type >::string_type string_type;
     typedef typename formatter_types< char_type >::formatter_type formatter_type;
-    typedef aux::char_constants< char_type > constants;
+    typedef boost::log::aux::char_constants< char_type > constants;
     typedef formatter_grammar< char_type > formatter_grammar_type;
 
     template< typename ScannerT >

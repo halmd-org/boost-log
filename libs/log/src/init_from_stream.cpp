@@ -38,7 +38,9 @@
 #include <boost/log/logging_core.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
+#ifdef BOOST_LOG_USE_SYSLOG
 #include <boost/log/sinks/syslog_backend.hpp>
+#endif
 #include <boost/log/sinks/rotating_ofstream.hpp>
 #include <boost/log/init/from_stream.hpp>
 #include <boost/log/init/filter_parser.hpp>
@@ -245,8 +247,10 @@ private:
             &sinks_repository< char_type >::default_text_file_sink_factory;
         instance.m_Factories[constants::console_destination()] =
             &sinks_repository< char_type >::default_console_sink_factory;
+#ifdef BOOST_LOG_USE_SYSLOG
         instance.m_Factories[constants::syslog_destination()] =
             &sinks_repository< char_type >::default_syslog_sink_factory;
+#endif // BOOST_LOG_USE_SYSLOG
     }
 
     static sinks_repository& get_instance()
@@ -360,6 +364,7 @@ private:
         return init_text_ostream_sink(backend, params);
     }
 
+#ifdef BOOST_LOG_USE_SYSLOG
     //! The function constructs a sink that writes log records to the syslog service
     static shared_ptr< sinks::sink< char_type > > default_syslog_sink_factory(params_t const& params)
     {
@@ -373,6 +378,7 @@ private:
 
         return init_sink(backend, params);
     }
+#endif // BOOST_LOG_USE_SYSLOG
 
     //! The function initializes common parameters of text stream sink and returns the constructed sink
     static shared_ptr< sinks::sink< char_type > > init_text_ostream_sink(

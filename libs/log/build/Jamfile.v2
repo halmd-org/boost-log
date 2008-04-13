@@ -17,6 +17,17 @@ local rule default_logapi ( )
 feature.feature logapi : unix winnt : propagated ;
 feature.set-default logapi : [ default_logapi ] ;
 
+project boost/log
+    : source-location ../src
+    : requirements
+        <threading>multi
+        <logapi>unix:<define>BOOST_LOG_USE_NATIVE_SYSLOG=1
+        <library>../../thread/build//boost_thread
+        <library>../../regex/build//boost_regex
+        <library>../../filesystem/build//boost_filesystem
+        <library>../../date_time/build//boost_date_time
+    ;
+
 alias platform_log_sources
     : ## winnt sources ##
     : ## requirements ##
@@ -28,16 +39,6 @@ alias platform_log_sources
         syslog_backend.cpp
     : ## requirements ##
         <logapi>unix
-    ;
-
-project boost/log
-    : source-location ../src
-    : requirements
-        <threading>multi
-        <library>../../thread/build//boost_thread
-        <library>../../regex/build//boost_regex
-        <library>../../filesystem/build//boost_filesystem
-        <library>../../date_time/build//boost_date_time
     ;
 
 lib boost_log

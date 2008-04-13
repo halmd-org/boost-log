@@ -26,10 +26,15 @@
 #include <boost/mpl/size.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/int.hpp>
+#include <boost/mpl/if.hpp>
 #include <boost/mpl/eval_if.hpp>
 #include <boost/mpl/equal_to.hpp>
 #include <boost/mpl/identity.hpp>
 #include <boost/mpl/is_sequence.hpp>
+#include <boost/type_traits/is_array.hpp>
+#include <boost/type_traits/is_pointer.hpp>
+#include <boost/type_traits/remove_extent.hpp>
+#include <boost/type_traits/remove_pointer.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/functional.hpp>
 #include <boost/log/filters/basic_filters.hpp>
@@ -104,33 +109,33 @@ public:
 
 namespace aux {
 
+    template< typename > struct is_char : mpl::false_ {};
+    template< > struct is_char< char > : mpl::true_ {};
+    template< > struct is_char< wchar_t > : mpl::true_ {};
+
     //! An auxiliary type translator to store strings by value in function objects
     template< typename StringT, typename ArgT >
     struct make_embedded_type
     {
-        typedef ArgT type;
+        // Make sure that string literals and C string are converted to STL strings
+        typedef typename mpl::if_c<
+            is_char<
+                typename remove_cv<
+                    typename mpl::eval_if<
+                        is_array< ArgT >,
+                        remove_extent< ArgT >,
+                        mpl::eval_if<
+                            is_pointer< ArgT >,
+                            remove_pointer< ArgT >,
+                            mpl::identity< void >
+                        >
+                    >::type
+                >::type
+            >::value,
+            StringT,
+            ArgT
+        >::type type;
     };
-    template< typename StringT >
-    struct make_embedded_type< StringT, typename StringT::pointer >
-    {
-        typedef StringT type;
-    };
-    template< typename StringT >
-    struct make_embedded_type< StringT, typename StringT::const_pointer >
-    {
-        typedef StringT type;
-    };
-    template< typename StringT, unsigned int N >
-    struct make_embedded_type< StringT, typename StringT::value_type [N] >
-    {
-        typedef StringT type;
-    };
-    template< typename StringT, unsigned int N >
-    struct make_embedded_type< StringT, typename StringT::value_type const [N] >
-    {
-        typedef StringT type;
-    };
-
 
     //! The base class for attr filter generator
     template< typename CharT, typename AttributeValueTypesT, bool >

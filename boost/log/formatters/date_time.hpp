@@ -25,7 +25,6 @@
 #include <ostream>
 #include <iterator>
 #include <boost/assert.hpp>
-#include <boost/noncopyable.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/algorithm/string/find.hpp>
@@ -78,7 +77,7 @@ namespace aux {
     template< typename >
     struct date_time_format_defaults;
     template< >
-    struct date_time_format_defaults< char > : noncopyable
+    struct date_time_format_defaults< char >
     {
         //! Character type
         typedef char char_type;
@@ -96,7 +95,7 @@ namespace aux {
         static string_literal_type time_period_last_placeholder() { return str_literal("%last%"); }
     };
     template< >
-    struct date_time_format_defaults< wchar_t > : noncopyable
+    struct date_time_format_defaults< wchar_t >
     {
         //! Character type
         typedef wchar_t char_type;
@@ -147,7 +146,12 @@ namespace aux {
         }
         //! Constructor with format setup
         explicit date_time_formatter_base(string_type const& Format)
-            : m_Format(Format.c_str()), m_StreamBuf(m_Buffer), m_Stream(&m_StreamBuf)
+            : m_Format(Format), m_StreamBuf(m_Buffer), m_Stream(&m_StreamBuf)
+        {
+        }
+        //! Copy constructor
+        date_time_formatter_base(date_time_formatter_base const& that)
+            : m_Format(that.m_Format), m_StreamBuf(m_Buffer), m_Stream(&m_StreamBuf)
         {
         }
 
@@ -175,6 +179,10 @@ namespace aux {
             std::ostreambuf_iterator< char_type > osb_it(m_Stream);
             std::use_facet< FacetT >(loc).put(osb_it, m_Stream, m_Stream.fill(), value);
         }
+
+    private:
+        //  Assignment prohibited
+        date_time_formatter_base& operator= (date_time_formatter_base const& that);
     };
 
     //! Time point formatting object
@@ -209,6 +217,11 @@ namespace aux {
         }
         //! Constructor with format setup
         explicit basic_date_time_formatter(string_type const& fmt) : base_type(fmt)
+        {
+        }
+        //! Copy constructor
+        basic_date_time_formatter(basic_date_time_formatter const& that) :
+            base_type(static_cast< base_type const& >(that))
         {
         }
 
@@ -307,6 +320,11 @@ namespace aux {
             base_type(args[keywords::format | base_type::default_date_format().str()])
         {
         }
+        //! Copy constructor
+        basic_date_formatter(basic_date_formatter const& that) :
+            base_type(static_cast< base_type const& >(that))
+        {
+        }
     };
 
     //! Time formatting object
@@ -331,6 +349,11 @@ namespace aux {
         template< typename ArgsT >
         explicit basic_time_formatter(ArgsT const& args) :
             base_type(args[keywords::format | base_type::default_time_format().str()])
+        {
+        }
+        //! Copy constructor
+        basic_time_formatter(basic_time_formatter const& that) :
+            base_type(static_cast< base_type const& >(that))
         {
         }
     };
@@ -366,6 +389,11 @@ namespace aux {
         template< typename ArgsT >
         explicit basic_time_duration_formatter(ArgsT const& args) :
             base_type(args[keywords::format | base_type::default_time_duration_format().str()])
+        {
+        }
+        //! Copy constructor
+        basic_time_duration_formatter(basic_time_duration_formatter const& that) :
+            base_type(static_cast< base_type const& >(that))
         {
         }
 
@@ -475,6 +503,15 @@ namespace aux {
             m_PeriodFormat(args[keywords::format] | base_type::default_time_period_format().str())
         {
             init_flags();
+        }
+        //! Copy constructor
+        basic_time_period_formatter(basic_time_period_formatter const& that) :
+            base_type(static_cast< base_type const& >(that)),
+            m_PeriodFormat(that.m_PeriodFormat),
+            m_fHasBegin(that.m_fHasBegin),
+            m_fHasEnd(that.m_fHasEnd),
+            m_fHasLast(that.m_fHasLast)
+        {
         }
 
         //! Formatting method for Boost.DateTime date object
@@ -595,49 +632,34 @@ private:
     //! Attribute value extractor
     attributes::attribute_value_extractor< char_type, AttributeValueTypesT > m_Extractor;
     //! Pointer to the formatter implementation
-    mutable std::auto_ptr< formatter_type > m_pFormatter;
+    mutable formatter_type m_Formatter;
 
 public:
     //! Constructor
     explicit fmt_date_time_facade(string_type const& name)
-        : m_Extractor(name), m_pFormatter(new formatter_type())
+        : m_Extractor(name)
     {
     }
     //! Constructor with date and time format specification
     template< typename ArgsT >
     fmt_date_time_facade(string_type const& name, ArgsT const& args)
-        : m_Extractor(name), m_pFormatter(new formatter_type(args))
+        : m_Extractor(name), m_Formatter(args)
     {
-    }
-
-    //! Copy constructor (acts as move) - the constructor is formally needed in order to compose lazy formatter expression
-    fmt_date_time_facade(fmt_date_time_facade const& that)
-        : m_Extractor(that.m_Extractor), m_pFormatter(that.m_pFormatter.release())
-    {
-    }
-    //! Assignment (acts as move)
-    fmt_date_time_facade& operator= (fmt_date_time_facade const& that)
-    {
-        m_Extractor = that.m_Extractor;
-        m_pFormatter.reset(that.m_pFormatter.release());
-        return *this;
     }
 
     //! Output stream operator
     void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const&) const
     {
-        BOOST_ASSERT(m_pFormatter.get() != 0);
-        log::aux::cleanup_guard< formatter_type > _(*m_pFormatter);
-        m_Extractor(attrs, *m_pFormatter);
-        strm.write(m_pFormatter->get().data(), m_pFormatter->get().size());
+        log::aux::cleanup_guard< formatter_type > _(m_Formatter);
+        m_Extractor(attrs, m_Formatter);
+        strm.write(m_Formatter.get().data(), m_Formatter.get().size());
     }
     //! Output stream operator
     void operator() (format_type& fmt, attribute_values_view const& attrs, string_type const&) const
     {
-        BOOST_ASSERT(m_pFormatter.get() != 0);
-        log::aux::cleanup_guard< formatter_type > _(*m_pFormatter);
-        m_Extractor(attrs, *m_pFormatter);
-        fmt % m_pFormatter->get();
+        log::aux::cleanup_guard< formatter_type > _(m_Formatter);
+        m_Extractor(attrs, m_Formatter);
+        fmt % m_Formatter.get();
     }
 };
 

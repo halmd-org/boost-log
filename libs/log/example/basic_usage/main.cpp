@@ -130,7 +130,6 @@ int main(int argc, char* argv[])
     // And output...
     BOOST_LOG(lg) << "Hello, World!";
 
-
     // Nice, huh? That's pretty much equivalent to writing the string to both the file
     // and the console. Now let's define the different way of formatting log records.
     // Each logging record may have a number of attributes in addition to the

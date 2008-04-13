@@ -85,4 +85,9 @@
 
 #endif // !defined(BOOST_LOG_BUILDING_THE_LIB)
 
+// Define BOOST_LOG_USE_SYSLOG if any syslog API should be supported
+#if !defined(BOOST_LOG_USE_SYSLOG) && defined(BOOST_LOG_USE_NATIVE_SYSLOG)
+#    define BOOST_LOG_USE_SYSLOG
+#endif // !defined(BOOST_LOG_USE_SYSLOG) && defined(BOOST_LOG_USE_NATIVE_SYSLOG)
+
 #endif // BOOST_LOG_DETAIL_PROLOGUE_HPP_INCLUDED_
