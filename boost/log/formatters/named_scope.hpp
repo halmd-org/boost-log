@@ -21,12 +21,10 @@
 
 #include <limits>
 #include <string>
-#include <ostream>
 #include <iterator>
 #include <algorithm>
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/type_dispatch/type_dispatcher.hpp>
@@ -68,8 +66,6 @@ public:
     typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
-    //! Boost.Format object type
-    typedef typename base_type::format_type format_type;
     //! Attribute values set type
     typedef typename base_type::attribute_values_view attribute_values_view;
 
@@ -140,19 +136,6 @@ public:
                     }
                 }
             }
-        }
-    }
-    //! Format operator
-    void operator() (format_type& fmt, attribute_values_view const& attrs, string_type const& msg) const
-    {
-        string_type str;
-        boost::log::aux::basic_ostringstreambuf< char_type > buf(str);
-        std::basic_ostream< char_type > strm(&buf);
-        (*this)(strm, attrs, msg);
-        if (strm.good())
-        {
-            strm.flush();
-            fmt % str;
         }
     }
 };

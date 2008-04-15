@@ -48,8 +48,6 @@ public:
     typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
-    //! Boost.Format object type
-    typedef typename base_type::format_type format_type;
     //! Attribute values set type
     typedef typename base_type::attribute_values_view attribute_values_view;
 
@@ -68,20 +66,6 @@ private:
     private:
         ostream_type& m_Stream;
     };
-    //! Boost.Format binding operator
-    struct format_op
-    {
-        typedef void result_type;
-        explicit format_op(format_type& fmt) : m_Format(fmt) {}
-        template< typename T >
-        void operator() (T const& value) const
-        {
-            m_Format % value;
-        }
-
-    private:
-        format_type& m_Format;
-    };
 
 private:
     //! Attribute value extractor
@@ -96,18 +80,6 @@ public:
     {
         ostream_op op(strm);
         m_Extractor(attrs, op);
-    }
-    //! Output stream operator
-    void operator() (format_type& fmt, attribute_values_view const& attrs, string_type const&) const
-    {
-        format_op op(fmt);
-        if (!m_Extractor(attrs, op))
-        {
-            // Not very nice but we have to put something
-            // into the formatter if there is no attribute value found
-            const char_type empty_string[1] = { 0 };
-            fmt % empty_string;
-        }
     }
 };
 
@@ -164,7 +136,7 @@ public:
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
     //! Boost.Format object type
-    typedef typename base_type::format_type format_type;
+    typedef basic_format< char_type > format_type;
     //! Attribute values set type
     typedef typename base_type::attribute_values_view attribute_values_view;
 
@@ -201,14 +173,6 @@ public:
         format_op op(m_Formatter);
         m_Extractor(attrs, op);
         strm << m_Formatter;
-    }
-    //! Output stream operator
-    void operator() (format_type& fmt, attribute_values_view const& attrs, string_type const&) const
-    {
-        log::aux::cleanup_guard< format_type > _(m_Formatter);
-        format_op op(m_Formatter);
-        m_Extractor(attrs, op);
-        fmt % m_Formatter.str();
     }
 };
 

@@ -98,6 +98,7 @@ public:
         m_StreamBuf(m_FormattedRecord),
         m_FormattingStream(&m_StreamBuf)
     {
+        m_FormattingStream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
     }
 
     //! The method sets formatter functor object
@@ -129,7 +130,8 @@ public:
         // Perform the formatting
         if (!m_Formatter.empty())
         {
-            log::aux::cleanup_guard< string_type > _(m_FormattedRecord);
+            log::aux::cleanup_guard< stream_type > cleanup1(m_FormattingStream);
+            log::aux::cleanup_guard< string_type > cleanup2(m_FormattedRecord);
 
             m_Formatter(m_FormattingStream, attributes, message);
             m_FormattingStream.flush();

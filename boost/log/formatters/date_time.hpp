@@ -619,8 +619,6 @@ public:
     typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
-    //! Boost.Format object type
-    typedef typename base_type::format_type format_type;
     //! Attribute values set type
     typedef typename base_type::attribute_values_view attribute_values_view;
 
@@ -653,13 +651,6 @@ public:
         log::aux::cleanup_guard< formatter_type > _(m_Formatter);
         m_Extractor(attrs, m_Formatter);
         strm.write(m_Formatter.get().data(), m_Formatter.get().size());
-    }
-    //! Output stream operator
-    void operator() (format_type& fmt, attribute_values_view const& attrs, string_type const&) const
-    {
-        log::aux::cleanup_guard< formatter_type > _(m_Formatter);
-        m_Extractor(attrs, m_Formatter);
-        fmt % m_Formatter.get();
     }
 };
 

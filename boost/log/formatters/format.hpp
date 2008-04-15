@@ -19,12 +19,16 @@
 #ifndef BOOST_LOG_FORMATTERS_FORMAT_HPP_INCLUDED_
 #define BOOST_LOG_FORMATTERS_FORMAT_HPP_INCLUDED_
 
+#include <vector>
+#include <ostream>
 #include <boost/format.hpp>
+#include <boost/function/function3.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/chain.hpp>
 #include <boost/log/formatters/wrappers.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
+#include <boost/log/detail/attachable_sstream_buf.hpp>
 
 namespace boost {
 
@@ -33,13 +37,13 @@ namespace log {
 namespace formatters {
 
 //! Formatter to output objects into a Boost.Format object
-template< typename CharT, typename ArgsT >
+template< typename CharT >
 class fmt_format :
-    public basic_formatter< CharT, fmt_format< CharT, ArgsT > >
+    public basic_formatter< CharT, fmt_format< CharT > >
 {
 private:
     //! Base type
-    typedef basic_formatter< CharT, fmt_format< CharT, ArgsT > > base_type;
+    typedef basic_formatter< CharT, fmt_format< CharT > > base_type;
 
 public:
     //! Char type
@@ -49,87 +53,97 @@ public:
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
     //! Boost.Format type
-    typedef typename base_type::format_type format_type;
+    typedef basic_format< char_type > format_type;
     //! Attribute values set type
     typedef typename base_type::attribute_values_view attribute_values_view;
+
+private:
+    //! Formatter function object type
+    typedef function3< void, ostream_type&, attribute_values_view const&, string_type const& > formatter_type;
+    //! Sequence of formatters
+    typedef std::vector< formatter_type > formatters;
 
 private:
     //! Boost.Format object
     mutable format_type m_Format;
     //! Other formatters
-    ArgsT m_Args;
+    formatters m_Formatters;
+
+    //! Formatting buffer
+    mutable string_type m_Buffer;
+    //! Stream buffer
+    mutable log::aux::basic_ostringstreambuf< char_type > m_StreamBuf;
+    //! Formatting stream
+    mutable ostream_type m_Stream;
 
 public:
     //! Constructor
-    fmt_format(format_type const& fmt, ArgsT const& args) : m_Format(fmt), m_Args(args) {}
+    explicit fmt_format(format_type const& fmt) : m_Format(fmt), m_StreamBuf(m_Buffer), m_Stream(&m_StreamBuf)
+    {
+        m_Stream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
+    }
+    //! Copy constructor
+    fmt_format(fmt_format const& that) :
+        m_Format(that.m_Format),
+        m_Formatters(that.m_Formatters),
+        m_StreamBuf(m_Buffer),
+        m_Stream(&m_StreamBuf)
+    {
+        m_Stream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
+    }
 
     //! Output operator
     void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const& msg) const
     {
-        log::aux::cleanup_guard< format_type > _(m_Format);
-        m_Args(m_Format, attrs, msg);
+        log::aux::cleanup_guard< format_type > cleanup1(m_Format);
+        log::aux::cleanup_guard< ostream_type > cleanup2(m_Stream);
+
+        for (typename formatters::const_iterator it = m_Formatters.begin(), end = m_Formatters.end(); it != end; ++it)
+        {
+            log::aux::cleanup_guard< string_type > cleanup3(m_Buffer);
+            (*it)(m_Stream, attrs, msg);
+            m_Stream.flush();
+            m_Format % m_Buffer;
+        }
+
         strm << m_Format.str();
     }
     //! Composition operator
-    template< typename NextArgT >
-    fmt_format<
-        char_type,
-        fmt_chain<
-            char_type,
-            ArgsT,
-            typename wrap_if_not_formatter< char_type, NextArgT >::type
-        >
-    > operator% (NextArgT const& arg) const
+    template< typename FormatterT >
+    fmt_format< char_type >& operator% (FormatterT const& fmt)
     {
-        typedef typename wrap_if_not_formatter< char_type, NextArgT >::type arg_t;
-        typedef fmt_chain< ArgsT, arg_t > fmt_chain_t;
-        return fmt_format< char_type, fmt_chain_t >(
-            m_Format, fmt_chain_t(m_Args, arg_t(arg)));
+        m_Formatters.push_back(formatter_type(fmt));
+        return *this;
     }
-};
 
-//! Formatter object generator
-template< typename CharT >
-class fmt_format_gen
-{
-    //! Format object
-    boost::basic_format< CharT > m_Format;
-
-public:
-    explicit fmt_format_gen(const CharT* fmt) : m_Format(fmt) {}
-    explicit fmt_format_gen(std::basic_string< CharT > const& fmt) : m_Format(fmt.c_str()) {}
-
-    //! Composition operator
-    template< typename NextArgT >
-    fmt_format<
-        CharT,
-        typename wrap_if_not_formatter< CharT, NextArgT >::type
-    > operator% (NextArgT const& arg) const
-    {
-        typedef typename wrap_if_not_formatter< CharT, NextArgT >::type arg_t;
-        return fmt_format< CharT, arg_t >(m_Format, arg_t(arg));
-    }
+private:
+    //! Assignment prohibited
+    fmt_format& operator= (fmt_format const& that);
 };
 
 //! Formatter generator
-inline fmt_format_gen< char > format(const char* fmt)
+inline fmt_format< char > format(const char* fmt)
 {
-    return fmt_format_gen< char >(fmt);
+    typedef fmt_format< char >::format_type format_type;
+    return fmt_format< char >(format_type(fmt));
 }
 //! Formatter generator
-inline fmt_format_gen< char > format(std::basic_string< char > const& fmt)
+inline fmt_format< char > format(std::basic_string< char > const& fmt)
 {
-    return fmt_format_gen< char >(fmt);
+    typedef fmt_format< char >::format_type format_type;
+    return fmt_format< char >(format_type(fmt));
 }
 //! Formatter generator
-inline fmt_format_gen< wchar_t > format(const wchar_t* fmt)
+inline fmt_format< wchar_t > format(const wchar_t* fmt)
 {
-    return fmt_format_gen< wchar_t >(fmt);
+    typedef fmt_format< wchar_t >::format_type format_type;
+    return fmt_format< wchar_t >(format_type(fmt));
 }
 //! Formatter generator
-inline fmt_format_gen< wchar_t > format(std::basic_string< wchar_t > const& fmt)
+inline fmt_format< wchar_t > format(std::basic_string< wchar_t > const& fmt)
 {
-    return fmt_format_gen< wchar_t >(fmt);
+    typedef fmt_format< wchar_t >::format_type format_type;
+    return fmt_format< wchar_t >(format_type(fmt));
 }
 
 } // namespace formatters

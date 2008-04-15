@@ -47,6 +47,8 @@ public:
     typedef typename base_type::char_type char_type;
     //! String type
     typedef typename base_type::string_type string_type;
+    //! Stream type
+    typedef typename base_type::ostream_type ostream_type;
     //! Attribute values set type
     typedef typename base_type::attribute_values_view attribute_values_view;
 
@@ -62,8 +64,7 @@ public:
     fmt_chain(LeftFmtT const& left, RightT const& right) : m_Left(left), m_Right(right) {}
 
     //! Output operator
-    template< typename T >
-    void operator() (T& strm, attribute_values_view const& attrs, string_type const& msg) const
+    void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const& msg) const
     {
         m_Left(strm, attrs, msg);
         m_Right(strm, attrs, msg);

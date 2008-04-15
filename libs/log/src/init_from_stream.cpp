@@ -192,7 +192,7 @@ struct sinks_repository
 {
     typedef CharT char_type;
     typedef std::basic_string< char_type > string_type;
-    typedef aux::char_constants< char_type > constants;
+    typedef boost::log::aux::char_constants< char_type > constants;
     typedef std::map< string_type, string_type > params_t;
     typedef function1< shared_ptr< sinks::sink< char_type > >, params_t const& > sink_factory;
     typedef std::map< string_type, sink_factory > sink_factories;
@@ -483,6 +483,21 @@ void apply_core_settings(std::map< std::basic_string< CharT >, std::basic_string
 
 } // namespace
 
+//! The function registers a factory for a sink
+template< typename CharT >
+void register_sink_factory(
+    const CharT* sink_name,
+    function1<
+        shared_ptr< sinks::sink< CharT > >,
+        std::map< std::basic_string< CharT >, std::basic_string< CharT > > const&
+    > const& factory)
+{
+    sinks_repository< CharT >& repo = sinks_repository< CharT >::get();
+    unique_lock< shared_mutex > _(repo.m_Mutex);
+    repo.m_Factories[sink_name] = factory;
+}
+
+
 //! The function initializes the logging library from a stream containing logging settings
 template< typename CharT >
 void init_from_stream(std::basic_istream< CharT >& strm)
@@ -515,6 +530,21 @@ void init_from_stream(std::basic_istream< CharT >& strm)
     }
     std::for_each(new_sinks.begin(), new_sinks.end(), bind(&core_t::add_sink, core_t::get(), _1));
 }
+
+template
+void register_sink_factory< char >(
+    const char* sink_name,
+    function1<
+        shared_ptr< sinks::sink< char > >,
+        std::map< std::basic_string< char >, std::basic_string< char > > const&
+    > const& factory);
+template
+void register_sink_factory< wchar_t >(
+    const wchar_t* sink_name,
+    function1<
+        shared_ptr< sinks::sink< wchar_t > >,
+        std::map< std::basic_string< wchar_t >, std::basic_string< wchar_t > > const&
+    > const& factory);
 
 template void init_from_stream< char >(std::basic_istream< char >& strm);
 template void init_from_stream< wchar_t >(std::basic_istream< wchar_t >& strm);

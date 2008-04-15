@@ -44,8 +44,6 @@ public:
     typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
-    //! Boost.Format type
-    typedef typename base_type::format_type format_type;
     //! Attribute values set type
     typedef typename base_type::attribute_values_view attribute_values_view;
 
@@ -61,11 +59,6 @@ public:
     void operator() (ostream_type& strm, attribute_values_view const&, string_type const&) const
     {
         strm << m_T;
-    }
-    //! Output operator
-    void operator() (format_type& fmt, attribute_values_view const&, string_type const&) const
-    {
-        fmt % m_T;
     }
 };
 
@@ -83,8 +76,6 @@ public:
     typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
-    //! Boost.Format type
-    typedef typename base_type::format_type format_type;
     //! Attribute values set type
     typedef typename base_type::attribute_values_view attribute_values_view;
 
@@ -100,11 +91,6 @@ public:
     void operator() (ostream_type& strm, attribute_values_view const&, string_type const&) const
     {
         strm << m_T;
-    }
-    //! Output operator
-    void operator() (format_type& fmt, attribute_values_view const&, string_type const&) const
-    {
-        fmt % m_T;
     }
 };
 
