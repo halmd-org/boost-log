@@ -48,6 +48,7 @@ lib boost_log
         attachable_sstream_buf.cpp
         slim_string.cpp
         logging_core.cpp
+	stream_provider.cpp
         named_scope.cpp
         timer.cpp
         sink.cpp

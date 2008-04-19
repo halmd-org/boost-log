@@ -19,12 +19,16 @@
 #ifndef BOOST_LOG_SOURCES_SEVERITY_LOGGER_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_SEVERITY_LOGGER_HPP_INCLUDED_
 
+#include <algorithm>
 #include <boost/shared_ptr.hpp>
 #include <boost/empty_deleter.hpp>
+#include <boost/thread/once.hpp>
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sources/basic_logger.hpp>
-#include <boost/log/attributes/mutable_constant.hpp>
+#include <boost/log/attributes/attribute.hpp>
+#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/detail/thread_specific.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -60,6 +64,40 @@ namespace aux {
         static const wchar_t* get() { return L"Severity"; }
     };
 
+    //! Severity level attribute implementation
+    class severity_level :
+        public attribute
+    {
+    public:
+        typedef int held_type;
+
+    public:
+        //! Default constructor
+        severity_level()
+        {
+            static once_flag flag = BOOST_ONCE_INIT;
+            boost::call_once(flag, &severity_level::get_instance);
+        }
+        //! The method returns the actual attribute value. It must not return NULL.
+        virtual shared_ptr< attribute_value > get_value()
+        {
+            return shared_ptr< attribute_value >(
+                new attributes::basic_attribute_value< held_type >(get_instance().get()));
+        }
+        //! The method sets the actual level
+        void set_value(held_type level)
+        {
+            get_instance().set(level);
+        }
+
+    private:
+        static log::aux::thread_specific< held_type >& get_instance()
+        {
+            static log::aux::thread_specific< held_type > instance;
+            return instance;
+        }
+    };
+
 } // namespace aux
 
 //! Logger class
@@ -79,7 +117,7 @@ public:
     typedef typename base_type::attribute_set attribute_set;
 
     //! Severity attribute type
-    typedef attributes::mutable_constant< int > severity_attribute;
+    typedef aux::severity_level severity_attribute;
 
 private:
     //! Default severity
@@ -91,20 +129,18 @@ public:
     //! Constructor
     basic_severity_logger() :
         base_type(),
-        m_DefaultSeverity(0),
-        m_Severity(m_DefaultSeverity)
+        m_DefaultSeverity(0)
     {
-        base_type::add_attribute(
+        base_type::add_attribute_unlocked(
             aux::severity_attribute_name< char_type >::get(),
             shared_ptr< attribute >(&m_Severity, empty_deleter()));
     }
     //! Copy constructor
     basic_severity_logger(basic_severity_logger const& that) :
         base_type(static_cast< base_type const& >(that)),
-        m_DefaultSeverity(that.m_DefaultSeverity),
-        m_Severity(that.m_Severity)
+        m_DefaultSeverity(that.m_DefaultSeverity)
     {
-        base_type::add_attribute(
+        base_type::add_attribute_unlocked(
             aux::severity_attribute_name< char_type >::get(),
             shared_ptr< attribute >(&m_Severity, empty_deleter()));
     }
@@ -112,58 +148,26 @@ public:
     template< typename ArgsT >
     explicit basic_severity_logger(ArgsT const& args) :
         base_type(args),
-        m_DefaultSeverity(args[keywords::severity | 0]),
-        m_Severity(m_DefaultSeverity)
+        m_DefaultSeverity(args[keywords::severity | 0])
     {
-        base_type::add_attribute(
+        base_type::add_attribute_unlocked(
             aux::severity_attribute_name< char_type >::get(),
             shared_ptr< attribute >(&m_Severity, empty_deleter()));
     }
 
-    //! Assignment
-    basic_severity_logger& operator= (basic_severity_logger const& that)
-    {
-        base_type::operator= (static_cast< base_type const& >(that));
-        m_Severity = that.m_Severity;
-        m_DefaultSeverity = that.m_DefaultSeverity;
-
-        typename attribute_set::iterator it =
-            this->attributes().find(aux::severity_attribute_name< char_type >::get());
-        if (it != this->attributes().end())
-        {
-            // Let the severity attribute point to the local attribute value
-            it->second.reset(&m_Severity, empty_deleter());
-        }
-        else
-        {
-            // Strange, shouldn't ever happen
-            base_type::add_attribute(
-                aux::severity_attribute_name< char_type >::get(),
-                shared_ptr< attribute >(&m_Severity, empty_deleter()));
-        }
-
-        return *this;
-    }
-
     //! The method opens a new logging record with the default severity
-    bool open_record() { return base_type::open_record(); }
+    bool open_record()
+    {
+        m_Severity.set_value(m_DefaultSeverity);
+        return base_type::open_record();
+    }
 
     //! The method allows to assign a severity to the opening record
     template< typename ArgsT >
     bool open_record(ArgsT const& args)
     {
         m_Severity.set_value(args[keywords::severity | m_DefaultSeverity]);
-        const bool Result = base_type::open_record();
-        if (!Result)
-            m_Severity.set_value(m_DefaultSeverity);
-
-        return Result;
-    }
-    //! The method pushes the constructed message to the sinks and closes the record
-    void push_record()
-    {
-        base_type::push_record();
-        m_Severity.set_value(m_DefaultSeverity);
+        return base_type::open_record();
     }
 
 protected:
@@ -173,6 +177,17 @@ protected:
     severity_attribute const& severity() const { return m_Severity; }
     //! Default severity value getter
     severity_attribute::held_type default_severity() const { return m_DefaultSeverity; }
+
+    //! Unlocked swap
+    void swap_unlocked(basic_severity_logger& that)
+    {
+        base_type::swap_unlocked(static_cast< base_type& >(that));
+        std::swap(m_DefaultSeverity, that.m_DefaultSeverity);
+    }
+
+private:
+    //! Assignment (should be implemented in the final type as copy and swap)
+    basic_severity_logger& operator= (basic_severity_logger const&);
 };
 
 //! Narrow-char logger with severity level support
@@ -180,6 +195,12 @@ BOOST_LOG_DECLARE_LOGGER(severity_logger, (basic_severity_logger));
 
 //! Wide-char logger with severity level support
 BOOST_LOG_DECLARE_WLOGGER(wseverity_logger, (basic_severity_logger));
+
+//! Narrow-char thread-safe logger with severity level support
+BOOST_LOG_DECLARE_LOGGER_MT(severity_logger_mt, (basic_severity_logger));
+
+//! Wide-char thraed-safe logger with severity level support
+BOOST_LOG_DECLARE_WLOGGER_MT(wseverity_logger_mt, (basic_severity_logger));
 
 } // namespace sources
 

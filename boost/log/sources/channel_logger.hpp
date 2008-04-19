@@ -20,7 +20,6 @@
 #define BOOST_LOG_SOURCES_CHANNEL_LOGGER_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
-#include <boost/empty_deleter.hpp>
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sources/basic_logger.hpp>
@@ -85,55 +84,42 @@ public:
 
 private:
     //! Channel attribute
-    channel_attribute m_Channel;
+    shared_ptr< channel_attribute > m_pChannel;
 
 public:
     //! Constructor
-    basic_channel_logger() : base_type(), m_Channel(make_default_channel_name())
+    basic_channel_logger() : base_type()
     {
     }
     //! Copy constructor
     basic_channel_logger(basic_channel_logger const& that) :
         base_type(static_cast< base_type const& >(that)),
-        m_Channel(that.m_Channel)
+        m_pChannel(that.m_pChannel)
     {
     }
     //! Constructor with arguments
     template< typename ArgsT >
     explicit basic_channel_logger(ArgsT const& args) :
-        base_type(args),
-        m_Channel(args[keywords::channel || &basic_channel_logger< BaseT >::make_default_channel_name])
+        base_type(args)
     {
-        if (!m_Channel.get().empty())
+        string_type channel_name =
+            args[keywords::channel || &basic_channel_logger< BaseT >::make_default_channel_name];
+        if (!channel_name.empty())
         {
-            base_type::add_attribute(
+            m_pChannel.reset(new channel_attribute(channel_name));
+            base_type::add_attribute_unlocked(
                 aux::channel_attribute_name< char_type >::get(),
-                shared_ptr< attribute >(&m_Channel, empty_deleter()));
+                m_pChannel);
         }
-    }
-
-    //! Assignment
-    basic_channel_logger& operator= (basic_channel_logger const& that)
-    {
-        base_type::operator= (static_cast< base_type const& >(that));
-        m_Channel = that.m_Channel;
-
-        typename attribute_set::iterator it =
-            this->attributes().find(aux::channel_attribute_name< char_type >::get());
-        if (it != this->attributes().end())
-        {
-            // Let the channel attribute point to the local attribute value
-            it->second.reset(&m_Channel, empty_deleter());
-        }
-
-        return *this;
     }
 
 protected:
-    //! Channel attribute accessor
-    channel_attribute& channel() { return m_Channel; }
-    //! Channel attribute accessor
-    channel_attribute const& channel() const { return m_Channel; }
+    //! Unlocked swap
+    void swap_unlocked(basic_channel_logger& that)
+    {
+        base_type::swap_unlocked(static_cast< base_type& >(that));
+        m_pChannel.swap(that.m_pChannel);
+    }
 
 private:
     //! Constructs an empty string as a default value for the channel name
@@ -145,6 +131,12 @@ BOOST_LOG_DECLARE_LOGGER(channel_logger, (basic_channel_logger));
 
 //! Wide-char logger with channel support
 BOOST_LOG_DECLARE_WLOGGER(wchannel_logger, (basic_channel_logger));
+
+//! Narrow-char thread-safe logger with channel support
+BOOST_LOG_DECLARE_LOGGER_MT(channel_logger_mt, (basic_channel_logger));
+
+//! Wide-char thraed-safe logger with channel support
+BOOST_LOG_DECLARE_WLOGGER_MT(wchannel_logger_mt, (basic_channel_logger));
 
 } // namespace sources
 
