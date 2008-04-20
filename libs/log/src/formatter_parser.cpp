@@ -33,7 +33,6 @@
 #include <boost/mpl/push_back.hpp>
 #include <boost/mpl/back_inserter.hpp>
 #include <boost/mpl/joint_view.hpp>
-#include <boost/thread/once.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/spirit/core.hpp>
@@ -51,6 +50,7 @@
 #include <boost/log/type_dispatch/standard_types.hpp>
 #include <boost/log/type_dispatch/date_time_types.hpp>
 #include "parser_utils.hpp"
+#include "singleton.hpp"
 
 namespace boost {
 
@@ -97,31 +97,18 @@ namespace {
 
 //! The structure contains formatter factories repository
 template< typename CharT >
-struct formatters_repository
+struct formatters_repository :
+    public log::aux::lazy_singleton< formatters_repository< CharT > >
 {
+    friend class log::aux::lazy_singleton< formatters_repository< CharT > >;
+
     //! Synchronization mutex
     mutable shared_mutex m_Mutex;
     //! The map of formatter factories
     typename formatter_types< CharT >::factories_map m_Map;
 
-    //! Returns an instance of the repository
-    static formatters_repository& get()
-    {
-        static once_flag flag = BOOST_ONCE_INIT;
-        call_once(flag, &formatters_repository< CharT >::get_instance);
-        return get_instance();
-    }
-
 private:
     formatters_repository() {}
-    formatters_repository(formatters_repository const&);
-    formatters_repository& operator= (formatters_repository const&);
-
-    static formatters_repository& get_instance()
-    {
-        static formatters_repository instance;
-        return instance;
-    }
 };
 
 //! Formatter parsing grammar

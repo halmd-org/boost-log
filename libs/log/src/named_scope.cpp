@@ -16,9 +16,9 @@
 #include <boost/optional.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/thread/tss.hpp>
-#include <boost/thread/once.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/named_scope.hpp>
+#include "singleton.hpp"
 
 namespace boost {
 
@@ -119,16 +119,23 @@ namespace {
 //! Named scope attribute implementation
 template< typename CharT >
 struct basic_named_scope< CharT >::implementation :
+    public log::aux::singleton<
+        implementation,
+        shared_ptr< implementation >
+    >,
     public enable_shared_from_this< implementation >
 {
+    //! Singleton base type
+    typedef log::aux::singleton<
+        implementation,
+        shared_ptr< implementation >
+    > singleton_base_type;
+
     //! Writeable scope list type
     typedef basic_writeable_named_scope_list< char_type > scope_list;
 
     //! Pointer to the thread-specific scope stack
     thread_specific_ptr< scope_list > pScopes;
-
-    //! Pointer to implementation instance
-    static implementation* const pInstance;
 
     //! The method returns current thread scope stack
     scope_list& get_scope_list()
@@ -144,36 +151,15 @@ struct basic_named_scope< CharT >::implementation :
         return *p;
     }
 
-private:
-    implementation() {}
-    implementation(implementation const&);
-    implementation& operator= (implementation const&);
-
-    //! The function initializes named scope attribute internals
-    static implementation* init_named_scope()
-    {
-        static once_flag flag = BOOST_ONCE_INIT;
-        call_once(&implementation::init_instance, flag);
-        return get_instance().get();
-    }
-    //! The reference holder function
-    static shared_ptr< implementation >& get_instance()
-    {
-        static shared_ptr< implementation > p(new implementation);
-        return p;
-    }
     //! Instance initializer
     static void init_instance()
     {
-        get_instance();
+        singleton_base_type::get_instance().reset(new implementation());
     }
+
+private:
+    implementation() {}
 };
-
-template< typename CharT >
-typename basic_named_scope< CharT >::implementation* const
-basic_named_scope< CharT >::implementation::pInstance =
-    basic_named_scope< CharT >::implementation::init_named_scope();
-
 
 //! Copy constructor
 template< typename CharT >
@@ -214,7 +200,7 @@ basic_named_scope_list< CharT >::~basic_named_scope_list()
 //! Constructor
 template< typename CharT >
 basic_named_scope< CharT >::basic_named_scope()
-    : pImpl(implementation::pInstance->shared_from_this())
+    : pImpl(implementation::instance)
 {
 }
 
@@ -230,7 +216,7 @@ shared_ptr< attribute_value > basic_named_scope< CharT >::get_value()
 template< typename CharT >
 void basic_named_scope< CharT >::push_scope(scope_entry const& entry)
 {
-    typename implementation::scope_list& s = implementation::pInstance->get_scope_list();
+    typename implementation::scope_list& s = implementation::instance->get_scope_list();
     s.push_back(entry);
 }
 
@@ -238,7 +224,7 @@ void basic_named_scope< CharT >::push_scope(scope_entry const& entry)
 template< typename CharT >
 void basic_named_scope< CharT >::pop_scope()
 {
-    typename implementation::scope_list& s = implementation::pInstance->get_scope_list();
+    typename implementation::scope_list& s = implementation::instance->get_scope_list();
     s.pop_back();
 }
 
@@ -246,7 +232,7 @@ void basic_named_scope< CharT >::pop_scope()
 template< typename CharT >
 typename basic_named_scope< CharT >::scope_stack const& basic_named_scope< CharT >::get_scopes()
 {
-    return implementation::pInstance->get_scope_list();
+    return implementation::instance->get_scope_list();
 }
 
 //! Explicitly instantiate named_scope implementation

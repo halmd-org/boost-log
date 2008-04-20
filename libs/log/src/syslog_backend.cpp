@@ -13,13 +13,17 @@
  */
 
 #include <syslog.h>
+#include <boost/weak_ptr.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/thread/once.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/iostreams/stream_buffer.hpp>
 #include <boost/iostreams/code_converter.hpp>
 #include <boost/iostreams/device/back_inserter.hpp>
 #include <boost/log/sinks/syslog_backend.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
+#include <boost/log/detail/cleanup_scope_guard.hpp>
+#include "singleton.hpp"
 
 namespace boost {
 
@@ -103,43 +107,17 @@ namespace {
         };
     };
 
-    //! A simple scope guard to clear the formatted record storage
-    struct clear_invoker
+    //! Syslog initializer (implemented as a weak singleton)
+    class syslog_initializer :
+        private log::aux::lazy_singleton< syslog_initializer, mutex >
     {
-        std::string& m_T;
-        explicit clear_invoker(std::string& t) : m_T(t) {}
-        ~clear_invoker() { m_T.clear(); }
-    };
+        friend class log::aux::lazy_singleton< syslog_initializer, mutex >;
+        typedef log::aux::lazy_singleton< syslog_initializer, mutex > mutex_holder;
 
-    //! Syslog initializer
-    class syslog_initializer
-    {
-        struct binder;
-        friend struct binder;
-        struct binder
-        {
-            typedef void return_type;
-            explicit binder(syslog::options_t const& options) : m_options(options) {}
-            return_type operator()() const
-            {
-                syslog_initializer::init(m_options);
-            }
-            syslog::options_t m_options;
-        };
-
+    private:
         explicit syslog_initializer(syslog::options_t const& options)
         {
             ::openlog("", options.value, LOG_USER);
-        }
-
-        static shared_ptr< syslog_initializer >& instance()
-        {
-            static shared_ptr< syslog_initializer > inst;
-            return inst;
-        }
-        static void init(syslog::options_t const& options)
-        {
-            instance().reset(new syslog_initializer(options));
         }
 
     public:
@@ -148,11 +126,17 @@ namespace {
             ::closelog();
         }
 
-        static shared_ptr< syslog_initializer > const& get_instance(syslog::options_t const& options)
+        static shared_ptr< syslog_initializer > get_instance(syslog::options_t const& options)
         {
-            static once_flag flag = BOOST_ONCE_INIT;
-            boost::call_once(flag, binder(options));
-            return instance();
+            unique_lock< mutex > _(mutex_holder::get());
+            static weak_ptr< syslog_initializer > instance;
+            shared_ptr< syslog_initializer > p(instance.lock());
+            if (!p)
+            {
+                p.reset(new syslog_initializer(options));
+                instance = p;
+            }
+            return p;
         }
     };
 
@@ -243,7 +227,7 @@ template< typename CharT >
 void basic_syslog_backend< CharT >::write_message(
     attribute_values_view const& attributes, string_type const& message)
 {
-    clear_invoker _(m_pImpl->m_FormattedRecord);
+    log::aux::cleanup_guard< std::string > _(m_pImpl->m_FormattedRecord);
 
     if (!m_pImpl->m_Formatter.empty())
         m_pImpl->m_Formatter(m_pImpl->m_FormattingStream, attributes, message);

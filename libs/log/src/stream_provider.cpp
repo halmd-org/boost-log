@@ -15,10 +15,9 @@
 #include <exception>
 #include <stack>
 #include <vector>
-#include <boost/noncopyable.hpp>
 #include <boost/thread/tss.hpp>
-#include <boost/thread/once.hpp>
 #include <boost/log/sources/basic_logger.hpp>
+#include "singleton.hpp"
 
 namespace boost {
 
@@ -32,11 +31,21 @@ namespace {
 
 //! The pool of stream compounds
 template< typename CharT >
-struct stream_compound_pool : noncopyable
+class stream_compound_pool :
+    public log::aux::lazy_singleton<
+        stream_compound_pool< CharT >,
+        thread_specific_ptr< stream_compound_pool< CharT > >
+    >
 {
+    //! Singleton base type
+    typedef log::aux::lazy_singleton<
+        stream_compound_pool< CharT >,
+        thread_specific_ptr< stream_compound_pool< CharT > >
+    > base_type;
     //! Stream compound type
     typedef typename stream_provider< CharT >::stream_compound stream_compound_t;
 
+public:
     //! Stream compounds pool
     std::stack< stream_compound_t*, std::vector< stream_compound_t* > > m_Pool;
 
@@ -52,23 +61,16 @@ struct stream_compound_pool : noncopyable
     //! The method returns pool instance
     static stream_compound_pool& get()
     {
-        static once_flag flag = BOOST_ONCE_INIT;
-        call_once(flag, &stream_compound_pool< CharT >::init_instance);
-        return *get_instance();
+        return *base_type::get();
+    }
+
+    static void init_instance()
+    {
+        base_type::get_instance().reset(new stream_compound_pool< CharT >());
     }
 
 private:
     stream_compound_pool() {}
-
-    static void init_instance()
-    {
-        get_instance().reset(new stream_compound_pool< CharT >());
-    }
-    static thread_specific_ptr< stream_compound_pool >& get_instance()
-    {
-        static thread_specific_ptr< stream_compound_pool > instance;
-        return instance;
-    }
 };
 
 } // namespace

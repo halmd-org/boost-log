@@ -29,7 +29,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/thread/once.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/filesystem/path.hpp>
@@ -46,6 +45,7 @@
 #include <boost/log/init/filter_parser.hpp>
 #include <boost/log/init/formatter_parser.hpp>
 #include "parser_utils.hpp"
+#include "singleton.hpp"
 
 namespace boost {
 
@@ -188,8 +188,12 @@ inline filesystem::path create_narrow_path(std::wstring const& wstr)
 
 //! The supported sinks repository
 template< typename CharT >
-struct sinks_repository
+struct sinks_repository :
+    public log::aux::lazy_singleton< sinks_repository< CharT > >
 {
+    friend class log::aux::lazy_singleton< sinks_repository< CharT > >;
+
+    typedef log::aux::lazy_singleton< sinks_repository< CharT > > base_type;
     typedef CharT char_type;
     typedef std::basic_string< char_type > string_type;
     typedef boost::log::aux::char_constants< char_type > constants;
@@ -201,14 +205,6 @@ struct sinks_repository
     shared_mutex m_Mutex;
     //! Map of the sink factories
     sink_factories m_Factories;
-
-    //! Returns an instance of the repository
-    static sinks_repository& get()
-    {
-        static once_flag flag = BOOST_ONCE_INIT;
-        call_once(flag, &sinks_repository< char_type >::init);
-        return get_instance();
-    }
 
     //! The function constructs a sink from the settings
     shared_ptr< sinks::sink< char_type > > construct_sink_from_settings(params_t const& params)
@@ -235,14 +231,9 @@ struct sinks_repository
         return shared_ptr< sinks::sink< char_type > >();
     }
 
-private:
-    sinks_repository() {}
-    sinks_repository(sinks_repository const&);
-    sinks_repository& operator= (sinks_repository const&);
-
-    static void init()
+    static void init_instance()
     {
-        sinks_repository& instance = get_instance();
+        sinks_repository& instance = base_type::get_instance();
         instance.m_Factories[constants::text_file_destination()] =
             &sinks_repository< char_type >::default_text_file_sink_factory;
         instance.m_Factories[constants::console_destination()] =
@@ -253,11 +244,8 @@ private:
 #endif // BOOST_LOG_USE_SYSLOG
     }
 
-    static sinks_repository& get_instance()
-    {
-        static sinks_repository instance;
-        return instance;
-    }
+private:
+    sinks_repository() {}
 
     //! The function constructs a sink that writes log records to a text file
     static shared_ptr< sinks::sink< char_type > > default_text_file_sink_factory(params_t const& params)

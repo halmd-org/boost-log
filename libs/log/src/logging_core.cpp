@@ -20,11 +20,11 @@
 #include <boost/ref.hpp>
 #include <boost/none.hpp>
 #include <boost/thread/tss.hpp>
-#include <boost/thread/once.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/log/logging_core.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
+#include "singleton.hpp"
 
 namespace boost {
 
@@ -82,9 +82,19 @@ namespace aux {
 
 //! Logging system implementation
 template< typename CharT >
-struct basic_logging_core< CharT >::implementation
+struct basic_logging_core< CharT >::implementation :
+    public log::aux::lazy_singleton<
+        implementation,
+        shared_ptr< basic_logging_core< CharT > >
+    >
 {
 public:
+    //! Base type of singleton holder
+    typedef log::aux::lazy_singleton<
+        implementation,
+        shared_ptr< basic_logging_core< CharT > >
+    > base_type;
+
     //! Front-end class type
     typedef basic_logging_core< char_type > logging_core_type;
     //! Read lock type
@@ -155,16 +165,10 @@ public:
         return p;
     }
 
-    //! The function holds the reference to the logging system singleton
-    static shared_ptr< logging_core_type >& get_instance()
-    {
-        static shared_ptr< logging_core_type > pInstance;
-        return pInstance;
-    }
     //! The function initializes the logging system
-    static void init_logging_core()
+    static void init_instance()
     {
-        get_instance().reset(new logging_core_type());
+        base_type::get_instance().reset(new logging_core_type());
     }
 
 private:
@@ -201,9 +205,7 @@ basic_logging_core< CharT >::~basic_logging_core()
 template< typename CharT >
 shared_ptr< basic_logging_core< CharT > > basic_logging_core< CharT >::get()
 {
-    static once_flag flag = BOOST_ONCE_INIT;
-    call_once(&implementation::init_logging_core, flag);
-    return implementation::get_instance();
+    return implementation::get();
 }
 
 //! The method enables or disables logging and returns the previous state of logging flag

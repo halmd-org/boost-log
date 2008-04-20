@@ -23,6 +23,7 @@
 #include <string>
 #include <utility>
 #include <ostream>
+#include <boost/assert.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
@@ -202,18 +203,22 @@ namespace aux {
             that.m_pLogger = 0;
             that.m_pStreamCompound = 0;
         }
-        //! Destructor
+        //! Destructor. Pushes the composed message to log.
         ~record_pump()
         {
-            if (m_pLogger) try
+            if (m_pLogger)
             {
-                m_pStreamCompound->stream.flush();
-                m_pLogger->push_record(m_pStreamCompound->message);
-                stream_provider_type::release_compound(m_pStreamCompound);
-            }
-            catch (std::exception&)
-            {
-                m_pLogger->cancel_record();
+                try
+                {
+                    m_pStreamCompound->stream.flush();
+                    m_pLogger->push_record(m_pStreamCompound->message);
+                }
+                catch (std::exception&)
+                {
+                    m_pLogger->cancel_record();
+                }
+
+                stream_provider_type::release_compound(m_pStreamCompound); // doesn't throw
             }
         }
 
@@ -221,6 +226,7 @@ namespace aux {
         template< typename T >
         record_pump const& operator<< (T const& value) const
         {
+            BOOST_ASSERT(m_pStreamCompound != 0);
             m_pStreamCompound->stream << value;
             return *this;
         }
