@@ -19,7 +19,6 @@
 #ifndef BOOST_LOG_DETAIL_STRING_LITERAL_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_STRING_LITERAL_HPP_INCLUDED_
 
-#include <cstddef>
 #include <stdexcept>
 #include <iosfwd>
 #include <string>
@@ -27,6 +26,8 @@
 #include <algorithm>
 #include <functional>
 #include <boost/operators.hpp>
+#include <boost/throw_exception.hpp>
+#include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -160,7 +161,7 @@ public:
         if (i < m_Len)
             return m_pStart[i];
         else
-            throw std::out_of_range("basic_string_literal::at: the index value is out of range");
+            boost::throw_exception(std::out_of_range("basic_string_literal::at: the index value is out of range"));
     }
 
     //! The method returns pointer to the beginning of the literal
@@ -233,7 +234,7 @@ public:
             traits_type::copy(pStr, m_pStart + pos, len);
             return len;
         } else {
-            throw std::out_of_range("basic_string_literal::copy: the position is out of range");
+            boost::throw_exception(std::out_of_range("basic_string_literal::copy: the position is out of range"));
         }
     }
     //! Comparison
@@ -243,7 +244,7 @@ public:
             const size_type CompareSize = (std::min)((std::min)(Count, Len), size() - pos);
             return compare_internal(m_pStart + pos, CompareSize, pStr, CompareSize);
         } else {
-            throw std::out_of_range("basic_string_literal::compare: the position is out of range");
+            boost::throw_exception(std::out_of_range("basic_string_literal::compare: the position is out of range"));
         }
     }
     //! Comparison

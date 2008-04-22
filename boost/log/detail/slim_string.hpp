@@ -19,12 +19,12 @@
 #ifndef BOOST_LOG_DETAIL_SLIM_STRING_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_SLIM_STRING_HPP_INCLUDED_
 
-#include <cstddef>
 #include <iosfwd>
 #include <string>
 #include <memory>
 #include <iterator>
 #include <algorithm>
+#include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/log/detail/prologue.hpp>
 
 #ifdef _MSC_VER

@@ -16,19 +16,19 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include <ctype.h>
-#include <wctype.h>
-#include <ctime>
-#include <cstdio>
-#include <cstdlib>
-#include <limits>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <boost/ref.hpp>
+#include <boost/limits.hpp>
 #include <boost/optional.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/compatibility/cpp_c_headers/cctype>
+#include <boost/compatibility/cpp_c_headers/cwctype>
+#include <boost/compatibility/cpp_c_headers/ctime>
+#include <boost/compatibility/cpp_c_headers/cstdio>
+#include <boost/compatibility/cpp_c_headers/cstdlib>
 #ifndef BOOST_FILESYSTEM_NARROW_ONLY
 #include <boost/mpl/if.hpp>
 #include <boost/type_traits/is_same.hpp>

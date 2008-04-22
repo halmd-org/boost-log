@@ -12,7 +12,6 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#include <ctime>
 #include <string>
 #include <locale> // Ticket #1788.
 #include <iterator> // Ticket #1788.
@@ -27,6 +26,7 @@
 
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
+#include <boost/compatibility/cpp_c_headers/ctime>
 #include <boost/io/ios_state.hpp> // Ticket #1788.
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/copy.hpp>

@@ -17,7 +17,7 @@
 #if defined(BOOST_WINDOWS) && !defined(BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER)
 
 #include <windows.h>
-#include <limits>
+#include <boost/limits.hpp>
 #include <boost/assert.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/log/attributes/timer.hpp>

@@ -12,13 +12,13 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#include <cstddef>
 #include <memory>
 #include <stack>
 #include <vector>
 #include <algorithm>
 #include <boost/ref.hpp>
 #include <boost/none.hpp>
+#include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/thread/tss.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>

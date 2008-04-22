@@ -15,16 +15,15 @@
 #ifndef BOOST_LOG_FORMATTERS_DATE_TIME_HPP_INCLUDED_
 #define BOOST_LOG_FORMATTERS_DATE_TIME_HPP_INCLUDED_
 
-#include <time.h>
-#include <ctime>
-#include <cmath>
 #include <string>
 #include <memory>
-#include <limits>
 #include <locale>
 #include <ostream>
 #include <iterator>
+#include <boost/limits.hpp>
 #include <boost/assert.hpp>
+#include <boost/compatibility/cpp_c_headers/ctime>
+#include <boost/compatibility/cpp_c_headers/cmath>
 #include <boost/utility/addressof.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/algorithm/string/find.hpp>

@@ -12,8 +12,6 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#include <cstdlib>
-#include <cwchar>
 #include <map>
 #include <vector>
 #include <string>
@@ -28,6 +26,8 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/compatibility/cpp_c_headers/cstdlib>
+#include <boost/compatibility/cpp_c_headers/cwchar>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>

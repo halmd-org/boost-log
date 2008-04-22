@@ -19,10 +19,10 @@
 #ifndef BOOST_LOG_FORMATTERS_NAMED_SCOPE_HPP_INCLUDED_
 #define BOOST_LOG_FORMATTERS_NAMED_SCOPE_HPP_INCLUDED_
 
-#include <limits>
 #include <string>
 #include <iterator>
 #include <algorithm>
+#include <boost/limits.hpp>
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/named_scope.hpp>

@@ -19,11 +19,11 @@
 #ifndef BOOST_LOG_SINKS_SINK_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_SINK_HPP_INCLUDED_
 
-#include <cassert>
 #include <string>
 #include <boost/ref.hpp>
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
+#include <boost/assert.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/static_assert.hpp>
@@ -136,7 +136,7 @@ public:
     //! Constructor with ability to attach user-constructed backend
     explicit unlocked_sink(shared_ptr< sink_backend_type > const& backend) : m_pBackend(backend)
     {
-        assert(!!m_pBackend);
+        BOOST_ASSERT(!!m_pBackend);
     }
 
     //! The method writes the message to the sink
@@ -258,7 +258,7 @@ public:
     //! Constructor with ability to attach user-constructed backend
     explicit synchronous_sink(shared_ptr< sink_backend_type > const& backend) : m_pBackend(backend)
     {
-        assert(!!m_pBackend);
+        BOOST_ASSERT(!!m_pBackend);
     }
 
     //! The method writes the message to the sink
@@ -355,7 +355,7 @@ public:
         m_pBackend(backend),
         m_Impl(m_pBackend.get(), &asynchronous_sink::write_message_trampoline)
     {
-        assert(!!backend);
+        BOOST_ASSERT(!!backend);
     }
 
     //! The method writes the message to the sink

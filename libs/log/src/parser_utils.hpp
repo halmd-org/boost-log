@@ -19,9 +19,9 @@
 #ifndef BOOST_LOG_PARSER_UTILS_HPP_INCLUDED_
 #define BOOST_LOG_PARSER_UTILS_HPP_INCLUDED_
 
-#include <cctype>
 #include <string>
 #include <iostream>
+#include <boost/compatibility/cpp_c_headers/cctype>
 
 namespace boost {
 

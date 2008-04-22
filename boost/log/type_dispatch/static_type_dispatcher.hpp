@@ -19,12 +19,12 @@
 #ifndef BOOST_LOG_STATIC_TYPE_DISPATCHER_HPP_INCLUDED_
 #define BOOST_LOG_STATIC_TYPE_DISPATCHER_HPP_INCLUDED_
 
-#include <cstddef>
 #include <utility>
 #include <iterator>
 #include <algorithm>
 #include <functional>
 #include <boost/array.hpp>
+#include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/mpl/begin.hpp>
 #include <boost/mpl/end.hpp>
 #include <boost/mpl/next.hpp>
