@@ -49,8 +49,8 @@
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/type_dispatch/standard_types.hpp>
 #include <boost/log/type_dispatch/date_time_types.hpp>
+#include <boost/log/detail/singleton.hpp>
 #include "parser_utils.hpp"
-#include "singleton.hpp"
 
 namespace boost {
 

@@ -12,8 +12,8 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#ifndef BOOST_LOG_SINGLETON_HPP_INCLUDED_
-#define BOOST_LOG_SINGLETON_HPP_INCLUDED_
+#ifndef BOOST_LOG_DETAIL_SINGLETON_HPP_INCLUDED_
+#define BOOST_LOG_DETAIL_SINGLETON_HPP_INCLUDED_
 
 #include <boost/noncopyable.hpp>
 #include <boost/thread/once.hpp>
@@ -72,4 +72,4 @@ StorageT& singleton< DerivedT, StorageT >::instance =
 
 } // namespace boost
 
-#endif // BOOST_LOG_SINGLETON_HPP_INCLUDED_
+#endif // BOOST_LOG_DETAIL_SINGLETON_HPP_INCLUDED_

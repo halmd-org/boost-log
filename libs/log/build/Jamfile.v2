@@ -49,6 +49,7 @@ lib boost_log
         slim_string.cpp
         logging_core.cpp
 	stream_provider.cpp
+	global_logger_storage.cpp
         named_scope.cpp
         timer.cpp
         sink.cpp

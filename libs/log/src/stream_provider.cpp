@@ -17,7 +17,7 @@
 #include <vector>
 #include <boost/thread/tss.hpp>
 #include <boost/log/sources/basic_logger.hpp>
-#include "singleton.hpp"
+#include <boost/log/detail/singleton.hpp>
 
 namespace boost {
 

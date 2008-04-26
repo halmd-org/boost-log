@@ -24,7 +24,7 @@
 #include <boost/thread/locks.hpp>
 #include <boost/log/logging_core.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
-#include "singleton.hpp"
+#include <boost/log/detail/singleton.hpp>
 
 namespace boost {
 

@@ -23,7 +23,7 @@
 #include <boost/log/sinks/syslog_backend.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
-#include "singleton.hpp"
+#include <boost/log/detail/singleton.hpp>
 
 namespace boost {
 

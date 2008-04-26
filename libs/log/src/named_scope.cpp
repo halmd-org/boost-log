@@ -18,7 +18,7 @@
 #include <boost/thread/tss.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/named_scope.hpp>
-#include "singleton.hpp"
+#include <boost/log/detail/singleton.hpp>
 
 namespace boost {
 

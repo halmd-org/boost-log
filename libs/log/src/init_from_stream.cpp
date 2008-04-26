@@ -44,8 +44,8 @@
 #include <boost/log/init/from_stream.hpp>
 #include <boost/log/init/filter_parser.hpp>
 #include <boost/log/init/formatter_parser.hpp>
+#include <boost/log/detail/singleton.hpp>
 #include "parser_utils.hpp"
-#include "singleton.hpp"
 
 namespace boost {
 
