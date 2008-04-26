@@ -216,5 +216,5 @@ void thread_specific_base::set_content(void* value) const
 } // namespace boost
 
 #else
-#error "An unsupported threading platform encoutered"
+#error "An unsupported threading platform encountered"
 #endif
