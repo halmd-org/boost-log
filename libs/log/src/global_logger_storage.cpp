@@ -34,7 +34,7 @@ template< typename CharT >
 struct loggers_repository :
     public log::aux::lazy_singleton< loggers_repository< CharT > >
 {
-    //! Repositoru map type
+    //! Repository map type
     typedef std::map< log::aux::type_info_wrapper, shared_ptr< logger_holder_base > > loggers_map_t;
 
     //! Synchronization primitive
