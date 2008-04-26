@@ -1,0 +1,5 @@
+
+exe settings_file 
+    : main.cpp ../../build/boost_log
+    ;
+

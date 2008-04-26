@@ -12,6 +12,7 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#include <stack>
 #include <string>
 #include <stdexcept>
 
@@ -76,24 +77,24 @@ struct filter_grammar :
 
         void operator() (long int& val) const
         {
-            m_Grammar.m_Subexpression =
+            m_Grammar.m_Subexpressions.push(
                 boost::log::filters::attr<
                     boost::log::integral_types
-                >(m_Grammar.m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), val));
+                >(m_Grammar.m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), val)));
         }
         void operator() (double& val) const
         {
-            m_Grammar.m_Subexpression =
+            m_Grammar.m_Subexpressions.push(
                 boost::log::filters::attr<
                     boost::log::floating_point_types
-                >(m_Grammar.m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), val));
+                >(m_Grammar.m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), val)));
         }
         void operator() (string_type& val) const
         {
-            m_Grammar.m_Subexpression =
+            m_Grammar.m_Subexpressions.push(
                 boost::log::filters::attr<
                     string_type
-                >(m_Grammar.m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), val));
+                >(m_Grammar.m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), val)));
         }
 
     private:
@@ -105,8 +106,8 @@ struct filter_grammar :
     //! The second operand of a relation
     mutable optional< arg_type > m_Operand;
 
-    //! Intermediate filter subexpression
-    mutable filter_type m_Subexpression;
+    //! Filter subexpressions as they are parsed
+    mutable std::stack< filter_type > m_Subexpressions;
 
     //! Reference to the filter being constructed
     filter_type& m_Filter;
@@ -117,11 +118,8 @@ struct filter_grammar :
     //! The method finalizes filter construction by flushing its internal data that may not have been put into the filter
     void flush() const
     {
-        make_has_attr();
-
-        // In case if the whole filter is a single condition, like "%Attribute%" or "%Attribute% > 5"
-        if (!m_Subexpression.empty())
-            m_Filter.swap(m_Subexpression);
+        if (!m_Subexpressions.empty())
+            m_Filter.swap(m_Subexpressions.top());
     }
 
     //! The quoted string handler
@@ -141,6 +139,10 @@ struct filter_grammar :
     //! The attribute name handler
     void on_attribute(const char_type* begin, const char_type* end) const
     {
+        // In case if previous subexpression consisted only
+        // from attribute name, like in "%Attribute1% & %Attribute2% > 1"
+        make_has_attr();
+
         // Cut off the '%'
         m_AttributeName = boost::in_place(++begin, --end);
     }
@@ -165,21 +167,15 @@ struct filter_grammar :
     void on_negation(const char_type* begin, const char_type* end) const
     {
         make_has_attr();
-        if (!m_Subexpression.empty())
+        if (!m_Subexpressions.empty())
         {
-            // In case if negation is applied to a single subexpression, like !%Attribute%
-            m_Subexpression = !boost::log::filters::wrap(m_Subexpression);
-        }
-        else if (!m_Filter.empty())
-        {
-            // In case if negation is applied to an expression, like !(%Attribute1% > 2 & %Attribute2% < 3)
-            m_Filter = !boost::log::filters::wrap(m_Filter);
+            m_Subexpressions.top() = !boost::log::filters::wrap(m_Subexpressions.top());
         }
         else
         {
-            // This should never happen
-            boost::throw_exception(std::logic_error("Filter parser internal error:"
-                " neither the filter tor the subexpression is set while trying to apply a negation"));
+            // This would happen if a filter consists of a single '!'
+            boost::throw_exception(std::logic_error("Filter parsing error:"
+                " a negation operator applied to nothingness"));
         }
     }
     //! The binary relation handler
@@ -209,10 +205,10 @@ struct filter_grammar :
         {
             if (string_type* operand = boost::get< string_type >(m_Operand.get_ptr()))
             {
-                m_Subexpression =
+                m_Subexpressions.push(
                     boost::log::filters::attr<
                         string_type
-                    >(m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), *operand));
+                    >(m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), *operand)));
                 m_AttributeName = none;
                 m_Operand = none;
             }
@@ -238,10 +234,10 @@ struct filter_grammar :
         {
             if (string_type* operand = boost::get< string_type >(m_Operand.get_ptr()))
             {
-                m_Subexpression =
+                m_Subexpressions.push(
                     boost::log::filters::attr<
                         string_type
-                    >(m_AttributeName.get()).matches(*operand);
+                    >(m_AttributeName.get()).matches(*operand));
                 m_AttributeName = none;
                 m_Operand = none;
             }
@@ -264,18 +260,28 @@ struct filter_grammar :
     template< template< typename, typename > class OperationT >
     void on_operation(const char_type* begin, const char_type* end) const
     {
-        if (!m_Subexpression.empty() && !m_Filter.empty())
+        if (!m_Subexpressions.empty())
         {
-            typedef boost::log::filters::flt_wrap< char_type, filter_type > wrap_t;
-            m_Filter = OperationT< wrap_t, wrap_t >(wrap_t(m_Filter), wrap_t(m_Subexpression));
-            m_Subexpression.clear();
+            filter_type right = m_Subexpressions.top();
+            m_Subexpressions.pop();
+            if (!m_Subexpressions.empty())
+            {
+                filter_type const& left = m_Subexpressions.top();
+                typedef boost::log::filters::flt_wrap< char_type, filter_type > wrap_t;
+                m_Subexpressions.top() = OperationT< wrap_t, wrap_t >(wrap_t(left), wrap_t(right));
+                return;
+            }
         }
-        else
-        {
-            // This should never happen
-            boost::throw_exception(std::logic_error("Filter parser internal error:"
-                " the subexpression is not set while trying to construct a filter"));
-        }
+
+        // This should never happen
+        boost::throw_exception(std::logic_error("Filter parser internal error:"
+            " the subexpression is not set while trying to construct a filter"));
+    }
+
+    //! The function is called when a full expression have finished parsing
+    void on_expression_finished(const char_type* begin, const char_type* end) const
+    {
+        make_has_attr();
     }
 
 private:
@@ -288,17 +294,8 @@ private:
     {
         if (!!m_AttributeName)
         {
-            if (!m_Subexpression)
-            {
-                m_Subexpression = boost::log::filters::has_attr(m_AttributeName.get());
-                m_AttributeName = none;
-            }
-            else
-            {
-                // This should never happen
-                boost::throw_exception(std::logic_error("Filter parser internal error:"
-                    " the subexpression is already set while trying to make another subexpression of has_attr filter"));
-            }
+            m_Subexpressions.push(boost::log::filters::has_attr(m_AttributeName.get()));
+            m_AttributeName = none;
         }
     }
 };
@@ -329,7 +326,7 @@ struct filter_grammar< CharT >::definition
             spirit::confix_p(constants::char_quote, *spirit::c_escape_ch_p, constants::char_quote)
                 [bind(&filter_grammar_type::on_quoted_string, g, _1, _2)] |
             // An attribute name in form %name%
-            spirit::confix_p(constants::char_percent, *spirit::print_p, constants::char_percent)
+            spirit::confix_p(constants::char_percent, *(spirit::print_p - constants::char_percent), constants::char_percent)
                 [bind(&filter_grammar_type::on_attribute, g, _1, _2)] |
             spirit::strict_real_p[bind(&filter_grammar_type::on_fp_constant, g, _1)] |
             spirit::int_p[bind(&filter_grammar_type::on_integer_constant, g, _1)];
@@ -362,12 +359,12 @@ struct filter_grammar< CharT >::definition
                 [bind(&filter_grammar_type::on_match_relation, g, _1, _2)]
             );
 
-        expression = term >> *(
+        expression = (term >> *(
             ((spirit::str_p(constants::and_keyword()) | constants::char_and) >> term)
                 [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_operation< boost::log::filters::flt_and >, g, _1, _2)] |
             ((spirit::str_p(constants::or_keyword()) | constants::char_or) >> term)
                 [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_operation< boost::log::filters::flt_or >, g, _1, _2)]
-            );
+            ))[bind(&filter_grammar_type::on_expression_finished, g, _1, _2)];
     }
 
     //! Accessor for the filter rule
@@ -392,8 +389,10 @@ typename basic_logging_core< CharT >::filter_type parse_filter(const CharT* begi
     return filt;
 }
 
-template basic_logging_core< char >::filter_type parse_filter< char >(const char* begin, const char* end);
-template basic_logging_core< wchar_t >::filter_type parse_filter< wchar_t >(const wchar_t* begin, const wchar_t* end);
+template BOOST_LOG_EXPORT
+basic_logging_core< char >::filter_type parse_filter< char >(const char* begin, const char* end);
+template BOOST_LOG_EXPORT
+basic_logging_core< wchar_t >::filter_type parse_filter< wchar_t >(const wchar_t* begin, const wchar_t* end);
 
 } // namespace log
 

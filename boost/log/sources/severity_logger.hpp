@@ -140,9 +140,8 @@ public:
         base_type(static_cast< base_type const& >(that)),
         m_DefaultSeverity(that.m_DefaultSeverity)
     {
-        base_type::add_attribute_unlocked(
-            aux::severity_attribute_name< char_type >::get(),
-            shared_ptr< attribute >(&m_Severity, empty_deleter()));
+        base_type::attributes()[aux::severity_attribute_name< char_type >::get()] =
+            shared_ptr< attribute >(&m_Severity, empty_deleter());
     }
     //! Constructor with arguments
     template< typename ArgsT >

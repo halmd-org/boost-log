@@ -224,9 +224,12 @@ public:
     //! The method is called when a string literal is discovered
     void push_string(const char_type* begin, const char_type* end) const
     {
-        string_type str(begin, end);
-        constants::translate_escape_sequences(str);
-        append_formatter(formatters::fmt_wrapper< char_type, string_type >(str));
+        if (begin != end)
+        {
+            string_type str(begin, end);
+            constants::translate_escape_sequences(str);
+            append_formatter(formatters::fmt_wrapper< char_type, string_type >(str));
+        }
     }
 
 private:
@@ -294,7 +297,7 @@ struct formatter_grammar< CharT >::definition
                         spirit::str_p(constants::message_text_keyword())
                             [bind(&formatter_grammar_type::on_attr_name, g, _1, _2)] |
                         (
-                            (*(spirit::print_p - constants::char_paren_bracket_left))
+                            (*(spirit::print_p - constants::char_paren_bracket_left - constants::char_percent))
                                 [bind(&formatter_grammar_type::on_attr_name, g, _1, _2)] >>
                             !arg_list
                         )
@@ -340,18 +343,18 @@ parse_formatter(const CharT* begin, const CharT* end)
     return fmt;
 }
 
-template
+template BOOST_LOG_EXPORT
 void register_formatter_factory< char >(
     const char* attr_name,
     formatter_types< char >::formatter_factory const& factory);
-template
+template BOOST_LOG_EXPORT
 void register_formatter_factory< wchar_t >(
     const wchar_t* attr_name,
     formatter_types< wchar_t >::formatter_factory const& factory);
 
-template
+template BOOST_LOG_EXPORT
 formatter_types< char >::formatter_type parse_formatter< char >(const char* begin, const char* end);
-template
+template BOOST_LOG_EXPORT
 formatter_types< wchar_t >::formatter_type parse_formatter< wchar_t >(const wchar_t* begin, const wchar_t* end);
 
 } // namespace log

@@ -106,7 +106,11 @@ private:
         //! Assignment operator (would be invoked in case of writing to the container)
         mapped_type& operator= (mapped_type const& val) const
         {
-            return m_pContainer->insert(key_type(m_pKey, m_KeyLen), val).first->second;
+            std::pair< iterator, bool > res =
+                m_pContainer->insert(key_type(m_pKey, m_KeyLen), val);
+            if (!res.second)
+                res.first->second = val;
+            return res.first->second;
         }
     };
 

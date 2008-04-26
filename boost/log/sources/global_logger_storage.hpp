@@ -170,7 +170,7 @@ private:
             return ::boost::log::sources::aux::logger_singleton< tag_name >::get();\
         }\
     };\
-    inline tag_name::logger_type& BOOST_JOIN(get_, tag_name)\
+    inline tag_name::logger_type& BOOST_JOIN(get_, tag_name)()\
     {\
         return tag_name::get();\
     }\

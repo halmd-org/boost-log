@@ -1,0 +1,18 @@
+[Core]
+
+Filter="%Severity% >= 2"
+
+
+[Sink:1]
+
+Destination=Console
+Format="%TimeStamp% *** %_%"
+Filter="%Tag% | %Severity% > 3"
+
+
+[Sink:2]
+
+Destination=TextFile
+FileName=test.log
+AutoFlush=true
+Format="[%TimeStamp%] %Tag% %_%"

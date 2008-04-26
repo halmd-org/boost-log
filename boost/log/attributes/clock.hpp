@@ -54,9 +54,9 @@ public:
     }
 };
 
-//! Attrubute that returns current UTC time
+//! Attribute that returns current UTC time
 typedef basic_clock< utc_time_traits > utc_clock;
-//! Attrubute that returns current local time
+//! Attribute that returns current local time
 typedef basic_clock< local_time_traits > local_clock;
 
 } // namespace attributes
