@@ -34,10 +34,11 @@
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/attachable_sstream_buf.hpp>
+#include <boost/log/detail/shared_lock_guard.hpp>
+#include <boost/log/detail/multiple_lock.hpp>
 #include <boost/log/logging_core.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/detail/attachable_sstream_buf.hpp>
-#include <boost/log/detail/multiple_lock.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -300,34 +301,34 @@ public:
     std::pair< typename attribute_set::iterator, bool > add_attribute(
         string_type const& name, shared_ptr< attribute > const& attr)
     {
-        unique_lock< threading_model > _(threading_base());
+        lock_guard< threading_model > _(threading_base());
         return add_attribute_unlocked(name, attr);
     }
     //! The method removes an attribute from the logger
     void remove_attribute(typename attribute_set::iterator it)
     {
-        unique_lock< threading_model > _(threading_base());
+        lock_guard< threading_model > _(threading_base());
         remove_attribute_unlocked(it);
     }
 
     //! The method removes all attributes from the logger
     void remove_all_attributes()
     {
-        unique_lock< threading_model > _(threading_base());
+        lock_guard< threading_model > _(threading_base());
         remove_all_attributes_unlocked();
     }
 
     //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
     bool open_record()
     {
-        shared_lock< threading_model > _(threading_base());
+        log::aux::shared_lock_guard< threading_model > _(threading_base());
         return open_record_unlocked();
     }
     //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
     template< typename ArgsT >
     bool open_record(ArgsT const& args)
     {
-        shared_lock< threading_model > _(threading_base());
+        log::aux::shared_lock_guard< threading_model > _(threading_base());
         return open_record_unlocked(args);
     }
     //! The method pushes the constructed message to the sinks and closes the record
@@ -482,7 +483,10 @@ class logger_mt :
 public:
     logger_mt() {}
     logger_mt(logger_mt const& that) :
-        base_type((shared_lock< const threading_model >(that.threading_base()), static_cast< base_type const& >(that)))
+        base_type((
+            log::aux::shared_lock_guard< const threading_model >(that.threading_base()),
+            static_cast< base_type const& >(that)
+        ))
     {
     }
 
@@ -491,7 +495,7 @@ public:
         if (this != &that)
         {
             logger_mt tmp(that);
-            unique_lock< threading_model > _(threading_base());
+            lock_guard< threading_model > _(threading_base());
             swap_unlocked(tmp);
         }
         return *this;
@@ -515,7 +519,10 @@ class wlogger_mt :
 public:
     wlogger_mt() {}
     wlogger_mt(wlogger_mt const& that) :
-        base_type((shared_lock< const threading_model >(that.threading_base()), static_cast< base_type const& >(that)))
+        base_type((
+            log::aux::shared_lock_guard< const threading_model >(that.threading_base()),
+            static_cast< base_type const& >(that)
+        ))
     {
     }
 
@@ -524,7 +531,7 @@ public:
         if (this != &that)
         {
             wlogger_mt tmp(that);
-            unique_lock< threading_model > _(threading_base());
+            lock_guard< threading_model > _(threading_base());
             swap_unlocked(tmp);
         }
         return *this;
@@ -599,7 +606,10 @@ public:
     public:\
         type_name() {}\
         type_name(type_name const& that) :\
-            base_type((::boost::shared_lock< const threading_model >(that.threading_base()), static_cast< base_type const& >(that)))\
+            base_type((\
+                ::boost::log::aux::shared_lock_guard< const threading_model >(that.threading_base()),\
+                static_cast< base_type const& >(that)\
+            ))\
         {\
         }\
         BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD, type_name)\
@@ -608,7 +618,7 @@ public:
             if (this != ::boost::addressof(that))\
             {\
                 type_name tmp(that);\
-                ::boost::unique_lock< threading_model > _(threading_base());\
+                ::boost::lock_guard< threading_model > _(threading_base());\
                 swap_unlocked(tmp);\
             }\
             return *this;\

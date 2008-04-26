@@ -43,7 +43,7 @@ timer::timer()
 //! The method returns the actual attribute value. It must not return NULL.
 shared_ptr< attribute_value > timer::get_value()
 {
-    unique_lock< mutex > _(m_Mutex);
+    lock_guard< mutex > _(m_Mutex);
 
     LARGE_INTEGER li;
     QueryPerformanceCounter(&li);

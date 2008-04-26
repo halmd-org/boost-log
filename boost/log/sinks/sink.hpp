@@ -35,6 +35,7 @@
 #include <boost/utility/in_place_factory.hpp>
 #include <boost/detail/atomic_count.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/shared_lock_guard.hpp>
 #include <boost/log/sinks/threading_models.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 
@@ -70,9 +71,9 @@ private:
     //! Mutex type
     typedef shared_mutex filter_mutex_type;
     //! Read lock type
-    typedef shared_lock< filter_mutex_type > scoped_read_lock;
+    typedef log::aux::shared_lock_guard< filter_mutex_type > scoped_read_lock;
     //! Write lock type
-    typedef unique_lock< filter_mutex_type > scoped_write_lock;
+    typedef lock_guard< filter_mutex_type > scoped_write_lock;
 
 private:
     //! Synchronization mutex

@@ -38,7 +38,7 @@ private:
     //! Synchronization mutex type
     typedef mutex mutex_type;
     //! Lock type
-    typedef unique_lock< mutex_type > scoped_lock;
+    typedef lock_guard< mutex_type > scoped_lock;
 
     //! Character type
     typedef CharT char_type;
@@ -164,7 +164,7 @@ private:
         while (!m_Finishing)
         {
             {
-                scoped_lock lock(m_Mutex);
+                unique_lock< mutex_type > lock(m_Mutex);
                 if (m_EnqueuedRecords.empty())
                     m_Condition.wait(lock);
 

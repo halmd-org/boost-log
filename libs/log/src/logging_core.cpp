@@ -25,6 +25,7 @@
 #include <boost/log/logging_core.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/detail/singleton.hpp>
+#include <boost/log/detail/shared_lock_guard.hpp>
 
 namespace boost {
 
@@ -98,9 +99,9 @@ public:
     //! Front-end class type
     typedef basic_logging_core< char_type > logging_core_type;
     //! Read lock type
-    typedef shared_lock< shared_mutex > scoped_read_lock;
+    typedef log::aux::shared_lock_guard< shared_mutex > scoped_read_lock;
     //! Write lock type
-    typedef unique_lock< shared_mutex > scoped_write_lock;
+    typedef lock_guard< shared_mutex > scoped_write_lock;
 
     //! Sinks container type
     typedef std::vector< shared_ptr< sink_type > > sink_list;

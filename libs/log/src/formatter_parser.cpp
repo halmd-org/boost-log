@@ -320,7 +320,7 @@ void register_formatter_factory(
     typename formatter_types< CharT >::string_type name(attr_name);
     formatters_repository< CharT >& repo = formatters_repository< CharT >::get();
 
-    unique_lock< shared_mutex > _(repo.m_Mutex);
+    lock_guard< shared_mutex > _(repo.m_Mutex);
     repo.m_Map[name] = factory;
 }
 

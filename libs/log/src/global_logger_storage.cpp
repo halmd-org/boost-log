@@ -56,7 +56,7 @@ shared_ptr< logger_holder_base > global_storage< CharT >::get_or_init(
     repository_t& repo = repository_t::get();
     log::aux::type_info_wrapper wrapped_key = key;
 
-    unique_lock< mutex > _(repo.m_Mutex);
+    lock_guard< mutex > _(repo.m_Mutex);
     typename loggers_map_t::iterator it = repo.m_Loggers.find(wrapped_key);
     if (it != repo.m_Loggers.end())
     {

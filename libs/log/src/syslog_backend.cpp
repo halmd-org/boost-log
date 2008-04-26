@@ -128,7 +128,7 @@ namespace {
 
         static shared_ptr< syslog_initializer > get_instance(syslog::options_t const& options)
         {
-            unique_lock< mutex > _(mutex_holder::get());
+            lock_guard< mutex > _(mutex_holder::get());
             static weak_ptr< syslog_initializer > instance;
             shared_ptr< syslog_initializer > p(instance.lock());
             if (!p)

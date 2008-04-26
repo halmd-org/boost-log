@@ -45,6 +45,7 @@
 #include <boost/log/init/filter_parser.hpp>
 #include <boost/log/init/formatter_parser.hpp>
 #include <boost/log/detail/singleton.hpp>
+#include <boost/log/detail/shared_lock_guard.hpp>
 #include "parser_utils.hpp"
 
 namespace boost {
@@ -212,7 +213,7 @@ struct sinks_repository :
         typename params_t::const_iterator dest = params.find(constants::sink_destination_param_name());
         if (dest != params.end())
         {
-            shared_lock< shared_mutex > _(m_Mutex);
+            log::aux::shared_lock_guard< shared_mutex > _(m_Mutex);
             typename sink_factories::const_iterator it = m_Factories.find(dest->second);
             if (it != m_Factories.end())
             {
@@ -481,7 +482,7 @@ void register_sink_factory(
     > const& factory)
 {
     sinks_repository< CharT >& repo = sinks_repository< CharT >::get();
-    unique_lock< shared_mutex > _(repo.m_Mutex);
+    lock_guard< shared_mutex > _(repo.m_Mutex);
     repo.m_Factories[sink_name] = factory;
 }
 
