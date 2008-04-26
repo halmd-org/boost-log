@@ -177,6 +177,20 @@ protected:
     //! Default severity value getter
     severity_attribute::held_type default_severity() const { return m_DefaultSeverity; }
 
+    //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
+    bool open_record_unlocked()
+    {
+        m_Severity.set_value(m_DefaultSeverity);
+        return base_type::open_record_unlocked();
+    }
+    //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
+    template< typename ArgsT >
+    bool open_record_unlocked(ArgsT const& args)
+    {
+        m_Severity.set_value(args[keywords::severity | m_DefaultSeverity]);
+        return base_type::open_record_unlocked();
+    }
+
     //! Unlocked swap
     void swap_unlocked(basic_severity_logger& that)
     {
