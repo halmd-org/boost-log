@@ -219,17 +219,15 @@ int main(int argc, char* argv[])
     {
         BOOST_LOG_NAMED_SCOPE("Tagging scope");
 
-        // The library has an attribute which simply returns its value
-        // on each record. It perfectly fits to be used as a tag.
-        attrs::constant< std::string > TagAttr("Tagged line");
+        // Here we add a temporary attribute to the logger lg.
+        // Every log record being written in the current scope with logger lg
+        // will have a string attribute "Tag" with value "Tagged line" attached.
+        BOOST_LOG_SCOPED_LOGGER_TAG(lg, "Tag", std::string, "Tagged line");
 
-        // Now lets add this attribute to the logger, but just temporarily
-        logging::scoped_attribute a1 =
-            logging::add_scoped_logger_attribute(lg, "Tag", TagAttr);
-
-        // We could have added it as a global or a thread attribute, using
-        // add_scoped_thread_attribute or add_scoped_global_attribute, but
-        // in practice this will be the most likely case.
+        // The above line is roughly equivalent to the following:
+        // attrs::constant< std::string > TagAttr("Tagged line");
+        // logging::scoped_attribute _ =
+        //     logging::add_scoped_logger_attribute(lg, "Tag", TagAttr);
 
         // Now these lines will be highlighted with the tag
         BOOST_LOG(lg) << "Some tagged log line";
@@ -275,9 +273,8 @@ int main(int argc, char* argv[])
 
     {
         // Next we try if the second condition of the filter works
-        attrs::constant< std::string > TagAttr("IMPORTANT MESSAGES");
-        logging::scoped_attribute a1 =
-            logging::add_scoped_thread_attribute("Tag", TagAttr);
+        // We mark following lines with a tag
+        BOOST_LOG_SCOPED_THREAD_TAG("Tag", std::string, "IMPORTANT MESSAGES");
 
         // We may omit the severity and use the shorter BOOST_LOG macro. The logger "slg"
         // has the default severity that may be specified on its construction. We didn't

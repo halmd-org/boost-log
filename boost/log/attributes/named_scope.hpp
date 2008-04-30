@@ -25,11 +25,11 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/current_function.hpp>
 #include <boost/mpl/if.hpp>
-#include <boost/detail/workaround.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/detail/string_literal.hpp>
+#include <boost/log/detail/unique_identifier_name.hpp>
+#include <boost/log/attributes/attribute.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -330,20 +330,6 @@ typedef basic_named_scope< wchar_t > wnamed_scope;
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif // _MSC_VER
-
-#define BOOST_LOG_UNIQUE_IDENTIFIER_NAME_INTERNAL_(prefix, postfix)\
-    BOOST_PP_CAT(prefix, postfix)
-#define BOOST_LOG_UNIQUE_IDENTIFIER_NAME_INTERNAL(prefix, postfix)\
-    BOOST_LOG_UNIQUE_IDENTIFIER_NAME_INTERNAL_(prefix, postfix)
-
-// In VC 7.0 and later when compiling with /ZI option __LINE__ macro is corrupted
-#if BOOST_WORKAROUND(BOOST_MSVC, >=1300)
-#  define BOOST_LOG_UNIQUE_IDENTIFIER_NAME(prefix)\
-    BOOST_LOG_UNIQUE_IDENTIFIER_NAME_INTERNAL(prefix, __COUNTER__)
-#else
-#  define BOOST_LOG_UNIQUE_IDENTIFIER_NAME(prefix)\
-    BOOST_LOG_UNIQUE_IDENTIFIER_NAME_INTERNAL(prefix, __LINE__)
-#endif // BOOST_WORKAROUND(BOOST_MSVC, >= 1300)
 
 //! Macro for scope markup
 #define BOOST_LOG_NAMED_SCOPE(name)\

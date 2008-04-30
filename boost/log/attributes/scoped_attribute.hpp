@@ -23,9 +23,11 @@
 #include <boost/empty_deleter.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/unique_identifier_name.hpp>
 #include <boost/log/logging_core.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
+#include <boost/log/attributes/constant.hpp>
 
 namespace boost {
 
@@ -138,6 +140,22 @@ inline aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attribute(
         l, name, shared_ptr< attribute >(boost::addressof(attr), empty_deleter()));
 }
 
+#define BOOST_LOG_SCOPED_LOGGER_TAG_INTERNAL(logger, attr_name, attr_type, attr_value, tag_var_name, sentry_var_name)\
+    ::boost::log::attributes::constant< attr_type > tag_var_name(attr_value);\
+    ::boost::log::scoped_attribute sentry_var_name =\
+        ::boost::log::add_scoped_logger_attribute(logger, attr_name, tag_var_name);\
+    sentry_var_name
+
+//! The macro sets a scoped attribute in a more compact way
+#define BOOST_LOG_SCOPED_LOGGER_TAG(logger, attr_name, attr_type, attr_value)\
+    BOOST_LOG_SCOPED_LOGGER_TAG_INTERNAL(\
+        logger,\
+        attr_name,\
+        attr_type,\
+        attr_value,\
+        BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_scoped_logger_tag_),\
+        BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_scoped_logger_tag_sentry_))
+
 namespace aux {
 
     //! A scoped thread-specific attribute guard
@@ -226,6 +244,21 @@ inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
     return aux::scoped_thread_attribute< CharT >(
         name, shared_ptr< attribute >(boost::addressof(attr), empty_deleter()));
 }
+
+#define BOOST_LOG_SCOPED_THREAD_TAG_INTERNAL(attr_name, attr_type, attr_value, tag_var_name, sentry_var_name)\
+    ::boost::log::attributes::constant< attr_type > tag_var_name(attr_value);\
+    ::boost::log::scoped_attribute sentry_var_name =\
+        ::boost::log::add_scoped_thread_attribute(attr_name, tag_var_name);\
+    sentry_var_name
+
+//! The macro sets a scoped attribute in a more compact way
+#define BOOST_LOG_SCOPED_THREAD_TAG(attr_name, attr_type, attr_value)\
+    BOOST_LOG_SCOPED_THREAD_TAG_INTERNAL(\
+        attr_name,\
+        attr_type,\
+        attr_value,\
+        BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_scoped_thread_tag_),\
+        BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_scoped_thread_tag_sentry_))
 
 } // namespace log
 

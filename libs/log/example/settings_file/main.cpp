@@ -87,8 +87,7 @@ int main(int argc, char* argv[])
         try_logging();
 
         // Now enable tagging and try again
-        attrs::constant< std::string > tag("TAGGED");
-        logging::scoped_attribute _ = logging::add_scoped_thread_attribute("Tag", tag);
+        BOOST_LOG_SCOPED_THREAD_TAG("Tag", std::string, "TAGGED");
         try_logging();
 
         return 0;
