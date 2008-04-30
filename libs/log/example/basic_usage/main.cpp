@@ -9,7 +9,7 @@
  * \date   11.11.2007
  * 
  * \brief  An example of basic library usage. See the library tutorial for expanded
- *         comments on this code. It may also be worthwile reading the Wiki requirements page:
+ *         comments on this code. It may also be worthwhile reading the Wiki requirements page:
  *         http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Boost.Logging
  */
 

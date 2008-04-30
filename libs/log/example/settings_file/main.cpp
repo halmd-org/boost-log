@@ -10,7 +10,7 @@
  * 
  * \brief  An example of initializing the library from a settings file.
  *         See the library tutorial for expanded comments on this code.
- *         It may also be worthwile reading the Wiki requirements page:
+ *         It may also be worthwhile reading the Wiki requirements page:
  *         http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Boost.Logging
  */
 
