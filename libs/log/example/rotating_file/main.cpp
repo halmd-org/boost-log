@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     {
         // Open a rotating text file
         shared_ptr< std::ostream > strm(
-            new sinks::rotating_ofstream("test_%N.log", sinks::keywords::rotation_size = 2048));
+            new sinks::rotating_ofstream("test_%N.log", sinks::keywords::rotation_size = 16384));
         if (!strm->good())
             throw std::runtime_error("Failed to open a text log file");
 

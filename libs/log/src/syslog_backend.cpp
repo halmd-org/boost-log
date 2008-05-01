@@ -17,11 +17,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/iostreams/stream_buffer.hpp>
-#include <boost/iostreams/code_converter.hpp>
-#include <boost/iostreams/device/back_inserter.hpp>
 #include <boost/log/sinks/syslog_backend.hpp>
-#include <boost/log/detail/attachable_sstream_buf.hpp>
+#include <boost/log/detail/narrowing_sstream_buf.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/singleton.hpp>
 
@@ -81,32 +78,6 @@ namespace syslog {
 
 namespace {
 
-    //! Stream buffer type generator
-    template< typename CharT >
-    struct make_streambuf;
-    template< >
-    struct make_streambuf< char >
-    {
-        typedef log::aux::basic_ostringstreambuf< char > type;
-    };
-    template< >
-    struct make_streambuf< wchar_t >
-    {
-        struct type :
-            public iostreams::stream_buffer<
-                iostreams::code_converter<
-                    iostreams::back_insert_device< std::string >
-                >
-            >
-        {
-            typedef iostreams::back_insert_device< std::string > device_t;
-            typedef iostreams::code_converter< device_t > convert_t;
-            typedef iostreams::stream_buffer< convert_t > base_type;
-
-            explicit type(std::string& str) : base_type(convert_t(device_t(str))) {}
-        };
-    };
-
     //! Syslog initializer (implemented as a weak singleton)
     class syslog_initializer :
         private log::aux::lazy_singleton< syslog_initializer, mutex >
@@ -146,7 +117,7 @@ template< typename CharT >
 struct basic_syslog_backend< CharT >::implementation
 {
     //! Stream buffer type
-    typedef typename make_streambuf< char_type >::type streambuf_type;
+    typedef typename log::aux::make_narrowing_ostringstreambuf< char_type >::type streambuf_type;
 
     //! Formatted string
     std::string m_FormattedRecord;

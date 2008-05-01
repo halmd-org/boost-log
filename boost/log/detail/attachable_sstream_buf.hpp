@@ -19,6 +19,7 @@
 #ifndef BOOST_LOG_ATTACHABLE_SSTREAM_BUF_HPP_INCLUDED_
 #define BOOST_LOG_ATTACHABLE_SSTREAM_BUF_HPP_INCLUDED_
 
+#include <memory>
 #include <string>
 #include <streambuf>
 #include <boost/log/detail/prologue.hpp>
@@ -41,21 +42,25 @@ namespace log {
 
 namespace aux {
 
-    //! An output streambuf
-    template< typename CharT >
-    class BOOST_LOG_EXPORT basic_ostringstreambuf :
-        public std::basic_streambuf< CharT >
+    //! A streambuf that puts the formatted data to an external string
+    template<
+        typename CharT,
+        typename TraitsT = std::char_traits< CharT >,
+        typename AllocatorT = std::allocator< CharT >
+    >
+    class basic_ostringstreambuf :
+        public std::basic_streambuf< CharT, TraitsT >
     {
         //! Base type
-        typedef std::basic_streambuf< CharT > base_type;
+        typedef std::basic_streambuf< CharT, TraitsT > base_type;
 
     public:
         //! Character type
         typedef typename base_type::char_type char_type;
-        //! String type
-        typedef std::basic_string< char_type > string_type;
         //! Traits type
         typedef typename base_type::traits_type traits_type;
+        //! String type
+        typedef std::basic_string< char_type, traits_type, AllocatorT > string_type;
         //! Int type
         typedef typename base_type::int_type int_type;
 
@@ -73,17 +78,54 @@ namespace aux {
 
     public:
         //! Constructor
-        explicit basic_ostringstreambuf(string_type& storage);
-        //! Destructor
-        ~basic_ostringstreambuf();
+        explicit basic_ostringstreambuf(string_type& storage) : m_Storage(storage)
+        {
+            base_type::setp(m_Buffer, m_Buffer + (sizeof(m_Buffer) / sizeof(*m_Buffer)));
+        }
 
     protected:
         //! Puts all buffered data to the string
-        int sync();
+        int sync()
+        {
+            register char_type* pBase = this->pbase();
+            register char_type* pPtr = this->pptr();
+            if (pBase != pPtr)
+            {
+                m_Storage.append(pBase, pPtr);
+                this->pbump(static_cast< int >(pBase - pPtr));
+            }
+            return 0;
+        }
         //! Puts an unbuffered character to the string
-        int_type overflow(int_type c);
+        int_type overflow(int_type c)
+        {
+            basic_ostringstreambuf::sync();
+            if (!traits_type::eq_int_type(c, traits_type::eof()))
+            {
+                m_Storage.push_back(traits_type::to_char_type(c));
+                return c;
+            }
+            else
+                return traits_type::not_eof(c);
+        }
         //! Puts a character sequence to the string
-        std::streamsize xsputn(const char_type* s, std::streamsize n);
+        std::streamsize xsputn(const char_type* s, std::streamsize n)
+        {
+            basic_ostringstreambuf::sync();
+            typedef typename string_type::size_type string_size_type;
+            register const string_size_type max_storage_left =
+                m_Storage.max_size() - m_Storage.size();
+            if (static_cast< string_size_type >(n) < max_storage_left)
+            {
+                m_Storage.append(s, static_cast< string_size_type >(n));
+                return n;
+            }
+            else
+            {
+                m_Storage.append(s, max_storage_left);
+                return static_cast< std::streamsize >(max_storage_left);
+            }
+        }
     };
 
 } // namespace aux

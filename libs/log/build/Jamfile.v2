@@ -45,7 +45,6 @@ lib boost_log
     : ## sources ##
         attribute_set.cpp
         attribute_values_view.cpp
-        attachable_sstream_buf.cpp
         slim_string.cpp
         logging_core.cpp
 	stream_provider.cpp
@@ -54,7 +53,6 @@ lib boost_log
         timer.cpp
         sink.cpp
         text_ostream_backend.cpp
-        rotating_ofstream.cpp
 	thread_specific.cpp
 	parser_utils.cpp
 	init_from_stream.cpp
