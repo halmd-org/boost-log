@@ -19,6 +19,7 @@
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/detail/singleton.hpp>
+#include <boost/log/utility/new_shared.hpp>
 
 namespace boost {
 
@@ -208,8 +209,7 @@ basic_named_scope< CharT >::basic_named_scope()
 template< typename CharT >
 shared_ptr< attribute_value > basic_named_scope< CharT >::get_value()
 {
-    return shared_ptr< attribute_value >(
-        new basic_named_scope_value< char_type >(&pImpl->get_scope_list()));
+    return log::new_shared< basic_named_scope_value< char_type > >(&pImpl->get_scope_list());
 }
 
 //! The method pushes the scope to the stack

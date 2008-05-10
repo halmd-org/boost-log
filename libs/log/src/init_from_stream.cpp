@@ -33,7 +33,6 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/empty_deleter.hpp>
 #include <boost/log/logging_core.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
@@ -42,6 +41,8 @@
 #endif
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
+#include <boost/log/utility/new_shared.hpp>
+#include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/rotating_ofstream.hpp>
 #include <boost/log/utility/init/from_stream.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
@@ -253,7 +254,7 @@ private:
     {
         typedef std::basic_istringstream< char_type > isstream;
         typedef sinks::basic_text_ostream_backend< char_type > backend_t;
-        shared_ptr< backend_t > backend(new backend_t());
+        shared_ptr< backend_t > backend = log::new_shared< backend_t >();
 
         // FileName
 #ifndef BOOST_FILESYSTEM_NARROW_ONLY
@@ -291,8 +292,8 @@ private:
                 isstream strm(rotation_interval_param->second);
                 strm >> interval;
 
-                file_stream.reset(new basic_rotating_ofstream< char_type >(
-                    file_name, keywords::rotation_interval = interval));
+                file_stream = new_shared< basic_rotating_ofstream< char_type > >(
+                    file_name, keywords::rotation_interval = interval);
             }
             break;
 
@@ -303,8 +304,8 @@ private:
                 isstream strm(rotation_size_param->second);
                 strm >> size;
 
-                file_stream.reset(new basic_rotating_ofstream< char_type >(
-                    file_name, keywords::rotation_size = size));
+                file_stream = new_shared< basic_rotating_ofstream< char_type > >(
+                    file_name, keywords::rotation_size = size);
             }
             break;
 
@@ -319,8 +320,8 @@ private:
                 isstream strm_size(rotation_size_param->second);
                 strm_size >> size;
 
-                file_stream.reset(new basic_rotating_ofstream< char_type >(
-                    file_name, keywords::rotation_interval = interval, keywords::rotation_size = size));
+                file_stream = new_shared< basic_rotating_ofstream< char_type > >(
+                    file_name, keywords::rotation_interval = interval, keywords::rotation_size = size);
             }
             break;
 
@@ -328,11 +329,11 @@ private:
             {
                 // No rotation required, we can use a simple stream
                 typedef filesystem::basic_ofstream< char_type > stream_t;
-                std::auto_ptr< stream_t > p(new filesystem::basic_ofstream< char_type >(
-                    file_name, std::ios_base::out | std::ios_base::trunc));
+                shared_ptr< stream_t > p = log::new_shared< stream_t >(
+                    file_name, std::ios_base::out | std::ios_base::trunc);
                 if (!p->is_open())
                     boost::throw_exception(std::runtime_error("Failed to open the destination file"));
-                file_stream.reset(p.release());
+                file_stream = p;
             }
         }
 
@@ -346,7 +347,7 @@ private:
     {
         // Construct the backend
         typedef sinks::basic_text_ostream_backend< char_type > backend_t;
-        shared_ptr< backend_t > backend(new backend_t());
+        shared_ptr< backend_t > backend = log::new_shared< backend_t >();
         backend->add_stream(
             shared_ptr< typename backend_t::stream_type >(&constants::get_console_log_stream(), empty_deleter()));
 
@@ -359,7 +360,7 @@ private:
     {
         // Construct the backend
         typedef sinks::basic_syslog_backend< char_type > backend_t;
-        shared_ptr< backend_t > backend(new backend_t());
+        shared_ptr< backend_t > backend = log::new_shared< backend_t >();
 
         // For now we use only the default level mapping. Will add support for configuration later.
         backend->set_level_extractor(
@@ -426,9 +427,9 @@ private:
         // Construct the frontend, considering Asynchronous parameter
         shared_ptr< sinks::sink< char_type > > p;
         if (!async)
-            p.reset(new sinks::synchronous_sink< backend_t >(backend));
+            p = log::new_shared< sinks::synchronous_sink< backend_t > >(backend);
         else
-            p.reset(new sinks::asynchronous_sink< backend_t >(backend));
+            p = log::new_shared< sinks::asynchronous_sink< backend_t > >(backend);
 
         p->set_filter(filt);
 

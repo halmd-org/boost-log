@@ -25,6 +25,7 @@
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/attributes/time_traits.hpp>
+#include <boost/log/utility/new_shared.hpp>
 
 namespace boost {
 
@@ -49,8 +50,7 @@ public:
     //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value()
     {
-        return shared_ptr< attribute_value >(
-            new result_value(TimeTraitsT::get_clock()));
+        return log::new_shared< result_value >(TimeTraitsT::get_clock());
     }
 };
 

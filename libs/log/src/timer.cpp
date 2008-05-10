@@ -73,7 +73,7 @@ shared_ptr< attribute_value > timer::get_value()
     }
     m_LastCounter = static_cast< uint64_t >(li.QuadPart);
 
-    return shared_ptr< attribute_value >(new result_value(m_Duration));
+    return log::new_shared< result_value >(m_Duration);
 }
 
 } // namespace attributes

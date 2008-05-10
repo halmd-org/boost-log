@@ -21,19 +21,20 @@
 
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
-#include <boost/empty_deleter.hpp>
-#include <boost/thread/once.hpp>
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/singleton.hpp>
+#include <boost/log/detail/thread_specific.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
-#include <boost/log/detail/thread_specific.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
 // 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
 #pragma warning(disable: 4251)
+// non dll-interface class 'A' used as base for dll-interface class 'B'
+#pragma warning(disable: 4275)
 #endif // _MSC_VER
 
 namespace boost {
@@ -66,36 +67,44 @@ namespace aux {
 
     //! Severity level attribute implementation
     class severity_level :
-        public attribute
+        public attribute,
+        public attribute_value,
+        public enable_shared_from_this< severity_level >,
+        public log::aux::lazy_singleton< severity_level, shared_ptr< severity_level > >
     {
+        friend class log::aux::lazy_singleton< severity_level, shared_ptr< severity_level > >;
+        typedef log::aux::lazy_singleton< severity_level, shared_ptr< severity_level > > singleton_base;
+
     public:
         typedef int held_type;
 
+    private:
+        //! The actual severity level value
+        log::aux::thread_specific< held_type > m_Value;
+
     public:
-        //! Default constructor
-        severity_level()
-        {
-            static once_flag flag = BOOST_ONCE_INIT;
-            boost::call_once(flag, &severity_level::get_instance);
-        }
+        virtual ~severity_level();
+
+        //! Returns an instance of the attribute
+        static BOOST_LOG_EXPORT shared_ptr< severity_level > get();
+
         //! The method returns the actual attribute value. It must not return NULL.
-        virtual shared_ptr< attribute_value > get_value()
-        {
-            return shared_ptr< attribute_value >(
-                new attributes::basic_attribute_value< held_type >(get_instance().get()));
-        }
+        virtual shared_ptr< attribute_value > get_value();
         //! The method sets the actual level
         void set_value(held_type level)
         {
-            get_instance().set(level);
+            m_Value.set(level);
         }
 
+        //! The method dispatches the value to the given object
+        virtual bool dispatch(type_dispatcher& dispatcher);
+        //! The method is called when the attribute value is passed to another thread
+        virtual shared_ptr< attribute_value > detach_from_thread();
+
     private:
-        static log::aux::thread_specific< held_type >& get_instance()
-        {
-            static log::aux::thread_specific< held_type > instance;
-            return instance;
-        }
+        severity_level();
+        //! Initializes the singleton instance
+        static void init_instance();
     };
 
 } // namespace aux
@@ -123,41 +132,43 @@ private:
     //! Default severity
     severity_attribute::held_type m_DefaultSeverity;
     //! Severity attribute
-    severity_attribute m_Severity;
+    shared_ptr< severity_attribute > m_pSeverity;
 
 public:
     //! Constructor
     basic_severity_logger() :
         base_type(),
-        m_DefaultSeverity(0)
+        m_DefaultSeverity(0),
+        m_pSeverity(severity_attribute::get())
     {
         base_type::add_attribute_unlocked(
             aux::severity_attribute_name< char_type >::get(),
-            shared_ptr< attribute >(&m_Severity, empty_deleter()));
+            m_pSeverity);
     }
     //! Copy constructor
     basic_severity_logger(basic_severity_logger const& that) :
         base_type(static_cast< base_type const& >(that)),
-        m_DefaultSeverity(that.m_DefaultSeverity)
+        m_DefaultSeverity(that.m_DefaultSeverity),
+        m_pSeverity(severity_attribute::get())
     {
-        base_type::attributes()[aux::severity_attribute_name< char_type >::get()] =
-            shared_ptr< attribute >(&m_Severity, empty_deleter());
+        base_type::attributes()[aux::severity_attribute_name< char_type >::get()] = m_pSeverity;
     }
     //! Constructor with arguments
     template< typename ArgsT >
     explicit basic_severity_logger(ArgsT const& args) :
         base_type(args),
-        m_DefaultSeverity(args[keywords::severity | 0])
+        m_DefaultSeverity(args[keywords::severity | 0]),
+        m_pSeverity(severity_attribute::get())
     {
         base_type::add_attribute_unlocked(
             aux::severity_attribute_name< char_type >::get(),
-            shared_ptr< attribute >(&m_Severity, empty_deleter()));
+            m_pSeverity);
     }
 
     //! The method opens a new logging record with the default severity
     bool open_record()
     {
-        m_Severity.set_value(m_DefaultSeverity);
+        m_pSeverity->set_value(m_DefaultSeverity);
         return base_type::open_record();
     }
 
@@ -165,29 +176,27 @@ public:
     template< typename ArgsT >
     bool open_record(ArgsT const& args)
     {
-        m_Severity.set_value(args[keywords::severity | m_DefaultSeverity]);
+        m_pSeverity->set_value(args[keywords::severity | m_DefaultSeverity]);
         return base_type::open_record();
     }
 
 protected:
     //! Severity attribute accessor
-    severity_attribute& severity() { return m_Severity; }
-    //! Severity attribute accessor
-    severity_attribute const& severity() const { return m_Severity; }
+    shared_ptr< severity_attribute > const& severity() const { return m_pSeverity; }
     //! Default severity value getter
     severity_attribute::held_type default_severity() const { return m_DefaultSeverity; }
 
     //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
     bool open_record_unlocked()
     {
-        m_Severity.set_value(m_DefaultSeverity);
+        m_pSeverity->set_value(m_DefaultSeverity);
         return base_type::open_record_unlocked();
     }
     //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
     template< typename ArgsT >
     bool open_record_unlocked(ArgsT const& args)
     {
-        m_Severity.set_value(args[keywords::severity | m_DefaultSeverity]);
+        m_pSeverity->set_value(args[keywords::severity | m_DefaultSeverity]);
         return base_type::open_record_unlocked();
     }
 

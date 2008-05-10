@@ -24,6 +24,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/utility/new_shared.hpp>
 
 namespace boost {
 
@@ -62,13 +63,10 @@ public:
     {
         register long NextValue = (--m_Counter) + 1;
 
-        shared_ptr< attribute_value > p;
         if (fDescending)
-            p.reset(new counter_value(m_InitialValue + NextValue));
+            return log::new_shared< counter_value >(m_InitialValue + NextValue);
         else
-            p.reset(new counter_value(m_InitialValue - NextValue));
-
-        return p;
+            return log::new_shared< counter_value >(m_InitialValue - NextValue);
     }
 };
 

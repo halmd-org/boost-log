@@ -29,6 +29,7 @@
 #include <boost/function/function0.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
+#include <boost/log/utility/new_shared.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -150,8 +151,8 @@ private:
     //! Constructs a logger holder
     static shared_ptr< logger_holder_base > construct_logger()
     {
-        return shared_ptr< logger_holder_base >(new logger_holder< logger_type >(
-            TagT::registration_file(), TagT::registration_line, TagT::construct_logger()));
+        return log::new_shared< logger_holder< logger_type > >(
+            TagT::registration_file(), TagT::registration_line, TagT::construct_logger());
     }
 };
 
