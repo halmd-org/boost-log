@@ -33,12 +33,12 @@
 #include <boost/spirit/utility/confix.hpp>
 #include <boost/spirit/utility/escape_char.hpp>
 #include <boost/log/logging_core.hpp>
-#include <boost/log/init/filter_parser.hpp>
-#include <boost/log/type_dispatch/standard_types.hpp>
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>
 #include <boost/log/detail/functional.hpp>
+#include <boost/log/utility/init/filter_parser.hpp>
+#include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include "parser_utils.hpp"
 
 namespace boost {

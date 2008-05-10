@@ -20,14 +20,15 @@
 #define BOOST_LOG_SCOPED_ATTRIBUTE_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
-#include <boost/empty_deleter.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/unique_identifier_name.hpp>
 #include <boost/log/logging_core.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/constant.hpp>
+#include <boost/log/utility/empty_deleter.hpp>
+#include <boost/log/utility/no_unused_warnings.hpp>
+#include <boost/log/utility/unique_identifier_name.hpp>
 
 namespace boost {
 
@@ -144,7 +145,7 @@ inline aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attribute(
     ::boost::log::attributes::constant< attr_type > tag_var_name(attr_value);\
     ::boost::log::scoped_attribute sentry_var_name =\
         ::boost::log::add_scoped_logger_attribute(logger, attr_name, tag_var_name);\
-    sentry_var_name
+    BOOST_LOG_NO_UNUSED_WARNINGS(sentry_var_name)
 
 //! The macro sets a scoped attribute in a more compact way
 #define BOOST_LOG_SCOPED_LOGGER_TAG(logger, attr_name, attr_type, attr_value)\
@@ -249,7 +250,7 @@ inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
     ::boost::log::attributes::constant< attr_type > tag_var_name(attr_value);\
     ::boost::log::scoped_attribute sentry_var_name =\
         ::boost::log::add_scoped_thread_attribute(attr_name, tag_var_name);\
-    sentry_var_name
+    BOOST_LOG_NO_UNUSED_WARNINGS(sentry_var_name)
 
 //! The macro sets a scoped attribute in a more compact way
 #define BOOST_LOG_SCOPED_THREAD_TAG(attr_name, attr_type, attr_value)\

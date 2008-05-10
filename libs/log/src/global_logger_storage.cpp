@@ -16,7 +16,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/log/detail/singleton.hpp>
-#include <boost/log/detail/type_info_wrapper.hpp>
+#include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
 
 namespace boost {
@@ -35,7 +35,7 @@ struct loggers_repository :
     public log::aux::lazy_singleton< loggers_repository< CharT > >
 {
     //! Repository map type
-    typedef std::map< log::aux::type_info_wrapper, shared_ptr< logger_holder_base > > loggers_map_t;
+    typedef std::map< log::type_info_wrapper, shared_ptr< logger_holder_base > > loggers_map_t;
 
     //! Synchronization primitive
     mutable mutex m_Mutex;
@@ -54,7 +54,7 @@ shared_ptr< logger_holder_base > global_storage< CharT >::get_or_init(
     typedef loggers_repository< CharT > repository_t;
     typedef typename repository_t::loggers_map_t loggers_map_t;
     repository_t& repo = repository_t::get();
-    log::aux::type_info_wrapper wrapped_key = key;
+    log::type_info_wrapper wrapped_key = key;
 
     lock_guard< mutex > _(repo.m_Mutex);
     typename loggers_map_t::iterator it = repo.m_Loggers.find(wrapped_key);

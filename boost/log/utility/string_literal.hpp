@@ -16,8 +16,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_DETAIL_STRING_LITERAL_HPP_INCLUDED_
-#define BOOST_LOG_DETAIL_STRING_LITERAL_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_STRING_LITERAL_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_STRING_LITERAL_HPP_INCLUDED_
 
 #include <stdexcept>
 #include <iosfwd>
@@ -339,4 +339,4 @@ inline typename enable_if<
 
 } // namespace boost
 
-#endif // BOOST_LOG_DETAIL_STRING_LITERAL_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_STRING_LITERAL_HPP_INCLUDED_

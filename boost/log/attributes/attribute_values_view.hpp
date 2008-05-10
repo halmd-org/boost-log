@@ -25,7 +25,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/slim_string.hpp>
+#include <boost/log/utility/slim_string.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 
@@ -47,7 +47,7 @@ public:
     //! String type
     typedef std::basic_string< char_type > string_type;
     //! Key type
-    typedef aux::basic_slim_string< char_type > key_type;
+    typedef basic_slim_string< char_type > key_type;
     //! Mapped attribute type
     typedef shared_ptr< attribute_value > mapped_type;
     //! Corresponding attribute set type

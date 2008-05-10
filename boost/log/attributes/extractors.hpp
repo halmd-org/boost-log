@@ -30,7 +30,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
-#include <boost/log/type_dispatch/static_type_dispatcher.hpp>
+#include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
 namespace boost {
 

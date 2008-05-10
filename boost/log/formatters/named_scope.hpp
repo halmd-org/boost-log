@@ -27,7 +27,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
-#include <boost/log/type_dispatch/type_dispatcher.hpp>
+#include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 
 namespace boost {
 

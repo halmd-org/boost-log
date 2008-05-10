@@ -35,7 +35,7 @@
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
-#include <boost/log/sinks/rotating_ofstream.hpp>
+#include <boost/log/utility/rotating_ofstream.hpp>
 #include <boost/log/formatters/format.hpp>
 #include <boost/log/formatters/attr.hpp>
 #include <boost/log/formatters/date_time.hpp>
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     {
         // Open a rotating text file
         shared_ptr< std::ostream > strm(
-            new sinks::rotating_ofstream("test_%N.log", sinks::keywords::rotation_size = 16384));
+            new logging::rotating_ofstream("test_%N.log", logging::keywords::rotation_size = 16384));
         if (!strm->good())
             throw std::runtime_error("Failed to open a text log file");
 

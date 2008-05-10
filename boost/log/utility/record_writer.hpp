@@ -16,14 +16,12 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_SINKS_RECORD_WRITER_HPP_INCLUDED_
-#define BOOST_LOG_SINKS_RECORD_WRITER_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_RECORD_WRITER_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_RECORD_WRITER_HPP_INCLUDED_
 
 namespace boost {
 
 namespace log {
-
-namespace sinks {
 
 //! A simple interface to extend stream's awareness of the data flow
 struct record_writer
@@ -37,10 +35,8 @@ struct record_writer
     virtual void on_end_record() {}
 };
 
-} // namespace sinks
-
 } // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_SINKS_RECORD_WRITER_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_RECORD_WRITER_HPP_INCLUDED_

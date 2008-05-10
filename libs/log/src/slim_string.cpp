@@ -16,7 +16,7 @@
 #include <algorithm>
 #include <functional>
 #include <boost/detail/atomic_count.hpp>
-#include <boost/log/detail/slim_string.hpp>
+#include <boost/log/utility/slim_string.hpp>
 #include "alignment_gap_between.hpp"
 
 #ifdef _MSC_VER
@@ -28,8 +28,6 @@
 namespace boost {
 
 namespace log {
-
-namespace aux {
 
 //! Slim string implementation class
 template< typename CharT, typename TraitsT >
@@ -232,7 +230,7 @@ public:
     //! Allocates the needed memory to accomodate n characters and constructs implementation object with m_RefCount == 1.
     static implementation* allocate_and_add_ref(internal_allocator_type* pAlloc, const_pointer str, size_type n)
     {
-        enum { alignment_gap = alignment_gap_between< implementation, char_type >::value };
+        enum { alignment_gap = log::aux::alignment_gap_between< implementation, char_type >::value };
         typename internal_allocator_type::pointer p =
             pAlloc->allocate(sizeof(implementation) + ((n + 1) * sizeof(char_type)) + alignment_gap);
         new (p) implementation(reinterpret_cast< char_type* >(p + sizeof(implementation) + alignment_gap), str, n);
@@ -243,7 +241,7 @@ public:
     {
         if (pImpl->release() == 0)
         {
-            enum { alignment_gap = alignment_gap_between< implementation, char_type >::value };
+            enum { alignment_gap = log::aux::alignment_gap_between< implementation, char_type >::value };
             const size_type size =
                 sizeof(implementation) + ((pImpl->size() + 1) * sizeof(char_type)) + alignment_gap;
             pImpl->~implementation();
@@ -665,8 +663,6 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, c
 
 template class basic_slim_string< char, std::char_traits< char > >;
 template class basic_slim_string< wchar_t, std::char_traits< wchar_t > >;
-
-} // namespace aux
 
 } // namespace log
 

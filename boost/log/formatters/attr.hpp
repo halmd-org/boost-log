@@ -25,7 +25,7 @@
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/attributes/extractors.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
-#include <boost/log/type_dispatch/standard_types.hpp>
+#include <boost/log/utility/type_dispatch/standard_types.hpp>
 
 namespace boost {
 

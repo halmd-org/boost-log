@@ -25,7 +25,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
-#include <boost/log/sinks/record_writer.hpp>
+#include <boost/log/utility/record_writer.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)

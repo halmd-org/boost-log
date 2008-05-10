@@ -16,8 +16,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_SINKS_ROTATING_OFSTREAM_HPP_INCLUDED_
-#define BOOST_LOG_SINKS_ROTATING_OFSTREAM_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_ROTATING_OFSTREAM_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_ROTATING_OFSTREAM_HPP_INCLUDED_
 
 #include <ios>
 #include <memory>
@@ -50,7 +50,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/narrowing_sstream_buf.hpp>
 #include <boost/log/attributes/time_traits.hpp>
-#include <boost/log/sinks/record_writer.hpp>
+#include <boost/log/utility/record_writer.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -63,8 +63,6 @@
 namespace boost {
 
 namespace log {
-
-namespace sinks {
 
 namespace keywords {
 
@@ -688,8 +686,6 @@ private:
 typedef basic_rotating_ofstream< char > rotating_ofstream;
 //! Wide-char stream type
 typedef basic_rotating_ofstream< wchar_t > rotating_wofstream;
-
-} // namespace sinks
 
 } // namespace log
 

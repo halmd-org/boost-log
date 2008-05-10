@@ -16,8 +16,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_INIT_FILTER_PARSER_HPP_INCLUDED_
-#define BOOST_LOG_INIT_FILTER_PARSER_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_INIT_FILTER_PARSER_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_INIT_FILTER_PARSER_HPP_INCLUDED_
 
 #include <string>
 #include <boost/log/detail/prologue.hpp>
@@ -64,4 +64,4 @@ inline typename basic_logging_core< CharT >::filter_type parse_filter(const Char
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_INIT_FILTER_PARSER_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_INIT_FILTER_PARSER_HPP_INCLUDED_

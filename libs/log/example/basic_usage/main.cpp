@@ -23,7 +23,6 @@
 #include <iostream>
 #include <fstream>
 #include <boost/shared_ptr.hpp>
-#include <boost/empty_deleter.hpp>
 #include <boost/log/logging_core.hpp>
 
 #include <boost/log/sources/basic_logger.hpp>
@@ -48,6 +47,8 @@
 
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>
+
+#include <boost/log/utility/empty_deleter.hpp>
 
 namespace logging = boost::log;
 namespace fmt = boost::log::formatters;
@@ -111,7 +112,7 @@ int main(int argc, char* argv[])
         // interference of other threads that might be trying to log.
 
         // Next we add streams to which logging records should be output
-        shared_ptr< std::ostream > pStream(&std::clog, boost::empty_deleter());
+        shared_ptr< std::ostream > pStream(&std::clog, logging::empty_deleter());
         pBackend->add_stream(pStream);
 
         // We can add more than one stream to the sink backend

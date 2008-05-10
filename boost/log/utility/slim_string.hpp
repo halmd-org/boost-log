@@ -16,8 +16,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_DETAIL_SLIM_STRING_HPP_INCLUDED_
-#define BOOST_LOG_DETAIL_SLIM_STRING_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_SLIM_STRING_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_SLIM_STRING_HPP_INCLUDED_
 
 #include <iosfwd>
 #include <string>
@@ -36,8 +36,6 @@
 namespace boost {
 
 namespace log {
-
-namespace aux {
 
 //! A slim string class with shared data and read-only access
 template<
@@ -218,8 +216,6 @@ inline void swap(basic_slim_string< CharT, TraitsT >& left, basic_slim_string< C
 typedef basic_slim_string< char > slim_string;
 typedef basic_slim_string< wchar_t > slim_wstring;
 
-} // namespace aux
-
 } // namespace log
 
 } // namespace boost
@@ -228,4 +224,4 @@ typedef basic_slim_string< wchar_t > slim_wstring;
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_DETAIL_SLIM_STRING_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_SLIM_STRING_HPP_INCLUDED_

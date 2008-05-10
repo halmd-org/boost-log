@@ -32,8 +32,8 @@
 #include <boost/mpl/size.hpp>
 #include <boost/thread/once.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/type_dispatch/type_dispatcher.hpp>
-#include <boost/log/detail/type_info_wrapper.hpp>
+#include <boost/log/utility/type_info_wrapper.hpp>
+#include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 
 namespace boost {
 
@@ -124,7 +124,7 @@ public:
 private:
     //! The dispatching map
     typedef array<
-        std::pair< aux::type_info_wrapper, std::ptrdiff_t >,
+        std::pair< type_info_wrapper, std::ptrdiff_t >,
         mpl::size< supported_types >::value
     > dispatching_map;
 
@@ -159,7 +159,7 @@ private:
     void* get_visitor(std::type_info const& type)
     {
         dispatching_map const& disp_map = get_dispatching_map();
-        aux::type_info_wrapper wrapper(type);
+        type_info_wrapper wrapper(type);
         typename dispatching_map::const_iterator it =
             std::lower_bound(
                 disp_map.begin(),

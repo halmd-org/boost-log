@@ -24,8 +24,8 @@
 #include <map>
 #include <boost/shared_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/type_dispatch/type_dispatcher.hpp>
-#include <boost/log/detail/type_info_wrapper.hpp>
+#include <boost/log/utility/type_info_wrapper.hpp>
+#include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 
 namespace boost {
 
@@ -64,7 +64,7 @@ class dynamic_type_dispatcher :
 {
 private:
     //! The dispatching map
-    typedef std::map< aux::type_info_wrapper, shared_ptr< void > > dispatching_map;
+    typedef std::map< type_info_wrapper, shared_ptr< void > > dispatching_map;
     dispatching_map m_DispatchingMap;
 
 public:
@@ -75,7 +75,7 @@ public:
         boost::shared_ptr< void > p(
             static_cast< type_visitor< T >* >(new aux::dynamic_type_dispatcher_visitor< T, FunT >(fun)));
 
-        aux::type_info_wrapper wrapper = { &typeid(T) };
+        type_info_wrapper wrapper = { &typeid(T) };
         m_DispatchingMap[wrapper] = p;
     }
 
@@ -89,7 +89,7 @@ private:
     //! The get_visitor method implementation
     void* get_visitor(std::type_info const& type)
     {
-        aux::type_info_wrapper wrapper = { &type };
+        type_info_wrapper wrapper = { &type };
         dispatching_map::iterator it = m_DispatchingMap.find(wrapper);
         if (it != m_DispatchingMap.end())
             return it->second.get();

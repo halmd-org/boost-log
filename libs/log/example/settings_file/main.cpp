@@ -33,7 +33,7 @@
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
-#include <boost/log/init/from_stream.hpp>
+#include <boost/log/utility/init/from_stream.hpp>
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;

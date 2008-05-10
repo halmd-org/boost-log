@@ -41,15 +41,15 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/log/init/formatter_parser.hpp>
 #include <boost/log/formatters/attr.hpp>
 #include <boost/log/formatters/chain.hpp>
 #include <boost/log/formatters/wrappers.hpp>
 #include <boost/log/formatters/message.hpp>
 #include <boost/log/attributes/named_scope.hpp>
-#include <boost/log/type_dispatch/standard_types.hpp>
-#include <boost/log/type_dispatch/date_time_types.hpp>
 #include <boost/log/detail/singleton.hpp>
+#include <boost/log/utility/init/formatter_parser.hpp>
+#include <boost/log/utility/type_dispatch/standard_types.hpp>
+#include <boost/log/utility/type_dispatch/date_time_types.hpp>
 #include "parser_utils.hpp"
 
 namespace boost {

@@ -26,7 +26,7 @@
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/type_dispatch/type_dispatcher.hpp>
+#include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 
 namespace boost {
 

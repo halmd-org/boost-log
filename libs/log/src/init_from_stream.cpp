@@ -40,12 +40,12 @@
 #ifdef BOOST_LOG_USE_SYSLOG
 #include <boost/log/sinks/syslog_backend.hpp>
 #endif
-#include <boost/log/sinks/rotating_ofstream.hpp>
-#include <boost/log/init/from_stream.hpp>
-#include <boost/log/init/filter_parser.hpp>
-#include <boost/log/init/formatter_parser.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
+#include <boost/log/utility/rotating_ofstream.hpp>
+#include <boost/log/utility/init/from_stream.hpp>
+#include <boost/log/utility/init/filter_parser.hpp>
+#include <boost/log/utility/init/formatter_parser.hpp>
 #include "parser_utils.hpp"
 
 namespace boost {
@@ -291,8 +291,8 @@ private:
                 isstream strm(rotation_interval_param->second);
                 strm >> interval;
 
-                file_stream.reset(new sinks::basic_rotating_ofstream< char_type >(
-                    file_name, sinks::keywords::rotation_interval = interval));
+                file_stream.reset(new basic_rotating_ofstream< char_type >(
+                    file_name, keywords::rotation_interval = interval));
             }
             break;
 
@@ -303,8 +303,8 @@ private:
                 isstream strm(rotation_size_param->second);
                 strm >> size;
 
-                file_stream.reset(new sinks::basic_rotating_ofstream< char_type >(
-                    file_name, sinks::keywords::rotation_size = size));
+                file_stream.reset(new basic_rotating_ofstream< char_type >(
+                    file_name, keywords::rotation_size = size));
             }
             break;
 
@@ -319,8 +319,8 @@ private:
                 isstream strm_size(rotation_size_param->second);
                 strm_size >> size;
 
-                file_stream.reset(new sinks::basic_rotating_ofstream< char_type >(
-                    file_name, sinks::keywords::rotation_interval = interval, sinks::keywords::rotation_size = size));
+                file_stream.reset(new basic_rotating_ofstream< char_type >(
+                    file_name, keywords::rotation_interval = interval, keywords::rotation_size = size));
             }
             break;
 

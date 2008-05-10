@@ -50,12 +50,12 @@
 #include <boost/preprocessor/seq/size.hpp>
 #include <boost/preprocessor/seq/for_each_i.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/string_literal.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/attributes/extractors.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
-#include <boost/log/type_dispatch/date_time_types.hpp>
+#include <boost/log/utility/string_literal.hpp>
+#include <boost/log/utility/type_dispatch/date_time_types.hpp>
 
 namespace boost {
 

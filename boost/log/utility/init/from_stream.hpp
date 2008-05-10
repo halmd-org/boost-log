@@ -16,8 +16,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_INIT_FROM_STREAM_HPP_INCLUDED_
-#define BOOST_LOG_INIT_FROM_STREAM_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_INIT_FROM_STREAM_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_INIT_FROM_STREAM_HPP_INCLUDED_
 
 #include <iosfwd>
 #include <map>
@@ -73,4 +73,4 @@ BOOST_LOG_EXPORT void init_from_stream(std::basic_istream< CharT >& strm);
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_INIT_FROM_STREAM_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_INIT_FROM_STREAM_HPP_INCLUDED_
