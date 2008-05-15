@@ -20,11 +20,11 @@
 #define BOOST_LOG_ATTRIBUTES_COUNTER_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/detail/atomic_count.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
-#include <boost/log/utility/new_shared.hpp>
 
 namespace boost {
 
@@ -52,7 +52,7 @@ private:
     //! Initial value
     const held_type m_InitialValue;
     //! The counter
-    ::boost::detail::atomic_count m_Counter;
+    boost::detail::atomic_count m_Counter;
 
 public:
     //! Constructor
@@ -64,9 +64,9 @@ public:
         register long NextValue = (--m_Counter) + 1;
 
         if (fDescending)
-            return log::new_shared< counter_value >(m_InitialValue + NextValue);
+            return boost::make_shared< counter_value >(m_InitialValue + NextValue);
         else
-            return log::new_shared< counter_value >(m_InitialValue - NextValue);
+            return boost::make_shared< counter_value >(m_InitialValue - NextValue);
     }
 };
 

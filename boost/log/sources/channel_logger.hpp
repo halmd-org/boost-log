@@ -20,11 +20,11 @@
 #define BOOST_LOG_SOURCES_CHANNEL_LOGGER_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/attributes/constant.hpp>
-#include <boost/log/utility/new_shared.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -107,7 +107,7 @@ public:
             args[keywords::channel || &basic_channel_logger< BaseT >::make_default_channel_name];
         if (!channel_name.empty())
         {
-            m_pChannel = log::new_shared< channel_attribute >(channel_name);
+            m_pChannel = boost::make_shared< channel_attribute >(channel_name);
             base_type::add_attribute_unlocked(
                 aux::channel_attribute_name< char_type >::get(),
                 m_pChannel);

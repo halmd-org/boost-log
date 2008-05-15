@@ -20,10 +20,10 @@
 #define BOOST_LOG_ATTRIBUTES_CONSTANT_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
-#include <boost/log/utility/new_shared.hpp>
 
 namespace boost {
 
@@ -59,7 +59,7 @@ public:
     {
         // We have to create a copy of the constant because the attribute object
         // can be created on the stack and get destroyed even if there are shared_ptrs that point to it.
-        return log::new_shared< base_type >(static_cast< base_type const& >(*this));
+        return boost::make_shared< base_type >(static_cast< base_type const& >(*this));
     }
 };
 

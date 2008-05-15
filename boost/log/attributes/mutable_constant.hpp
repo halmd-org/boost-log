@@ -20,12 +20,12 @@
 #define BOOST_LOG_ATTRIBUTES_MUTABLE_CONSTANT_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
-#include <boost/log/utility/new_shared.hpp>
 
 namespace boost {
 
@@ -68,7 +68,7 @@ public:
     shared_ptr< attribute_value > get_value()
     {
         scoped_read_lock _(m_Mutex);
-        return log::new_shared< mutable_constant_value >(m_Value);
+        return boost::make_shared< mutable_constant_value >(m_Value);
     }
 
     //! The method sets a new attribute value
@@ -110,7 +110,7 @@ public:
     //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value()
     {
-        return log::new_shared< mutable_constant_value >(m_Value);
+        return boost::make_shared< mutable_constant_value >(m_Value);
     }
 
     //! The method sets a new attribute value

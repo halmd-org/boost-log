@@ -12,8 +12,8 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#include <boost/make_shared.hpp>
 #include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/utility/new_shared.hpp>
 
 namespace boost {
 
@@ -62,7 +62,7 @@ bool severity_level::dispatch(type_dispatcher& dispatcher)
 //! The method is called when the attribute value is passed to another thread
 shared_ptr< attribute_value > severity_level::detach_from_thread()
 {
-    return log::new_shared<
+    return boost::make_shared<
         attributes::basic_attribute_value< held_type >
     >(m_Value.get());
 }

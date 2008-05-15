@@ -23,13 +23,13 @@
 #include <stdexcept>
 #include <boost/limits.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/compatibility/cpp_c_headers/cstdio>
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/function/function0.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
-#include <boost/log/utility/new_shared.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -151,7 +151,7 @@ private:
     //! Constructs a logger holder
     static shared_ptr< logger_holder_base > construct_logger()
     {
-        return log::new_shared< logger_holder< logger_type > >(
+        return boost::make_shared< logger_holder< logger_type > >(
             TagT::registration_file(), TagT::registration_line, TagT::construct_logger());
     }
 };
