@@ -8,7 +8,7 @@
         [@http://www.boost.org/LICENSE_1_0.txt]).
     ]
     [id log]
-    [last-revision $Date: 2008-05-16 18:40:36 $]
+    [last-revision $Date: 2008-05-18 10:28:51 $]
 ]
 
 [c++]
@@ -50,7 +50,9 @@ Here are definitions of some terms that will be used widely throughout the docum
 
 [section:how_to_read How to read the documentation]
 
-The documentation is oriented to both newbies and experienced library users. If this is your first experience with the library, it is recommended to read the [link log.tutorial Tutorial] first. The tutorial gives the overview of the library features with sample code snippets. Some tutorial steps are presented in two forms: easy and advanced. The easy form typically describes the most common and simple way to do the task and it is being recommended to be read by newbies. The advanced form usually gives an expanded way to do the same thing but with ability to do some extra customization. It also often explains the library features behind the easy interface in a more detailed way. This form may come handy for more experienced users and should generally be read if your needs are not satisfied with the easy way.
+The documentation is oriented to both newbies and experienced library users. However, users are expected to be familiar with the commonly used Boost components, such as `shared_ptr`, `make_shared` (see [@http://www.boost.org/doc/libs/release/libs/smart_ptr/smart_ptr.htm Boost.SmartPtr]), and `function` ([@http://www.boost.org/doc/libs/release/doc/html/function.html Boost.Function]). Some parts of the documentation will refer to other Boost libraries as needed.
+
+If this is your first experience with the library, it is recommended to read the [link log.installation Instalation] and [link log.tutorial Tutorial] sections first. The tutorial gives the overview of the library features with sample code snippets. Some tutorial steps are presented in two forms: easy and advanced. The easy form typically describes the most common and simple way to do the task and it is being recommended to be read by newbies. The advanced form usually gives an expanded way to do the same thing but with ability to do some extra customization. It also often explains the library features behind the easy interface in a more detailed way. This form may come handy for more experienced users and should generally be read if your needs are not satisfied with the easy way.
 
 Besides the tutorial there is an [link advanced Advanced features] chapter. This part gives description of other tools provided by the library that were not covered by the tutorial. This chapter is better to be read on per-case basis.
 
@@ -60,6 +62,7 @@ For simplicity in the code snippets in this documentation it shall be assumed th
 
     namespace logging = boost::log;
     namespace sinks = boost::log::sinks;
+    namespace src = boost::log::sources;
     namespace fmt = boost::log::formatters;
     namespace flt = boost::log::filters;
     namespace attrs = boost::log::attributes;
@@ -134,7 +137,7 @@ The last thing worth noting here is that `locked_backend` member function call t
 
 Now that we defined where the log is to be stored it's time to go on and try logging. In order to do this one has to create a logging source. This would be a logger object in our case and it is as simple as that:
 
-    logging::logger lg;
+    src::logger lg;
 
 Note that unlike sinks sources need not to be registered anywhere since they interact directly with logging core. Also note that there are two versions of loggers provided by the library: the thread-safe ones and not thread-safe. For the not thread-safe loggers it is safe for different threads to write logs through different instances of loggers and thus there should be a separate logger for each thread that writes logs. The thread-safe counterparts may be accessed from different threads concurrently, but this would involve locking and may slow things down in case of intense logging. The thread-safe logger types have the `_mt` suffix in their name.
 
@@ -146,31 +149,31 @@ Regardless of the threas safety, all loggers provided by the library are default
 
 In case if you cannot put a logger into your class (suppose you don't have one), the library provides a way of declaring global loggers like this:
 
-    BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, logging::logger_mt)
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::logger_mt)
 
-Here `my_logger` is a user-defined tag name that will be used later to retrieve the logger instance and `logging::logger_mt` is the logger type. Any logger type provided by the library or defined by user can be used in such declaration. However, since the logger will have a single instance, you will normally want to use thread-safe loggers in a multithreaded application as global ones.
+Here `my_logger` is a user-defined tag name that will be used later to retrieve the logger instance and `logger_mt` is the logger type. Any logger type provided by the library or defined by user can be used in such declaration. However, since the logger will have a single instance, you will normally want to use thread-safe loggers in a multithreaded application as global ones.
 
 In case if you want to pass some arguments to the logger on construction, you can use the following macro:
 
-    BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS(my_logger, logging::logger_mt, (arg1)(arg2)(arg3))
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS(my_logger, src::logger_mt, (arg1)(arg2)(arg3))
 
 or even write the initialization code yourself:
 
-    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, logging::logger_mt)
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, src::logger_mt)
     {
         // do something on logger initialization and return logger instance
-        return logging::logger_mt();
+        return src::logger_mt();
     }
 
-You may have such declaration in either a header or a compiled cpp unit. You may even have it in different modules of your application, however, the declaration should be exactly the same in all places, including the definition of the logger type (`logging::logger_mt` in this case) and all symbol bindings within the logger initialization body.
+You may have such declaration in either a header or a compiled cpp unit. You may even have it in different modules of your application, however, the declaration should be exactly the same in all places, including the definition of the logger type (`logger_mt` in this case) and all symbol bindings within the logger initialization body.
 
 Later on you can acquire the logger like this:
 
-    logging::logger_mt& lg = get_my_logger();
+    src::logger_mt& lg = get_my_logger();
 
 or like this:
 
-    logging::logger_mt& lg = my_logger::get();
+    src::logger_mt& lg = my_logger::get();
 
 In any case, the `lg` will reference to the one and only instance of the logger throughout the application, even if the application consists of multiple modules.
 
@@ -203,21 +206,17 @@ Each log record may have a number of attributes attached. Attributes may contain
 
 Aside from that, there are three possible scopes of attributes: source-specific, thread-specific and global. The source-specific attributes are registered in sources (loggers, for instance) and are attached only to log records that are written through these particular sources. The thread-specific and global attributes should be registered directly in the logging core and, as follows from the naming, are attached to records made in a particular thread or to every record ever made, respectively. When a log record is made attribute values from these three sets are accumulated into a single view and passed to sinks, so there is no difference for them where the attribute was registered. Any attribute may be registered in any scope. Upon registering an attribute is given a unique name in order to make it possible to search for it. If it happens that the same named attribute is found in several scopes, the attribute from the most specific scope is taken into consideration in any further processing, including filtering and formatting. Such behavior makes it possible to override global or thread-scoped attributes with the ones registered in your local logger, thus reducing thread interference.
 
-Getting back to our tutorial, let's add a couple of attributes to our application. First, adding identifiers of log records would be a good idea in order to make it easier to look for them in logs. There is a `counter` attribute that fits perfectly for this task and making it global would be a good idea.
+Getting back to our tutorial, let's add some attributes to our application.
 
-    // The attribute value type would be 'unsigned int'
-    // and the counter would start incrementing from value 1
-    boost::shared_ptr< logging::attribute > pCounter(new attrs::counter< unsigned int >(1));
-    logging::logging_core::get()->add_global_attribute("LineID", pCounter);
+[section The easy form]
 
-Next, let's add named scopes support. It's implemented with the `named_scope` attribute and thread-specific scope would be a good place for it.
+There are attributes that are most likely to be used in almost any application. These are log record counter and a timestamp. They can be added with a single function call:
 
-    boost::shared_ptr< logging::attribute > pNamedScope(new attrs::named_scope());
-    logging::logging_core::get()->add_thread_attribute("Scope", pNamedScope);
+    logging::add_common_attributes();
 
-Now we can mark execution scopes with macros `BOOST_LOG_FUNCTION` and `BOOST_LOG_NAMED_SCOPE` (the latter accepts a string literal as an argument).
+With this call attributes "LineID" and "TimeStamp" are registered globally. The "LineID" attribute is a counter that increments for each record being made, the first record gets identifier 1. The value type of the attribute is `unsigned int`. The "TimeStamp" attribute always yelds the current time (i.e. the time when the log record is created, not the time it was written to a sink) and its value type is `boost::posix_time::ptime` (see [@http://www.boost.org/doc/libs/release/doc/html/date_time.html Boost.DateTime] documentation).
 
-Finally, let's add a logging severity level that would show how important each log record is. We can do it in a straightforward way by adding an appropriate attribute to the logger, but that would made it inconvenient to change the severity level of each log record and would require us to explicitly add the attribute in each logger we construct. Luckily, the library provides a `severity_logger` source that is similar to the logger we have used before except that it does just what we need by providing support for severity levels.
+Some attrubutes are registered automatically on loggers construction. For example, `severity_logger` registers a source-specific attribute "Severity" which can be used to add a level of emphasis for different log records. For example:
 
     // We define our own severity levels
     enum severity_level
@@ -230,20 +229,45 @@ Finally, let's add a logging severity level that would show how important each l
     };
 
     // The logger implicitly adds a source-specific attribute 'Severity' of type 'int' on construction
-    logging::severity_logger slg;
+    src::severity_logger slg;
 
-By the way, this is a good place to note that the best way to support attributes that have to be automatically registered in the logger, like severity level or channel name, is to make your own logger by deriving it from `basic_logger`, just what `severity_logger` does. This is better explained in the [link log.extension.sources Extending the library] section.
+    BOOST_LOG_SEV(slg, normal) << "A regular message";
+    BOOST_LOG_SEV(slg, warning) << "Something bad is going on but I can handle it";
+    BOOST_LOG_SEV(slg, critical) << "Everything crumbles, shoot me now!";
 
-Now we can write logging records with a specific severity level like that:
+The `BOOST_LOG_SEV` macro acts pretty much like `BOOST_LOG` except that it takes an additional argument for the `open_record` method of the logger. The expanded `BOOST_LOG_SEV` macro would look something like this:
 
-    BOOST_LOG_SEV(slg, normal) << "A normal severity message";
-    BOOST_LOG_SEV(slg, error) << "An error severity message";
+    if (lg.open_record(src::keywords::severity = normal))
+        lg.strm() << "A regular message";
+
+You can see here that the `open_record` can take named arguments. Some logger types provided by the library have support for such additional parameters and this approach can certainly be used by users when writing their own loggers.
+
+[endsect]
+
+[section The advanced form]
+
+Let's see what's under the hood of that `add_common_attributes` function we used in the easy form section. It might look something like this:
+
+    boost::shared_ptr< logging::logging_core > pCore = logging::logging_core::get();
+    pCore->add_global_attribute(
+        "LineID", boost::make_shared< attrs::counter< unsigned int > >(1));
+    pCore->add_global_attribute(
+        "TimeStamp", boost::make_shared< attrs::local_clock >());
+
+Here the `counter` and `local_clock` components are attribute classes, they derive from the common attribute interface `attribute`. The library provides a number of other attribute classes, including the `functor` attribute that calls some functional object on value acquision. For example, we can in a similar way register a `named_scope` attrubute:
+
+    pCore->add_global_attribute(
+        "Scope", boost::make_shared< attrs::named_scope >());
+
+This will give the ability to store scope names in log for every log record the application makes. See the [link log.advanced.attributes Attributes] section for detailed description of attributes provided by the library.
+
+[endsect]
 
 [endsect]
 
 [section:tutorial_4 Step 4: Formatting]
 
-If you run the resulting code above you will see no difference between the two log records. That's because all these attributes we so carefully registered are not involved in formatting the output. By default the library just puts your message to the log file without examining any attributes. This behavior can be changed.
+If you run the resulting code from the previous tutorial step you will see no difference between the two log records. That's because all these attributes we so carefully registered are not involved in formatting the output. By default the library just puts your message to the log file without examining any attributes. This behavior can be changed.
 
 You can add a custom formatter to a sink backend that supports it (`text_ostream_backend` we used above being the one). The formatter is actually a function object that supports the following signature:
 
@@ -251,7 +275,11 @@ You can add a custom formatter to a sink backend that supports it (`text_ostream
 
 The formatter will be invoked whenever a log record passes filtering and is to be stored in log. The formatted record should be composed by insertion into STL-compatible output stream `strm`. The `attrs` argument contains all attributes attached to the record, and `msg` represents message text acquired by the logger.
 
-While it is perfectly fine if you just write your own formatter function, the library provides a way to automatically generate it with a lambda-style expression like this:
+While it is perfectly fine if you just write your own formatter function, the library provides a two ways to automatically generate it.
+
+[section Lambda-style formatters]
+
+You can create a formatter with a lambda-style expression like this:
 
     // This makes the sink to write log records that look like this:
     // 1: <0> [main] A normal severity message
@@ -264,22 +292,49 @@ While it is perfectly fine if you just write your own formatter function, the li
 
 Here the `ostrm` is a placeholder for the stream to format the record in (the `strm` argument in terms of the formatter signature above). Other insertion arguments, such as `attr`, `named_scope` and `message`, are manipulators that define what should be stored in the stream. The `message` manipulator is a bit special since unlike all other manipulators it writes a preformatted message text acquired from the logger, not an attribute.
 
-Some manipulators may accept additional arguments that customize their behavior. Most of these arguments are named and may be passed in Boost.Parameter style. For example, with `named_scope` manipulator you may decide the direction of iteration through the list of scopes and the depth of iteration:
+Some manipulators may accept additional arguments that customize their behavior. Most of these arguments are named and may be passed in [@http://www.boost.org/doc/libs/release/libs/parameter/doc/html/index.html Boost.Parameter] style. For example, `attr` supports format specifier in a printf-style string and with `named_scope` manipulator you may decide the direction of iteration through the list of scopes and the depth of iteration:
 
     using namespace fmt::keywords; // All argument name keywords reside in this namespace
     pSink->locked_backend()->set_formatter(fmt::ostrm
-        << fmt::attr< unsigned int >("LineID")
+        << fmt::attr< unsigned int >("LineID", format="%08x") // make the line numbers to be written in hex, 8 symbols long
         << ": <" << fmt::attr< int >("Severity")
-        << "> [" << fmt::named_scope("Scope", scope_iteration=reverse, scope_depth=4)
+        << "> [" << fmt::named_scope("Scope", scope_iteration=reverse, scope_depth=4) // make scope iteration top-to-bottom, no more than 4 scopes to be written
         << "] " << fmt::message());
 
 For the reference of the supported arguments see the reference of the corresponding manipulator. More manipulators are described in the [link log.advanced.formatters Advanced] section.
 
 [endsect]
 
+[section Boost.Format-style formatters]
+
+In case if you need to make the log record form customizable, you can define formatters with with a syntax similar to [@http://www.boost.org/doc/libs/release/libs/format/index.html Boost.Format]. The same formatter as described above can be written as follows:
+
+    // This makes the sink to write log records that look like this:
+    // 1: <0> [main] A normal severity message
+    // 2: <3> [main] An error severity message
+    pSink->locked_backend()->set_formatter(
+        fmt::format("%1%: <%2%> [%3%] %4%")
+            % fmt::attr< unsigned int >("LineID")
+            % fmt::attr< int >("Severity")
+            % fmt::named_scope("Scope")
+            % fmt::message());
+
+The `format` placeholder accepts the format string with positional specification of all arguments being formatted. Note that only positional format is currently supported. However, format of individual attributes can still be customized with the corresponding manipulator arguments:
+
+    pSink->locked_backend()->set_formatter(
+        fmt::format("%1%: <%2%> [%3%] %4%")
+            % fmt::attr< unsigned int >("LineID", format="%08x")
+            % fmt::attr< int >("Severity")
+            % fmt::named_scope("Scope", scope_iteration=reverse, scope_depth=4)
+            % fmt::message());
+
+[endsect]
+
+[endsect]
+
 [section:tutorial_5 Step 5: Filtering]
 
-And now we have come to filtering log records. Filtering takes place before any formatting is done and is performed for each log record attempted to be written. Therefore a careful choice of filters is very critical for the performance of logging and, of couruse, for the amount of information left in logs. The library offers two phases of filtering: global and sink-based. The global filtering takes place prior to the sink-based and is intended to provide a way to globally disable or enable logging or to drop all low-priority and unneeded records. The sink-based filtering is a more fine tuning. Sink-specific filters basically decide which particular records will be processed by the particular sink.
+And now we have come to filtering log records. Filtering takes place before any formatting is done and is performed for each log record attempted to be written. Therefore a careful choice of filters is very critical for the performance of logging and, of course, for the amount of information left in logs. The library offers two phases of filtering: global and sink-based. The global filtering takes place prior to the sink-based and is intended to provide a way to globally disable or enable logging or to drop all low-priority and unneeded records. The sink-based filtering is a more fine tuning. Sink-specific filters basically decide which particular records will be processed by the particular sink.
 
 Both phases of filtering are implemented the same way. The filter is a function object that supports the following signature:
 
@@ -330,6 +385,85 @@ This section contains a more detailed description of library components and feat
 [endsect]
 
 [section:attributes Attributes]
+
+[section:named_scope Named scopes]
+
+The logging library supports mainaining scopes stack tracking during the application execution. This stack may either be written to log or be used for other needs (for example, to save the exact call sequence that led to and exception when throwing one). The attribute `named_scope` implements support for scope naming, one can register it the following way:
+
+    logging::logging_core::get()->add_global_attribute(
+        "Scope", boost::make_shared< attrs::named_scope >());
+
+Now we can mark execution scopes with macros `BOOST_LOG_FUNCTION` and `BOOST_LOG_NAMED_SCOPE` (the latter accepts a string literal as an argument) like this:
+
+    void foo(int n)
+    {
+        // Mark the scope of the function foo
+        BOOST_LOG_FUNCTION();
+
+        switch (n)
+        {
+        case 0:
+            {
+                // Mark the current scope
+                BOOST_LOG_NAMED_SCOPE("case 0");
+                BOOST_LOG(lg) << "Some log record";
+                bar(); // call some function
+            }
+            break;
+
+        case 1:
+            {
+                // Mark the current scope
+                BOOST_LOG_NAMED_SCOPE("case 1");
+                BOOST_LOG(lg) << "Some log record";
+                bar(); // call some function
+            }
+            break;
+
+        default:
+            {
+                // Mark the current scope
+                BOOST_LOG_NAMED_SCOPE("default");
+                BOOST_LOG(lg) << "Some log record";
+                bar(); // call some function
+            }
+            break;
+        }
+    }
+
+Later we will be able to see in log that the `bar` function was called from `foo` and, more precisely, from the case statement that corresponds the value of `n`. This may be very useful when tracking down subtle bugs that show only when `bar` is called from a specific location (e.g. if `bar` is being passed invalid arguments in that particular location).
+
+Another good case is attaching the scope stack information to an exception. With help of Boost.Exception, this is possible:
+
+    typedef boost::error_info< struct tag_scopes, attrs::named_scope > scopes_info;
+
+    void bar(int x)
+    {
+        BOOST_LOG_FUNCTION();
+
+        if (x < 0)
+        {
+            throw boost::enable_error_info(std::range_error("x must not be negative"))
+                << scopes_info(attrs::named_scope::get_scopes());
+        }
+    }
+
+    void foo()
+    {
+        BOOST_LOG_FUNCTION();
+
+        try
+        {
+            bar(-1);
+        }
+        catch (std::range_error& e)
+        {
+            BOOST_LOG(lg) << "bar call failed: " << e.what() << ", scopes stack:\n"
+                << *boost::get_error_info< scopes_info >(e);
+        }
+    }
+
+[endsect]
 
 [endsect]
 

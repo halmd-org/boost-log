@@ -68,7 +68,7 @@ inline shared_ptr<
     sinks::synchronous_sink<
         sinks::wtext_ostream_backend
     >
-> init_log_to_wconsole()
+> winit_log_to_console()
 {
     return init_log_to_console(std::wclog);
 }

@@ -57,7 +57,7 @@ inline void register_sink_factory(
         std::map< std::basic_string< CharT >, std::basic_string< CharT > > const&
     > const& factory)
 {
-    register_sink(sink_name.c_str(), factory);
+    register_sink_factory(sink_name.c_str(), factory);
 }
 
 

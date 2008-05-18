@@ -78,7 +78,7 @@ inline shared_ptr< attribute > make_functor_attr(T const& fun)
     BOOST_STATIC_ASSERT(!is_void< result_type >::value);
 
     typedef functor< result_type, T > functor_t;
-    return shared_ptr< attribute >(new functor_t(fun));
+    return boost::make_shared< functor_t >(fun);
 }
 
 #endif // BOOST_NO_RESULT_OF
@@ -92,7 +92,7 @@ inline shared_ptr< attribute > make_functor_attr(T const& fun)
     BOOST_STATIC_ASSERT(!is_void< result_type >::value);
 
     typedef functor< result_type, T > functor_t;
-    return shared_ptr< attribute >(new functor_t(fun));
+    return boost::make_shared< functor_t >(fun);
 }
 
 } // namespace attributes
