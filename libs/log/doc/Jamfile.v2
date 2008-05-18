@@ -4,6 +4,36 @@
 
 using quickbook ;
 
+import doxygen ;
+
+doxygen autodoc
+   :
+      [ glob
+         ../../../boost/log/*.hpp
+	 ../../../boost/log/attributes/*.hpp
+	 ../../../boost/log/filters/*.hpp
+	 ../../../boost/log/formatters/*.hpp
+	 ../../../boost/log/sinks/*.hpp
+	 ../../../boost/log/sources/*.hpp
+	 ../../../boost/log/utility/*.hpp
+	 ../../../boost/log/utility/init/*.hpp
+	 ../../../boost/log/utility/type_dispatch/*.hpp
+      ]
+   :
+   <doxygen:param>HIDE_UNDOC_MEMBERS=YES
+   <doxygen:param>HIDE_UNDOC_MEMBERS=YES
+   <doxygen:param>HIDE_UNDOC_CLASSES=YES
+   <doxygen:param>EXTRACT_PRIVATE=NO
+   <doxygen:param>ENABLE_PREPROCESSING=YES
+   <doxygen:param>MACRO_EXPANSION=YES
+   <doxygen:param>"PREDEFINED=BOOST_LOG_DOXYGEN_PASS \\
+                  "BOOST_LOG_NO_VTABLE=" \\
+                  "BOOST_STATIC_ASSERT(x)=" \\
+		  "BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(x)=" \\
+                  "BOOST_LOG_EXPORT=""
+   ;
+
+
 xml log : log.qbk ;
 boostbook standalone
     :
@@ -12,6 +42,7 @@ boostbook standalone
         <xsl:param>boost.root=../../../..
         <xsl:param>nav.layout=none
         <xsl:param>navig.graphics=0
+        <dependency>autodoc
     ;
 
 install html : ../../../doc/html/boostbook.css ;

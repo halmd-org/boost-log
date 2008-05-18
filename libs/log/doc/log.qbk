@@ -8,7 +8,7 @@
         [@http://www.boost.org/LICENSE_1_0.txt]).
     ]
     [id log]
-    [last-revision $Date: 2008-05-18 10:28:51 $]
+    [last-revision $Date: 2008-05-18 12:16:43 $]
 ]
 
 [c++]
@@ -486,6 +486,7 @@ Another good case is attaching the scope stack information to an exception. With
 
 [endsect]
 
+[xinclude autodoc.xml]
 
 [section:acknowledgements Acknowledgements]
 

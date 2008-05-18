@@ -24,7 +24,7 @@ namespace boost {
 namespace log {
 
 //! A simple interface to extend stream's awareness of the data flow
-struct record_writer
+struct BOOST_LOG_EXPORT record_writer
 {
     //! Destructor
     virtual ~record_writer() {}

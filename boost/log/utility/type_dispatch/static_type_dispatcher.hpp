@@ -39,6 +39,8 @@ namespace boost {
 
 namespace log {
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 namespace aux {
 
     //! A single type visitor implementation
@@ -102,20 +104,30 @@ namespace aux {
 
 } // namespace aux
 
+#endif // BOOST_LOG_DOXYGEN_PASS
+
 //! A static type dispatcher implementation
 template< typename TypeSequenceT >
 class BOOST_LOG_NO_VTABLE static_type_dispatcher :
     public type_dispatcher,
+#ifndef BOOST_LOG_DOXYGEN_PASS
     private aux::static_type_dispatcher_visitor<
         typename mpl::begin< TypeSequenceT >::type,
         typename mpl::end< TypeSequenceT >::type
     >
+#else
+    private implementation_defined
+#endif // BOOST_LOG_DOXYGEN_PASS
 {
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! Base type
     typedef aux::static_type_dispatcher_visitor<
         typename mpl::begin< TypeSequenceT >::type,
         typename mpl::end< TypeSequenceT >::type
     > base_type;
+#else
+    typedef implementation_defined base_type;
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 public:
     //! Type sequence of the supported types

@@ -113,10 +113,12 @@ public:
     typedef TypeSequenceT value_types;
 
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     template< typename ReceiverT, typename ItT, typename EndT >
     class dispatcher_visitor;
     template< typename ReceiverT, typename ItT, typename EndT >
     friend class dispatcher_visitor;
+#endif // BOOST_LOG_DOXYGEN_PASS
     template< typename ReceiverT >
     class dispatcher;
     template< typename ReceiverT >
@@ -148,6 +150,8 @@ private:
     template< typename ReceiverT >
     bool extract(attribute_values_view const& attrs, ReceiverT& receiver) const;
 };
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 //! Dispatcher visitor implementation
 template< typename CharT, typename TypeSequenceT >
@@ -185,22 +189,32 @@ public:
     explicit dispatcher_visitor(ReceiverT& receiver) : m_Receiver(receiver) {}
 };
 
+#endif // BOOST_LOG_DOXYGEN_PASS
+
 //! Attribute value dispatcher
 template< typename CharT, typename TypeSequenceT >
 template< typename ReceiverT >
 class type_list_value_extractor< CharT, TypeSequenceT >::dispatcher :
+#ifndef BOOST_LOG_DOXYGEN_PASS
     public dispatcher_visitor<
         ReceiverT,
         typename mpl::begin< TypeSequenceT >::type,
         typename mpl::end< TypeSequenceT >::type
     >
+#else
+    public implementation_defined
+#endif // BOOST_LOG_DOXYGEN_PASS
 {
     //! Base type
+#ifndef BOOST_LOG_DOXYGEN_PASS
     typedef dispatcher_visitor<
         ReceiverT,
         typename mpl::begin< TypeSequenceT >::type,
         typename mpl::end< TypeSequenceT >::type
     > base_type;
+#else
+    typedef implementation_defined base_type;
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 public:
     //! Forwarding constructor
@@ -211,7 +225,7 @@ public:
 template< typename CharT, typename TypeSequenceT >
 template< typename ReceiverT >
 inline bool type_list_value_extractor< CharT, TypeSequenceT >::extract(
-        attribute_values_view const& attrs, ReceiverT& receiver) const
+    attribute_values_view const& attrs, ReceiverT& receiver) const
 {
     typename attribute_values_view::const_iterator it = attrs.find(m_Name);
     if (it != attrs.end())
