@@ -49,7 +49,7 @@ public:
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
     //! Attribute values set type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:
     //! Output stream operator
@@ -76,7 +76,7 @@ public:
     explicit fmt_attr(string_type const& name) : m_Extractor(name) {}
 
     //! Output stream operator
-    void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const&) const
+    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const&) const
     {
         ostream_op op(strm);
         m_Extractor(attrs, op);
@@ -138,7 +138,7 @@ public:
     //! Boost.Format object type
     typedef basic_format< char_type > format_type;
     //! Attribute values set type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:
     //! Boost.Format binding operator
@@ -167,7 +167,7 @@ public:
     explicit fmt_attr_formatted(string_type const& name, string_type const& fmt) : m_Extractor(name), m_Formatter(fmt) {}
 
     //! Output stream operator
-    void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const&) const
+    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const&) const
     {
         log::aux::cleanup_guard< format_type > _(m_Formatter);
         format_op op(m_Formatter);

@@ -38,7 +38,7 @@ private:
     //! Base type
     typedef basic_filter< CharT, flt_has_attr< CharT > > base_type;
     //! Attribute values container type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
     //! Char type
     typedef typename base_type::char_type char_type;
     //! String type
@@ -52,7 +52,7 @@ public:
     explicit flt_has_attr(string_type const& name) : m_AttributeName(name) {}
     explicit flt_has_attr(const char_type* name) : m_AttributeName(name) {}
 
-    bool operator() (attribute_values_view const& values) const
+    bool operator() (values_view_type const& values) const
     {
         return (values.find(m_AttributeName) != values.end());
     }

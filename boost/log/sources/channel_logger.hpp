@@ -76,7 +76,7 @@ public:
     //! Final type
     typedef typename base_type::final_type final_type;
     //! Attribute set type
-    typedef typename base_type::attribute_set attribute_set;
+    typedef typename base_type::attribute_set_type attribute_set_type;
     //! String type
     typedef typename base_type::string_type string_type;
 

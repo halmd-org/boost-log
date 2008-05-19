@@ -47,7 +47,7 @@ struct basic_sink_backend : noncopyable
     //! String type to be used as a message text holder
     typedef std::basic_string< char_type > string_type;
     //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > attribute_values_view;
+    typedef basic_attribute_values_view< char_type > values_view_type;
 
     //! Threading model tag
     typedef ThreadingModelTagT threading_model;
@@ -64,7 +64,7 @@ public:
     //  Type imports from the base class
     typedef typename base_type::char_type char_type;
     typedef typename base_type::string_type string_type;
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
     typedef typename base_type::threading_model threading_model;
 
     //  This type of sink backends require synchronization on the frontend side
@@ -88,7 +88,7 @@ private:
     boost::function3<
         void,
         stream_type&,
-        attribute_values_view const&,
+        values_view_type const&,
         string_type const&
     > m_Formatter;
 
@@ -125,7 +125,7 @@ public:
     }
 
     //! The method writes the message to the sink - do not override in derived classes
-    void write_message(attribute_values_view const& attributes, string_type const& message)
+    void write_message(values_view_type const& attributes, string_type const& message)
     {
         // Perform the formatting
         if (!m_Formatter.empty())
@@ -145,7 +145,7 @@ public:
 
 protected:
     //! A backend-defined implementation of the formatted message storing
-    virtual void do_write_message(attribute_values_view const& attributes, string_type const& formatted_message) = 0;
+    virtual void do_write_message(values_view_type const& attributes, string_type const& formatted_message) = 0;
 };
 
 } // namespace sinks

@@ -45,7 +45,7 @@ private:
     //! String type to be used as a message text holder
     typedef std::basic_string< char_type > string_type;
     //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > attribute_values_view;
+    typedef basic_attribute_values_view< char_type > values_view_type;
 
     //! Enqueued record aggregate
     struct enqueued_record;
@@ -53,11 +53,11 @@ private:
     struct enqueued_record
     {
         //! Log record attributes
-        attribute_values_view Attributes;
+        values_view_type Attributes;
         //! Log message
         string_type Message;
 
-        enqueued_record(attribute_values_view const& a, string_type const& m)
+        enqueued_record(values_view_type const& a, string_type const& m)
             : Attributes(a), Message(m)
         {
         }
@@ -127,14 +127,14 @@ public:
     }
 
     //! The method puts the record into the queue
-    void enqueue_message(attribute_values_view const& attributes, string_type const& message)
+    void enqueue_message(values_view_type const& attributes, string_type const& message)
     {
         // Make sure that no references to the thread-specific data is left in attribute values
-        for (typename attribute_values_view::const_iterator it = attributes.begin(), end = attributes.end(); it != end; ++it)
+        for (typename values_view_type::const_iterator it = attributes.begin(), end = attributes.end(); it != end; ++it)
         {
             // Yep, a bit hackish. I'll need a better backdoor to do it gacefully.
             it->second->detach_from_thread().swap(
-                    const_cast< typename attribute_values_view::mapped_type& >(it->second));
+                    const_cast< typename values_view_type::mapped_type& >(it->second));
         }
 
         // Put the record into the queue
@@ -206,7 +206,7 @@ asynchronous_sink_impl< CharT >::~asynchronous_sink_impl()
 
 //! The method puts the record into the queue
 template< typename CharT >
-void asynchronous_sink_impl< CharT >::enqueue_message(attribute_values_view const& attributes, string_type const& message)
+void asynchronous_sink_impl< CharT >::enqueue_message(values_view_type const& attributes, string_type const& message)
 {
     pImpl->enqueue_message(attributes, message);
 }

@@ -60,7 +60,7 @@ namespace syslog {
         //! String type
         typedef std::basic_string< char_type > string_type;
         //! Attribute values view type
-        typedef basic_attribute_values_view< char_type > attribute_values_view;
+        typedef basic_attribute_values_view< char_type > values_view_type;
     };
 
     //! Straightforward syslog level extractor
@@ -77,7 +77,7 @@ namespace syslog {
         //! String type
         typedef typename base_type::string_type string_type;
         //! Attribute values view type
-        typedef typename base_type::attribute_values_view attribute_values_view;
+        typedef typename base_type::values_view_type values_view_type;
 
     private:
         //! Extracted attribute name
@@ -87,10 +87,10 @@ namespace syslog {
         //! Constructor
         explicit straightforward_level_mapping(string_type const& name) : m_AttributeName(name) {}
         //! Extraction operator
-        level_t operator() (attribute_values_view const& values) const
+        level_t operator() (values_view_type const& values) const
         {
             // Find attribute value
-            typename attribute_values_view::const_iterator it = values.find(m_AttributeName);
+            typename values_view_type::const_iterator it = values.find(m_AttributeName);
             if (it != values.end())
             {
                 optional< attribute_value_type const& > value = it->second->get< attribute_value_type >();
@@ -115,7 +115,7 @@ namespace syslog {
         //! String type
         typedef typename base_type::string_type string_type;
         //! Attribute values view type
-        typedef typename base_type::attribute_values_view attribute_values_view;
+        typedef typename base_type::values_view_type values_view_type;
 
     private:
         //! Mapping type
@@ -149,10 +149,10 @@ namespace syslog {
         //! Constructor
         explicit level_mapping(string_type const& name) : m_AttributeName(name) {}
         //! Extraction operator
-        level_t operator() (attribute_values_view const& values) const
+        level_t operator() (values_view_type const& values) const
         {
             // Find attribute value
-            typename attribute_values_view::const_iterator it = values.find(m_AttributeName);
+            typename values_view_type::const_iterator it = values.find(m_AttributeName);
             if (it != values.end())
             {
                 optional< attribute_value_type const& > value = it->second->get< attribute_value_type >();
@@ -190,20 +190,20 @@ public:
     //! String type to be used as a message text holder
     typedef typename base_type::string_type string_type;
     //! Attribute values view type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
     //! Output stream type
     typedef std::basic_ostream< char_type > stream_type;
     //! Formatter function type
     typedef boost::function3<
         void,
         stream_type&,
-        attribute_values_view const&,
+        values_view_type const&,
         string_type const&
     > formatter_type;
     //! Syslog level extractor type
     typedef boost::function1<
         syslog::level_t,
-        attribute_values_view const&
+        values_view_type const&
     > level_extractor_type;
 
 private:
@@ -232,7 +232,7 @@ public:
     std::locale imbue(std::locale const& loc);
 
     //! The method writes the message to the sink
-    void write_message(attribute_values_view const& attributes, string_type const& message);
+    void write_message(values_view_type const& attributes, string_type const& message);
 };
 
 typedef basic_syslog_backend< char > syslog_backend;

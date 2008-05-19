@@ -55,7 +55,7 @@ public:
     //! String type to be used as a message text holder
     typedef typename base_type::string_type string_type;
     //! Attribute values view type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
     //! Output stream type
     typedef typename base_type::stream_type stream_type;
 
@@ -91,7 +91,7 @@ public:
 
 private:
     //! The method writes the message to the sink
-    void do_write_message(attribute_values_view const& attributes, string_type const& formatted_message);
+    void do_write_message(values_view_type const& attributes, string_type const& formatted_message);
 };
 
 typedef basic_text_ostream_backend< char > text_ostream_backend;

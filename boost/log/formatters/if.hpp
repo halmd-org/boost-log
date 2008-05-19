@@ -43,7 +43,7 @@ public:
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
     //! Attribute values set type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:    
     FilterT m_Filter;
@@ -55,7 +55,7 @@ public:
     fmt_if_else(FilterT const& flt, ThenT const& th, ElseT const& el) : m_Filter(flt), m_Then(th), m_Else(el) {}
 
     //! Output operator
-    void operator() (ostream_type& strm, attribute_values_view const& values, string_type const& message) const
+    void operator() (ostream_type& strm, values_view_type const& values, string_type const& message) const
     {
         if (m_Filter(values))
             m_Then(strm, values, message);
@@ -79,7 +79,7 @@ public:
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
     //! Attribute values set type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:
     class else_gen
@@ -110,7 +110,7 @@ public:
     fmt_if(FilterT const& flt, FormatterT const& fmt) : else_(flt, fmt) {}
 
     //! Output operator
-    void operator() (ostream_type& strm, attribute_values_view const& values, string_type const& message) const
+    void operator() (ostream_type& strm, values_view_type const& values, string_type const& message) const
     {
         if (else_.m_Filter(values))
             else_.m_Formatter(strm, values, message);

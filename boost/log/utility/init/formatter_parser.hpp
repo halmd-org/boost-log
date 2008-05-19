@@ -50,9 +50,9 @@ struct formatter_types
     //! Output stream type
     typedef std::basic_ostream< char_type > ostream_type;
     //! Map of attribute values
-    typedef basic_attribute_values_view< char_type > attribute_values_view;
+    typedef basic_attribute_values_view< char_type > values_view_type;
     //! The formatter function object
-    typedef function3< void, ostream_type&, attribute_values_view const&, string_type const& > formatter_type;
+    typedef function3< void, ostream_type&, values_view_type const&, string_type const& > formatter_type;
 
     //! Map of formatter factory arguments [argument name -> argument value]
     typedef std::map< string_type, string_type > formatter_factory_args;

@@ -51,7 +51,7 @@ public:
     //! String type
     typedef std::basic_string< char_type > string_type;
     //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > attribute_values_view;
+    typedef basic_attribute_values_view< char_type > values_view_type;
     //! Attribute value type
     typedef T value_type;
 
@@ -65,13 +65,13 @@ public:
 
     //! Extraction operator
     template< typename ReceiverT >
-    result_type operator() (attribute_values_view const& attrs, ReceiverT& receiver) const
+    result_type operator() (values_view_type const& attrs, ReceiverT& receiver) const
     {
         return extract(attrs, receiver);
     }
     //! Extraction operator
     template< typename ReceiverT >
-    result_type operator() (attribute_values_view const& attrs, ReceiverT const& receiver) const
+    result_type operator() (values_view_type const& attrs, ReceiverT const& receiver) const
     {
         return extract(attrs, receiver);
     }
@@ -79,9 +79,9 @@ public:
 private:
     //! Implementation of the attribute value extraction
     template< typename ReceiverT >
-    result_type extract(attribute_values_view const& attrs, ReceiverT& receiver) const
+    result_type extract(values_view_type const& attrs, ReceiverT& receiver) const
     {
-        typename attribute_values_view::const_iterator it = attrs.find(m_Name);
+        typename values_view_type::const_iterator it = attrs.find(m_Name);
         if (it != attrs.end())
         {
             optional< value_type const& > val = it->second->get< value_type >();
@@ -108,7 +108,7 @@ public:
     //! String type
     typedef std::basic_string< char_type > string_type;
     //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > attribute_values_view;
+    typedef basic_attribute_values_view< char_type > values_view_type;
     //! Attribute value types
     typedef TypeSequenceT value_types;
 
@@ -134,13 +134,13 @@ public:
 
     //! Extraction operator
     template< typename ReceiverT >
-    result_type operator() (attribute_values_view const& attrs, ReceiverT& receiver) const
+    result_type operator() (values_view_type const& attrs, ReceiverT& receiver) const
     {
         return extract(attrs, receiver);
     }
     //! Extraction operator
     template< typename ReceiverT >
-    result_type operator() (attribute_values_view const& attrs, ReceiverT const& receiver) const
+    result_type operator() (values_view_type const& attrs, ReceiverT const& receiver) const
     {
         return extract(attrs, receiver);
     }
@@ -148,7 +148,7 @@ public:
 private:
     //! Implementation of the attribute value extraction
     template< typename ReceiverT >
-    bool extract(attribute_values_view const& attrs, ReceiverT& receiver) const;
+    bool extract(values_view_type const& attrs, ReceiverT& receiver) const;
 };
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -225,9 +225,9 @@ public:
 template< typename CharT, typename TypeSequenceT >
 template< typename ReceiverT >
 inline bool type_list_value_extractor< CharT, TypeSequenceT >::extract(
-    attribute_values_view const& attrs, ReceiverT& receiver) const
+    values_view_type const& attrs, ReceiverT& receiver) const
 {
-    typename attribute_values_view::const_iterator it = attrs.find(m_Name);
+    typename values_view_type::const_iterator it = attrs.find(m_Name);
     if (it != attrs.end())
     {
         dispatcher< ReceiverT > disp(receiver);

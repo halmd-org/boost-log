@@ -45,7 +45,7 @@ public:
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
     //! Attribute values set type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:
     //! Object to be output
@@ -56,7 +56,7 @@ public:
     explicit fmt_wrapper(T const& obj) : m_T(obj) {}
 
     //! Output operator
-    void operator() (ostream_type& strm, attribute_values_view const&, string_type const&) const
+    void operator() (ostream_type& strm, values_view_type const&, string_type const&) const
     {
         strm << m_T;
     }
@@ -77,7 +77,7 @@ public:
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
     //! Attribute values set type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:
     //! Reference to object to be output
@@ -88,13 +88,13 @@ public:
     explicit fmt_wrapper(reference_wrapper< T > const& obj) : m_T(obj.get()) {}
 
     //! Output operator
-    void operator() (ostream_type& strm, attribute_values_view const&, string_type const&) const
+    void operator() (ostream_type& strm, values_view_type const&, string_type const&) const
     {
         strm << m_T;
     }
 };
 
-//! A convenience class that conditionally wrapst the type into a formatter
+//! A convenience class that conditionally wraps the type into a formatter
 template< typename CharT, typename T, bool >
 struct wrap_if_c
 {

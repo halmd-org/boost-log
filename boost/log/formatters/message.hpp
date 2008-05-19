@@ -43,11 +43,11 @@ public:
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
     //! Attribute values set type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 public:
     //! Output operator
-    void operator() (ostream_type& strm, attribute_values_view const&, string_type const& msg) const
+    void operator() (ostream_type& strm, values_view_type const&, string_type const& msg) const
     {
         strm << msg;
     }

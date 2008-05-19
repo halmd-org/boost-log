@@ -48,13 +48,13 @@ public:
     //! String type to be used as a message text holder
     typedef std::basic_string< char_type > string_type;
     //! Attribute set type
-    typedef basic_attribute_set< char_type > attribute_set;
+    typedef basic_attribute_set< char_type > attribute_set_type;
     //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > attribute_values_view;
+    typedef basic_attribute_values_view< char_type > values_view_type;
     //! Sink interface type
     typedef sinks::sink< char_type > sink_type;
     //! Filter function type
-    typedef function1< bool, attribute_values_view const& > filter_type;
+    typedef function1< bool, values_view_type const& > filter_type;
 
 private:
     //! Implementation type
@@ -104,35 +104,35 @@ public:
     void remove_sink(shared_ptr< sink_type > const& s);
 
     //! The method adds an attribute to the global attribute set
-    std::pair< typename attribute_set::iterator, bool > add_global_attribute(
+    std::pair< typename attribute_set_type::iterator, bool > add_global_attribute(
         string_type const& name, shared_ptr< attribute > const& attr);
     //! The method removes an attribute from the global attribute set
-    void remove_global_attribute(typename attribute_set::iterator it);
+    void remove_global_attribute(typename attribute_set_type::iterator it);
     //! The method returns the complete set of currently registered global attributes
-    attribute_set get_global_attributes() const;
+    attribute_set_type get_global_attributes() const;
     /*!
      *  \brief The method replaces the complete set of currently registered global attributes with the provided set
      *  \note The method invalidates all iterators that may have been returned
      *        from the add_global_attribute method.
      */
-    void set_global_attributes(attribute_set const& attrs) const;
+    void set_global_attributes(attribute_set_type const& attrs) const;
 
     //! The method adds an attribute to the thread-specific attribute set
-    std::pair< typename attribute_set::iterator, bool > add_thread_attribute(
+    std::pair< typename attribute_set_type::iterator, bool > add_thread_attribute(
         string_type const& name, shared_ptr< attribute > const& attr);
     //! The method removes an attribute from the thread-specific attribute set
-    void remove_thread_attribute(typename attribute_set::iterator it);
+    void remove_thread_attribute(typename attribute_set_type::iterator it);
     //! The method returns the complete set of currently registered thread-specific attributes
-    attribute_set get_thread_attributes() const;
+    attribute_set_type get_thread_attributes() const;
     /*!
      *  \brief The method replaces the complete set of currently registered thread-specific attributes with the provided set
      *  \note The method invalidates all iterators that may have been returned
      *        from the add_thread_attribute method.
      */
-    void set_thread_attributes(attribute_set const& attrs) const;
+    void set_thread_attributes(attribute_set_type const& attrs) const;
 
     //! The method opens a new record to be written and returns true if the record was opened
-    bool open_record(attribute_set const& source_attributes);
+    bool open_record(attribute_set_type const& source_attributes);
     //! The method pushes the record and closes it
     void push_record(string_type const& message_text);
     //! The method cancels the currently opened record

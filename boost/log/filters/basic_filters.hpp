@@ -54,11 +54,11 @@ struct basic_filter : public filter_base
     //! String type
     typedef std::basic_string< char_type > string_type;
     //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > attribute_values_view;
+    typedef basic_attribute_values_view< char_type > values_view_type;
 
     //  Various standard functor typedefs
     typedef bool result_type;
-    typedef attribute_values_view argument_type;
+    typedef values_view_type argument_type;
     typedef argument_type arg1_type;
     enum { arity = 1 };
 };
@@ -72,7 +72,7 @@ private:
     //! Base type
     typedef basic_filter< CharT, flt_wrap< CharT, T > > base_type;
     //! Attribute values container type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:
     //! Underlying filter
@@ -81,7 +81,7 @@ private:
 public:
     explicit flt_wrap(T const& that) : m_Filter(that) {}
 
-    bool operator() (attribute_values_view const& values) const
+    bool operator() (values_view_type const& values) const
     {
         return static_cast< bool >(m_Filter(values));
     }
@@ -190,7 +190,7 @@ private:
     //! Base type
     typedef basic_filter< typename FltT::char_type, flt_negation< FltT > > base_type;
     //! Attribute values container type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:
     //! Underlying filter
@@ -199,7 +199,7 @@ private:
 public:
     explicit flt_negation(FltT const& that) : m_Filter(that) {}
 
-    bool operator() (attribute_values_view const& values) const
+    bool operator() (values_view_type const& values) const
     {
         return (!m_Filter(values));
     }
@@ -222,7 +222,7 @@ private:
     //! Base type
     typedef basic_filter< typename LeftT::char_type, flt_and< LeftT, RightT > > base_type;
     //! Attribute values container type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:
     //! Left-side filter
@@ -233,7 +233,7 @@ private:
 public:
     flt_and(LeftT const& left, RightT const& right) : m_Left(left), m_Right(right) {}
 
-    bool operator() (attribute_values_view const& values) const
+    bool operator() (values_view_type const& values) const
     {
         return (m_Left(values) && m_Right(values));
     }
@@ -259,7 +259,7 @@ private:
     //! Base type
     typedef basic_filter< typename LeftT::char_type, flt_or< LeftT, RightT > > base_type;
     //! Attribute values container type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:
     //! Left-side filter
@@ -270,7 +270,7 @@ private:
 public:
     flt_or(LeftT const& left, RightT const& right) : m_Left(left), m_Right(right) {}
 
-    bool operator() (attribute_values_view const& values) const
+    bool operator() (values_view_type const& values) const
     {
         return (m_Left(values) || m_Right(values));
     }

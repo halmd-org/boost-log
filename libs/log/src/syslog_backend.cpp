@@ -196,7 +196,7 @@ std::locale basic_syslog_backend< CharT >::imbue(std::locale const& loc)
 //! The method writes the message to the sink
 template< typename CharT >
 void basic_syslog_backend< CharT >::write_message(
-    attribute_values_view const& attributes, string_type const& message)
+    values_view_type const& attributes, string_type const& message)
 {
     log::aux::cleanup_guard< std::string > _(m_pImpl->m_FormattedRecord);
 

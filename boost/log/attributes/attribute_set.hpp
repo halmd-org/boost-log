@@ -44,7 +44,7 @@ class basic_attribute_set
     friend class basic_attribute_values_view< CharT >;
 
     //! Self type
-    typedef basic_attribute_set this_type;
+    typedef basic_attribute_set< CharT > this_type;
 
 public:
     //! Char type

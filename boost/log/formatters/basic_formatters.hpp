@@ -48,7 +48,7 @@ struct basic_formatter : public formatter_base
     //! Stream type
     typedef std::basic_ostream< char_type > ostream_type;
     //! Attribute values set type
-    typedef basic_attribute_values_view< char_type > attribute_values_view;
+    typedef basic_attribute_values_view< char_type > values_view_type;
 
     //! Functor result type
     typedef void result_type;

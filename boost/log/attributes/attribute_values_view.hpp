@@ -39,7 +39,7 @@ class basic_attribute_values_view :
     private std::allocator< char >
 {
     //! Self type
-    typedef basic_attribute_values_view this_type;
+    typedef basic_attribute_values_view< CharT > this_type;
 
 public:
     //! Char type
@@ -51,7 +51,7 @@ public:
     //! Mapped attribute type
     typedef shared_ptr< attribute_value > mapped_type;
     //! Corresponding attribute set type
-    typedef basic_attribute_set< char_type > attribute_set;
+    typedef basic_attribute_set< char_type > attribute_set_type;
 
     //! Value type
     typedef std::pair< const key_type, mapped_type > value_type;
@@ -164,9 +164,9 @@ private:
 public:
     //! The constructor adopts three attribute sets to the view
     BOOST_LOG_EXPORT basic_attribute_values_view(
-        attribute_set const& source_attrs,
-        attribute_set const& thread_attrs,
-        attribute_set const& global_attrs);
+        attribute_set_type const& source_attrs,
+        attribute_set_type const& thread_attrs,
+        attribute_set_type const& global_attrs);
     //! Copy constructor
     BOOST_LOG_EXPORT basic_attribute_values_view(basic_attribute_values_view const& that);
     //! Destructor

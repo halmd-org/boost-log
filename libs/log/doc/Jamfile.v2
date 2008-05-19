@@ -10,26 +10,33 @@ doxygen autodoc
    :
       [ glob
          ../../../boost/log/*.hpp
-	 ../../../boost/log/attributes/*.hpp
-	 ../../../boost/log/filters/*.hpp
-	 ../../../boost/log/formatters/*.hpp
-	 ../../../boost/log/sinks/*.hpp
-	 ../../../boost/log/sources/*.hpp
-	 ../../../boost/log/utility/*.hpp
-	 ../../../boost/log/utility/init/*.hpp
-	 ../../../boost/log/utility/type_dispatch/*.hpp
+         ../../../boost/log/attributes/*.hpp
+         ../../../boost/log/filters/*.hpp
+         ../../../boost/log/formatters/*.hpp
+         ../../../boost/log/sinks/*.hpp
+         ../../../boost/log/sources/*.hpp
+         ../../../boost/log/utility/*.hpp
+         ../../../boost/log/utility/init/*.hpp
+         ../../../boost/log/utility/type_dispatch/*.hpp
       ]
    :
-   <doxygen:param>HIDE_UNDOC_MEMBERS=YES
+   <doxygen:param>RECURSIVE=YES
+   <doxygen:param>EXCLUDE_SYMBOLS="aux aux::*"
+   <doxygen:param>ALPHABETICAL_INDEX=YES
+   <doxygen:param>REPEAT_BRIEF=YES
+   <doxygen:param>ALWAYS_DETAILED_SEC=YES
+   <doxygen:param>INHERIT_DOCS=YES
    <doxygen:param>HIDE_UNDOC_MEMBERS=YES
    <doxygen:param>HIDE_UNDOC_CLASSES=YES
    <doxygen:param>EXTRACT_PRIVATE=NO
+   <doxygen:param>BUILTIN_STL_SUPPORT=YES
    <doxygen:param>ENABLE_PREPROCESSING=YES
    <doxygen:param>MACRO_EXPANSION=YES
    <doxygen:param>"PREDEFINED=BOOST_LOG_DOXYGEN_PASS \\
                   "BOOST_LOG_NO_VTABLE=" \\
                   "BOOST_STATIC_ASSERT(x)=" \\
 		  "BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(x)=" \\
+		  "BOOST_LOG_UNIQUE_IDENTIFIER_NAME(x)=anonymous" \\
                   "BOOST_LOG_EXPORT=""
    ;
 

@@ -58,7 +58,7 @@ namespace aux {
         //! A reference to the logger
         mutable logger_type* m_pLogger;
         //! An iterator to the added attribute
-        typename logger_type::attribute_set::iterator m_itAttribute;
+        typename logger_type::attribute_set_type::iterator m_itAttribute;
         //! A saved attribute, if it was already registered
         mutable shared_ptr< attribute > m_pSavedAttribute;
 
@@ -72,7 +72,7 @@ namespace aux {
             m_pLogger(boost::addressof(l))
         {
             std::pair<
-                typename logger_type::attribute_set::iterator,
+                typename logger_type::attribute_set_type::iterator,
                 bool
             > res = l.add_attribute(name, attr);
             m_itAttribute = res.first;
@@ -172,7 +172,7 @@ namespace aux {
         //! A pointer to the logging core
         mutable shared_ptr< logging_core_type > m_pCore;
         //! An iterator to the added attribute
-        typename logging_core_type::attribute_set::iterator m_itAttribute;
+        typename logging_core_type::attribute_set_type::iterator m_itAttribute;
         //! A saved attribute, if it was already registered
         mutable shared_ptr< attribute > m_pSavedAttribute;
 
@@ -183,7 +183,7 @@ namespace aux {
             m_pCore(logging_core_type::get())
         {
             std::pair<
-                typename logging_core_type::attribute_set::iterator,
+                typename logging_core_type::attribute_set_type::iterator,
                 bool
             > res = m_pCore->add_thread_attribute(name, attr);
             m_itAttribute = res.first;

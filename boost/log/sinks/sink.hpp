@@ -63,9 +63,9 @@ public:
     //! String type to be used as a message text holder
     typedef std::basic_string< char_type > string_type;
     //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > attribute_values_view;
+    typedef basic_attribute_values_view< char_type > values_view_type;
     //! Filter function type
-    typedef function1< bool, attribute_values_view const& > filter_type;
+    typedef function1< bool, values_view_type const& > filter_type;
 
 private:
     //! Mutex type
@@ -99,14 +99,14 @@ public:
     }
 
     //! The method returns true if the attribute values pass the filter
-    bool will_write_message(attribute_values_view const& attributes)
+    bool will_write_message(values_view_type const& attributes)
     {
         scoped_read_lock _(m_FilterMutex);
         return (m_Filter.empty() || m_Filter(attributes));
     }
 
     //! The method writes the message to the sink
-    virtual void write_message(attribute_values_view const& attributes, string_type const& message) = 0;
+    virtual void write_message(values_view_type const& attributes, string_type const& message) = 0;
 };
 
 //! Non-blocking logging sink facade
@@ -121,7 +121,7 @@ public:
     typedef SinkBackendT sink_backend_type;
     BOOST_STATIC_ASSERT((is_model_supported< typename sink_backend_type::threading_model, backend_synchronization_tag >::value));
 
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
     typedef typename base_type::string_type string_type;
 
     //! A pointer type that locks the backend until it's destroyed (does not lock for this sink frontend!)
@@ -141,7 +141,7 @@ public:
     }
 
     //! The method writes the message to the sink
-    void write_message(attribute_values_view const& attributes, string_type const& message)
+    void write_message(values_view_type const& attributes, string_type const& message)
     {
         m_pBackend->write_message(attributes, message);
     }
@@ -238,7 +238,7 @@ public:
     typedef SinkBackendT sink_backend_type;
     BOOST_STATIC_ASSERT((is_model_supported< typename sink_backend_type::threading_model, frontend_synchronization_tag >::value));
 
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
     typedef typename base_type::string_type string_type;
 
     //! A pointer type that locks the backend until it's destroyed
@@ -263,7 +263,7 @@ public:
     }
 
     //! The method writes the message to the sink
-    void write_message(attribute_values_view const& attributes, string_type const& message)
+    void write_message(values_view_type const& attributes, string_type const& message)
     {
         scoped_lock _(m_Mutex);
         m_pBackend->write_message(attributes, message);
@@ -290,10 +290,10 @@ namespace aux {
         //! String type to be used as a message text holder
         typedef std::basic_string< char_type > string_type;
         //! Attribute values view type
-        typedef basic_attribute_values_view< char_type > attribute_values_view;
+        typedef basic_attribute_values_view< char_type > values_view_type;
 
         //! Callback type to call write_message in the backend
-        typedef void (*write_message_callback_t)(void*, attribute_values_view const&, string_type const&); 
+        typedef void (*write_message_callback_t)(void*, values_view_type const&, string_type const&); 
 
     private:
         class implementation;
@@ -304,7 +304,7 @@ namespace aux {
         ~asynchronous_sink_impl();
 
         //! The method puts the record into the queue
-        void enqueue_message(attribute_values_view const& attributes, string_type const& message);
+        void enqueue_message(values_view_type const& attributes, string_type const& message);
 
         //! Accessor to the shared lock for the locked_backend_ptr support
         optional< shared_backend_lock >& get_shared_backend_lock() const;
@@ -332,7 +332,7 @@ public:
     >::value));
 
     typedef typename base_type::char_type char_type;
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
     typedef typename base_type::string_type string_type;
 
     //! A pointer type that locks the backend until it's destroyed
@@ -360,7 +360,7 @@ public:
     }
 
     //! The method writes the message to the sink
-    void write_message(attribute_values_view const& attributes, string_type const& message)
+    void write_message(values_view_type const& attributes, string_type const& message)
     {
         m_Impl.enqueue_message(attributes, message);
     }
@@ -372,7 +372,7 @@ public:
 
 private:
     //! Trampoline function to invoke the backend
-    static void write_message_trampoline(void* pBackend, attribute_values_view const& attributes, string_type const& message)
+    static void write_message_trampoline(void* pBackend, values_view_type const& attributes, string_type const& message)
     {
         sink_backend_type* p = reinterpret_cast< sink_backend_type* >(pBackend);
         p->write_message(attributes, message);

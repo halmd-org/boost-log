@@ -115,13 +115,13 @@ public:
             //! A list of sinks that will accept the record
             sink_list AcceptingSinks;
             //! Attribute values view
-            attribute_values_view AttributeValues;
+            values_view_type AttributeValues;
 
             //! Constructor
             pending_record(
-                attribute_set const& SourceAttrs,
-                attribute_set const& ThreadAttrs,
-                attribute_set const& GlobalAttrs
+                attribute_set_type const& SourceAttrs,
+                attribute_set_type const& ThreadAttrs,
+                attribute_set_type const& GlobalAttrs
             ) : AttributeValues(SourceAttrs, ThreadAttrs, GlobalAttrs)
             {
             }
@@ -130,7 +130,7 @@ public:
         std::stack< aux::exclusive_ptr< pending_record >, std::vector< aux::exclusive_ptr< pending_record > > > PendingRecords;
 
         //! Thread-specific attribute set
-        attribute_set ThreadAttributes;
+        attribute_set_type ThreadAttributes;
     };
 
 public:
@@ -141,7 +141,7 @@ public:
     sink_list Sinks;
 
     //! Global attribute set
-    attribute_set GlobalAttributes;
+    attribute_set_type GlobalAttributes;
     //! Thread-specific data
     thread_specific_ptr< thread_data > pThreadData;
 
@@ -244,16 +244,16 @@ void basic_logging_core< CharT >::remove_sink(shared_ptr< sink_type > const& s)
 
 //! The method adds an attribute to the global attribute set
 template< typename CharT >
-std::pair< typename basic_logging_core< CharT >::attribute_set::iterator, bool >
+std::pair< typename basic_logging_core< CharT >::attribute_set_type::iterator, bool >
 basic_logging_core< CharT >::add_global_attribute(string_type const& name, shared_ptr< attribute > const& attr)
 {
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
-    return pImpl->GlobalAttributes.insert(typename attribute_set::key_type(name), attr);
+    return pImpl->GlobalAttributes.insert(typename attribute_set_type::key_type(name), attr);
 }
 
 //! The method removes an attribute from the global attribute set
 template< typename CharT >
-void basic_logging_core< CharT >::remove_global_attribute(typename attribute_set::iterator it)
+void basic_logging_core< CharT >::remove_global_attribute(typename attribute_set_type::iterator it)
 {
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
     pImpl->GlobalAttributes.erase(it);
@@ -261,14 +261,14 @@ void basic_logging_core< CharT >::remove_global_attribute(typename attribute_set
 
 //! The method returns the complete set of currently registered global attributes
 template< typename CharT >
-typename basic_logging_core< CharT >::attribute_set basic_logging_core< CharT >::get_global_attributes() const
+typename basic_logging_core< CharT >::attribute_set_type basic_logging_core< CharT >::get_global_attributes() const
 {
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
     return pImpl->GlobalAttributes;
 }
 //! The method replaces the complete set of currently registered global attributes with the provided set
 template< typename CharT >
-void basic_logging_core< CharT >::set_global_attributes(attribute_set const& attrs) const
+void basic_logging_core< CharT >::set_global_attributes(attribute_set_type const& attrs) const
 {
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
     pImpl->GlobalAttributes = attrs;
@@ -276,16 +276,16 @@ void basic_logging_core< CharT >::set_global_attributes(attribute_set const& att
 
 //! The method adds an attribute to the thread-specific attribute set
 template< typename CharT >
-std::pair< typename basic_logging_core< CharT >::attribute_set::iterator, bool >
+std::pair< typename basic_logging_core< CharT >::attribute_set_type::iterator, bool >
 basic_logging_core< CharT >::add_thread_attribute(string_type const& name, shared_ptr< attribute > const& attr)
 {
     typename implementation::thread_data* p = pImpl->get_thread_data();
-    return p->ThreadAttributes.insert(typename attribute_set::key_type(name), attr);
+    return p->ThreadAttributes.insert(typename attribute_set_type::key_type(name), attr);
 }
 
 //! The method removes an attribute from the thread-specific attribute set
 template< typename CharT >
-void basic_logging_core< CharT >::remove_thread_attribute(typename attribute_set::iterator it)
+void basic_logging_core< CharT >::remove_thread_attribute(typename attribute_set_type::iterator it)
 {
     typename implementation::thread_data* p = pImpl->pThreadData.get();
     if (p)
@@ -294,14 +294,14 @@ void basic_logging_core< CharT >::remove_thread_attribute(typename attribute_set
 
 //! The method returns the complete set of currently registered thread-specific attributes
 template< typename CharT >
-typename basic_logging_core< CharT >::attribute_set basic_logging_core< CharT >::get_thread_attributes() const
+typename basic_logging_core< CharT >::attribute_set_type basic_logging_core< CharT >::get_thread_attributes() const
 {
     typename implementation::thread_data* p = pImpl->get_thread_data();
     return p->ThreadAttributes;
 }
 //! The method replaces the complete set of currently registered thread-specific attributes with the provided set
 template< typename CharT >
-void basic_logging_core< CharT >::set_thread_attributes(attribute_set const& attrs) const
+void basic_logging_core< CharT >::set_thread_attributes(attribute_set_type const& attrs) const
 {
     typename implementation::thread_data* p = pImpl->get_thread_data();
     p->ThreadAttributes = attrs;
@@ -325,7 +325,7 @@ void basic_logging_core< CharT >::reset_filter()
 
 //! The method opens a new record to be written and returns true if the record was opened
 template< typename CharT >
-bool basic_logging_core< CharT >::open_record(attribute_set const& source_attributes)
+bool basic_logging_core< CharT >::open_record(attribute_set_type const& source_attributes)
 {
     // Try a quick win first
     if (pImpl->Enabled) try
@@ -388,7 +388,7 @@ void basic_logging_core< CharT >::push_record(string_type const& message_text)
         if (tsd->PendingRecords.empty())
         {
             // If push_record was called with no prior call to open_record, we call it here
-            attribute_set empty_source_attributes;
+            attribute_set_type empty_source_attributes;
             if (!this->open_record(empty_source_attributes))
                 return;
         }

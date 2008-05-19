@@ -67,7 +67,7 @@ public:
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
     //! Attribute values set type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:
     //! Scope stack container type
@@ -86,15 +86,23 @@ private:
 public:
     //! Constructor
     template< typename T1, typename T2 >
-    fmt_named_scope(T1 const& name, T2 const& delimiter, typename scope_stack::size_type max_scopes, keywords::scope_iteration_values direction)
-        : m_AttributeName(name), m_ScopeDelimiter(delimiter), m_MaxScopes(max_scopes), m_IterationDirection(direction)
+    fmt_named_scope(
+        T1 const& name,
+        T2 const& delimiter,
+        typename scope_stack::size_type max_scopes,
+        keywords::scope_iteration_values direction
+    ) :
+        m_AttributeName(name),
+        m_ScopeDelimiter(delimiter),
+        m_MaxScopes(max_scopes),
+        m_IterationDirection(direction)
     {
     }
 
     //! Output operator
-    void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const&) const
+    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const&) const
     {
-        typename attribute_values_view::const_iterator it = attrs.find(m_AttributeName);
+        typename values_view_type::const_iterator it = attrs.find(m_AttributeName);
         if (it != attrs.end())
         {
             optional< scope_stack const& > maybe_scopes = it->second->get< scope_stack >();
@@ -165,7 +173,8 @@ namespace aux {
         typedef fmt_named_scope< CharT > fmt_named_scope_t;
 
         keywords::scope_iteration_values direction = args[keywords::scope_iteration | keywords::forward];
-        const CharT* default_delimiter = (direction == keywords::forward ? default_scope_delimiter< CharT >::forward() : default_scope_delimiter< CharT >::reverse());
+        const CharT* default_delimiter =
+            (direction == keywords::forward ? default_scope_delimiter< CharT >::forward() : default_scope_delimiter< CharT >::reverse());
 
         return fmt_named_scope_t(
             name,
@@ -180,7 +189,8 @@ namespace aux {
         typedef fmt_named_scope< CharT > fmt_named_scope_t;
 
         keywords::scope_iteration_values direction = args[keywords::scope_iteration | keywords::forward];
-        const CharT* default_delimiter = (direction == keywords::forward ? default_scope_delimiter< CharT >::forward() : default_scope_delimiter< CharT >::reverse());
+        const CharT* default_delimiter =
+            (direction == keywords::forward ? default_scope_delimiter< CharT >::forward() : default_scope_delimiter< CharT >::reverse());
 
         return fmt_named_scope_t(
             name,

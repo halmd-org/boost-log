@@ -87,7 +87,7 @@ class basic_named_scope_list :
     protected std::allocator< basic_named_scope_entry< CharT > >
 {
     //! Self type
-    typedef basic_named_scope_list< CharT >this_type;
+    typedef basic_named_scope_list< CharT > this_type;
 
 public:
     //! Character type

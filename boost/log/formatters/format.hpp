@@ -55,11 +55,11 @@ public:
     //! Boost.Format type
     typedef basic_format< char_type > format_type;
     //! Attribute values set type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:
     //! Formatter function object type
-    typedef function3< void, ostream_type&, attribute_values_view const&, string_type const& > formatter_type;
+    typedef function3< void, ostream_type&, values_view_type const&, string_type const& > formatter_type;
     //! Sequence of formatters
     typedef std::vector< formatter_type > formatters;
 
@@ -93,7 +93,7 @@ public:
     }
 
     //! Output operator
-    void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const& msg) const
+    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
         log::aux::cleanup_guard< format_type > cleanup1(m_Format);
         log::aux::cleanup_guard< ostream_type > cleanup2(m_Stream);

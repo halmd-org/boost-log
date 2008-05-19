@@ -90,7 +90,7 @@ void basic_text_ostream_backend< CharT >::auto_flush(bool f)
 //! The method writes the message to the sink
 template< typename CharT >
 void basic_text_ostream_backend< CharT >::do_write_message(
-    attribute_values_view const& attributes, string_type const& message)
+    values_view_type const& attributes, string_type const& message)
 {
     typename string_type::const_pointer const p = message.data();
     typename string_type::size_type const s = message.size();

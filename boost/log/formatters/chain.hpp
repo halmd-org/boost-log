@@ -50,7 +50,7 @@ public:
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
     //! Attribute values set type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:
     //! Left formatter
@@ -64,7 +64,7 @@ public:
     fmt_chain(LeftFmtT const& left, RightT const& right) : m_Left(left), m_Right(right) {}
 
     //! Output operator
-    void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const& msg) const
+    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
         m_Left(strm, attrs, msg);
         m_Right(strm, attrs, msg);

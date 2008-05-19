@@ -255,7 +255,7 @@ public:
     //! String type to be used as a message text holder
     typedef std::basic_string< char_type > string_type;
     //! Attribute set type
-    typedef basic_attribute_set< char_type > attribute_set;
+    typedef basic_attribute_set< char_type > attribute_set_type;
     //! Logging system core type
     typedef basic_logging_core< char_type > logging_core_type;
     //! Threading model type
@@ -270,7 +270,7 @@ private:
     shared_ptr< logging_core_type > m_pLoggingSystem;
 
     //! Logger-specific attribute set
-    attribute_set m_Attributes;
+    attribute_set_type m_Attributes;
 
 public:
     //! Constructor
@@ -298,14 +298,14 @@ public:
     }
 
     //! The method adds an attribute to the logger
-    std::pair< typename attribute_set::iterator, bool > add_attribute(
+    std::pair< typename attribute_set_type::iterator, bool > add_attribute(
         string_type const& name, shared_ptr< attribute > const& attr)
     {
         lock_guard< threading_model > _(threading_base());
         return add_attribute_unlocked(name, attr);
     }
     //! The method removes an attribute from the logger
-    void remove_attribute(typename attribute_set::iterator it)
+    void remove_attribute(typename attribute_set_type::iterator it)
     {
         lock_guard< threading_model > _(threading_base());
         remove_attribute_unlocked(it);
@@ -346,9 +346,9 @@ protected:
     //! An accessor to the logging system pointer
     shared_ptr< logging_core_type > const& core() const { return m_pLoggingSystem; }
     //! An accessor to the logger attributes
-    attribute_set& attributes() { return m_Attributes; }
+    attribute_set_type& attributes() { return m_Attributes; }
     //! An accessor to the logger attributes
-    attribute_set const& attributes() const { return m_Attributes; }
+    attribute_set_type const& attributes() const { return m_Attributes; }
     //! An accessor to the threading model base
     threading_model& threading_base() { return *this; }
     //! An accessor to the threading model base
@@ -380,13 +380,13 @@ protected:
     }
 
     //! The method adds an attribute to the logger
-    std::pair< typename attribute_set::iterator, bool > add_attribute_unlocked(
+    std::pair< typename attribute_set_type::iterator, bool > add_attribute_unlocked(
         string_type const& name, shared_ptr< attribute > const& attr)
     {
         return m_Attributes.insert(std::make_pair(name, attr));
     }
     //! The method removes an attribute from the logger
-    void remove_attribute_unlocked(typename attribute_set::iterator it)
+    void remove_attribute_unlocked(typename attribute_set_type::iterator it)
     {
         m_Attributes.erase(it);
     }

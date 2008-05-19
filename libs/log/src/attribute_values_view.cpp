@@ -114,8 +114,8 @@ public:
 
     //! Constructs elements at the end of the view that correspond to the elements of the specified sequence
     void adopt_nodes(
-        typename attribute_set::const_iterator& it,
-        typename attribute_set::const_iterator end)
+        typename attribute_set_type::const_iterator& it,
+        typename attribute_set_type::const_iterator end)
     {
         for (; it != end; ++it)
             push_back(it->first, it->second.get());
@@ -124,10 +124,10 @@ public:
     //! The function ensures the order of the created nodes and discards elements from [it2, end2) that have
     //! keys equivalent to the corresponding elements in [it1, end1).
     void adopt_nodes(
-        typename attribute_set::const_iterator& it1,
-        typename attribute_set::const_iterator end1,
-        typename attribute_set::const_iterator& it2,
-        typename attribute_set::const_iterator end2)
+        typename attribute_set_type::const_iterator& it1,
+        typename attribute_set_type::const_iterator end1,
+        typename attribute_set_type::const_iterator& it2,
+        typename attribute_set_type::const_iterator end2)
     {
         while (true)
         {
@@ -198,9 +198,9 @@ public:
 //! The constructor adopts three attribute sets to the view
 template< typename CharT >
 basic_attribute_values_view< CharT >::basic_attribute_values_view(
-    attribute_set const& source_attrs,
-    attribute_set const& thread_attrs,
-    attribute_set const& global_attrs)
+    attribute_set_type const& source_attrs,
+    attribute_set_type const& thread_attrs,
+    attribute_set_type const& global_attrs)
 {
     // Allocate the implementation container
     size_type max_size = source_attrs.size() + thread_attrs.size() + global_attrs.size();
@@ -209,7 +209,7 @@ basic_attribute_values_view< CharT >::basic_attribute_values_view(
     if (max_size > 0)
     {
         // Compose the view. All copies performed bellow don't throw, so we are safe now.
-        typename attribute_set::const_iterator
+        typename attribute_set_type::const_iterator
             src = source_attrs.begin(),
             esrc = source_attrs.end(),
             trd = thread_attrs.begin(),
@@ -260,7 +260,7 @@ basic_attribute_values_view< CharT >::basic_attribute_values_view(
             {
                 // Source, thread and global attributes left
                 // Select the least-keyed attribute
-                register typename attribute_set::const_iterator* pIt = &src;
+                register typename attribute_set_type::const_iterator* pIt = &src;
                 register int cmp = (*pIt)->first.compare(trd->first);
                 if (cmp > 0)
                     pIt = &trd;

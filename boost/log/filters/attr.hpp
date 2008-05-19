@@ -61,7 +61,7 @@ public:
     //! String type
     typedef typename base_type::string_type string_type;
     //! Attribute values container type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
     //! Predicate functor type
     typedef FunT checker_type;
 
@@ -96,7 +96,7 @@ public:
     {
     }
 
-    bool operator() (attribute_values_view const& values) const
+    bool operator() (values_view_type const& values) const
     {
         bool result = false;
         checker_wrapper receiver(m_Checker, result);
@@ -151,9 +151,9 @@ namespace aux {
         //! String type
         typedef std::basic_string< char_type > string_type;
         //! Attribute values container type
-        typedef basic_attribute_values_view< char_type > attribute_values_view;
+        typedef basic_attribute_values_view< char_type > values_view_type;
         //! Size type
-        typedef typename attribute_values_view::size_type size_type;
+        typedef typename values_view_type::size_type size_type;
         //! Supported attribute value types
         typedef AttributeValueTypesT attribute_value_types;
     

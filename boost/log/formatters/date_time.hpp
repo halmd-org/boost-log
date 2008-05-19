@@ -619,7 +619,7 @@ public:
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
     //! Attribute values set type
-    typedef typename base_type::attribute_values_view attribute_values_view;
+    typedef typename base_type::values_view_type values_view_type;
 
 private:
     //! Actual formatter type
@@ -645,7 +645,7 @@ public:
     }
 
     //! Output stream operator
-    void operator() (ostream_type& strm, attribute_values_view const& attrs, string_type const&) const
+    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const&) const
     {
         log::aux::cleanup_guard< formatter_type > _(m_Formatter);
         m_Extractor(attrs, m_Formatter);
