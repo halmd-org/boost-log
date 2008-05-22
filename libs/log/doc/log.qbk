@@ -8,7 +8,7 @@
         [@http://www.boost.org/LICENSE_1_0.txt]).
     ]
     [id log]
-    [last-revision $Date: 2008-05-18 12:16:43 $]
+    [last-revision $Date: 2008-05-22 19:48:37 $]
 ]
 
 [c++]
@@ -366,6 +366,51 @@ This section contains a more detailed description of library components and feat
 
 [section:sources Logging sources]
 
+[section:basic_logger Basic loggers]
+
+    #include <boost/log/sources/basic_logger.hpp>
+
+The simpliest logging sources provided by the library are loggers `logger` and its thread-safe version, `logger_mt` (`wlogger` and `wlogger_mt` for wide-character logging, accordingly). These loggers only provide an ability to store source-specific attributes within themselves and, of course, to form log records. This type of loggers should probably be used in case if there is no need in advanced features like severity level checks. It may well be used as a tool to collect application statistics and register application events, such as notifications and alarms. In such cases the logger is normally used in conjunction with [link log.advanced.attributes.scoped_attributes scoped attributes] to attach the needed data to the notification event. Below is an example of usage:
+
+    class network_connection
+    {
+        src::logger m_logger;
+        src::logger::attribute_set_type::iterator m_remote_addr;
+
+    public:
+        void on_connected(std::string const& remote_addr)
+        {
+            // Put the remote address into the logger to automatically attach it to every log record written through the logger
+            m_remote_addr = m_logger.add_attribute("RemoteAddress",
+                boost::make_shared< attr::constant< std::string > >(remote_addr)).first;
+
+            BOOST_LOG(m_logger) << "Connection established";
+        }
+        void on_disconnected()
+        {
+            BOOST_LOG(m_logger) << "Connection shut down";
+
+            // Remove the attribute with the remote address
+            m_logger.remove_attribute(m_remote_addr);
+        }
+        void on_data_received(std::size_t size)
+        {
+            // Put the size as an additional attrubute so it can be collected and accumulated later if needed
+            // The attribute will be attached to the only log record that is made within the current scope
+            BOOST_LOG_SCOPED_LOGGER_TAG(m_logger, "ReceivedSize", attr::constant< std::size_t >, size);
+            BOOST_LOG(m_logger) << "Some data received";
+        }
+        void on_data_sent(std::size_t size)
+        {
+            BOOST_LOG_SCOPED_LOGGER_TAG(m_logger, "SentSize", attr::constant< std::size_t >, size);
+            BOOST_LOG(m_logger) << "Some data sent";
+        }
+    };
+
+Class `network_connection` in the code snippet above represents an approach of implementing simple logging and statistic information gathering in a network-related application. Each of the presented methods of the class effectively marks a corresponding event that may be tracked and collected on sinks level. Furthermore, other methods of the class, that are not shown here for simplicity, are able to write logs too. Note that every log record ever made in the connected state of the `network_connection` object will be implicitly marked up with an address of the remote site.
+
+[endsect]
+
 [endsect]
 
 [section:sink_frontends Sink Frontends]
@@ -387,6 +432,8 @@ This section contains a more detailed description of library components and feat
 [section:attributes Attributes]
 
 [section:named_scope Named scopes]
+
+    #include <boost/log/attributes/named_scope.hpp>
 
 The logging library supports mainaining scopes stack tracking during the application execution. This stack may either be written to log or be used for other needs (for example, to save the exact call sequence that led to and exception when throwing one). The attribute `named_scope` implements support for scope naming, one can register it the following way:
 
@@ -462,6 +509,10 @@ Another good case is attaching the scope stack information to an exception. With
                 << *boost::get_error_info< scopes_info >(e);
         }
     }
+
+[endsect]
+
+[section:scoped_attributes Scoped attributes]
 
 [endsect]
 
