@@ -132,7 +132,7 @@ struct basic_named_scope< CharT >::implementation :
         shared_ptr< implementation >
     > singleton_base_type;
 
-    //! Writeable scope list type
+    //! Writable scope list type
     typedef basic_writeable_named_scope_list< char_type > scope_list;
 
     //! Pointer to the thread-specific scope stack
@@ -236,10 +236,14 @@ typename basic_named_scope< CharT >::scope_stack const& basic_named_scope< CharT
 }
 
 //! Explicitly instantiate named_scope implementation
+#ifdef BOOST_LOG_USE_CHAR
 template class BOOST_LOG_EXPORT basic_named_scope< char >;
-template class BOOST_LOG_EXPORT basic_named_scope< wchar_t >;
 template class basic_named_scope_list< char >;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
+template class BOOST_LOG_EXPORT basic_named_scope< wchar_t >;
 template class basic_named_scope_list< wchar_t >;
+#endif
 
 } // namespace attributes
 

@@ -68,7 +68,12 @@
 
 #if !defined(BOOST_LOG_BUILDING_THE_LIB)
 
-#    if defined(BOOST_HAS_DECLSPEC)
+// Detect if we're dealing with dll
+#   if defined(BOOST_LOG_DYN_LINK) || defined(BOOST_ALL_DYN_LINK)
+#        define BOOST_LOG_DLL
+#   endif
+
+#    if defined(BOOST_HAS_DECLSPEC) && defined(BOOST_LOG_DLL)
 #        define BOOST_LOG_EXPORT __declspec(dllimport)
 #    else
 #        define BOOST_LOG_EXPORT
@@ -78,7 +83,7 @@
 // 
 #    if !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_LOG_NO_LIB)
 #        define BOOST_LIB_NAME boost_log
-#        if defined(BOOST_ALL_DYN_LINK) || defined(BOOST_LOG_DYN_LINK)
+#        if defined(BOOST_LOG_DLL)
 #            define BOOST_DYN_LINK
 #        endif
 #        include <boost/config/auto_link.hpp>
@@ -86,7 +91,7 @@
 
 #else // !defined(BOOST_LOG_BUILDING_THE_LIB)
 
-#    if defined(BOOST_HAS_DECLSPEC)
+#    if defined(BOOST_HAS_DECLSPEC) && defined(BOOST_LOG_DLL)
 #        define BOOST_LOG_EXPORT __declspec(dllexport)
 #    elif defined(__GNUC__) && __GNUC__ >= 4 && (defined(linux) || defined(__linux) || defined(__linux__))
 #        define BOOST_LOG_EXPORT __attribute__((visibility("default")))
@@ -100,5 +105,11 @@
 #if !defined(BOOST_LOG_USE_SYSLOG) && defined(BOOST_LOG_USE_NATIVE_SYSLOG)
 #    define BOOST_LOG_USE_SYSLOG
 #endif // !defined(BOOST_LOG_USE_SYSLOG) && defined(BOOST_LOG_USE_NATIVE_SYSLOG)
+
+#if !defined(BOOST_LOG_USE_CHAR) && !defined(BOOST_LOG_USE_WCHAR_T)
+// By default we provide support for both char and wchar_t
+#    define BOOST_LOG_USE_CHAR
+#    define BOOST_LOG_USE_WCHAR_T
+#endif // !defined(BOOST_LOG_USE_CHAR) && !defined(BOOST_LOG_USE_WCHAR_T)
 
 #endif // BOOST_LOG_DETAIL_PROLOGUE_HPP_INCLUDED_

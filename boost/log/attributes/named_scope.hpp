@@ -22,11 +22,13 @@
 #include <ostream>
 #include <memory>
 #include <iterator>
+#include <boost/log/detail/prologue.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/current_function.hpp>
 #include <boost/mpl/if.hpp>
+#ifdef BOOST_LOG_USE_WCHAR_T
 #include <boost/preprocessor/cat.hpp>
-#include <boost/log/detail/prologue.hpp>
+#endif
 #include <boost/log/utility/string_literal.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
 #include <boost/log/attributes/attribute.hpp>
@@ -335,18 +337,22 @@ typedef basic_named_scope< wchar_t > wnamed_scope;
     ::boost::log::attributes::named_scope::sentry var(name, file, line);\
     BOOST_LOG_NO_UNUSED_WARNINGS(var)
 
+#ifdef BOOST_LOG_USE_CHAR
 //! Macro for scope markup
 #define BOOST_LOG_NAMED_SCOPE(name)\
     BOOST_LOG_NAMED_SCOPE_INTERNAL(BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_named_scope_sentry_), name, __FILE__, __LINE__)
 
+//! Macro for function scope markup
+#define BOOST_LOG_FUNCTION() BOOST_LOG_NAMED_SCOPE(BOOST_CURRENT_FUNCTION)
+#endif
+
+#ifdef BOOST_LOG_USE_WCHAR_T
 //! Macro for scope markup
 #define BOOST_LOG_WNAMED_SCOPE(name)\
     BOOST_LOG_NAMED_SCOPE_INTERNAL(BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_named_scope_sentry_), name, BOOST_PP_CAT(L, __FILE__), __LINE__)
 
 //! Macro for function scope markup
-#define BOOST_LOG_FUNCTION() BOOST_LOG_NAMED_SCOPE(BOOST_CURRENT_FUNCTION)
-
-//! Macro for function scope markup
 #define BOOST_LOG_WFUNCTION() BOOST_LOG_WNAMED_SCOPE(BOOST_PP_CAT(L, BOOST_CURRENT_FUNCTION))
+#endif
 
 #endif // BOOST_LOG_ATTRIBUTES_NAMED_SCOPE_HPP_INCLUDED_

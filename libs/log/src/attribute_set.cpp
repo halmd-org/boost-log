@@ -419,8 +419,12 @@ basic_attribute_set< CharT >::find_impl(const char_type* key, size_type len)
     return iterator(m_pImpl->Nodes.find(typename implementation::light_key_type(key, len)).pointed_node());
 }
 
+#ifdef BOOST_LOG_USE_CHAR
 template class basic_attribute_set< char >;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 template class basic_attribute_set< wchar_t >;
+#endif
 
 } // namespace log
 

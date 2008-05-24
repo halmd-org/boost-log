@@ -235,8 +235,12 @@ public:
     void write_message(values_view_type const& attributes, string_type const& message);
 };
 
+#ifdef BOOST_LOG_USE_CHAR
 typedef basic_syslog_backend< char > syslog_backend;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 typedef basic_syslog_backend< wchar_t > wsyslog_backend;
+#endif
 
 } // namespace sinks
 

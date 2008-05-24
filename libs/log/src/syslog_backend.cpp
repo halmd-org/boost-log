@@ -215,8 +215,12 @@ void basic_syslog_backend< CharT >::write_message(
 }
 
 //! Explicitly instantiate sink implementation
+#ifdef BOOST_LOG_USE_CHAR
 template class BOOST_LOG_EXPORT basic_syslog_backend< char >;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 template class BOOST_LOG_EXPORT basic_syslog_backend< wchar_t >;
+#endif
 
 } // namespace sinks
 

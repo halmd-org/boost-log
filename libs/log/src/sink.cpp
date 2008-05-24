@@ -132,7 +132,7 @@ public:
         // Make sure that no references to the thread-specific data is left in attribute values
         for (typename values_view_type::const_iterator it = attributes.begin(), end = attributes.end(); it != end; ++it)
         {
-            // Yep, a bit hackish. I'll need a better backdoor to do it gacefully.
+            // Yep, a bit hackish. I'll need a better backdoor to do it gracefully.
             it->second->detach_from_thread().swap(
                     const_cast< typename values_view_type::mapped_type& >(it->second));
         }
@@ -218,8 +218,12 @@ optional< shared_backend_lock >& asynchronous_sink_impl< CharT >::get_shared_bac
     return pImpl->get_shared_backend_lock();
 }
 
+#ifdef BOOST_LOG_USE_CHAR
 template class BOOST_LOG_EXPORT asynchronous_sink_impl< char >;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 template class BOOST_LOG_EXPORT asynchronous_sink_impl< wchar_t >;
+#endif
 
 } // namespace aux
 

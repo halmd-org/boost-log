@@ -313,10 +313,15 @@ inline void swap(
 }
 
 //  Convenience typedefs
+#ifdef BOOST_LOG_USE_CHAR
 typedef basic_string_literal< char > string_literal;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 typedef basic_string_literal< wchar_t > wstring_literal;
+#endif
 
 //  Convenience generators
+#ifdef BOOST_LOG_USE_CHAR
 template< typename T, std::size_t LenV >
 inline typename enable_if<
     is_same< T, const char >,
@@ -325,7 +330,9 @@ inline typename enable_if<
 {
     return string_literal(p);
 }
+#endif
 
+#ifdef BOOST_LOG_USE_WCHAR_T
 template< typename T, std::size_t LenV >
 inline typename enable_if<
     is_same< T, const wchar_t >,
@@ -334,6 +341,7 @@ inline typename enable_if<
 {
     return wstring_literal(p);
 }
+#endif
 
 } // namespace log
 

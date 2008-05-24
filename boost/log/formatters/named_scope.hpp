@@ -153,18 +153,23 @@ namespace aux {
     //! Auxiliary traits to acquire correct default delimiter depending on the character type
     template< typename CharT >
     struct default_scope_delimiter;
+
+#ifdef BOOST_LOG_USE_CHAR
     template< >
     struct default_scope_delimiter< char >
     {
         static const char* forward() { return "->"; }
         static const char* reverse() { return "<-"; }
     };
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
     template< >
     struct default_scope_delimiter< wchar_t >
     {
         static const wchar_t* forward() { return L"->"; }
         static const wchar_t* reverse() { return L"<-"; }
     };
+#endif
 
     //! Auxiliary function to construct formatter from the complete set of arguments
     template< typename CharT, typename ArgsT >
@@ -201,6 +206,8 @@ namespace aux {
 
 } // namespace aux
 
+#ifdef BOOST_LOG_USE_CHAR
+
 //! Formatter generator
 inline fmt_named_scope< char > named_scope(const char* name)
 {
@@ -211,17 +218,6 @@ inline fmt_named_scope< char > named_scope(std::basic_string< char > const& name
 {
     return fmt_named_scope< char >(name, "->", (std::numeric_limits< std::size_t >::max)(), keywords::forward);
 }
-//! Formatter generator
-inline fmt_named_scope< wchar_t > named_scope(const wchar_t* name)
-{
-    return fmt_named_scope< wchar_t >(name, L"->", (std::numeric_limits< std::size_t >::max)(), keywords::forward);
-}
-//! Formatter generator
-inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const& name)
-{
-    return fmt_named_scope< wchar_t >(name, L"->", (std::numeric_limits< std::size_t >::max)(), keywords::forward);
-}
-
 
 //! Formatter generator
 template< typename T1 >
@@ -232,18 +228,6 @@ inline fmt_named_scope< char > named_scope(const char* name, T1 const& arg1)
 //! Formatter generator
 template< typename T1 >
 inline fmt_named_scope< char > named_scope(std::basic_string< char > const& name, T1 const& arg1)
-{
-    return aux::named_scope(name, arg1);
-}
-//! Formatter generator
-template< typename T1 >
-inline fmt_named_scope< wchar_t > named_scope(const wchar_t* name, T1 const& arg1)
-{
-    return aux::named_scope(name, arg1);
-}
-//! Formatter generator
-template< typename T1 >
-inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const& name, T1 const& arg1)
 {
     return aux::named_scope(name, arg1);
 }
@@ -260,6 +244,48 @@ inline fmt_named_scope< char > named_scope(std::basic_string< char > const& name
 {
     return aux::named_scope(name, (arg1, arg2));
 }
+
+//! Formatter generator
+template< typename T1, typename T2, typename T3 >
+inline fmt_named_scope< char > named_scope(const char* name, T1 const& arg1, T2 const& arg2, T3 const& arg3)
+{
+    return aux::named_scope(name, (arg1, arg2, arg3));
+}
+//! Formatter generator
+template< typename T1, typename T2, typename T3 >
+inline fmt_named_scope< char > named_scope(std::basic_string< char > const& name, T1 const& arg1, T2 const& arg2, T3 const& arg3)
+{
+    return aux::named_scope(name, (arg1, arg2, arg3));
+}
+
+#endif // BOOST_LOG_USE_CHAR
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+
+//! Formatter generator
+inline fmt_named_scope< wchar_t > named_scope(const wchar_t* name)
+{
+    return fmt_named_scope< wchar_t >(name, L"->", (std::numeric_limits< std::size_t >::max)(), keywords::forward);
+}
+//! Formatter generator
+inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const& name)
+{
+    return fmt_named_scope< wchar_t >(name, L"->", (std::numeric_limits< std::size_t >::max)(), keywords::forward);
+}
+
+//! Formatter generator
+template< typename T1 >
+inline fmt_named_scope< wchar_t > named_scope(const wchar_t* name, T1 const& arg1)
+{
+    return aux::named_scope(name, arg1);
+}
+//! Formatter generator
+template< typename T1 >
+inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const& name, T1 const& arg1)
+{
+    return aux::named_scope(name, arg1);
+}
+
 //! Formatter generator
 template< typename T1, typename T2 >
 inline fmt_named_scope< wchar_t > named_scope(const wchar_t* name, T1 const& arg1, T2 const& arg2)
@@ -275,18 +301,6 @@ inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const
 
 //! Formatter generator
 template< typename T1, typename T2, typename T3 >
-inline fmt_named_scope< char > named_scope(const char* name, T1 const& arg1, T2 const& arg2, T3 const& arg3)
-{
-    return aux::named_scope(name, (arg1, arg2, arg3));
-}
-//! Formatter generator
-template< typename T1, typename T2, typename T3 >
-inline fmt_named_scope< char > named_scope(std::basic_string< char > const& name, T1 const& arg1, T2 const& arg2, T3 const& arg3)
-{
-    return aux::named_scope(name, (arg1, arg2, arg3));
-}
-//! Formatter generator
-template< typename T1, typename T2, typename T3 >
 inline fmt_named_scope< wchar_t > named_scope(const wchar_t* name, T1 const& arg1, T2 const& arg2, T3 const& arg3)
 {
     return aux::named_scope(name, (arg1, arg2, arg3));
@@ -297,6 +311,8 @@ inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const
 {
     return aux::named_scope(name, (arg1, arg2, arg3));
 }
+
+#endif // BOOST_LOG_USE_WCHAR_T
 
 } // namespace formatters
 

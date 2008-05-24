@@ -213,8 +213,12 @@ inline void swap(basic_slim_string< CharT, TraitsT >& left, basic_slim_string< C
     left.swap(right);
 }
 
+#ifdef BOOST_LOG_USE_CHAR
 typedef basic_slim_string< char > slim_string;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 typedef basic_slim_string< wchar_t > slim_wstring;
+#endif
 
 } // namespace log
 

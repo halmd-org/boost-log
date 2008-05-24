@@ -343,19 +343,23 @@ parse_formatter(const CharT* begin, const CharT* end)
     return fmt;
 }
 
+#ifdef BOOST_LOG_USE_CHAR
 template BOOST_LOG_EXPORT
 void register_formatter_factory< char >(
     const char* attr_name,
     formatter_types< char >::formatter_factory const& factory);
 template BOOST_LOG_EXPORT
+formatter_types< char >::formatter_type parse_formatter< char >(const char* begin, const char* end);
+#endif
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+template BOOST_LOG_EXPORT
 void register_formatter_factory< wchar_t >(
     const wchar_t* attr_name,
     formatter_types< wchar_t >::formatter_factory const& factory);
-
-template BOOST_LOG_EXPORT
-formatter_types< char >::formatter_type parse_formatter< char >(const char* begin, const char* end);
 template BOOST_LOG_EXPORT
 formatter_types< wchar_t >::formatter_type parse_formatter< wchar_t >(const wchar_t* begin, const wchar_t* end);
+#endif
 
 } // namespace log
 

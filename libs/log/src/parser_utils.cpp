@@ -22,6 +22,7 @@ namespace log {
 
 namespace aux {
 
+#ifdef BOOST_LOG_USE_CHAR
 void char_constants< char >::translate_escape_sequences(std::basic_string< char_type >& str)
 {
     using namespace std; // to make sure we can use C functions unqualified
@@ -81,7 +82,9 @@ void char_constants< char >::translate_escape_sequences(std::basic_string< char_
         }
     }
 }
+#endif
 
+#ifdef BOOST_LOG_USE_WCHAR_T
 void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< char_type >& str)
 {
     std::basic_string< char_type >::iterator it = str.begin();
@@ -181,6 +184,7 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
         }
     }
 }
+#endif
 
 } // namespace aux
 

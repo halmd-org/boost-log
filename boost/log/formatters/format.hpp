@@ -121,6 +121,8 @@ private:
     fmt_format& operator= (fmt_format const& that);
 };
 
+#ifdef BOOST_LOG_USE_CHAR
+
 //! Formatter generator
 inline fmt_format< char > format(const char* fmt)
 {
@@ -133,6 +135,11 @@ inline fmt_format< char > format(std::basic_string< char > const& fmt)
     typedef fmt_format< char >::format_type format_type;
     return fmt_format< char >(format_type(fmt));
 }
+
+#endif
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+
 //! Formatter generator
 inline fmt_format< wchar_t > format(const wchar_t* fmt)
 {
@@ -145,6 +152,8 @@ inline fmt_format< wchar_t > format(std::basic_string< wchar_t > const& fmt)
     typedef fmt_format< wchar_t >::format_type format_type;
     return fmt_format< wchar_t >(format_type(fmt));
 }
+
+#endif
 
 } // namespace formatters
 

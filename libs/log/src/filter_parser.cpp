@@ -389,10 +389,14 @@ typename basic_logging_core< CharT >::filter_type parse_filter(const CharT* begi
     return filt;
 }
 
+#ifdef BOOST_LOG_USE_CHAR
 template BOOST_LOG_EXPORT
 basic_logging_core< char >::filter_type parse_filter< char >(const char* begin, const char* end);
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 template BOOST_LOG_EXPORT
 basic_logging_core< wchar_t >::filter_type parse_filter< wchar_t >(const wchar_t* begin, const wchar_t* end);
+#endif
 
 } // namespace log
 

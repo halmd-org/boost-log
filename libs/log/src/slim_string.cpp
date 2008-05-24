@@ -34,7 +34,7 @@ template< typename CharT, typename TraitsT >
 struct basic_slim_string< CharT, TraitsT >::implementation
 {
 private:
-    //! Auxilitary function object to implement character comparison through char_traits
+    //! Auxiliary function object to implement character comparison through char_traits
     struct eq_traits :
         public std::binary_function< char_type, char_type, bool >
     {
@@ -43,7 +43,7 @@ private:
             return traits_type::eq(left, right);
         }
     };
-    //! Auxilitary function object to implement character lookup
+    //! Auxiliary function object to implement character lookup
     struct eq_char_bound :
         public std::unary_function< char_type, bool >
     {
@@ -661,8 +661,12 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, c
         throw std::out_of_range("basic_slim_string::compare: the position is out of range");
 }
 
+#ifdef BOOST_LOG_USE_CHAR
 template class basic_slim_string< char, std::char_traits< char > >;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 template class basic_slim_string< wchar_t, std::char_traits< wchar_t > >;
+#endif
 
 } // namespace log
 

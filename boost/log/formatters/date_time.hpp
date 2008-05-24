@@ -75,6 +75,8 @@ namespace aux {
     //! A special base class that defines the default format strings
     template< typename >
     struct date_time_format_defaults;
+
+#ifdef BOOST_LOG_USE_CHAR
     template< >
     struct date_time_format_defaults< char >
     {
@@ -93,6 +95,8 @@ namespace aux {
         static string_literal_type time_period_end_placeholder() { return str_literal("%end%"); }
         static string_literal_type time_period_last_placeholder() { return str_literal("%last%"); }
     };
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
     template< >
     struct date_time_format_defaults< wchar_t >
     {
@@ -111,6 +115,7 @@ namespace aux {
         static string_literal_type time_period_end_placeholder() { return str_literal(L"%end%"); }
         static string_literal_type time_period_last_placeholder() { return str_literal(L"%last%"); }
     };
+#endif
 
     //! Base class for formatters
     template< typename CharT >
@@ -654,92 +659,99 @@ public:
 };
 
 
-#define BOOST_LOG_ITERATION_CHAR_TYPE char
-#define BOOST_LOG_ITERATION_KEYWORDS (format)
+#ifdef BOOST_LOG_USE_CHAR
 
-#define BOOST_LOG_ITERATION_NAME date_time
+#   define BOOST_LOG_ITERATION_CHAR_TYPE char
+#   define BOOST_LOG_ITERATION_KEYWORDS (format)
 
-#define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
-#define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
-#include BOOST_PP_ITERATE()
+#   define BOOST_LOG_ITERATION_NAME date_time
 
-#undef BOOST_LOG_ITERATION_NAME
-#define BOOST_LOG_ITERATION_NAME date
+#   define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
+#   define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
+#   include BOOST_PP_ITERATE()
 
-#define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
-#define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
-#include BOOST_PP_ITERATE()
+#   undef BOOST_LOG_ITERATION_NAME
+#   define BOOST_LOG_ITERATION_NAME date
 
-#undef BOOST_LOG_ITERATION_NAME
-#define BOOST_LOG_ITERATION_NAME time
+#   define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
+#   define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
+#   include BOOST_PP_ITERATE()
 
-#define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
-#define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
-#include BOOST_PP_ITERATE()
+#   undef BOOST_LOG_ITERATION_NAME
+#   define BOOST_LOG_ITERATION_NAME time
 
-#undef BOOST_LOG_ITERATION_NAME
-#define BOOST_LOG_ITERATION_NAME time_duration
+#   define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
+#   define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
+#   include BOOST_PP_ITERATE()
 
-#define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
-#define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
-#include BOOST_PP_ITERATE()
+#   undef BOOST_LOG_ITERATION_NAME
+#   define BOOST_LOG_ITERATION_NAME time_duration
 
-#undef BOOST_LOG_ITERATION_NAME
-#define BOOST_LOG_ITERATION_NAME time_period
-#undef BOOST_LOG_ITERATION_KEYWORDS
-#define BOOST_LOG_ITERATION_KEYWORDS (format)(unit_format)
+#   define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
+#   define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
+#   include BOOST_PP_ITERATE()
 
-#define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
-#define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
-#include BOOST_PP_ITERATE()
+#   undef BOOST_LOG_ITERATION_NAME
+#   define BOOST_LOG_ITERATION_NAME time_period
+#   undef BOOST_LOG_ITERATION_KEYWORDS
+#   define BOOST_LOG_ITERATION_KEYWORDS (format)(unit_format)
 
+#   define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
+#   define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
+#   include BOOST_PP_ITERATE()
 
-#undef BOOST_LOG_ITERATION_CHAR_TYPE
-#define BOOST_LOG_ITERATION_CHAR_TYPE wchar_t
-#undef BOOST_LOG_ITERATION_KEYWORDS
-#define BOOST_LOG_ITERATION_KEYWORDS (format)
+#   undef BOOST_LOG_ITERATION_NAME
+#   undef BOOST_LOG_ITERATION_CHAR_TYPE
+#   undef BOOST_LOG_ITERATION_KEYWORDS
 
-#undef BOOST_LOG_ITERATION_NAME
-#define BOOST_LOG_ITERATION_NAME date_time
+#endif // BOOST_LOG_USE_CHAR
 
-#define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
-#define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
-#include BOOST_PP_ITERATE()
+#ifdef BOOST_LOG_USE_WCHAR_T
 
-#undef BOOST_LOG_ITERATION_NAME
-#define BOOST_LOG_ITERATION_NAME date
+#   define BOOST_LOG_ITERATION_CHAR_TYPE wchar_t
+#   define BOOST_LOG_ITERATION_KEYWORDS (format)
 
-#define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
-#define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
-#include BOOST_PP_ITERATE()
+#   define BOOST_LOG_ITERATION_NAME date_time
 
-#undef BOOST_LOG_ITERATION_NAME
-#define BOOST_LOG_ITERATION_NAME time
+#   define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
+#   define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
+#   include BOOST_PP_ITERATE()
 
-#define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
-#define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
-#include BOOST_PP_ITERATE()
+#   undef BOOST_LOG_ITERATION_NAME
+#   define BOOST_LOG_ITERATION_NAME date
 
-#undef BOOST_LOG_ITERATION_NAME
-#define BOOST_LOG_ITERATION_NAME time_duration
+#   define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
+#   define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
+#   include BOOST_PP_ITERATE()
 
-#define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
-#define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
-#include BOOST_PP_ITERATE()
+#   undef BOOST_LOG_ITERATION_NAME
+#   define BOOST_LOG_ITERATION_NAME time
 
-#undef BOOST_LOG_ITERATION_NAME
-#define BOOST_LOG_ITERATION_NAME time_period
-#undef BOOST_LOG_ITERATION_KEYWORDS
-#define BOOST_LOG_ITERATION_KEYWORDS (format)(unit_format)
+#   define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
+#   define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
+#   include BOOST_PP_ITERATE()
 
-#define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
-#define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
-#include BOOST_PP_ITERATE()
+#   undef BOOST_LOG_ITERATION_NAME
+#   define BOOST_LOG_ITERATION_NAME time_duration
 
+#   define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
+#   define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
+#   include BOOST_PP_ITERATE()
 
-#undef BOOST_LOG_ITERATION_NAME
-#undef BOOST_LOG_ITERATION_CHAR_TYPE
-#undef BOOST_LOG_ITERATION_KEYWORDS
+#   undef BOOST_LOG_ITERATION_NAME
+#   define BOOST_LOG_ITERATION_NAME time_period
+#   undef BOOST_LOG_ITERATION_KEYWORDS
+#   define BOOST_LOG_ITERATION_KEYWORDS (format)(unit_format)
+
+#   define BOOST_PP_FILENAME_1 <boost/log/formatters/date_time.hpp>
+#   define BOOST_PP_ITERATION_LIMITS (0, BOOST_PP_SEQ_SIZE(BOOST_LOG_ITERATION_KEYWORDS))
+#   include BOOST_PP_ITERATE()
+
+#   undef BOOST_LOG_ITERATION_NAME
+#   undef BOOST_LOG_ITERATION_CHAR_TYPE
+#   undef BOOST_LOG_ITERATION_KEYWORDS
+
+#endif // BOOST_LOG_USE_WCHAR_T
 
 } // namespace formatters
 

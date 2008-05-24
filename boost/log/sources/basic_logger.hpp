@@ -131,7 +131,7 @@ namespace aux {
         //! Output stream type
         typedef std::basic_ostream< char_type > ostream_type;
 
-        //! Formatting stheam compound
+        //! Formatting stream compound
         struct stream_compound
         {
             //! The string to be written to
@@ -433,6 +433,8 @@ inline void swap(
     static_cast< FinalT& >(left).swap(static_cast< FinalT& >(right));
 }
 
+#ifdef BOOST_LOG_USE_CHAR
+
 //! Narrow-char logger
 class logger :
     public basic_logger< char, logger, single_thread_model >
@@ -449,26 +451,6 @@ public:
     }
 
     void swap(logger& that)
-    {
-        swap_unlocked(that);
-    }
-};
-//! Wide-char logger
-class wlogger :
-    public basic_logger< wchar_t, wlogger, single_thread_model >
-{
-public:
-    wlogger& operator= (wlogger const& that)
-    {
-        if (this != &that)
-        {
-            wlogger tmp(that);
-            swap_unlocked(tmp);
-        }
-        return *this;
-    }
-
-    void swap(wlogger& that)
     {
         swap_unlocked(that);
     }
@@ -510,6 +492,32 @@ public:
         swap_unlocked(that);
     }
 };
+
+#endif // BOOST_LOG_USE_CHAR
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+
+//! Wide-char logger
+class wlogger :
+    public basic_logger< wchar_t, wlogger, single_thread_model >
+{
+public:
+    wlogger& operator= (wlogger const& that)
+    {
+        if (this != &that)
+        {
+            wlogger tmp(that);
+            swap_unlocked(tmp);
+        }
+        return *this;
+    }
+
+    void swap(wlogger& that)
+    {
+        swap_unlocked(that);
+    }
+};
+
 //! Wide-char thread-safe logger
 class wlogger_mt :
     public basic_logger< wchar_t, wlogger_mt, multi_thread_model >
@@ -546,6 +554,8 @@ public:
         swap_unlocked(that);
     }
 };
+
+#endif // BOOST_LOG_USE_WCHAR_T
 
 } // namespace sources
 
@@ -633,6 +643,8 @@ public:
         }\
     }
 
+#ifdef BOOST_LOG_USE_CHAR
+
 /*!
  *  \brief The macro declares a narrow-char logger class that inherits a number of base classes
  * 
@@ -643,6 +655,22 @@ public:
  */
 #define BOOST_LOG_DECLARE_LOGGER(type_name, base_seq)\
     BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, ::boost::log::sources::single_thread_model)
+
+/*!
+ *  \brief The macro declares a narrow-char thread-safe logger class that inherits a number of base classes
+ * 
+ *  Equivalent to BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, multi_thread_model)
+ * 
+ *  \param type_name The name of the logger class to declare
+ *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
+ */
+#define BOOST_LOG_DECLARE_LOGGER_MT(type_name, base_seq)\
+    BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, ::boost::log::sources::multi_thread_model)
+
+#endif // BOOST_LOG_USE_CHAR
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+
 /*!
  *  \brief The macro declares a wide-char logger class that inherits a number of base classes
  * 
@@ -655,16 +683,6 @@ public:
     BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq, ::boost::log::sources::single_thread_model)
 
 /*!
- *  \brief The macro declares a narrow-char thread-safe logger class that inherits a number of base classes
- * 
- *  Equivalent to BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, multi_thread_model)
- * 
- *  \param type_name The name of the logger class to declare
- *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
- */
-#define BOOST_LOG_DECLARE_LOGGER_MT(type_name, base_seq)\
-    BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, ::boost::log::sources::multi_thread_model)
-/*!
  *  \brief The macro declares a wide-char thread-safe logger class that inherits a number of base classes
  * 
  *  Equivalent to BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq, multi_thread_model)
@@ -674,5 +692,7 @@ public:
  */
 #define BOOST_LOG_DECLARE_WLOGGER_MT(type_name, base_seq)\
     BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq, ::boost::log::sources::multi_thread_model)
+
+#endif // BOOST_LOG_USE_WCHAR_T
 
 #endif // BOOST_LOG_SOURCES_BASIC_LOGGER_HPP_INCLUDED_

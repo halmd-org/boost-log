@@ -79,6 +79,7 @@ namespace aux {
     template< typename CharT >
     struct file_controller_traits;
 
+#ifdef BOOST_LOG_USE_CHAR
     template< >
     struct file_controller_traits< char >
     {
@@ -124,7 +125,9 @@ namespace aux {
 #endif // defined(_MSC_VER)
         }
     };
+#endif // BOOST_LOG_USE_CHAR
 
+#ifdef BOOST_LOG_USE_WCHAR_T
     template< >
     struct file_controller_traits< wchar_t >
     {
@@ -151,6 +154,7 @@ namespace aux {
             return &swprintf;
         }
     };
+#endif // BOOST_LOG_USE_WCHAR_T
 
     //! Base class for file controller instantiations
     struct BOOST_LOG_NO_VTABLE file_controller_base
@@ -683,10 +687,14 @@ private:
     }
 };
 
+#ifdef BOOST_LOG_USE_CHAR
 //! Narrow-char stream type
 typedef basic_rotating_ofstream< char > rotating_ofstream;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 //! Wide-char stream type
 typedef basic_rotating_ofstream< wchar_t > rotating_wofstream;
+#endif
 
 } // namespace log
 

@@ -119,8 +119,12 @@ void basic_text_ostream_backend< CharT >::do_write_message(
 }
 
 //! Explicitly instantiate sink backend implementation
+#ifdef BOOST_LOG_USE_CHAR
 template class BOOST_LOG_EXPORT basic_text_ostream_backend< char >;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 template class BOOST_LOG_EXPORT basic_text_ostream_backend< wchar_t >;
+#endif
 
 } // namespace sinks
 

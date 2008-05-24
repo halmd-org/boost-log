@@ -35,17 +35,23 @@ namespace log {
 
 namespace sources {
 
+#ifdef BOOST_LOG_USE_CHAR
+
 //! Narrow-char logger with severity level and channel support
 BOOST_LOG_DECLARE_LOGGER(severity_channel_logger, (basic_severity_logger)(basic_channel_logger));
-
-//! Wide-char logger with severity level and channel support
-BOOST_LOG_DECLARE_WLOGGER(wseverity_channel_logger, (basic_severity_logger)(basic_channel_logger));
-
 //! Narrow-char thread-safe logger with severity level and channel support
 BOOST_LOG_DECLARE_LOGGER_MT(severity_channel_logger_mt, (basic_severity_logger)(basic_channel_logger));
 
+#endif
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+
+//! Wide-char logger with severity level and channel support
+BOOST_LOG_DECLARE_WLOGGER(wseverity_channel_logger, (basic_severity_logger)(basic_channel_logger));
 //! Wide-char thread-safe logger with severity level and channel support
 BOOST_LOG_DECLARE_WLOGGER_MT(wseverity_channel_logger_mt, (basic_severity_logger)(basic_channel_logger));
+
+#endif
 
 } // namespace sources
 

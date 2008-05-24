@@ -23,9 +23,9 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/joint_view.hpp>
 #include <boost/log/detail/prologue.hpp>
-#ifdef BOOST_NO_INTRINSIC_WCHAR_T
+#if defined(BOOST_NO_INTRINSIC_WCHAR_T) && defined(BOOST_LOG_USE_WCHAR_T)
 #include <boost/mpl/push_back.hpp>
-#endif // BOOST_NO_INTRINSIC_WCHAR_T
+#endif // defined(BOOST_NO_INTRINSIC_WCHAR_T) && defined(BOOST_LOG_USE_WCHAR_T)
 
 namespace boost {
 
@@ -71,8 +71,12 @@ struct basic_string_types :
 {
 };
 
+#ifdef BOOST_LOG_USE_CHAR
 typedef basic_string_types< char > string_types;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 typedef basic_string_types< wchar_t > wstring_types;
+#endif
 
 //! An auxiliary type sequence maker. The sequence contains all
 //! attribute value types that are supported by the library by default.
@@ -85,7 +89,7 @@ struct make_default_attribute_types :
 {
 };
 
-#ifdef BOOST_NO_INTRINSIC_WCHAR_T
+#if defined(BOOST_NO_INTRINSIC_WCHAR_T) && defined(BOOST_LOG_USE_WCHAR_T)
 
 //! Remove wchar_t from the list since it's a typedef
 template< >
@@ -97,7 +101,7 @@ struct make_default_attribute_types< wchar_t > :
 {
 };
 
-#endif // BOOST_NO_INTRINSIC_WCHAR_T
+#endif // defined(BOOST_NO_INTRINSIC_WCHAR_T) && defined(BOOST_LOG_USE_WCHAR_T)
 
 } // namespace log
 

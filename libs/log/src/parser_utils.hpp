@@ -22,6 +22,7 @@
 #include <string>
 #include <iostream>
 #include <boost/compatibility/cpp_c_headers/cctype>
+#include <boost/log/detail/prologue.hpp>
 
 namespace boost {
 
@@ -32,6 +33,7 @@ namespace aux {
 //! Some constants and algorithms needed for parsing
 template< typename > struct char_constants;
 
+#ifdef BOOST_LOG_USE_CHAR
 template< >
 struct char_constants< char >
 {
@@ -101,7 +103,9 @@ struct char_constants< char >
 
     static void translate_escape_sequences(std::basic_string< char_type >& str);
 };
+#endif
 
+#ifdef BOOST_LOG_USE_WCHAR_T
 template< >
 struct char_constants< wchar_t >
 {
@@ -175,6 +179,7 @@ struct char_constants< wchar_t >
 
     static void translate_escape_sequences(std::basic_string< char_type >& str);
 };
+#endif
 
 } // namespace aux
 

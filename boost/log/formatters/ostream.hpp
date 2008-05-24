@@ -30,7 +30,7 @@ namespace log {
 
 namespace formatters {
 
-//! A placeholder class to represent a stream in formatters lambda expressions
+//! A placeholder class to represent a stream in lambda expressions of formatters
 template< typename CharT >
 struct stream_placeholder
 {
@@ -54,11 +54,15 @@ struct stream_placeholder
 template< typename CharT >
 const stream_placeholder< CharT > stream_placeholder< CharT >::instance = {};
 
-//  Placeholders to begin lambda expresions
+//  Placeholders to begin lambda expressions
 namespace {
 
+#ifdef BOOST_LOG_USE_CHAR
     stream_placeholder< char > const& ostrm = stream_placeholder< char >::instance;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
     stream_placeholder< wchar_t > const& wostrm = stream_placeholder< wchar_t >::instance;
+#endif
 
 } // namespace
 

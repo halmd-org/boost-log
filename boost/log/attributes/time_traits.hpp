@@ -34,7 +34,7 @@ struct basic_time_traits
     //! Time type
     typedef posix_time::ptime time_type;
 
-    //! Cutternt time source
+    //! Current time source
 #if defined(BOOST_DATE_TIME_HAS_HIGH_PRECISION_CLOCK)
     typedef posix_time::microsec_clock clock_source;
 #else

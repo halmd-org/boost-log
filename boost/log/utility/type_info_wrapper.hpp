@@ -19,7 +19,12 @@
 #ifndef BOOST_LOG_UTILITY_TYPE_INFO_WRAPPER_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_TYPE_INFO_WRAPPER_HPP_INCLUDED_
 
+#ifdef __GNUC__
+#include <cxxabi.h>
+#include <memory.h>
+#endif // __GNUC__
 #include <typeinfo>
+#include <string>
 #include <boost/operators.hpp>
 #include <boost/log/detail/prologue.hpp>
 
@@ -52,6 +57,17 @@ private:
     typedef int (dummy::*unspecified_bool);
 #endif // BOOST_NO_UNSPECIFIED_BOOL
 
+#ifdef __GNUC__
+    //! A simple scope guard for automatic memory free
+    struct auto_free
+    {
+        explicit auto_free(void* p) : p_(p) {}
+        ~auto_free() { free(p_); }
+    private:    
+        void* p_;
+    };
+#endif // __GNUC__
+
 private:
     //! A pointer to the actual type info
     std::type_info const* info;
@@ -78,6 +94,31 @@ public:
 
     //! Type info getter
     std::type_info const& get() const { return *info; }
+
+    //! The method returns the contained type name string in a possibly more readable format than get().name()
+    std::string pretty_name() const
+    {
+        if (*info != typeid(uninitialized_state))
+        {
+#ifdef __GNUC__
+            // GCC returns decorated type name, will need to demangle it using ABI
+            int status = 0;
+            size_t size = 0;
+            const char* name = info->name();
+            char* undecorated = abi::__cxa_demangle(name, NULL, &size, &status);
+            auto_free _(undecorated);
+
+            if (undecorated)
+                return undecorated;
+            else
+                return name;
+#else
+            return info->name();
+#endif
+        }
+        else
+            return "[uninitialized]";
+    }
 
 #ifdef _MSC_VER
 #pragma warning(push)

@@ -109,8 +109,12 @@ void stream_provider< CharT >::release_compound(stream_compound* compound) /* th
 }
 
 //! Explicitly instantiate stream_provider implementation
+#ifdef BOOST_LOG_USE_CHAR
 template struct stream_provider< char >;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 template struct stream_provider< wchar_t >;
+#endif
 
 } // namespace aux
 

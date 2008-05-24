@@ -30,6 +30,7 @@
 #include <boost/function/function0.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
+#include <boost/log/utility/type_info_wrapper.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -133,13 +134,13 @@ struct logger_singleton :
             // is no protection against different definitions of logger type itself.
             char buf[std::numeric_limits< unsigned int >::digits10 + 3];
             std::sprintf(buf, "%u", holder->m_RegistrationLine);
-            std::string str = 
+            std::string str =
                 std::string("Could not initialize global logger with tag \"") +
-                typeid(TagT).name() +
+                type_info_wrapper(typeid(TagT)).pretty_name() +
                 "\" and type \"" +
-                typeid(logger_type).name() +
+                type_info_wrapper(typeid(logger_type)).pretty_name() +
                 "\". A logger of type \"" +
-                holder->logger_type().name() +
+                type_info_wrapper(holder->logger_type()).pretty_name() +
                 "\" with the same tag has already been registered at " +
                 holder->m_RegistrationFile + ":" + buf + ".";
 

@@ -73,8 +73,12 @@ shared_ptr< logger_holder_base > global_storage< CharT >::get_or_init(
 }
 
 //! Explicitly instantiate global_storage implementation
+#ifdef BOOST_LOG_USE_CHAR
 template struct global_storage< char >;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 template struct global_storage< wchar_t >;
+#endif
 
 } // namespace aux
 

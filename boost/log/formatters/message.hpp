@@ -53,16 +53,20 @@ public:
     }
 };
 
+#ifdef BOOST_LOG_USE_CHAR
 //! Formatter generator
 inline fmt_message< char > message()
 {
     return fmt_message< char >();
 }
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 //! Formatter generator
 inline fmt_message< wchar_t > wmessage()
 {
     return fmt_message< wchar_t >();
 }
+#endif
 
 } // namespace formatters
 

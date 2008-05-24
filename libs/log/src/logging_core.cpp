@@ -127,7 +127,10 @@ public:
             }
         };
         //! A stack of records being validated and pushed to the sinks
-        std::stack< aux::exclusive_ptr< pending_record >, std::vector< aux::exclusive_ptr< pending_record > > > PendingRecords;
+        std::stack<
+            aux::exclusive_ptr< pending_record >,
+            std::vector< aux::exclusive_ptr< pending_record > >
+        > PendingRecords;
 
         //! Thread-specific attribute set
         attribute_set_type ThreadAttributes;
@@ -425,9 +428,13 @@ void basic_logging_core< CharT >::cancel_record()
     }
 }
 
-//! Explicitly instantiate logging_core implementation
+//  Explicitly instantiate logging_core implementation
+#ifdef BOOST_LOG_USE_CHAR
 template class BOOST_LOG_EXPORT basic_logging_core< char >;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 template class BOOST_LOG_EXPORT basic_logging_core< wchar_t >;
+#endif
 
 } // namespace log
 

@@ -49,16 +49,21 @@ namespace aux {
     //! A helper traits to get channel attribute name constant in the proper type
     template< typename >
     struct channel_attribute_name;
+
+#ifdef BOOST_LOG_USE_CHAR
     template< >
     struct channel_attribute_name< char >
     {
         static const char* get() { return "Channel"; }
     };
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
     template< >
     struct channel_attribute_name< wchar_t >
     {
         static const wchar_t* get() { return L"Channel"; }
     };
+#endif
 
 } // namespace aux
 
@@ -127,17 +132,23 @@ private:
     static string_type make_default_channel_name() { return string_type(); }
 };
 
+#ifdef BOOST_LOG_USE_CHAR
+
 //! Narrow-char logger with channel support
 BOOST_LOG_DECLARE_LOGGER(channel_logger, (basic_channel_logger));
-
-//! Wide-char logger with channel support
-BOOST_LOG_DECLARE_WLOGGER(wchannel_logger, (basic_channel_logger));
-
 //! Narrow-char thread-safe logger with channel support
 BOOST_LOG_DECLARE_LOGGER_MT(channel_logger_mt, (basic_channel_logger));
 
-//! Wide-char thraed-safe logger with channel support
+#endif // BOOST_LOG_USE_CHAR
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+
+//! Wide-char logger with channel support
+BOOST_LOG_DECLARE_WLOGGER(wchannel_logger, (basic_channel_logger));
+//! Wide-char thread-safe logger with channel support
 BOOST_LOG_DECLARE_WLOGGER_MT(wchannel_logger_mt, (basic_channel_logger));
+
+#endif // BOOST_LOG_USE_WCHAR_T
 
 } // namespace sources
 

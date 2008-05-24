@@ -83,6 +83,8 @@ public:
     }
 };
 
+#ifdef BOOST_LOG_USE_CHAR
+
 //! Formatter generator
 inline fmt_attr<
     char,
@@ -91,6 +93,20 @@ inline fmt_attr<
 {
     return fmt_attr< char, make_default_attribute_types< char >::type >(name);
 }
+//! Formatter generator with ability to specify an exact attribute value type(s)
+template< typename AttributeValueTypesT >
+inline fmt_attr<
+    char,
+    AttributeValueTypesT
+> attr(std::basic_string< char > const& name)
+{
+    return fmt_attr< char, AttributeValueTypesT >(name);
+}
+
+#endif
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+
 //! Formatter generator
 inline fmt_attr<
     wchar_t,
@@ -103,21 +119,14 @@ inline fmt_attr<
 //! Formatter generator with ability to specify an exact attribute value type(s)
 template< typename AttributeValueTypesT >
 inline fmt_attr<
-    char,
-    AttributeValueTypesT
-> attr(std::basic_string< char > const& name)
-{
-    return fmt_attr< char, AttributeValueTypesT >(name);
-}
-//! Formatter generator with ability to specify an exact attribute value type(s)
-template< typename AttributeValueTypesT >
-inline fmt_attr<
     wchar_t,
     AttributeValueTypesT
 > attr(std::basic_string< wchar_t > const& name)
 {
     return fmt_attr< wchar_t, AttributeValueTypesT >(name);
 }
+
+#endif
 
 
 //! Abstract type attribute formatter with format specifier
@@ -176,6 +185,8 @@ public:
     }
 };
 
+#ifdef BOOST_LOG_USE_CHAR
+
 //! Formatter generator
 inline fmt_attr_formatted<
     char,
@@ -184,6 +195,20 @@ inline fmt_attr_formatted<
 {
     return fmt_attr_formatted< char, make_default_attribute_types< char >::type >(name, fmt);
 }
+//! Formatter generator with ability to specify an exact attribute value type(s)
+template< typename AttributeValueTypesT >
+inline fmt_attr_formatted<
+    char,
+    AttributeValueTypesT
+> attr(std::basic_string< char > const& name, std::basic_string< char > const& fmt)
+{
+    return fmt_attr_formatted< char, AttributeValueTypesT >(name, fmt);
+}
+
+#endif
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+
 //! Formatter generator
 inline fmt_attr_formatted<
     wchar_t,
@@ -196,21 +221,14 @@ inline fmt_attr_formatted<
 //! Formatter generator with ability to specify an exact attribute value type(s)
 template< typename AttributeValueTypesT >
 inline fmt_attr_formatted<
-    char,
-    AttributeValueTypesT
-> attr(std::basic_string< char > const& name, std::basic_string< char > const& fmt)
-{
-    return fmt_attr_formatted< char, AttributeValueTypesT >(name, fmt);
-}
-//! Formatter generator with ability to specify an exact attribute value type(s)
-template< typename AttributeValueTypesT >
-inline fmt_attr_formatted<
     wchar_t,
     AttributeValueTypesT
 > attr(std::basic_string< wchar_t > const& name, std::basic_string< wchar_t > const& fmt)
 {
     return fmt_attr_formatted< wchar_t, AttributeValueTypesT >(name, fmt);
 }
+
+#endif
 
 } // namespace formatters
 

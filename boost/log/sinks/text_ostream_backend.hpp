@@ -94,8 +94,12 @@ private:
     void do_write_message(values_view_type const& attributes, string_type const& formatted_message);
 };
 
+#ifdef BOOST_LOG_USE_CHAR
 typedef basic_text_ostream_backend< char > text_ostream_backend;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 typedef basic_text_ostream_backend< wchar_t > wtext_ostream_backend;
+#endif
 
 } // namespace sinks
 

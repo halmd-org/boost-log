@@ -139,8 +139,12 @@ public:
     void cancel_record();
 };
 
+#ifdef BOOST_LOG_USE_CHAR
 typedef basic_logging_core< char > logging_core;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 typedef basic_logging_core< wchar_t > wlogging_core;
+#endif
 
 } // namespace log
 

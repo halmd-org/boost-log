@@ -54,16 +54,21 @@ namespace aux {
     //! A helper traits to get severity attribute name constant in the proper type
     template< typename >
     struct severity_attribute_name;
+
+#ifdef BOOST_LOG_USE_CHAR
     template< >
     struct severity_attribute_name< char >
     {
         static const char* get() { return "Severity"; }
     };
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
     template< >
     struct severity_attribute_name< wchar_t >
     {
         static const wchar_t* get() { return L"Severity"; }
     };
+#endif
 
     //! Severity level attribute implementation
     class severity_level :
@@ -212,17 +217,23 @@ private:
     basic_severity_logger& operator= (basic_severity_logger const&);
 };
 
+#ifdef BOOST_LOG_USE_CHAR
+
 //! Narrow-char logger with severity level support
 BOOST_LOG_DECLARE_LOGGER(severity_logger, (basic_severity_logger));
-
-//! Wide-char logger with severity level support
-BOOST_LOG_DECLARE_WLOGGER(wseverity_logger, (basic_severity_logger));
-
 //! Narrow-char thread-safe logger with severity level support
 BOOST_LOG_DECLARE_LOGGER_MT(severity_logger_mt, (basic_severity_logger));
 
-//! Wide-char thraed-safe logger with severity level support
+#endif
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+
+//! Wide-char logger with severity level support
+BOOST_LOG_DECLARE_WLOGGER(wseverity_logger, (basic_severity_logger));
+//! Wide-char thread-safe logger with severity level support
 BOOST_LOG_DECLARE_WLOGGER_MT(wseverity_logger_mt, (basic_severity_logger));
+
+#endif
 
 } // namespace sources
 

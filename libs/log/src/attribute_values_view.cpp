@@ -353,8 +353,12 @@ void basic_attribute_values_view< CharT >::freeze()
 }
 
 //! Explicitly instantiate container implementation
+#ifdef BOOST_LOG_USE_CHAR
 template class basic_attribute_values_view< char >;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 template class basic_attribute_values_view< wchar_t >;
+#endif
 
 } // namespace log
 
