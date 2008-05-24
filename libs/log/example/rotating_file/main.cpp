@@ -18,14 +18,13 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #endif // _CRT_SECURE_NO_WARNINGS
 
-#define BOOST_LOG_DYN_LINK 1
+// #define BOOST_LOG_DYN_LINK 1
 
 #include <stdexcept>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <boost/shared_ptr.hpp>
-#include <boost/empty_deleter.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #include <boost/log/logging_core.hpp>
@@ -36,6 +35,7 @@
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/rotating_ofstream.hpp>
+#include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/formatters/format.hpp>
 #include <boost/log/formatters/attr.hpp>
 #include <boost/log/formatters/date_time.hpp>
