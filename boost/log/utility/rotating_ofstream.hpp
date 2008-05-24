@@ -48,6 +48,7 @@
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/narrowing_sstream_buf.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 #include <boost/log/utility/record_writer.hpp>

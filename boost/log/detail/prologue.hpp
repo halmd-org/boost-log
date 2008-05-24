@@ -22,6 +22,17 @@
 
 #include <boost/config.hpp>
 
+#if defined(_MSC_VER) && !defined(_STLPORT_VERSION)
+// MSVC 9.0 mandates packaging of STL classes, which apparently affects alignment and
+// makes alignment_of< T >::value no longer be a power of 2 for types that derive from STL classes.
+// This breaks type_with_alignment and everything that relies on it.
+// This doesn't happen with non-native STLs, such as STLPort. Strangely, this doesn't show with
+// STL classes themselves or most of the user-defined derived classes.
+// Not sure if that happens with other MSVC versions.
+// See: http://svn.boost.org/trac/boost/ticket/1946
+#define BOOST_LOG_BROKEN_STL_ALIGNMENT
+#endif
+
 // Extended declaration macros. Used to implement compiler-specific optimizations.
 #if defined(_MSC_VER)
 #    define BOOST_LOG_FASTCALL __fastcall

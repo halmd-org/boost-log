@@ -292,8 +292,14 @@ private:
                 isstream strm(rotation_interval_param->second);
                 strm >> interval;
 
+#ifndef BOOST_LOG_BROKEN_STL_ALIGNMENT
                 file_stream = boost::make_shared< basic_rotating_ofstream< char_type > >(
                     file_name, keywords::rotation_interval = interval);
+#else
+                file_stream.reset(new basic_rotating_ofstream< char_type > (
+                    file_name, keywords::rotation_interval = interval));
+#endif // BOOST_LOG_BROKEN_STL_ALIGNMENT
+
             }
             break;
 
@@ -304,8 +310,13 @@ private:
                 isstream strm(rotation_size_param->second);
                 strm >> size;
 
+#ifndef BOOST_LOG_BROKEN_STL_ALIGNMENT
                 file_stream = boost::make_shared< basic_rotating_ofstream< char_type > >(
                     file_name, keywords::rotation_size = size);
+#else
+                file_stream.reset(new basic_rotating_ofstream< char_type >(
+                    file_name, keywords::rotation_size = size));
+#endif // BOOST_LOG_BROKEN_STL_ALIGNMENT
             }
             break;
 
@@ -320,8 +331,13 @@ private:
                 isstream strm_size(rotation_size_param->second);
                 strm_size >> size;
 
+#ifndef BOOST_LOG_BROKEN_STL_ALIGNMENT
                 file_stream = boost::make_shared< basic_rotating_ofstream< char_type > >(
                     file_name, keywords::rotation_interval = interval, keywords::rotation_size = size);
+#else
+                file_stream.reset(new basic_rotating_ofstream< char_type >(
+                    file_name, keywords::rotation_interval = interval, keywords::rotation_size = size));
+#endif // BOOST_LOG_BROKEN_STL_ALIGNMENT
             }
             break;
 

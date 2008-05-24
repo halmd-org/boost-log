@@ -13,6 +13,7 @@
  */
 
 #include <iterator>
+#include <algorithm>
 #include "parser_utils.hpp"
 
 namespace boost {
