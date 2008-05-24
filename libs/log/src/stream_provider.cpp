@@ -12,9 +12,6 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#include <exception>
-#include <stack>
-#include <vector>
 #include <boost/thread/tss.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/detail/singleton.hpp>
@@ -46,15 +43,16 @@ class stream_compound_pool :
     typedef typename stream_provider< CharT >::stream_compound stream_compound_t;
 
 public:
-    //! Stream compounds pool
-    std::stack< stream_compound_t*, std::vector< stream_compound_t* > > m_Pool;
+    //! Pooled stream compounds
+    stream_compound_t* m_Top;
 
     ~stream_compound_pool()
     {
-        while (!m_Pool.empty())
+        register stream_compound_t* p = NULL;
+        while ((p = m_Top) != NULL)
         {
-            delete m_Pool.top();
-            m_Pool.pop();
+            m_Top = p->next;
+            delete p;
         }
     }
 
@@ -70,7 +68,7 @@ public:
     }
 
 private:
-    stream_compound_pool() {}
+    stream_compound_pool() : m_Top(NULL) {}
 };
 
 } // namespace
@@ -80,10 +78,11 @@ template< typename CharT >
 typename stream_provider< CharT >::stream_compound* stream_provider< CharT >::allocate_compound()
 {
     stream_compound_pool< char_type >& pool = stream_compound_pool< char_type >::get();
-    if (!pool.m_Pool.empty())
+    if (pool.m_Top)
     {
-        register stream_compound* p = pool.m_Pool.top();
-        pool.m_Pool.pop();
+        register stream_compound* p = pool.m_Top;
+        pool.m_Top = p->next;
+        p->next = NULL;
         return p;
     }
     else
@@ -94,18 +93,11 @@ typename stream_provider< CharT >::stream_compound* stream_provider< CharT >::al
 template< typename CharT >
 void stream_provider< CharT >::release_compound(stream_compound* compound) /* throw() */
 {
-    try
-    {
-        stream_compound_pool< char_type >& pool = stream_compound_pool< char_type >::get();
-        pool.m_Pool.push(compound);
-        compound->message.clear();
-        compound->stream.clear();
-    }
-    catch (std::exception&)
-    {
-        // Just in case if stack allocation failed
-        delete compound;
-    }
+    stream_compound_pool< char_type >& pool = stream_compound_pool< char_type >::get();
+    compound->next = pool.m_Top;
+    pool.m_Top = compound;
+    compound->message.clear();
+    compound->stream.clear();
 }
 
 //! Explicitly instantiate stream_provider implementation

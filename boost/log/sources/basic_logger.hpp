@@ -134,6 +134,8 @@ namespace aux {
         //! Formatting stream compound
         struct stream_compound
         {
+            stream_compound* next;
+
             //! The string to be written to
             string_type message;
             //! The streambuf
@@ -142,6 +144,7 @@ namespace aux {
             ostream_type stream;
 
             stream_compound() :
+                next(NULL),
                 stream_buf(message),
                 stream(&stream_buf)
             {
