@@ -26,6 +26,7 @@ project boost/log
         <library>../../regex/build//boost_regex
         <library>../../filesystem/build//boost_filesystem
         <library>../../date_time/build//boost_date_time
+        <library>../../system/build//boost_system
     ;
 
 alias platform_log_sources
