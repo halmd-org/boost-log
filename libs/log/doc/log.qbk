@@ -8,7 +8,7 @@
         [@http://www.boost.org/LICENSE_1_0.txt]).
     ]
     [id log]
-    [last-revision $Date: 2008-05-22 19:48:37 $]
+    [last-revision $Date: 2008-05-28 20:05:14 $]
 ]
 
 [c++]
@@ -384,10 +384,13 @@ The simpliest logging sources provided by the library are loggers `logger` and i
             m_remote_addr = m_logger.add_attribute("RemoteAddress",
                 boost::make_shared< attr::constant< std::string > >(remote_addr)).first;
 
-            BOOST_LOG(m_logger) << "Connection established";
+            // The straightforward way of logging
+            if (m_logger.open_record())                         // check the filters
+                m_logger.strm() << "Connection established";    // format the record
         }
         void on_disconnected()
         {
+            // The simplier way of logging: the above "if" condition is wrapped into a neat macro
             BOOST_LOG(m_logger) << "Connection shut down";
 
             // Remove the attribute with the remote address
@@ -408,6 +411,116 @@ The simpliest logging sources provided by the library are loggers `logger` and i
     };
 
 Class `network_connection` in the code snippet above represents an approach of implementing simple logging and statistic information gathering in a network-related application. Each of the presented methods of the class effectively marks a corresponding event that may be tracked and collected on sinks level. Furthermore, other methods of the class, that are not shown here for simplicity, are able to write logs too. Note that every log record ever made in the connected state of the `network_connection` object will be implicitly marked up with an address of the remote site.
+
+[endsect]
+
+[section:severity_level_logger Loggers with severity level support]
+
+    #include <boost/log/sources/severity_logger.hpp>
+
+An ability to distinguish some log records from others based on some kind of level of severity or importance is one of the most frequently requested feature. The classes `severity_logger` and `severity_logger_mt` (along with their `wseverity_logger` and `wseverity_logger_mt` wide-char counterparts) provide this functionality.
+
+The loggers automatically register a special source-specific attribute "Severity" (attribute value type is `int`), which can be set for every record in a compact and efficient manner, with a named argument `severity` that can be passed to the constructor and/or the `open_record` method. If passed to the logger constructor, the `severity` argument sets the default value of the severity level that will be used if none provided in the `open_record` arguments. The `severity` argument passed to the `open_record` method sets the level of the particular log record being made.
+
+The actual values of this attribute and their meaning is entirely user-defined. However, it is recommended to use level of value equivalent to zero as a base point for other values. This is because the default-constructed logger object sets default severity level to zero. It is also recommended to define the same levels of severity for the entire application in order to avoid the confusion in the written logs later. The following code snippet shows the usage of `severity_logger`.
+
+    // User-defined severity levels
+    enum my_levels
+    {
+        normal,
+        warning,
+        error
+    };
+
+    void foo()
+    {
+        // The default-constructed logger will use default level 0
+        src::severity_logger lg;
+
+        // The straightforward usage with default severity level (which is 0)
+        if (lg.open_record())
+            lg.strm() << "A default-severity log record";
+
+        // The straightforward usage with a specific level value
+        if (lg.open_record(src::keywords::severity = warning))
+            lg.strm() << "A warning level log record";
+
+        // The default severity can be specified in constructor
+        src::severity_logger error_lg(src::keywords::severity = error);
+
+        // There are predefined macros that make the usage easier
+        BOOST_LOG_SEV(lg, warning) << "A warning level log record";
+
+        // Thanks to the default severity level, you can use the basic macros too
+        BOOST_LOG(error_lg) << "An error level log record";
+    }
+
+And, of course, severity loggers also provide the same functionality the [link log.advanced.sources.basic_logger basic loggers] do.
+
+[endsect]
+
+[section:channel_logger Loggers with channel support]
+
+    #include <boost/log/sources/channel_logger.hpp>
+
+Sometimes it is important to categorize log records based on some constant piece information, such as module or class name, relation of the logged information to some specific domain of application functionality (e.g. network or file system related messages) or some constant tag that may be used later to filter these records to a specific sink. This feature is fulfilled with loggers `channel_logger`, `channel_logger_mt` and their wide-char counterparts `wchannel_logger`, `wchannel_logger_mt`. These loggers automatically register a string attribute named "Channel". This attribute can be set only in the logger constructor with a named argument `channel` and cannot be changed during the logger lifetime. Aside from that the usage is similar to the [link log.advanced.sources.basic_logger basic loggers]:
+
+    class network_connection
+    {
+        src::channel_logger m_net;
+        src::channel_logger m_stat;
+        src::logger::attribute_set_type::iterator m_remote_addr;
+
+    public:
+        network_connection() :
+            // We can dump network-related messages through this logger and be able to filter them later
+            m_net(src::keywords::channel = "net"),
+            // We also can separate statistic records in a different channel in order to route them to a different sink
+            m_stat(src::keywords::channel = "stat")
+        {
+        }
+
+        void on_connected(std::string const& remote_addr)
+        {
+            // Put message to the "net" channel
+            BOOST_LOG(m_net) << "Connection established";
+        }
+        void on_disconnected()
+        {
+            // Put message to the "net" channel
+            BOOST_LOG(m_net) << "Connection shut down";
+        }
+        void on_data_received(std::size_t size)
+        {
+            // Put the size as an additional attrubute so it can be collected and accumulated later if needed
+            // The attribute will be attached to the only log record that is made within the current scope
+            BOOST_LOG_SCOPED_LOGGER_TAG(m_stat, "ReceivedSize", attr::constant< std::size_t >, size);
+            BOOST_LOG(m_stat) << "Some data received";
+        }
+        void on_data_sent(std::size_t size)
+        {
+            BOOST_LOG_SCOPED_LOGGER_TAG(m_stat, "SentSize", attr::constant< std::size_t >, size);
+            BOOST_LOG(m_stat) << "Some data sent";
+        }
+    };
+
+[endsect]
+
+[section:mixed_loggers Loggers with mixed features]
+
+    #include <boost/log/sources/severity_channel_logger.hpp>
+
+If you wonder whether you can use a mixed set of several logger features in one logger, then yes, you certainly can. The library provides `severity_channel_logger` and `severity_channel_logger_mt` (with their wide-char analogues `wseverity_channel_logger` and `wseverity_channel_logger_mt`) which combine features of the described loggers with [link log.advanced.sources.severity_level_logger severity level] and [link log.advanced.sources.channel_logger channels] support. You can also design your own logger features and combine them with the ones provided by the library, as described in the [link log.extension.sources Extending the library] section.
+
+[endsect]
+
+[section:global_storage Global storage for loggers]
+
+    #include <boost/log/sources/global_logger_storage.hpp>
+
+Sometimes it is inconvenient to have a logger object to be able to write logs. This issue is often present in a functional-style code with no obvious places where a logger could be stored. An other domain where the problem persists is generic libraries that want to support logging. In such cases it would be more convenient to have one or several global loggers in order to easily access them in every place when needed. In this regard `std::cout` is a good example of such a logger.
+
+The library provides a way to declare global loggers that can be accessed pretty much like `std::cout`. In fact, this feature can be used with any loggers, including user-defined ones. Having declared a global logger, one can be sure to have a thread-safe access to this logger instance from any place of the application code. The library also guarantees that a global logger instance will be singular even across module boundaries.
 
 [endsect]
 
