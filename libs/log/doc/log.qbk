@@ -8,7 +8,8 @@
         [@http://www.boost.org/LICENSE_1_0.txt]).
     ]
     [id log]
-    [last-revision $Date: 2008-05-28 20:05:14 $]
+    [source-mode c++]
+    [last-revision $Date: 2008-05-29 20:04:04 $]
 ]
 
 [c++]
@@ -71,7 +72,27 @@ For simplicity in the code snippets in this documentation it shall be assumed th
 
 [section:installation Installation]
 
-The library has the compiled part which should be built as described in the [@http://www.boost.org/doc/libs/release/more/getting_started/ Getting Started] article. One thing should be noted, though. If your aplication consists of more than one module (e.g. an exe and one or several dll's) the library *must* be built as a shared object. If you have a single executable, you may build the library as a static lib.
+The library has the compiled part which should be built as described in the [@http://www.boost.org/doc/libs/release/more/getting_started/ Getting Started] article. One thing should be noted, though. If your aplication consists of more than one module (e.g. an exe and one or several dll's) the library _must_ be built as a shared object. If you have a single executable, you may build the library as a static library.
+
+The library supports a number of configuration macros:
+
+[table Configuration macros
+    [[Macro name]                               [Effect]]
+    [[`BOOST_LOG_DYN_LINK`]                     [If defined in user code, the library will assume the binary is built as a dynamically loaded library (dll or so). Otherwise it is assumed that the library is built in static mode. This macro must be either defined or not defined for all translation units of user application that use logging. This macro can help with auto-linking on platforms that support it.]]
+    [[`BOOST_ALL_DYN_LINK`]                     [Same as `BOOST_LOG_DYN_LINK` but also affects other Boost libraries the same way]]
+    [[`BOOST_LOG_USE_CHAR`]                     [If defined, enables support for narrow character logging. Has effect on both the library compilation and user code compilation.]]
+    [[`BOOST_LOG_USE_WCHAR_T`]                  [If defined, enables support for wide character logging. Has effect on both the library compilation and user code compilation. If neither `BOOST_LOG_USE_CHAR` nor `BOOST_LOG_USE_WCHAR_T` is defined, it is assumed the both character types support is enabled. Defining only one of them allows to significantly reduce binary size of the library.]]
+    [[`BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER`] [Has effect on Windows platform only, on both the library compilation and user code compilation stages. If defined, disables support for `QueryPerformanceCounter` API in the `timer` attribute. This will result in a significantly less accurate time readings and may reduce performance a little. The macro is intended to solve possible problems with earlier revisions of AMD Athlon CPU, described [@http://support.microsoft.com/?scid=kb;en-us;895980 here] and [@http://support.microsoft.com/?id=896256 here].]]
+    [[`BOOST_LOG_USE_NATIVE_SYSLOG`]            [Has effect on the library compilation stage. If for some reason the support for native SysLog API is not detected, define this macro to enable support for SysLog.]]
+]
+
+You may define configuration macros in the `bjam` command line, like this:
+
+[pre
+    bjam --with-log variant=release define=BOOST_LOG_USE_CHAR stage
+]
+
+The logging library also uses several Boost libraries that need building too. These are [@http://www.boost.org/doc/libs/release/libs/filesystem/doc/index.htm Boost.Filesystem], [@http://www.boost.org/doc/libs/release/libs/system/doc/index.html Boost.System], [@http://www.boost.org/doc/libs/release/doc/html/date_time.html Boost.DateTime], [@http://www.boost.org/doc/libs/release/doc/html/thread.html Boost.Thread] and [@http://www.boost.org/doc/libs/release/libs/regex/index.html Boost.Regex]. Refer to their documentation for detailed instructions on building procedure.
 
 [endsect]
 
@@ -144,7 +165,7 @@ Note that unlike sinks sources need not to be registered anywhere since they int
 Regardless of the threas safety, all loggers provided by the library are default and copy-constructible and support swapping, so there should be no problem in making a logger a member of your class. As you will see later, such approach can give you additional benefits.
 
 [endsect]
-
+BOOST_LOG_DECLARE_GLOBAL_LOGGER_INITBOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT
 [section Creating loggers: Function oriented programming style]
 
 In case if you cannot put a logger into your class (suppose you don't have one), the library provides a way of declaring global loggers like this:
@@ -296,9 +317,9 @@ Some manipulators may accept additional arguments that customize their behavior.
 
     using namespace fmt::keywords; // All argument name keywords reside in this namespace
     pSink->locked_backend()->set_formatter(fmt::ostrm
-        << fmt::attr< unsigned int >("LineID", format="%08x") // make the line numbers to be written in hex, 8 symbols long
+        << fmt::attr< unsigned int >("LineID", format = "%08x") // make the line numbers to be written in hex, 8 symbols long
         << ": <" << fmt::attr< int >("Severity")
-        << "> [" << fmt::named_scope("Scope", scope_iteration=reverse, scope_depth=4) // make scope iteration top-to-bottom, no more than 4 scopes to be written
+        << "> [" << fmt::named_scope("Scope", scope_iteration = reverse, scope_depth = 4) // make scope iteration top-to-bottom, no more than 4 scopes to be written
         << "] " << fmt::message());
 
 For the reference of the supported arguments see the reference of the corresponding manipulator. More manipulators are described in the [link log.advanced.formatters Advanced] section.
@@ -323,9 +344,9 @@ The `format` placeholder accepts the format string with positional specification
 
     pSink->locked_backend()->set_formatter(
         fmt::format("%1%: <%2%> [%3%] %4%")
-            % fmt::attr< unsigned int >("LineID", format="%08x")
+            % fmt::attr< unsigned int >("LineID", format = "%08x")
             % fmt::attr< int >("Severity")
-            % fmt::named_scope("Scope", scope_iteration=reverse, scope_depth=4)
+            % fmt::named_scope("Scope", scope_iteration = reverse, scope_depth = 4)
             % fmt::message());
 
 [endsect]
@@ -520,7 +541,47 @@ If you wonder whether you can use a mixed set of several logger features in one 
 
 Sometimes it is inconvenient to have a logger object to be able to write logs. This issue is often present in a functional-style code with no obvious places where a logger could be stored. An other domain where the problem persists is generic libraries that want to support logging. In such cases it would be more convenient to have one or several global loggers in order to easily access them in every place when needed. In this regard `std::cout` is a good example of such a logger.
 
-The library provides a way to declare global loggers that can be accessed pretty much like `std::cout`. In fact, this feature can be used with any loggers, including user-defined ones. Having declared a global logger, one can be sure to have a thread-safe access to this logger instance from any place of the application code. The library also guarantees that a global logger instance will be singular even across module boundaries.
+The library provides a way to declare global loggers that can be accessed pretty much like `std::cout`. In fact, this feature can be used with any loggers, including user-defined ones. Having declared a global logger, one can be sure to have a thread-safe access to this logger instance from any place of the application code. The library also guarantees that a global logger instance will be singular even across module boundaries. This allows to employ logging even in header-only components that may be compiled into different modules.
+
+The easiest way to declare a global logger is to use the following macro:
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::severity_logger_mt)
+
+The `my_logger` argument gives the logger a name that may be used to acquire the logger instance. The second parameter denotes the logger type. In multithreaded applications, when the logger can be accessed from different threads, users will normally want to use thread-safe versions of loggers.
+
+In case if there is a need to pass arguments to the logger constructor, there is another macro:
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS(
+        my_logger,
+        src::severity_channel_logger,
+        (src::keywords::severity = error)(src::keywords::channel = "my_channel"))
+
+The last macro argument is a [@http://www.boost.org/doc/libs/release/libs/preprocessor/doc/index.html Boost.Preprocessor] sequence of arguments passed to the logger constructor. Be careful, however, when using non-constant expressions and references to objects as constructor arguments, since the arguments are evaluated only once and it is often difficult to tell the exact moment when it is done. The logger is constructed on the first request from whichever part of the application that has the knowledge of the logger declaration. It is up to user to make sure that all arguments have valid states at that point.
+
+The third macro of this section provides maximum flexibility, allowing user to actually define the logic of creating the logger.
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, src::severity_logger_mt)
+    {
+        // Do something that needs to be done on logger initialization, e.g. add a stop watch attribute
+        src::severity_logger_mt lg;
+        lg.add_attribute("StopWatch", boost::make_shared< attrs::timer >());
+        // The initializing routine must return the logger instance
+        return lg;
+    }
+
+Like the `BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS` macro, the initializing code is called only once, on the first request of the logger.
+
+[important Beware of the One Definition Rule (ODR) violation issues. Regardless of the way of logger declaration you choose, you should ensure that [_the logger is declared in exactly the same way at all occurrences] and [_all symbol names involved in the declaration resolve to the same entities]. The latter includes the names used within the initialization routine of the `BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT` macro, such as references to external variables, functions and types. The library tries to protect itself from ODR violations to a certain degree, but in general the behavior is undefined if the rule is violated.]
+
+In order to acquire the logger instance you may use either
+
+    src::severity_logger_mt& lg = get_my_logger();
+
+or
+
+    src::severity_logger_mt& lg = my_logger::get();
+
+which are equivalent. Further usage of the logger is completely the same as it was a regular logger object of the corresponding type.
 
 [endsect]
 

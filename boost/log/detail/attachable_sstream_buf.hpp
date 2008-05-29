@@ -25,7 +25,7 @@
 #include <boost/log/detail/prologue.hpp>
 
 #ifndef BOOST_LOG_DEFAULT_ATTACHABLE_SSTREAM_BUF_SIZE
-//! The size (in chars) of a stream buffer used by logger. It affects logger object size.
+//! The size (in chars) of a stream buffer used by logger.
 //! \note The Boost.Log library should be rebuilt once this value is modified.
 #define BOOST_LOG_DEFAULT_ATTACHABLE_SSTREAM_BUF_SIZE 16
 #endif // BOOST_LOG_DEFAULT_ATTACHABLE_SSTREAM_BUF_SIZE
