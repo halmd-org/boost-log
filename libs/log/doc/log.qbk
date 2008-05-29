@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-05-29 20:04:04 $]
+    [last-revision $Date: 2008-05-29 20:19:11 $]
 ]
 
 [c++]
@@ -53,7 +53,7 @@ Here are definitions of some terms that will be used widely throughout the docum
 
 The documentation is oriented to both newbies and experienced library users. However, users are expected to be familiar with the commonly used Boost components, such as `shared_ptr`, `make_shared` (see [@http://www.boost.org/doc/libs/release/libs/smart_ptr/smart_ptr.htm Boost.SmartPtr]), and `function` ([@http://www.boost.org/doc/libs/release/doc/html/function.html Boost.Function]). Some parts of the documentation will refer to other Boost libraries as needed.
 
-If this is your first experience with the library, it is recommended to read the [link log.installation Instalation] and [link log.tutorial Tutorial] sections first. The tutorial gives the overview of the library features with sample code snippets. Some tutorial steps are presented in two forms: easy and advanced. The easy form typically describes the most common and simple way to do the task and it is being recommended to be read by newbies. The advanced form usually gives an expanded way to do the same thing but with ability to do some extra customization. It also often explains the library features behind the easy interface in a more detailed way. This form may come handy for more experienced users and should generally be read if your needs are not satisfied with the easy way.
+If this is your first experience with the library, it is recommended to read the [link log.installation Instalation] and [link log.tutorial Tutorial] sections first. The tutorial gives the overview of the library features with sample code snippets. Some tutorial steps are presented in two forms: simple and advanced. The simple form typically describes the most common and easy way to do the task and it is being recommended to be read by newbies. The advanced form usually gives an expanded way to do the same thing but with ability to do some extra customization. It also often explains the library features behind the simple interface in a more detailed way. This form may come handy for more experienced users and should generally be read if your needs are not satisfied with the easy way.
 
 Besides the tutorial there is an [link advanced Advanced features] chapter. This part gives description of other tools provided by the library that were not covered by the tutorial. This chapter is better to be read on per-case basis.
 
@@ -102,7 +102,7 @@ In this section we shall walk through the essential steps to get started with th
 
 [section:tutorial_1 Step 1: Picking sinks]
 
-[section The easy form]
+[section The simple form]
 
 The first thing you'll have to do is to decide where and how you want logs to be stored. In terms of the library you have to construct logging sinks and register them into the logging core. This should be done only once somewhere in the startup code of your application. The library provides support for several different logging sinks, such as STL streams and syslog where available, and a simplified interface to register them like that:
 
@@ -165,7 +165,7 @@ Note that unlike sinks sources need not to be registered anywhere since they int
 Regardless of the threas safety, all loggers provided by the library are default and copy-constructible and support swapping, so there should be no problem in making a logger a member of your class. As you will see later, such approach can give you additional benefits.
 
 [endsect]
-BOOST_LOG_DECLARE_GLOBAL_LOGGER_INITBOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT
+
 [section Creating loggers: Function oriented programming style]
 
 In case if you cannot put a logger into your class (suppose you don't have one), the library provides a way of declaring global loggers like this:
@@ -229,7 +229,7 @@ Aside from that, there are three possible scopes of attributes: source-specific,
 
 Getting back to our tutorial, let's add some attributes to our application.
 
-[section The easy form]
+[section The simple form]
 
 There are attributes that are most likely to be used in almost any application. These are log record counter and a timestamp. They can be added with a single function call:
 
@@ -267,7 +267,7 @@ You can see here that the `open_record` can take named arguments. Some logger ty
 
 [section The advanced form]
 
-Let's see what's under the hood of that `add_common_attributes` function we used in the easy form section. It might look something like this:
+Let's see what's under the hood of that `add_common_attributes` function we used in the simple form section. It might look something like this:
 
     boost::shared_ptr< logging::logging_core > pCore = logging::logging_core::get();
     pCore->add_global_attribute(
@@ -587,21 +587,46 @@ which are equivalent. Further usage of the logger is completely the same as it w
 
 [endsect]
 
+
 [section:sink_frontends Sink Frontends]
 
+[section:unlocked Unlocked sink frontend]
+
 [endsect]
+
+[section:sync Synchronous sink frontend]
+
+[endsect]
+
+[section:async Asynchronous sink frontend]
+
+[endsect]
+
+[endsect]
+
 
 [section:sink_backends Sink Backends]
 
+[section:text_ostream Text stream backend]
+
 [endsect]
+
+[section:syslog SysLog backend]
+
+[endsect]
+
+[endsect]
+
 
 [section:filters Filters]
 
 [endsect]
 
+
 [section:formatters Formatters]
 
 [endsect]
+
 
 [section:attributes Attributes]
 
@@ -716,8 +741,8 @@ Another good case is attaching the scope stack information to an exception. With
 [section:acknowledgements Acknowledgements]
 
 * Luca Rigini wrote the initial implementation of the NT event log sink and made a lot of suggestions on how to improve the library in regard of writing user-defined sinks.
-* Jean-Daniel Michaud, Michael Lacher and all others who took part in the discussion of the requirements to the library (http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Boost.Logging).
-* John Torjo and Gennadiy Rozental for their discussion on the John's logging library on the Boost developers list. It helped a lot to learn the requirements and possible solutions for the library.
+* Jean-Daniel Michaud, Michael Lacher and all others who took part in the discussion of the requirements to the library on [@http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Boost.Logging Wiki].
+* John Torjo, Gennadiy Rozental and others for their discussion on the John's logging library on the Boost developers list. It helped a lot to learn the requirements and possible solutions for the library.
 * All authors of the great Boost libraries that were involved in this library (notably, Boost.SmartPtr, Boost.Thread, Boost.Function, Boost.Optional, Boost.DateTime, Boost.Filesystem, Boost.Intrusive, Boost.IOStreams and other).
 
 [endsect]
