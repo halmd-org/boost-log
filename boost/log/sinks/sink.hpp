@@ -160,9 +160,8 @@ namespace aux {
         boost::detail::atomic_count m_RefCounter;
         scoped_lock m_Lock;
 
-        shared_backend_lock(scoped_lock& l) : m_RefCounter(0), m_Lock(*l.mutex(), boost::defer_lock_t())
+        shared_backend_lock(scoped_lock& l) : m_RefCounter(0), m_Lock(boost::move(l))
         {
-            m_Lock.swap(l);
         }
     };
 
