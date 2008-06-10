@@ -153,7 +153,9 @@ private:
     static shared_ptr< logger_holder_base > construct_logger()
     {
         return boost::make_shared< logger_holder< logger_type > >(
-            TagT::registration_file(), TagT::registration_line, TagT::construct_logger());
+            TagT::registration_file(),
+            static_cast< unsigned int >(TagT::registration_line),
+            TagT::construct_logger());
     }
 };
 
@@ -164,7 +166,7 @@ private:
     struct tag_name\
     {\
         typedef logger logger_type;\
-        enum { registration_line = __LINE__ };\
+        enum registration_line_t { registration_line = __LINE__ };\
         static const char* registration_file() { return __FILE__; }\
         static logger_type construct_logger();\
         static inline logger_type& get()\
