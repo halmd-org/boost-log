@@ -34,10 +34,12 @@ class stream_compound_pool :
         thread_specific_ptr< stream_compound_pool< CharT > >
     >
 {
+    //! Thread-specific pointer type
+    typedef thread_specific_ptr< stream_compound_pool< CharT > > tls_ptr_type;
     //! Singleton base type
     typedef log::aux::lazy_singleton<
         stream_compound_pool< CharT >,
-        thread_specific_ptr< stream_compound_pool< CharT > >
+        tls_ptr_type
     > base_type;
     //! Stream compound type
     typedef typename stream_provider< CharT >::stream_compound stream_compound_t;
@@ -59,12 +61,10 @@ public:
     //! The method returns pool instance
     static stream_compound_pool& get()
     {
-        return *base_type::get();
-    }
-
-    static void init_instance()
-    {
-        base_type::get_instance().reset(new stream_compound_pool< CharT >());
+        tls_ptr_type& ptr = base_type::get();
+        if (!ptr.get())
+            ptr.reset(new stream_compound_pool< CharT >());
+        return *ptr;
     }
 
 private:
