@@ -65,13 +65,14 @@ public:
     static stream_compound_pool& get()
     {
         tls_ptr_type& ptr = base_type::get();
-        if (!ptr.get())
+        register this_type* p = ptr.get();
+        if (!p)
         {
             std::auto_ptr< this_type > pNew(new this_type());
             ptr.reset(pNew.get());
-            pNew.release();
+            p = pNew.release();
         }
-        return *ptr;
+        return *p;
     }
 
 private:
