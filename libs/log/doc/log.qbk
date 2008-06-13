@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-05-29 20:19:11 $]
+    [last-revision $Date: 2008-06-13 15:03:06 $]
 ]
 
 [c++]
@@ -590,15 +590,113 @@ which are equivalent. Further usage of the logger is completely the same as it w
 
 [section:sink_frontends Sink Frontends]
 
+Every sink object that is compatible with the logging library is required to support interface `sink< CharT >`, where `CharT` is the appropriate character type. This interface is used by `logging_core` to perform sink-specific filtering and pass log records to sinks. Technically speaking, one can derive his class from the `sink` template and have his new-found sink, but for sake of code reusing and sink implementation simplicity the library suggests separated concepts of sink frontend and sink backend. Sink frontends derive from the `sink` template and encapsulate the logic of filtering and thread synchronization. Most probably you won't have to write your own frontend once you need to create a new type of sink, because the library provides a number of frontends that cover most use cases. See [link log.advanced.sink_backends Sink Backends] section for more details on interface between frontends and backends.
+
 [section:unlocked Unlocked sink frontend]
+
+    #include <boost/log/sinks/sink.hpp>
+
+The unlocked sink frontend is implemented with the `unlocked_sink` class template. This frontend provides the most basic service for the backend, which is filtering. The `unlocked_sink` performs no thread synchronization when accessing the backend, assuming that either the syncronization is not needed or the syncronization is implemented in the backend. However, filtering is still thread-safe (that is, one can safely change filter in the `unlocked_sink` frontend while other threads are writing logs through this sink). This is the only sink frontend available in a single thread environment. The example of use is as follows:
+
+    // Some sink backend (for simplicity synchronization code omitted)
+    class my_backend :
+        public sinks::basic_sink_backend< char, sinks::backend_synchronization_tag >
+    {
+    public:
+        // The method is called for every log record being put into the sink backend
+        void write_message(values_view_type const& attributes, string_type const& message)
+        {
+            std::cout << message << std::endl;
+        }
+    };
+
+    // The function registers my_backend sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+
+        // The simpliest way, the backend is default-constructed
+        boost::shared_ptr< sink< char > > sink1(new sinks::unlocked_sink< my_backend >);
+        core->add_sink(sink1);
+
+        // One can construct backend separately and pass it to the frontend
+        boost::shared_ptr< my_backend > backend(new my_backend);
+        boost::shared_ptr< sink< char > > sink2(new sinks::unlocked_sink< my_backend >(backend));
+        core->add_sink(sink2);
+
+        // You can manage filtering through the sink interface
+        sink1->set_filter(flt::attr< int >("Severity") >= warning);
+        sink2->set_filter(flt::attr< std::string >("Channel") == "net");
+    }
 
 [endsect]
 
 [section:sync Synchronous sink frontend]
 
+    #include <boost/log/sinks/sink.hpp>
+
+The synchronous sink frontend is implemented with the `synchronous_sink` class template. It is similar to the `unlocked_sink` but additionally provides thread synchronization with a mutex before passing log records to the backend. All sink backends that support formatting currently require thread synchronization in the frontend.
+
+The synchronous sink also introduce an ability to acquire a pointer to the locked backend. As long as the pointer exists, the backend is guaranteed not to be accessed from other threads, unless the access is done through another frontend or a direct reference to the backend. This feature can be useful if there is a need to perform some updates on the sink backend while other threads may be writing logs. Beware, though, that while the backend is locked any other thread that tries to write a log record to the sink gets blocked until the backend is released.
+
+The usage is similar to the `unlocked_sink`.
+
+    // The function registers text output sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+
+        // Create a backend and initialize it with a stream
+        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
+        backend->add_stream(boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
+
+        // Wrap it into the frontend and register in the core
+        boost::shared_ptr< sinks::synchronous_sink< sinks::text_ostream_backend > > sink(new sinks::synchronous_sink< sinks::text_ostream_backend >(backend));
+        core->add_sink(sink);
+
+        // You can manage filtering through the sink interface
+        sink->set_filter(flt::attr< int >("Severity") >= warning);
+
+        // You can also manage backend in a thread-safe manner
+        {
+            sinks::synchronous_sink< sinks::text_ostream_backend >::locked_backend_ptr p = sink.locked_backend();
+            p->add_stream(boost::make_shared< std::ofstream >("test.log"));
+            p->set_formatter(fmt::ostrm << "Level: " << fmt::attr< int >("Severity") << "Message: " << fmt::message());
+        } // the backend gets released here
+    }
+
+
 [endsect]
 
 [section:async Asynchronous sink frontend]
+
+    #include <boost/log/sinks/sink.hpp>
+
+The frontend is implemented in the `asynchronous_sink` class template. Like synchronous one, asynchronous sink frontend provides a way of synchronizing access to the backend. All log records are passed to the backend in a dedicated thread, which makes it suitable for backends that may block for a considerable amount of time (network and other hardware device-related sinks, for example). The internal thread of the frontend is spawned on the frontend constructor and joined on its destructor (which implies that the frontend destruction may block). Aside from that, the frontend is similar to the `synchronous_sink` class template.
+
+    // The function registers text output sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+
+        // Create a backend and initialize it with a stream
+        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
+        backend->add_stream(boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
+
+        // Wrap it into the frontend and register in the core
+        boost::shared_ptr< sinks::asynchronous_sink< sinks::text_ostream_backend > > sink(new sinks::asynchronous_sink< sinks::text_ostream_backend >(backend));
+        core->add_sink(sink);
+
+        // You can manage filtering through the sink interface
+        sink->set_filter(flt::attr< int >("Severity") >= warning);
+
+        // You can also manage backend in a thread-safe manner
+        {
+            sinks::asynchronous_sink< sinks::text_ostream_backend >::locked_backend_ptr p = sink.locked_backend();
+            p->add_stream(boost::make_shared< std::ofstream >("test.log"));
+            p->set_formatter(fmt::ostrm << "Level: " << fmt::attr< int >("Severity") << "Message: " << fmt::message());
+        } // the backend gets released here
+    }
 
 [endsect]
 
@@ -609,9 +707,81 @@ which are equivalent. Further usage of the logger is completely the same as it w
 
 [section:text_ostream Text stream backend]
 
+    #include <boost/log/sinks/text_ostream_backend.hpp>
+
+The text output stream sink backend is the most generic backend provided by the library out of box. The backend is implemented in the `basic_text_ostream_backend` class template (`text_ostream_backend` and `wtext_ostream_backend` convenience typedefs provided for narrow and wide character support). It supports formatting log records into strings and putting into one or several streams. Each attached stream gets the same result of formatting, so if you need to format log records differently for different streams, you will need to create several sinks - each with its own formatter.
+
+The sink backend is compatible with any stream that derives from the `std::basic_ostream` class template. However, the sink can provide additional information about written data if the stream object also publicly derives from `record_writer` interface class. This interface declares methods that are called by the backend before and after each record is put into the stream. These hints can be used by the stream implementation to delimit log records (for example, an XML-writing stream could insert tags and indentation between log records) or perform other actions aligned to log records (for example, rotate the file without cutting a log record in the middle).
+
+The backend provides another feature that may come useful when debugging your application. With `auto_flush` method one can enable the sink to automatically flush buffers of all attached streams after each log record written. This will, of course, degrade logging performance, but in case of application crash there is a good probability that last log records are not lost.
+
+    // The function registers text output sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+
+        // Create a backend and attach a couple of streams to it
+        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
+        backend->add_stream(boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
+        backend->add_stream(boost::shared_ptr< std::ostream >(new std::ofstream("test.log")));
+
+        // Enable auto-flushing after each log record written
+        backend->auto_flush(true);
+
+        // Wrap it into the frontend and register in the core. The backend requires synchronization in the frontend.
+        boost::shared_ptr< sinks::synchronous_sink< sinks::text_ostream_backend > > sink(new sinks::synchronous_sink< sinks::text_ostream_backend >(backend));
+        core->add_sink(sink);
+    }
+
 [endsect]
 
-[section:syslog SysLog backend]
+[section:syslog Syslog backend]
+
+    #include <boost/log/sinks/syslog_backend.hpp>
+
+The syslog backend, as it comes from its name, provides support for syslog API that is available on virtually any UNIX or Linux platform. On Windows there is no  known implementation of the syslog API, therefore the backend is not available on this platform.
+
+The backend is implemented in the `basic_syslog_backend` class template, `syslog_backend` and `wsyslog_backend` convenience typedefs are also available. The backend supports formatting log records, and therefore requires thread synchronization in the frontend. The backend also supports severity level translation from the application-specific values to the syslog-defined values. This is achieved with an additional function object, level extractor, that receives a set of attribute values of each log record and returns appropriate syslog level value. This value is used by the backend in the `LOG_MAKEPRI` macro to construct the final priority value of the syslog record. The other argument of the `LOG_MAKEPRI` macro, the facility, is constant for each backend object and can be specified in the backend constructor arguments.
+
+Level extractors can be written by library users to map the application log levels to the syslog levels the best way. However, the library provides two extractors that would fit this need in obvious cases. The `straightforward_level_mapping` class template provides a way to directly map values of some integral attribute to syslog levels. The `level_mapping` class template adds some flexibility and allows to map arbitrary values of some integral attribute to syslog levels.
+
+One additional thing should be noted. Syslog API allows to customize the service behavior by specifying additional flags to the `openlog` call. The backend too supports this feature - the options can be passed to the backend constructor. However, since `openlog` is only called once per logging session, the constructor argument is only taken into consideration for the first backend object being created.
+
+Anyway, one example is better than a thousand words.
+
+    // The function registers syslog sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+
+        // Create a backend. Specify facility and options in the constructor.
+        boost::shared_ptr< sinks::syslog_backend > backend(new sinks::syslog_backend(
+            sinks::syslog::user, sinks::syslog::console_fallback | sinks::syslog::log_pid));
+
+        // Set the straightforward level translator for the "Severity" attribute of type int
+        backend->set_level_extractor(sinks::syslog::straightforward_level_mapping< char >("Severity"));
+
+        // Wrap it into the frontend and register in the core. The backend requires synchronization in the frontend.
+        boost::shared_ptr< sinks::synchronous_sink< sinks::syslog_backend > > sink(new sinks::synchronous_sink< sinks::syslog_backend >(backend));
+        core->add_sink(sink);
+
+        // Create a new backend. No use to specify options here.
+        backend.reset(new sinks::syslog_backend(sinks::syslog::local0));
+
+        // Create and fill in another level translator for "MyLevel" attribute of type string
+        sinks::syslog::level_mapping< char, std::string > mapping("MyLevel");
+        mapping["debug"] = sinks::syslog::debug;
+        mapping["normal"] = sinks::syslog::info;
+        mapping["warning"] = sinks::syslog::warning;
+        mapping["failure"] = sinks::syslog::critical;
+        backend->set_level_extractor(mapping);
+
+        // Wrap it into the frontend and register in the core.
+        sink.reset(new sinks::synchronous_sink< sinks::syslog_backend >(backend));
+        core->add_sink(sink);
+    }
+
+Please note that all syslog constants, as well as level extractors, are declared within a nested namespace `syslog`. The library will not accept (and does not declare in the backend interface) native syslog constants, which are macros, actually.
 
 [endsect]
 
