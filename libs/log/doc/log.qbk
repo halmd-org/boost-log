@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-06-13 15:03:06 $]
+    [last-revision $Date: 2008-06-17 10:05:29 $]
 ]
 
 [c++]
@@ -790,10 +790,24 @@ Please note that all syslog constants, as well as level extractors, are declared
 
 [section:filters Filters]
 
+[section:has_attr Attribute presence filter]
+
+    #include <boost/log/filters/has_attr.hpp>
+
+The filter `has_attr` checks if an attribute value with specified name and, optionally, type is attached to a log record. If no type specified to the filter, the filter returns `true` if any-typed value with the specified name is found. If an MPL-compatible type sequence in specified as a value type, the filter returns `true` if a value with the specified name and one of the specified types is found.
+
+This filter is usually used in conjunction with [link log.advanced.formatters.conditional conditional formatters], but it also can be used as a quick filter based on the log record structure.
+
+[endsect]
+
 [endsect]
 
 
 [section:formatters Formatters]
+
+[section:conditional Conditional formatters]
+
+[endsect]
 
 [endsect]
 

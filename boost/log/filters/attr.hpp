@@ -333,16 +333,14 @@ namespace aux {
 
 //! Filter generator
 template< typename AttributeValueTypesT, typename CharT >
-aux::flt_attr_gen< CharT, AttributeValueTypesT > attr(
-    const CharT* name BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(AttributeValueTypesT))
+inline aux::flt_attr_gen< CharT, AttributeValueTypesT > attr(const CharT* name)
 {
     return aux::flt_attr_gen< CharT, AttributeValueTypesT >(name);
 }
 
 //! Filter generator
 template< typename AttributeValueTypesT, typename CharT >
-aux::flt_attr_gen< CharT, AttributeValueTypesT > attr(
-    std::basic_string< CharT > const& name BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(AttributeValueTypesT))
+inline aux::flt_attr_gen< CharT, AttributeValueTypesT > attr(std::basic_string< CharT > const& name)
 {
     return aux::flt_attr_gen< CharT, AttributeValueTypesT >(name);
 }
