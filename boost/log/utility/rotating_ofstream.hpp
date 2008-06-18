@@ -41,6 +41,7 @@
 #include <boost/type_traits/is_same.hpp>
 #endif // BOOST_FILESYSTEM_NARROW_ONLY
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/utility/base_from_member.hpp>
 #include <boost/utility/in_place_factory.hpp>
 #include <boost/parameter/keyword.hpp>
 #include <boost/function/function1.hpp>
@@ -160,6 +161,12 @@ namespace aux {
     struct BOOST_LOG_NO_VTABLE file_controller_base
     {
     public:
+        //! The type of the handler of the event of opening of a new file
+        typedef function1< void, std::ostream& > open_handler_type;
+        //! The type of the handler of the event of closing of a file
+        typedef function1< void, std::ostream& > close_handler_type;
+
+    protected:
         //! File buffer
         filesystem::basic_filebuf< char > m_File;
         //! File open mode
@@ -188,14 +195,83 @@ namespace aux {
         }
         virtual ~file_controller_base() {}
 
+        //! The function flushes the buffered data to the file
+        int flush()
+        {
+            return m_File.pubsync();
+        }
+
+        //! Closes the currently open file
+        void close(close_handler_type const& on_close)
+        {
+            if (!on_close.empty()) try
+            {
+                std::ostream strm(&m_File);
+                on_close(boost::ref(strm));
+            }
+            catch (...)
+            {
+            }
+
+            close_file();
+        }
+
+        //! Puts the buffered record to the file
+        void put_record(std::string const& storage, open_handler_type const& on_open, close_handler_type const& on_close)
+        {
+            // Check if it's time to rotate the file
+            if (m_File.is_open() &&
+                m_RotationSize < m_Written + static_cast< uintmax_t >(storage.size()) ||
+                (m_RotationInterval > 0 && m_RotationInterval < (std::time(NULL) - m_LastRotation)))
+            {
+                close(on_close);
+            }
+
+            if (!m_File.is_open())
+            {
+                open_file();
+                if (!on_open.empty()) try
+                {
+                    std::ostream strm(&m_File);
+                    on_open(boost::ref(strm));
+                }
+                catch (...)
+                {
+                }
+            }
+
+            // Now put the data to the file
+            write_data(storage);
+        }
+
+        //! Writes data from storage to the file
+        void write_data(std::string const& storage)
+        {
+            BOOST_STATIC_ASSERT(std::numeric_limits< std::streamsize >::is_specialized);
+            const std::streamsize max_block_size = (std::numeric_limits< std::streamsize >::max)();
+            register std::string::size_type size = storage.size();
+            register std::string::const_pointer const end = storage.data() + size;
+            while (size > 0)
+            {
+                register const std::streamsize block_size =
+                    size > static_cast< std::string::size_type >(max_block_size) ? max_block_size : static_cast< std::streamsize >(size);
+                register const std::streamsize written = m_File.sputn(end - size, block_size);
+                if (written == 0)
+                    break;
+                size -= written;
+                m_Written += written;
+            }
+        }
+
+    private:
+        //  Copying and assignment are prohibited
+        file_controller_base(file_controller_base const&);
+        file_controller_base& operator= (file_controller_base const&);
+
         //! The function opens a new file
         virtual void open_file() = 0;
         //! The function closes the file
         virtual void close_file() = 0;
-
-    private:
-        file_controller_base(file_controller_base const&);
-        file_controller_base& operator= (file_controller_base const&);
     };
 
     //! The file controller implementation
@@ -435,29 +511,109 @@ class basic_rotating_ofstream :
     //! Base class of the stream
     typedef std::basic_ostream< CharT, TraitsT > stream_base;
 
-private:
+public:
     //! String type
     typedef std::basic_string< CharT, TraitsT, AllocatorT > string_type;
-    //! Narrowing buffer type
-    typedef typename log::aux::make_narrowing_ostringstreambuf<
-        CharT,
-        TraitsT,
-        AllocatorT
-    >::type narrowing_streambuf;
 
-public:
     //! The type of the handler of the event of opening of a new file
-    typedef function1< void, std::ostream& > open_handler_type;
+    typedef aux::file_controller_base::open_handler_type open_handler_type;
     //! The type of the handler of the event of closing of a file
-    typedef function1< void, std::ostream& > close_handler_type;
+    typedef aux::file_controller_base::close_handler_type close_handler_type;
 
 private:
-    //! Record storage
-    std::string m_Storage;
-    //! Narrowing stream buffer that also acts as a temporary storage for log records
-    narrowing_streambuf m_Buf;
-    //! Pointer to the implementation of the file controller
-    std::auto_ptr< aux::file_controller_base > m_pFileCtl;
+    //! Composite stream buffer type, that performs encoding translation and passes converted data to the file
+    class composite_streambuf :
+        private base_from_member< std::string >,
+        public log::aux::make_narrowing_ostringstreambuf<
+            CharT,
+            TraitsT,
+            AllocatorT
+        >::type
+    {
+    private:
+        //! Narrowing buffer type
+        typedef typename log::aux::make_narrowing_ostringstreambuf<
+            CharT,
+            TraitsT,
+            AllocatorT
+        >::type narrowing_streambuf;
+
+    private:
+        //! The pointer to the file controller
+        std::auto_ptr< aux::file_controller_base > m_pFileCtl;
+
+    public:
+        composite_streambuf() :
+            narrowing_streambuf(base_from_member< std::string >::member)
+        {
+        }
+
+        //! The function creates a file controller
+        void open(filesystem::path const& pattern, std::ios_base::openmode mode, uintmax_t rot_size, unsigned int rot_int)
+        {
+            m_pFileCtl.reset(new aux::file_controller< char >(pattern, mode, rot_size, rot_int));
+        }
+
+#ifndef BOOST_FILESYSTEM_NARROW_ONLY
+        //! The function creates a file controller
+        void open(filesystem::wpath const& pattern, std::ios_base::openmode mode, uintmax_t rot_size, unsigned int rot_int)
+        {
+            m_pFileCtl.reset(new aux::file_controller< wchar_t >(pattern, mode, rot_size, rot_int));
+        }
+#endif // BOOST_FILESYSTEM_NARROW_ONLY
+
+        //! The method closes the file
+        void close(close_handler_type const& on_close)
+        {
+            log::aux::cleanup_guard< std::string > _(storage());
+            narrowing_streambuf::sync();
+
+            if (m_pFileCtl.get())
+            {
+                m_pFileCtl->write_data(storage());
+                m_pFileCtl->close(on_close);
+                m_pFileCtl.reset();
+            }
+        }
+        
+        //! The method is called after all data of the record is written to the stream
+        void on_end_record(open_handler_type const& on_open, close_handler_type const& on_close)
+        {
+            log::aux::cleanup_guard< std::string > _(storage());
+            narrowing_streambuf::sync();
+
+            if (m_pFileCtl.get()) try
+            {
+                m_pFileCtl->put_record(storage(), on_open, on_close);
+            }
+            catch (...)
+            {
+            }
+        }
+
+    protected:
+        //! Buffer synchronization implementation (flushes the attached file)
+        virtual int sync()
+        {
+            // We actually flush file buffers, not the string buffers
+            if (m_pFileCtl.get())
+                return m_pFileCtl->flush();
+            else
+                return 0;
+        }
+
+    private:
+        //  Copying and assignment are prohibited
+        composite_streambuf(composite_streambuf const&);
+        composite_streambuf& operator= (composite_streambuf const&);
+
+        //! The function returns a reference to the storage string
+        std::string& storage() { return base_from_member< std::string >::member; }
+    };
+
+private:
+    //! The stream buffer converts record data and puts it to the file
+    composite_streambuf m_Buf;
 
     //! The handler in called when a new file is opened during rotation
     open_handler_type m_OpenHandler;
@@ -466,7 +622,7 @@ private:
 
 public:
     //! Default constructor
-    basic_rotating_ofstream() : stream_base(NULL), m_Buf(m_Storage)
+    basic_rotating_ofstream() : stream_base(NULL)
     {
         stream_base::init(&m_Buf);
     }
@@ -476,31 +632,29 @@ public:
 #define BOOST_LOG_ROTATING_OFSTREAM_CTOR(z, it, data)\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     basic_rotating_ofstream(filesystem::path const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg)) :\
-        stream_base(NULL),\
-        m_Buf(m_Storage),\
-        m_pFileCtl(construct_file_controller(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))))\
+        stream_base(NULL)\
     {\
         stream_base::init(&m_Buf);\
+        open_internal(pattern, (BOOST_PP_ENUM_PARAMS(it, arg)));\
     }\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     basic_rotating_ofstream(filesystem::wpath const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg)) :\
-        stream_base(NULL),\
-        m_Buf(m_Storage),\
-        m_pFileCtl(construct_file_controller(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))))\
+        stream_base(NULL)\
     {\
         stream_base::init(&m_Buf);\
+        open_internal(pattern, (BOOST_PP_ENUM_PARAMS(it, arg)));\
     }\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     void open(filesystem::path const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
     {\
         close();\
-        m_pFileCtl.reset(construct_file_controller(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))));\
+        open_internal(pattern, (BOOST_PP_ENUM_PARAMS(it, arg)));\
     }\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     void open(filesystem::wpath const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
     {\
         close();\
-        m_pFileCtl.reset(construct_file_controller(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))));\
+        open_internal(pattern, (BOOST_PP_ENUM_PARAMS(it, arg)));\
     }
 
 #else
@@ -508,17 +662,16 @@ public:
 #define BOOST_LOG_ROTATING_OFSTREAM_CTOR(z, it, data)\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     basic_rotating_ofstreambuf(filesystem::path const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg)) :\
-        stream_base(NULL),\
-        m_Buf(m_Storage),\
-        m_pFileCtl(construct_file_controller(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))))\
+        stream_base(NULL)\
     {\
         stream_base::init(&m_Buf);\
+        open_internal(pattern, (BOOST_PP_ENUM_PARAMS(it, arg)));\
     }\
     template< BOOST_PP_ENUM_PARAMS(it, typename T) >\
     void open(filesystem::path const& pattern, BOOST_PP_ENUM_BINARY_PARAMS(it, T, const& arg))\
     {\
         close();\
-        m_pFileCtl.reset(construct_file_controller(pattern, (BOOST_PP_ENUM_PARAMS(it, arg))));\
+        open_internal(pattern, (BOOST_PP_ENUM_PARAMS(it, arg)));\
     }
 
 #endif // BOOST_FILESYSTEM_NARROW_ONLY
@@ -542,73 +695,13 @@ public:
     //! The method closes the file
     void close()
     {
-        if (m_pFileCtl.get() && m_pFileCtl->m_File.is_open())
-        {
-            flush_record();
-
-            if (!m_CloseHandler.empty()) try
-            {
-                std::ostream strm(&m_pFileCtl->m_File);
-                m_CloseHandler(boost::ref(strm));
-            }
-            catch (...)
-            {
-            }
-
-            m_pFileCtl->close_file();
-            m_pFileCtl.reset();
-        }
-        else
-        {
-            m_Buf.pubsync();
-            m_Storage.clear();
-        }
+        m_Buf.close(m_CloseHandler);
     }
     
     //! The method is called after all data of the record is written to the stream
     void on_end_record()
     {
-        if (m_pFileCtl.get()) try
-        {
-            // Check if we have to rotate the file
-            if (m_pFileCtl->m_File.is_open() &&
-                m_pFileCtl->m_RotationSize < m_pFileCtl->m_Written + static_cast< uintmax_t >(m_Storage.size()) ||
-                (m_pFileCtl->m_RotationInterval > 0 && m_pFileCtl->m_RotationInterval < (std::time(NULL) - m_pFileCtl->m_LastRotation)))
-            {
-                if (!m_CloseHandler.empty()) try
-                {
-                    std::ostream strm(&m_pFileCtl->m_File);
-                    m_CloseHandler(boost::ref(strm));
-                }
-                catch (...)
-                {
-                }
-                m_pFileCtl->close_file();
-            }
-
-            if (!m_pFileCtl->m_File.is_open())
-            {
-                m_pFileCtl->open_file();
-                if (!m_OpenHandler.empty()) try
-                {
-                    std::ostream strm(&m_pFileCtl->m_File);
-                    m_OpenHandler(boost::ref(strm));
-                }
-                catch (...)
-                {
-                }
-            }
-
-            // Put the record to the file
-            flush_record();
-            return;
-        }
-        catch (...)
-        {
-        }
-
-        m_Buf.pubsync();
-        m_Storage.clear();
+        m_Buf.on_end_record(m_OpenHandler, m_CloseHandler);
     }
 
     //! Sets a new handler for opening a new file
@@ -633,57 +726,19 @@ public:
     }
 
 private:
-    //! Copying and assignment are closed
+    //  Copying and assignment are closed
     basic_rotating_ofstream(basic_rotating_ofstream const&);
     basic_rotating_ofstream& operator= (basic_rotating_ofstream const&);
 
     //! An internal function to handle construction args
     template< typename PathT, typename ArgsT >
-    static aux::file_controller_base* construct_file_controller(PathT const& pattern, ArgsT const& args)
+    void open_internal(PathT const& pattern, ArgsT const& args)
     {
-        return construct_file_controller_impl(
+        m_Buf.open(
             pattern,
             args[keywords::open_mode | (std::ios_base::out | std::ios_base::trunc)],
             args[keywords::rotation_size | ~static_cast< uintmax_t >(0)],
             args[keywords::rotation_interval | static_cast< unsigned int >(0)]);
-    }
-
-    //! An internal function to construct the device implementation
-    static aux::file_controller_base* construct_file_controller_impl(
-        filesystem::path const& pattern, std::ios_base::openmode mode, uintmax_t rot_size, unsigned int rot_int)
-    {
-        return new aux::file_controller< char >(pattern, mode, rot_size, rot_int);
-    }
-
-#ifndef BOOST_FILESYSTEM_NARROW_ONLY
-    //! An internal function to construct the device implementation
-    static aux::file_controller_base* construct_file_controller_impl(
-        filesystem::wpath const& pattern, std::ios_base::openmode mode, uintmax_t rot_size, unsigned int rot_int)
-    {
-        return new aux::file_controller< wchar_t >(pattern, mode, rot_size, rot_int);
-    }
-#endif // BOOST_FILESYSTEM_NARROW_ONLY
-
-    //! Puts the buffered record to the file
-    void flush_record()
-    {
-        log::aux::cleanup_guard< std::string > _(m_Storage);
-        m_Buf.pubsync();
-
-        BOOST_STATIC_ASSERT(std::numeric_limits< std::streamsize >::is_specialized);
-        const std::streamsize max_block_size = (std::numeric_limits< std::streamsize >::max)();
-        register std::string::size_type size = m_Storage.size();
-        register std::string::const_pointer const end = m_Storage.data() + size;
-        while (size > 0)
-        {
-            register const std::streamsize block_size =
-                size > static_cast< std::string::size_type >(max_block_size) ? max_block_size : static_cast< std::streamsize >(size);
-            register const std::streamsize written = m_pFileCtl->m_File.sputn(end - size, block_size);
-            if (written == 0)
-                break;
-            size -= written;
-            m_pFileCtl->m_Written += written;
-        }
     }
 };
 
