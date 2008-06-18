@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-06-17 16:53:50 $]
+    [last-revision $Date: 2008-06-18 16:51:18 $]
 ]
 
 [c++]
@@ -698,6 +698,8 @@ The frontend is implemented in the `asynchronous_sink` class template. Like sync
         } // the backend gets released here
     }
 
+[important If asynchronous logging is used in multi-module application, one should take care when to unload dynamically loaded modules that write logs. The library has many places where it may end up using resources that are physically reside in the dynamically loaded module. Examples of such resources are virtual tables, string literals and functions. If it appears that either of these resources are used by the library, whereas the module in which they reside gets unloaded, the application will most probably crash. Strictly speaking, this problem persists with any sink type (and is not limited to sinks at all), but asynchronous sinks introduce an additional problem. User cannot tell which recources are used by the asynchronous sink because it works in a dedicated thread and use buffered log records. There is no general solution for this issue. Users are advised to either avoid dynamic module unloading during the application work time, or to avoid asynchronous logging. As an additional way to cope with the problem, one may try to shutdown all asynchronous sinks before unloading any modules, and after unloading re-create them. However, avoiding dynamic unloading is the only way to solve the problem completely.]
+
 [endsect]
 
 [endsect]
@@ -932,6 +934,22 @@ The `attr` placeholder has an advanced support for string-typed attribute values
 
 
 [section:formatters Formatters]
+
+As it was noted in the [link log.tutorial.tutorial_4 tutorial], the library provides two ways of expressing formatters: with a stream-style syntax or [@http://www.boost.org/doc/libs/release/libs/format/index.html Boost.Format]-style expression. Which of the two formats is chosen is determined with the apropriate anchor expression. To use stream-style syntax one should begin formatter definition with a `ostrm` or `wostrm` keyword, like that:
+
+    #include <boost/log/formatters/ostream.hpp>
+
+    backend->set_formatter(fmt::ostrm << expr1 << expr2 << ... << exprN);
+
+Here expressions `expr1` through `exprN` may be either manipulators, described in this section, or other expressions resulting in an object that supports putting into an STL-stream. Note that `boost::ref` is also supported, which allows to inject references into the formatter object.
+
+To use [@http://www.boost.org/doc/libs/release/libs/format/index.html Boost.Format]-style syntax one should use `format` construct:
+
+    #include <boost/log/formatters/format.hpp>
+
+    backend->set_formatter(fmt::format("format string") % expr1 % expr2 % ... % exprN);
+
+The format string passed to the `format` keyword should contain positional placeholders for the appropriate expressions. In case of wide-character logging the format string should be wide. Expressions `expr1` through `exprN` have the same meaning as in stream-like variant. It should be noted, though, that using stream-like syntax usually results in a faster formatter than the one is constructed with the `format` keyword.
 
 [section:conditional Conditional formatters]
 

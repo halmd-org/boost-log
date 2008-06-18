@@ -109,10 +109,11 @@ public:
         strm << m_Format.str();
     }
     //! Composition operator
-    template< typename FormatterT >
-    fmt_format< char_type >& operator% (FormatterT const& fmt)
+    template< typename T >
+    fmt_format< char_type >& operator% (T const& fmt)
     {
-        m_Formatters.push_back(formatter_type(fmt));
+        typedef typename wrap_if_not_formatter< char_type, T >::type result_type;
+        m_Formatters.push_back(formatter_type(result_type(fmt)));
         return *this;
     }
 
