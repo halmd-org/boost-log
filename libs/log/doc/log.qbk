@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-06-19 16:29:01 $]
+    [last-revision $Date: 2008-06-19 16:42:38 $]
 ]
 
 [c++]
@@ -1095,7 +1095,7 @@ Ones that are familiar with Boost.Phoenix lambda expressions will find this synt
     backend->set_formatter
     (
         fmt::ostrm
-            << fmt::date_time("TimeStamp") << " "                       // First, put the current time
+            << fmt::date_time("TimeStamp") << " "                      // First, put the current time
             << fmt::if_ (flt::has_attr< int >("ID"))
                [
                    fmt::ostrm << fmt::attr< int >("ID", "[0x%08x]")    // if "ID" is integral then format it as a hex number
@@ -1210,6 +1210,10 @@ Another good case is attaching the scope stack information to an exception. With
 [section:scoped_attributes Scoped attributes]
 
 [endsect]
+
+[endsect]
+
+[section:utilities Utilities]
 
 [endsect]
 
