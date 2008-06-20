@@ -267,6 +267,11 @@ namespace aux {
                 allocator_type::deallocate(p, 1);
                 throw;
             }
+
+            // These two won't throw
+            sequence_container::node_algorithms::init(p);
+            index_container::node_algorithms::init(p);
+
             return p;
         }
     };

@@ -23,6 +23,22 @@ namespace log {
 namespace aux {
 
 #ifdef BOOST_LOG_USE_CHAR
+
+const char_constants< char >::char_type char_constants< char >::char_comment;
+const char_constants< char >::char_type char_constants< char >::char_comma;
+const char_constants< char >::char_type char_constants< char >::char_quote;
+const char_constants< char >::char_type char_constants< char >::char_percent;
+const char_constants< char >::char_type char_constants< char >::char_exclamation;
+const char_constants< char >::char_type char_constants< char >::char_and;
+const char_constants< char >::char_type char_constants< char >::char_or;
+const char_constants< char >::char_type char_constants< char >::char_equal;
+const char_constants< char >::char_type char_constants< char >::char_greater;
+const char_constants< char >::char_type char_constants< char >::char_less;
+const char_constants< char >::char_type char_constants< char >::char_section_bracket_left;
+const char_constants< char >::char_type char_constants< char >::char_section_bracket_right;
+const char_constants< char >::char_type char_constants< char >::char_paren_bracket_left;
+const char_constants< char >::char_type char_constants< char >::char_paren_bracket_right;
+
 void char_constants< char >::translate_escape_sequences(std::basic_string< char_type >& str)
 {
     using namespace std; // to make sure we can use C functions unqualified
@@ -82,9 +98,26 @@ void char_constants< char >::translate_escape_sequences(std::basic_string< char_
         }
     }
 }
-#endif
+
+#endif // BOOST_LOG_USE_CHAR
 
 #ifdef BOOST_LOG_USE_WCHAR_T
+
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_comment;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_comma;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_quote;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_percent;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_exclamation;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_and;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_or;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_equal;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_greater;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_less;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_section_bracket_left;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_section_bracket_right;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_paren_bracket_left;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_paren_bracket_right;
+
 void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< char_type >& str)
 {
     std::basic_string< char_type >::iterator it = str.begin();
@@ -184,7 +217,8 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
         }
     }
 }
-#endif
+
+#endif // BOOST_LOG_USE_WCHAR_T
 
 } // namespace aux
 

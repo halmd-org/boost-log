@@ -121,9 +121,9 @@ private:
         node_base* m_pPrev;
         node_base* m_pNext;
 
-        node_base() { m_pPrev = m_pNext = this; }
-        node_base(node_base const& that) : m_Value(that.m_Value) { m_pPrev = m_pNext = this; }
-        node_base(key_type const& key, mapped_type const& data) : m_Value(key, data) { m_pPrev = m_pNext = this; }
+        node_base() { /* m_pPrev = m_pNext = 0; -- initialized internally in cpp */ }
+        node_base(node_base const& that) : m_Value(that.m_Value) { /* m_pPrev = m_pNext = 0; -- initialized internally in cpp */ }
+        node_base(key_type const& key, mapped_type const& data) : m_Value(key, data) { /* m_pPrev = m_pNext = 0; -- initialized internally in cpp */ }
 
     private:
         node_base& operator= (node_base const&);
