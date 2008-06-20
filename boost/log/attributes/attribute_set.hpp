@@ -128,7 +128,7 @@ private:
     private:
         node_base& operator= (node_base const&);
     };
-    
+
     //! Iterator class
     template< bool fConstV > class iter;
     template< bool fConstV > friend class iter;
@@ -221,6 +221,8 @@ public:
     BOOST_LOG_EXPORT basic_attribute_set();
     //! Copy constructor
     BOOST_LOG_EXPORT basic_attribute_set(basic_attribute_set const& that);
+    //! Destructor
+    BOOST_LOG_EXPORT ~basic_attribute_set();
 
     //! Assignment
     BOOST_LOG_EXPORT basic_attribute_set& operator= (basic_attribute_set const& that);

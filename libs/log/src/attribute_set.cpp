@@ -91,7 +91,7 @@ namespace aux {
             static void set_previous(node* n, node* prev) { n->m_pPrev = prev; }  
         };
 
-        //! Contained nodes traits for the intrusive list
+        //! Contained node traits for the intrusive list
         typedef intrusive::derivation_value_traits< value_type, node_traits, intrusive::safe_link > value_traits;
 
         //! The intrusive list of nodes to fasten iteration
@@ -325,6 +325,13 @@ template< typename CharT >
 basic_attribute_set< CharT >::basic_attribute_set(basic_attribute_set const& that)
     : m_pImpl(new implementation(*that.m_pImpl))
 {
+}
+
+//! Destructor
+template< typename CharT >
+basic_attribute_set< CharT >::~basic_attribute_set()
+{
+    delete m_pImpl;
 }
 
 //! Assignment
