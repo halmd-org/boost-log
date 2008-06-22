@@ -221,8 +221,8 @@ namespace aux {
         {
             // Check if it's time to rotate the file
             if (m_File.is_open() &&
-                m_RotationSize < m_Written + static_cast< uintmax_t >(storage.size()) ||
-                (m_RotationInterval > 0 && m_RotationInterval < (std::time(NULL) - m_LastRotation)))
+                (m_RotationSize < m_Written + static_cast< uintmax_t >(storage.size()) ||
+                (m_RotationInterval > 0 && m_RotationInterval < (std::time(NULL) - m_LastRotation))))
             {
                 close(on_close);
             }
