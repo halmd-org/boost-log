@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-06-25 22:17:14 $]
+    [last-revision $Date: 2008-06-25 23:42:24 $]
 ]
 
 [c++]
@@ -1235,7 +1235,11 @@ Scoped attributes are a powerful mechanism of tagging log records that can be us
     BOOST_LOG_SCOPED_THREAD_ATTR(attr_name, attr_type);
     BOOST_LOG_SCOPED_THREAD_ATTR_CTOR(attr_name, attr_type, attr_ctor_args);
 
-The former two register a source-specific attribute in the `logger` logger object. The attribute name and type are given in the `attr_name` and `attr_type` arguments. The BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR additionally accepts a Boost.Preprocessor sequence of arguments that should be passed to the attribute constructor. The latter pair of macros do exactly the same but the attribute is registered for the current thread in the logging core (which does not require a logger). For example:
+The former two register a source-specific attribute in the `logger` logger object. The attribute name and type are given in the `attr_name` and `attr_type` arguments. The BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR additionally accepts a Boost.Preprocessor sequence of arguments that should be passed to the attribute constructor. The latter pair of macros do exactly the same but the attribute is registered for the current thread in the logging core (which does not require a logger).
+
+[information If it appears that a same-named attribute is already registered in the logger/logging core, the macros won't override the existing attribute and will eventually have no effect. See [link log.rationale.why_weak_scoped_attributes Rationale] for a more detailed explanation of reasons for such behavior.]
+
+Usage example follows:
 
     BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::logger_mt)
 
@@ -1293,6 +1297,8 @@ The macros are effectively wrappers around `BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR` a
 
     // Note there is no "attrs::constant" type wrapping and no addinional parenthesis around the tag value.
     BOOST_LOG_SCOPED_THREAD_TAG("Tag", std::string, "Called from A::bar");
+
+[warning When using scoped attributes, make sure that the scoped attribute is not altered in the attribute set in which it was registered. For example, one should not clear attribute set of a logger if there are logger-specific scoped attributes registered in it. Otherwise the program will likely crash. This issue is especially critical in multithreaded application, when one thread may not know whether there are scoped attributes in the logger or there are not. Future releases may solve this limitation but currently the scoped attribute must remain intact until unregistered on scope ending.]
 
 Although the described macros are intended to be the primary interface for the functionality, there is also a C++ interface available. It may be useful if user decides to develop his own macros that cannot be based on the existing ones.
 
@@ -1362,6 +1368,74 @@ Dynamic memory allocation also introduces exception safety issues: the `BOOST_LO
 One possible alternative solution would be pooling preformatted and preallocated scope names somewhere but this would surely degrade performance even more and introduce the problem of detecting when to update or free pooled strings.
 
 Therefore restricting to string literals seems the optimal desicion, which minimizes dynamic memory usage and provides enough flexibility for common needs.
+
+[endsect]
+
+[section:why_weak_scoped_attributes Why scoped attributes don't override existing attributes?]
+
+Initially scoped attributes were able to override other attributes with the same name if they were already registered by the time when a scoped attribute encountered. This allowed some interesting use cases like this:
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::logger_mt)
+
+    void foo()
+    {
+        // This scoped attribute would temporarily replace the existing tag
+        BOOST_LOG_SCOPED_THREAD_TAG("Section", std::string, "In foo");
+
+        // This log record will have a "Section" attribute with value "In foo"
+        BOOST_LOG(get_my_logger()) << "We're in foo section";
+    }
+
+    int main(int, char*[])
+    {
+        BOOST_LOG_SCOPED_THREAD_TAG("Section", std::string, "In main");
+
+        // This log record will have a "Section" attribute with value "In main"
+        BOOST_LOG(get_my_logger()) << "We're in main section";
+
+        foo();
+
+        // This log record will have a "Section" attribute with value "In main" again
+        BOOST_LOG(get_my_logger()) << "We're in main section again";
+
+        return 0;
+    }
+
+However, this feature introduced a number of safety problems, including thread safety issues, that might be difficult to locate. For example, it was no longer safe to use logger-wide scoped attributes on the same logger from different threads, because the resulting attribute would be undefined:
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::logger_mt)
+
+    void thread1()
+    {
+        BOOST_LOG_SCOPED_LOGGER_TAG(get_my_logger(), "Tag", std::string, "thread1");
+        BOOST_LOG(get_my_logger()) << "We're in thread1";
+    }
+
+    void thread2()
+    {
+        BOOST_LOG_SCOPED_LOGGER_TAG(get_my_logger(), "Tag", int, 10);
+        BOOST_LOG(get_my_logger()) << "We're in thread2";
+    }
+
+    int main(int, char*[])
+    {
+        BOOST_LOG_SCOPED_LOGGER_TAG(get_my_logger(), "Tag", double, -2.2);
+
+        BOOST_LOG(get_my_logger()) << "We're in main";
+
+        boost::thread t1(&thread1);
+        boost::thread t2(&thread2);
+
+        t1.join();
+        t2.join();
+
+        // Which "Tag" is registered here?
+        BOOST_LOG(get_my_logger()) << "We're in main again";
+
+        return 0;
+    }
+
+There were other issues, like having an attribute set iterator that points to one attribute object, then suddenly without seemingly modifying it it becomes to point to a different attribute object (of, possibly, a different type). Such behavior could lead to tricky failures that would be difficult to investigate. Therefore this feature was eventually dropped, which simplified scoped attributes implementation significantly.
 
 [endsect]
 

@@ -38,7 +38,9 @@ namespace log {
 namespace aux {
 
     //! A base class for all scoped attribute classes
-    class attribute_scope_guard {};
+    class attribute_scope_guard
+    {
+    };
 
 } // namespace aux
 
@@ -60,8 +62,6 @@ namespace aux {
         mutable logger_type* m_pLogger;
         //! An iterator to the added attribute
         typename logger_type::attribute_set_type::iterator m_itAttribute;
-        //! A saved attribute, if it was already registered
-        mutable shared_ptr< attribute > m_pSavedAttribute;
 
     public:
         //! Constructor
@@ -76,12 +76,10 @@ namespace aux {
                 typename logger_type::attribute_set_type::iterator,
                 bool
             > res = l.add_attribute(name, attr);
-            m_itAttribute = res.first;
-            if (!res.second)
-            {
-                m_pSavedAttribute = attr;
-                m_pSavedAttribute.swap(m_itAttribute->second);
-            }
+            if (res.second)
+                m_itAttribute = res.first;
+            else
+                m_pLogger = 0; // if there already is a same-named attribute, don't register anything
         }
         //! Copy constructor (implemented as move)
         scoped_logger_attribute(scoped_logger_attribute const& that) :
@@ -89,7 +87,6 @@ namespace aux {
             m_itAttribute(that.m_itAttribute)
         {
             that.m_pLogger = 0;
-            m_pSavedAttribute.swap(that.m_pSavedAttribute);
         }
 
         //! Destructor
@@ -97,10 +94,7 @@ namespace aux {
         {
             if (m_pLogger)
             {
-                if (!m_pSavedAttribute)
-                    m_pLogger->remove_attribute(m_itAttribute);
-                else
-                    m_pSavedAttribute.swap(m_itAttribute->second);
+                m_pLogger->remove_attribute(m_itAttribute);
             }
         }
 
@@ -193,8 +187,6 @@ namespace aux {
         mutable shared_ptr< logging_core_type > m_pCore;
         //! An iterator to the added attribute
         typename logging_core_type::attribute_set_type::iterator m_itAttribute;
-        //! A saved attribute, if it was already registered
-        mutable shared_ptr< attribute > m_pSavedAttribute;
 
     public:
         //! Constructor
@@ -206,18 +198,15 @@ namespace aux {
                 typename logging_core_type::attribute_set_type::iterator,
                 bool
             > res = m_pCore->add_thread_attribute(name, attr);
-            m_itAttribute = res.first;
-            if (!res.second)
-            {
-                m_pSavedAttribute = attr;
-                m_pSavedAttribute.swap(m_itAttribute->second);
-            }
+            if (res.second)
+                m_itAttribute = res.first;
+            else
+                m_pCore.reset(); // if there already is a same-named attribute, don't register anything
         }
         //! Copy constructor (implemented as move)
         scoped_thread_attribute(scoped_thread_attribute const& that) : m_itAttribute(that.m_itAttribute)
         {
             m_pCore.swap(that.m_pCore);
-            m_pSavedAttribute.swap(that.m_pSavedAttribute);
         }
 
         //! Destructor
@@ -225,12 +214,13 @@ namespace aux {
         {
             if (m_pCore)
             {
-                if (!m_pSavedAttribute)
-                    m_pCore->remove_thread_attribute(m_itAttribute);
-                else
-                    m_pSavedAttribute.swap(m_itAttribute->second);
+                m_pCore->remove_thread_attribute(m_itAttribute);
             }
         }
+
+    private:
+        //! Assignment (closed)
+        scoped_thread_attribute& operator= (scoped_thread_attribute const&);
     };
 
 } // namespace aux
