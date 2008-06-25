@@ -196,8 +196,8 @@ int main(int argc, char* argv[])
     shared_ptr< logging::attribute > pTimeStamp(new attrs::local_clock());
     logging::logging_core::get()->add_global_attribute("TimeStamp", pTimeStamp);
 
-    shared_ptr< logging::attribute > pUptime(new attrs::timer());
-    logging::logging_core::get()->add_global_attribute("Uptime", pUptime);
+    // And an up time stopwatch
+    BOOST_LOG_SCOPED_THREAD_ATTR("Uptime", attrs::timer);
 
     // Attributes may have two other scopes: thread scope and source scope. Attributes of thread
     // scope are output with each record made by the thread (regardless of the logger object), and
