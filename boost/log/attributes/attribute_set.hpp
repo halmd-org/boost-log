@@ -32,7 +32,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 template< typename >
 class basic_attribute_values_view;

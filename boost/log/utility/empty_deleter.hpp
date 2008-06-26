@@ -24,11 +24,13 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
+//! A function object that does nothing and can be used as an empty deleter for shared_ptr
 struct empty_deleter
 {
-    void operator() (const volatile void*) const volatile {}
+    typedef void result_type;
+    void operator() (const volatile void*) const {}
 };
 
 } // namespace log

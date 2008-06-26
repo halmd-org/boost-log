@@ -13,13 +13,15 @@
  */
 
 #include <memory>
-#include <boost/thread/tss.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/detail/singleton.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/tss.hpp>
+#endif
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace sources {
 
@@ -32,13 +34,22 @@ template< typename CharT >
 class stream_compound_pool :
     public log::aux::lazy_singleton<
         stream_compound_pool< CharT >,
+#if !defined(BOOST_LOG_NO_THREADS)
         thread_specific_ptr< stream_compound_pool< CharT > >
+#else
+        std::auto_ptr< stream_compound_pool< CharT > >
+#endif
     >
 {
     //! Self type
     typedef stream_compound_pool< CharT > this_type;
+#if !defined(BOOST_LOG_NO_THREADS)
     //! Thread-specific pointer type
     typedef thread_specific_ptr< this_type > tls_ptr_type;
+#else
+    //! Thread-specific pointer type
+    typedef std::auto_ptr< this_type > tls_ptr_type;
+#endif
     //! Singleton base type
     typedef log::aux::lazy_singleton<
         this_type,

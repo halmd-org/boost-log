@@ -17,7 +17,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace sources {
 
@@ -52,7 +52,11 @@ bool severity_level::dispatch(type_dispatcher& dispatcher)
         dispatcher.get_visitor< held_type >();
     if (visitor)
     {
+#if !defined(BOOST_LOG_NO_THREADS)
         visitor->visit(m_Value.get());
+#else
+        visitor->visit(m_Value);
+#endif
         return true;
     }
     else
@@ -62,9 +66,14 @@ bool severity_level::dispatch(type_dispatcher& dispatcher)
 //! The method is called when the attribute value is passed to another thread
 shared_ptr< attribute_value > severity_level::detach_from_thread()
 {
+#if !defined(BOOST_LOG_NO_THREADS)
     return boost::make_shared<
         attributes::basic_attribute_value< held_type >
     >(m_Value.get());
+#else
+    // With multithreading disabled we may safely return this here. This method will not be called anyway.
+    return shared_from_this();
+#endif
 }
 
 //! Initializes the singleton instance

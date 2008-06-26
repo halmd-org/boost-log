@@ -34,7 +34,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace sources {
 
@@ -136,8 +136,11 @@ private:
 
 //! Narrow-char logger with channel support
 BOOST_LOG_DECLARE_LOGGER(channel_logger, (basic_channel_logger));
+
+#if !defined(BOOST_LOG_NO_THREADS)
 //! Narrow-char thread-safe logger with channel support
 BOOST_LOG_DECLARE_LOGGER_MT(channel_logger_mt, (basic_channel_logger));
+#endif
 
 #endif // BOOST_LOG_USE_CHAR
 
@@ -145,8 +148,11 @@ BOOST_LOG_DECLARE_LOGGER_MT(channel_logger_mt, (basic_channel_logger));
 
 //! Wide-char logger with channel support
 BOOST_LOG_DECLARE_WLOGGER(wchannel_logger, (basic_channel_logger));
+
+#if !defined(BOOST_LOG_NO_THREADS)
 //! Wide-char thread-safe logger with channel support
 BOOST_LOG_DECLARE_WLOGGER_MT(wchannel_logger_mt, (basic_channel_logger));
+#endif
 
 #endif // BOOST_LOG_USE_WCHAR_T
 

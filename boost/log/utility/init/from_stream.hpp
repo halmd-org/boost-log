@@ -37,7 +37,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! The function registers a factory for a sink
 template< typename CharT >

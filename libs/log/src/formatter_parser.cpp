@@ -20,9 +20,9 @@
 #undef BOOST_MPL_LIMIT_VECTOR_SIZE
 #define BOOST_MPL_LIMIT_VECTOR_SIZE 50
 
-#ifndef BOOST_SPIRIT_THREADSAFE
+#if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
 #define BOOST_SPIRIT_THREADSAFE
-#endif // BOOST_SPIRIT_THREADSAFE
+#endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
 
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
@@ -33,8 +33,6 @@
 #include <boost/mpl/push_back.hpp>
 #include <boost/mpl/back_inserter.hpp>
 #include <boost/mpl/joint_view.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #include <boost/spirit/core.hpp>
 #include <boost/spirit/utility/confix.hpp>
 #include <boost/spirit/utility/escape_char.hpp>
@@ -50,6 +48,10 @@
 #include <boost/log/utility/init/formatter_parser.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include <boost/log/utility/type_dispatch/date_time_types.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#endif
 #include "parser_utils.hpp"
 
 namespace boost {
@@ -91,7 +93,7 @@ inline std::basic_ostream<CharT, TraitsT>& operator<<(
 
 } // namespace local_time
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace {
 
@@ -102,8 +104,10 @@ struct formatters_repository :
 {
     friend class log::aux::lazy_singleton< formatters_repository< CharT > >;
 
+#if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
     mutable shared_mutex m_Mutex;
+#endif
     //! The map of formatter factories
     typename formatter_types< CharT >::factories_map m_Map;
 
@@ -178,7 +182,9 @@ public:
         else
         {
             formatters_repository< char_type > const& repo = formatters_repository< char_type >::get();
+#if !defined(BOOST_LOG_NO_THREADS)
             shared_lock< shared_mutex > lock(repo.m_Mutex);
+#endif
     
             typename formatter_types< CharT >::factories_map::const_iterator it = repo.m_Map.find(m_AttrName);
             if (it != repo.m_Map.end())
@@ -188,8 +194,10 @@ public:
             }
             else
             {
+#if !defined(BOOST_LOG_NO_THREADS)
                 // No user-defined factory, shall use the most generic formatter we can ever imagine at this point
                 lock.unlock();
+#endif
 
                 typedef mpl::joint_view<
                     // We have to exclude std::time_t since it's an integral type and will conflict with one of the standard types
@@ -323,7 +331,9 @@ void register_formatter_factory(
     typename formatter_types< CharT >::string_type name(attr_name);
     formatters_repository< CharT >& repo = formatters_repository< CharT >::get();
 
+#if !defined(BOOST_LOG_NO_THREADS)
     lock_guard< shared_mutex > _(repo.m_Mutex);
+#endif
     repo.m_Map[name] = factory;
 }
 

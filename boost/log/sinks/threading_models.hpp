@@ -24,12 +24,14 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
 //! Base tag for all other tags
 struct threading_model_tag {};
+
+#if !defined(BOOST_LOG_NO_THREADS)
 
 //! The sink backend ensures all needed synchronization, it is capable to handle multithreaded calls
 struct backend_synchronization_tag : threading_model_tag {};
@@ -37,6 +39,15 @@ struct backend_synchronization_tag : threading_model_tag {};
 struct single_thread_tag : threading_model_tag {};
 //! The sink backend expects pre-synchronized calls, all needed synchronization is implemented in the frontend (IOW, only one thread is writing to the backend concurrently, but is is possible for several threads to write sequentially) 
 struct frontend_synchronization_tag : threading_model_tag {};
+
+#else // !defined(BOOST_LOG_NO_THREADS)
+
+//  If multithreading is disabled, threading models become redundant
+struct single_thread_tag : threading_model_tag {};
+typedef single_thread_tag backend_synchronization_tag;
+typedef single_thread_tag frontend_synchronization_tag;
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
 
 //! A helper metafunction to check if a therading model is supported
 template< typename TestedT, typename RequiredT >

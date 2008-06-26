@@ -33,7 +33,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! The function parses a filter from the string
 template< typename CharT >

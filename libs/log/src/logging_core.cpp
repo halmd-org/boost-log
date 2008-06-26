@@ -19,19 +19,21 @@
 #include <boost/ref.hpp>
 #include <boost/none.hpp>
 #include <boost/compatibility/cpp_c_headers/cstddef>
-#include <boost/thread/tss.hpp>
-#include <boost/thread/shared_mutex.hpp>
-#include <boost/thread/locks.hpp>
 #include <boost/log/logging_core.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/detail/singleton.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/tss.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/locks.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
+#endif
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
-namespace aux {
+namespace {
 
     //! A simple exclusive ownership smart-pointer with moving copy semantics
     template< typename T >
@@ -79,7 +81,7 @@ namespace aux {
         element_type* get() const { return this->m_p; }
     };
 
-} // namespace aux
+} // namespace
 
 //! Logging system implementation
 template< typename CharT >
@@ -98,10 +100,12 @@ public:
 
     //! Front-end class type
     typedef basic_logging_core< char_type > logging_core_type;
+#if !defined(BOOST_LOG_NO_THREADS)
     //! Read lock type
     typedef log::aux::shared_lock_guard< shared_mutex > scoped_read_lock;
     //! Write lock type
     typedef lock_guard< shared_mutex > scoped_write_lock;
+#endif
 
     //! Sinks container type
     typedef std::vector< shared_ptr< sink_type > > sink_list;
@@ -128,8 +132,8 @@ public:
         };
         //! A stack of records being validated and pushed to the sinks
         std::stack<
-            aux::exclusive_ptr< pending_record >,
-            std::vector< aux::exclusive_ptr< pending_record > >
+            exclusive_ptr< pending_record >,
+            std::vector< exclusive_ptr< pending_record > >
         > PendingRecords;
 
         //! Thread-specific attribute set
@@ -137,16 +141,23 @@ public:
     };
 
 public:
+#if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
     shared_mutex Mutex;
+#endif
 
     //! List of sinks involved into output
     sink_list Sinks;
 
     //! Global attribute set
     attribute_set_type GlobalAttributes;
+#if !defined(BOOST_LOG_NO_THREADS)
     //! Thread-specific data
     thread_specific_ptr< thread_data > pThreadData;
+#else
+    //! Thread-specific data
+    std::auto_ptr< thread_data > pThreadData;
+#endif
 
     //! The global state of logging
     volatile bool Enabled;
@@ -155,7 +166,7 @@ public:
 
 public:
     //! Constructor
-    implementation() : Mutex(), Enabled(true) {}
+    implementation() : Enabled(true) {}
 
     //! The method returns the current therad-specific data
     thread_data* get_thread_data()
@@ -179,8 +190,9 @@ private:
     //! The method initializes thread-specific data
     void init_thread_data()
     {
+#if !defined(BOOST_LOG_NO_THREADS)
         scoped_write_lock lock(Mutex);
-
+#endif
         if (!pThreadData.get())
         {
             std::auto_ptr< thread_data > p(new thread_data());
@@ -216,7 +228,9 @@ shared_ptr< basic_logging_core< CharT > > basic_logging_core< CharT >::get()
 template< typename CharT >
 bool basic_logging_core< CharT >::set_logging_enabled(bool enabled)
 {
+#if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
+#endif
     const bool old_value = pImpl->Enabled;
     pImpl->Enabled = enabled;
     return old_value;
@@ -226,7 +240,9 @@ bool basic_logging_core< CharT >::set_logging_enabled(bool enabled)
 template< typename CharT >
 void basic_logging_core< CharT >::add_sink(shared_ptr< sink_type > const& s)
 {
+#if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
+#endif
     typename implementation::sink_list::iterator it =
         std::find(pImpl->Sinks.begin(), pImpl->Sinks.end(), s);
     if (it == pImpl->Sinks.end())
@@ -237,7 +253,9 @@ void basic_logging_core< CharT >::add_sink(shared_ptr< sink_type > const& s)
 template< typename CharT >
 void basic_logging_core< CharT >::remove_sink(shared_ptr< sink_type > const& s)
 {
+#if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
+#endif
     typename implementation::sink_list::iterator it =
         std::find(pImpl->Sinks.begin(), pImpl->Sinks.end(), s);
     if (it != pImpl->Sinks.end())
@@ -250,7 +268,9 @@ template< typename CharT >
 std::pair< typename basic_logging_core< CharT >::attribute_set_type::iterator, bool >
 basic_logging_core< CharT >::add_global_attribute(string_type const& name, shared_ptr< attribute > const& attr)
 {
+#if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
+#endif
     return pImpl->GlobalAttributes.insert(typename attribute_set_type::key_type(name), attr);
 }
 
@@ -258,7 +278,9 @@ basic_logging_core< CharT >::add_global_attribute(string_type const& name, share
 template< typename CharT >
 void basic_logging_core< CharT >::remove_global_attribute(typename attribute_set_type::iterator it)
 {
+#if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
+#endif
     pImpl->GlobalAttributes.erase(it);
 }
 
@@ -266,14 +288,18 @@ void basic_logging_core< CharT >::remove_global_attribute(typename attribute_set
 template< typename CharT >
 typename basic_logging_core< CharT >::attribute_set_type basic_logging_core< CharT >::get_global_attributes() const
 {
+#if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
+#endif
     return pImpl->GlobalAttributes;
 }
 //! The method replaces the complete set of currently registered global attributes with the provided set
 template< typename CharT >
 void basic_logging_core< CharT >::set_global_attributes(attribute_set_type const& attrs) const
 {
+#if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
+#endif
     pImpl->GlobalAttributes = attrs;
 }
 
@@ -314,7 +340,9 @@ void basic_logging_core< CharT >::set_thread_attributes(attribute_set_type const
 template< typename CharT >
 void basic_logging_core< CharT >::set_filter(filter_type const& filter)
 {
+#if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
+#endif
     pImpl->Filter = filter;
 }
 
@@ -322,7 +350,9 @@ void basic_logging_core< CharT >::set_filter(filter_type const& filter)
 template< typename CharT >
 void basic_logging_core< CharT >::reset_filter()
 {
+#if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
+#endif
     pImpl->Filter.clear();
 }
 
@@ -334,14 +364,16 @@ bool basic_logging_core< CharT >::open_record(attribute_set_type const& source_a
     if (pImpl->Enabled) try
     {
         typename implementation::thread_data* tsd = pImpl->get_thread_data();
+#if !defined(BOOST_LOG_NO_THREADS)
         // Lock the core to be safe against any attribute or sink set modifications
         typename implementation::scoped_read_lock lock(pImpl->Mutex);
+#endif
     
         if (pImpl->Enabled && !pImpl->Sinks.empty())
         {
             // Construct a record
             typedef typename implementation::thread_data::pending_record pending_record;
-            aux::exclusive_ptr< pending_record > record(new pending_record(
+            exclusive_ptr< pending_record > record(new pending_record(
                 source_attributes, tsd->ThreadAttributes, pImpl->GlobalAttributes));
 
             if (pImpl->Filter.empty() || pImpl->Filter(record->AttributeValues))

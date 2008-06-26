@@ -21,7 +21,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! A simple interface to extend stream's awareness of the data flow
 struct BOOST_LOG_EXPORT record_writer

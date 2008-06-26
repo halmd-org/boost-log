@@ -29,15 +29,17 @@
 #include <boost/static_assert.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/function/function1.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
-#include <boost/thread/recursive_mutex.hpp>
 #include <boost/utility/in_place_factory.hpp>
 #include <boost/detail/atomic_count.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
 #include <boost/log/sinks/threading_models.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/recursive_mutex.hpp>
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -49,7 +51,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
@@ -67,6 +69,7 @@ public:
     //! Filter function type
     typedef function1< bool, values_view_type const& > filter_type;
 
+#if !defined(BOOST_LOG_NO_THREADS)
 private:
     //! Mutex type
     typedef shared_mutex filter_mutex_type;
@@ -74,10 +77,13 @@ private:
     typedef log::aux::shared_lock_guard< filter_mutex_type > scoped_read_lock;
     //! Write lock type
     typedef lock_guard< filter_mutex_type > scoped_write_lock;
+#endif
 
 private:
+#if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
     filter_mutex_type m_FilterMutex;
+#endif
     //! Filter
     filter_type m_Filter;
 
@@ -88,20 +94,26 @@ public:
     template< typename T >
     void set_filter(T const& filter)
     {
+#if !defined(BOOST_LOG_NO_THREADS)
         scoped_write_lock _(m_FilterMutex);
+#endif
         m_Filter = filter;
     }
     //! The method removes the sink-specific filter
     void reset_filter()
     {
+#if !defined(BOOST_LOG_NO_THREADS)
         scoped_write_lock _(m_FilterMutex);
+#endif
         m_Filter.clear();
     }
 
     //! The method returns true if the attribute values pass the filter
     bool will_write_message(values_view_type const& attributes)
     {
+#if !defined(BOOST_LOG_NO_THREADS)
         scoped_read_lock _(m_FilterMutex);
+#endif
         return (m_Filter.empty() || m_Filter(attributes));
     }
 
@@ -148,6 +160,8 @@ public:
     //! Locking accessor to the attached backend
     locked_backend_ptr locked_backend() const { return m_pBackend; }
 };
+
+#if !defined(BOOST_LOG_NO_THREADS)
 
 namespace aux {
 
@@ -377,6 +391,8 @@ private:
         p->write_message(attributes, message);
     }
 };
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
 
 } // namespace sinks
 

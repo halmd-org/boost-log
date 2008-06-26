@@ -31,7 +31,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! A generated attribute values view
 template< typename CharT >

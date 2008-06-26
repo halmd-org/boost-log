@@ -30,12 +30,7 @@
 
 namespace boost {
 
-namespace log {
-
-#if (defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530) && !(defined BOOST_NO_COMPILER_CONFIG)
-    // Sun C++ 5.3 can't handle the safe_bool idiom, so don't use it
-#    define BOOST_NO_UNSPECIFIED_BOOL
-#endif // (defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530) && !(defined BOOST_NO_COMPILER_CONFIG)
+namespace BOOST_LOG_NAMESPACE {
 
 //! A simple type_info wrapper that implements value semantic to the type information
 class type_info_wrapper :
@@ -145,8 +140,6 @@ public:
 #endif
 
 };
-
-#undef BOOST_NO_UNSPECIFIED_BOOL
 
 } // namespace log
 

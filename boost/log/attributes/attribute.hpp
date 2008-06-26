@@ -30,7 +30,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! A base class for an attribute value
 struct BOOST_LOG_NO_VTABLE attribute_value

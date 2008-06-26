@@ -20,8 +20,8 @@ feature.set-default logapi : [ default_logapi ] ;
 project boost/log
     : source-location ../src
     : requirements
-        <threading>multi
-	<link>shared:<define>BOOST_LOG_DLL
+        <threading>single:<define>BOOST_LOG_NO_THREADS
+        <link>shared:<define>BOOST_LOG_DLL
         <logapi>unix:<define>BOOST_LOG_USE_NATIVE_SYSLOG=1
         <library>../../thread/build//boost_thread
         <library>../../regex/build//boost_regex
@@ -49,18 +49,18 @@ lib boost_log
         attribute_values_view.cpp
         slim_string.cpp
         logging_core.cpp
-	stream_provider.cpp
-	severity_level.cpp
-	global_logger_storage.cpp
+        stream_provider.cpp
+        severity_level.cpp
+        global_logger_storage.cpp
         named_scope.cpp
         timer.cpp
         sink.cpp
         text_ostream_backend.cpp
-	thread_specific.cpp
-	parser_utils.cpp
-	init_from_stream.cpp
-	filter_parser.cpp
-	formatter_parser.cpp
+        thread_specific.cpp
+        parser_utils.cpp
+        init_from_stream.cpp
+        filter_parser.cpp
+        formatter_parser.cpp
         platform_log_sources
     : ## requirements ##
         <define>BOOST_LOG_BUILDING_THE_LIB=1

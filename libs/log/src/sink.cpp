@@ -16,15 +16,17 @@
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
 #include <boost/utility/in_place_factory.hpp>
+#include <boost/log/sinks/sink.hpp>
+
+#if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/thread.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
-#include <boost/log/sinks/sink.hpp>
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
@@ -134,7 +136,7 @@ public:
         {
             // Yep, a bit hackish. I'll need a better backdoor to do it gracefully.
             it->second->detach_from_thread().swap(
-                    const_cast< typename values_view_type::mapped_type& >(it->second));
+                const_cast< typename values_view_type::mapped_type& >(it->second));
         }
 
         // Put the record into the queue
@@ -232,3 +234,5 @@ template class BOOST_LOG_EXPORT asynchronous_sink_impl< wchar_t >;
 } // namespace log
 
 } // namespace boost
+
+#endif // !defined(BOOST_LOG_NO_THREADS)

@@ -24,16 +24,18 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #if defined(BOOST_WINDOWS) && !defined(BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER)
 #include <boost/cstdint.hpp>
-#include <boost/thread/mutex.hpp>
 #endif
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/attributes/time_traits.hpp>
+#if !defined(BOOST_LOG_NO_THREADS) && defined(BOOST_WINDOWS) && !defined(BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER)
+#include <boost/thread/mutex.hpp>
+#endif
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace attributes {
 
@@ -72,8 +74,10 @@ private:
     typedef basic_attribute_value< time_type::time_duration_type > result_value;
 
 private:
+#if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
     mutex m_Mutex;
+#endif
     //! Frequency factor for calculating duration
     uint64_t m_FrequencyFactor;
     //! Last value of the performance counter

@@ -26,9 +26,9 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
-namespace aux {
+namespace {
 
     //! A list-like container with ability to search for the value by the key
     template< typename ValueT, typename NodeT >
@@ -276,7 +276,7 @@ namespace aux {
         }
     };
 
-} // namespace aux
+} // namespace
 
 //! Attribute set implementation
 template< typename CharT >
@@ -312,7 +312,7 @@ public:
     };
 
     //! Node container type
-    typedef aux::ordered_list< node, node_base > node_container;
+    typedef ordered_list< node, node_base > node_container;
 
 public:
     //! Node container

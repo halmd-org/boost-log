@@ -30,13 +30,18 @@
 // STL classes themselves or most of the user-defined derived classes.
 // Not sure if that happens with other MSVC versions.
 // See: http://svn.boost.org/trac/boost/ticket/1946
-#define BOOST_LOG_BROKEN_STL_ALIGNMENT
+#   define BOOST_LOG_BROKEN_STL_ALIGNMENT
 #endif
 
 #if defined(BOOST_MSVC)
 // For some reason MSVC 9.0 fails to link the library if static integral constants are defined in cpp
-#define BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
+#   define BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
 #endif
+
+#if (defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530) && !(defined BOOST_NO_COMPILER_CONFIG)
+    // Sun C++ 5.3 can't handle the safe_bool idiom, so don't use it
+#   define BOOST_NO_UNSPECIFIED_BOOL
+#endif // (defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530) && !(defined BOOST_NO_COMPILER_CONFIG)
 
 // Extended declaration macros. Used to implement compiler-specific optimizations.
 #if defined(_MSC_VER)
@@ -106,5 +111,30 @@
 #    define BOOST_LOG_USE_CHAR
 #    define BOOST_LOG_USE_WCHAR_T
 #endif // !defined(BOOST_LOG_USE_CHAR) && !defined(BOOST_LOG_USE_WCHAR_T)
+
+// Check if multithreading is supported
+#if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_HAS_THREADS)
+#   define BOOST_LOG_NO_THREADS
+#endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_HAS_THREADS)
+
+namespace boost {
+
+// Setup namespace name
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
+#   if defined(BOOST_LOG_NO_THREADS)
+namespace log_st {}
+namespace log = log_st;
+#       define BOOST_LOG_NAMESPACE log_st
+#   else
+namespace log_mt {}
+namespace log = log_mt;
+#       define BOOST_LOG_NAMESPACE log_mt
+#   endif // defined(BOOST_LOG_NO_THREADS)
+#else
+namespace log {}
+#   define BOOST_LOG_NAMESPACE log
+#endif // !defined(BOOST_LOG_DOXYGEN_PASS)
+
+} // namespace boost
 
 #endif // BOOST_LOG_DETAIL_PROLOGUE_HPP_INCLUDED_

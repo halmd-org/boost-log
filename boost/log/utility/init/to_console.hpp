@@ -30,7 +30,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! The function constructs the sink and adds it to the core
 template< typename CharT >

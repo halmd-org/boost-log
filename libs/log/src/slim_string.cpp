@@ -27,7 +27,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! Slim string implementation class
 template< typename CharT, typename TraitsT >

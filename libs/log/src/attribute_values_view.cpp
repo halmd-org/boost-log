@@ -21,7 +21,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! Container implementation
 template< typename CharT >

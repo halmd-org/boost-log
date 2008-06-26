@@ -24,7 +24,9 @@
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/detail/thread_specific.hpp>
+#endif
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
@@ -39,7 +41,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace sources {
 
@@ -84,8 +86,13 @@ namespace aux {
         typedef int held_type;
 
     private:
+#if !defined(BOOST_LOG_NO_THREADS)
         //! The actual severity level value
         log::aux::thread_specific< held_type > m_Value;
+#else
+        //! The actual severity level value
+        held_type m_Value;
+#endif
 
     public:
         virtual ~severity_level();
@@ -98,7 +105,7 @@ namespace aux {
         //! The method sets the actual level
         void set_value(held_type level)
         {
-            m_Value.set(level);
+            m_Value = level;
         }
 
         //! The method dispatches the value to the given object
@@ -221,8 +228,11 @@ private:
 
 //! Narrow-char logger with severity level support
 BOOST_LOG_DECLARE_LOGGER(severity_logger, (basic_severity_logger));
+
+#if !defined(BOOST_LOG_NO_THREADS)
 //! Narrow-char thread-safe logger with severity level support
 BOOST_LOG_DECLARE_LOGGER_MT(severity_logger_mt, (basic_severity_logger));
+#endif
 
 #endif
 
@@ -230,8 +240,11 @@ BOOST_LOG_DECLARE_LOGGER_MT(severity_logger_mt, (basic_severity_logger));
 
 //! Wide-char logger with severity level support
 BOOST_LOG_DECLARE_WLOGGER(wseverity_logger, (basic_severity_logger));
+
+#if !defined(BOOST_LOG_NO_THREADS)
 //! Wide-char thread-safe logger with severity level support
 BOOST_LOG_DECLARE_WLOGGER_MT(wseverity_logger_mt, (basic_severity_logger));
+#endif
 
 #endif
 

@@ -31,7 +31,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! An MPL-sequence of natively supported date and time types of attributes
 typedef mpl::vector<

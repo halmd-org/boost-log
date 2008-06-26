@@ -23,6 +23,8 @@
 #include <boost/type_traits/is_pod.hpp>
 #include <boost/log/detail/prologue.hpp>
 
+#if !defined(BOOST_LOG_NO_THREADS)
+
 #ifdef _MSC_VER
 #pragma warning(push)
 // 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
@@ -33,7 +35,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
@@ -116,5 +118,7 @@ public:
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif // _MSC_VER
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
 
 #endif // BOOST_LOG_DETAIL_THREAD_SPECIFIC_HPP_INCLUDED_

@@ -35,7 +35,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! A slim string class with shared data and read-only access
 template<

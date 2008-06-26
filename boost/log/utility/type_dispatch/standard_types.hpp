@@ -29,7 +29,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! An MPL-sequence of integral types of attributes, supported by default
 typedef mpl::vector<

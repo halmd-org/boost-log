@@ -13,15 +13,17 @@
  */
 
 #include <map>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/locks.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/locks.hpp>
+#endif
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace sources {
 
@@ -37,8 +39,10 @@ struct loggers_repository :
     //! Repository map type
     typedef std::map< log::type_info_wrapper, shared_ptr< logger_holder_base > > loggers_map_t;
 
+#if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization primitive
     mutable mutex m_Mutex;
+#endif
     //! Map of logger holders
     loggers_map_t m_Loggers;
 };
@@ -56,7 +60,9 @@ shared_ptr< logger_holder_base > global_storage< CharT >::get_or_init(
     repository_t& repo = repository_t::get();
     log::type_info_wrapper wrapped_key = key;
 
+#if !defined(BOOST_LOG_NO_THREADS)
     lock_guard< mutex > _(repo.m_Mutex);
+#endif
     typename loggers_map_t::iterator it = repo.m_Loggers.find(wrapped_key);
     if (it != repo.m_Loggers.end())
     {

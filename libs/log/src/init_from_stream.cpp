@@ -30,8 +30,6 @@
 #include <boost/compatibility/cpp_c_headers/cstdlib>
 #include <boost/compatibility/cpp_c_headers/cwchar>
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/log/logging_core.hpp>
@@ -41,17 +39,21 @@
 #include <boost/log/sinks/syslog_backend.hpp>
 #endif
 #include <boost/log/detail/singleton.hpp>
-#include <boost/log/detail/shared_lock_guard.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/rotating_ofstream.hpp>
 #include <boost/log/utility/init/from_stream.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
 #include <boost/log/utility/init/formatter_parser.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#include <boost/log/detail/shared_lock_guard.hpp>
+#endif
 #include "parser_utils.hpp"
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace {
 
@@ -203,8 +205,10 @@ struct sinks_repository :
     typedef function1< shared_ptr< sinks::sink< char_type > >, params_t const& > sink_factory;
     typedef std::map< string_type, sink_factory > sink_factories;
 
+#if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
     shared_mutex m_Mutex;
+#endif
     //! Map of the sink factories
     sink_factories m_Factories;
 
@@ -214,7 +218,9 @@ struct sinks_repository :
         typename params_t::const_iterator dest = params.find(constants::sink_destination_param_name());
         if (dest != params.end())
         {
+#if !defined(BOOST_LOG_NO_THREADS)
             log::aux::shared_lock_guard< shared_mutex > _(m_Mutex);
+#endif
             typename sink_factories::const_iterator it = m_Factories.find(dest->second);
             if (it != m_Factories.end())
             {
@@ -430,6 +436,9 @@ private:
             backend->set_formatter(parse_formatter(it->second));
         }
 
+        shared_ptr< sinks::sink< char_type > > p;
+
+#if !defined(BOOST_LOG_NO_THREADS)
         // Asynchronous
         bool async = false;
         it = params.find(constants::asynchronous_param_name());
@@ -441,11 +450,14 @@ private:
         }
 
         // Construct the frontend, considering Asynchronous parameter
-        shared_ptr< sinks::sink< char_type > > p;
         if (!async)
             p = boost::make_shared< sinks::synchronous_sink< backend_t > >(backend);
         else
             p = boost::make_shared< sinks::asynchronous_sink< backend_t > >(backend);
+#else
+        // When multithreading is disabled we always use the unlocked sink frontend
+        p = boost::make_shared< sinks::unlocked_sink< backend_t > >(backend);
+#endif
 
         p->set_filter(filt);
 
@@ -499,7 +511,9 @@ void register_sink_factory(
     > const& factory)
 {
     sinks_repository< CharT >& repo = sinks_repository< CharT >::get();
+#if !defined(BOOST_LOG_NO_THREADS)
     lock_guard< shared_mutex > _(repo.m_Mutex);
+#endif
     repo.m_Factories[sink_name] = factory;
 }
 

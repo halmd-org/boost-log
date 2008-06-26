@@ -24,7 +24,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! An interface to the concrete type visitor
 template< typename T >

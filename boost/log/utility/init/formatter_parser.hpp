@@ -37,7 +37,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! The structure generates commonly used types related to formatters
 template< typename CharT >

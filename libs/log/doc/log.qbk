@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-06-25 23:42:24 $]
+    [last-revision $Date: 2008-06-26 13:41:38 $]
 ]
 
 [c++]
@@ -80,6 +80,7 @@ The library supports a number of configuration macros:
     [[Macro name]                               [Effect]]
     [[`BOOST_LOG_DYN_LINK`]                     [If defined in user code, the library will assume the binary is built as a dynamically loaded library (dll or so). Otherwise it is assumed that the library is built in static mode. This macro must be either defined or not defined for all translation units of user application that use logging. This macro can help with auto-linking on platforms that support it.]]
     [[`BOOST_ALL_DYN_LINK`]                     [Same as `BOOST_LOG_DYN_LINK` but also affects other Boost libraries the same way]]
+    [[`BOOST_LOG_NO_THREADS`]                   [If defined, disables multithreading support. Has effect on both the library compilation and user code compilation.]]
     [[`BOOST_LOG_USE_CHAR`]                     [If defined, enables support for narrow character logging. Has effect on both the library compilation and user code compilation.]]
     [[`BOOST_LOG_USE_WCHAR_T`]                  [If defined, enables support for wide character logging. Has effect on both the library compilation and user code compilation. If neither `BOOST_LOG_USE_CHAR` nor `BOOST_LOG_USE_WCHAR_T` is defined, it is assumed the both character types support is enabled. Defining only one of them allows to significantly reduce binary size of the library.]]
     [[`BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER`] [Has effect on Windows platform only, on both the library compilation and user code compilation stages. If defined, disables support for `QueryPerformanceCounter` API in the `timer` attribute. This will result in a significantly less accurate time readings and may reduce performance a little. The macro is intended to solve possible problems with earlier revisions of AMD Athlon CPU, described [@http://support.microsoft.com/?scid=kb;en-us;895980 here] and [@http://support.microsoft.com/?id=896256 here].]]

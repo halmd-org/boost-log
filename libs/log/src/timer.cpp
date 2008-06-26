@@ -19,12 +19,14 @@
 #include <windows.h>
 #include <boost/limits.hpp>
 #include <boost/assert.hpp>
-#include <boost/thread/locks.hpp>
 #include <boost/log/attributes/timer.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/locks.hpp>
+#endif
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace attributes {
 
@@ -43,7 +45,9 @@ timer::timer()
 //! The method returns the actual attribute value. It must not return NULL.
 shared_ptr< attribute_value > timer::get_value()
 {
+#if !defined(BOOST_LOG_NO_THREADS)
     lock_guard< mutex > _(m_Mutex);
+#endif
 
     LARGE_INTEGER li;
     QueryPerformanceCounter(&li);

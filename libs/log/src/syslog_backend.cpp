@@ -15,16 +15,18 @@
 #include <syslog.h>
 #include <boost/weak_ptr.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/mutex.hpp>
 #include <boost/log/sinks/syslog_backend.hpp>
 #include <boost/log/detail/narrowing_sstream_buf.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/singleton.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/locks.hpp>
+#include <boost/thread/mutex.hpp>
+#endif
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
@@ -79,11 +81,17 @@ namespace syslog {
 namespace {
 
     //! Syslog initializer (implemented as a weak singleton)
+#if !defined(BOOST_LOG_NO_THREADS)
     class syslog_initializer :
         private log::aux::lazy_singleton< syslog_initializer, mutex >
+#else
+    class syslog_initializer
+#endif
     {
+#if !defined(BOOST_LOG_NO_THREADS)
         friend class log::aux::lazy_singleton< syslog_initializer, mutex >;
         typedef log::aux::lazy_singleton< syslog_initializer, mutex > mutex_holder;
+#endif
 
     private:
         explicit syslog_initializer(syslog::options_t const& options)
@@ -99,7 +107,9 @@ namespace {
 
         static shared_ptr< syslog_initializer > get_instance(syslog::options_t const& options)
         {
+#if !defined(BOOST_LOG_NO_THREADS)
             lock_guard< mutex > _(mutex_holder::get());
+#endif
             static weak_ptr< syslog_initializer > instance;
             shared_ptr< syslog_initializer > p(instance.lock());
             if (!p)

@@ -31,14 +31,16 @@
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
 #include <boost/log/detail/multiple_lock.hpp>
 #include <boost/log/logging_core.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -48,7 +50,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace sources {
 
@@ -81,6 +83,8 @@ struct single_thread_model
 
     void swap(single_thread_model&) {}
 };
+
+#if !defined(BOOST_LOG_NO_THREADS)
 
 //! Multi-thread locking model
 struct multi_thread_model
@@ -115,6 +119,8 @@ private:
     //! Synchronization primitive
     mutable shared_mutex m_Mutex;
 };
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
 
 namespace aux {
 
@@ -304,34 +310,44 @@ public:
     std::pair< typename attribute_set_type::iterator, bool > add_attribute(
         string_type const& name, shared_ptr< attribute > const& attr)
     {
+#if !defined(BOOST_LOG_NO_THREADS)
         lock_guard< threading_model > _(threading_base());
+#endif
         return add_attribute_unlocked(name, attr);
     }
     //! The method removes an attribute from the logger
     void remove_attribute(typename attribute_set_type::iterator it)
     {
+#if !defined(BOOST_LOG_NO_THREADS)
         lock_guard< threading_model > _(threading_base());
+#endif
         remove_attribute_unlocked(it);
     }
 
     //! The method removes all attributes from the logger
     void remove_all_attributes()
     {
+#if !defined(BOOST_LOG_NO_THREADS)
         lock_guard< threading_model > _(threading_base());
+#endif
         remove_all_attributes_unlocked();
     }
 
     //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
     bool open_record()
     {
+#if !defined(BOOST_LOG_NO_THREADS)
         log::aux::shared_lock_guard< threading_model > _(threading_base());
+#endif
         return open_record_unlocked();
     }
     //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
     template< typename ArgsT >
     bool open_record(ArgsT const& args)
     {
+#if !defined(BOOST_LOG_NO_THREADS)
         log::aux::shared_lock_guard< threading_model > _(threading_base());
+#endif
         return open_record_unlocked(args);
     }
     //! The method pushes the constructed message to the sinks and closes the record
@@ -459,6 +475,8 @@ public:
     }
 };
 
+#if !defined(BOOST_LOG_NO_THREADS)
+
 //! Narrow-char thread-safe logger
 class logger_mt :
     public basic_logger< char, logger_mt, multi_thread_model >
@@ -496,6 +514,7 @@ public:
     }
 };
 
+#endif // !defined(BOOST_LOG_NO_THREADS)
 #endif // BOOST_LOG_USE_CHAR
 
 #ifdef BOOST_LOG_USE_WCHAR_T
@@ -520,6 +539,8 @@ public:
         swap_unlocked(that);
     }
 };
+
+#if !defined(BOOST_LOG_NO_THREADS)
 
 //! Wide-char thread-safe logger
 class wlogger_mt :
@@ -558,6 +579,7 @@ public:
     }
 };
 
+#endif // !defined(BOOST_LOG_NO_THREADS)
 #endif // BOOST_LOG_USE_WCHAR_T
 
 } // namespace sources
@@ -596,6 +618,8 @@ public:
 #define BOOST_LOG_CTOR_FORWARD(z, n, data)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit data(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) : base_type((BOOST_PP_ENUM_PARAMS(n, arg))) {}
+
+#if !defined(BOOST_LOG_NO_THREADS)
 
 /*!
  *  \brief The macro declares a logger class that inherits a number of base classes
@@ -646,6 +670,51 @@ public:
         }\
     }
 
+#else // !defined(BOOST_LOG_NO_THREADS)
+
+/*!
+ *  \brief The macro declares a logger class that inherits a number of base classes
+ * 
+ *  \param type_name The name of the logger class to declare
+ *  \param char_type The character type of the logger. Either char or wchar_t expected.
+ *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
+ *  \param threading A threading model class
+ */
+#define BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char_type, base_seq, threading)\
+    class type_name :\
+        public BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL1, ~, base_seq)\
+            ::boost::log::sources::basic_logger< char_type, type_name, threading >\
+            BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL2, ~, base_seq)\
+    {\
+        typedef BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL1, ~, base_seq)\
+            ::boost::log::sources::basic_logger< char_type, type_name, threading >\
+            BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL2, ~, base_seq) base_type;\
+    public:\
+        typedef base_type::threading_model threading_model;\
+    public:\
+        type_name() {}\
+        type_name(type_name const& that) :\
+            base_type(static_cast< base_type const& >(that))\
+        {\
+        }\
+        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD, type_name)\
+        type_name& operator= (type_name const& that)\
+        {\
+            if (this != ::boost::addressof(that))\
+            {\
+                type_name tmp(that);\
+                swap_unlocked(tmp);\
+            }\
+            return *this;\
+        }\
+        void swap(type_name& that)\
+        {\
+            swap_unlocked(that);\
+        }\
+    }
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
+
 #ifdef BOOST_LOG_USE_CHAR
 
 /*!
@@ -659,6 +728,8 @@ public:
 #define BOOST_LOG_DECLARE_LOGGER(type_name, base_seq)\
     BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, ::boost::log::sources::single_thread_model)
 
+#if !defined(BOOST_LOG_NO_THREADS)
+
 /*!
  *  \brief The macro declares a narrow-char thread-safe logger class that inherits a number of base classes
  * 
@@ -670,6 +741,7 @@ public:
 #define BOOST_LOG_DECLARE_LOGGER_MT(type_name, base_seq)\
     BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, ::boost::log::sources::multi_thread_model)
 
+#endif // !defined(BOOST_LOG_NO_THREADS)
 #endif // BOOST_LOG_USE_CHAR
 
 #ifdef BOOST_LOG_USE_WCHAR_T
@@ -685,6 +757,8 @@ public:
 #define BOOST_LOG_DECLARE_WLOGGER(type_name, base_seq)\
     BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq, ::boost::log::sources::single_thread_model)
 
+#if !defined(BOOST_LOG_NO_THREADS)
+
 /*!
  *  \brief The macro declares a wide-char thread-safe logger class that inherits a number of base classes
  * 
@@ -696,6 +770,7 @@ public:
 #define BOOST_LOG_DECLARE_WLOGGER_MT(type_name, base_seq)\
     BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq, ::boost::log::sources::multi_thread_model)
 
+#endif // !defined(BOOST_LOG_NO_THREADS)
 #endif // BOOST_LOG_USE_WCHAR_T
 
 #endif // BOOST_LOG_SOURCES_BASIC_LOGGER_HPP_INCLUDED_

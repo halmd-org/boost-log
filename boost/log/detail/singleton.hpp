@@ -16,12 +16,16 @@
 #define BOOST_LOG_DETAIL_SINGLETON_HPP_INCLUDED_
 
 #include <boost/noncopyable.hpp>
-#include <boost/thread/once.hpp>
 #include <boost/log/detail/prologue.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/once.hpp>
+#else
+#include <boost/log/utility/no_unused_warnings.hpp>
+#endif
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
@@ -33,8 +37,13 @@ public:
     //! Returns the singleton instance
     static StorageT& get()
     {
+#if !defined(BOOST_LOG_NO_THREADS)
         static once_flag flag = BOOST_ONCE_INIT;
         boost::call_once(flag, &DerivedT::init_instance);
+#else
+        static const bool initialized = (DerivedT::init_instance(), true);
+        BOOST_LOG_NO_UNUSED_WARNINGS(initialized);
+#endif
         return get_instance();
     }
 

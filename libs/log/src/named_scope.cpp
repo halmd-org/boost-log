@@ -16,14 +16,16 @@
 #include <boost/optional.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/thread/tss.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/detail/singleton.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/tss.hpp>
+#endif
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace attributes {
 
@@ -135,8 +137,13 @@ struct basic_named_scope< CharT >::implementation :
     //! Writable scope list type
     typedef basic_writeable_named_scope_list< char_type > scope_list;
 
+#if !defined(BOOST_LOG_NO_THREADS)
     //! Pointer to the thread-specific scope stack
     thread_specific_ptr< scope_list > pScopes;
+#else
+    //! Pointer to the scope stack
+    std::auto_ptr< scope_list > pScopes;
+#endif
 
     //! The method returns current thread scope stack
     scope_list& get_scope_list()

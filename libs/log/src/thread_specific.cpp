@@ -15,8 +15,12 @@
 #include <string>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
-#include <boost/thread/tss.hpp> // To hook on Boost.Thread configuration macros
 #include <boost/log/detail/thread_specific.hpp>
+
+#if !defined(BOOST_LOG_NO_THREADS)
+
+#include <boost/thread/tss.hpp> // To hook on Boost.Thread configuration macros
+
 
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
 
@@ -24,7 +28,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
@@ -65,7 +69,7 @@ void thread_specific_base::set_content(void* value) const
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
@@ -218,3 +222,5 @@ void thread_specific_base::set_content(void* value) const
 #else
 #error "An unsupported threading platform encountered"
 #endif
+
+#endif // !defined(BOOST_LOG_NO_THREADS)

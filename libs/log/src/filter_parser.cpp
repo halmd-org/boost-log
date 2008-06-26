@@ -16,9 +16,9 @@
 #include <string>
 #include <stdexcept>
 
-#ifndef BOOST_SPIRIT_THREADSAFE
+#if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
 #define BOOST_SPIRIT_THREADSAFE
-#endif // BOOST_SPIRIT_THREADSAFE
+#endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
 
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
@@ -43,7 +43,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace {
 

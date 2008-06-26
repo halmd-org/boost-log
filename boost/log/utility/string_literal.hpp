@@ -34,7 +34,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! String literals wrapper class
 template< typename CharT, typename TraitsT = std::char_traits< CharT > >

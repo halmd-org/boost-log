@@ -36,7 +36,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 //! Logging system core class
 template< typename CharT >

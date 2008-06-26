@@ -30,14 +30,18 @@
 #include <boost/mpl/next.hpp>
 #include <boost/mpl/deref.hpp>
 #include <boost/mpl/size.hpp>
-#include <boost/thread/once.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/once.hpp>
+#else
+#include <boost/log/utility/no_unused_warnings.hpp>
+#endif
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
@@ -140,6 +144,7 @@ private:
         mpl::size< supported_types >::value
     > dispatching_map;
 
+#if !defined(BOOST_LOG_NO_THREADS)
     //! Dunction delegate to implement one-time initialization
     struct delegate
     {
@@ -157,13 +162,20 @@ private:
         static_type_dispatcher* m_pThis;
         void (static_type_dispatcher::*m_pFun)();
     };
+#endif // !defined(BOOST_LOG_NO_THREADS)
+
 
 public:
     //! Constructor
     static_type_dispatcher()
     {
+#if !defined(BOOST_LOG_NO_THREADS)
         static once_flag flag = BOOST_ONCE_INIT;
         boost::call_once(flag, delegate(this, &static_type_dispatcher::init_dispatching_map));
+#else
+        static bool initialized = (init_dispatching_map(), true);
+        BOOST_LOG_NO_UNUSED_WARNINGS(initialized);
+#endif
     }
 
 private:

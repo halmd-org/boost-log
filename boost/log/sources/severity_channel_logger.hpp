@@ -31,7 +31,7 @@
 
 namespace boost {
 
-namespace log {
+namespace BOOST_LOG_NAMESPACE {
 
 namespace sources {
 
@@ -39,8 +39,11 @@ namespace sources {
 
 //! Narrow-char logger with severity level and channel support
 BOOST_LOG_DECLARE_LOGGER(severity_channel_logger, (basic_severity_logger)(basic_channel_logger));
+
+#if !defined(BOOST_LOG_NO_THREADS)
 //! Narrow-char thread-safe logger with severity level and channel support
 BOOST_LOG_DECLARE_LOGGER_MT(severity_channel_logger_mt, (basic_severity_logger)(basic_channel_logger));
+#endif
 
 #endif
 
@@ -48,8 +51,11 @@ BOOST_LOG_DECLARE_LOGGER_MT(severity_channel_logger_mt, (basic_severity_logger)(
 
 //! Wide-char logger with severity level and channel support
 BOOST_LOG_DECLARE_WLOGGER(wseverity_channel_logger, (basic_severity_logger)(basic_channel_logger));
+
+#if !defined(BOOST_LOG_NO_THREADS)
 //! Wide-char thread-safe logger with severity level and channel support
 BOOST_LOG_DECLARE_WLOGGER_MT(wseverity_channel_logger_mt, (basic_severity_logger)(basic_channel_logger));
+#endif
 
 #endif
 
