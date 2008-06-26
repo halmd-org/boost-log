@@ -33,28 +33,23 @@
 #define BOOST_LOG_BROKEN_STL_ALIGNMENT
 #endif
 
+#if defined(BOOST_MSVC)
+// For some reason MSVC 9.0 fails to link the library if static integral constants are defined in cpp
+#define BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
+#endif
+
 // Extended declaration macros. Used to implement compiler-specific optimizations.
 #if defined(_MSC_VER)
-#    define BOOST_LOG_FASTCALL __fastcall
-#    define BOOST_LOG_NOINLINE __declspec(noinline)
 #    define BOOST_LOG_FORCEINLINE __forceinline
 #    define BOOST_LOG_NO_VTABLE __declspec(novtable)
 #elif defined(__GNUC__)
-#    define BOOST_LOG_NOINLINE __attribute__((noinline))
 #    if (__GNUC__ > 3)
 #        define BOOST_LOG_FORCEINLINE inline __attribute__((always_inline))
 #    else
 #        define BOOST_LOG_FORCEINLINE inline
 #    endif
-#    if (((__GNUC__ == 3) && (__GNUC_MINOR__ >= 4)) || (__GNUC__ > 3))
-#        define BOOST_LOG_FASTCALL __attribute__((fastcall))
-#    else
-#        define BOOST_LOG_FASTCALL __attribute__((regparm(2)))
-#    endif
 #    define BOOST_LOG_NO_VTABLE
 #else
-#    define BOOST_LOG_FASTCALL
-#    define BOOST_LOG_NOINLINE
 #    define BOOST_LOG_FORCEINLINE inline
 #    define BOOST_LOG_NO_VTABLE
 #endif

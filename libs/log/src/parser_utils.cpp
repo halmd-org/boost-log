@@ -24,6 +24,8 @@ namespace aux {
 
 #ifdef BOOST_LOG_USE_CHAR
 
+#ifndef BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
+
 const char_constants< char >::char_type char_constants< char >::char_comment;
 const char_constants< char >::char_type char_constants< char >::char_comma;
 const char_constants< char >::char_type char_constants< char >::char_quote;
@@ -38,6 +40,8 @@ const char_constants< char >::char_type char_constants< char >::char_section_bra
 const char_constants< char >::char_type char_constants< char >::char_section_bracket_right;
 const char_constants< char >::char_type char_constants< char >::char_paren_bracket_left;
 const char_constants< char >::char_type char_constants< char >::char_paren_bracket_right;
+
+#endif // BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
 
 void char_constants< char >::translate_escape_sequences(std::basic_string< char_type >& str)
 {
@@ -103,6 +107,8 @@ void char_constants< char >::translate_escape_sequences(std::basic_string< char_
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 
+#ifndef BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
+
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_comment;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_comma;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_quote;
@@ -117,6 +123,8 @@ const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_secti
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_section_bracket_right;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_paren_bracket_left;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_paren_bracket_right;
+
+#endif // BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
 
 void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< char_type >& str)
 {
