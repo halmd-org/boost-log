@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-06-26 13:41:38 $]
+    [last-revision $Date: 2008-06-26 13:55:07 $]
 ]
 
 [c++]
@@ -1238,7 +1238,7 @@ Scoped attributes are a powerful mechanism of tagging log records that can be us
 
 The former two register a source-specific attribute in the `logger` logger object. The attribute name and type are given in the `attr_name` and `attr_type` arguments. The BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR additionally accepts a Boost.Preprocessor sequence of arguments that should be passed to the attribute constructor. The latter pair of macros do exactly the same but the attribute is registered for the current thread in the logging core (which does not require a logger).
 
-[information If it appears that a same-named attribute is already registered in the logger/logging core, the macros won't override the existing attribute and will eventually have no effect. See [link log.rationale.why_weak_scoped_attributes Rationale] for a more detailed explanation of reasons for such behavior.]
+[note If it appears that a same-named attribute is already registered in the logger/logging core, the macros won't override the existing attribute and will eventually have no effect. See [link log.rationale.why_weak_scoped_attributes Rationale] for a more detailed explanation of reasons for such behavior.]
 
 Usage example follows:
 
