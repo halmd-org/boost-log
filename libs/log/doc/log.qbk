@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-06-26 13:55:07 $]
+    [last-revision $Date: 2008-06-27 11:21:20 $]
 ]
 
 [c++]
@@ -94,6 +94,21 @@ You may define configuration macros in the `bjam` command line, like this:
 ]
 
 The logging library also uses several Boost libraries that need building too. These are [@http://www.boost.org/doc/libs/release/libs/filesystem/doc/index.htm Boost.Filesystem], [@http://www.boost.org/doc/libs/release/libs/system/doc/index.html Boost.System], [@http://www.boost.org/doc/libs/release/doc/html/date_time.html Boost.DateTime], [@http://www.boost.org/doc/libs/release/doc/html/thread.html Boost.Thread] and [@http://www.boost.org/doc/libs/release/libs/regex/index.html Boost.Regex]. Refer to their documentation for detailed instructions on building procedure.
+
+[endsect]
+
+[section:support Supported compilers]
+
+The library should build and work with a reasonably well-compliant compiler. The library was successfully built and tested on the following platforms:
+
+* Windows XP, Windows Vista. MSVC 8.0, 9.0. MSVC 7.1 should work too, but it was not tested.
+* Linux. GCC 4.2, 4.3. However, all GCC 4.x should work well.
+
+The following compilers are not supported and will likely fail to compile the library:
+
+* MSVC 7.0 and older.
+* Borland C++ 5.5.1 (free version). Newer versions might or might not work.
+* GCC 3.3 and older.
 
 [endsect]
 
@@ -699,7 +714,7 @@ The frontend is implemented in the `asynchronous_sink` class template. Like sync
         } // the backend gets released here
     }
 
-[important If asynchronous logging is used in multi-module application, one should take care when to unload dynamically loaded modules that write logs. The library has many places where it may end up using resources that are physically reside in the dynamically loaded module. Examples of such resources are virtual tables, string literals and functions. If it appears that either of these resources are used by the library, whereas the module in which they reside gets unloaded, the application will most probably crash. Strictly speaking, this problem persists with any sink type (and is not limited to sinks at all), but asynchronous sinks introduce an additional problem. User cannot tell which recources are used by the asynchronous sink because it works in a dedicated thread and use buffered log records. There is no general solution for this issue. Users are advised to either avoid dynamic module unloading during the application work time, or to avoid asynchronous logging. As an additional way to cope with the problem, one may try to shutdown all asynchronous sinks before unloading any modules, and after unloading re-create them. However, avoiding dynamic unloading is the only way to solve the problem completely.]
+[important If asynchronous logging is used in multi-module application, one should decide carefully when to unload dynamically loaded modules that write logs. The library has many places where it may end up using resources that are physically reside in the dynamically loaded module. Examples of such resources are virtual tables, string literals and functions. If it appears that either of these resources are used by the library, whereas the module in which they reside gets unloaded, the application will most probably crash. Strictly speaking, this problem persists with any sink type (and is not limited to sinks in the first place), but asynchronous sinks introduce an additional problem. User cannot tell which recources are used by the asynchronous sink because it works in a dedicated thread and use buffered log records. There is no general solution for this issue. Users are advised to either avoid dynamic module unloading during the application work time, or to avoid asynchronous logging. As an additional way to cope with the problem, one may try to shutdown all asynchronous sinks before unloading any modules, and after unloading re-create them. However, avoiding dynamic unloading is the only way to solve the problem completely.]
 
 [endsect]
 
@@ -925,7 +940,7 @@ The `attr` placeholder has an advanced support for string-typed attribute values
 
     sink->set_filter(flt::attr< std::string >("Domain").ends_with(".ru")); // selects only records that are related to russian web domains
 
-* `matches(T const& regex)` allows to set up a filter based on [@http://www.boost.org/doc/libs/release/libs/regex/doc/html/index.html Boost.Regex] regular expressions matching mechanism. The filter returns `true` if matching is successful.
+* `matches(T const& regex)` allows to set up a filter based on [@http://www.boost.org/doc/libs/release/libs/regex/doc/html/index.html Boost.Regex] regular expressions matching mechanism. The filter returns `true` if the attribute value matches the `regex` expression.
 
     sink->set_filter(flt::attr< std::string >("Domain").matches("www\\..*\\.ru"));
 
@@ -956,7 +971,7 @@ The format string passed to the `format` keyword should contain positional place
 
     #include <boost/log/formatters/attr.hpp>
 
-The `attr` formatter is the most generic and simple way to format an attribute value. In the simpliest form it is equivalent to putting tha specified attribute value into an STL stream with an `operator <<` associated with the attribute value type. For example:
+The `attr` formatter is the most generic and simple way to format an attribute value. In the simpliest form it is equivalent to putting the specified attribute value into an STL stream with an `operator <<` associated with the attribute value type. For example:
 
     // A custom attribute value type
     struct A
@@ -1442,8 +1457,18 @@ There were other issues, like having an attribute set iterator that points to on
 
 [endsect]
 
-
 [xinclude autodoc.xml]
+
+[section:todo TODO in future releases]
+
+* Optimize scoped attributes. The idea is to store both the attribute and the `shared_ptr` counter on the stack. Currently only the attribute is stored on the stack.
+* Optimize single-threaded configuration. In many places dynamic memory allocation can be removed if multithreading support is disabled.
+* Support C++0x features, like variadic templates.
+* Optionally support [@http://www.threadingbuildingblocks.org Intel TBB]. In particular, atomic types and thread-safe queue could be useful.
+* Move from Boost.Regex to Boost.Xpressive. This would remove the dependency in the Boost.Regex library module. However, Boost.Regex support should be retained.
+* Windows NT event log support. For now it is not clear how the support should be implemented. The problem is that event log API expects the user to supply a message ID rather than the message text. There is no problem to put the ID in an attribute, but that makes the formatted message text pretty much useless. Also, to make the event log backend generic enough, there must be some mapping between logging library attributes, event attributes and message IDs.
+
+[endsect]
 
 [section:acknowledgements Acknowledgements]
 
