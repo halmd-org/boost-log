@@ -1,0 +1,955 @@
+[section:advanced Advanced features]
+
+This section contains a more detailed description of library components and features. Some of them are presented in the [link tutorial.tutorial Tutorual] section, so it is recommended to read it first to get the basic understanding of the library.
+
+[section:sources Logging sources]
+
+[section:basic_logger Basic loggers]
+
+    #include <boost/log/sources/basic_logger.hpp>
+
+The simpliest logging sources provided by the library are loggers `logger` and its thread-safe version, `logger_mt` (`wlogger` and `wlogger_mt` for wide-character logging, accordingly). These loggers only provide an ability to store source-specific attributes within themselves and, of course, to form log records. This type of loggers should probably be used in case if there is no need in advanced features like severity level checks. It may well be used as a tool to collect application statistics and register application events, such as notifications and alarms. In such cases the logger is normally used in conjunction with [link advanced.advanced.attributes.scoped_attributes scoped attributes] to attach the needed data to the notification event. Below is an example of usage:
+
+    class network_connection
+    {
+        src::logger m_logger;
+        src::logger::attribute_set_type::iterator m_remote_addr;
+
+    public:
+        void on_connected(std::string const& remote_addr)
+        {
+            // Put the remote address into the logger to automatically attach it to every log record written through the logger
+            m_remote_addr = m_logger.add_attribute("RemoteAddress",
+                boost::make_shared< attr::constant< std::string > >(remote_addr)).first;
+
+            // The straightforward way of logging
+            if (m_logger.open_record())                         // check the filters
+                m_logger.strm() << "Connection established";    // format the record
+        }
+        void on_disconnected()
+        {
+            // The simplier way of logging: the above "if" condition is wrapped into a neat macro
+            BOOST_LOG(m_logger) << "Connection shut down";
+
+            // Remove the attribute with the remote address
+            m_logger.remove_attribute(m_remote_addr);
+        }
+        void on_data_received(std::size_t size)
+        {
+            // Put the size as an additional attrubute so it can be collected and accumulated later if needed
+            // The attribute will be attached to the only log record that is made within the current scope
+            BOOST_LOG_SCOPED_LOGGER_TAG(m_logger, "ReceivedSize", attr::constant< std::size_t >, size);
+            BOOST_LOG(m_logger) << "Some data received";
+        }
+        void on_data_sent(std::size_t size)
+        {
+            BOOST_LOG_SCOPED_LOGGER_TAG(m_logger, "SentSize", attr::constant< std::size_t >, size);
+            BOOST_LOG(m_logger) << "Some data sent";
+        }
+    };
+
+Class `network_connection` in the code snippet above represents an approach of implementing simple logging and statistic information gathering in a network-related application. Each of the presented methods of the class effectively marks a corresponding event that may be tracked and collected on sinks level. Furthermore, other methods of the class, that are not shown here for simplicity, are able to write logs too. Note that every log record ever made in the connected state of the `network_connection` object will be implicitly marked up with an address of the remote site.
+
+[endsect]
+
+[section:severity_level_logger Loggers with severity level support]
+
+    #include <boost/log/sources/severity_logger.hpp>
+
+An ability to distinguish some log records from others based on some kind of level of severity or importance is one of the most frequently requested feature. The classes `severity_logger` and `severity_logger_mt` (along with their `wseverity_logger` and `wseverity_logger_mt` wide-char counterparts) provide this functionality.
+
+The loggers automatically register a special source-specific attribute "Severity" (attribute value type is `int`), which can be set for every record in a compact and efficient manner, with a named argument `severity` that can be passed to the constructor and/or the `open_record` method. If passed to the logger constructor, the `severity` argument sets the default value of the severity level that will be used if none provided in the `open_record` arguments. The `severity` argument passed to the `open_record` method sets the level of the particular log record being made.
+
+The actual values of this attribute and their meaning is entirely user-defined. However, it is recommended to use level of value equivalent to zero as a base point for other values. This is because the default-constructed logger object sets default severity level to zero. It is also recommended to define the same levels of severity for the entire application in order to avoid the confusion in the written logs later. The following code snippet shows the usage of `severity_logger`.
+
+    // User-defined severity levels
+    enum my_levels
+    {
+        normal,
+        warning,
+        error
+    };
+
+    void foo()
+    {
+        // The default-constructed logger will use default level 0
+        src::severity_logger lg;
+
+        // The straightforward usage with default severity level (which is 0)
+        if (lg.open_record())
+            lg.strm() << "A default-severity log record";
+
+        // The straightforward usage with a specific level value
+        if (lg.open_record(src::keywords::severity = warning))
+            lg.strm() << "A warning level log record";
+
+        // The default severity can be specified in constructor
+        src::severity_logger error_lg(src::keywords::severity = error);
+
+        // There are predefined macros that make the usage easier
+        BOOST_LOG_SEV(lg, warning) << "A warning level log record";
+
+        // Thanks to the default severity level, you can use the basic macros too
+        BOOST_LOG(error_lg) << "An error level log record";
+    }
+
+And, of course, severity loggers also provide the same functionality the [link advanced.advanced.sources.basic_logger basic loggers] do.
+
+[endsect]
+
+[section:channel_logger Loggers with channel support]
+
+    #include <boost/log/sources/channel_logger.hpp>
+
+Sometimes it is important to categorize log records based on some constant piece information, such as module or class name, relation of the logged information to some specific domain of application functionality (e.g. network or file system related messages) or some constant tag that may be used later to filter these records to a specific sink. This feature is fulfilled with loggers `channel_logger`, `channel_logger_mt` and their wide-char counterparts `wchannel_logger`, `wchannel_logger_mt`. These loggers automatically register a string attribute named "Channel". This attribute can be set only in the logger constructor with a named argument `channel` and cannot be changed during the logger lifetime. Aside from that the usage is similar to the [link advanced.advanced.sources.basic_logger basic loggers]:
+
+    class network_connection
+    {
+        src::channel_logger m_net;
+        src::channel_logger m_stat;
+        src::logger::attribute_set_type::iterator m_remote_addr;
+
+    public:
+        network_connection() :
+            // We can dump network-related messages through this logger and be able to filter them later
+            m_net(src::keywords::channel = "net"),
+            // We also can separate statistic records in a different channel in order to route them to a different sink
+            m_stat(src::keywords::channel = "stat")
+        {
+        }
+
+        void on_connected(std::string const& remote_addr)
+        {
+            // Put message to the "net" channel
+            BOOST_LOG(m_net) << "Connection established";
+        }
+        void on_disconnected()
+        {
+            // Put message to the "net" channel
+            BOOST_LOG(m_net) << "Connection shut down";
+        }
+        void on_data_received(std::size_t size)
+        {
+            // Put the size as an additional attrubute so it can be collected and accumulated later if needed
+            // The attribute will be attached to the only log record that is made within the current scope
+            BOOST_LOG_SCOPED_LOGGER_TAG(m_stat, "ReceivedSize", attr::constant< std::size_t >, size);
+            BOOST_LOG(m_stat) << "Some data received";
+        }
+        void on_data_sent(std::size_t size)
+        {
+            BOOST_LOG_SCOPED_LOGGER_TAG(m_stat, "SentSize", attr::constant< std::size_t >, size);
+            BOOST_LOG(m_stat) << "Some data sent";
+        }
+    };
+
+[endsect]
+
+[section:mixed_loggers Loggers with mixed features]
+
+    #include <boost/log/sources/severity_channel_logger.hpp>
+
+If you wonder whether you can use a mixed set of several logger features in one logger, then yes, you certainly can. The library provides `severity_channel_logger` and `severity_channel_logger_mt` (with their wide-char analogues `wseverity_channel_logger` and `wseverity_channel_logger_mt`) which combine features of the described loggers with [link advanced.advanced.sources.severity_level_logger severity level] and [link advanced.advanced.sources.channel_logger channels] support. You can also design your own logger features and combine them with the ones provided by the library, as described in the [link extension.extension.sources Extending the library] section.
+
+[endsect]
+
+[section:global_storage Global storage for loggers]
+
+    #include <boost/log/sources/global_logger_storage.hpp>
+
+Sometimes it is inconvenient to have a logger object to be able to write logs. This issue is often present in a functional-style code with no obvious places where a logger could be stored. An other domain where the problem persists is generic libraries that want to support logging. In such cases it would be more convenient to have one or several global loggers in order to easily access them in every place when needed. In this regard `std::cout` is a good example of such a logger.
+
+The library provides a way to declare global loggers that can be accessed pretty much like `std::cout`. In fact, this feature can be used with any loggers, including user-defined ones. Having declared a global logger, one can be sure to have a thread-safe access to this logger instance from any place of the application code. The library also guarantees that a global logger instance will be singular even across module boundaries. This allows to employ logging even in header-only components that may be compiled into different modules.
+
+The easiest way to declare a global logger is to use the following macro:
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::severity_logger_mt)
+
+The `my_logger` argument gives the logger a name that may be used to acquire the logger instance. The second parameter denotes the logger type. In multithreaded applications, when the logger can be accessed from different threads, users will normally want to use thread-safe versions of loggers.
+
+In case if there is a need to pass arguments to the logger constructor, there is another macro:
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS(
+        my_logger,
+        src::severity_channel_logger,
+        (src::keywords::severity = error)(src::keywords::channel = "my_channel"))
+
+The last macro argument is a __boost_preprocessor__ sequence of arguments passed to the logger constructor. Be careful, however, when using non-constant expressions and references to objects as constructor arguments, since the arguments are evaluated only once and it is often difficult to tell the exact moment when it is done. The logger is constructed on the first request from whichever part of the application that has the knowledge of the logger declaration. It is up to user to make sure that all arguments have valid states at that point.
+
+The third macro of this section provides maximum flexibility, allowing user to actually define the logic of creating the logger.
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, src::severity_logger_mt)
+    {
+        // Do something that needs to be done on logger initialization, e.g. add a stop watch attribute
+        src::severity_logger_mt lg;
+        lg.add_attribute("StopWatch", boost::make_shared< attrs::timer >());
+        // The initializing routine must return the logger instance
+        return lg;
+    }
+
+Like the `BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS` macro, the initializing code is called only once, on the first request of the logger.
+
+[important Beware of the One Definition Rule (ODR) violation issues. Regardless of the way of logger declaration you choose, you should ensure that [_the logger is declared in exactly the same way at all occurrences] and [_all symbol names involved in the declaration resolve to the same entities]. The latter includes the names used within the initialization routine of the `BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT` macro, such as references to external variables, functions and types. The library tries to protect itself from ODR violations to a certain degree, but in general the behavior is undefined if the rule is violated.]
+
+In order to acquire the logger instance you may use either
+
+    src::severity_logger_mt& lg = get_my_logger();
+
+or
+
+    src::severity_logger_mt& lg = my_logger::get();
+
+which are equivalent. Further usage of the logger is completely the same as it was a regular logger object of the corresponding type.
+
+[endsect]
+
+[endsect]
+
+
+[section:sink_frontends Sink Frontends]
+
+Every sink object that is compatible with the logging library is required to support interface `sink< CharT >`, where `CharT` is the appropriate character type. This interface is used by `logging_core` to perform sink-specific filtering and pass log records to sinks. Technically speaking, one can derive his class from the `sink` template and have his new-found sink, but for sake of code reusing and sink implementation simplicity the library suggests separated concepts of sink frontend and sink backend. Sink frontends derive from the `sink` template and encapsulate the logic of filtering and thread synchronization. Most probably you won't have to write your own frontend once you need to create a new type of sink, because the library provides a number of frontends that cover most use cases. See [link advanced.advanced.sink_backends Sink Backends] section for more details on interface between frontends and backends.
+
+[section:unlocked Unlocked sink frontend]
+
+    #include <boost/log/sinks/sink.hpp>
+
+The unlocked sink frontend is implemented with the `unlocked_sink` class template. This frontend provides the most basic service for the backend, which is filtering. The `unlocked_sink` performs no thread synchronization when accessing the backend, assuming that either the syncronization is not needed or the syncronization is implemented in the backend. However, filtering is still thread-safe (that is, one can safely change filter in the `unlocked_sink` frontend while other threads are writing logs through this sink). This is the only sink frontend available in a single thread environment. The example of use is as follows:
+
+    // Some sink backend (for simplicity synchronization code omitted)
+    class my_backend :
+        public sinks::basic_sink_backend< char, sinks::backend_synchronization_tag >
+    {
+    public:
+        // The method is called for every log record being put into the sink backend
+        void write_message(values_view_type const& attributes, string_type const& message)
+        {
+            std::cout << message << std::endl;
+        }
+    };
+
+    // The function registers my_backend sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+
+        // The simpliest way, the backend is default-constructed
+        boost::shared_ptr< sink< char > > sink1(new sinks::unlocked_sink< my_backend >);
+        core->add_sink(sink1);
+
+        // One can construct backend separately and pass it to the frontend
+        boost::shared_ptr< my_backend > backend(new my_backend);
+        boost::shared_ptr< sink< char > > sink2(new sinks::unlocked_sink< my_backend >(backend));
+        core->add_sink(sink2);
+
+        // You can manage filtering through the sink interface
+        sink1->set_filter(flt::attr< int >("Severity") >= warning);
+        sink2->set_filter(flt::attr< std::string >("Channel") == "net");
+    }
+
+[endsect]
+
+[section:sync Synchronous sink frontend]
+
+    #include <boost/log/sinks/sink.hpp>
+
+The synchronous sink frontend is implemented with the `synchronous_sink` class template. It is similar to the `unlocked_sink` but additionally provides thread synchronization with a mutex before passing log records to the backend. All sink backends that support formatting currently require thread synchronization in the frontend.
+
+The synchronous sink also introduce an ability to acquire a pointer to the locked backend. As long as the pointer exists, the backend is guaranteed not to be accessed from other threads, unless the access is done through another frontend or a direct reference to the backend. This feature can be useful if there is a need to perform some updates on the sink backend while other threads may be writing logs. Beware, though, that while the backend is locked any other thread that tries to write a log record to the sink gets blocked until the backend is released.
+
+The usage is similar to the `unlocked_sink`.
+
+    // The function registers text output sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+
+        // Create a backend and initialize it with a stream
+        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
+        backend->add_stream(boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
+
+        // Wrap it into the frontend and register in the core
+        boost::shared_ptr< sinks::synchronous_sink< sinks::text_ostream_backend > > sink(new sinks::synchronous_sink< sinks::text_ostream_backend >(backend));
+        core->add_sink(sink);
+
+        // You can manage filtering through the sink interface
+        sink->set_filter(flt::attr< int >("Severity") >= warning);
+
+        // You can also manage backend in a thread-safe manner
+        {
+            sinks::synchronous_sink< sinks::text_ostream_backend >::locked_backend_ptr p = sink.locked_backend();
+            p->add_stream(boost::make_shared< std::ofstream >("test.log"));
+            p->set_formatter(fmt::ostrm << "Level: " << fmt::attr< int >("Severity") << "Message: " << fmt::message());
+        } // the backend gets released here
+    }
+
+
+[endsect]
+
+[section:async Asynchronous sink frontend]
+
+    #include <boost/log/sinks/sink.hpp>
+
+The frontend is implemented in the `asynchronous_sink` class template. Like synchronous one, asynchronous sink frontend provides a way of synchronizing access to the backend. All log records are passed to the backend in a dedicated thread, which makes it suitable for backends that may block for a considerable amount of time (network and other hardware device-related sinks, for example). The internal thread of the frontend is spawned on the frontend constructor and joined on its destructor (which implies that the frontend destruction may block). Aside from that, the frontend is similar to the `synchronous_sink` class template.
+
+    // The function registers text output sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+
+        // Create a backend and initialize it with a stream
+        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
+        backend->add_stream(boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
+
+        // Wrap it into the frontend and register in the core
+        boost::shared_ptr< sinks::asynchronous_sink< sinks::text_ostream_backend > > sink(new sinks::asynchronous_sink< sinks::text_ostream_backend >(backend));
+        core->add_sink(sink);
+
+        // You can manage filtering through the sink interface
+        sink->set_filter(flt::attr< int >("Severity") >= warning);
+
+        // You can also manage backend in a thread-safe manner
+        {
+            sinks::asynchronous_sink< sinks::text_ostream_backend >::locked_backend_ptr p = sink.locked_backend();
+            p->add_stream(boost::make_shared< std::ofstream >("test.log"));
+            p->set_formatter(fmt::ostrm << "Level: " << fmt::attr< int >("Severity") << "Message: " << fmt::message());
+        } // the backend gets released here
+    }
+
+[important If asynchronous logging is used in multi-module application, one should decide carefully when to unload dynamically loaded modules that write logs. The library has many places where it may end up using resources that are physically reside in the dynamically loaded module. Examples of such resources are virtual tables, string literals and functions. If it appears that either of these resources are used by the library, whereas the module in which they reside gets unloaded, the application will most probably crash. Strictly speaking, this problem persists with any sink type (and is not limited to sinks in the first place), but asynchronous sinks introduce an additional problem. User cannot tell which recources are used by the asynchronous sink because it works in a dedicated thread and use buffered log records. There is no general solution for this issue. Users are advised to either avoid dynamic module unloading during the application work time, or to avoid asynchronous logging. As an additional way to cope with the problem, one may try to shutdown all asynchronous sinks before unloading any modules, and after unloading re-create them. However, avoiding dynamic unloading is the only way to solve the problem completely.]
+
+[endsect]
+
+[endsect]
+
+
+[section:sink_backends Sink Backends]
+
+[section:text_ostream Text stream backend]
+
+    #include <boost/log/sinks/text_ostream_backend.hpp>
+
+The text output stream sink backend is the most generic backend provided by the library out of box. The backend is implemented in the `basic_text_ostream_backend` class template (`text_ostream_backend` and `wtext_ostream_backend` convenience typedefs provided for narrow and wide character support). It supports formatting log records into strings and putting into one or several streams. Each attached stream gets the same result of formatting, so if you need to format log records differently for different streams, you will need to create several sinks - each with its own formatter.
+
+The sink backend is compatible with any stream that derives from the `std::basic_ostream` class template. However, the sink can provide additional information about written data if the stream object also publicly derives from `record_writer` interface class. This interface declares methods that are called by the backend before and after each record is put into the stream. These hints can be used by the stream implementation to delimit log records (for example, an XML-writing stream could insert tags and indentation between log records) or perform other actions aligned to log records (for example, rotate the file without cutting a log record in the middle).
+
+The backend provides another feature that may come useful when debugging your application. With `auto_flush` method one can enable the sink to automatically flush buffers of all attached streams after each log record written. This will, of course, degrade logging performance, but in case of application crash there is a good probability that last log records are not lost.
+
+    // The function registers text output sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+
+        // Create a backend and attach a couple of streams to it
+        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
+        backend->add_stream(boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
+        backend->add_stream(boost::shared_ptr< std::ostream >(new std::ofstream("test.log")));
+
+        // Enable auto-flushing after each log record written
+        backend->auto_flush(true);
+
+        // Wrap it into the frontend and register in the core. The backend requires synchronization in the frontend.
+        boost::shared_ptr< sinks::synchronous_sink< sinks::text_ostream_backend > > sink(new sinks::synchronous_sink< sinks::text_ostream_backend >(backend));
+        core->add_sink(sink);
+    }
+
+[endsect]
+
+[section:syslog Syslog backend]
+
+    #include <boost/log/sinks/syslog_backend.hpp>
+
+The syslog backend, as it comes from its name, provides support for syslog API that is available on virtually any UNIX or Linux platform. On Windows there is no  known implementation of the syslog API, therefore the backend is not available on this platform.
+
+The backend is implemented in the `basic_syslog_backend` class template, `syslog_backend` and `wsyslog_backend` convenience typedefs are also available. The backend supports formatting log records, and therefore requires thread synchronization in the frontend. The backend also supports severity level translation from the application-specific values to the syslog-defined values. This is achieved with an additional function object, level extractor, that receives a set of attribute values of each log record and returns appropriate syslog level value. This value is used by the backend in the `LOG_MAKEPRI` macro to construct the final priority value of the syslog record. The other argument of the `LOG_MAKEPRI` macro, the facility, is constant for each backend object and can be specified in the backend constructor arguments.
+
+Level extractors can be written by library users to map the application log levels to the syslog levels the best way. However, the library provides two extractors that would fit this need in obvious cases. The `straightforward_level_mapping` class template provides a way to directly map values of some integral attribute to syslog levels. The `level_mapping` class template adds some flexibility and allows to map arbitrary values of some integral attribute to syslog levels.
+
+One additional thing should be noted. Syslog API allows to customize the service behavior by specifying additional flags to the `openlog` call. The backend too supports this feature - the options can be passed to the backend constructor. However, since `openlog` is only called once per logging session, the constructor argument is only taken into consideration for the first backend object being created.
+
+Anyway, one example is better than a thousand words.
+
+    // The function registers syslog sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+
+        // Create a backend. Specify facility and options in the constructor.
+        boost::shared_ptr< sinks::syslog_backend > backend(new sinks::syslog_backend(
+            sinks::syslog::user, sinks::syslog::console_fallback | sinks::syslog::log_pid));
+
+        // Set the straightforward level translator for the "Severity" attribute of type int
+        backend->set_level_extractor(sinks::syslog::straightforward_level_mapping< char >("Severity"));
+
+        // Wrap it into the frontend and register in the core. The backend requires synchronization in the frontend.
+        boost::shared_ptr< sinks::synchronous_sink< sinks::syslog_backend > > sink(new sinks::synchronous_sink< sinks::syslog_backend >(backend));
+        core->add_sink(sink);
+
+        // Create a new backend. No use to specify options here.
+        backend.reset(new sinks::syslog_backend(sinks::syslog::local0));
+
+        // Create and fill in another level translator for "MyLevel" attribute of type string
+        sinks::syslog::level_mapping< char, std::string > mapping("MyLevel");
+        mapping["debug"] = sinks::syslog::debug;
+        mapping["normal"] = sinks::syslog::info;
+        mapping["warning"] = sinks::syslog::warning;
+        mapping["failure"] = sinks::syslog::critical;
+        backend->set_level_extractor(mapping);
+
+        // Wrap it into the frontend and register in the core.
+        sink.reset(new sinks::synchronous_sink< sinks::syslog_backend >(backend));
+        core->add_sink(sink);
+    }
+
+Please note that all syslog constants, as well as level extractors, are declared within a nested namespace `syslog`. The library will not accept (and does not declare in the backend interface) native syslog constants, which are macros, actually.
+
+[endsect]
+
+[endsect]
+
+
+[section:filters Filters]
+
+As it was pointed out in [link tutorial.tutorial.filters tutorial], filters are implemented as Lambda-like expressions with placeholders for attribute values. This section will describe placeholders that can be used to build more complex expressions.
+
+[section:has_attr Attribute presence filter]
+
+    #include <boost/log/filters/has_attr.hpp>
+
+The filter `has_attr` checks if an attribute value with specified name and, optionally, type is attached to a log record. If no type specified to the filter, the filter returns `true` if any-typed value with the specified name is found. If an MPL-compatible type sequence in specified as a value type, the filter returns `true` if a value with the specified name and one of the specified types is found.
+
+This filter is usually used in conjunction with [link advanced.advanced.formatters.conditional conditional formatters], but it also can be used as a quick filter based on the log record structure. For example, one can use this filter to extract statistic records and route them to a specific sink.
+
+    // A simple sink backend to accumulate statistic information
+    class my_stat_accumulator :
+        public sinks::basic_sink_backend< char, sinks::backend_synchronization_tag >
+    {
+        // A map of accumulated statistic values, ordered by the statistic information stream name
+        std::map< std::string, int > m_StatInfo;
+
+    public:
+        // Destructor
+        ~my_stat_accumulator()
+        {
+            // Display the accumulated data
+            for (std::map< std::string, int >::const_iterator it = m_StatInfo.begin(); it != m_StatInfo.end(); ++it)
+            {
+                std::cout << "Statistic stream: " << it->first << ", accumulated value: " << it->second << "\n";
+            }
+            std::cout.flush();
+        }
+
+        // The method is called for every log record being put into the sink backend
+        void write_message(values_view_type const& attributes, string_type const& message)
+        {
+            // First, acquire statistic information stream name
+            values_view_type::const_iterator itName = attributes.find("StatisticStream");
+            if (itName != attributes.end())
+            {
+                boost::optional< std::string const& > name = itName->second.get< std::string >();
+                if (name)
+                {
+                    // Next, get the statistic value change
+                    values_view_type::const_iterator itChange = attributes.find("Change");
+                    if (itChange != attributes.end())
+                    {
+                        boost::optional< int const& > change = itChange->second.get< int >();
+                        if (change)
+                        {
+                            // Accumulate the statistic data
+                            m_StatInfo[name.get()] += change.get();
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    // The function registers two sinks - one for statistic information, and another one for other records
+    void foo()
+    {
+        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+
+        // Create a backend and attach a stream to it
+        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
+        backend->add_stream(boost::shared_ptr< std::ostream >(new std::ofstream("test.log")));
+
+        // Create a frontend and setup filtering
+        boost::shared_ptr< sinks::synchronous_sink< sinks::text_ostream_backend > > sink(new sinks::synchronous_sink< sinks::text_ostream_backend >(backend));
+        // All records that don't have a "StatisticStream" attribute attached will go to the "test.log" file
+        sink->set_filter(!flt::has_attr("StatisticStream"));
+
+        core->add_sink(sink);
+
+        // Create another sink that will receive all statistic data
+        boost::shared_ptr< sinks::synchronous_sink< my_stat_accumulator > > stat_sink(new sinks::synchronous_sink< my_stat_accumulator >);
+        // All records with a "StatisticStream" string attribute attached will go to the my_stat_accumulator sink
+        sink->set_filter(flt::has_attr< std::string >("StatisticStream"));
+
+        core->add_sink(stat_sink);
+    }
+
+    // This simple macro will simplify putting statistic data into a logger
+    #define PUT_STAT(lg, stat_stream, change)\
+        if (true) {\
+            BOOST_LOG_SCOPED_LOGGER_TAG(lg, "StatisticStream", std::string, stat_stream);\
+            BOOST_LOG_SCOPED_LOGGER_TAG(lg, "Change", int, change);\
+            BOOST_LOG(lg);\
+        } else ((void)0)
+
+    void bar()
+    {
+        src::logger lg;
+
+        // Put a regular log record, it will go to the "test.log" file
+        BOOST_LOG(lg) << "A regular log record";
+
+        // Put some statistic data
+        PUT_STAT(lg, "StreamOne", 10);
+        PUT_STAT(lg, "StreamTwo", 20);
+        PUT_STAT(lg, "StreamOne", -5);
+    }
+
+Please note that in the example above we extended the library in two ways: we defined a new sink backend `my_stat_accumulator` and a new macro `PUT_STAT`. Also note the technique of extracting attrubute value from the view - we need to both check that the needed attribute value is found in the view and that it has the needed type. There is also a mechanism of attribute value extractors that can simplify this, especially when an attribute can have a number of types. Refer to [link extension.extension Extending the library] section for more details.
+
+[endsect]
+
+[section:attr Generic attribute placeholder]
+
+    #include <boost/log/filters/attr.hpp>
+
+Unlike `has_attr`, `attr` construct is not a complete filter by itself. Instead, it is a placeholder that may take part in a complete filter expressions like this:
+
+    sink->set_filter(flt::attr< int >("Severity") >= 5 && flt::attr< std::string >("Channel") == "net");
+
+The line above registers a composite filter that consists of two elementary subfilters: the first one checks the severity level, and the second checks the channel name. Like `has_attr`, the `attr` placeholder accepts an expected attribute value type or set of types in an MPL-compatible type sequence. However, attribute value type is not optional with `attr`, like it is with `has_attr`.
+
+Besides generating lambda expressions, the `attr` placeholder allows to construct filters with its member functions. There are currently two such members that can be used with any type:
+
+* `is_in_range(T const& lower, T const& upper)` generates a filter that returns `true` if the attribute value `x` of type `T` satisfies condition `lower <= x < upper`. For example:
+
+    sink->set_filter(flt::attr< int >("Severity").is_in_range(3, 5)); // drops all records that have level below 3 or greater than 4
+
+* `satisfies(FunT const& fun)` allows to inject a user-defined unary predicate `fun` into the filter. The preticate should accept an attribute value as an argument and return a value, convertible to boolean. The result of the filter will be equivalent to the result of the predicate. For example:
+
+    bool check_severity_level(int level);
+
+    sink->set_filter(flt::attr< int >("Severity").satisfies(&check_severity_level));
+
+The `attr` placeholder has an advanced support for string-typed attribute values (that have type `std::string` or `std::wstring`, that is). For string attribute values there are also available the following member functions:
+
+* `begins_with(T const& s)`, `ends_with(T const& s)` and `contains(T const& s)`. As follows from their names, the functions construct filters that rerurn `true` if an attribute value begins with, ends with or contains the specified substring `s`, respectively. The string comparison is case sensitive.
+
+    sink->set_filter(flt::attr< std::string >("Domain").ends_with(".ru")); // selects only records that are related to russian web domains
+
+* `matches(T const& regex)` allows to set up a filter based on __boost_regex__ regular expressions matching mechanism. The filter returns `true` if the attribute value matches the `regex` expression.
+
+    sink->set_filter(flt::attr< std::string >("Domain").matches("www\\..*\\.ru"));
+
+[endsect]
+
+[endsect]
+
+[section:formatters Formatters]
+
+As it was noted in the [link tutorial.tutorial.formatters tutorial], the library provides two ways of expressing formatters: with a stream-style syntax or __boost_format__-style expression. Which of the two formats is chosen is determined with the apropriate anchor expression. To use stream-style syntax one should begin formatter definition with a `ostrm` or `wostrm` keyword, like that:
+
+    #include <boost/log/formatters/ostream.hpp>
+
+    backend->set_formatter(fmt::ostrm << expr1 << expr2 << ... << exprN);
+
+Here expressions `expr1` through `exprN` may be either manipulators, described in this section, or other expressions resulting in an object that supports putting into an STL-stream. Note that `boost::ref` is also supported, which allows to inject references into the formatter object.
+
+To use __boost_format__-style syntax one should use `format` construct:
+
+    #include <boost/log/formatters/format.hpp>
+
+    backend->set_formatter(fmt::format("format string") % expr1 % expr2 % ... % exprN);
+
+The format string passed to the `format` keyword should contain positional placeholders for the appropriate expressions. In case of wide-character logging the format string should be wide. Expressions `expr1` through `exprN` have the same meaning as in stream-like variant. It should be noted, though, that using stream-like syntax usually results in a faster formatter than the one is constructed with the `format` keyword.
+
+[section:attr Generic attribute formatter]
+
+    #include <boost/log/formatters/attr.hpp>
+
+The `attr` formatter is the most generic and simple way to format an attribute value. In the simpliest form it is equivalent to putting the specified attribute value into an STL stream with an `operator <<` associated with the attribute value type. For example:
+
+    // A custom attribute value type
+    struct A
+    {
+        int n;
+        std::string s;
+    };
+
+    // This operator will be called by the formatter
+    std::ostream& operator<< (std::ostream& strm, A const& val)
+    {
+        strm << "[n = " << val.n << ", s = " << val.s << "]";
+        return strm;
+    }
+
+    // Sets the formatter to a sink backend
+    backend->set_formatter(fmt::ostrm << fmt::attr< A >("MyAttribute"));
+
+This will also work with __boost_format__-style syntax since it falls back to streams internally:
+
+    // Sets the formatter to a sink backend
+    backend->set_formatter(fmt::format("%1%") % fmt::attr< A >("MyAttribute"));
+
+Like filters, formatters also support specifying a set of possible types of the attribute values in MPL-compatible sequences. For example, you can format an attribute that may have some integral type like this:
+
+    typedef boost::mpl::vector< short, int, long >::type types;
+    backend->set_formatter(fmt::ostrm << fmt::attr< types >("MyInteger"));
+
+The `attr` formatter also supports an additional argument with a __boost_format__ format string. This feature can be used to specify formatting rules for numbers and/or decorate the formatted attribute somehow. For example:
+
+    typedef boost::mpl::vector< short, int, long >::type types;
+    backend->set_formatter(fmt::ostrm << fmt::attr< types >("MyInteger", "[%08x]")); // will print the "MyInteger" attribute value as 8-digit hex in square brackets
+
+Please note, though, that the format string should be valid for all attribute value types that are specified as the template argument for the `attr` formatter. If this is not possible, one should consider using [link advanced.advanced.formatters.conditional conditional formatters] to split types into several groups and specify a valid format string for each group.
+
+[endsect]
+
+[section:date_time Date and time formatter]
+
+    #include <boost/log/formatters/date_time.hpp>
+
+The library provides several formatters dedicated to date and time-related attribute value types. These are `date`, `time`, `date_time`, `time_duration` and `time_period`. The `date` and `time` formatters are mostly included by `date_time`.
+
+As it comes from its name, `date_time` is responsible for formatting time points. The supported attribute value types are: `std::tm`, `std::time_t` and `boost::posix_time::ptime` and `boost::local_time::local_date_time` from __boost_date_time__. Additionally, the `date` formatter also supports `boost::gregorian::date` type. Like with other formatters and filters, you can also explicitly specify the attribute type or set of types that you want to format.
+
+The date and time format can be customized by user. The format should be passed as a named argument `format` to the appropriate formatter. This argument should be a format string, containing placeholders described in __boost_date_time__ documentation. Some usage examples as follows:
+
+    // Puts a date of any of the supported types into log. The default format is "%Y-%b-%d".
+    backend->set_formatter(fmt::ostrm << fmt::date("Date"));
+
+    // Puts a time point of any of the supported types into log. The default format is "%H:%M:%S.%f".
+    backend->set_formatter(fmt::ostrm << fmt::time("Time"));
+
+    // Puts a date and time of the specified type into log. The default format is "%Y-%b-%d %H:%M:%S.%f".
+    backend->set_formatter(fmt::ostrm << fmt::date_time< std::tm >("DateTime"));
+
+    // Puts a date and time of one of the specified types into log.
+    typedef boost::mpl::vector< std::time_t, std::tm, boost::posix_time::ptime >::type types;
+    backend->set_formatter(fmt::ostrm << fmt::date_time< types >("DateTime", fmt::keywords::format = "%d.%m.%y %H:%M:%S"));
+
+The `time_duration` formatter is responsible for formatting time periods that are not bound to a specific time point. It supports types `double` (interpreted as a result of the `difftime` standard function), `boost::posix_time::time_duration` and `boost::gregorian::date_duration`. The formatter also supports the `format` argument. The usage is straightforward:
+
+    // Puts a time duration of any of the supported types into log. The default format is "%-%H:%M:%S.%f".
+    backend->set_formatter(fmt::ostrm << fmt::time_duration("Duration"));
+
+    // Puts a time duration of the specified type into log.
+    backend->set_formatter(fmt::ostrm << fmt::time_duration< boost::posix_time::time_duration >("Duration", fmt::keywords::format = "%H:%M:%S"));
+
+The `time_period` formatter composes two time points that denote a time period. It supports tha following types: `boost::posix_time::time_period`, `boost::local_time::local_time_period` and `boost::gregorian::date_period`. The formatter is a bit more special since it supports two kinds of format strings, the one that describes the date format, and the one that describes the dates composition. The former can be specified with the named argument `unit_format` and the latter - with named argument `format`. The time period composition format string may contain either of the three placeholders:
+
+* `%begin%` - the placeholder will be substituted with the starting time point of the period.
+* `%last%` - the placeholder will be substituted with the last time point of the period.
+* `%end%` - the placeholder will be substituted with the time point that is immediately after the time period.
+
+Here are some usage examples:
+
+    // Puts a time period of any of the supported types into log. The default composition format is [%begin% - %last%].
+    backend->set_formatter(fmt::ostrm << fmt::time_period("Period"));
+
+    // Puts a time period of the specified type into log.
+    backend->set_formatter(fmt::ostrm << fmt::time_period< boost::posix_time::time_period >("Period",
+        fmt::keywords::format = "[%begin%; %end%)", fmt::keywords::unit_format = "%d.%m.%y %H:%M:%S"));
+
+[endsect]
+
+[section:named_scope Named scope formatter]
+
+    #include <boost/log/formatters/named_scope.hpp>
+
+The formatter `named_scope` is intended to add support for flexible formatting of the [link advanced.advanced.attributes.named_scope named scope] attribute. The basic usage is quite straightforward and its result is similar to what [link advanced.advanced.formatters.attr `attr`] provides:
+
+    // Puts the scope stack from outer ones towards inner ones: outer scope -> inner scope
+    backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes"));
+
+The formatter supports customization with the following named arguments:
+
+* `scope_iteration`. The argument describes the direction of iteration through scopes. Can have values `forward` (default) or `reverse`.
+* `scope_delimiter`. The argument can be used to specify the delimiters between scopes. The default delimiter depends on the `scope_iteration` argument. If `scope_iteration == forward` the default `scope_delimiter` will be "->", otherwise it will be "<-".
+* `scope_depth`. The argument can be used to limit the number of scopes to put to log. The formatter will print `scope_depth` innermost scopes and, if there are more scopes left, append an ellipsis to the written sequence. By default the formatter will write all scope names.
+
+Here are few usage examples:
+
+    // Puts the scope stack in reverse order: inner scope <- outer scope
+    backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes", fmt::keywords::scope_iteration = fmt::keywords::reverse));
+
+    // Puts the scope stack in reverse order with a custom delimiter: inner scope | outer scope
+    backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes",
+        fmt::keywords::scope_iteration = fmt::keywords::reverse, fmt::keywords::scope_delimiter = " | "));
+
+    // Puts the scope stack in forward order, no more than 2 inner scopes: ... -> outer scope -> inner scope
+    backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes",
+        fmt::keywords::scope_iteration = fmt::keywords::forward, fmt::keywords::scope_depth = 2));
+
+    // Puts the scope stack in reverse order, no more than 2 inner scopes: inner scope <- outer scope <- ...
+    backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes",
+        fmt::keywords::scope_iteration = fmt::keywords::reverse, fmt::keywords::scope_depth = 2));
+
+[endsect]
+
+[section:conditional Conditional formatters]
+
+    #include <boost/log/formatters/if.hpp>
+
+There are cases when one would want to check some condition about the log record and format it depending on that condition. One example of such need is formatting an attribute value depending on its runtime type. The general syntax of the conditional formatter is as follows:
+
+    if_ (filter)
+    [
+        true_formatter
+    ]
+    .else_
+    [
+        false_formatter
+    ]
+
+Ones that are familiar with __boost_phoenix__ lambda expressions will find this syntax quite familiar. The `filter` argument is a filter that is applied to the record being formatted. If it returns `true`, the `true_formatter` is executed, otherwise `false_formatter` is executed. The `else_` section with `false_formatter` is optional. If it is omitted and `filter` yields `false`, no formatter is executed. Here is an example:
+
+    backend->set_formatter
+    (
+        fmt::ostrm
+            << fmt::date_time("TimeStamp") << " "                      // First, put the current time
+            << fmt::if_ (flt::has_attr< int >("ID"))
+               [
+                   fmt::ostrm << fmt::attr< int >("ID", "[0x%08x]")    // if "ID" is integral then format it as a hex number
+               ]
+               .else_
+               [
+                   fmt::ostrm << "[" << fmt::attr("ID") << "]"         // otherwise put it as it is
+               ]
+            << " " << fmt::message()                                   // and after that goes the log record text
+    );
+
+[endsect]
+
+[section:message Message placeholder]
+
+    #include <boost/log/formatters/message.hpp>
+
+With all these attributes we shouldn't forget the log message itself, should we? There is a `message` placeholder that represents text of logging records being formatted. The usage is quite simple:
+
+    // Sets up a formatter that will ignore all attributes and only print log record text
+    backend->set_formatter(fmt::ostrm << fmt::message());
+
+Please note, that for wide character logging there is a similar `wmessage` placeholder.
+
+[endsect]
+
+[endsect]
+
+[section:attributes Attributes]
+
+Every attribute supported by the library must derive from the `attribute` interface. This interface has the only virtual method named `get_value`. This method should return the actual attribute value object, derived from the `attribute_value` interface. Such separation allows to implement attributes that can return different values at different time points (like clock-related attributes, for example) and, on the other hand, allows to use different values of the same attribute independently.
+
+The attribute value object is mostly intended to store the actual attribute value and implement type dispatch in order to be able to extract the value.
+
+[section:named_scope Named scopes]
+
+    #include <boost/log/attributes/named_scope.hpp>
+
+The logging library supports mainaining scopes stack tracking during the application execution. This stack may either be written to log or be used for other needs (for example, to save the exact call sequence that led to and exception when throwing one). Each stack element contains following information (see `basic_named_scope_entry` structure template definition):
+
+* Scope name. It can be defined by user or generated by compiler, but in any case it [_must be a constant string literal] (see [link log.rationale.why_str_lit Rationale]).
+* Source file name, where the scope begins. It is usually a result of the standard `__FILE__` macro expansion. Like scope name, the file name [_must be a constant string literal].
+* Line number in the source file. Usually it is a result of the standard `__LINE__` macro expansion.
+
+The scope stack is implemented through a thread-specific global storage internally. There is a `named_scope` (`wnamed_scope` for wide-character logging) attribute that allows to hook this stack into logging pipeline. This attribute generates value of the nested type `named_scope::scope_stack` which is the instance of the scope stack. The attribute can be registered the following way:
+
+    logging::logging_core::get()->add_global_attribute("Scope", boost::make_shared< attrs::named_scope >());
+
+Note it is perfectly valid to register the attribute globally because the scope stack is thread-local anyway. This will also implicitly add scope tracking to all threads of the application, which is often exactly what we need.
+
+Now we can mark execution scopes with macros `BOOST_LOG_FUNCTION` and `BOOST_LOG_NAMED_SCOPE` (the latter accepts the scope name as an argument). These macros automatically add source position information to each scope entry. An example follows:
+
+    void foo(int n)
+    {
+        // Mark the scope of the function foo
+        BOOST_LOG_FUNCTION();
+
+        switch (n)
+        {
+        case 0:
+            {
+                // Mark the current scope
+                BOOST_LOG_NAMED_SCOPE("case 0");
+                BOOST_LOG(lg) << "Some log record";
+                bar(); // call some function
+            }
+            break;
+
+        case 1:
+            {
+                // Mark the current scope
+                BOOST_LOG_NAMED_SCOPE("case 1");
+                BOOST_LOG(lg) << "Some log record";
+                bar(); // call some function
+            }
+            break;
+
+        default:
+            {
+                // Mark the current scope
+                BOOST_LOG_NAMED_SCOPE("default");
+                BOOST_LOG(lg) << "Some log record";
+                bar(); // call some function
+            }
+            break;
+        }
+    }
+
+After executing `foo` we will be able to see in log that the `bar` function was called from `foo` and, more precisely, from the case statement that corresponds the value of `n`. This may be very useful when tracking down subtle bugs that show only when `bar` is called from a specific location (e.g. if `bar` is being passed invalid arguments in that particular location).
+
+Another good use case is attaching the scope stack information to an exception. With help of Boost.Exception, this is possible:
+
+    typedef boost::error_info< struct tag_scopes, attrs::named_scope::scope_stack > scopes_info;
+
+    void bar(int x)
+    {
+        BOOST_LOG_FUNCTION();
+
+        if (x < 0)
+        {
+            // Attach a copy of the current scope stack to the exception
+            throw boost::enable_error_info(std::range_error("x must not be negative"))
+                << scopes_info(attrs::named_scope::get_scopes());
+        }
+    }
+
+    void foo()
+    {
+        BOOST_LOG_FUNCTION();
+
+        try
+        {
+            bar(-1);
+        }
+        catch (std::range_error& e)
+        {
+            // Acquire the scope stack from the exception object
+            BOOST_LOG(lg) << "bar call failed: " << e.what() << ", scopes stack:\n"
+                << *boost::get_error_info< scopes_info >(e);
+        }
+    }
+
+Note that we do not inject the `named_scope` attribute into the exception. Since scope stacks are maintained globally, throwing an exception will cause stack unwinding and, as a result, will truncate the global stack. Instead we create a copy of the scope stack at the throw site. This copy will be kept intact even if the global stack instance changes during stack unwinding.
+
+[endsect]
+
+[section:scoped_attributes Scoped attributes]
+
+    #include <boost/log/attributes/scoped_attribute.hpp>
+
+Scoped attributes are a powerful mechanism of tagging log records that can be used for different purposes. As the naming implies, scoped attributes are registered in the beginning of a scope and unregistered on the end of the scope. The mechanism includes the following four macros:
+
+    BOOST_LOG_SCOPED_LOGGER_ATTR(logger, attr_name, attr_type);
+    BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR(logger, attr_name, attr_type, attr_ctor_args);
+
+    BOOST_LOG_SCOPED_THREAD_ATTR(attr_name, attr_type);
+    BOOST_LOG_SCOPED_THREAD_ATTR_CTOR(attr_name, attr_type, attr_ctor_args);
+
+The former two register a source-specific attribute in the `logger` logger object. The attribute name and type are given in the `attr_name` and `attr_type` arguments. The BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR additionally accepts a __boost_preprocessor__ sequence of arguments that should be passed to the attribute constructor. The latter pair of macros do exactly the same but the attribute is registered for the current thread in the logging core (which does not require a logger).
+
+[note If it appears that a same-named attribute is already registered in the logger/logging core, the macros won't override the existing attribute and will eventually have no effect. See [link log.rationale.why_weak_scoped_attributes Rationale] for a more detailed explanation of reasons for such behavior.]
+
+Usage example follows:
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::logger_mt)
+
+    void foo()
+    {
+        // This log record will too be marked with the "Tag" attribute, whenever it is called from the A::bar function.
+        // It will not be marked when called from other places.
+        BOOST_LOG(get_my_logger()) << "A log message from foo";
+    }
+
+    struct A
+    {
+        src::logger m_Logger;
+
+        void bar()
+        {
+            // Set a thread-wide markup tag. Note the additional parenthesis to form a Boost.PP sequence.
+            BOOST_LOG_SCOPED_THREAD_ATTR_CTOR("Tag", attrs::constant< std::string >, ("Called from A::bar"));
+
+            // This log record will be marked
+            BOOST_LOG(m_Logger) << "A log message from A::bar";
+
+            foo();
+        }
+    };
+
+    int main(int, char*[])
+    {
+        src::logger lg;
+
+        // Let's measure our application run time
+        BOOST_LOG_SCOPED_LOGGER_ATTR(lg, "RunTime", attrs::timer);
+
+        // Mark application start. The "RunTime" attribute should be nearly 0 at this point.
+        BOOST_LOG(lg) << "Application started";
+
+        // Note that no other log records are affected by the "RunTime" attribute.
+        foo();
+
+        A a;
+        a.bar();
+
+        // Mark application ending. The "RunTime" attribute will show the execution time elapsed.
+        BOOST_LOG(lg) << "Application ended";
+
+        return 0;
+    }
+
+It is quite often convenient to mark a group of log records with a constant value in order to be able to filter the records later. The library provides two convenience macros just for this purpose:
+
+    BOOST_LOG_SCOPED_LOGGER_TAG(logger, tag_name, tag_type, tag_value);
+    BOOST_LOG_SCOPED_THREAD_TAG(tag_name, tag_type, tag_value);
+
+The macros are effectively wrappers around `BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR` and `BOOST_LOG_SCOPED_THREAD_ATTR_CTOR`, respectively. For example, the "Tag" scoped attribute from the example above can be registered like this:
+
+    // Note there is no "attrs::constant" type wrapping and no addinional parenthesis around the tag value.
+    BOOST_LOG_SCOPED_THREAD_TAG("Tag", std::string, "Called from A::bar");
+
+[warning When using scoped attributes, make sure that the scoped attribute is not altered in the attribute set in which it was registered. For example, one should not clear attribute set of a logger if there are logger-specific scoped attributes registered in it. Otherwise the program will likely crash. This issue is especially critical in multithreaded application, when one thread may not know whether there are scoped attributes in the logger or there are not. Future releases may solve this limitation but currently the scoped attribute must remain intact until unregistered on scope ending.]
+
+Although the described macros are intended to be the primary interface for the functionality, there is also a C++ interface available. It may be useful if user decides to develop his own macros that cannot be based on the existing ones.
+
+Any scoped attribute is attached to a generic sentry object of type `scoped_attribute`. As long as the sentry exists, the attribute is registered. There are several functions that create sentries for source or thread-specific attributes:
+
+    // Source-specific scoped attribute registration
+    template< typename LoggerT >
+    [unspecified] add_scoped_logger_attribute(
+        LoggerT& l, typename LoggerT::string_type const& name, shared_ptr< attribute > const& attr);
+
+    template< typename LoggerT, typename AttributeT >
+    [unspecified] add_scoped_logger_attribute(
+        LoggerT& l, typename LoggerT::string_type const& name, AttributeT& attr)
+
+    // Thread-specific scoped attribute registration
+    template< typename CharT >
+    [unspecified] add_scoped_thread_attribute(
+        std::basic_string< CharT > const& name, shared_ptr< attribute > const& attr)
+
+    template< typename CharT, typename AttributeT >
+    [unspecified] add_scoped_thread_attribute(
+        std::basic_string< CharT > const& name, AttributeT& attr)
+
+Please note that the overloads that accept references to the attribute do not control the life time of the attribute. These overloads can be used to temporarily register attributes that reside on stack or are members of a class - in other words, whose life duration is controlled elsewhere.
+
+The object of `scoped_attribute` type is able to attach results of each of these functions on its construction. For example, `BOOST_LOG_SCOPED_LOGGER_ATTR(lg, "RunTime", attrs::timer)` can roughly be expanded to this:
+
+    attrs::timer attr;
+    attrs::scoped_attribute sentry = attrs::add_scoped_logger_attribute(lg, "RunTime", attr);
+
+[endsect]
+
+[endsect]
+
+[section:utilities Utilities]
+
+[endsect]
+
+[endsect]
