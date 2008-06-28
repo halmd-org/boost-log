@@ -744,7 +744,115 @@ Please note, that for wide character logging there is a similar `wmessage` place
 
 Every attribute supported by the library must derive from the `attribute` interface. This interface has the only virtual method named `get_value`. This method should return the actual attribute value object, derived from the `attribute_value` interface. Such separation allows to implement attributes that can return different values at different time points (like clock-related attributes, for example) and, on the other hand, allows to use different values of the same attribute independently.
 
-The attribute value object is mostly intended to store the actual attribute value and implement type dispatch in order to be able to extract the value.
+The attribute value object is mostly intended to store the actual attribute value and implement type dispatching in order to be able to extract the stored value. One should not confuse the attribute value object type and the stored value type. The former is in most cases not needed by users and is hidden behind the `attribute_value` interface, but the latter is needed to be able to extract the value. For bevity we call the stored attribute value type simply as attribute value type in this documentation.
+
+[section:constant Constants]
+
+    #include <boost/log/attributes/constant.hpp>
+
+The most simple and frequently used attribute type is a constant value of some type. This kind of attribute is implemented with the `constant` class template. The template is parametrized with the attribute value type. The constant value should be passed to the attribute constructor. Here is an example:
+
+    void foo()
+    {
+        src::logger lg;
+
+        // Register a constant attribute that always yields value -5
+        boost::shared_ptr< attrs::attribute > attr(new attrs::constant< int >(-5));
+        lg.add_attribute("MyInteger", attr);
+
+        // Register another constant attribute. Make it a string this time.
+        attr.reset(new attrs::constant< std::string >("Hello world!"));
+        lg.add_attribute("MyString", attr);
+    }
+
+That's it, there's nothing much you can do with a constant attribute. Constants are very useful when one wants to highlight some log records or just pass some data to a sink backend (e.g. pass statistical parameters to the collector).
+
+[endsect]
+
+[section:mutable_constant Mutable constants]
+
+    #include <boost/log/attribute/mutable_constant.hpp>
+
+This kind of attribute is an extenstion for the [link advanced.advanced.attributes.constant constant attribute]. In addition to being able to store some value, the `mutable_constant` class template has two distinctions:
+
+* it allows to modify the stored value without re-registering the attribute
+* it allows to synchronize the stores and readings of the stored value
+
+In order to change the stored value of the attribute, one must call the `set_value` method:
+
+    void foo()
+    {
+        src::logger lg;
+
+        // Register a mutable constant attribute that always yields value -5
+        boost::shared_ptr< attrs::mutable_constant< int > > attr(new attrs::mutable_constant< int >(-5));
+        lg.add_attribute("MyInteger", attr);
+        BOOST_LOG(lg) << "This record has MyInteger == -5";
+
+        // Change the attribute value
+        attr->set_value(100);
+        BOOST_LOG(lg) << "This record has MyInteger == 100";
+    }
+
+In multithreaded applications the `set_value` method calls must be seralized with the `get_value` calls (which, generally speaking, happen on every log record being made). By default `mutable_constant` does not serialize calls in any way, assuming that user will do so externally. However, `mutable_constant` template provides three additional template arguments: synchronization primitive type, scoped exclusive lock type and scoped shareable lock type. If synchronization primitive type is specified, the scoped exclusive lock type is a mandatory parameter. In this case, scoped shareable lock type is not specified, the attribute will fall back to the exclusive lock instead of shared locks. For example:
+
+    // This mutable constant will always lock exclusively either for reading or storing the value
+    typedef attrs::mutable_constant<
+        int,                                        // attribute value type
+        boost::mutex,                               // synchronization primitive
+        boost::lock_guard< boost::mutex >           // exclusive lock type
+    > exclusive_mc;
+    boost::shared_ptr< exclusive_mc > my_int1;
+
+    // This mutable constant will use shared clocking for reading the value and exclusive locking for storing
+    typedef attrs::mutable_constant<
+        int,                                        // attribute value type
+        boost::shared_mutex,                        // synchronization primitive
+        boost::unique_lock< boost::shared_mutex >,  // exclusive lock type
+        boost::shared_lock< boost::shared_mutex >   // shared lock type
+    > shared_mc;
+    boost::shared_ptr< shared_mc > my_int2;
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, src::logger_mt)
+    {
+        src::logger_mt lg;
+
+        my_int1.reset(new exclusive_mc(10));
+        lg.add_attribute("MyInteger1", my_int1);
+
+        my_int2.reset(new shared_mc(20));
+        lg.add_attribute("MyInteger2", my_int2);
+
+        return lg;
+    }
+
+    void foo()
+    {
+        src::logger_mt& lg = get_my_logger();
+
+        // This is safe, even if executed in multiple threads
+        my_int1->set_value(200);
+        BOOST_LOG(lg) << "This record has MyInteger1 == 200";
+
+        my_int2->set_value(300);
+        BOOST_LOG(lg) << "This record has MyInteger2 == 300";
+    }
+
+Mutable constants are often used as auxiliary attributes inside loggers to store attriblutes that may change on some events. As opposed to regular constants, which would require re-registering in case of value modification, mutable constants allow to modify the value in-place.
+
+[endsect]
+
+[section:counter Counters]
+
+[endsect]
+
+[section:clock Wall clock]
+
+[endsect]
+
+[section:timer Stop watch]
+
+[endsect]
 
 [section:named_scope Named scopes]
 
@@ -926,16 +1034,14 @@ Any scoped attribute is attached to a generic sentry object of type `scoped_attr
 
     template< typename LoggerT, typename AttributeT >
     [unspecified] add_scoped_logger_attribute(
-        LoggerT& l, typename LoggerT::string_type const& name, AttributeT& attr)
+        LoggerT& l, typename LoggerT::string_type const& name, AttributeT& attr);
 
     // Thread-specific scoped attribute registration
     template< typename CharT >
-    [unspecified] add_scoped_thread_attribute(
-        std::basic_string< CharT > const& name, shared_ptr< attribute > const& attr)
+    [unspecified] add_scoped_thread_attribute(std::basic_string< CharT > const& name, shared_ptr< attribute > const& attr);
 
     template< typename CharT, typename AttributeT >
-    [unspecified] add_scoped_thread_attribute(
-        std::basic_string< CharT > const& name, AttributeT& attr)
+    [unspecified] add_scoped_thread_attribute(std::basic_string< CharT > const& name, AttributeT& attr);
 
 Please note that the overloads that accept references to the attribute do not control the life time of the attribute. These overloads can be used to temporarily register attributes that reside on stack or are members of a class - in other words, whose life duration is controlled elsewhere.
 
@@ -943,6 +1049,14 @@ The object of `scoped_attribute` type is able to attach results of each of these
 
     attrs::timer attr;
     attrs::scoped_attribute sentry = attrs::add_scoped_logger_attribute(lg, "RunTime", attr);
+
+[endsect]
+
+[section:functor Function objects as attributes]
+
+[endsect]
+
+[section:extractors Attribute value extractors]
 
 [endsect]
 
