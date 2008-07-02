@@ -21,10 +21,12 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/detail/atomic_count.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
+#ifndef BOOST_LOG_NO_THREADS
+#include <boost/detail/atomic_count.hpp>
+#endif // BOOST_LOG_NO_THREADS
 
 namespace boost {
 
@@ -32,11 +34,10 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace attributes {
 
+#ifndef BOOST_LOG_NO_THREADS
+
 //! A class of an attribute that counts an integral value
-template<
-    typename T,
-    bool fDescending = false
->
+template< typename T >
 class counter :
     public attribute
 {
@@ -51,24 +52,64 @@ private:
 private:
     //! Initial value
     const held_type m_InitialValue;
+    //! Step value
+    const long m_Step;
     //! The counter
     boost::detail::atomic_count m_Counter;
 
 public:
     //! Constructor
-    explicit counter(held_type const& initial = 0) : m_InitialValue(initial), m_Counter(0) {}
+    explicit counter(held_type const& initial = 0, long step = 1) :
+        m_InitialValue(initial), m_Step(step), m_Counter(1)
+    {
+    }
 
     //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value()
     {
-        register long NextValue = (--m_Counter) + 1;
-
-        if (fDescending)
-            return boost::make_shared< counter_value >(m_InitialValue + NextValue);
-        else
-            return boost::make_shared< counter_value >(m_InitialValue - NextValue);
+        // TODO: a full featured atomic would do better here
+        register long NextValue = --m_Counter;
+        return boost::make_shared< counter_value >(m_InitialValue - static_cast< held_type >(NextValue * m_Step));
     }
 };
+
+#else // BOOST_LOG_NO_THREADS
+
+//! A class of an attribute that counts an integral value
+template< typename T >
+class counter :
+    public attribute
+{
+public:
+    //! A held counter type
+    typedef T held_type;
+
+private:
+    //! Counter value type
+    typedef basic_attribute_value< held_type > counter_value;
+
+private:
+    //! Counter value
+    held_type m_Value;
+    //! Step value
+    const held_type m_Step;
+
+public:
+    //! Constructor
+    explicit counter(held_type const& initial = 0, long step = 1) :
+        m_Value(initial), m_Step(step)
+    {
+    }
+
+    //! The method returns the actual attribute value. It must not return NULL.
+    shared_ptr< attribute_value > get_value()
+    {
+        m_Value += static_cast< held_type >(m_Step);
+        return boost::make_shared< counter_value >(m_Value);
+    }
+};
+
+#endif // BOOST_LOG_NO_THREADS
 
 } // namespace attributes
 

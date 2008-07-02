@@ -14,8 +14,10 @@
 
 #include <new>
 #include <boost/assert.hpp>
-#include <boost/detail/atomic_count.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
+#ifndef BOOST_LOG_NO_THREADS
+#include <boost/detail/atomic_count.hpp>
+#endif // BOOST_LOG_NO_THREADS
 #include "light_key.hpp"
 #include "alignment_gap_between.hpp"
 
@@ -48,7 +50,12 @@ private:
 
 private:
     //! Reference counter
+#ifndef BOOST_LOG_NO_THREADS
     detail::atomic_count m_RefCount;
+#else
+    unsigned long m_RefCount;
+#endif // BOOST_LOG_NO_THREADS
+
     //! Points to the first element in the container
     node* m_pBegin;
     //! Points after the last element of the container

@@ -15,8 +15,10 @@
 #include <stdexcept>
 #include <algorithm>
 #include <functional>
-#include <boost/detail/atomic_count.hpp>
 #include <boost/log/utility/slim_string.hpp>
+#ifndef BOOST_LOG_NO_THREADS
+#include <boost/detail/atomic_count.hpp>
+#endif // BOOST_LOG_NO_THREADS
 #include "alignment_gap_between.hpp"
 
 #ifdef _MSC_VER
@@ -60,7 +62,12 @@ private:
 
 private:
     //! Reference counter
+#ifndef BOOST_LOG_NO_THREADS
     detail::atomic_count m_RefCount;
+#else
+    unsigned long m_RefCount;
+#endif // BOOST_LOG_NO_THREADS
+
     //! Pointer to the first character
     pointer m_pBegin;
     //! Pointer to the last character

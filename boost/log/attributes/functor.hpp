@@ -36,6 +36,8 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace attributes {
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 //! A class of an attribute that acquires its value from a third-party functor
 template< typename R, typename T >
 class functor :
@@ -63,6 +65,8 @@ public:
         return boost::make_shared< functor_result_value >(m_Functor());
     }
 };
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 #ifndef BOOST_NO_RESULT_OF
 

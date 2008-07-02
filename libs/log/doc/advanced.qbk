@@ -844,13 +844,79 @@ Mutable constants are often used as auxiliary attributes inside loggers to store
 
 [section:counter Counters]
 
+    #include <boost/log/attributes/counter.hpp>
+
+Counters are one of the simpliest attributes that generate a new value each time requested. Counters are often used to identify log records or to count some events, e.g. accepted network connections. The class template `counter` provides such functionality. This template is parametrized with the counter value type, which should support arithmetic operations, such as `operator +` and `operator -`. The counter attribute allows to specify initial value and step (which can be negative) on construction.
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, src::logger_mt)
+    {
+        src::logger_mt lg;
+
+        // This counter will count lines, starting from 0
+        lg.add_attribute("LineCounter", boost::make_shared< attrs::counter< unsigned int >());
+
+        // This counter will count backwards, starting from 100 with step -5
+        lg.add_attribute("CountDown", boost::make_shared< attrs::counter< int >(100, -5));
+
+        return lg;
+    }
+
+    void foo()
+    {
+        src::logger_mt& lg = get_my_logger();
+        BOOST_LOG(lg) << "This record has LineCounter == 0, CountDown == 100";
+        BOOST_LOG(lg) << "This record has LineCounter == 1, CountDown == 95";
+        BOOST_LOG(lg) << "This record has LineCounter == 2, CountDown == 90";
+    }
+
 [endsect]
 
 [section:clock Wall clock]
 
+    #include <boost/log/attributes/clock.hpp>
+
+One of the "must-have" features of any logging library is the support for attaching a time stamp to every log record. The library provides two attributes for this purpose: `utc_clock` and `local_clock`. The former returns current UTC time and the latter returns current local time. In either case the returned time stamp is acquired with maximum precision for the target platform. The attribute value is `boost::posix_time::ptime` (see __boost_date_time__). The usage is quite straightforward:
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::logger_mt)
+
+    void foo()
+    {
+        logging::logging_core::get()->register_global_attribute("TimeStamp", boost::make_shared< attrs::local_clock >());
+
+        // Now every log record ever made will have a time stamp attached
+        src::logger_mt& lg = get_my_logger();
+        BOOST_LOG(lg) << "This record has a time stamp";
+    }
+
 [endsect]
 
 [section:timer Stop watch]
+
+    #include <boost/log/attributes/timer.hpp>
+
+The `timer` attribute is very useful when there is a need to estimate duration of some prolongated process. The attribute returns time duration elapsed since the attribute construction. The attribute value type is `boost::posix_time::ptime::time_duration_type` (see __boost_date_time__).
+
+    // The class represents a single peer-to-peer connection
+    class network_connection
+    {
+        src::logger m_Logger;
+
+    public:
+        network_connection()
+        {
+            m_Logger.add_attribute("Duration", boost::make_shared< attrs::timer >());
+            BOOST_LOG(m_Logger) << "Connection established";
+        }
+        ~network_connection()
+        {
+            // This log record will show the whole life time duration of the connection
+            BOOST_LOG(m_Logger) << "Connection closed";
+        }
+    };
+
+The attribute provides high resolution of the time estimation and even can be used as a simple in-place performance profiling tool.
+
+[tip The `timer` attribute can even be used to profile the code in different modules without recompiling them. The trick is to wrap an expensive call a foreign module with the thread-specific `timer` [link advanced.advanced.attributes.scoped_attributes scoped attribute], which will markup all log records made from within the module with time readings.]
 
 [endsect]
 
@@ -1054,15 +1120,58 @@ The object of `scoped_attribute` type is able to attach results of each of these
 
 [section:functor Function objects as attributes]
 
+    #include <boost/log/attributes/functor.hpp>
+
+This attribute is a simple wrapper around a user-defined function object. Each attempt to acquire the attribute value results in the function object call. The result of the call is returned as the attribute value (this implies that the function must not return `void`). The functor attribute can be constructed with the `make_functor_attr` helper function, like this:
+
+    void foo()
+    {
+        logging::logging_core::get()->register_global_attribute("MyRandomAttr", attrs::make_functor_attr(&std::rand));
+    }
+
+Auto-generated function objects, like the ones defined in __boost_bind__, __boost_lambda__, or STL, are also supported.
+
+[note Some deficient compilers may not support `result_of` construct properly. This metafunction is used in the `make_functor_attr` function to automatically detect the return type of the function object. In case if `result_of` breaks, one may try to explicitly specify the return type of the function object as a template argument to the `make_functor_attr` function.]
+
 [endsect]
 
 [section:extractors Attribute value extractors]
+
+    #include <boost/log/attributes/extractors.hpp>
 
 [endsect]
 
 [endsect]
 
 [section:utilities Utilities]
+
+[section:string_literal String literals]
+
+[endsect]
+
+[section:type_info_wrapper Type information wrapper]
+
+[endsect]
+
+[section:rotating_ofstream Rotating file stream]
+
+[endsect]
+
+[section:type_dispatch Type dispatchers]
+
+[heading Static type dispatcher]
+
+[heading Dynamic type dispatcher]
+
+[endsect]
+
+[section:init Simplified library initialization tools]
+
+[heading Convenience functions]
+
+[heading Library initialization from a settings file]
+
+[endsect]
 
 [endsect]
 

@@ -30,12 +30,12 @@
 #include <boost/mpl/or.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/utility/in_place_factory.hpp>
-#include <boost/detail/atomic_count.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
 #include <boost/log/sinks/threading_models.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/detail/atomic_count.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>

@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-06-28 13:09:06 $]
+    [last-revision $Date: 2008-07-02 19:08:48 $]
 ]
 
 [c++]
@@ -25,6 +25,8 @@
 [def __boost_parameter__ [@http://www.boost.org/doc/libs/release/libs/parameter/doc/html/index.html Boost.Parameter]]
 [def __boost_format__ [@http://www.boost.org/doc/libs/release/libs/format/index.html Boost.Format]]
 [def __boost_preprocessor__ [@http://www.boost.org/doc/libs/release/libs/preprocessor/doc/index.html Boost.Preprocessor]]
+[def __boost_bind__ [@http://www.boost.org/doc/libs/release/libs/bind/bind.html Boost.Bind]]
+[def __boost_lambda__ [@http://www.boost.org/doc/libs/release/doc/html/lambda.html Boost.Lambda]]
 [def __boost_phoenix__ [@http://www.boost.org/doc/libs/release/libs/spirit/doc/phoenix.html Boost.Phoenix]]
 [def __boost_optional__ [@http://www.boost.org/doc/libs/release/libs/optional/index.html Boost.Optional]]
 [def __boost_intrusive__ [@http://www.boost.org/doc/libs/release/doc/html/intrusive.html Boost.Intrusive]]
