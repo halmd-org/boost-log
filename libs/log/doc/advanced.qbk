@@ -8,7 +8,7 @@ This section contains a more detailed description of library components and feat
 
     #include <boost/log/sources/basic_logger.hpp>
 
-The simpliest logging sources provided by the library are loggers `logger` and its thread-safe version, `logger_mt` (`wlogger` and `wlogger_mt` for wide-character logging, accordingly). These loggers only provide an ability to store source-specific attributes within themselves and, of course, to form log records. This type of loggers should probably be used in case if there is no need in advanced features like severity level checks. It may well be used as a tool to collect application statistics and register application events, such as notifications and alarms. In such cases the logger is normally used in conjunction with [link advanced.advanced.utility.scoped_attributes scoped attributes] to attach the needed data to the notification event. Below is an example of usage:
+The simpliest logging sources provided by the library are loggers `logger` and its thread-safe version, `logger_mt` (`wlogger` and `wlogger_mt` for wide-character logging, accordingly). These loggers only provide an ability to store source-specific attributes within themselves and, of course, to form log records. This type of loggers should probably be used in case if there is no need in advanced features like severity level checks. It may well be used as a tool to collect application statistics and register application events, such as notifications and alarms. In such cases the logger is normally used in conjunction with [link advanced.advanced.utilities.scoped_attributes scoped attributes] to attach the needed data to the notification event. Below is an example of usage:
 
     class network_connection
     {
@@ -509,7 +509,7 @@ This filter is usually used in conjunction with [link advanced.advanced.formatte
         PUT_STAT(lg, "StreamOne", -5);
     }
 
-Please note that in the example above we extended the library in two ways: we defined a new sink backend `my_stat_accumulator` and a new macro `PUT_STAT`. Also note the technique of extracting attrubute value from the view - we need to both check that the needed attribute value is found in the view and that it has the needed type. There is also a mechanism of [link advanced.advanced.utility.extractors attribute value extractors] that can simplify this, especially when an attribute can have a number of types.
+Please note that in the example above we extended the library in two ways: we defined a new sink backend `my_stat_accumulator` and a new macro `PUT_STAT`. Also note the technique of extracting attrubute value from the view - we need to both check that the needed attribute value is found in the view and that it has the needed type. There is also a mechanism of [link advanced.advanced.utilities.extractors attribute value extractors] that can simplify this, especially when an attribute can have a number of types.
 
 [endsect]
 
@@ -918,7 +918,7 @@ The `timer` attribute is very useful when there is a need to estimate duration o
 
 The attribute provides high resolution of the time estimation and even can be used as a simple in-place performance profiling tool.
 
-[tip The `timer` attribute can even be used to profile the code in different modules without recompiling them. The trick is to wrap an expensive call a foreign module with the thread-specific `timer` [link advanced.advanced.utility.scoped_attributes scoped attribute], which will markup all log records made from within the module with time readings.]
+[tip The `timer` attribute can even be used to profile the code in different modules without recompiling them. The trick is to wrap an expensive call a foreign module with the thread-specific `timer` [link advanced.advanced.utilities.scoped_attributes scoped attribute], which will markup all log records made from within the module with time readings.]
 
 [endsect]
 

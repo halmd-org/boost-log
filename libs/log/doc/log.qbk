@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-07-03 20:16:07 $]
+    [last-revision $Date: 2008-07-03 20:30:30 $]
 ]
 
 [c++]
@@ -218,7 +218,7 @@ There were other issues, like having an attribute set iterator that points to on
 
 [endsect]
 
-[section:why_weak_record_ordering Why log records are weakly ordered in multithreaded application?]
+[section:why_weak_record_ordering Why log records are weakly ordered in a multithreaded application?]
 
 Although the library guarantees that log records made in a given thread are always delivered to sinks in the same order as they were made in, the library cannot provide such guarantee for different threads. E.g. it is possible that thread A emits a log record and gets preempted, then thread B emits its log record and manages to deliver it to a sink before being preempted. The resulting log will contain log record from thread B before the record made in thread A. However, attribute values attached to the records will always be actual with regard to the moment of emitting the record and not the moment of passing the record to the sink. This is the reason for a strange, at first glance, situation when, e.g. a log record with an earlier time stamp follows a record with a later time stamp. The problem shows quite rarely, usually when thread contention on logging is very high.
 
