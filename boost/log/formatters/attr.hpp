@@ -23,9 +23,9 @@
 #include <boost/format.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
-#include <boost/log/attributes/extractors.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
+#include <boost/log/utility/attribute_value_extractor.hpp>
 
 namespace boost {
 
@@ -69,7 +69,7 @@ private:
 
 private:
     //! Attribute value extractor
-    attributes::attribute_value_extractor< char_type, AttributeValueTypesT > m_Extractor;
+    attribute_value_extractor< char_type, AttributeValueTypesT > m_Extractor;
 
 public:
     //! Constructor
@@ -167,7 +167,7 @@ private:
 
 private:
     //! Attribute value extractor
-    attributes::attribute_value_extractor< char_type, AttributeValueTypesT > m_Extractor;
+    attribute_value_extractor< char_type, AttributeValueTypesT > m_Extractor;
     //! Formatter object
     mutable format_type m_Formatter;
 

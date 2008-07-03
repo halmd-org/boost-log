@@ -34,16 +34,16 @@
 #include <boost/log/logging_core.hpp>
 #include <boost/log/attributes/clock.hpp>
 #include <boost/log/attributes/counter.hpp>
-#include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
-#include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/formatters/format.hpp>
 #include <boost/log/formatters/attr.hpp>
 #include <boost/log/formatters/date_time.hpp>
 #include <boost/log/formatters/message.hpp>
+#include <boost/log/utility/empty_deleter.hpp>
+#include <boost/log/utility/scoped_attribute.hpp>
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;

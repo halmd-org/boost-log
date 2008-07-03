@@ -16,8 +16,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_SCOPED_ATTRIBUTE_HPP_INCLUDED_
-#define BOOST_LOG_SCOPED_ATTRIBUTE_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_SCOPED_ATTRIBUTE_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_SCOPED_ATTRIBUTE_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
 #include <boost/utility/addressof.hpp>
@@ -293,4 +293,4 @@ inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
 
 } // namespace boost
 
-#endif // BOOST_LOG_SCOPED_ATTRIBUTE_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_SCOPED_ATTRIBUTE_HPP_INCLUDED_

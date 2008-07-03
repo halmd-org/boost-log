@@ -52,9 +52,9 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
-#include <boost/log/attributes/extractors.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/utility/string_literal.hpp>
+#include <boost/log/utility/attribute_value_extractor.hpp>
 #include <boost/log/utility/type_dispatch/date_time_types.hpp>
 
 namespace boost {
@@ -632,7 +632,7 @@ private:
 
 private:
     //! Attribute value extractor
-    attributes::attribute_value_extractor< char_type, AttributeValueTypesT > m_Extractor;
+    attribute_value_extractor< char_type, AttributeValueTypesT > m_Extractor;
     //! Pointer to the formatter implementation
     mutable formatter_type m_Formatter;
 

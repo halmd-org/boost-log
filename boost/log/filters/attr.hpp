@@ -39,7 +39,7 @@
 #include <boost/log/detail/functional.hpp>
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
-#include <boost/log/attributes/extractors.hpp>
+#include <boost/log/utility/attribute_value_extractor.hpp>
 
 namespace boost {
 
@@ -55,7 +55,7 @@ class flt_attr :
     //! Base type
     typedef basic_filter< CharT, flt_attr< CharT, FunT, AttributeValueTypesT > > base_type;
     //! Attribute value extractor type
-    typedef attributes::attribute_value_extractor< CharT, AttributeValueTypesT > extractor;
+    typedef attribute_value_extractor< CharT, AttributeValueTypesT > extractor;
 
 public:
     //! String type

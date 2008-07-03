@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-07-02 19:08:48 $]
+    [last-revision $Date: 2008-07-03 20:16:07 $]
 ]
 
 [c++]
@@ -218,6 +218,19 @@ There were other issues, like having an attribute set iterator that points to on
 
 [endsect]
 
+[section:why_weak_record_ordering Why log records are weakly ordered in multithreaded application?]
+
+Although the library guarantees that log records made in a given thread are always delivered to sinks in the same order as they were made in, the library cannot provide such guarantee for different threads. E.g. it is possible that thread A emits a log record and gets preempted, then thread B emits its log record and manages to deliver it to a sink before being preempted. The resulting log will contain log record from thread B before the record made in thread A. However, attribute values attached to the records will always be actual with regard to the moment of emitting the record and not the moment of passing the record to the sink. This is the reason for a strange, at first glance, situation when, e.g. a log record with an earlier time stamp follows a record with a later time stamp. The problem shows quite rarely, usually when thread contention on logging is very high.
+
+There are two posible ways to cope with the problem:
+
+* Enforce strict serialization of log record being made throughout the application. This solution implies a severe performance impact in multithreaded application because log records that otherwise could be processed concurrently will have to go serial. Since this controverses one of the [link log.moti main library goals], it was rejected.
+* Attempt to maintain log record ordering on the sink level. This solution is more or less viable. On the downside, it would introduce log record buffering, which in turn would compromise logs reliability. In case of application crash all buffered records would be lost. It was decided not to be implemented in the current library version.
+
+However, since log record buffering is already present in asynchronous logging, the latter solution may be implemented as a part of the [link advanced.advanced.sinks.async asynchronous sink frontend] functionality in future library versions.
+
+[endsect]
+
 [endsect]
 
 [xinclude autodoc.xml]
@@ -230,6 +243,7 @@ There were other issues, like having an attribute set iterator that points to on
 * Optionally support [@http://www.threadingbuildingblocks.org Intel TBB]. In particular, atomic types and thread-safe queue could be useful.
 * Move from __boost_regex__ to __boost_xpressive__. This would remove the dependency in the Boost.Regex library module. However, Boost.Regex support should be retained.
 * Windows NT event log support. For now it is not clear how the support should be implemented. The problem is that event log API expects the user to supply a message ID rather than the message text. There is no problem to put the ID in an attribute, but that makes the formatted message text pretty much useless. Also, to make the event log backend generic enough, there must be some mapping between logging library attributes, event attributes and message IDs.
+* Implement log record ordering feature for asynchronous logging (see [link log.rationale.why_weak_record_ordering here]).
 
 [endsect]
 

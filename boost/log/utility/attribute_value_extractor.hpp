@@ -4,7 +4,7 @@
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  * 
- * \file   extractors.hpp
+ * \file   attribute_value_extractor.hpp
  * \author Andrey Semashev
  * \date   01.03.2008
  * 
@@ -16,8 +16,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_ATTRIBUTES_EXTRACTORS_HPP_INCLUDED_
-#define BOOST_LOG_ATTRIBUTES_EXTRACTORS_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_ATTRIBUTE_VALUE_EXTRACTOR_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_ATTRIBUTE_VALUE_EXTRACTOR_HPP_INCLUDED_
 
 #include <string>
 #include <boost/optional.hpp>
@@ -36,7 +36,7 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-namespace attributes {
+namespace aux {
 
 //! Fixed type attribute value extractor
 template< typename CharT, typename T >
@@ -236,20 +236,22 @@ inline bool type_list_value_extractor< CharT, TypeSequenceT >::extract(
     return false;
 }
 
+} // namespace aux
+
 //! Generic attribute value extractor
 template< typename CharT, typename T >
 class attribute_value_extractor :
     public mpl::if_<
         mpl::is_sequence< T >,
-        type_list_value_extractor< CharT, T >,
-        fixed_type_value_extractor< CharT, T >
+        log::aux::type_list_value_extractor< CharT, T >,
+        log::aux::fixed_type_value_extractor< CharT, T >
     >::type
 {
     //! Base type
     typedef typename mpl::if_<
         mpl::is_sequence< T >,
-        type_list_value_extractor< CharT, T >,
-        fixed_type_value_extractor< CharT, T >
+        log::aux::type_list_value_extractor< CharT, T >,
+        log::aux::fixed_type_value_extractor< CharT, T >
     >::type base_type;
 
 public:
@@ -261,10 +263,8 @@ public:
     explicit attribute_value_extractor(string_type const& name) : base_type(name) {}
 };
 
-} // namespace attributes
-
 } // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_ATTRIBUTES_EXTRACTORS_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_ATTRIBUTE_VALUE_EXTRACTOR_HPP_INCLUDED_
