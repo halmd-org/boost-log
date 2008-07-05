@@ -1037,9 +1037,37 @@ Auto-generated function objects, like the ones defined in __boost_bind__, __boos
 
 [section:string_literal String literals]
 
+    #include <boost/log/utility/string_literal.hpp>
+
+String literals are used in several places throughout the library. However, this component can be successfully used outside of the library in users code. It is header-only and does not require linking with the library binary. String literals can improve performance significantly if there is no need to modify stored strings. What is also important, since string literals do not dynamically allocate memory, it is easier to maintain exception safety when using string literals instead of regular strings.
+
+The functionality is implemented in `basic_string_literal` class template, which is parametrized with character and character traits, similar to `std::basic_string`. There are also two convenience typedefs provided: `string_literal` and `wstring_literal`, for narrow and wide character types, respectively. In order to ease string literal construction in generic code there is also a `str_literal` function template that accepts a string literal and returns a `basic_string_literal` instance for the appropriate character type.
+
+String literals support interface similar to STL strings, except for string modification functions. However, it is possible to assign to or clear string literals, as long as only string literals involved. Relational and stream output operators are also supported. A more detailed information is given in the [classref boost::log::basic_string_literal Reference section].
+
 [endsect]
 
 [section:type_info_wrapper Type information wrapper]
+
+    #include <boost/log/utility/type_info_wrapper.hpp>
+
+The language support for run time type information is essential for the library. But partially because of limitations that C++ Standard poses on this feature, partially because of differences of implementation of different compilers, there was a need for a lightweight wrapper around `std::type_info` class to fill the gaps. The table below briefly shows the differences between the `std::type_info` and `type_info_wrapper` classes.
+
+[table Type information classes comparison
+    [[Feature]                                  [`std::type_info`]              [`type_info_wrapper`]]
+    [[Is default-constructible]                 [No]                            [Yes. The default-constructed wrapper is in an empty state.]]
+    [[Is copy-constructible]                    [No]                            [Yes]]
+    [[Is assignable]                            [No]                            [Yes]]
+    [[Is swappable]                             [No]                            [Yes]]
+    [[Is singleton]                             [Yes, as defined in C++ Standard. Not every compiler conforms to this requirement, though.] [No]]
+    [[Life time duration]                       [Static, until the application terminates] [Dynamic]]
+    [[Has an empty state]                       [No]                            [Yes. In empty state the type info wrapper is never equal to other non-empty type info wrappers. It is equal to other empty type info wrappers and can be ordered with them.]]
+    [[Supports equality comparison]             [Yes]                           [Yes]]
+    [[Supports ordering]                        [Yes, partial ordering with the `before` method.] [Yes, partial ordering with the complete set of comparison operators.]]
+    [[Supports printable representation of type] [Yes, with `name` and `raw_name` functions.] [Yes, with `pretty_name` function. The function makes its best to print the type name in a human-readable form.]]
+]
+
+Given the distinctions above, using type information objects becomes much easier. For example, ability to copy and order with regular operators allows to use `type_info_wrapper` with containers. Ability to default-construct and assign allows to use type information as a regular objects an not to resort to pointers which may be unsafe.
 
 [endsect]
 
@@ -1152,6 +1180,83 @@ The object of `scoped_attribute` type is able to attach results of each of these
 [section:rotating_ofstream Rotating file stream]
 
     #include <boost/log/utility/rotating_ofstream.hpp>
+
+It is often convenient to split log into several parts in order to reduce log file sizes and make it more manageable. This functionality is implemented in the `basic_rotating_ofstream` class template (convenience typedefs `rotating_ofstream` and `rotating_wofstream` are also available). This stream is capable to dynamically change the underlying file the data written to. There are two supported criteria of rotation:
+
+* The file can be rotated upon a certain file size. The maximum file size can be specified in the stream constructor or `open` method in the named argument `rotation_size`.
+
+[note The rotation file size can be imprecise. The implementation counts the number of bytes written to the file, but the underlying API can introduce additional auxiliary data, which would increase the log file size on disk. The most well-known such case is the way Windows and DOS operating systems work with text files with regard to new-line characters. Each new-line character is written as a two byte sequence 0x0D 0x0A instead of a single 0x0A. There are other platforms known that introduce much more distortion into the written data.]
+
+* The file can be rotated upon some time interval, which can be specified in the named argument `rotation_interval` as number of seconds.
+
+These two criteria can be combined together, so it is possible, for instance, to rotate the log file each hour but keep its size under 1 MB.
+
+Since the underlying file may change, the rotating stream accepts a file name template instead of the final file name. The file name may be composed of the current date and time (see formatting capabilities of __boost_date_time__ for placeholder description) and/or file counter (using the `%N` placeholder with optional `printf`-style format specifiers). A few quick examples:
+
+[table
+    [[Template]                            [Expands to]]
+    [[file\_%N.log]                        [file\_1.log, file\_2.log...]]
+    [[file\_%03N.log]                      [file\_001.log, file\_002.log...]]
+    [[file\_%Y%m%d.log]                    [file\_20080705.log, file\_20080706.log...]]
+    [[file\_%Y-%m-%d\_%H-%M-%S.%N.log]     [file\_2008-07-05\_13-44-23.1.log, file\_2008-07-06\_16-00-10.2.log...]]
+]
+
+The rotating stream is designed in order not to break log records in the middle when it comes to rotating the file. This feature needs the stream to know when a log record is ended and when the next one is started. Such requirement cannot be fulfilled with the standard stream interface. The `basic_rotating_ofstream` supports an additional interface `record_writer` that allows the stream to receive such metadata. However, this makes [_the rotating stream not a regular stream anymore, since it doesn't write data into the underlying file until it receives notifications that delimit log records]. The `record_writer` interface is also supported in the [link advanced.advanced.sink_backends.text_ostream text stream backend], so using the rotating stream with the sink just works. But if you ever use the rotating stream outside the library, you should make sure you provide the stream with this metadata.
+
+Here's a basic usage example:
+
+    void foo()
+    {
+        boost::shared_ptr< sinks::synchronous_sink< sinks::text_ostream_backend > > sink(
+            new sinks::synchronous_sink< sinks::text_ostream_backend >);
+
+        // The file will rotate every hour and will attempt not to exceed 1 MB.
+        sink->locked_backend()->add_stream(boost::make_shared< rotating_ofstream >(
+            "file_%02N.log", logging::keywords::rotation_interval = 3600, logging::keywords::rotation_size = 1048576));
+
+        logging::logging_core::get()->add_sink(sink);
+    }
+
+But there's more about the rotating file stream. The stream also supports calling user-defined functions before closing and after opening the underlying file. This can be very useful when the file should have a header and/or footer, like XML files, for example. With support of formatters, it is well possible to store log records in XML, like this:
+
+    // The function is called for every file being opened
+    void write_header(std::ostream& strm)
+    {
+        strm << "<?xml version=\"1.0\"?>\n"
+                "<log>\n";
+    }
+
+    // The function is called for every file being closed
+    void write_footer(std::ostream& strm)
+    {
+        strm << "</log>\n";
+    }
+
+    void foo()
+    {
+        // Construct the stream
+        boost::shared_ptr< rotating_ofstream > strm(
+            new rotating_ofstream("log_%02N.xml", logging::keywords::rotation_interval = 3600, logging::keywords::rotation_size = 1048576));
+
+        // Setup open and close handlers
+        strm->set_open_handler(&write_header);
+        strm->set_close_handler(&write_header);
+
+        // Create a sink
+        boost::shared_ptr< sinks::synchronous_sink< sinks::text_ostream_backend > > sink(
+            new sinks::synchronous_sink< sinks::text_ostream_backend >);
+        sink->locked_backend()->add_stream(strm);
+
+        // Setup the formatter
+        sink->set_formatter(fmt::ostrm
+            << "\t<message id=\"" << fmt::attr< unsigned int >("Line #") << "\">\n"
+                << "\t\t<timestamp>" << fmt::date_time("TimeStamp") << "</timestamp>\n"
+                << "\t\t<level>" << fmt::attr< int >("Severity") << "</level>\n"
+                << "\t\t<![CDATA[" << fmt::message() << "]]>\n"
+            << "\t</message>");
+
+        logging::logging_core::get()->add_sink(sink);
+    }
 
 [endsect]
 

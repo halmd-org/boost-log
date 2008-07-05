@@ -25,6 +25,7 @@
 #endif // __GNUC__
 #include <typeinfo>
 #include <string>
+#include <algorithm>
 #include <boost/operators.hpp>
 #include <boost/log/detail/prologue.hpp>
 
@@ -40,7 +41,7 @@ class type_info_wrapper :
 {
 private:
     //! An inaccessible type to indicate an uninitialized state of the wrapper
-    enum uninitialized_state {};
+    enum uninitialized {};
 
 #ifndef BOOST_NO_UNSPECIFIED_BOOL
     struct dummy
@@ -69,18 +70,18 @@ private:
 
 public:
     //! Default constructor (leaves object in an unusable state)
-    type_info_wrapper() : info(&typeid(uninitialized_state)) {}
+    type_info_wrapper() : info(&typeid(uninitialized)) {}
     //! Copy constructor
     type_info_wrapper(type_info_wrapper const& that) : info(that.info) {}
     //! Conversion constructor
     type_info_wrapper(std::type_info const& that) : info(&that) {}
 
 #ifdef BOOST_NO_UNSPECIFIED_BOOL
-    operator bool () const { return (*info != typeid(uninitialized_state)); }
+    operator bool () const { return (*info != typeid(uninitialized)); }
 #else
     operator unspecified_bool() const
     {
-        if (*info != typeid(uninitialized_state))
+        if (*info != typeid(uninitialized))
             return &dummy::data2;
         else
             return 0;
@@ -90,10 +91,16 @@ public:
     //! Type info getter
     std::type_info const& get() const { return *info; }
 
+    //! Swaps two instances of the wrapper
+    void swap(type_info_wrapper& that)
+    {
+        std::swap(info, that.info);
+    }
+
     //! The method returns the contained type name string in a possibly more readable format than get().name()
     std::string pretty_name() const
     {
-        if (*info != typeid(uninitialized_state))
+        if (*info != typeid(uninitialized))
         {
 #ifdef __GNUC__
             // GCC returns decorated type name, will need to demangle it using ABI
@@ -122,7 +129,7 @@ public:
 #endif
 
     //! Initialized state checker
-    bool operator! () const { return (*info == typeid(uninitialized_state)); }
+    bool operator! () const { return (*info == typeid(uninitialized)); }
 
     //! Equality comparison
     bool operator== (type_info_wrapper const& that) const
@@ -140,6 +147,12 @@ public:
 #endif
 
 };
+
+//! Free swap for type info wrapper
+inline void swap(type_info_wrapper& left, type_info_wrapper& right)
+{
+    left.swap(right);
+}
 
 } // namespace log
 

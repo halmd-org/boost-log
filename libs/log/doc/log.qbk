@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-07-03 20:30:30 $]
+    [last-revision $Date: 2008-07-05 19:08:11 $]
 ]
 
 [c++]
@@ -237,6 +237,8 @@ However, since log record buffering is already present in asynchronous logging, 
 
 [section:todo TODO in future releases]
 
+Points in this section are not necessarilly going to be implemented. These are mainly some thoughts on ways of further improvements of the library.
+
 * Optimize scoped attributes. The idea is to store both the attribute and the `shared_ptr` counter on the stack. Currently only the attribute is stored on the stack.
 * Optimize single-threaded configuration. In many places dynamic memory allocation can be removed if multithreading support is disabled.
 * Support C++0x features, like variadic templates.
@@ -244,6 +246,7 @@ However, since log record buffering is already present in asynchronous logging, 
 * Move from __boost_regex__ to __boost_xpressive__. This would remove the dependency in the Boost.Regex library module. However, Boost.Regex support should be retained.
 * Windows NT event log support. For now it is not clear how the support should be implemented. The problem is that event log API expects the user to supply a message ID rather than the message text. There is no problem to put the ID in an attribute, but that makes the formatted message text pretty much useless. Also, to make the event log backend generic enough, there must be some mapping between logging library attributes, event attributes and message IDs.
 * Implement log record ordering feature for asynchronous logging (see [link log.rationale.why_weak_record_ordering here]).
+* Improve rotating flexibility. The idea is to make the rotation criteria user-definable. Allow to put attribute values into the file name.
 
 [endsect]
 
