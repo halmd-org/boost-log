@@ -1262,11 +1262,165 @@ But there's more about the rotating file stream. The stream also supports callin
 
 [section:type_dispatch Type dispatchers]
 
+    #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
+
+Type dispatchers are used throughout the library in order to work with attribute values. Dispatchers allow to acquire actual typed attribute value using the Visitor concept. The most notable places where the functionality is used are filters and formatters. Most of the time users won't need to dig into details of type dispatches, but this information may be useful for the ones who intend to extend the library and wants to understand what's under the hood.
+
+Every type dispatcher supports `type_dispatcher` interface. When an attribute value needs to be extracted, this interface is passed to the attribute value object, which then tries to acquire the concrete visitor for the actual type of the value. All visitors derive from the appropriate instance of the `type_visitor` class template, instantiated on the actual type of the value. If the dispatcher is capable to consume the value of the requested type, it must return the pointer to the appropriate visitor interface. Otherwise it returns `NULL`. When (and if) the corresponding visitor is acquired, the attribute value object only have to pass the contained value to the visitor.
+
+Gladly, there is no need to write type dispatchers from scratch. The library provides two kinds of type dispatchers that implement `type_dispatcher` and `type_visitor` interfaces and encapsulate the visitor lookup.
+
 [heading Static type dispatcher]
+
+    #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
+
+Static type dispatchers are used when the set of types that needs to be supported for extraction is known at compile time. The `static_type_dispatcher` class template is parametrized with an MPL type sequence of types that needs to be supported. The dispatcher inherits from `type_dispatcher` and `type_visitor` instances for all types in the MPL sequence. All you need to do is derive your class from the dispatcher and implement the `visit` methods for all supported types, like this:
+
+    // A simple attribute value
+    template< typename T >
+    struct my_value :
+        public logging::attribute_value
+    {
+        T m_Value;
+
+        explicit my_value(T const& value) : m_Value(value) {}
+
+        // The function passes the contained type into the dispatcher
+        bool dispatch(logging::type_dispatcher& dispatcher)
+        {
+            logging::type_visitor< T >* visitor = dispatcher.get_visitor< T >();
+            if (visitor)
+            {
+                visitor->visit(m_Value);
+                return true;
+            }
+            else
+                return false;
+        }
+
+        // Other functions omitted for brevity...
+    };
+
+    // Type dispatcher for the supported types
+    struct my_dispatcher :
+        public logging::static_type_dispatcher<
+            boost::mpl::vector< int, double, std::string >
+        >
+    {
+        // Implement visitation logic for all supported types
+        void visit(int const& value)
+        {
+            std::cout << "Received int value = " << value << std::endl;
+        }
+        void visit(double const& value)
+        {
+            std::cout << "Received double value = " << value << std::endl;
+        }
+        void visit(std::string const& value)
+        {
+            std::cout << "Received string value = " << value << std::endl;
+        }
+    };
+
+    int main(int, char*[])
+    {
+        my_dispatcher disp;
+
+        // These two attributes are supported by the dispatcher
+        my_value< std::string > val1("Hello world!");
+        assert(val1.dispatch(disp));
+
+        my_value< double > val2(1.2);
+        assert(val2.dispatch(disp));
+
+        // This one is not
+        my_value< float > val3(-4.3);
+        assert(!val3.dispatch(disp));
+
+        return 0;
+    }
+
+[tip In the example above we implemented a reduced attribute value object. Since in most cases this implementation is always the same, the library provides a ready-to-go attribute value in the [headerref boost/log/attributes/basic_attribute_value.hpp ] file, the `basic_attribute_value` class template.]
 
 [heading Dynamic type dispatcher]
 
+    #include <boost/log/utility/type_dispatch/dynamic_type_dispatcher.hpp>
+
+In case if the set of types that have to be supported is not available at compile time, the `dynamic_type_dispatcher` class to help. One can use its `register_type` method to add support for a particular type. User has to pass a function object along with the type, this functor will be called when a visitor for the specified type is invoked. Considering the `my_value` from the code sample for static type dispatcher is intact, the code can be rewritten as follows:
+
+    // Implement visitation logic for all supported types
+    void on_int(int const& value)
+    {
+        std::cout << "Received int value = " << value << std::endl;
+    }
+    void on_double(double const& value)
+    {
+        std::cout << "Received double value = " << value << std::endl;
+    }
+    void on_string(std::string const& value)
+    {
+        std::cout << "Received string value = " << value << std::endl;
+    }
+
+    int main(int, char*[])
+    {
+        logging::dynamic_type_dispatcher disp;
+
+        // Register type visitors
+        disp.register_type< int >(&on_int);
+        disp.register_type< double >(&on_double);
+        disp.register_type< std::string >(&on_string);
+
+        // These two attributes are supported by the dispatcher
+        my_value< std::string > val1("Hello world!");
+        assert(val1.dispatch(disp));
+
+        my_value< double > val2(1.2);
+        assert(val2.dispatch(disp));
+
+        // This one is not
+        my_value< float > val3(-4.3);
+        assert(!val3.dispatch(disp));
+
+        return 0;
+    }
+
+Of course, complex function objects, like provided by __boost_bind__, are also supported.
+
 [heading Predefined type sequences]
+
+    #include <boost/log/utility/type_dispatch/standard_types.hpp>
+    #include <boost/log/utility/type_dispatch/date_time_types.hpp>
+
+One may notice that when using type dispatchers and defining filters and formatters it may be convenient to have some predefined type sequences to designate frequently used sets of types. The library provides several such sets.
+
+[table Standard types (standard_types.hpp)
+    [[Type sequence]                            [Meaning]]
+    [[`integral_types`]                         [All integral types, including `bool`, character and 64 bit integral types, if available]]
+    [[`floating_point_types`]                   [Floating point types]]
+    [[`numeric_types`]                          [Includes `integral_types` and `floating_point_types`]]
+    [[`string_types` and `wstring_types`]       [Narrow or wide string types. Currently only includes STL string types and [link advanced.advanced.utilities.string_literal string literals].]]
+]
+
+There are also a number of time-related type sequences available:
+
+[table Time-related types (date_time_types.hpp)
+    [[Type sequence]                            [Meaning]]
+    [[`native_date_time_types`]                 [All types defined in C/C++ standard that have both date and time portions]]
+    [[`boost_date_time_types`]                  [All types defined in __boost_date_time__ that have both date and time portions]]
+    [[`date_time_types`]                        [Includes `native_date_time_types` and `boost_date_time_types`]]
+    [[`native_date_types`]                      [All types defined in C/C++ standard that have date portion. Currently equivalent to `native_date_time_types`.]]
+    [[`boost_date_types`]                       [All types defined in __boost_date_time__ that have date portion]]
+    [[`date_types`]                             [Includes `native_date_types` and `boost_date_types`]]
+    [[`native_time_types`]                      [All types defined in C/C++ standard that have time portion. Currently equivalent to `native_date_time_types`.]]
+    [[`boost_time_types`]                       [All types defined in __boost_date_time__ that have time portion. Currently equivalent to `boost_date_time_types`.]]
+    [[`time_types`]                             [Includes `native_time_types` and `boost_time_types`]]
+    [[`native_time_duration_types`]             [All types defined in C/C++ standard that are used to represent time duration. Currently only includes `double`, as the result type of the `difftime` standard function.]]
+    [[`boost_time_duration_types`]              [All time duration types defined in __boost_date_time__]]
+    [[`time_duration_types`]                    [Includes `native_time_duration_types` and `boost_time_duration_types`]]
+    [[`boost_time_period_types`]                [All time period types defined in __boost_date_time__]]
+    [[`time_period_types`]                      [Currently equivalent to `boost_time_period_types`]]
+]
 
 [endsect]
 

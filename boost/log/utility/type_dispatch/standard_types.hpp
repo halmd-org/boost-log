@@ -23,9 +23,7 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/joint_view.hpp>
 #include <boost/log/detail/prologue.hpp>
-#if defined(BOOST_NO_INTRINSIC_WCHAR_T) && defined(BOOST_LOG_USE_WCHAR_T)
-#include <boost/mpl/push_back.hpp>
-#endif // defined(BOOST_NO_INTRINSIC_WCHAR_T) && defined(BOOST_LOG_USE_WCHAR_T)
+#include <boost/log/utility/string_literal.hpp>
 
 namespace boost {
 
@@ -34,6 +32,10 @@ namespace BOOST_LOG_NAMESPACE {
 //! An MPL-sequence of integral types of attributes, supported by default
 typedef mpl::vector<
     bool,
+    char,
+#if !defined(BOOST_NO_INTRINSIC_WCHAR_T)
+    wchar_t,
+#endif
     signed char,
     unsigned char,
     short,
@@ -65,8 +67,8 @@ typedef mpl::joint_view<
 template< typename CharT >
 struct basic_string_types :
     public mpl::vector<
-        CharT,
-        std::basic_string< CharT >
+        std::basic_string< CharT >,
+        basic_string_literal< CharT >
     >::type
 {
 };
@@ -88,20 +90,6 @@ struct make_default_attribute_types :
     >
 {
 };
-
-#if defined(BOOST_NO_INTRINSIC_WCHAR_T) && defined(BOOST_LOG_USE_WCHAR_T)
-
-//! Remove wchar_t from the list since it's a typedef
-template< >
-struct make_default_attribute_types< wchar_t > :
-    public mpl::push_back<
-        numeric_types,
-        std::basic_string< wchar_t >
-    >
-{
-};
-
-#endif // defined(BOOST_NO_INTRINSIC_WCHAR_T) && defined(BOOST_LOG_USE_WCHAR_T)
 
 } // namespace log
 

@@ -22,8 +22,7 @@
 #include <boost/compatibility/cpp_c_headers/ctime>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/joint_view.hpp>
-#include <boost/mpl/copy.hpp>
-#include <boost/mpl/back_inserter.hpp>
+#include <boost/mpl/push_back.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/date_time/local_time/local_time_types.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
@@ -51,16 +50,26 @@ typedef mpl::joint_view<
     boost_date_time_types
 >::type date_time_types;
 
+//! An MPL-sequence of natively supported date types of attributes
+typedef native_date_time_types native_date_types;
+
 //! An MPL-sequence of Boost date types of attributes
-typedef mpl::vector<
+typedef mpl::push_back<
+    boost_date_time_types,
     gregorian::date
 >::type boost_date_types;
 
 //! An MPL-sequence with the complete list of the supported date types
-typedef mpl::copy<
-    date_time_types,
-    mpl::back_inserter< boost_date_types >
+typedef mpl::joint_view<
+    native_date_types,
+    boost_date_types
 >::type date_types;
+
+//! An MPL-sequence of natively supported time types
+typedef native_date_time_types native_time_types;
+
+//! An MPL-sequence of Boost time types
+typedef boost_date_time_types boost_time_types;
 
 //! An MPL-sequence with the complete list of the supported time types
 typedef date_time_types time_types;
