@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-07-05 19:08:11 $]
+    [last-revision $Date: 2008-07-07 19:00:37 $]
 ]
 
 [c++]
@@ -129,6 +129,8 @@ You may define configuration macros in the `bjam` command line, like this:
 ]
 
 The logging library also uses several Boost libraries that need building too. These are __boost_filesystem__, __boost_system__, __boost_date_time__, __boost_thread__ and __boost_regex__. Refer to their documentation for detailed instructions on building procedure.
+
+One final thing should be added. The library requires run-time type information (RTTI) to be enabled for both the library compilation and user's code compilation. Normally, this won't need anything from you except to check that RTTI support is not disabled in your project.
 
 [endsect]
 
