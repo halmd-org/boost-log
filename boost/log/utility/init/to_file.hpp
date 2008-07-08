@@ -31,6 +31,12 @@
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 
+#ifndef BOOST_LOG_NO_THREADS
+#define BOOST_LOG_FILE_SINK_FRONTEND sinks::synchronous_sink
+#else
+#define BOOST_LOG_FILE_SINK_FRONTEND sinks::unlocked_sink
+#endif
+
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
@@ -40,7 +46,7 @@ namespace aux {
 //! The function constructs the sink and adds it to the core
 template< typename CharT >
 shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::basic_text_ostream_backend< CharT >
     >
 > init_log_to_file(shared_ptr< std::basic_ostream< CharT > > const& strm)
@@ -49,8 +55,8 @@ shared_ptr<
     shared_ptr< backend_t > pBackend = boost::make_shared< backend_t >();
     pBackend->add_stream(strm);
 
-    shared_ptr< sinks::synchronous_sink< backend_t > > pSink =
-        boost::make_shared< sinks::synchronous_sink< backend_t > >(pBackend);
+    shared_ptr< BOOST_LOG_FILE_SINK_FRONTEND< backend_t > > pSink =
+        boost::make_shared< BOOST_LOG_FILE_SINK_FRONTEND< backend_t > >(pBackend);
     basic_logging_core< CharT >::get()->add_sink(pSink);
 
     return pSink;
@@ -60,7 +66,7 @@ shared_ptr<
 
 //! The function initializes the logging library to write logs to a file stream
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::text_ostream_backend
     >
 > init_log_to_file(const char* file_name)
@@ -72,7 +78,7 @@ inline shared_ptr<
 
 //! The function initializes the logging library to write logs to a file stream
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::text_ostream_backend
     >
 > init_log_to_file(std::string const& file_name)
@@ -82,7 +88,7 @@ inline shared_ptr<
 
 //! The function initializes the logging library to write logs to a file stream
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::text_ostream_backend
     >
 > init_log_to_file(boost::filesystem::path const& file_name)
@@ -96,7 +102,7 @@ inline shared_ptr<
 
 //! The function initializes the logging library to write logs to a file stream
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::text_ostream_backend
     >
 > init_log_to_file(boost::filesystem::wpath const& file_name)
@@ -108,7 +114,7 @@ inline shared_ptr<
 
 //! The function initializes the logging library to write logs to a file stream
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::text_ostream_backend
     >
 > init_log_to_file(const wchar_t* file_name)
@@ -119,7 +125,7 @@ inline shared_ptr<
 
 //! The function initializes the logging library to write logs to a file stream
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::text_ostream_backend
     >
 > init_log_to_file(std::wstring const& file_name)
@@ -131,7 +137,7 @@ inline shared_ptr<
 
 //! The function initializes the logging library to write logs to a wide file stream
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::wtext_ostream_backend
     >
 > winit_log_to_file(const char* file_name)
@@ -143,7 +149,7 @@ inline shared_ptr<
 
 //! The function initializes the logging library to write logs to a wide file stream
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::wtext_ostream_backend
     >
 > winit_log_to_file(std::string const& file_name)
@@ -153,7 +159,7 @@ inline shared_ptr<
 
 //! The function initializes the logging library to write logs to a wide file stream
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::wtext_ostream_backend
     >
 > winit_log_to_file(boost::filesystem::path const& file_name)
@@ -167,7 +173,7 @@ inline shared_ptr<
 
 //! The function initializes the logging library to write logs to a wide file stream
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::wtext_ostream_backend
     >
 > winit_log_to_file(boost::filesystem::wpath const& file_name)
@@ -179,7 +185,7 @@ inline shared_ptr<
 
 //! The function initializes the logging library to write logs to a wide file stream
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::wtext_ostream_backend
     >
 > winit_log_to_file(const wchar_t* file_name)
@@ -190,7 +196,7 @@ inline shared_ptr<
 
 //! The function initializes the logging library to write logs to a wide file stream
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::wtext_ostream_backend
     >
 > winit_log_to_file(std::wstring const& file_name)
@@ -203,5 +209,7 @@ inline shared_ptr<
 } // namespace log
 
 } // namespace boost
+
+#undef BOOST_LOG_FILE_SINK_FRONTEND
 
 #endif // BOOST_LOG_UTILITY_INIT_TO_FILE_HPP_INCLUDED_

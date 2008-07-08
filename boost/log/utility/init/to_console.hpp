@@ -28,6 +28,12 @@
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 
+#ifndef BOOST_LOG_NO_THREADS
+#define BOOST_LOG_CONSOLE_SINK_FRONTEND sinks::synchronous_sink
+#else
+#define BOOST_LOG_CONSOLE_SINK_FRONTEND sinks::unlocked_sink
+#endif
+
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
@@ -35,7 +41,7 @@ namespace BOOST_LOG_NAMESPACE {
 //! The function constructs the sink and adds it to the core
 template< typename CharT >
 shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_CONSOLE_SINK_FRONTEND<
         sinks::basic_text_ostream_backend< CharT >
     >
 > init_log_to_console(std::basic_ostream< CharT >& strm)
@@ -46,8 +52,8 @@ shared_ptr<
     shared_ptr< backend_t > pBackend = boost::make_shared< backend_t >();
     pBackend->add_stream(pStream);
 
-    shared_ptr< sinks::synchronous_sink< backend_t > > pSink =
-        boost::make_shared< sinks::synchronous_sink< backend_t > >(pBackend);
+    shared_ptr< BOOST_LOG_CONSOLE_SINK_FRONTEND< backend_t > > pSink =
+        boost::make_shared< BOOST_LOG_CONSOLE_SINK_FRONTEND< backend_t > >(pBackend);
     basic_logging_core< CharT >::get()->add_sink(pSink);
 
     return pSink;
@@ -55,7 +61,7 @@ shared_ptr<
 
 //! The function initializes the logging library to write logs to console
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_CONSOLE_SINK_FRONTEND<
         sinks::text_ostream_backend
     >
 > init_log_to_console()
@@ -65,7 +71,7 @@ inline shared_ptr<
 
 //! The function initializes the logging library to write logs to wide console
 inline shared_ptr<
-    sinks::synchronous_sink<
+    BOOST_LOG_CONSOLE_SINK_FRONTEND<
         sinks::wtext_ostream_backend
     >
 > winit_log_to_console()
@@ -76,5 +82,7 @@ inline shared_ptr<
 } // namespace log
 
 } // namespace boost
+
+#undef BOOST_LOG_CONSOLE_SINK_FRONTEND
 
 #endif // BOOST_LOG_UTILITY_INIT_TO_CONSOLE_HPP_INCLUDED_

@@ -1468,9 +1468,95 @@ This part of the library is provided in order to simplify logging initialization
 
 [heading Convenience functions]
 
-    #include <boost/log/utility/init/common_attributes.hpp>
     #include <boost/log/utility/init/to_console.hpp>
     #include <boost/log/utility/init/to_file.hpp>
+    #include <boost/log/utility/init/common_attributes.hpp>
+
+The library provides a number of functions that simplify some common initialization procedures, like sink and commonly used attributes registration. This is not much of a functionality, however, it allows to save a couple of minutes of learning the library for a newcomer.
+
+Logging to the application console is the simpliest way to see the logging library in action. To achieve this, one can initialize the library with a single function call, like this:
+
+    int main(int, char*[])
+    {
+        // Initialize logging to std::clog
+        logging::init_log_to_console();
+
+        // Here we go, we can write logs right away
+        src::logger lg;
+        BOOST_LOG(lg) << "Hello world!";
+
+        return 0;
+    }
+
+Pretty easy, isn't it? There is `winit_log_to_console` function for wide-character logging. If you want to put logs to some other standard stream, you can pass the stream to the `init_log_to_console` function as an argument. E.g. enabling logging to `std::cout` instead of `std::clog` would look like this:
+
+    logging::init_log_to_console(std::cout);
+
+What's important, is that you can further manage the console sink if you save the `shared_ptr` to the sink that this function returns. This allows you to setup things like filter, formatter and auto-flush flag.
+
+    int main(int, char*[])
+    {
+        // Initialize logging to std::clog
+        boost::shared_ptr<
+            sinks::synchronous_sink< sinks::text_ostream_backend >
+        > sink = logging::init_log_to_console();
+
+        sink->set_filter(flt::attr< int >("Severity") >= 3);
+        sink->locked_backend()->auto_flush(true);
+
+        // Here we go, we can write logs right away
+        src::logger lg;
+        BOOST_LOG(lg) << "Hello world!";
+
+        return 0;
+    }
+
+Similarly to console, one can use a single function call to enable logging to a file. All you have to do is to provide the file name:
+
+    int main(int, char*[])
+    {
+        // Initialize logging to the "test.log" file
+        logging::init_log_to_file("test.log");
+
+        // Here we go, we can write logs right away
+        src::logger lg;
+        BOOST_LOG(lg) << "Hello world!";
+
+        return 0;
+    }
+
+Like with `init_log_to_console`, the `init_log_to_file` function has its wide-character counterpart `winit_log_to_file` and returns the `shared_ptr` to the registered sink. The functions do not conflict and may be combined freely, so it is possible to setup logging to console and a couple of files, including filtering and formatting, in about 10 lines of code.
+
+Lastly, there is a `add_common_attributes` function that registers two most frequently used attributes: "LineID" and "TimeStamp". The former counts log record being made and has attribute value `unsigned int`. The latter, as its name implies, provides current time for each log record, in form of `boost::posix_time::ptime` (see __boost_date_time__). These two attributes are registered globally, so they will remain available in all threads and loggers. This makes the final version of our code sample to look something like this:
+
+    int main(int, char*[])
+    {
+        // Initialize sinks
+        logging::init_log_to_console()->set_filter(flt::attr< int >("Severity") >= 4);
+
+        boost::function< void (std::ostream&, attribute_values_view const&, std::string const&) > formatter =
+            fmt::ostrm
+                << fmt::attr< unsigned int >("LineID", "[% 9u] ")
+                << fmt::date_time< boost::posix_time::ptime >("TimeStamp") << " *"
+                << fmt::attr< int >("Severity") << "* " << fmt::message();
+
+        logging::init_log_to_file("complete.log")->locked_backend()->set_formatter(formatter);
+
+        boost::shared_ptr<
+            sinks::synchronous_sink< sinks::text_ostream_backend >
+        > sink = logging::init_log_to_file("essential.log");
+        sink->locked_backend()->set_formatter(formatter);
+        sink->set_filter(flt::attr< int >("Severity") >= 1);
+
+        // Register common attributes
+        logging::add_common_attributes();
+
+        // Here we go, we can write logs
+        src::logger lg;
+        BOOST_LOG(lg) << "Hello world!";
+
+        return 0;
+    }
 
 [heading Filter and formatter parsers]
 
