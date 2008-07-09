@@ -20,6 +20,7 @@
 #define BOOST_LOG_TYPE_DISPATCHER_HPP_INCLUDED_
 
 #include <typeinfo>
+#include <boost/mpl/aux_/lambda_support.hpp>
 #include <boost/log/detail/prologue.hpp>
 
 namespace boost {
@@ -30,8 +31,13 @@ namespace BOOST_LOG_NAMESPACE {
 template< typename T >
 struct BOOST_LOG_NO_VTABLE type_visitor
 {
+    //! The type, which the visitor is able to consume
+    typedef T supported_type;
+
     //! The method invokes the visitor-specific logic with the given value
     virtual void visit(T const& value) = 0;
+
+    BOOST_MPL_AUX_LAMBDA_SUPPORT(1, type_visitor, (T))
 };
 
 //! A type dispatcher interface

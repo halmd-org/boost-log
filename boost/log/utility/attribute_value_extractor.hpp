@@ -21,12 +21,8 @@
 
 #include <string>
 #include <boost/optional.hpp>
-#include <boost/mpl/begin.hpp>
-#include <boost/mpl/if.hpp>
-#include <boost/mpl/end.hpp>
-#include <boost/mpl/next.hpp>
-#include <boost/mpl/deref.hpp>
 #include <boost/mpl/is_sequence.hpp>
+#include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
@@ -113,16 +109,51 @@ public:
     typedef TypeSequenceT value_types;
 
 private:
-#ifndef BOOST_LOG_DOXYGEN_PASS
-    template< typename ReceiverT, typename ItT, typename EndT >
-    class dispatcher_visitor;
-    template< typename ReceiverT, typename ItT, typename EndT >
-    friend class dispatcher_visitor;
-#endif // BOOST_LOG_DOXYGEN_PASS
+    template< typename ReceiverT >
+    struct visitor;
+    template< typename ReceiverT >
+    friend struct visitor;
+    template< typename ReceiverT >
+    struct visitor
+    {
+        struct root
+        {
+            ReceiverT* m_pReceiver;
+        };
+
+        template< typename T >
+        struct BOOST_LOG_NO_VTABLE apply :
+            public type_visitor< T >,
+            virtual public root
+        {
+            typedef apply< T > type;
+            typedef typename type_visitor< T >::supported_type supported_type;
+
+            //! Visitation (virtual)
+            void visit(supported_type const& value)
+            {
+                (*this->m_pReceiver)(value);
+            }
+        };
+    };
+
     template< typename ReceiverT >
     class dispatcher;
     template< typename ReceiverT >
     friend class dispatcher;
+    template< typename ReceiverT >
+    class dispatcher :
+        public static_type_dispatcher< value_types, visitor< ReceiverT > >
+    {
+        typedef typename visitor< ReceiverT >::root root_type;
+
+    public:
+        //! Forwarding constructor
+        explicit dispatcher(ReceiverT& receiver)
+        {
+            this->m_pReceiver = boost::addressof(receiver);
+        }
+    };
 
 private:
     //! Attribute name to extract
@@ -148,93 +179,17 @@ public:
 private:
     //! Implementation of the attribute value extraction
     template< typename ReceiverT >
-    bool extract(values_view_type const& attrs, ReceiverT& receiver) const;
-};
-
-#ifndef BOOST_LOG_DOXYGEN_PASS
-
-//! Dispatcher visitor implementation
-template< typename CharT, typename TypeSequenceT >
-template< typename ReceiverT, typename ItT, typename EndT >
-class BOOST_LOG_NO_VTABLE type_list_value_extractor< CharT, TypeSequenceT >::dispatcher_visitor :
-    public dispatcher_visitor< ReceiverT, typename mpl::next< ItT >::type, EndT >
-{
-    //! Base type
-    typedef dispatcher_visitor< ReceiverT, typename mpl::next< ItT >::type, EndT > base_type;
-    //! Supported attribute value type
-    typedef typename mpl::deref< ItT >::type supported_type;
-
-public:
-    //! Forwarding constructor
-    explicit dispatcher_visitor(ReceiverT& receiver) : base_type(receiver) {}
-    //! Visitation (virtual)
-    void visit(supported_type const& value)
+    bool extract(values_view_type const& attrs, ReceiverT& receiver) const
     {
-        this->m_Receiver(value);
+        typename values_view_type::const_iterator it = attrs.find(m_Name);
+        if (it != attrs.end())
+        {
+            dispatcher< ReceiverT > disp(receiver);
+            return it->second->dispatch(disp);
+        }
+        return false;
     }
 };
-
-//! Dispatcher visitor implementation specialization to end the recursion
-template< typename CharT, typename TypeSequenceT >
-template< typename ReceiverT, typename EndT >
-class BOOST_LOG_NO_VTABLE type_list_value_extractor< CharT, TypeSequenceT >::dispatcher_visitor< ReceiverT, EndT, EndT > :
-    public static_type_dispatcher< TypeSequenceT >
-{
-protected:
-    //! Reference to the receiver of the attribute value
-    ReceiverT& m_Receiver;
-
-public:
-    //! Forwarding constructor
-    explicit dispatcher_visitor(ReceiverT& receiver) : m_Receiver(receiver) {}
-};
-
-#endif // BOOST_LOG_DOXYGEN_PASS
-
-//! Attribute value dispatcher
-template< typename CharT, typename TypeSequenceT >
-template< typename ReceiverT >
-class type_list_value_extractor< CharT, TypeSequenceT >::dispatcher :
-#ifndef BOOST_LOG_DOXYGEN_PASS
-    public dispatcher_visitor<
-        ReceiverT,
-        typename mpl::begin< TypeSequenceT >::type,
-        typename mpl::end< TypeSequenceT >::type
-    >
-#else
-    public implementation_defined
-#endif // BOOST_LOG_DOXYGEN_PASS
-{
-    //! Base type
-#ifndef BOOST_LOG_DOXYGEN_PASS
-    typedef dispatcher_visitor<
-        ReceiverT,
-        typename mpl::begin< TypeSequenceT >::type,
-        typename mpl::end< TypeSequenceT >::type
-    > base_type;
-#else
-    typedef implementation_defined base_type;
-#endif // BOOST_LOG_DOXYGEN_PASS
-
-public:
-    //! Forwarding constructor
-    explicit dispatcher(ReceiverT& receiver) : base_type(receiver) {}
-};
-
-//! Implementation of the attribute value extraction
-template< typename CharT, typename TypeSequenceT >
-template< typename ReceiverT >
-inline bool type_list_value_extractor< CharT, TypeSequenceT >::extract(
-    values_view_type const& attrs, ReceiverT& receiver) const
-{
-    typename values_view_type::const_iterator it = attrs.find(m_Name);
-    if (it != attrs.end())
-    {
-        dispatcher< ReceiverT > disp(receiver);
-        return it->second->dispatch(disp);
-    }
-    return false;
-}
 
 } // namespace aux
 

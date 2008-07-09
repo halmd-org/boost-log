@@ -22,14 +22,15 @@
 #include <utility>
 #include <iterator>
 #include <algorithm>
-#include <functional>
 #include <boost/array.hpp>
 #include <boost/compatibility/cpp_c_headers/cstddef>
-#include <boost/mpl/begin.hpp>
-#include <boost/mpl/end.hpp>
-#include <boost/mpl/next.hpp>
-#include <boost/mpl/deref.hpp>
 #include <boost/mpl/size.hpp>
+#include <boost/mpl/for_each.hpp>
+#include <boost/mpl/inherit.hpp>
+#include <boost/mpl/inherit_linearly.hpp>
+#include <boost/mpl/apply.hpp>
+#include <boost/mpl/apply_wrap.hpp>
+#include <boost/mpl/placeholders.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
@@ -43,96 +44,18 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-#ifndef BOOST_LOG_DOXYGEN_PASS
-
-namespace aux {
-
-    //! A single type visitor implementation
-    template< typename ItT, typename EndT >
-    class BOOST_LOG_NO_VTABLE static_type_dispatcher_visitor :
-        public type_visitor< typename mpl::deref< ItT >::type >,
-        public static_type_dispatcher_visitor<
-            typename mpl::next< ItT >::type,
-            EndT
-        >
-    {
-        //! Base type
-        typedef static_type_dispatcher_visitor<
-            typename mpl::next< ItT >::type,
-            EndT
-        > base_type;
-
-    public:
-        //! The single supported type
-        typedef typename mpl::deref< ItT >::type supported_type;
-
-    protected:
-        //! Visitor registrar
-        void init(void* pthis, std::pair< type_info_wrapper, std::ptrdiff_t >* p)
-        {
-            p->first = typeid(supported_type);
-            BOOST_LOG_ASSUME(this != NULL);
-            // To honor GCC bugs we have to operate on pointers other than void*
-            p->second = std::distance(
-                    reinterpret_cast< char* >(pthis),
-                    reinterpret_cast< char* >(static_cast< type_visitor< supported_type >* >(this)));
-
-            base_type::init(pthis, ++p);
-        }
-    };
-
-    //! A specialization to end the recursion
-    template< typename EndT >
-    class static_type_dispatcher_visitor< EndT, EndT >
-    {
-    protected:
-        //! Visitor registrar
-        void init(void*, std::pair< type_info_wrapper, std::ptrdiff_t >*)
-        {
-        }
-    };
-
-    //! An ordering predicate for the dispatching map
-    struct dispatching_map_order :
-        public std::binary_function<
-            std::pair< type_info_wrapper, std::ptrdiff_t >,
-            std::pair< type_info_wrapper, std::ptrdiff_t >,
-            bool
-        >
-    {
-        bool operator() (first_argument_type const& left, second_argument_type const& right) const
-        {
-            return (left.first < right.first);
-        }
-    };
-
-} // namespace aux
-
-#endif // BOOST_LOG_DOXYGEN_PASS
-
 //! A static type dispatcher implementation
-template< typename TypeSequenceT >
-class BOOST_LOG_NO_VTABLE static_type_dispatcher :
+template<
+    typename TypeSequenceT,
+    typename VisitorGenT = type_visitor< mpl::_1 >
+>
+class static_type_dispatcher :
     public type_dispatcher,
-#ifndef BOOST_LOG_DOXYGEN_PASS
-    private aux::static_type_dispatcher_visitor<
-        typename mpl::begin< TypeSequenceT >::type,
-        typename mpl::end< TypeSequenceT >::type
-    >
-#else
-    private implementation_defined
-#endif // BOOST_LOG_DOXYGEN_PASS
+    public mpl::inherit_linearly<
+        TypeSequenceT,
+        mpl::inherit< mpl::_1, mpl::apply_wrap1< VisitorGenT, mpl::_2 > >
+    >::type
 {
-#ifndef BOOST_LOG_DOXYGEN_PASS
-    //! Base type
-    typedef aux::static_type_dispatcher_visitor<
-        typename mpl::begin< TypeSequenceT >::type,
-        typename mpl::end< TypeSequenceT >::type
-    > base_type;
-#else
-    typedef implementation_defined base_type;
-#endif // BOOST_LOG_DOXYGEN_PASS
-
 public:
     //! Type sequence of the supported types
     typedef TypeSequenceT supported_types;
@@ -144,13 +67,26 @@ private:
         mpl::size< supported_types >::value
     > dispatching_map;
 
+    //! An ordering predicate for the dispatching map
+    struct dispatching_map_order;
+    friend struct dispatching_map_order;
+    struct dispatching_map_order
+    {
+        typedef bool result_type;
+        typedef typename dispatching_map::value_type first_argument_type, second_argument_type;
+        bool operator() (first_argument_type const& left, second_argument_type const& right) const
+        {
+            return (left.first < right.first);
+        }
+    };
+
 #if !defined(BOOST_LOG_NO_THREADS)
-    //! Dunction delegate to implement one-time initialization
+    //! Function delegate to implement one-time initialization
     struct delegate
     {
         typedef void result_type;
-        explicit delegate(static_type_dispatcher* pthis, void (static_type_dispatcher::*pfun)())
-            : m_pThis(pthis), m_pFun(pfun)
+        explicit delegate(static_type_dispatcher* pThis, void (static_type_dispatcher::*pFun)())
+            : m_pThis(pThis), m_pFun(pFun)
         {
         }
         result_type operator()() const
@@ -164,6 +100,44 @@ private:
     };
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
+    //! The wrapper metafunction is used with mpl::for_each to pass visitor type to the dispatching_map_initializer
+    struct visitor_wrapper
+    {
+        template< typename T >
+        struct apply
+        {
+            typedef typename mpl::apply< VisitorGenT, T >::type* type;
+        };
+    };
+    //! The functor is used to initialize dispatching map of visitors
+    struct dispatching_map_initializer;
+    friend struct dispatching_map_initializer;
+    struct dispatching_map_initializer
+    {
+        typedef void result_type;
+
+        dispatching_map_initializer(static_type_dispatcher* pThis, typename dispatching_map::iterator& pEntry)
+            : m_pThis(pThis), m_pEntry(pEntry)
+        {
+        }
+
+        template< typename T >
+        void operator() (T*) const
+        {
+            typedef typename T::supported_type supported_type;
+            m_pEntry->first = typeid(supported_type);
+            BOOST_LOG_ASSUME(m_pThis != NULL);
+            // To honor GCC bugs we have to operate on pointers other than void*
+            m_pEntry->second = std::distance(
+                    reinterpret_cast< char* >(m_pThis),
+                    reinterpret_cast< char* >(static_cast< type_visitor< supported_type >* >(m_pThis)));
+            ++m_pEntry;
+        }
+
+    private:
+        static_type_dispatcher* m_pThis;
+        typename dispatching_map::iterator& m_pEntry;
+    };
 
 public:
     //! Constructor
@@ -189,7 +163,7 @@ private:
                 disp_map.begin(),
                 disp_map.end(),
                 std::make_pair(wrapper, std::ptrdiff_t(0)),
-                aux::dispatching_map_order()
+                dispatching_map_order()
             );
 
         if (it != disp_map.end() && it->first == wrapper)
@@ -202,12 +176,16 @@ private:
         else
             return NULL;
     }
+
     //! The method initializes the dispatching map
     void init_dispatching_map()
     {
         dispatching_map& disp_map = get_dispatching_map();
-        base_type::init(this, disp_map.c_array());
-        std::sort(disp_map.begin(), disp_map.end(), aux::dispatching_map_order());
+
+        typename dispatching_map::iterator it = disp_map.begin();
+        mpl::for_each< supported_types, visitor_wrapper >(dispatching_map_initializer(this, it));
+
+        std::sort(disp_map.begin(), disp_map.end(), dispatching_map_order());
     }
     //! The method returns the dispatching map instance
     static dispatching_map& get_dispatching_map()
