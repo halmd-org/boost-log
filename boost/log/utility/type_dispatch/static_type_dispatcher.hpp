@@ -27,12 +27,10 @@
 #include <boost/mpl/assert.hpp>
 #include <boost/mpl/size.hpp>
 #include <boost/mpl/for_each.hpp>
-#include <boost/mpl/inherit.hpp>
 #include <boost/mpl/inherit_linearly.hpp>
 #include <boost/mpl/quote.hpp>
 #include <boost/mpl/lambda.hpp>
 #include <boost/mpl/apply.hpp>
-#include <boost/mpl/placeholders.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
@@ -49,6 +47,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
+//! A simple metafunction class to inherit visitors in a static dispatcher
 template< typename VisitorGenT >
 struct inherit_visitors
 {
@@ -58,7 +57,30 @@ struct inherit_visitors
         public VisitorGenT::BOOST_NESTED_TEMPLATE apply< T >::type
     {
         typedef apply< NextBaseT, T > type;
+
+    protected:
+        //! The function is used to initialize dispatching map of supported types
+        void init_visitor(void* pThis, std::pair< type_info_wrapper, std::ptrdiff_t >* pEntry)
+        {
+            typedef T supported_type;
+            pEntry->first = typeid(supported_type);
+            BOOST_LOG_ASSUME(this != NULL);
+            // To honor GCC bugs we have to operate on pointers other than void*
+            pEntry->second = std::distance(
+                    reinterpret_cast< char* >(pThis),
+                    reinterpret_cast< char* >(static_cast< type_visitor< supported_type >* >(this)));
+            NextBaseT::init_visitor(pThis, ++pEntry);
+        }
     };
+};
+
+//! The class ends recursion of the visitors inheritance hierarchy
+template< typename BaseT >
+class BOOST_LOG_NO_VTABLE static_type_dispatcher_base :
+    public BaseT
+{
+protected:
+    void init_visitor(void*, std::pair< type_info_wrapper, std::ptrdiff_t >*) {}
 };
 
 } // namespace aux
@@ -72,13 +94,20 @@ template<
 class static_type_dispatcher :
     public mpl::inherit_linearly<
         TypeSequenceT,
+        // Usage of this class instead of mpl::inherit provides substantial improvement in compilation time,
+        // binary size and compiler memory footprint on some compilers (for instance, ICL)
         aux::inherit_visitors< typename mpl::lambda< VisitorGenT >::type >,
-//        mpl::inherit< mpl::_1, typename mpl::lambda< VisitorGenT >::type::BOOST_NESTED_TEMPLATE apply< mpl::_2 > >,
-        RootT
+        aux::static_type_dispatcher_base< RootT >
     >::type
 {
     // The static type dispatcher must eventually derive from the type_dispatcher interface class
     BOOST_MPL_ASSERT((is_base_of< type_dispatcher, RootT >));
+
+    typedef typename mpl::inherit_linearly<
+        TypeSequenceT,
+        aux::inherit_visitors< typename mpl::lambda< VisitorGenT >::type >,
+        aux::static_type_dispatcher_base< RootT >
+    >::type base_type;
 
 public:
     //! Type sequence of the supported types
@@ -124,45 +153,6 @@ private:
     };
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
-    //! The wrapper metafunction is used with mpl::for_each to pass visitor type to the dispatching_map_initializer
-    struct visitor_wrapper
-    {
-        template< typename T >
-        struct apply
-        {
-            typedef typename mpl::apply< VisitorGenT, T >::type* type;
-        };
-    };
-    //! The functor is used to initialize dispatching map of visitors
-    struct dispatching_map_initializer;
-    friend struct dispatching_map_initializer;
-    struct dispatching_map_initializer
-    {
-        typedef void result_type;
-
-        dispatching_map_initializer(static_type_dispatcher* pThis, typename dispatching_map::iterator& pEntry)
-            : m_pThis(pThis), m_pEntry(pEntry)
-        {
-        }
-
-        template< typename T >
-        void operator() (T*) const
-        {
-            typedef typename T::supported_type supported_type;
-            m_pEntry->first = typeid(supported_type);
-            BOOST_LOG_ASSUME(m_pThis != NULL);
-            // To honor GCC bugs we have to operate on pointers other than void*
-            m_pEntry->second = std::distance(
-                    reinterpret_cast< char* >(m_pThis),
-                    reinterpret_cast< char* >(static_cast< type_visitor< supported_type >* >(m_pThis)));
-            ++m_pEntry;
-        }
-
-    private:
-        static_type_dispatcher* m_pThis;
-        typename dispatching_map::iterator& m_pEntry;
-    };
-
 public:
     //! Constructor
     static_type_dispatcher()
@@ -177,6 +167,8 @@ public:
     }
 
 private:
+    using base_type::init_visitor;
+
     //! The get_visitor method implementation
     void* get_visitor(std::type_info const& type)
     {
@@ -207,7 +199,7 @@ private:
         dispatching_map& disp_map = get_dispatching_map();
 
         typename dispatching_map::iterator it = disp_map.begin();
-        mpl::for_each< supported_types, visitor_wrapper >(dispatching_map_initializer(this, it));
+        base_type::init_visitor(static_cast< void* >(this), &*it);
 
         std::sort(disp_map.begin(), disp_map.end(), dispatching_map_order());
     }
