@@ -113,18 +113,19 @@ private:
     struct visitor;
     template< typename ReceiverT >
     friend struct visitor;
+
+    template< typename ReceiverT >
+    class dispatcher;
+    template< typename ReceiverT >
+    friend class dispatcher;
+
+    //! Visitor class definition
     template< typename ReceiverT >
     struct visitor
     {
-        struct root
-        {
-            ReceiverT* m_pReceiver;
-        };
-
         template< typename T >
         struct BOOST_LOG_NO_VTABLE apply :
-            public type_visitor< T >,
-            virtual public root
+            public type_visitor< T >
         {
             typedef apply< T > type;
             typedef typename type_visitor< T >::supported_type supported_type;
@@ -132,26 +133,23 @@ private:
             //! Visitation (virtual)
             void visit(supported_type const& value)
             {
-                (*this->m_pReceiver)(value);
+                BOOST_LOG_ASSUME(this != NULL);
+                static_cast< dispatcher< ReceiverT >* >(this)->m_Receiver(value);
             }
         };
     };
 
-    template< typename ReceiverT >
-    class dispatcher;
-    template< typename ReceiverT >
-    friend class dispatcher;
+    //! Type dispatcher class definition
     template< typename ReceiverT >
     class dispatcher :
         public static_type_dispatcher< value_types, visitor< ReceiverT > >
     {
-        typedef typename visitor< ReceiverT >::root root_type;
-
     public:
-        //! Forwarding constructor
-        explicit dispatcher(ReceiverT& receiver)
+        ReceiverT& m_Receiver;
+
+        //! Dispatcher constructor
+        explicit dispatcher(ReceiverT& receiver) : m_Receiver(receiver)
         {
-            this->m_pReceiver = boost::addressof(receiver);
         }
     };
 

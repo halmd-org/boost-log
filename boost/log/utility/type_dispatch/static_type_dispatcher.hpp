@@ -24,13 +24,16 @@
 #include <algorithm>
 #include <boost/array.hpp>
 #include <boost/compatibility/cpp_c_headers/cstddef>
+#include <boost/mpl/assert.hpp>
 #include <boost/mpl/size.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/inherit.hpp>
 #include <boost/mpl/inherit_linearly.hpp>
+#include <boost/mpl/quote.hpp>
+#include <boost/mpl/lambda.hpp>
 #include <boost/mpl/apply.hpp>
-#include <boost/mpl/apply_wrap.hpp>
 #include <boost/mpl/placeholders.hpp>
+#include <boost/type_traits/is_base_of.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
@@ -44,18 +47,39 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
+namespace aux {
+
+template< typename VisitorGenT >
+struct inherit_visitors
+{
+    template< typename NextBaseT, typename T >
+    struct BOOST_LOG_NO_VTABLE apply :
+        public NextBaseT,
+        public VisitorGenT::BOOST_NESTED_TEMPLATE apply< T >::type
+    {
+        typedef apply< NextBaseT, T > type;
+    };
+};
+
+} // namespace aux
+
 //! A static type dispatcher implementation
 template<
     typename TypeSequenceT,
-    typename VisitorGenT = type_visitor< mpl::_1 >
+    typename VisitorGenT = mpl::quote1< type_visitor >,
+    typename RootT = type_dispatcher
 >
 class static_type_dispatcher :
-    public type_dispatcher,
     public mpl::inherit_linearly<
         TypeSequenceT,
-        mpl::inherit< mpl::_1, mpl::apply_wrap1< VisitorGenT, mpl::_2 > >
+        aux::inherit_visitors< typename mpl::lambda< VisitorGenT >::type >,
+//        mpl::inherit< mpl::_1, typename mpl::lambda< VisitorGenT >::type::BOOST_NESTED_TEMPLATE apply< mpl::_2 > >,
+        RootT
     >::type
 {
+    // The static type dispatcher must eventually derive from the type_dispatcher interface class
+    BOOST_MPL_ASSERT((is_base_of< type_dispatcher, RootT >));
+
 public:
     //! Type sequence of the supported types
     typedef TypeSequenceT supported_types;
