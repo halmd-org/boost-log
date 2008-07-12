@@ -26,11 +26,9 @@
 #include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/mpl/assert.hpp>
 #include <boost/mpl/size.hpp>
-#include <boost/mpl/for_each.hpp>
 #include <boost/mpl/inherit_linearly.hpp>
 #include <boost/mpl/quote.hpp>
 #include <boost/mpl/lambda.hpp>
-#include <boost/mpl/apply.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
@@ -83,6 +81,17 @@ protected:
     void init_visitor(void*, std::pair< type_info_wrapper, std::ptrdiff_t >*) {}
 };
 
+//! Ordering predicate for type dispatching map
+struct dispatching_map_order
+{
+    typedef bool result_type;
+    typedef std::pair< type_info_wrapper, std::ptrdiff_t > first_argument_type, second_argument_type;
+    bool operator() (first_argument_type const& left, second_argument_type const& right) const
+    {
+        return (left.first < right.first);
+    }
+};
+
 } // namespace aux
 
 //! A static type dispatcher implementation
@@ -119,19 +128,6 @@ private:
         std::pair< type_info_wrapper, std::ptrdiff_t >,
         mpl::size< supported_types >::value
     > dispatching_map;
-
-    //! An ordering predicate for the dispatching map
-    struct dispatching_map_order;
-    friend struct dispatching_map_order;
-    struct dispatching_map_order
-    {
-        typedef bool result_type;
-        typedef typename dispatching_map::value_type first_argument_type, second_argument_type;
-        bool operator() (first_argument_type const& left, second_argument_type const& right) const
-        {
-            return (left.first < right.first);
-        }
-    };
 
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Function delegate to implement one-time initialization
@@ -174,15 +170,17 @@ private:
     {
         dispatching_map const& disp_map = get_dispatching_map();
         type_info_wrapper wrapper(type);
-        typename dispatching_map::const_iterator it =
+        typename dispatching_map::value_type const* begin = &*disp_map.begin();
+        typename dispatching_map::value_type const* end = begin + disp_map.size();
+        typename dispatching_map::value_type const* it =
             std::lower_bound(
-                disp_map.begin(),
-                disp_map.end(),
+                begin,
+                end,
                 std::make_pair(wrapper, std::ptrdiff_t(0)),
-                dispatching_map_order()
+                aux::dispatching_map_order()
             );
 
-        if (it != disp_map.end() && it->first == wrapper)
+        if (it != end && it->first == wrapper)
         {
             // To honor GCC bugs we have to operate on pointers other than void*
             char* pthis = reinterpret_cast< char* >(this);
@@ -197,11 +195,11 @@ private:
     void init_dispatching_map()
     {
         dispatching_map& disp_map = get_dispatching_map();
+        typename dispatching_map::value_type* begin = &*disp_map.begin();
+        typename dispatching_map::value_type* end = begin + disp_map.size();
 
-        typename dispatching_map::iterator it = disp_map.begin();
-        base_type::init_visitor(static_cast< void* >(this), &*it);
-
-        std::sort(disp_map.begin(), disp_map.end(), dispatching_map_order());
+        base_type::init_visitor(static_cast< void* >(this), begin);
+        std::sort(begin, end, aux::dispatching_map_order());
     }
     //! The method returns the dispatching map instance
     static dispatching_map& get_dispatching_map()
