@@ -35,8 +35,8 @@ doxygen autodoc
    <doxygen:param>"PREDEFINED=BOOST_LOG_DOXYGEN_PASS \\
                   "BOOST_LOG_NO_VTABLE=" \\
                   "BOOST_STATIC_ASSERT(x)=" \\
-		  "BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(x)=" \\
-		  "BOOST_LOG_UNIQUE_IDENTIFIER_NAME(x)=anonymous" \\
+                  "BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(x)=" \\
+                  "BOOST_LOG_UNIQUE_IDENTIFIER_NAME(x)=anonymous" \\
                   "BOOST_LOG_EXPORT=""
    ;
 
@@ -48,7 +48,8 @@ boostbook standalone
     :
         <xsl:param>boost.root=../../../..
         <xsl:param>nav.layout=none
-        <xsl:param>navig.graphics=0
+        <xsl:param>navig.graphics=1
+        <xsl:param>chunk.section.depth=2
         <dependency>autodoc
     ;
 

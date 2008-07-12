@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-07-07 19:00:37 $]
+    [last-revision $Date: 2008-07-12 18:03:43 $]
 ]
 
 [c++]
@@ -31,6 +31,7 @@
 [def __boost_optional__ [@http://www.boost.org/doc/libs/release/libs/optional/index.html Boost.Optional]]
 [def __boost_intrusive__ [@http://www.boost.org/doc/libs/release/doc/html/intrusive.html Boost.Intrusive]]
 [def __boost_iostreams__ [@http://www.boost.org/doc/libs/release/libs/iostreams/doc/index.html Boost.IOStreams]]
+[def __boost_mpl__ [@http://www.boost.org/doc/libs/release/libs/mpl/doc/index.html Boost.MPL]]
 
 [section Disclaimer]
 
@@ -95,6 +96,7 @@ For simplicity in the code snippets in this documentation it shall be assumed th
 The library should build and work with a reasonably well-compliant compiler. The library was successfully built and tested on the following platforms:
 
 * Windows XP, Windows Vista. MSVC 8.0, 9.0. MSVC 7.1 should work too, but it was not tested.
+* Windows Vista. Intel C++ Compiler 10.1.022.
 * Linux. GCC 4.2, 4.3. However, all GCC 4.x should work well.
 
 The following compilers are not supported and will likely fail to compile the library:
