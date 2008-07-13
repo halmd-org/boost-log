@@ -1,15 +1,19 @@
-/*!
+/*
  * (C) 2007 Andrey Semashev
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
+ * This header is the Boost.Log library implementation, see the library documentation
+ * at http://www.boost.org/libs/log/doc/log.html.
+ */
+/*!
  * \file   attributes/named_scope.hpp
  * \author Andrey Semashev
  * \date   24.06.2007
  * 
- * \brief  This header is the Boost.Log library implementation, see the library documentation
- *         at http://www.boost.org/libs/log/doc/log.html.
+ * The header contains implementation of named scope container and an attribute that allows to
+ * put the named scope to log. A number of convenience macros are also provided.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
@@ -333,9 +337,13 @@ typedef basic_named_scope< wchar_t > wnamed_scope;
 #pragma warning(pop)
 #endif // _MSC_VER
 
+//! \cond
+
 #define BOOST_LOG_NAMED_SCOPE_INTERNAL(var, name, file, line)\
     ::boost::log::attributes::named_scope::sentry var(name, file, line);\
     BOOST_LOG_NO_UNUSED_WARNINGS(var)
+
+//! \endcond
 
 #ifdef BOOST_LOG_USE_CHAR
 //! Macro for scope markup

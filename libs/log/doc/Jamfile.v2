@@ -8,38 +8,45 @@ import doxygen ;
 
 doxygen autodoc
    :
-      [ glob
-         ../../../boost/log/*.hpp
-         ../../../boost/log/attributes/*.hpp
-         ../../../boost/log/filters/*.hpp
-         ../../../boost/log/formatters/*.hpp
-         ../../../boost/log/sinks/*.hpp
-         ../../../boost/log/sources/*.hpp
-         ../../../boost/log/utility/*.hpp
-         ../../../boost/log/utility/init/*.hpp
-         ../../../boost/log/utility/type_dispatch/*.hpp
-      ]
+        [ glob
+            ../../../boost/log/*.hpp
+            ../../../boost/log/attributes/*.hpp
+            ../../../boost/log/filters/*.hpp
+            ../../../boost/log/formatters/*.hpp
+            ../../../boost/log/sinks/*.hpp
+            ../../../boost/log/sources/*.hpp
+            ../../../boost/log/utility/*.hpp
+            ../../../boost/log/utility/init/*.hpp
+            ../../../boost/log/utility/type_dispatch/*.hpp
+        ]
    :
-   <doxygen:param>RECURSIVE=YES
-   <doxygen:param>EXCLUDE_SYMBOLS="aux aux::*"
-   <doxygen:param>ALPHABETICAL_INDEX=YES
-   <doxygen:param>REPEAT_BRIEF=YES
-   <doxygen:param>ALWAYS_DETAILED_SEC=YES
-   <doxygen:param>INHERIT_DOCS=YES
-   <doxygen:param>HIDE_UNDOC_MEMBERS=YES
-   <doxygen:param>HIDE_UNDOC_CLASSES=YES
-   <doxygen:param>EXTRACT_PRIVATE=NO
-   <doxygen:param>BUILTIN_STL_SUPPORT=YES
-   <doxygen:param>ENABLE_PREPROCESSING=YES
-   <doxygen:param>MACRO_EXPANSION=YES
-   <doxygen:param>"PREDEFINED=BOOST_LOG_DOXYGEN_PASS \\
-                  "BOOST_LOG_NO_VTABLE=" \\
-                  "BOOST_STATIC_ASSERT(x)=" \\
-                  "BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(x)=" \\
-                  "BOOST_LOG_UNIQUE_IDENTIFIER_NAME(x)=anonymous" \\
-                  "BOOST_LOG_EXPORT=""
+        <doxygen:param>RECURSIVE=YES
+        <doxygen:param>ALPHABETICAL_INDEX=YES
+        <doxygen:param>REPEAT_BRIEF=YES
+        <doxygen:param>ALWAYS_DETAILED_SEC=YES
+        <doxygen:param>BRIEF_MEMBER_DESC=NO
+        <doxygen:param>ABBREVIATE_BRIEF=YES
+        <doxygen:param>INHERIT_DOCS=YES
+        <doxygen:param>HIDE_UNDOC_MEMBERS=YES
+        <doxygen:param>HIDE_UNDOC_CLASSES=YES
+        <doxygen:param>HIDE_SCOPE_NAMES=YES
+        <doxygen:param>EXTRACT_ALL=NO
+        <doxygen:param>EXTRACT_PRIVATE=NO
+        <doxygen:param>BUILTIN_STL_SUPPORT=YES
+        <doxygen:param>ENABLE_PREPROCESSING=YES
+        <doxygen:param>MACRO_EXPANSION=YES
+        <doxygen:param>TAB_SIZE=4
+        <doxygen:param>"PREDEFINED=BOOST_LOG_DOXYGEN_PASS \\
+                       "BOOST_LOG_NO_VTABLE=" \\
+                       "BOOST_STATIC_ASSERT(x)=" \\
+                       "BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(x)=" \\
+                       "BOOST_LOG_UNIQUE_IDENTIFIER_NAME(x)=anonymous" \\
+                       "BOOST_LOG_EXPORT=""
+        <xsl:param>"boost.doxygen.reftitle=Boost.Log Reference"
+        <xsl:param>"boost.doxygen.detailns=aux"
    ;
 
+#   <doxygen:param>EXCLUDE_SYMBOLS="aux aux::*"
 
 xml log : log.qbk ;
 boostbook standalone
@@ -47,9 +54,11 @@ boostbook standalone
         log
     :
         <xsl:param>boost.root=../../../..
+        <xsl:param>boost.libraries=../../../../libs/libraries.htm
         <xsl:param>nav.layout=none
         <xsl:param>navig.graphics=1
         <xsl:param>chunk.section.depth=2
+        <xsl:param>boost.compact.function=0
         <dependency>autodoc
     ;
 

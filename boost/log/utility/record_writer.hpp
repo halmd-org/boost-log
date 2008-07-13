@@ -1,15 +1,20 @@
-/*!
+/*
  * (C) 2007 Andrey Semashev
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
+ * This header is the Boost.Log library implementation, see the library documentation
+ * at http://www.boost.org/libs/log/doc/log.html.
+ */
+/*!
  * \file   record_writer.hpp
  * \author Andrey Semashev
  * \date   04.01.2008
  * 
- * \brief  This header is the Boost.Log library implementation, see the library documentation
- *         at http://www.boost.org/libs/log/doc/log.html.
+ * The header contains definition of an additional interface for a stream to receive
+ * additional meta-information about log records during the output. This interface
+ * is also supported in the text_ostream_backend. 
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
@@ -18,6 +23,8 @@
 
 #ifndef BOOST_LOG_UTILITY_RECORD_WRITER_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_RECORD_WRITER_HPP_INCLUDED_
+
+#include <boost/log/detail/prologue.hpp>
 
 namespace boost {
 

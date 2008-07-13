@@ -1,15 +1,18 @@
-/*!
+/*
  * (C) 2007 Andrey Semashev
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
+ * This header is the Boost.Log library implementation, see the library documentation
+ * at http://www.boost.org/libs/log/doc/log.html.
+ */
+/*!
  * \file   logging_core.hpp
  * \author Andrey Semashev
  * \date   19.04.2007
  * 
- * \brief  This header is the Boost.Log library implementation, see the library documentation
- *         at http://www.boost.org/libs/log/doc/log.html.
+ * This header contains logging core class definition.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
@@ -38,7 +41,14 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-//! Logging system core class
+/*!
+ * \brief Logging system core class
+ * 
+ * The logging core is used to interconnect log sources and sinks. It also provides
+ * a number of basic features, like global filtering and global and thread-specific attribute storage.
+ * 
+ * The logging core is a singleton. Users can acquire the core instance by calling the static method <pre>get</pre>.
+ */
 template< typename CharT >
 class BOOST_LOG_EXPORT basic_logging_core : noncopyable
 {
@@ -66,84 +76,174 @@ private:
     implementation* pImpl;
 
 private:
-    //! Constructor
+    //! \cond
     basic_logging_core();
+    //! \endcond
 
 public:
-    //! Destructor
+    /*!
+     * Destructor. Destroys the core, releases any sinks and attributes that were registered.
+     */
     ~basic_logging_core();
 
-    //! The method returns a pointer to the logging system instance
+    /*!
+     * \return The method returns a pointer to the logging system singleton instance.
+     */
     static shared_ptr< basic_logging_core > get();
 
     /*!
-     *  \brief The method enables or disables logging
+     * The method enables or disables logging.
      * 
-     *  Setting this status to false allows you to completely wipe out any logging activity, including
-     *  filtering and generation of attribute values. It is useful if you want to completely disable logging
-     *  in a running application. The state of logging does not alter any other properties of the logging
-     *  library, such as filters or sinks, so you can enable logging with the very same settings that you had
-     *  when the logging was disabled.
-     *  This feature may also be useful if you want to perform major changes to logging configuration and
-     *  don't want your application to block on opening or pushing a log record.
+     * Setting this status to false allows you to completely wipe out any logging activity, including
+     * filtering and generation of attribute values. It is useful if you want to completely disable logging
+     * in a running application. The state of logging does not alter any other properties of the logging
+     * library, such as filters or sinks, so you can enable logging with the very same settings that you had
+     * when the logging was disabled.
+     * This feature may also be useful if you want to perform major changes to logging configuration and
+     * don't want your application to block on opening or pushing a log record.
      * 
-     *  By default logging is enabled.
+     * By default logging is enabled.
      * 
-     *  \return the previous value of enabled/disabled logging flag
+     * \param enabled The actual flag of logging activity.
+     * \return The previous value of enabled/disabled logging flag
      */
     bool set_logging_enabled(bool enabled = true);
 
-    //! The method sets the global logging filter
+    /*!
+     * The method sets the global logging filter. The filter is applied to every log record that is processed.
+     * 
+     * \param filter The filter function object to be installed.
+     */
     void set_filter(filter_type const& filter);
-    //! The method removes the global logging filter
+    /*!
+     * The method removes the global logging filter. All log records are passed to sinks without global filtering applied.
+     */
     void reset_filter();
 
-    //! The method adds a new sink
+    /*!
+     * The method adds a new sink. The sink is included into logging process immediately after being added and until being removed.
+     * No sink can be added more than once at the same time. If the sink is already registered, the call is ignored.
+     * 
+     * \param s The sink to be registered.
+     */
     void add_sink(shared_ptr< sink_type > const& s);
-    //! The method removes the sink from the output
+    /*!
+     * The method removes the sink from the output. The sink will not receive any log records after removal.
+     * The call has no effect if the sink is not registered.
+     *  
+     * \param s The sink to be unregistered.
+     */
     void remove_sink(shared_ptr< sink_type > const& s);
 
-    //! The method adds an attribute to the global attribute set
+    /*!
+     * The method adds an attribute to the global attribute set. The attribute will be implicitly added to every log record.
+     * 
+     * \param name The attribute name.
+     * \param attr Pointer to the attribute. Must not be NULL.
+     * \return A pair of values. If the second member is true, then the attribute is added and the first member points to the
+     *         attribute. Otherwise the attribute was not added and the first member points to the attribute that prevents
+     *         addition.
+     */
     std::pair< typename attribute_set_type::iterator, bool > add_global_attribute(
         string_type const& name, shared_ptr< attribute > const& attr);
-    //! The method removes an attribute from the global attribute set
+    /*!
+     * The method removes an attribute from the global attribute set.
+     * 
+     * \pre The attribute was added with the add_global_attribute call.
+     * \post The attribute is no longer registered as a global attribute. The iterator is invalidated after removal.
+     * 
+     * \param it Iterator to the previously added attribute.
+     */
     void remove_global_attribute(typename attribute_set_type::iterator it);
-    //! The method returns the complete set of currently registered global attributes
+
+    /*!
+     * The method returns copy of the complete set of currently registered global attributes.
+     */
     attribute_set_type get_global_attributes() const;
     /*!
-     *  \brief The method replaces the complete set of currently registered global attributes with the provided set
-     *  \note The method invalidates all iterators that may have been returned
-     *        from the add_global_attribute method.
+     * The method replaces the complete set of currently registered global attributes with the provided set.
+     * 
+     * \note The method invalidates all iterators that may have been returned
+     *       from the add_global_attribute method.
+     * 
+     * \param attrs The set of attributes to be installed.
      */
     void set_global_attributes(attribute_set_type const& attrs) const;
 
-    //! The method adds an attribute to the thread-specific attribute set
+    /*!
+     * The method adds an attribute to the thread-specific attribute set. The attribute will be implicitly added to
+     * every log record made in the current thread.
+     * 
+     * \note In single-threaded build the effect is the same as adding the attribute globally.
+     * 
+     * \param name The attribute name.
+     * \param attr Pointer to the attribute. Must not be NULL.
+     * \return A pair of values. If the second member is true, then the attribute is added and the first member points to the
+     *         attribute. Otherwise the attribute was not added and the first member points to the attribute that prevents
+     *         addition.
+     */
     std::pair< typename attribute_set_type::iterator, bool > add_thread_attribute(
         string_type const& name, shared_ptr< attribute > const& attr);
-    //! The method removes an attribute from the thread-specific attribute set
+    /*!
+     * The method removes an attribute from the thread-specific attribute set.
+     * 
+     * \pre The attribute was added with the add_thread_attribute call.
+     * \post The attribute is no longer registered as a thread-specific attribute. The iterator is invalidated after removal.
+     * 
+     * \param it Iterator to the previously added attribute.
+     */
     void remove_thread_attribute(typename attribute_set_type::iterator it);
-    //! The method returns the complete set of currently registered thread-specific attributes
+
+    /*!
+     * The method returns copy of the complete set of currently registered thread-specific attributes.
+     */
     attribute_set_type get_thread_attributes() const;
     /*!
-     *  \brief The method replaces the complete set of currently registered thread-specific attributes with the provided set
-     *  \note The method invalidates all iterators that may have been returned
-     *        from the add_thread_attribute method.
+     * The method replaces the complete set of currently registered thread-specific attributes with the provided set.
+     * 
+     * \note The method invalidates all iterators that may have been returned
+     *       from the add_thread_attribute method.
+     * 
+     * \param attrs The set of attributes to be installed.
      */
     void set_thread_attributes(attribute_set_type const& attrs) const;
 
-    //! The method opens a new record to be written and returns true if the record was opened
+    /*!
+     * The method attempts to open a new record to be written. While attempting to open a log record all filtering is applied.
+     * A successfully opened record must be either cancelled by calling cancel_record or pushed further to sinks by calling
+     * the push_record method.
+     * 
+     * More than one open records are allowed, such records exist independently. All attribute values are acquired during opening
+     * the record and do not interact between records. However, only the last-open record remains active all the time, and
+     * consequent record cancellation or pushing will dispatch only the last-open record, making the previously open one active,
+     * and so on.
+     * 
+     * \param source_attributes The set of source-specific attributes to be attached to the record to be opened.
+     * \return True if the record is opened, false if not (e.g. because it didn't pass filtering).
+     * \throw Does not throw.
+     */
     bool open_record(attribute_set_type const& source_attributes);
-    //! The method pushes the record and closes it
+    /*!
+     * The method pushes the record to sinks and closes it. Results are undefined if called before opening a record.
+     * 
+     * \param message_text The formatted log message text.
+     * \throw Does not throw.
+     */
     void push_record(string_type const& message_text);
-    //! The method cancels the currently opened record
+    /*!
+     * The method cancels the currently opened record. The record is not passed to any sinks. Results are undefined if called
+     * before opening a record.
+     * 
+     * \throw Does not throw.
+     */
     void cancel_record();
 };
 
 #ifdef BOOST_LOG_USE_CHAR
-typedef basic_logging_core< char > logging_core;
+typedef basic_logging_core< char > logging_core;        //!< Convenience typedef for narrow-character logging
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_logging_core< wchar_t > wlogging_core;
+typedef basic_logging_core< wchar_t > wlogging_core;    //!< Convenience typedef for wide-character logging
 #endif
 
 } // namespace log

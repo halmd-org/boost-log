@@ -1,15 +1,18 @@
-/*!
+/*
  * (C) 2007 Andrey Semashev
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
+ * This header is the Boost.Log library implementation, see the library documentation
+ * at http://www.boost.org/libs/log/doc/log.html.
+ */
+/*!
  * \file   attribute.hpp
  * \author Andrey Semashev
  * \date   15.04.2007
  * 
- * \brief  This header is the Boost.Log library implementation, see the library documentation
- *         at http://www.boost.org/libs/log/doc/log.html.
+ * The header contains attribute and attribute_value interfaces definition.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
@@ -36,6 +39,8 @@ namespace BOOST_LOG_NAMESPACE {
 struct BOOST_LOG_NO_VTABLE attribute_value
 {
 private:
+    //! \cond
+
     //! A simple type dispatcher to support the get method
     template< typename T >
     struct extractor :
@@ -64,6 +69,8 @@ private:
         optional< T const& >& res_;
     };
 
+    //! \endcond
+
 public:
     virtual ~attribute_value() {}
 
@@ -78,6 +85,7 @@ public:
     //! A simpler way to get attribute value in case if one knows its exact type
     template< typename T >
     optional<
+#ifndef BOOST_LOG_DOXYGEN_PASS
         typename add_reference<
             typename add_const<
                 typename remove_cv<
@@ -85,6 +93,9 @@ public:
                 >::type
             >::type
         >::type
+#else
+        T const&
+#endif // BOOST_LOG_DOXYGEN_PASS
     > get()
     {
         typedef typename remove_cv<

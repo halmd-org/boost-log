@@ -1,15 +1,18 @@
-/*!
+/*
  * (C) 2007 Andrey Semashev
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
+ * This header is the Boost.Log library implementation, see the library documentation
+ * at http://www.boost.org/libs/log/doc/log.html.
+ */
+/*!
  * \file   string_literal.hpp
  * \author Andrey Semashev
  * \date   24.06.2007
  * 
- * \brief  This header is the Boost.Log library implementation, see the library documentation
- *         at http://www.boost.org/libs/log/doc/log.html.
+ * The header contains implementation of a constant string literal wrapper.
  */
 
 #if defined(_MSC_VER) && _MSC_VER > 1000
@@ -38,8 +41,9 @@ namespace BOOST_LOG_NAMESPACE {
 
 //! String literals wrapper class
 template< typename CharT, typename TraitsT = std::char_traits< CharT > >
-class basic_string_literal :
-    public totally_ordered1< basic_string_literal< CharT, TraitsT >,
+class basic_string_literal
+    //! \cond
+    : public totally_ordered1< basic_string_literal< CharT, TraitsT >,
         totally_ordered2< basic_string_literal< CharT, TraitsT >, const CharT*,
             totally_ordered2<
                 basic_string_literal< CharT, TraitsT >,
@@ -47,6 +51,7 @@ class basic_string_literal :
             >
         >
     >
+    //! \endcond
 {
     //! Self type
     typedef basic_string_literal< CharT, TraitsT > this_type;
@@ -80,7 +85,11 @@ public:
     basic_string_literal() { clear(); }
     //! Constructor from a string literal
     template< typename T, size_type LenV >
-    basic_string_literal(T(&p)[LenV], typename enable_if< is_same< T, const value_type >, int >::type = 0)
+    basic_string_literal(T(&p)[LenV]
+        //! \cond
+        , typename enable_if< is_same< T, const value_type >, int >::type = 0
+        //! \endcond
+        )
         : m_pStart(p), m_Len(LenV - 1)
     {
     }
@@ -94,10 +103,15 @@ public:
     }
     //! Assignment from a string literal
     template< typename T, size_type LenV >
+#ifndef BOOST_LOG_DOXYGEN_PASS
     typename enable_if<
         is_same< T, const value_type >,
         this_type&
-    >::type operator= (T(&p)[LenV])
+    >::type
+#else
+    this_type&
+#endif // BOOST_LOG_DOXYGEN_PASS
+    operator= (T(&p)[LenV])
     {
         return assign(p);
     }
@@ -216,10 +230,15 @@ public:
     }
     //! Assignment from a string literal
     template< typename T, size_type LenV >
+#ifndef BOOST_LOG_DOXYGEN_PASS
     typename enable_if<
         is_same< T, const value_type >,
         this_type&
-    >::type assign(T(&p)[LenV])
+    >::type
+#else
+    this_type&
+#endif // BOOST_LOG_DOXYGEN_PASS
+    assign(T(&p)[LenV])
     {
         m_pStart = p;
         m_Len = LenV - 1;
@@ -314,34 +333,45 @@ inline void swap(
 
 //  Convenience typedefs
 #ifdef BOOST_LOG_USE_CHAR
-typedef basic_string_literal< char > string_literal;
+typedef basic_string_literal< char > string_literal;        //!< String literal type for narrow characters
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_string_literal< wchar_t > wstring_literal;
+typedef basic_string_literal< wchar_t > wstring_literal;    //!< String literal type for wide characters
 #endif
 
 //  Convenience generators
 #ifdef BOOST_LOG_USE_CHAR
 template< typename T, std::size_t LenV >
-inline typename enable_if<
+inline
+#ifndef BOOST_LOG_DOXYGEN_PASS
+typename enable_if<
     is_same< T, const char >,
     string_literal 
->::type str_literal(T(&p)[LenV])
+>::type
+#else
+basic_string_literal< T >
+#endif // BOOST_LOG_DOXYGEN_PASS
+str_literal(T(&p)[LenV])
 {
     return string_literal(p);
 }
 #endif
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 template< typename T, std::size_t LenV >
 inline typename enable_if<
     is_same< T, const wchar_t >,
     wstring_literal 
->::type str_literal(T(&p)[LenV])
+>::type
+str_literal(T(&p)[LenV])
 {
     return wstring_literal(p);
 }
 #endif
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace log
 

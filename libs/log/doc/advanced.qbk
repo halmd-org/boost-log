@@ -1,3 +1,12 @@
+[/
+    This document is a part of Boost.Log library documentation.
+
+    (c) 2008 Andrey Semashev
+
+    Use, modification and distribution is subject to the Boost Software License, Version 1.0.
+    (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+/]
+
 [section:advanced Advanced features]
 
 This section contains a more detailed description of library components and features. Some of them are presented in the [link tutorial.tutorial Tutorual] section, so it is recommended to read it first to get the basic understanding of the library.

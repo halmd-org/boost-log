@@ -1,15 +1,18 @@
-/*!
+/*
  * (C) 2007 Andrey Semashev
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
+ * This header is the Boost.Log library implementation, see the library documentation
+ * at http://www.boost.org/libs/log/doc/log.html.
+ */
+/*!
  * \file   attribute_set.hpp
  * \author Andrey Semashev
  * \date   08.03.2007
  * 
- * \brief  This header is the Boost.Log library implementation, see the library documentation
- *         at http://www.boost.org/libs/log/doc/log.html.
+ * This header contains definition of the attribute set container.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
@@ -74,6 +77,8 @@ public:
     typedef typename allocator_type::difference_type difference_type;
 
 private:
+    //! \cond
+
     //! Implementation
     struct implementation;
     friend struct implementation;
@@ -206,11 +211,20 @@ private:
         node_base* m_pNode;
     };
 
+    //! \endcond
+
 public:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! Iterator type
     typedef iter< false > iterator;
     //! Const iterator type
     typedef iter< true > const_iterator;
+#else
+    //! Iterator type
+    typedef [implementation defined] iterator;
+    //! Const iterator type
+    typedef [implementation defined] const_iterator;
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 private:
     //! Pointer to implementation

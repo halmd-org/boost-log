@@ -1,15 +1,20 @@
-/*!
+/*
  * (C) 2007 Andrey Semashev
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
+ * This header is the Boost.Log library implementation, see the library documentation
+ * at http://www.boost.org/libs/log/doc/log.html.
+ */
+/*!
  * \file   attribute_values_view.hpp
  * \author Andrey Semashev
  * \date   21.04.2007
  * 
- * \brief  This header is the Boost.Log library implementation, see the library documentation
- *         at http://www.boost.org/libs/log/doc/log.html.
+ * This header file contains definition of attribute values view. The view is constructed from
+ * three attribute sets (global, thread-specific and source-specific) and contains attribute
+ * values.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
@@ -71,6 +76,8 @@ public:
     typedef typename allocator_type::difference_type difference_type;
 
 private:
+    //! \cond
+
     typedef std::allocator< char > internal_allocator_type;
     struct implementation;
 
@@ -86,9 +93,14 @@ private:
         }
     };
 
+    //! \endcond
+
 public:
     //! Const iterator class
     class const_iterator;
+
+    //! \cond
+
     friend class const_iterator;
     class const_iterator
     {
@@ -156,6 +168,8 @@ public:
         //! The pointed element of the container
         node* m_pNode;
     };
+
+    //! \endcond
 
 private:
     //! Pointer to the container implementation
