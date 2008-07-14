@@ -270,19 +270,19 @@ public:
     void swap(basic_attribute_set& that) { std::swap(m_pImpl, that.m_pImpl); }
 
     /*
-     * Returns iterator to the first element of the container.
+     * \return Iterator to the first element of the container.
      */
     BOOST_LOG_EXPORT iterator begin();
     /*
-     * Returns iterator to the after-the-last element of the container.
+     * \return Iterator to the after-the-last element of the container.
      */
     BOOST_LOG_EXPORT iterator end();
     /*
-     * Returns constant iterator to the first element of the container.
+     * \return Constant iterator to the first element of the container.
      */
     BOOST_LOG_EXPORT const_iterator begin() const;
     /*
-     * Returns constant iterator to the after-the-last element of the container.
+     * \return Constant iterator to the after-the-last element of the container.
      */
     BOOST_LOG_EXPORT const_iterator end() const;
 
