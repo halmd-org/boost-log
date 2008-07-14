@@ -41,7 +41,9 @@ template< typename >
 class basic_attribute_values_view;
 
 /*!
- * An attribute set class. An attribute set is an associative container with attribute name as a key and
+ * \brief An attribute set class.
+ * 
+ * An attribute set is an associative container with attribute name as a key and
  * pointer to the attribute as a mapped value. The container allows storing only one element for each distinct
  * key value. In most regards attribute set container provides interface similar to std::map. However, there are
  * differences in operator[] semantics and a number of optimizations with regard to iteration. Besides,
@@ -57,7 +59,7 @@ class basic_attribute_set
     typedef basic_attribute_set< CharT > this_type;
 
 public:
-    //! Char type
+    //! Character type
     typedef CharT char_type;
     //! String type
     typedef std::basic_string< char_type > string_type;
@@ -227,9 +229,13 @@ public:
     //! Const iterator type
     typedef iter< true > const_iterator;
 #else
-    //! Iterator type
+    /*!
+     * Iterator type. The iterator complies to the bidirectional iterator requirements.
+     */
     typedef implementation_defined iterator;
-    //! Const iterator type
+    /*!
+     * Constant iterator type. The iterator complies to the bidirectional iterator requirements with read-only capabilities.
+     */
     typedef implementation_defined const_iterator;
 #endif // BOOST_LOG_DOXYGEN_PASS
 
@@ -265,7 +271,7 @@ public:
     /*!
      * Swaps two instances of the container.
      * 
-     * \throw Doesn't throw.
+     * \throw Nothing.
      */
     void swap(basic_attribute_set& that) { std::swap(m_pImpl, that.m_pImpl); }
 
