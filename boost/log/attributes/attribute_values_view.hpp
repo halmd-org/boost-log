@@ -38,7 +38,29 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-//! A generated attribute values view
+/*!
+ * \brief A view of attribute values
+ * 
+ * Attribute values view is a read-only associative container with attribute name as a key and
+ * a pointer to attribute value object as a mapped type. This is a collection of elements with unique
+ * keys, that is, there can be only one attribute value with a given name in a view. With respect to
+ * read-only capabilities, attribute values view is close to std::map.
+ * 
+ * An instance of attribute values view can be constructed from three attribute sets and attempts to
+ * accomodate values all attributes from the sets. The situation when a same-named attribute is found
+ * in more than one attribute is possible. This problem is solved on construction of the view: the three
+ * attribute sets have different priorities when it comes to solving conflicts.
+ * 
+ * From the library perspective the three source attribute sets are global, thread-specific and source-specific
+ * attributes, with the latter having the highest priority. This feature allows to override attributes of wider scopes
+ * with the more specific ones.
+ * 
+ * After the view construction it cannot be modified. However, for sake of performance, the attribute values
+ * are not immediately acquired on the view construction. Instead, on-demand acquision is performed either on
+ * iterator dereferencing or on call to the freeze method. Once acquired, the attribute value stays within the view
+ * until its destruction. This nuance does not affect other view properties, such as size or lookup ability.
+ * The logging core automatically freezes the view at the right point, so users should not be bothered.
+ */
 template< typename CharT >
 class basic_attribute_values_view :
     private std::allocator< char >
@@ -47,7 +69,7 @@ class basic_attribute_values_view :
     typedef basic_attribute_values_view< CharT > this_type;
 
 public:
-    //! Char type
+    //! Character type
     typedef CharT char_type;
     //! String type
     typedef std::basic_string< char_type > string_type;
@@ -75,9 +97,9 @@ public:
     //! Difference type
     typedef typename allocator_type::difference_type difference_type;
 
-private:
-    //! \cond
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
+private:
     typedef std::allocator< char > internal_allocator_type;
     struct implementation;
 
@@ -93,14 +115,8 @@ private:
         }
     };
 
-    //! \endcond
-
 public:
-    //! Const iterator class
     class const_iterator;
-
-    //! \cond
-
     friend class const_iterator;
     class const_iterator
     {
@@ -169,59 +185,119 @@ public:
         node* m_pNode;
     };
 
-    //! \endcond
+#else
+
+    /*!
+     * Constant iterator type with bidirectional capabilities.
+     */
+    typedef implementation_defined const_iterator;
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 private:
     //! Pointer to the container implementation
     implementation* m_pImpl;
 
 public:
-    //! The constructor adopts three attribute sets to the view
+    /*!
+     * The constructor adopts three attribute sets into the view. The \a source_attrs attributes have the greatest preference
+     * when a same-named attribute is found in several sets, \a global_attrs has the least. The constructed view is not frozen.
+     * 
+     * \param source_attrs A set of source-specific attributes.
+     * \param thread_attrs A set of thread-specific attributes.
+     * \param global_attrs A set of global attributes.
+     */
     BOOST_LOG_EXPORT basic_attribute_values_view(
         attribute_set_type const& source_attrs,
         attribute_set_type const& thread_attrs,
         attribute_set_type const& global_attrs);
-    //! Copy constructor
+
+    /*!
+     * Copy constructor.
+     * 
+     * \pre The original view is frozen.
+     * \post The constructed view is frozen, std::equal(begin(), end(), that.begin()) == true
+     */
     BOOST_LOG_EXPORT basic_attribute_values_view(basic_attribute_values_view const& that);
-    //! Destructor
+    /*!
+     * Destructor. Releases all referenced attribute values.
+     */
     BOOST_LOG_EXPORT ~basic_attribute_values_view();
 
-    //! Assignment
+    /*!
+     * Assignment operator
+     * 
+     * \pre The original view is frozen.
+     * \post The resulting view is frozen, std::equal(begin(), end(), that.begin()) == true
+     */
     BOOST_LOG_EXPORT basic_attribute_values_view& operator= (basic_attribute_values_view const& that);
 
-    //! Swap
+    /*!
+     * Swaps two views
+     * 
+     * \throw Nothing.
+     */
     void swap(basic_attribute_values_view& that)
     {
         std::swap(m_pImpl, that.m_pImpl);
     }
 
-    //  Iterator generators
+    /*!
+     * \return Iterator to the first element of the view.
+     */
     BOOST_LOG_EXPORT const_iterator begin() const;
+    /*!
+     * \return Iterator to the after-the-last element of the view.
+     */
     BOOST_LOG_EXPORT const_iterator end() const;
 
-    //! The method returns number of elements in the container
+    /*!
+     * \return Number of elements in the view.
+     */
     BOOST_LOG_EXPORT size_type size() const;
-    //! The method checks if the container is empty
+    /*!
+     * \return true if there are no elements in the container, false otherwise.
+     */
     bool empty() const { return (size() == 0); }
 
-    //! The method finds the attribute by name
+    /*!
+     * The method finds the attribute value by name.
+     * 
+     * \param key Attribute name.
+     * \return Iterator to the found element or end() if the attribute with such name is not found.
+     */
     const_iterator find(key_type const& key) const
     {
         return find_impl(key.data(), key.size());
     }
-    //! The method finds the attribute by name
+    /*!
+     * The method finds the attribute value by name.
+     * 
+     * \param key Attribute name.
+     * \return Iterator to the found element or end() if the attribute with such name is not found.
+     */
     const_iterator find(string_type const& key) const
     {
         return find_impl(key.data(), key.size());
     }
-    //! The method finds the attribute by name
+    /*!
+     * The method finds the attribute value by name.
+     * 
+     * \param key Attribute name. Must not be NULL, must point to a zero-terminated string.
+     * \return Iterator to the found element or end() if the attribute with such name is not found.
+     */
     const_iterator find(const char_type* key) const
     {
         typedef std::char_traits< char_type > traits_type;
         return find_impl(key, traits_type::length(key));
     }
 
-    //! Alternative lookup syntax
+    /*!
+     * Alternative lookup syntax.
+     * 
+     * \param key Attribute name.
+     * \return A pointer to the attribute value if it is found with \a key, default-constructed mapped value otherwise.
+     */
     mapped_type operator[] (key_type const& key) const
     {
         const_iterator it = this->find(key);
@@ -230,7 +306,12 @@ public:
         else
             return mapped_type();
     }
-    //! Alternative lookup syntax
+    /*!
+     * Alternative lookup syntax.
+     * 
+     * \param key Attribute name.
+     * \return A pointer to the attribute value if it is found with \a key, default-constructed mapped value otherwise.
+     */
     mapped_type operator[] (string_type const& key) const
     {
         const_iterator it = this->find(key);
@@ -239,7 +320,12 @@ public:
         else
             return mapped_type();
     }
-    //! Alternative lookup syntax
+    /*!
+     * Alternative lookup syntax.
+     * 
+     * \param key Attribute name. Must not be NULL, must point to a zero-terminated string.
+     * \return A pointer to the attribute value if it is found with \a key, default-constructed mapped value otherwise.
+     */
     mapped_type operator[] (const char_type* key) const
     {
         const_iterator it = this->find(key);
@@ -249,30 +335,58 @@ public:
             return mapped_type();
     }
 
-    //! The method returns the number of the same named attributes in the container
+    /*!
+     * The method counts the number of the attribute value occurrences in the view. Since there can be only one
+     * attribute value with a particular key, the method always return 0 or 1.
+     * 
+     * \param key Attribute name.
+     * \return The number of times the attribute value is found in the container.
+     */
     size_type count(key_type const& key) const { return size_type(find(key) != end()); }
-    //! The method returns the number of the same named attributes in the container
+    /*!
+     * The method counts the number of the attribute value occurrences in the view. Since there can be only one
+     * attribute value with a particular key, the method always return 0 or 1.
+     * 
+     * \param key Attribute name.
+     * \return The number of times the attribute value is found in the container.
+     */
     size_type count(string_type const& key) const { return size_type(find(key) != end()); }
-    //! The method returns the number of the same named attributes in the container
+    /*!
+     * The method counts the number of the attribute value occurrences in the view. Since there can be only one
+     * attribute value with a particular key, the method always return 0 or 1.
+     * 
+     * \param key Attribute name. Must not be NULL, must point to a zero-terminated string.
+     * \return The number of times the attribute value is found in the container.
+     */
     size_type count(const char_type* key) const { return size_type(find(key) != end()); }
 
-    //! The method acquires values of all adopted attributes. Users don't need to call it, since will always get an already frozen view.
+    /*!
+     * The method acquires values of all adopted attributes.
+     * 
+     * \post The view is frozen
+     */
     BOOST_LOG_EXPORT void freeze();
 
 private:
+    //! \cond
+
     //! Internal lookup implementation
     BOOST_LOG_EXPORT const_iterator find_impl(const char_type* key, size_type len) const;
+
+    //! \endcond
 };
 
-//! Free swap overload
+/*!
+ * Free swap overload
+ */
 template< typename CharT >
 inline void swap(basic_attribute_values_view< CharT >& left, basic_attribute_values_view< CharT >& right)
 {
     left.swap(right);
 }
 
-typedef basic_attribute_values_view< char > attribute_values_view;
-typedef basic_attribute_values_view< wchar_t > wattribute_values_view;
+typedef basic_attribute_values_view< char > attribute_values_view;      //!< Convenience typedef for narrow-character logging
+typedef basic_attribute_values_view< wchar_t > wattribute_values_view;  //!< Convenience typedef for wide-character logging
 
 } // namespace log
 
