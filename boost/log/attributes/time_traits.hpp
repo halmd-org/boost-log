@@ -32,7 +32,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace attributes {
 
-//! Base class for time traits involving Boost.DateTime
+//! Base class for time traits involving Boost.DateTime.
 struct basic_time_traits
 {
     //! Time type
@@ -47,9 +47,12 @@ struct basic_time_traits
 };
 
 //! Time traits that describes UTC time acquirement via Boost.DateTime facilities
-struct utc_time_traits : public basic_time_traits
+struct utc_time_traits :
+    public basic_time_traits
 {
-    //! Clock acquire trampoline
+    /*!
+     * \return Current time stamp
+     */
     static time_type get_clock()
     {
         return clock_source::universal_time();
@@ -57,9 +60,12 @@ struct utc_time_traits : public basic_time_traits
 };
 
 //! Time traits that describes local time acquirement via Boost.DateTime facilities
-struct local_time_traits : public basic_time_traits
+struct local_time_traits :
+    public basic_time_traits
 {
-    //! Clock acquire trampoline
+    /*!
+     * \return Current time stamp
+     */
     static time_type get_clock()
     {
         return clock_source::local_time();

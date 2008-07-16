@@ -36,7 +36,17 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace attributes {
 
-//! A class of an attribute that holds a single constant value with ability to change it
+/*!
+ * \brief A class of an attribute that holds a single constant value with ability to change it
+ * 
+ * The mutable_constant attribute stores a single value of type, specified as the first template argument.
+ * A copy of this value is returned on each attribute value acquision.
+ * 
+ * The attribute also allows to modify the stored value, even if the attibute is registered in an attribute set.
+ * In order to ensure thread safety of such modifications the mutable_constant class is also parametrized
+ * with three additional template arguments: mutex type, scoped write and scoped read lock types. By default
+ * no synchronization is done.
+ */
 template< typename T, typename MutexT = void, typename ScopedWriteLockT = void, typename ScopedReadLockT = ScopedWriteLockT >
 class mutable_constant :
     public attribute
@@ -64,17 +74,26 @@ private:
     mutex_type m_Mutex;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor with the stored value initialization
+     */
     explicit mutable_constant(held_type const& value) : m_Value(value) {}
 
-    //! The method returns the actual attribute value. It must not return NULL.
+    /*!
+     * The method returns the actual attribute value. It shall not return NULL.
+     * The implementation acquires a shared lock of the mutex in order to protect the
+     * copying of the stored object into the attribute value.
+     */
     shared_ptr< attribute_value > get_value()
     {
         scoped_read_lock _(m_Mutex);
         return boost::make_shared< mutable_constant_value >(m_Value);
     }
 
-    //! The method sets a new attribute value
+    /*!
+     * The method sets a new attribute value. The implementation exclusively locks the mutex in order
+     * to protect the value assignment.
+     */
     void set_value(held_type const& v)
     {
         scoped_write_lock _(m_Mutex);
@@ -82,7 +101,11 @@ public:
     }
 };
 
-//! Specialization for unlocked case
+/*!
+ * \brief Specialization for unlocked case
+ * 
+ * This version of attribute does not perform thread synchronization to access the stored value.
+ */
 template< typename T >
 class mutable_constant< T, void, void, void > :
     public attribute
@@ -107,16 +130,19 @@ private:
     held_type m_Value;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor with the stored value initialization
+     */
     explicit mutable_constant(held_type const& value) : m_Value(value) {}
 
-    //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value()
     {
         return boost::make_shared< mutable_constant_value >(m_Value);
     }
 
-    //! The method sets a new attribute value
+    /*!
+     * The method sets a new attribute value.
+     */
     void set_value(held_type const& v)
     {
         m_Value = v;

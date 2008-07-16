@@ -37,9 +37,18 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace attributes {
 
+/*!
+ * \class counter
+ * \brief A class of an attribute that counts an integral value
+ * 
+ * This type of attribute acts as a counter, that is, it returns a monotonously
+ * changing value each time requested. The attribute value type can be specified
+ * as a template parameter. However, the type must support basic arithmetic
+ * operations, such as addition and substraction.
+ */
+
 #ifndef BOOST_LOG_NO_THREADS
 
-//! A class of an attribute that counts an integral value
 template< typename T >
 class counter :
     public attribute
@@ -61,13 +70,18 @@ private:
     boost::detail::atomic_count m_Counter;
 
 public:
-    //! Constructor
-    explicit counter(held_type const& initial = 0, long step = 1) :
+    /*!
+     * Constructor
+     * 
+     * \param initial Initial value of the counter
+     * \param step Changing step of the counter. Each value acquired from the attribute
+     *        will be greater than the previous one to this amount.
+     */
+    explicit counter(held_type const& initial = held_type(), long step = 1) :
         m_InitialValue(initial), m_Step(step), m_Counter(1)
     {
     }
 
-    //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value()
     {
         // TODO: a full featured atomic would do better here
@@ -78,7 +92,6 @@ public:
 
 #else // BOOST_LOG_NO_THREADS
 
-//! A class of an attribute that counts an integral value
 template< typename T >
 class counter :
     public attribute
@@ -98,13 +111,18 @@ private:
     const held_type m_Step;
 
 public:
-    //! Constructor
-    explicit counter(held_type const& initial = 0, long step = 1) :
+    /*!
+     * Constructor
+     * 
+     * \param initial Initial value of the counter
+     * \param step Changing step of the counter. Each value acquired from the attribute
+     *        will be greater than the previous one to this amount.
+     */
+    explicit counter(held_type const& initial = held_type(), long step = 1) :
         m_Value(initial), m_Step(step)
     {
     }
 
-    //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value()
     {
         m_Value += static_cast< held_type >(m_Step);

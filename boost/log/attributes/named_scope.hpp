@@ -64,22 +64,41 @@ namespace aux {
 
 } // namespace aux
 
-//! The structure contains all information about a named scope
+/*!
+ * \brief The structure contains all information about a named scope
+ * 
+ * The named scope entries are stored as elements of basic_named_scope_list container, which
+ * in turn can be acquired either from the basic_named_scope attribute value or from a thread-local
+ * instance.
+ */
 template< typename CharT >
-struct basic_named_scope_entry :
-    public aux::named_scope_list_node
+struct basic_named_scope_entry
+    //! \cond
+    : public aux::named_scope_list_node
+    //! \endcond
 {
     //! Character type
     typedef CharT char_type;
 
-    //! The scope (e.g. function signatute) name
+    /*!
+     * The scope name (e.g. function signatute)
+     */
     basic_string_literal< char_type > scope_name;
-    //! The source file name
+    /*!
+     * The source file name
+     */
     basic_string_literal< char_type > file_name;
-    //! The line number in the source file
+    /*!
+     * The line number in the source file
+     */
     unsigned int line;
 
-    //! Initializing constructor
+    /*!
+     * Initializing constructor
+     * 
+     * \post scope_name == sn && file_name == fn && line == ln
+     * \throw Nothing.
+     */
     template< typename T1, unsigned int N1, typename T2, unsigned int N2 >
     basic_named_scope_entry(T1 (&sn)[N1], T2 (&fn)[N2], unsigned int ln)
         : scope_name(sn), file_name(fn), line(ln)
@@ -87,10 +106,16 @@ struct basic_named_scope_entry :
     }
 };
 
-//! The class implements the list of scopes
+/*!
+ * \brief The class implements the list of scopes
+ * 
+ * The scope list provides a read-only access to a doubly-linked list of scopes.
+ */
 template< typename CharT >
-class basic_named_scope_list :
-    protected std::allocator< basic_named_scope_entry< CharT > >
+class basic_named_scope_list
+    //! \cond
+    : protected std::allocator< basic_named_scope_entry< CharT > >
+    //! \endcond
 {
     //! Self type
     typedef basic_named_scope_list< CharT > this_type;
@@ -109,6 +134,8 @@ public:
     typedef typename allocator_type::const_pointer const_pointer;
     typedef typename allocator_type::size_type size_type;
     typedef typename allocator_type::difference_type difference_type;
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 protected:
     //! Iterator class
@@ -193,6 +220,27 @@ public:
     typedef std::reverse_iterator< const_iterator > const_reverse_iterator;
     typedef std::reverse_iterator< iterator > reverse_iterator;
 
+#else
+
+    /*!
+     * A constant iterator to the sequence of scopes. Complies to bidirectional iterator requirements.
+     */
+    typedef implementation_defined const_iterator;
+    /*!
+     * An iterator to the sequence of scopes. Complies to bidirectional iterator requirements.
+     */
+    typedef implementation_defined iterator;
+    /*!
+     * A constant reverse iterator to the sequence of scopes. Complies to bidirectional iterator requirements.
+     */
+    typedef implementation_defined const_reverse_iterator;
+    /*!
+     * A reverse iterator to the sequence of scopes. Complies to bidirectional iterator requirements.
+     */
+    typedef implementation_defined reverse_iterator;
+
+#endif // BOOST_LOG_DOXYGEN_PASS
+
 protected:
     //! The root node of the container
     aux::named_scope_list_node m_RootNode;
@@ -202,12 +250,28 @@ protected:
     bool m_fNeedToDeallocate;
 
 public:
-    //  Structors
+    /*!
+     * Default constructor
+     * 
+     * \post empty() == true
+     */
     basic_named_scope_list() : m_Size(0), m_fNeedToDeallocate(false) {}
+    /*!
+     * Copy constructor
+     * 
+     * \post std::equal(begin(), end(), that.begin()) == true
+     */
     BOOST_LOG_EXPORT basic_named_scope_list(basic_named_scope_list const& that);
+    /*!
+     * Destructor. Destroys the stored entries.
+     */
     BOOST_LOG_EXPORT ~basic_named_scope_list();
 
-    //! Assignment
+    /*!
+     * Assignment operator
+     * 
+     * \post std::equal(begin(), end(), that.begin()) == true
+     */
     basic_named_scope_list& operator= (basic_named_scope_list const& that)
     {
         if (this != &that)
@@ -218,18 +282,35 @@ public:
         return *this;
     }
     
-    //  Iterators
+    /*!
+     * \return Constant iterator to the first element of the container.
+     */
     const_iterator begin() const { return const_iterator(m_RootNode._m_pNext); }
+    /*!
+     * \return Constant iterator to the after-the-last element of the container.
+     */
     const_iterator end() const { return const_iterator(const_cast< aux::named_scope_list_node* >(&m_RootNode)); }
+    /*!
+     * \return Constant iterator to the last element of the container.
+     */
     const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
+    /*!
+     * \return Constant iterator to the before-the-first element of the container.
+     */
     const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
 
-    //! Returns the size of the container
+    /*!
+     * \return The number of elements in the container
+     */
     size_type size() const { return m_Size; }
-    //! Returns true if the container is empty and false otherwise
+    /*!
+     * \return true if the container is empty and false otherwise
+     */
     bool empty() const { return (m_Size == 0); }
 
-    //! Swaps two instances of the container
+    /*!
+     * Swaps two instances of the container
+     */
     void swap(basic_named_scope_list& that)
     {
         using std::swap;
@@ -238,9 +319,13 @@ public:
         swap(m_fNeedToDeallocate, that.m_fNeedToDeallocate);
     }
 
-    //! Last pushed scope accessor
+    /*!
+     * \return Last pushed scope entry
+     */
     const_reference back() const { return *rbegin(); }
-    //! First pushed scope accessor
+    /*!
+     * \return First pushed scope entry
+     */
     const_reference front() const { return *begin(); }
 };
 
@@ -257,7 +342,18 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (
     return strm;
 }
 
-//! A class of an attribute that holds stack of named scopes of the current thread
+/*!
+ * \brief A class of an attribute that holds stack of named scopes of the current thread
+ * 
+ * The basic_named_scope attribute is essentially a hook to the thread-specific instance of
+ * scope list. This means that the attribute will generate different values if get_value is
+ * called in different threads. The attribute generates value with stored type
+ * basic_named_scope_list< CharT >.
+ * 
+ * The attribute class can also be used to gain access to the scope stack instance, e.g. to
+ * get its copy or to push or pop a scope entry. However, it is highly not recommended to
+ * maintain scope list manually. Use BOOST_LOG_NAMED_SCOPE or BOOST_LOG_FUNCTION macros instead.
+ */
 template< typename CharT >
 class BOOST_LOG_EXPORT basic_named_scope :
     public attribute
@@ -276,14 +372,22 @@ public:
         //! Attribute type
         typedef basic_named_scope< char_type > named_scope_type;
 
-        //! Constructor
+        /*!
+         * Constructor. Pushes the specified scope to the end of the thread-local list of scopes.
+         * 
+         * \param sn Scope name.
+         * \param fn File name, in which the scope is located.
+         * \param ln Line number in the file.
+         */
         template< typename T1, unsigned int N1, typename T2, unsigned int N2 >
         sentry(T1 (&sn)[N1], T2 (&fn)[N2], unsigned int ln) : m_Entry(sn, fn, ln)
         {
             named_scope_type::push_scope(m_Entry);
         }
 
-        //! Destructor
+        /*!
+         * Destructor. Removes the last pushed scope from the thread-local list of scopes.
+         */
         ~sentry()
         {
             named_scope_type::pop_scope();
@@ -302,19 +406,28 @@ private:
     shared_ptr< implementation > pImpl;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor. Creates an attribute.
+     */
     basic_named_scope();
 
-    //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value();
 
-    //! The method pushes the scope to the stack
+    /*!
+     * The method pushes the scope to the back of the current thread's scope list
+     * 
+     * \throw Nothing.
+     */
     static void push_scope(scope_entry const& entry);
-    //! The method pops the top scope
+    /*!
+     * The method pops the last pushed scope from the current thread's scope list
+     * 
+     * \throw Nothing.
+     */
     static void pop_scope();
 
     /*!
-     *  \brief Returns the current thread's scope stack
+     *  \return The current thread's list of scopes
      * 
      *  \note The returned reference is only valid until the current thread ends. The scopes in the
      *        returned container may change if the execution scope is changed (i.e. either push_scope
@@ -324,8 +437,8 @@ public:
     static scope_stack const& get_scopes();
 };
 
-typedef basic_named_scope< char > named_scope;
-typedef basic_named_scope< wchar_t > wnamed_scope;
+typedef basic_named_scope< char > named_scope;      //!< Convenience typedef for narrow-character logging
+typedef basic_named_scope< wchar_t > wnamed_scope;  //!< Convenience typedef for wide-character logging
 
 } // namespace attributes
 
@@ -346,21 +459,39 @@ typedef basic_named_scope< wchar_t > wnamed_scope;
 //! \endcond
 
 #ifdef BOOST_LOG_USE_CHAR
-//! Macro for scope markup
+
+/*!
+ * Macro for scope markup. The specified scope name is pushed to the end of the current thread scope list.
+ */
 #define BOOST_LOG_NAMED_SCOPE(name)\
     BOOST_LOG_NAMED_SCOPE_INTERNAL(BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_named_scope_sentry_), name, __FILE__, __LINE__)
 
-//! Macro for function scope markup
+/*!
+ * Macro for function scope markup. The scope name is constructed with help of compiler and contains current function name.
+ * The scope name is pushed to the end of the current thread scope list.
+ * 
+ * Not all compilers have support for this macro. The exact form of the scope name may vary from one compiler to another.
+ */
 #define BOOST_LOG_FUNCTION() BOOST_LOG_NAMED_SCOPE(BOOST_CURRENT_FUNCTION)
+
 #endif
 
 #ifdef BOOST_LOG_USE_WCHAR_T
-//! Macro for scope markup
+
+/*!
+ * Macro for scope markup. The specified scope name is pushed to the end of the current thread scope list.
+ */
 #define BOOST_LOG_WNAMED_SCOPE(name)\
     BOOST_LOG_NAMED_SCOPE_INTERNAL(BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_named_scope_sentry_), name, BOOST_PP_CAT(L, __FILE__), __LINE__)
 
-//! Macro for function scope markup
+/*!
+ * Macro for function scope markup. The scope name is constructed with help of compiler and contains current function name.
+ * The scope name is pushed to the end of the current thread scope list.
+ * 
+ * Not all compilers have support for this macro. The exact form of the scope name may vary from one compiler to another.
+ */
 #define BOOST_LOG_WFUNCTION() BOOST_LOG_WNAMED_SCOPE(BOOST_PP_CAT(L, BOOST_CURRENT_FUNCTION))
+
 #endif
 
 #endif // BOOST_LOG_ATTRIBUTES_NAMED_SCOPE_HPP_INCLUDED_

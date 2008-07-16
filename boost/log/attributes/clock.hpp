@@ -36,13 +36,23 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace attributes {
 
-//! A class of an attribute that makes an attribute value of the current date and time
+/*!
+ * \brief A class of an attribute that makes an attribute value of the current date and time
+ * 
+ * The attribute generates current time stamp as a value. The type of the attribute value
+ * is determined with time traits passed to the class template as a template parameter.
+ * The time traits provided by the library use boost::posix_time::ptime as the time type.
+ * 
+ * Time traits also determine the way time is acquired. There are two types of time traits
+ * provided by th library: utc_time_traits and local_time_traits. The first returns UTC time,
+ * the second returns local time.
+ */
 template< typename TimeTraitsT >
 class basic_clock :
     public attribute
 {
 public:
-    //! A held functor type
+    //! Time storage type
     typedef typename TimeTraitsT::time_type time_type;
 
 private:
@@ -50,7 +60,6 @@ private:
     typedef basic_attribute_value< time_type > result_value;
 
 public:
-    //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value()
     {
         return boost::make_shared< result_value >(TimeTraitsT::get_clock());

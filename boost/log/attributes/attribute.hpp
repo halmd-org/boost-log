@@ -37,7 +37,6 @@ namespace BOOST_LOG_NAMESPACE {
 
 /*!
  * \brief A base class for an attribute value
- * \sa basic_attribute_values_view
  * 
  * An attribute value is an object that contains a piece of data that represents an attribute state
  * at the point of the value acquision. All major operations with log records, such as filtering and
@@ -102,7 +101,6 @@ public:
     /*!
      * The method dispatches the value to the given object.
      * 
-     * \sa type_dispatcher 
      * \param dispatcher The object that attempts to dispatch the stored value.
      * \return true if \a dispatcher was capable to consume the real attribute value type and false otherwise.
      */
@@ -174,8 +172,8 @@ struct BOOST_LOG_NO_VTABLE attribute
     virtual ~attribute() {}
 
     /*!
-     * The method returns the actual attribute value. It must not return NULL (use excetions
-     * to indicate errors).
+     * \return The actual attribute value. It shall not return NULL (exceptions
+     * shall be used to indicate errors).
      */
     virtual shared_ptr< attribute_value > get_value() = 0;
 };

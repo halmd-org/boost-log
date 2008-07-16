@@ -34,7 +34,17 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace attributes {
 
-//! A class of an attribute that holds a single constant value
+/*!
+ * \brief A class of an attribute that holds a single constant value
+ * 
+ * The constant is a simpliest and one of the most frequently types of attributes.
+ * It stores a constant value, which it eventually returns as its value each time
+ * requested.
+ * 
+ * \internal The attribute attempts to optimize memory allocations and implements both
+ *           attribute and attribute_value interfaces. However, the value can be detached from
+ *           the attribute if detach_from_thread is called.
+ */
 template< typename T >
 class constant :
     public attribute,
@@ -48,16 +58,16 @@ public:
     typedef typename base_type::held_type held_type;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor with the stored value initialization
+     */
     explicit constant(held_type const& value) : base_type(value) {}
 
-    //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value()
     {
         return this->BOOST_NESTED_TEMPLATE shared_from_this< base_type >();
     }
 
-    //! The method is called when the attribute value is passed to another thread
     shared_ptr< attribute_value > detach_from_thread()
     {
         // We have to create a copy of the constant because the attribute object

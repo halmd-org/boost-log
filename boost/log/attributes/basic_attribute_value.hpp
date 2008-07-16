@@ -32,7 +32,13 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace attributes {
 
-//! Basic attribute value class
+/*!
+ * \brief Basic attribute value class
+ * 
+ * This class can be used as a boilerplate for simple attribute values. The class implements all needed
+ * interfaces of attribute values and allows to store a single value of the type specified as a template parameter.
+ * The stored value can be dispatched with type dispatching mechanism.
+ */
 template< typename T >
 class basic_attribute_value :
     public attribute_value,
@@ -47,10 +53,12 @@ private:
     held_type m_Value;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor with initialization of the stored value
+     */
     explicit basic_attribute_value(held_type const& v) : m_Value(v) {}
 
-    bool dispatch(type_dispatcher& dispatcher)
+    virtual bool dispatch(type_dispatcher& dispatcher)
     {
         register type_visitor< held_type >* visitor =
             dispatcher.get_visitor< held_type >();
@@ -63,12 +71,14 @@ public:
             return false;
     }
 
-    shared_ptr< attribute_value > detach_from_thread()
+    virtual shared_ptr< attribute_value > detach_from_thread()
     {
         return this->shared_from_this< basic_attribute_value< held_type > >();
     }
 
-    //! Returns the contained value
+    /*!
+     * \return Reference to the contained value.
+     */
     held_type const& get() const { return m_Value; }
 };
 

@@ -41,7 +41,15 @@ namespace attributes {
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
-//! A class of an attribute that acquires its value from a third-party functor
+/*!
+ * \brief A class of an attribute that acquires its value from a third-party functor
+ * 
+ * The attribute calls a stored nullary functional object to acquire each value.
+ * The result type of the functional object is the attribute value type.
+ * 
+ * It is not recommended to use this class directly. Use make_functor_attr convenience functions
+ * to construct the attribute instead.
+ */
 template< typename R, typename T >
 class functor :
     public attribute
@@ -59,10 +67,11 @@ private:
     const held_type m_Functor;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor with the stored delegate imitialization
+     */
     explicit functor(held_type const& fun) : m_Functor(fun) {}
 
-    //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value()
     {
         return boost::make_shared< functor_result_value >(m_Functor());
@@ -73,7 +82,12 @@ public:
 
 #ifndef BOOST_NO_RESULT_OF
 
-//  Generator functions
+/*!
+ * The function constructs functor attribute instance with the provided functional object.
+ * 
+ * \param fun Nullary functional object that returns an actual stored value for an attribute value.
+ * \return Pointer to the attribute instance
+ */
 template< typename T >
 inline shared_ptr< attribute > make_functor_attr(T const& fun)
 {
@@ -90,6 +104,15 @@ inline shared_ptr< attribute > make_functor_attr(T const& fun)
 
 #endif // BOOST_NO_RESULT_OF
 
+/*!
+ * \overload make_functor_attr
+ * 
+ * The function constructs functor attribute instance with the provided functional object.
+ * Use this version if your compiler fails to determine the result type of the functional object.
+ * 
+ * \param fun Nullary functional object that returns an actual stored value for an attribute value.
+ * \return Pointer to the attribute instance
+ */
 template< typename R, typename T >
 inline shared_ptr< attribute > make_functor_attr(T const& fun)
 {

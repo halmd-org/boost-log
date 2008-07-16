@@ -42,6 +42,25 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace attributes {
 
+/*!
+ * \class timer
+ * \brief A class of an attribute that makes an attribute value of the time interval since construction
+ * 
+ * The timer attribute calculates the time passed since its construction and returns it on value acquision.
+ * The attribute value type is boost::posix_time::time_duration.
+ * 
+ * On Windows platform there are two implementations of the attribute. The default one is more precise but
+ * a bit slower. This version uses QueryPerformanceFrequence/QueryPerformanceCounter API to calculate elapsed time.
+ * There are known problems with these functions when used with some CPUs, notably AMD Athlon with
+ * Cool'n'Quiet technology enabled. See the following links for for more information and possible resolutions:
+ * 
+ * http://support.microsoft.com/?scid=kb;en-us;895980
+ * http://support.microsoft.com/?id=896256
+ * 
+ * In case if none of these solutions apply, you are free to #define BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER macro to
+ * fall back to another implementation based on Boost.DateTime.
+ */
+
 #if defined(BOOST_WINDOWS) && !defined(BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER)
 
 #ifdef _MSC_VER
@@ -52,19 +71,6 @@ namespace attributes {
 #pragma warning(disable: 4251)
 #endif // _MSC_VER
 
-/*!
- * \brief A class of an attribute that makes an attribute value of the time interval since construction (a more precise version for Windows)
- * 
- * This version uses QueryPerformanceFrequence/QueryPerformanceCounter API to calculate a more precise value
- * of the elapsed time. There are known problems with these functions when used with some CPUs, notably AMD Athlon with
- * Cool'n'Quiet technology enabled. See the following links for for more information and possible resolutions:
- * 
- * http://support.microsoft.com/?scid=kb;en-us;895980
- * http://support.microsoft.com/?id=896256
- * 
- * In case if none of these solutions apply, you are free to #define BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER macro to
- * fall back to the default implementation based on Boost.DateTime.
- */
 class BOOST_LOG_EXPORT timer :
     public attribute
 {
@@ -89,9 +95,11 @@ private:
     time_type::time_duration_type m_Duration;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor. Starts time counting.
+     */
     timer();
-    //! The method returns the actual attribute value. It must not return NULL.
+
     shared_ptr< attribute_value > get_value();
 };
 
@@ -101,7 +109,6 @@ public:
 
 #else // defined(BOOST_WINDOWS) && !defined(BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER)
 
-//! A class of an attribute that makes an attribute value of the time interval since construction
 class timer :
     public attribute
 {
@@ -118,10 +125,11 @@ private:
     const time_type m_BaseTimePoint;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor. Starts time counting.
+     */
     timer() : m_BaseTimePoint(utc_time_traits::get_clock()) {}
 
-    //! The method returns the actual attribute value. It must not return NULL.
     shared_ptr< attribute_value > get_value()
     {
         return boost::make_shared< result_value >(utc_time_traits::get_clock() - m_BaseTimePoint);
