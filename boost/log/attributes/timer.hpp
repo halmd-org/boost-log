@@ -47,17 +47,17 @@ namespace attributes {
  * \brief A class of an attribute that makes an attribute value of the time interval since construction
  * 
  * The timer attribute calculates the time passed since its construction and returns it on value acquision.
- * The attribute value type is boost::posix_time::time_duration.
+ * The attribute value type is \c boost::posix_time::time_duration.
  * 
  * On Windows platform there are two implementations of the attribute. The default one is more precise but
- * a bit slower. This version uses QueryPerformanceFrequence/QueryPerformanceCounter API to calculate elapsed time.
+ * a bit slower. This version uses <tt>QueryPerformanceFrequence</tt>/<tt>QueryPerformanceCounter</tt> API to calculate elapsed time.
  * There are known problems with these functions when used with some CPUs, notably AMD Athlon with
  * Cool'n'Quiet technology enabled. See the following links for for more information and possible resolutions:
  * 
  * http://support.microsoft.com/?scid=kb;en-us;895980
  * http://support.microsoft.com/?id=896256
  * 
- * In case if none of these solutions apply, you are free to #define BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER macro to
+ * In case if none of these solutions apply, you are free to <tt>#define BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER</tt> macro to
  * fall back to another implementation based on Boost.DateTime.
  */
 

@@ -41,10 +41,10 @@ namespace attributes {
  * 
  * The attribute generates current time stamp as a value. The type of the attribute value
  * is determined with time traits passed to the class template as a template parameter.
- * The time traits provided by the library use boost::posix_time::ptime as the time type.
+ * The time traits provided by the library use \c boost::posix_time::ptime as the time type.
  * 
  * Time traits also determine the way time is acquired. There are two types of time traits
- * provided by th library: utc_time_traits and local_time_traits. The first returns UTC time,
+ * provided by th library: \c utc_time_traits and \c local_time_traits. The first returns UTC time,
  * the second returns local time.
  */
 template< typename TimeTraitsT >

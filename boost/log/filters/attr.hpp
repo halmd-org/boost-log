@@ -50,7 +50,16 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace filters {
 
-//! The filter checks that the attribute value satisfies the predicate FunT
+/*!
+ * \brief The filter checks that the attribute value satisfies the predicate \c FunT
+ * 
+ * The \c flt_attr filter extracts stored attribute value and applies the predicate
+ * to it. The result of the predicate is returned as a result of filtering.
+ * 
+ * One should not resort to direct usage of this class. The filter is constructed
+ * with the \c attr helper function and lambda expression. See "Advanced features ->
+ * Filters -> Generic attribute placeholder" section of the library documentation.
+ */
 template< typename CharT, typename FunT, typename AttributeValueTypesT >
 class flt_attr :
     public basic_filter< CharT, flt_attr< CharT, FunT, AttributeValueTypesT > >
@@ -69,6 +78,8 @@ public:
     typedef FunT checker_type;
 
 private:
+    //! \cond
+
     //! Function adapter that saves the checker function result into a referenced variable
     struct checker_wrapper
     {
@@ -87,6 +98,8 @@ private:
         bool& m_Result;
     };
 
+    //! \endcond
+
 private:
     //! Attribute value extractor
     extractor m_Extractor;
@@ -94,11 +107,23 @@ private:
     checker_type m_Checker;
 
 public:
+    /*!
+     * Constructs the filter
+     * 
+     * \param name The attribute name
+     * \param checker A predicate that is applied to the attribute value
+     */
     flt_attr(string_type const& name, checker_type const& checker)
         : m_Extractor(name), m_Checker(checker)
     {
     }
 
+    /*!
+     * Applies the filter
+     * 
+     * \param values A set of attribute values of a single log record
+     * \return true if the log record passed the filter, false otherwise
+     */
     bool operator() (values_view_type const& values) const
     {
         bool result = false;
@@ -109,6 +134,8 @@ public:
         return result;
     }
 };
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 namespace aux {
 
@@ -334,16 +361,40 @@ namespace aux {
 
 } // namespace aux
 
-//! Filter generator
+#endif // BOOST_LOG_DOXYGEN_PASS
+
+/*!
+ * The function generates an attribute placeholder in filter expressions
+ * 
+ * \param name Attribute name. Must point to a zero-terminated string, must not be NULL.
+ * \return An object that will, upon applying a corresponding operation to it, construct the filter.
+ */
 template< typename AttributeValueTypesT, typename CharT >
-inline aux::flt_attr_gen< CharT, AttributeValueTypesT > attr(const CharT* name)
+inline
+#ifndef BOOST_LOG_DOXYGEN_PASS
+aux::flt_attr_gen< CharT, AttributeValueTypesT >
+#else
+implementation_defined
+#endif
+attr(const CharT* name)
 {
     return aux::flt_attr_gen< CharT, AttributeValueTypesT >(name);
 }
 
-//! Filter generator
+/*!
+ * The function generates an attribute placeholder in filter expressions
+ * 
+ * \param name Attribute name.
+ * \return An object that will, upon applying a corresponding operation to it, construct the filter.
+ */
 template< typename AttributeValueTypesT, typename CharT >
-inline aux::flt_attr_gen< CharT, AttributeValueTypesT > attr(std::basic_string< CharT > const& name)
+inline
+#ifndef BOOST_LOG_DOXYGEN_PASS
+aux::flt_attr_gen< CharT, AttributeValueTypesT >
+#else
+implementation_defined
+#endif
+attr(std::basic_string< CharT > const& name)
 {
     return aux::flt_attr_gen< CharT, AttributeValueTypesT >(name);
 }

@@ -42,8 +42,8 @@ namespace attributes {
  * requested.
  * 
  * \internal The attribute attempts to optimize memory allocations and implements both
- *           attribute and attribute_value interfaces. However, the value can be detached from
- *           the attribute if detach_from_thread is called.
+ *           attribute and \c attribute_value interfaces. However, the value can be detached from
+ *           the attribute if \c detach_from_thread is called.
  */
 template< typename T >
 class constant :

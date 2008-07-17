@@ -47,7 +47,7 @@ namespace attributes {
  * The attribute calls a stored nullary functional object to acquire each value.
  * The result type of the functional object is the attribute value type.
  * 
- * It is not recommended to use this class directly. Use make_functor_attr convenience functions
+ * It is not recommended to use this class directly. Use \c make_functor_attr convenience functions
  * to construct the attribute instead.
  */
 template< typename R, typename T >

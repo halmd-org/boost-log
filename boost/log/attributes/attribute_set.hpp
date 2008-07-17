@@ -45,9 +45,9 @@ class basic_attribute_values_view;
  * 
  * An attribute set is an associative container with attribute name as a key and
  * pointer to the attribute as a mapped value. The container allows storing only one element for each distinct
- * key value. In most regards attribute set container provides interface similar to std::map. However, there are
- * differences in operator[] semantics and a number of optimizations with regard to iteration. Besides,
- * attribute names are stored as a read-only slim_string's instead of std::string, which is also saves memory
+ * key value. In most regards attribute set container provides interface similar to \c std::map. However, there are
+ * differences in \c operator[] semantics and a number of optimizations with regard to iteration. Besides,
+ * attribute names are stored as a read-only <tt>slim_string</tt>'s instead of \c std::string, which is also saves memory
  * and CPU time.
  */
 template< typename CharT >
@@ -92,7 +92,7 @@ private:
     struct implementation;
     friend struct implementation;
 
-    //! Reference proxy object to implement operator[]
+    //! Reference proxy object to implement \c operator[]
     class reference_proxy;
     friend class reference_proxy;
     class reference_proxy
@@ -247,13 +247,13 @@ public:
     /*!
      * Default constructor.
      * 
-     * \post empty() == true
+     * \post <tt>empty() == true</tt>
      */
     BOOST_LOG_EXPORT basic_attribute_set();
     /*!
      * Copy constructor.
      * 
-     * \post std::equal(begin(), end(), that.begin()) == true
+     * \post <tt>std::equal(begin(), end(), that.begin()) == true</tt>
      */
     BOOST_LOG_EXPORT basic_attribute_set(basic_attribute_set const& that);
     /*!
@@ -264,7 +264,7 @@ public:
     /*!
      * Assignment operator.
      * 
-     * \post std::equal(begin(), end(), that.begin()) == true
+     * \post <tt>std::equal(begin(), end(), that.begin()) == true</tt>
      */
     BOOST_LOG_EXPORT basic_attribute_set& operator= (basic_attribute_set const& that);
 
@@ -315,7 +315,7 @@ public:
      * The method finds the attribute by name.
      * 
      * \param key Attribute name.
-     * \return Iterator to the found element or end() if the attribute with such name is not found.
+     * \return Iterator to the found element or \c end() if the attribute with such name is not found.
      */
     iterator find(string_type const& key)
     {
@@ -325,7 +325,7 @@ public:
      * The method finds the attribute by name.
      * 
      * \param key Attribute name. Must not be NULL, must point to a zero-terminated string.
-     * \return Iterator to the found element or end() if the attribute with such name is not found.
+     * \return Iterator to the found element or \c end() if the attribute with such name is not found.
      */
     iterator find(const char_type* key)
     {
@@ -336,7 +336,7 @@ public:
      * The method finds the attribute by name.
      * 
      * \param key Attribute name.
-     * \return Iterator to the found element or end() if the attribute with such name is not found.
+     * \return Iterator to the found element or \c end() if the attribute with such name is not found.
      */
     const_iterator find(key_type const& key) const
     {
@@ -346,7 +346,7 @@ public:
      * The method finds the attribute by name.
      * 
      * \param key Attribute name.
-     * \return Iterator to the found element or end() if the attribute with such name is not found.
+     * \return Iterator to the found element or \c end() if the attribute with such name is not found.
      */
     const_iterator find(string_type const& key) const
     {
@@ -356,7 +356,7 @@ public:
      * The method finds the attribute by name.
      * 
      * \param key Attribute name. Must not be NULL, must point to a zero-terminated string.
-     * \return Iterator to the found element or end() if the attribute with such name is not found.
+     * \return Iterator to the found element or \c end() if the attribute with such name is not found.
      */
     const_iterator find(const char_type* key) const
     {
@@ -390,13 +390,13 @@ public:
 
     /*!
      * Combined lookup/insertion operator. The operator semantics depends on the further usage of the returned reference.
-     * * If the reference is used as an assignment target, the assignment expression is equivalent to element insertion,
-     *   where the element is composed of the second argument of the operator[] as a key and the second argument of assignment
-     *   as a mapped value.
-     * * If the returned reference is used in context where a conversion to the mapped type is required,
-     *   the result of the conversion is equivalent to the mapped value found with the second argument of the operator[] as a key,
-     *   if such an element exists in the container, or a default-constructed mapped value, if an element does not exist in the
-     *   container.
+     * \li If the reference is used as an assignment target, the assignment expression is equivalent to element insertion,
+     *     where the element is composed of the second argument of the \c operator[] as a key and the second argument of assignment
+     *     as a mapped value.
+     * \li If the returned reference is used in context where a conversion to the mapped type is required,
+     *     the result of the conversion is equivalent to the mapped value found with the second argument of the \c operator[] as a key,
+     *     if such an element exists in the container, or a default-constructed mapped value, if an element does not exist in the
+     *     container.
      * 
      * \param key Attribute name.
      * \return A smart reference object of unspecified type.
@@ -407,13 +407,13 @@ public:
     }
     /*!
      * Combined lookup/insertion operator. The operator semantics depends on the further usage of the returned reference.
-     * * If the reference is used as an assignment target, the assignment expression is equivalent to element insertion,
-     *   where the element is composed of the second argument of the operator[] as a key and the second argument of assignment
-     *   as a mapped value.
-     * * If the returned reference is used in context where a conversion to the mapped type is required,
-     *   the result of the conversion is equivalent to the mapped value found with the second argument of the operator[] as a key,
-     *   if such an element exists in the container, or a default-constructed mapped value, if an element does not exist in the
-     *   container.
+     * \li If the reference is used as an assignment target, the assignment expression is equivalent to element insertion,
+     *     where the element is composed of the second argument of the \c operator[] as a key and the second argument of assignment
+     *     as a mapped value.
+     * \li If the returned reference is used in context where a conversion to the mapped type is required,
+     *     the result of the conversion is equivalent to the mapped value found with the second argument of the \c operator[] as a key,
+     *     if such an element exists in the container, or a default-constructed mapped value, if an element does not exist in the
+     *     container.
      * 
      * \param key Attribute name.
      * \return A smart reference object of unspecified type.
@@ -424,13 +424,13 @@ public:
     }
     /*!
      * Combined lookup/insertion operator. The operator semantics depends on the further usage of the returned reference.
-     * * If the reference is used as an assignment target, the assignment expression is equivalent to element insertion,
-     *   where the element is composed of the second argument of the operator[] as a key and the second argument of assignment
-     *   as a mapped value.
-     * * If the returned reference is used in context where a conversion to the mapped type is required,
-     *   the result of the conversion is equivalent to the mapped value found with the second argument of the operator[] as a key,
-     *   if such an element exists in the container, or a default-constructed mapped value, if an element does not exist in the
-     *   container.
+     * \li If the reference is used as an assignment target, the assignment expression is equivalent to element insertion,
+     *     where the element is composed of the second argument of the \c operator[] as a key and the second argument of assignment
+     *     as a mapped value.
+     * \li If the returned reference is used in context where a conversion to the mapped type is required,
+     *     the result of the conversion is equivalent to the mapped value found with the second argument of the \c operator[] as a key,
+     *     if such an element exists in the container, or a default-constructed mapped value, if an element does not exist in the
+     *     container.
      * 
      * \param key Attribute name. Must not be NULL, must point to a zero-terminated string.
      * \return A smart reference object of unspecified type.
@@ -526,7 +526,7 @@ public:
      * 
      * \param begin A forward iterator that points to the first element to be inserted.
      * \param end A forward iterator that points to the after-the-last element to be inserted.
-     * \param out An outlut iterator that receives iterators to the inserted elements
+     * \param out An output iterator that receives iterators to the inserted elements
      */
     template< typename FwdIteratorT, typename OutputIteratorT >
     void insert(FwdIteratorT begin, FwdIteratorT end, OutputIteratorT out)
@@ -564,7 +564,7 @@ public:
     /*!
      * The method removes all elements from the container
      * 
-     * \post empty() == true
+     * \post <tt>empty() == true</tt>
      */
     BOOST_LOG_EXPORT void clear();
 

@@ -44,7 +44,7 @@ namespace BOOST_LOG_NAMESPACE {
  * Attribute values view is a read-only associative container with attribute name as a key and
  * a pointer to attribute value object as a mapped type. This is a collection of elements with unique
  * keys, that is, there can be only one attribute value with a given name in a view. With respect to
- * read-only capabilities, attribute values view is close to std::map.
+ * read-only capabilities, attribute values view is close to \c std::map.
  * 
  * An instance of attribute values view can be constructed from three attribute sets and attempts to
  * accomodate values all attributes from the sets. The situation when a same-named attribute is found
@@ -216,7 +216,7 @@ public:
      * Copy constructor.
      * 
      * \pre The original view is frozen.
-     * \post The constructed view is frozen, std::equal(begin(), end(), that.begin()) == true
+     * \post The constructed view is frozen, <tt>std::equal(begin(), end(), that.begin()) == true</tt>
      */
     BOOST_LOG_EXPORT basic_attribute_values_view(basic_attribute_values_view const& that);
     /*!
@@ -228,7 +228,7 @@ public:
      * Assignment operator
      * 
      * \pre The original view is frozen.
-     * \post The resulting view is frozen, std::equal(begin(), end(), that.begin()) == true
+     * \post The resulting view is frozen, <tt>std::equal(begin(), end(), that.begin()) == true</tt>
      */
     BOOST_LOG_EXPORT basic_attribute_values_view& operator= (basic_attribute_values_view const& that);
 
@@ -264,7 +264,7 @@ public:
      * The method finds the attribute value by name.
      * 
      * \param key Attribute name.
-     * \return Iterator to the found element or end() if the attribute with such name is not found.
+     * \return Iterator to the found element or \c end() if the attribute with such name is not found.
      */
     const_iterator find(key_type const& key) const
     {
@@ -274,7 +274,7 @@ public:
      * The method finds the attribute value by name.
      * 
      * \param key Attribute name.
-     * \return Iterator to the found element or end() if the attribute with such name is not found.
+     * \return Iterator to the found element or \c end() if the attribute with such name is not found.
      */
     const_iterator find(string_type const& key) const
     {
@@ -284,7 +284,7 @@ public:
      * The method finds the attribute value by name.
      * 
      * \param key Attribute name. Must not be NULL, must point to a zero-terminated string.
-     * \return Iterator to the found element or end() if the attribute with such name is not found.
+     * \return Iterator to the found element or \c end() if the attribute with such name is not found.
      */
     const_iterator find(const char_type* key) const
     {

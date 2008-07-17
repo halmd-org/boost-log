@@ -67,8 +67,8 @@ namespace aux {
 /*!
  * \brief The structure contains all information about a named scope
  * 
- * The named scope entries are stored as elements of basic_named_scope_list container, which
- * in turn can be acquired either from the basic_named_scope attribute value or from a thread-local
+ * The named scope entries are stored as elements of \c basic_named_scope_list container, which
+ * in turn can be acquired either from the \c basic_named_scope attribute value or from a thread-local
  * instance.
  */
 template< typename CharT >
@@ -96,7 +96,7 @@ struct basic_named_scope_entry
     /*!
      * Initializing constructor
      * 
-     * \post scope_name == sn && file_name == fn && line == ln
+     * \post <tt>scope_name == sn && file_name == fn && line == ln</tt>
      * \throw Nothing.
      */
     template< typename T1, unsigned int N1, typename T2, unsigned int N2 >
@@ -253,13 +253,13 @@ public:
     /*!
      * Default constructor
      * 
-     * \post empty() == true
+     * \post <tt>empty() == true</tt>
      */
     basic_named_scope_list() : m_Size(0), m_fNeedToDeallocate(false) {}
     /*!
      * Copy constructor
      * 
-     * \post std::equal(begin(), end(), that.begin()) == true
+     * \post <tt>std::equal(begin(), end(), that.begin()) == true</tt>
      */
     BOOST_LOG_EXPORT basic_named_scope_list(basic_named_scope_list const& that);
     /*!
@@ -270,7 +270,7 @@ public:
     /*!
      * Assignment operator
      * 
-     * \post std::equal(begin(), end(), that.begin()) == true
+     * \post <tt>std::equal(begin(), end(), that.begin()) == true</tt>
      */
     basic_named_scope_list& operator= (basic_named_scope_list const& that)
     {
@@ -348,11 +348,11 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (
  * The basic_named_scope attribute is essentially a hook to the thread-specific instance of
  * scope list. This means that the attribute will generate different values if get_value is
  * called in different threads. The attribute generates value with stored type
- * basic_named_scope_list< CharT >.
+ * <tt>basic_named_scope_list< CharT ></tt>.
  * 
  * The attribute class can also be used to gain access to the scope stack instance, e.g. to
  * get its copy or to push or pop a scope entry. However, it is highly not recommended to
- * maintain scope list manually. Use BOOST_LOG_NAMED_SCOPE or BOOST_LOG_FUNCTION macros instead.
+ * maintain scope list manually. Use \c BOOST_LOG_NAMED_SCOPE or \c BOOST_LOG_FUNCTION macros instead.
  */
 template< typename CharT >
 class BOOST_LOG_EXPORT basic_named_scope :
@@ -430,8 +430,8 @@ public:
      *  \return The current thread's list of scopes
      * 
      *  \note The returned reference is only valid until the current thread ends. The scopes in the
-     *        returned container may change if the execution scope is changed (i.e. either push_scope
-     *        or pop_scope is called). User has to copy the stack if he wants to keep it intact regardless
+     *        returned container may change if the execution scope is changed (i.e. either \c push_scope
+     *        or \c pop_scope is called). User has to copy the stack if he wants to keep it intact regardless
      *        of the execution scope.
      */
     static scope_stack const& get_scopes();

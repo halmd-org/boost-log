@@ -53,7 +53,7 @@ namespace BOOST_LOG_NAMESPACE {
  * For example, an attribute or its values may use thread-specific data, which is global and shared
  * between all the instances of the attribute/value. Passing such an attribute value to another thread
  * would be a disaster. To solve this the library defines an additional method for attribute values,
- * namely detach_from_thread. This method is called for all attribute values that are passed to
+ * namely \c detach_from_thread. This method is called for all attribute values that are passed to
  * another thread. The method is called only once per attribute value, on the first thread change.
  * It is assumed that the value does not depend on any thread-specific data after this call.
  */

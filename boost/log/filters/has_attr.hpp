@@ -33,7 +33,11 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace filters {
 
-//! A filter that detects if there is an attribute with given name and type in the complete attribute view
+/*!
+ * \brief A filter that detects if there is an attribute with given name and type in the attribute values view
+ * 
+ * The filter can be instantiated either with one particular attribute value type or with a sequence of types.
+ */
 template< typename CharT, typename AttributeValueTypesT = void >
 class flt_has_attr :
     public basic_filter< CharT, flt_has_attr< CharT, AttributeValueTypesT > >
@@ -75,8 +79,19 @@ private:
     extractor m_Extractor;
 
 public:
+    /*!
+     * Constructs the filter
+     * 
+     * \param name Attribute name
+     */
     explicit flt_has_attr(string_type const& name) : m_Extractor(name) {}
 
+    /*!
+     * Applies the filter
+     * 
+     * \param values A set of attribute values of a single log record
+     * \return true if the log record contains the sought attribute value, false otherwise
+     */
     bool operator() (values_view_type const& values) const
     {
         bool received = false;
@@ -86,7 +101,11 @@ public:
     }
 };
 
-//! A filter that detects if there is an attribute with given name in the complete attribute view
+/*!
+ * \brief A filter that detects if there is an attribute with given name in the complete attribute view
+ * 
+ * The specialization is used when an attribute value of any type is sought.
+ */
 template< typename CharT >
 class flt_has_attr< CharT, void > :
     public basic_filter< CharT, flt_has_attr< CharT, void > >
@@ -108,8 +127,19 @@ private:
     string_type m_AttributeName;
 
 public:
+    /*!
+     * Constructs the filter
+     * 
+     * \param name Attribute name
+     */
     explicit flt_has_attr(string_type const& name) : m_AttributeName(name) {}
 
+    /*!
+     * Applies the filter
+     * 
+     * \param values A set of attribute values of a single log record
+     * \return true if the log record contains the sought attribute value, false otherwise
+     */
     bool operator() (values_view_type const& values) const
     {
         return (values.find(m_AttributeName) != values.end());
@@ -118,13 +148,17 @@ public:
 
 #ifdef BOOST_LOG_USE_CHAR
 
-//! Filter generator
+/*!
+ * Filter generator
+ */
 inline flt_has_attr< char > has_attr(std::basic_string< char > const& name)
 {
     return flt_has_attr< char >(name);
 }
 
-//! Filter generator
+/*!
+ * Filter generator
+ */
 template< typename AttributeValueTypesT >
 inline flt_has_attr< char, AttributeValueTypesT > has_attr(std::basic_string< char > const& name)
 {
@@ -135,13 +169,17 @@ inline flt_has_attr< char, AttributeValueTypesT > has_attr(std::basic_string< ch
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 
-//! Filter generator
+/*!
+ * Filter generator
+ */
 inline flt_has_attr< wchar_t > has_attr(std::basic_string< wchar_t > const& name)
 {
     return flt_has_attr< wchar_t >(name);
 }
 
-//! Filter generator
+/*!
+ * Filter generator
+ */
 template< typename AttributeValueTypesT >
 inline flt_has_attr< wchar_t, AttributeValueTypesT > has_attr(std::basic_string< wchar_t > const& name)
 {
