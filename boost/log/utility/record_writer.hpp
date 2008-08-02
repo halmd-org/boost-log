@@ -30,15 +30,28 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-//! A simple interface to extend stream's awareness of the data flow
+/*!
+ * \brief A simple interface to extend stream's awareness of the data flow
+ * 
+ * The stream class should derive from this class in order to be able to receive
+ * notifications about logging record boundaries in the written data flow.
+ * 
+ * This interface is used by the \c basic_text_ostream_backend sink backend.
+ */
 struct BOOST_LOG_EXPORT record_writer
 {
-    //! Destructor
+    /*!
+     * Destructor
+     */
     virtual ~record_writer() {}
 
-    //! The method is called before any data that belong to the record is written to the stream
+    /*!
+     * The method is called before any data that belong to the record is written to the stream
+     */
     virtual void on_start_record() {}
-    //! The method is called after all data of the record is written to the stream
+    /*!
+     * The method is called after all data of the record is written to the stream
+     */
     virtual void on_end_record() {}
 };
 

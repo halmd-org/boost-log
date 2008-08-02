@@ -61,7 +61,18 @@ namespace aux {
 
 } // namespace aux
 
-//! A dynamic type dispatcher implementation
+/*!
+ * \brief A dynamic type dispatcher
+ * 
+ * The type dispatcher can be used to pass objects of arbitrary types from one
+ * component to another. With regard to the library, the type dispatcher
+ * can be used to extract attribute values.
+ * 
+ * The dynamic type dispatcher can be initialized in run time and, therefore,
+ * can support different types, depending on runtime conditions. Each
+ * supported type is associated with a functional object that will be called
+ * when an object of the type is dispatched.
+ */
 class dynamic_type_dispatcher :
     public type_dispatcher
 {
@@ -71,7 +82,11 @@ private:
     dispatching_map m_DispatchingMap;
 
 public:
-    //! The method allows to register a new type to dispatch
+    /*!
+     * The method registers a new type
+     * 
+     * \param fun Function object that will be associated with the type \c T
+     */
     template< typename T, typename FunT >
     void register_type(FunT const& fun)
     {
@@ -82,14 +97,16 @@ public:
         m_DispatchingMap[wrapper] = p;
     }
 
-    //! The method returns the number of registered types
+    /*!
+     * The method returns the number of registered types
+     */
     dispatching_map::size_type registered_types_count() const
     {
         return m_DispatchingMap.size();
     }
 
 private:
-    //! The get_visitor method implementation
+#ifndef BOOST_LOG_DOXYGEN_PASS
     void* get_visitor(std::type_info const& type)
     {
         type_info_wrapper wrapper = { &type };
@@ -99,6 +116,7 @@ private:
         else
             return NULL;
     }
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 } // namespace log

@@ -47,7 +47,7 @@ namespace BOOST_LOG_NAMESPACE {
  * read-only capabilities, attribute values view is close to \c std::map.
  * 
  * An instance of attribute values view can be constructed from three attribute sets and attempts to
- * accomodate values all attributes from the sets. The situation when a same-named attribute is found
+ * accommodate values all attributes from the sets. The situation when a same-named attribute is found
  * in more than one attribute is possible. This problem is solved on construction of the view: the three
  * attribute sets have different priorities when it comes to solving conflicts.
  * 

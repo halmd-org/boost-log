@@ -47,6 +47,7 @@ namespace aux {
 
 } // namespace aux
 
+//! Scoped attribute guard type
 typedef aux::attribute_scope_guard const& scoped_attribute;
 
 namespace aux {
@@ -109,12 +110,22 @@ namespace aux {
 } // namespace aux
 
 //  Generator helper functions
+/*!
+ * Registers an attribute in the logger
+ * 
+ * \param l Logger to register the attribute in
+ * \param name Attribute name
+ * \param attr Pointer to the attribute. Must not be NULL.
+ * \return An unspecified guard object that may be used to initialize \c scoped_attribute variable.
+ */
 template< typename LoggerT >
 inline aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attribute(
     LoggerT& l, typename LoggerT::string_type const& name, shared_ptr< attribute > const& attr)
 {
     return aux::scoped_logger_attribute< LoggerT >(l, name, attr);
 }
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 template< typename LoggerT >
 inline aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attribute(
@@ -139,6 +150,10 @@ inline aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attribute(
         l, name, shared_ptr< attribute >(boost::addressof(attr), empty_deleter()));
 }
 
+#endif // BOOST_LOG_DOXYGEN_PASS
+
+//! \cond
+
 #define BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR_INTERNAL(logger, attr_name, attr_type, attr_ctor_args, attr_var_name, sentry_var_name)\
     attr_type attr_var_name(BOOST_PP_SEQ_ENUM(attr_ctor_args));\
     ::boost::log::scoped_attribute sentry_var_name =\
@@ -150,6 +165,8 @@ inline aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attribute(
     ::boost::log::scoped_attribute sentry_var_name =\
         ::boost::log::add_scoped_logger_attribute(logger, attr_name, attr_var_name);\
     BOOST_LOG_NO_UNUSED_WARNINGS(sentry_var_name)
+
+//! \endcond
 
 //! The macro sets a scoped logger-wide attribute with constructor arguments in a more compact way
 #define BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR(logger, attr_name, attr_type, attr_ctor_args)\
@@ -229,12 +246,21 @@ namespace aux {
 } // namespace aux
 
 //  Generator helper functions
+/*!
+ * Registers a thread-specific attribute
+ * 
+ * \param name Attribute name
+ * \param attr Pointer to the attribute. Must not be NULL.
+ * \return An unspecified guard object that may be used to initialize \c scoped_attribute variable.
+ */
 template< typename CharT >
 inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
     std::basic_string< CharT > const& name, shared_ptr< attribute > const& attr)
 {
     return aux::scoped_thread_attribute< CharT >(name, attr);
 }
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 template< typename CharT >
 inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
@@ -259,6 +285,10 @@ inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
         name, shared_ptr< attribute >(boost::addressof(attr), empty_deleter()));
 }
 
+#endif // BOOST_LOG_DOXYGEN_PASS
+
+//! \cond
+
 #define BOOST_LOG_SCOPED_THREAD_ATTR_CTOR_INTERNAL(attr_name, attr_type, attr_ctor_args, attr_var_name, sentry_var_name)\
     attr_type attr_var_name(BOOST_PP_SEQ_ENUM(attr_ctor_args));\
     ::boost::log::scoped_attribute sentry_var_name =\
@@ -270,6 +300,8 @@ inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
     ::boost::log::scoped_attribute sentry_var_name =\
         ::boost::log::add_scoped_thread_attribute(attr_name, attr_var_name);\
     BOOST_LOG_NO_UNUSED_WARNINGS(sentry_var_name)
+
+//! \endcond
 
 //! The macro sets a scoped thread-wide attribute with constructor arguments in a more compact way
 #define BOOST_LOG_SCOPED_THREAD_ATTR_CTOR(attr_name, attr_type, attr_ctor_args)\

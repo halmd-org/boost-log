@@ -97,20 +97,47 @@ struct dispatching_map_order
 
 } // namespace aux
 
-//! A static type dispatcher implementation
+/*!
+ * \brief A static type dispatcher class
+ * 
+ * The type dispatcher can be used to pass objects of arbitrary types from one
+ * component to another. With regard to the library, the type dispatcher
+ * can be used to extract attribute values.
+ * 
+ * Static type dispatchers allow to specify set of supported types at compile
+ * time. The class is parametrized with the following template parameters:
+ * 
+ * \li \c TypeSequenceT - an MPL type sequence of types that need to be supported
+ *     by the dispatcher
+ * \li \c VisitorGenT - an MPL unary metafunction class that will be used to
+ *     generate concrete visitors. The metafunction will be applied to each
+ *     type in the \c TypeSequenceT type sequence.
+ * \li \c RootT - the ultimate base class of the dispatcher
+ * 
+ * Users can either derive their classes from the dispatcher and override
+ * \c visit methods for all the supported types, or specify in the \c VisitorGenT
+ * template parameter a custom unary metafunction class that will generate
+ * visitors for all supported types (each generated visitor must derive from
+ * the appropriate \c type_visitor instance in this case). Users can also
+ * specify a custom base class for the dispatcher in the \c RootT template
+ * parameter (the base class, however, must derive from the \c type_dispatcher
+ * interface).
+ */
 template<
     typename TypeSequenceT,
     typename VisitorGenT = mpl::quote1< type_visitor >,
     typename RootT = type_dispatcher
 >
-class static_type_dispatcher :
-    public mpl::inherit_linearly<
+class static_type_dispatcher
+#ifndef BOOST_LOG_DOXYGEN_PASS
+    : public mpl::inherit_linearly<
         TypeSequenceT,
         // Usage of this class instead of mpl::inherit provides substantial improvement in compilation time,
         // binary size and compiler memory footprint on some compilers (for instance, ICL)
         aux::inherit_visitors< typename mpl::lambda< VisitorGenT >::type >,
         aux::static_type_dispatcher_base< RootT >
     >::type
+#endif // BOOST_LOG_DOXYGEN_PASS
 {
     // The static type dispatcher must eventually derive from the type_dispatcher interface class
     BOOST_MPL_ASSERT((is_base_of< type_dispatcher, RootT >));
@@ -126,6 +153,8 @@ public:
     typedef TypeSequenceT supported_types;
 
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
     //! The dispatching map
     typedef array<
         std::pair< type_info_wrapper, std::ptrdiff_t >,
@@ -152,8 +181,12 @@ private:
     };
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
+#endif // BOOST_LOG_DOXYGEN_PASS
+
 public:
-    //! Constructor
+    /*!
+     * Default constructor. Initializes the dispatcher internals.
+     */
     static_type_dispatcher()
     {
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -166,6 +199,8 @@ public:
     }
 
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
     using base_type::init_visitor;
 
     //! The get_visitor method implementation
@@ -210,6 +245,8 @@ private:
         static dispatching_map instance;
         return instance;
     }
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 } // namespace log

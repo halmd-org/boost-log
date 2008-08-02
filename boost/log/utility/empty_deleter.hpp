@@ -35,7 +35,11 @@ namespace BOOST_LOG_NAMESPACE {
 //! A function object that does nothing and can be used as an empty deleter for shared_ptr
 struct empty_deleter
 {
+    //! Function object result type
     typedef void result_type;
+    /*!
+     * Does nothing
+     */
     void operator() (const volatile void*) const {}
 };
 

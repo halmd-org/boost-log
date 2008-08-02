@@ -8,7 +8,7 @@
  * at http://www.boost.org/libs/log/doc/log.html.
  */
 /*!
- * \file   formatters/attr.hpp
+ * \file
  * \author Andrey Semashev
  * \date   22.04.2007
  * 
@@ -36,7 +36,15 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace formatters {
 
-//! Abstract type attribute formatter
+/*!
+ * \brief Generic attribute value formatter
+ * 
+ * The \c fmt_attr formatter attempts to convert the attribute value to a string by
+ * putting it into a stream. The final representation of the value is totally defined by the
+ * \c operator<< overload implementation.
+ * 
+ * The formatter can either accept a single attribute value type or a sequence of types.
+ */
 template< typename CharT, typename AttributeValueTypesT >
 class fmt_attr :
     public basic_formatter< CharT, fmt_attr< CharT, AttributeValueTypesT > >
@@ -75,11 +83,22 @@ private:
     attribute_value_extractor< char_type, AttributeValueTypesT > m_Extractor;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor
+     * 
+     * \param name Attribute name
+     */
     explicit fmt_attr(string_type const& name) : m_Extractor(name) {}
 
-    //! Output stream operator
-    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const&) const
+    /*!
+     * Formatting operator. Puts the attribute with the specified on construction name from
+     * \a attrs into the \a strm stream.
+     * 
+     * \param strm A reference to the stream, where the final text of the logging record is composed
+     * \param attrs A set of attribute values that are associated with the logging record
+     * \param msg The logging record message
+     */
+    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
         ostream_op op(strm);
         m_Extractor(attrs, op);
@@ -88,7 +107,9 @@ public:
 
 #ifdef BOOST_LOG_USE_CHAR
 
-//! Formatter generator
+/*!
+ * Formatter generator. By default the formatter will support all standard types.
+ */
 inline fmt_attr<
     char,
     make_default_attribute_types< char >::type
@@ -96,7 +117,9 @@ inline fmt_attr<
 {
     return fmt_attr< char, make_default_attribute_types< char >::type >(name);
 }
-//! Formatter generator with ability to specify an exact attribute value type(s)
+/*!
+ * Formatter generator with ability to specify an exact attribute value type(s)
+ */
 template< typename AttributeValueTypesT >
 inline fmt_attr<
     char,
@@ -110,7 +133,9 @@ inline fmt_attr<
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 
-//! Formatter generator
+/*!
+ * Formatter generator. By default the formatter will support all standard types.
+ */
 inline fmt_attr<
     wchar_t,
     make_default_attribute_types< wchar_t >::type
@@ -119,7 +144,9 @@ inline fmt_attr<
     return fmt_attr< wchar_t, make_default_attribute_types< wchar_t >::type >(name);
 }
 
-//! Formatter generator with ability to specify an exact attribute value type(s)
+/*!
+ * Formatter generator with ability to specify an exact attribute value type(s)
+ */
 template< typename AttributeValueTypesT >
 inline fmt_attr<
     wchar_t,
@@ -132,7 +159,15 @@ inline fmt_attr<
 #endif
 
 
-//! Abstract type attribute formatter with format specifier
+/*!
+ * \brief Generic attribute value formatter
+ * 
+ * The \c fmt_attr_formatted formatter converts the attribute value to a string by
+ * passing it to a Boost.Format formatter. The formatter is initialized with a
+ * format string that may specify the exact representation of the formatted data.
+ * 
+ * The formatter can either accept a single attribute value type or a sequence of types.
+ */
 template< typename CharT, typename AttributeValueTypesT >
 class fmt_attr_formatted :
     public basic_formatter< CharT, fmt_attr_formatted< CharT, AttributeValueTypesT > >
@@ -175,11 +210,24 @@ private:
     mutable format_type m_Formatter;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor with attribute name and format string initialization
+     * 
+     * \param name Attribute name
+     * \param fmt Format string. Must be compatible with Boost.Format and contain a single placeholder.
+     *        The placeholder must be compatible with all attribute value types specified in \c AttributeValueTypesT
+     */
     explicit fmt_attr_formatted(string_type const& name, string_type const& fmt) : m_Extractor(name), m_Formatter(fmt) {}
 
-    //! Output stream operator
-    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const&) const
+    /*!
+     * Formatting operator. Formats the attribute with the specified on construction name from
+     * \a attrs and puts the result into the \a strm stream.
+     * 
+     * \param strm A reference to the stream, where the final text of the logging record is composed
+     * \param attrs A set of attribute values that are associated with the logging record
+     * \param msg The logging record message
+     */
+    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
         log::aux::cleanup_guard< format_type > _(m_Formatter);
         format_op op(m_Formatter);
@@ -190,7 +238,9 @@ public:
 
 #ifdef BOOST_LOG_USE_CHAR
 
-//! Formatter generator
+/*!
+ * Formatter generator. By default the formatter will support all standard types.
+ */
 inline fmt_attr_formatted<
     char,
     make_default_attribute_types< char >::type
@@ -198,7 +248,10 @@ inline fmt_attr_formatted<
 {
     return fmt_attr_formatted< char, make_default_attribute_types< char >::type >(name, fmt);
 }
-//! Formatter generator with ability to specify an exact attribute value type(s)
+
+/*!
+ * Formatter generator with ability to specify an exact attribute value type(s)
+ */
 template< typename AttributeValueTypesT >
 inline fmt_attr_formatted<
     char,
@@ -212,7 +265,9 @@ inline fmt_attr_formatted<
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 
-//! Formatter generator
+/*!
+ * Formatter generator. By default the formatter will support all standard types.
+ */
 inline fmt_attr_formatted<
     wchar_t,
     make_default_attribute_types< wchar_t >::type
@@ -221,7 +276,9 @@ inline fmt_attr_formatted<
     return fmt_attr_formatted< wchar_t, make_default_attribute_types< wchar_t >::type >(name, fmt);
 }
 
-//! Formatter generator with ability to specify an exact attribute value type(s)
+/*!
+ * Formatter generator with ability to specify an exact attribute value type(s)
+ */
 template< typename AttributeValueTypesT >
 inline fmt_attr_formatted<
     wchar_t,

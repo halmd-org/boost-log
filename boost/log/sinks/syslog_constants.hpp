@@ -43,7 +43,11 @@ namespace sinks {
 namespace syslog {
 
     struct options_tag;
+    //! A tagged integal type that represents set of option flags for the syslog API initialization
     typedef log::aux::tagged_integer< int, options_tag > options_t;
+    /*!
+     * The function constructs options from an integer
+     */
     inline options_t make_options(int opt)
     {
         options_t options = { opt };
@@ -51,7 +55,11 @@ namespace syslog {
     }
 
     struct level_tag;
+    //! A tagged integal type that represents log record level for the syslog API
     typedef log::aux::tagged_integer< int, level_tag > level_t;
+    /*!
+     * The function constructs log record level from an integer
+     */
     inline level_t make_level(int lev)
     {
         level_t level = { lev };
@@ -59,7 +67,11 @@ namespace syslog {
     }
 
     struct facility_tag;
+    //! A tagged integal type that represents log source facility for the syslog API
     typedef log::aux::tagged_integer< int, facility_tag > facility_t;
+    /*!
+     * The function constructs log source facility from an integer
+     */
     inline facility_t make_facility(int fac)
     {
         facility_t facility = { fac };
@@ -67,35 +79,35 @@ namespace syslog {
     }
 
     //  Syslog initialization options
-    BOOST_LOG_EXPORT extern const options_t console_fallback;       // LOG_CONS
-    BOOST_LOG_EXPORT extern const options_t no_delay;               // LOG_NDELAY
-    BOOST_LOG_EXPORT extern const options_t no_wait;                // LOG_NOWAIT
-    BOOST_LOG_EXPORT extern const options_t print_stderr;           // LOG_PERROR
-    BOOST_LOG_EXPORT extern const options_t log_pid;                // LOG_PID
+    BOOST_LOG_EXPORT extern const options_t console_fallback;       //!< Equivalent to LOG_CONS in syslog API
+    BOOST_LOG_EXPORT extern const options_t no_delay;               //!< Equivalent to LOG_NDELAY in syslog API
+    BOOST_LOG_EXPORT extern const options_t no_wait;                //!< Equivalent to LOG_NOWAIT in syslog API
+    BOOST_LOG_EXPORT extern const options_t print_stderr;           //!< Equivalent to LOG_PERROR in syslog API
+    BOOST_LOG_EXPORT extern const options_t log_pid;                //!< Equivalent to LOG_PID in syslog API
 
     //  Syslog record levels
-    BOOST_LOG_EXPORT extern const level_t emergency;                // LOG_EMERG
-    BOOST_LOG_EXPORT extern const level_t alert;                    // LOG_ALERT
-    BOOST_LOG_EXPORT extern const level_t critical;                 // LOG_CRIT
-    BOOST_LOG_EXPORT extern const level_t error;                    // LOG_ERROR
-    BOOST_LOG_EXPORT extern const level_t warning;                  // LOG_WARNING
-    BOOST_LOG_EXPORT extern const level_t notice;                   // LOG_NOTICE
-    BOOST_LOG_EXPORT extern const level_t info;                     // LOG_INFO
-    BOOST_LOG_EXPORT extern const level_t debug;                    // LOG_DEBUG
+    BOOST_LOG_EXPORT extern const level_t emergency;                //!< Equivalent to LOG_EMERG in syslog API
+    BOOST_LOG_EXPORT extern const level_t alert;                    //!< Equivalent to LOG_ALERT in syslog API
+    BOOST_LOG_EXPORT extern const level_t critical;                 //!< Equivalent to LOG_CRIT in syslog API
+    BOOST_LOG_EXPORT extern const level_t error;                    //!< Equivalent to LOG_ERROR in syslog API
+    BOOST_LOG_EXPORT extern const level_t warning;                  //!< Equivalent to LOG_WARNING in syslog API
+    BOOST_LOG_EXPORT extern const level_t notice;                   //!< Equivalent to LOG_NOTICE in syslog API
+    BOOST_LOG_EXPORT extern const level_t info;                     //!< Equivalent to LOG_INFO in syslog API
+    BOOST_LOG_EXPORT extern const level_t debug;                    //!< Equivalent to LOG_DEBUG in syslog API
 
     //  Syslog facility codes
-    BOOST_LOG_EXPORT extern const facility_t daemon;                // LOG_DAEMON (LOG_USER if not supported)
-    BOOST_LOG_EXPORT extern const facility_t user;                  // LOG_USER
-    BOOST_LOG_EXPORT extern const facility_t mail;                  // LOG_MAIL (LOG_USER if not supported)
-    BOOST_LOG_EXPORT extern const facility_t news;                  // LOG_NEWS (LOG_USER if not supported)
-    BOOST_LOG_EXPORT extern const facility_t local0;                // LOG_LOCAL0
-    BOOST_LOG_EXPORT extern const facility_t local1;                // LOG_LOCAL1
-    BOOST_LOG_EXPORT extern const facility_t local2;                // LOG_LOCAL2
-    BOOST_LOG_EXPORT extern const facility_t local3;                // LOG_LOCAL3
-    BOOST_LOG_EXPORT extern const facility_t local4;                // LOG_LOCAL4
-    BOOST_LOG_EXPORT extern const facility_t local5;                // LOG_LOCAL5
-    BOOST_LOG_EXPORT extern const facility_t local6;                // LOG_LOCAL6
-    BOOST_LOG_EXPORT extern const facility_t local7;                // LOG_LOCAL7
+    BOOST_LOG_EXPORT extern const facility_t daemon;                //!< Equivalent to LOG_DAEMON (LOG_USER if not supported) in syslog API
+    BOOST_LOG_EXPORT extern const facility_t user;                  //!< Equivalent to LOG_USER in syslog API
+    BOOST_LOG_EXPORT extern const facility_t mail;                  //!< Equivalent to LOG_MAIL (LOG_USER if not supported) in syslog API
+    BOOST_LOG_EXPORT extern const facility_t news;                  //!< Equivalent to LOG_NEWS (LOG_USER if not supported) in syslog API
+    BOOST_LOG_EXPORT extern const facility_t local0;                //!< Equivalent to LOG_LOCAL0 in syslog API
+    BOOST_LOG_EXPORT extern const facility_t local1;                //!< Equivalent to LOG_LOCAL1 in syslog API
+    BOOST_LOG_EXPORT extern const facility_t local2;                //!< Equivalent to LOG_LOCAL2 in syslog API
+    BOOST_LOG_EXPORT extern const facility_t local3;                //!< Equivalent to LOG_LOCAL3 in syslog API
+    BOOST_LOG_EXPORT extern const facility_t local4;                //!< Equivalent to LOG_LOCAL4 in syslog API
+    BOOST_LOG_EXPORT extern const facility_t local5;                //!< Equivalent to LOG_LOCAL5 in syslog API
+    BOOST_LOG_EXPORT extern const facility_t local6;                //!< Equivalent to LOG_LOCAL6 in syslog API
+    BOOST_LOG_EXPORT extern const facility_t local7;                //!< Equivalent to LOG_LOCAL7 in syslog API
 
 } // namespace syslog
 

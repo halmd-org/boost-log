@@ -32,7 +32,9 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-//! An MPL-sequence of integral types of attributes, supported by default
+/*!
+ * An MPL-sequence of integral types of attributes, supported by default
+ */
 typedef mpl::vector<
     bool,
     char,
@@ -53,20 +55,26 @@ typedef mpl::vector<
 #endif // defined(BOOST_HAS_LONG_LONG)
 >::type integral_types;
 
-//! An MPL-sequence of FP types of attributes, supported by default
+/*!
+ * An MPL-sequence of FP types of attributes, supported by default
+ */
 typedef mpl::vector<
     float,
     double,
     long double
 >::type floating_point_types;
 
-//! An MPL-sequence of all numeric types of attributes, supported by default
+/*!
+ * An MPL-sequence of all numeric types of attributes, supported by default
+ */
 typedef mpl::joint_view<
     integral_types,
     floating_point_types
 >::type numeric_types;
 
-//! An MPL-sequence of string types of attributes, supported by default
+/*!
+ * An MPL-sequence of string types of attributes, supported by default
+ */
 template< typename CharT >
 struct basic_string_types :
     public mpl::vector<
@@ -77,14 +85,16 @@ struct basic_string_types :
 };
 
 #ifdef BOOST_LOG_USE_CHAR
-typedef basic_string_types< char > string_types;
+typedef basic_string_types< char > string_types;        //!< Convenience typedef for narrow-character string types
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_string_types< wchar_t > wstring_types;
+typedef basic_string_types< wchar_t > wstring_types;    //!< Convenience typedef for wide-character string types
 #endif
 
-//! An auxiliary type sequence maker. The sequence contains all
-//! attribute value types that are supported by the library by default.
+/*!
+ * An auxiliary type sequence maker. The sequence contains all
+ * attribute value types that are supported by the library by default.
+ */
 template< typename CharT >
 struct make_default_attribute_types :
     public mpl::joint_view<

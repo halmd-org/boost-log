@@ -104,9 +104,9 @@ inline shared_ptr< attribute > make_functor_attr(T const& fun)
 
 #endif // BOOST_NO_RESULT_OF
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 /*!
- * \overload make_functor_attr
- * 
  * The function constructs functor attribute instance with the provided functional object.
  * Use this version if your compiler fails to determine the result type of the functional object.
  * 
@@ -124,6 +124,8 @@ inline shared_ptr< attribute > make_functor_attr(T const& fun)
     typedef functor< result_type, T > functor_t;
     return boost::make_shared< functor_t >(fun);
 }
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace attributes
 

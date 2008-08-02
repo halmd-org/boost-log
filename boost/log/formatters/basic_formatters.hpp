@@ -37,15 +37,28 @@ namespace formatters {
 
 //! A base class for every formatter
 struct formatter_base {};
-//! A template metafunction to detect formatters
+
+/*!
+ * \brief A type trait to detect formatters
+ * 
+ * The \c is_formatter class is a metafunction that returns \c true if it is instantiated with
+ * a formatter type and \c false otherwise.
+ */
 template< typename T >
 struct is_formatter : public is_base_and_derived< formatter_base, T > {};
 
-//! A base class for all formatters
+/*!
+ * \brief A base class for formatters
+ * 
+ * The \c basic_formatter class defines standard types that most formatters use and
+ * have to provide in order to be valid functors. This class also enables
+ * support for the \c is_formatter type trait, which allows the formatter
+ * to take part in lambda expressions.
+ */
 template< typename CharT, typename DerivedT >
 struct basic_formatter : public formatter_base
 {
-    //! Char type
+    //! Character type
     typedef CharT char_type;
     //! String type
     typedef std::basic_string< char_type > string_type;

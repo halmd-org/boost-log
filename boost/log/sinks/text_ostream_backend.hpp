@@ -44,7 +44,12 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-//! A basic implementation of a text output stream logging sink backend
+/*!
+ * \brief An implementation of a text output stream logging sink backend
+ * 
+ * The sink backend puts formatted log records to one or more text streams.
+ * The sink supports \c record_writer interface.
+ */
 template< typename CharT >
 class BOOST_LOG_EXPORT basic_text_ostream_backend :
     public basic_formatting_sink_backend< CharT >
@@ -63,6 +68,8 @@ public:
     typedef typename base_type::stream_type stream_type;
 
 private:
+    //! \cond
+
     //! Structure with data regarding a single stream
     struct stream_info
     {
@@ -72,6 +79,8 @@ private:
     //! Type of the container that holds all aggregated streams
     typedef std::vector< stream_info > ostream_sequence;
 
+    //! \endcond
+
 private:
     //! Output stream list
     ostream_sequence m_Streams;
@@ -79,29 +88,46 @@ private:
     bool m_fAutoFlush;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor. No streams attached to the constructed backend, auto flush feature disabled.
+     */
 	basic_text_ostream_backend();
-    //! Destructor
+    /*!
+     * Destructor
+     */
     ~basic_text_ostream_backend();
 
-    //! The method adds a new stream to the sink
+    /*!
+     * The method adds a new stream to the sink.
+     * 
+     * \param strm Pointer to the stream. Must not be NULL.
+     */
     void add_stream(shared_ptr< stream_type > const& strm);
-    //! The method removes a stream from the sink
+    /*!
+     * The method removes a stream from the sink. If the stream is not attached to the sink,
+     * the method has no effect.
+     * 
+     * \param strm Pointer to the stream. Must not be NULL.
+     */
     void remove_stream(shared_ptr< stream_type > const& strm);
 
-    //! Sets the flag to automatically flush buffers after each logged line
+    /*!
+     * Sets the flag to automatically flush buffers of all attached streams after each log record
+     */
     void auto_flush(bool f = true);
 
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method writes the message to the sink
     void do_write_message(values_view_type const& attributes, string_type const& formatted_message);
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 #ifdef BOOST_LOG_USE_CHAR
-typedef basic_text_ostream_backend< char > text_ostream_backend;
+typedef basic_text_ostream_backend< char > text_ostream_backend;        //!< Convenience typedef for narrow-character logging
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_text_ostream_backend< wchar_t > wtext_ostream_backend;
+typedef basic_text_ostream_backend< wchar_t > wtext_ostream_backend;    //!< Convenience typedef for wide-character logging
 #endif
 
 } // namespace sinks

@@ -30,34 +30,55 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-//! An interface to the concrete type visitor
+/*!
+ * \brief An interface to the concrete type visitor
+ * 
+ * This interface is used by type dispatchers to consume the dispatched value.
+ */
 template< typename T >
 struct BOOST_LOG_NO_VTABLE type_visitor
 {
     //! The type, which the visitor is able to consume
     typedef T supported_type;
 
-    //! The method invokes the visitor-specific logic with the given value
+    /*!
+     * The method invokes the visitor-specific logic with the given value
+     * 
+     * \param value The dispatched value
+     */
     virtual void visit(T const& value) = 0;
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
     BOOST_MPL_AUX_LAMBDA_SUPPORT(1, type_visitor, (T))
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
-//! A type dispatcher interface
+/*!
+ * \brief A type dispatcher interface
+ * 
+ * All type dispatchers support this interface. It is used to acquire the
+ * visitor interface for the requested type.
+ */
 struct BOOST_LOG_NO_VTABLE type_dispatcher
 {
 public:
-    //! The method returns the type-specific visitor or NULL, if the type is not supported
+    /*!
+     * The method requests a type visitor for a value of type \c T
+     * 
+     * \return The type-specific visitor or NULL, if the type is not supported
+     */
     template< typename T >
-    type_visitor< T >* get_visitor(BOOST_EXPLICIT_TEMPLATE_TYPE(T))
+    type_visitor< T >* get_visitor()
     {
         return reinterpret_cast< type_visitor< T >* >(
             this->get_visitor(typeid(T)));
     }
 
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! The get_visitor method implementation
     virtual void* get_visitor(std::type_info const& type) = 0;
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 } // namespace log

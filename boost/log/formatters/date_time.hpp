@@ -68,8 +68,19 @@ namespace formatters {
 
 namespace keywords {
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
     BOOST_PARAMETER_KEYWORD(tag, format)
     BOOST_PARAMETER_KEYWORD(tag, unit_format)
+
+#else
+
+    //! The keyword for passing format specifiers to date and time fomatters
+    implementation_defined format;
+    //! The keyword for passing boundaries format specifiers to time period fomatters
+    implementation_defined unit_format;
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace keywords
 
@@ -601,7 +612,11 @@ namespace aux {
 
 } // namespace aux
 
-//! Date and time attribute formatter
+/*!
+ * \brief Date and time attribute formatter
+ * 
+ * The formatter performs formatting for all date and time related types.
+ */
 template<
     typename CharT,
     typename AttributeValueTypesT,
@@ -640,20 +655,36 @@ private:
     mutable formatter_type m_Formatter;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor
+     * 
+     * \param name Attribute name
+     */
     explicit fmt_date_time_facade(string_type const& name)
         : m_Extractor(name)
     {
     }
-    //! Constructor with date and time format specification
+    /*!
+     * Constructor with date and time format specification
+     * 
+     * \param name Attribute name
+     * \param args A set of named arguments that describe the format
+     */
     template< typename ArgsT >
     fmt_date_time_facade(string_type const& name, ArgsT const& args)
         : m_Extractor(name), m_Formatter(args)
     {
     }
 
-    //! Output stream operator
-    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const&) const
+    /*!
+     * Formatting operator. Formats the attribute with the specified on construction name from
+     * \a attrs and puts the result into the \a strm stream.
+     * 
+     * \param strm A reference to the stream, where the final text of the logging record is composed
+     * \param attrs A set of attribute values that are associated with the logging record
+     * \param msg The logging record message
+     */
+    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
         log::aux::cleanup_guard< formatter_type > _(m_Formatter);
         m_Extractor(attrs, m_Formatter);
@@ -661,6 +692,8 @@ public:
     }
 };
 
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 #ifdef BOOST_LOG_USE_CHAR
 
@@ -755,6 +788,81 @@ public:
 #   undef BOOST_LOG_ITERATION_KEYWORDS
 
 #endif // BOOST_LOG_USE_WCHAR_T
+
+#else // BOOST_LOG_DOXYGEN_PASS
+
+/*!
+ * Formatter generator with the explicitly spectfied set of supported types in the first template parameter.
+ * 
+ * \param name Attribute name
+ * \param args Optional named arguments. Supported arguments:
+ *             \li \c format - format string, must be compliant with Boost.DateTime date format string specification. Default: <tt>%%Y-%%b-%%d</tt>
+ */
+template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
+fmt_date_time_facade<
+    CharT,
+    AttributeValueTypesT,
+    implementation_defined
+> date(std::basic_string< CharT > const& name, ArgsT... const& args);
+
+/*!
+ * Formatter generator with the explicitly spectfied set of supported types in the first template parameter.
+ * 
+ * \param name Attribute name
+ * \param args Optional named arguments. Supported arguments:
+ *             \li \c format - format string, must be compliant with Boost.DateTime time format string specification. Default: <tt>%%H:%%M:%%S.%%f</tt>
+ */
+template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
+fmt_date_time_facade<
+    CharT,
+    AttributeValueTypesT,
+    implementation_defined
+> time(std::basic_string< CharT > const& name, ArgsT... const& args);
+
+/*!
+ * Formatter generator with the explicitly spectfied set of supported types in the first template parameter.
+ * 
+ * \param name Attribute name
+ * \param args Optional named arguments. Supported arguments:
+ *             \li \c format - format string, must be compliant with Boost.DateTime date and time format string specification. Default: <tt>%%Y-%%b-%%d %%H:%%M:%%S.%%f</tt>
+ */
+template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
+fmt_date_time_facade<
+    CharT,
+    AttributeValueTypesT,
+    implementation_defined
+> date_time(std::basic_string< CharT > const& name, ArgsT... const& args);
+
+/*!
+ * Formatter generator with the explicitly spectfied set of supported types in the first template parameter.
+ * 
+ * \param name Attribute name
+ * \param args Optional named arguments. Supported arguments:
+ *             \li \c format - format string, must be compliant with Boost.DateTime time format string specification. Default: <tt>%%-%%H:%%M:%%S.%%f</tt>
+ */
+template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
+fmt_date_time_facade<
+    CharT,
+    AttributeValueTypesT,
+    implementation_defined
+> time_duration(std::basic_string< CharT > const& name, ArgsT... const& args);
+
+/*!
+ * Formatter generator with the explicitly spectfied set of supported types in the first template parameter.
+ * 
+ * \param name Attribute name
+ * \param args Optional named arguments. Supported arguments:
+ *             \li \c unit_format - format string for period boundaries, must be compliant with Boost.DateTime date and time format string specification. Default: <tt>%%Y-%%b-%%d %%H:%%M:%%S.%%f</tt>
+ *             \li \c format - format string for boundaries composition, can contain placeholders <tt>%%begin%</tt>, <tt>%%end%</tt> and <tt>%%last%</tt>. Default: <tt>[%%begin% - %%last%]</tt>
+ */
+template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
+fmt_date_time_facade<
+    CharT,
+    AttributeValueTypesT,
+    implementation_defined
+> time_period(std::basic_string< CharT > const& name, ArgsT... const& args);
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace formatters
 

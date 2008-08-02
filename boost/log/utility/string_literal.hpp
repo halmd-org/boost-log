@@ -39,7 +39,17 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-//! String literals wrapper class
+/*!
+ * \brief String literal wrapper
+ * 
+ * The \c basic_string_literal is a thin wrapper around a constant string literal.
+ * It provides interface similar to STL strings, but because of read-only nature
+ * of string literals, lacks ability to modify string contents. However,
+ * \c basic_string_literal objects can be assigned to and cleared.
+ * 
+ * The main advantage of this class comparing to other string classes is that
+ * it doesn't dynamically allocate memory and therefore is fast, thin and exception safe.
+ */
 template< typename CharT, typename TraitsT = std::char_traits< CharT > >
 class basic_string_literal
     //! \cond
@@ -67,9 +77,8 @@ public:
     typedef const value_type* const_iterator;
     typedef std::reverse_iterator< const_iterator > const_reverse_iterator;
 
-private:
     //! Corresponding STL string type
-    typedef std::basic_string< value_type, traits_type > std_string_type;
+    typedef std::basic_string< value_type, traits_type > string_type;
 
 private:
     //! Pointer to the beginning of the literal
@@ -81,9 +90,19 @@ private:
     static const value_type g_EmptyString[1];
 
 public:
-    //! Constructor
+    /*!
+     * Constructor
+     * 
+     * \post <tt>empty() == true</tt>
+     */
     basic_string_literal() { clear(); }
-    //! Constructor from a string literal
+
+    /*!
+     * Constructor from a string literal
+     * 
+     * \post <tt>*this == p</tt>
+     * \param p A zero-terminated constant sequence of characters
+     */
     template< typename T, size_type LenV >
     basic_string_literal(T(&p)[LenV]
         //! \cond
@@ -93,15 +112,31 @@ public:
         : m_pStart(p), m_Len(LenV - 1)
     {
     }
-    //! Copy constructor
-    basic_string_literal(basic_string_literal const& That) : m_pStart(That.m_pStart), m_Len(That.m_Len) {}
 
-    //! Assignment
-    this_type& operator= (this_type const& That)
+    /*!
+     * Copy constructor
+     * 
+     * \post <tt>*this == that</tt>
+     * \param that Source literal to copy string from
+     */
+    basic_string_literal(basic_string_literal const& that) : m_pStart(that.m_pStart), m_Len(that.m_Len) {}
+
+    /*!
+     * Assignment operator
+     * 
+     * \post <tt>*this == that</tt>
+     * \param that Source literal to copy string from
+     */
+    this_type& operator= (this_type const& that)
     {
-        return assign(That);
+        return assign(that);
     }
-    //! Assignment from a string literal
+    /*!
+     * Assignment from a string literal
+     * 
+     * \post <tt>*this == p</tt>
+     * \param p A zero-terminated constant sequence of characters
+     */
     template< typename T, size_type LenV >
 #ifndef BOOST_LOG_DOXYGEN_PASS
     typename enable_if<
@@ -116,60 +151,117 @@ public:
         return assign(p);
     }
 
-    //! Equality comparison
-    bool operator== (this_type const& That) const
+    /*!
+     * Lexicographical comparison (equality)
+     * 
+     * \param that Comparand
+     * \return \c true if the comparand string equals to this string, \c false otherwise
+     */
+    bool operator== (this_type const& that) const
     {
-        return (compare_internal(m_pStart, m_Len, That.m_pStart, That.m_Len) == 0);
+        return (compare_internal(m_pStart, m_Len, that.m_pStart, that.m_Len) == 0);
     }
-    //! Equality comparison
-    bool operator== (const_pointer p) const
+    /*!
+     * Lexicographical comparison (equality)
+     * 
+     * \param str Comparand. Must point to a zero-terminated sequence of characters, must not be NULL.
+     * \return \c true if the comparand string equals to this string, \c false otherwise
+     */
+    bool operator== (const_pointer str) const
     {
-        return (compare_internal(m_pStart, m_Len, p, traits_type::length(p)) == 0);
+        return (compare_internal(m_pStart, m_Len, str, traits_type::length(str)) == 0);
     }
-    //! Equality comparison
-    bool operator== (std_string_type const& That) const
+    /*!
+     * Lexicographical comparison (equality)
+     * 
+     * \param that Comparand
+     * \return \c true if the comparand string equals to this string, \c false otherwise
+     */
+    bool operator== (string_type const& that) const
     {
-        return (compare_internal(m_pStart, m_Len, That.c_str(), That.size()) == 0);
-    }
-
-    //! Less ordering
-    bool operator< (this_type const& That) const
-    {
-        return (compare_internal(m_pStart, m_Len, That.m_pStart, That.m_Len) < 0);
-    }
-    //! Less ordering
-    bool operator< (const_pointer p) const
-    {
-        return (compare_internal(m_pStart, m_Len, p, traits_type::length(p)) < 0);
-    }
-    //! Less ordering
-    bool operator< (std_string_type const& That) const
-    {
-        return (compare_internal(m_pStart, m_Len, That.c_str(), That.size()) < 0);
-    }
-
-    //! Greater ordering
-    bool operator> (this_type const& That) const
-    {
-        return (compare_internal(m_pStart, m_Len, That.m_pStart, That.m_Len) > 0);
-    }
-    //! Greater ordering
-    bool operator> (const_pointer p) const
-    {
-        return (compare_internal(m_pStart, m_Len, p, traits_type::length(p)) > 0);
-    }
-    //! Greater ordering
-    bool operator> (std_string_type const& That) const
-    {
-        return (compare_internal(m_pStart, m_Len, That.c_str(), That.size()) > 0);
+        return (compare_internal(m_pStart, m_Len, that.c_str(), that.size()) == 0);
     }
 
-    //! Subscript
+    /*!
+     * Lexicographical comparison (less ordering)
+     * 
+     * \param that Comparand
+     * \return \c true if this string is less than the comparand, \c false otherwise
+     */
+    bool operator< (this_type const& that) const
+    {
+        return (compare_internal(m_pStart, m_Len, that.m_pStart, that.m_Len) < 0);
+    }
+    /*!
+     * Lexicographical comparison (less ordering)
+     * 
+     * \param str Comparand. Must point to a zero-terminated sequence of characters, must not be NULL.
+     * \return \c true if this string is less than the comparand, \c false otherwise
+     */
+    bool operator< (const_pointer str) const
+    {
+        return (compare_internal(m_pStart, m_Len, str, traits_type::length(str)) < 0);
+    }
+    /*!
+     * Lexicographical comparison (less ordering)
+     * 
+     * \param that Comparand
+     * \return \c true if this string is less than the comparand, \c false otherwise
+     */
+    bool operator< (string_type const& that) const
+    {
+        return (compare_internal(m_pStart, m_Len, that.c_str(), that.size()) < 0);
+    }
+
+    /*!
+     * Lexicographical comparison (greater ordering)
+     * 
+     * \param that Comparand
+     * \return \c true if this string is greater than the comparand, \c false otherwise
+     */
+    bool operator> (this_type const& that) const
+    {
+        return (compare_internal(m_pStart, m_Len, that.m_pStart, that.m_Len) > 0);
+    }
+    /*!
+     * Lexicographical comparison (greater ordering)
+     * 
+     * \param str Comparand. Must point to a zero-terminated sequence of characters, must not be NULL.
+     * \return \c true if this string is greater than the comparand, \c false otherwise
+     */
+    bool operator> (const_pointer str) const
+    {
+        return (compare_internal(m_pStart, m_Len, str, traits_type::length(str)) > 0);
+    }
+    /*!
+     * Lexicographical comparison (greater ordering)
+     * 
+     * \param that Comparand
+     * \return \c true if this string is greater than the comparand, \c false otherwise
+     */
+    bool operator> (string_type const& that) const
+    {
+        return (compare_internal(m_pStart, m_Len, that.c_str(), that.size()) > 0);
+    }
+
+    /*!
+     * Subscript operator
+     * 
+     * \pre <tt>i < size()</tt>
+     * \param i Requested character index
+     * \return Constant reference to the requested character
+     */
     const_reference operator[] (size_type i) const
     {
         return m_pStart[i];
     }
-    //! Checked subscript
+    /*!
+     * Checked subscript
+     * 
+     * \param i Requested character index
+     * \return Constant reference to the requested character
+     * \throw An <tt>std::exception</tt>-based exception if index \a i is out of string boundaries
+     */
     const_reference at(size_type i) const
     {
         if (i < m_Len)
@@ -178,57 +270,93 @@ public:
             boost::throw_exception(std::out_of_range("basic_string_literal::at: the index value is out of range"));
     }
 
-    //! The method returns pointer to the beginning of the literal
+    /*!
+     * \return Pointer to the beginning of the literal
+     */
     const_pointer c_str() const { return m_pStart; }
-    //! The method returns pointer to the beginning of the literal
+    /*!
+     * \return Pointer to the beginning of the literal
+     */
     const_pointer data() const { return m_pStart; }
-    //! The method returns the length of the literal
+    /*!
+     * \return Length of the literal
+     */
     size_type size() const { return m_Len; }
-    //! The method returns the length of the literal
+    /*!
+     * \return Length of the literal
+     */
     size_type length() const { return m_Len; }
 
-    //! The method checks if the literal is empty
+    /*!
+     * \return \c true if the literal is an empty string, \c false otherwise
+     */
     bool empty() const
     {
         return (m_Len == 0);
     }
 
-    //! Begin forward iterator
+    /*!
+     * \return Iterator that points to the first character of the literal
+     */
     const_iterator begin() const { return m_pStart; }
-    //! End forward iterator
+    /*!
+     * \return Iterator that points after the last character of the literal
+     */
     const_iterator end() const { return m_pStart + m_Len; }
-    //! Begin reverse iterator
+    /*!
+     * \return Reverse iterator that points to the last character of the literal
+     */
     const_reverse_iterator rbegin() const { return const_reverse_iterator(end()); }
-    //! End reverse iterator
+    /*!
+     * \return Reverse iterator that points before the first character of the literal
+     */
     const_reverse_iterator rend() const { return const_reverse_iterator(begin()); }
 
-    //! The method constructs STL string from the literal
-    std_string_type str() const
+    /*!
+     * \return STL string constructed from the literal
+     */
+    string_type str() const
     {
-        return std_string_type(m_pStart, m_Len);
+        return string_type(m_pStart, m_Len);
     }
 
-    //! The method clears the literal
+    /*!
+     * The method clears the literal
+     * 
+     * \post <tt>empty() == true</tt>
+     */
     void clear()
     {
         m_pStart = g_EmptyString;
         m_Len = 0;
     }
-    //! The method swaps two literals
-    void swap(this_type& That)
+    /*!
+     * The method swaps two literals
+     */
+    void swap(this_type& that)
     {
-        std::swap(m_pStart, That.m_pStart);
-        std::swap(m_Len, That.m_Len);
+        std::swap(m_pStart, that.m_pStart);
+        std::swap(m_Len, that.m_Len);
     }
 
-    //! Assignment
-    this_type& assign(this_type const& That)
+    /*!
+     * Assignment from another literal
+     * 
+     * \post <tt>*this == that</tt>
+     * \param that Source literal to copy string from
+     */
+    this_type& assign(this_type const& that)
     {
-        m_pStart = That.m_pStart;
-        m_Len = That.m_Len;
+        m_pStart = that.m_pStart;
+        m_Len = that.m_Len;
         return *this;
     }
-    //! Assignment from a string literal
+    /*!
+     * Assignment from another literal
+     * 
+     * \post <tt>*this == p</tt>
+     * \param p A zero-terminated constant sequence of characters
+     */
     template< typename T, size_type LenV >
 #ifndef BOOST_LOG_DOXYGEN_PASS
     typename enable_if<
@@ -245,54 +373,118 @@ public:
         return *this;
     }
 
-    //! The method copies the literal or its portion to an external buffer
-    size_type copy(value_type* pStr, size_type Count, size_type pos = 0) const
+    /*!
+     * The method copies the literal or its portion to an external buffer
+     *
+     * \pre <tt>pos < size()</tt> 
+     * \param str Pointer to the external buffer beginning. Must not be NULL.
+     *            The buffer must have enough capacity to accommodate the requested number of characters.
+     * \param n Maximum number of characters to copy
+     * \param pos Starting position to start copying from
+     * \return Number of characters copied
+     * \throw An <tt>std::exception</tt>-based exception if \a pos is out of range.
+     */
+    size_type copy(value_type* str, size_type n, size_type pos = 0) const
     {
-        if (pos <= size()) {
-            const size_type len = (std::min)(Count, size() - pos);
-            traits_type::copy(pStr, m_pStart + pos, len);
+        if (pos <= size())
+        {
+            const size_type len = (std::min)(n, size() - pos);
+            traits_type::copy(str, m_pStart + pos, len);
             return len;
-        } else {
+        }
+        else
             boost::throw_exception(std::out_of_range("basic_string_literal::copy: the position is out of range"));
-        }
     }
-    //! Comparison
-    int compare(size_type pos, size_type Count, const_pointer pStr, size_type Len) const
+
+    /*!
+     * Lexicographically compares the argument string to a part of this string
+     * 
+     * \pre <tt>pos < size()</tt> 
+     * \param pos Starting position within this string to perform comparison to
+     * \param n Length of the substring of this string to perform comparison to
+     * \param str Comparand. Must point to a sequence of characters, must not be NULL.
+     * \param len Number of characters in the sequence \a str.
+     * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
+     *         a positive value if this string is greater than the comparand.
+     * \throw An <tt>std::exception</tt>-based exception if \a pos is out of range.
+     */
+    int compare(size_type pos, size_type n, const_pointer str, size_type len) const
     {
-        if (pos <= size()) {
-            const size_type CompareSize = (std::min)((std::min)(Count, Len), size() - pos);
-            return compare_internal(m_pStart + pos, CompareSize, pStr, CompareSize);
-        } else {
+        if (pos <= size())
+        {
+            const size_type compare_size = (std::min)((std::min)(n, len), size() - pos);
+            return compare_internal(m_pStart + pos, compare_size, str, compare_size);
+        }
+        else
             boost::throw_exception(std::out_of_range("basic_string_literal::compare: the position is out of range"));
-        }
     }
-    //! Comparison
-    int compare(size_type pos, size_type Count, const_pointer pStr) const
+    /*!
+     * Lexicographically compares the argument string to a part of this string
+     * 
+     * \pre <tt>pos < size()</tt> 
+     * \param pos Starting position within this string to perform comparison to
+     * \param n Length of the substring of this string to perform comparison to
+     * \param str Comparand. Must point to a zero-terminated sequence of characters, must not be NULL.
+     * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
+     *         a positive value if this string is greater than the comparand.
+     * \throw An <tt>std::exception</tt>-based exception if \a pos is out of range.
+     */
+    int compare(size_type pos, size_type n, const_pointer str) const
     {
-        return compare(pos, Count, pStr, traits_type::length(pStr));
+        return compare(pos, n, str, traits_type::length(str));
     }
-    //! Comparison
-    int compare(size_type pos, size_type Count, this_type const& That) const
+    /*!
+     * Lexicographically compares the argument string literal to a part of this string
+     * 
+     * \pre <tt>pos < size()</tt> 
+     * \param pos Starting position within this string to perform comparison to
+     * \param n Length of the substring of this string to perform comparison to
+     * \param that Comparand
+     * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
+     *         a positive value if this string is greater than the comparand.
+     * \throw An <tt>std::exception</tt>-based exception if \a pos is out of range.
+     */
+    int compare(size_type pos, size_type n, this_type const& that) const
     {
-        return compare(pos, Count, That.c_str(), That.size());
+        return compare(pos, n, that.c_str(), that.size());
     }
-    //! Comparison
-    int compare(const_pointer pStr, size_type Len) const
+    /*!
+     * Lexicographically compares the argument string to this string
+     * 
+     * \param str Comparand. Must point to a sequence of characters, must not be NULL.
+     * \param len Number of characters in the sequence \a str.
+     * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
+     *         a positive value if this string is greater than the comparand.
+     */
+    int compare(const_pointer str, size_type len) const
     {
-        return compare(0, m_Len, pStr, Len);
+        return compare(0, m_Len, str, len);
     }
-    //! Comparison
-    int compare(const_pointer pStr) const
+    /*!
+     * Lexicographically compares the argument string to this string
+     * 
+     * \param str Comparand. Must point to a zero-terminated sequence of characters, must not be NULL.
+     * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
+     *         a positive value if this string is greater than the comparand.
+     */
+    int compare(const_pointer str) const
     {
-        return compare(0, m_Len, pStr, traits_type::length(pStr));
+        return compare(0, m_Len, str, traits_type::length(str));
     }
-    //! Comparison
-    int compare(this_type const& That) const
+    /*!
+     * Lexicographically compares the argument string to this string
+     * 
+     * \param that Comparand
+     * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
+     *         a positive value if this string is greater than the comparand.
+     */
+    int compare(this_type const& that) const
     {
-        return compare(0, m_Len, That.c_str(), That.size());
+        return compare(0, m_Len, that.c_str(), that.size());
     }
 
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! Internal comparison implementation
     static int compare_internal(const_pointer pLeft, size_type LeftLen, const_pointer pRight, size_type RightLen)
     {
@@ -304,6 +496,7 @@ private:
         }
         return (LeftLen - RightLen);
     }
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 template< typename CharT, typename TraitsT >
@@ -339,7 +532,7 @@ typedef basic_string_literal< char > string_literal;        //!< String literal 
 typedef basic_string_literal< wchar_t > wstring_literal;    //!< String literal type for wide characters
 #endif
 
-//  Convenience generators
+//! Creates a string literal wrapper from a constant string literal
 #ifdef BOOST_LOG_USE_CHAR
 template< typename T, std::size_t LenV >
 inline

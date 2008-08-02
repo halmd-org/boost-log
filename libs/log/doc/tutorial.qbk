@@ -48,7 +48,7 @@ The `synchronous_sink` class template above indicates that the sink is synchrono
 The `text_ostream_backend` class implements storing text records into STL-compatible streams. We have used a file stream above but we could have used any type of stream. For example, adding output to console could look as follows:
 
     // We have to provide an empty deleter to avoid destroying the global stream
-    boost::shared_ptr< std::ostream > pStream(&std::clog, boost::empty_deleter());
+    boost::shared_ptr< std::ostream > pStream(&std::clog, logging::empty_deleter());
     pSink->locked_backend()->add_stream(pStream);
 
 The `text_ostream_backend` supports adding several streams. In that case its output will be duplicated to all added streams. This may be useful to duplicate output to console and file, since all the filtering, formatting and other overhead the library makes are done only once per record for the sink.

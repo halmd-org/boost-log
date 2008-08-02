@@ -26,8 +26,8 @@
 #include <locale>
 #include <ostream>
 #include <boost/noncopyable.hpp>
-#include <boost/static_assert.hpp>
 #include <boost/mpl/or.hpp>
+#include <boost/mpl/assert.hpp>
 #include <boost/function/function3.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
@@ -41,7 +41,12 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-//! A basic implementation of a logging sink backend
+/*!
+ * \brief Base class for a logging sink backend
+ * 
+ * The \c basic_sink_backend class template defines a number of types that
+ * all sink backends are required to define. All sink backends have to derive from the class.
+ */
 template< typename CharT, typename ThreadingModelTagT >
 struct basic_sink_backend : noncopyable
 {
@@ -56,7 +61,13 @@ struct basic_sink_backend : noncopyable
     typedef ThreadingModelTagT threading_model;
 };
 
-//! A basic implementation of a logging sink backend with message formatting support
+/*!
+ * \brief A base class for a logging sink backend with message formatting support
+ * 
+ * The \c basic_formatting_sink_backend class template implements logging record
+ * formatting. Formatting requires storing auxiliary data, such as formatter and
+ * formatting stream. This requires thread synchronization to be done in sink frontend.
+ */
 template< typename CharT, typename ThreadingModelTagT = frontend_synchronization_tag >
 class BOOST_LOG_NO_VTABLE basic_formatting_sink_backend :
     public basic_sink_backend< CharT, ThreadingModelTagT >
@@ -70,14 +81,15 @@ public:
     typedef typename base_type::values_view_type values_view_type;
     typedef typename base_type::threading_model threading_model;
 
-    //  This type of sink backends require synchronization on the frontend side
-    BOOST_STATIC_ASSERT((mpl::or_<
-        is_model_supported< threading_model, single_thread_tag >,
-        is_model_supported< threading_model, frontend_synchronization_tag >
-    >::value));
-
     //! Output stream type
     typedef std::basic_ostream< char_type > stream_type;
+
+private:
+    //  This type of sink backends require synchronization on the frontend side
+    BOOST_MPL_ASSERT((mpl::or_<
+        is_model_supported< threading_model, single_thread_tag >,
+        is_model_supported< threading_model, frontend_synchronization_tag >
+    >));
 
 private:
     //! Formatted log record storage
@@ -96,7 +108,11 @@ private:
     > m_Formatter;
 
 public:
-    //! Default constructor
+    /*!
+     * Default constructor
+     * 
+     * \post The sink backend base class is initialized. The formatter is not set.
+     */
     basic_formatting_sink_backend() :
         m_StreamBuf(m_FormattedRecord),
         m_FormattingStream(&m_StreamBuf)
@@ -104,30 +120,50 @@ public:
         m_FormattingStream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
     }
 
-    //! The method sets formatter functor object
+    /*!
+     * The method sets formatter functional object
+     * 
+     * \param fmt Formatter object
+     */
     template< typename T >
     void set_formatter(T const& fmt)
     {
         m_Formatter = fmt;
     }
-    //! The method resets the formatter
+    /*!
+     * The method resets the formatter. If the formatter is not set, the result of formatting
+     * is equivalent to the log record message text.
+     */
     void reset_formatter()
     {
         m_Formatter.clear();
     }
 
-    //! The method returns the current locale
+    /*!
+     * The method returns the current locale used for formatting
+     */
     std::locale getloc() const
     {
         return m_FormattingStream.getloc();
     }
-    //! The method sets the locale used during formatting
+    /*!
+     * The method sets the locale used for formatting
+     */
     std::locale imbue(std::locale const& loc)
     {
         return m_FormattingStream.imbue(loc);
     }
 
-    //! The method writes the message to the sink - do not override in derived classes
+    /*!
+     * The method formats the message and passes it to the to the sink implementation
+     * by calling \c do_write_message.
+     * 
+     * \note Do not override in derived classes. Use \c do_write_message method to process
+     *       the formatted message in a sink-specific manner.
+     * 
+     * \param attributes A set of attribute values attached to the log record
+     * \param message Log record message text
+     */
     void write_message(values_view_type const& attributes, string_type const& message)
     {
         // Perform the formatting
@@ -147,7 +183,12 @@ public:
     }
 
 protected:
-    //! A backend-defined implementation of the formatted message storing
+    /*!
+     * A backend-defined implementation of the formatted message processing
+     * 
+     * \param attributes A set of attribute values attached to the log record
+     * \param formatted_message Formatted log record
+     */
     virtual void do_write_message(values_view_type const& attributes, string_type const& formatted_message) = 0;
 };
 

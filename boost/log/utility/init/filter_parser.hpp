@@ -38,12 +38,26 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-//! The function parses a filter from the string
+/*!
+ * The function parses a filter from the sequence of characters
+ * 
+ * \pre <tt>begin <= end</tt>
+ * \param begin Pointer to the first character of the sequence. Must not be NULL.
+ * \param end Pointer to the after-the-last character of the sequence. Must not be NULL.
+ * \return A function object that can be used as a filter.
+ * \throw An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
+ */
 template< typename CharT >
 BOOST_LOG_EXPORT typename basic_logging_core< CharT >::filter_type
 parse_filter(const CharT* begin, const CharT* end);
 
-//! The function parses a filter from the string
+/*!
+ * The function parses a filter from the string
+ * 
+ * \param str A string that contains filter description
+ * \return A function object that can be used as a filter.
+ * \throw An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
+ */
 template< typename CharT, typename TraitsT, typename AllocatorT >
 inline typename basic_logging_core< CharT >::filter_type
 parse_filter(std::basic_string< CharT, TraitsT, AllocatorT > const& str)
@@ -52,7 +66,14 @@ parse_filter(std::basic_string< CharT, TraitsT, AllocatorT > const& str)
     return parse_filter(p, p + str.size());
 }
 
-//! The function parses a filter from the string
+/*!
+ * The function parses a filter from the string
+ * 
+ * \param str A string that contains filter description. Must point to a zero-terminated character sequence,
+ *            must not be NULL.
+ * \return A function object that can be used as a filter.
+ * \throw An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
+ */
 template< typename CharT >
 inline typename basic_logging_core< CharT >::filter_type parse_filter(const CharT* str)
 {

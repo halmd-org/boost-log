@@ -8,7 +8,7 @@
  * at http://www.boost.org/libs/log/doc/log.html.
  */
 /*!
- * \file   named_scope.hpp
+ * \file
  * \author Andrey Semashev
  * \date   26.11.2007
  * 
@@ -40,20 +40,38 @@ namespace formatters {
 
 namespace keywords {
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
     BOOST_PARAMETER_KEYWORD(tag, scope_delimiter)
     BOOST_PARAMETER_KEYWORD(tag, scope_depth)
     BOOST_PARAMETER_KEYWORD(tag, scope_iteration)
 
+#else // BOOST_LOG_DOXYGEN_PASS
+
+    //! The keyword for passing scopes delimiter to the \c named_scope formatter
+    implementation_defined scope_delimiter;
+    //! The keyword for passing maximum scopes depth to the \c named_scope formatter
+    implementation_defined scope_depth;
+    //! The keyword for passing scope iteration direction to the \c named_scope formatter
+    implementation_defined scope_iteration;
+
+#endif // BOOST_LOG_DOXYGEN_PASS
+
     //! Scope iteration directions
-    enum scope_iteration_values
+    enum scope_iteration_direction
     {
-        forward,
-        reverse
+        forward,    //!< Iterate through scopes from outermost to innermost
+        reverse     //!< Iterate through scopes from innermost to outermost
     };
 
 } // namespace keywords
 
-//! Named scope attribute formatter
+/*!
+ * \brief Named scope attribute formatter
+ * 
+ * The formatter iterates through the list of scopes and puts each one into the resulting stream.
+ * The formatter supports customizing the iteration direction, depth and delimiter between the scopes.
+ */
 template< typename CharT >
 class fmt_named_scope :
     public basic_formatter< CharT, fmt_named_scope< CharT > >
@@ -63,7 +81,7 @@ private:
     typedef basic_formatter< CharT, fmt_named_scope< CharT > > base_type;
 
 public:
-    //! Char type
+    //! Character type
     typedef typename base_type::char_type char_type;
     //! String type
     typedef typename base_type::string_type string_type;
@@ -84,16 +102,23 @@ private:
     //! Number of scopes to output
     const typename scope_stack::size_type m_MaxScopes;
     //! Scope iteration direction
-    const keywords::scope_iteration_values m_IterationDirection;
+    const keywords::scope_iteration_direction m_IterationDirection;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor
+     * 
+     * \param name Attribute name
+     * \param delimiter Scope delimiter string
+     * \param max_scopes Maximum scope iteration depth
+     * \param direction Scope iteration direction
+     */
     template< typename T1, typename T2 >
     fmt_named_scope(
         T1 const& name,
         T2 const& delimiter,
         typename scope_stack::size_type max_scopes,
-        keywords::scope_iteration_values direction
+        keywords::scope_iteration_direction direction
     ) :
         m_AttributeName(name),
         m_ScopeDelimiter(delimiter),
@@ -102,8 +127,15 @@ public:
     {
     }
 
-    //! Output operator
-    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const&) const
+    /*!
+     * Formatting operator. Acquires the scope list attribute with the specified on construction name from
+     * \a attrs and puts its contents into the \a strm stream.
+     * 
+     * \param strm A reference to the stream, where the final text of the logging record is composed
+     * \param attrs A set of attribute values that are associated with the logging record
+     * \param msg The logging record message
+     */
+    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
         typename values_view_type::const_iterator it = attrs.find(m_AttributeName);
         if (it != attrs.end())
@@ -180,7 +212,7 @@ namespace aux {
     {
         typedef fmt_named_scope< CharT > fmt_named_scope_t;
 
-        keywords::scope_iteration_values direction = args[keywords::scope_iteration | keywords::forward];
+        keywords::scope_iteration_direction direction = args[keywords::scope_iteration | keywords::forward];
         const CharT* default_delimiter =
             (direction == keywords::forward ? default_scope_delimiter< CharT >::forward() : default_scope_delimiter< CharT >::reverse());
 
@@ -196,7 +228,7 @@ namespace aux {
     {
         typedef fmt_named_scope< CharT > fmt_named_scope_t;
 
-        keywords::scope_iteration_values direction = args[keywords::scope_iteration | keywords::forward];
+        keywords::scope_iteration_direction direction = args[keywords::scope_iteration | keywords::forward];
         const CharT* default_delimiter =
             (direction == keywords::forward ? default_scope_delimiter< CharT >::forward() : default_scope_delimiter< CharT >::reverse());
 
@@ -208,6 +240,8 @@ namespace aux {
     }
 
 } // namespace aux
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 #ifdef BOOST_LOG_USE_CHAR
 
@@ -316,6 +350,22 @@ inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const
 }
 
 #endif // BOOST_LOG_USE_WCHAR_T
+
+#else // BOOST_LOG_DOXYGEN_PASS
+
+/*!
+ * Formatter generator. Construct the named scope formatter with the specified formatting parameters.
+ * 
+ * \param name Attribute name
+ * \param args An optional set of named parameters. Supported parameters:
+ *             \li \c scope_delimiter - a string that is used to delimit the formatted scope names. Default: "->" or "<-", depending on the iteration direction.
+ *             \li \c scope_iteration - iteration direction. Default: forward.
+ *             \li \c scope_depth - iteration depth. Default: unlimited.
+ */
+template< typename CharT, typename... ArgsT >
+fmt_named_scope< CharT > named_scope(std::basic_string< CharT > const& name, ArgsT... const& args);
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace formatters
 

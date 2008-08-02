@@ -195,7 +195,16 @@ private:
 
 } // namespace aux
 
-//! Generic attribute value extractor
+/*!
+ * \brief Generic attribute value extractor
+ * 
+ * Attribute value extractor is a functional object that attempts to extract the stored
+ * attribute value from the attribute value wrapper object. The extracted value is passed to
+ * an unary functional object (the receiver) provided by user.
+ * 
+ * The extractor can be specialized on one or several attribute value types that should be
+ * specified in the second template argument.
+ */
 template< typename CharT, typename T >
 class attribute_value_extractor :
     public mpl::if_<
@@ -216,7 +225,11 @@ public:
     typedef typename base_type::string_type string_type;
 
 public:
-    //! Forwarding constructor
+    /*!
+     * Constructor
+     * 
+     * \param name Attribute name to be extracted on invokation
+     */
     explicit attribute_value_extractor(string_type const& name) : base_type(name) {}
 
 #ifdef BOOST_LOG_DOXYGEN_PASS
@@ -225,12 +238,18 @@ public:
 
     //! Character type
     typedef CharT char_type;
-    //! String type
-    typedef std::basic_string< char_type > string_type;
     //! Attribute values view type
     typedef basic_attribute_values_view< char_type > values_view_type;
 
-    //! Extraction operator
+    /*!
+     * Extraction operator. Looks for an attribute value with the name specified on construction
+     * and tries to acquire the stored value of one of the supported types. If extraction succeeds,
+     * the extracted value is passed to \a receiver.
+     * 
+     * \param attrs A set of attribute values in which to look for the apecified attribute value.
+     * \param receiver A receiving functional object to pass extracted value to.
+     * \return \c true if extraction succeeded, \c false otherwise
+     */
     template< typename ReceiverT >
     result_type operator() (values_view_type const& attrs, ReceiverT& receiver) const;
 #endif // BOOST_LOG_DOXYGEN_PASS

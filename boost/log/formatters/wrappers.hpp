@@ -35,7 +35,12 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace formatters {
 
-//! Formatter fmt_wrapper to output objects into streams
+/*!
+ * \brief Formatter wrapper to output objects into streams
+ * 
+ * The formatter aggregates some object and provides formatter interface. Upon formatting
+ * the wrapper puts the wrapped object into the formatting stream.
+ */
 template< typename CharT, typename T >
 class fmt_wrapper :
     public basic_formatter< CharT, fmt_wrapper< CharT, T > >
@@ -57,17 +62,32 @@ private:
     T m_T;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor
+     * 
+     * \param obj Object to be aggregated
+     */
     explicit fmt_wrapper(T const& obj) : m_T(obj) {}
 
-    //! Output operator
-    void operator() (ostream_type& strm, values_view_type const&, string_type const&) const
+    /*!
+     * Formatting operator. Puts the aggregated object into the \a strm stream.
+     * 
+     * \param strm A reference to the stream, where the final text of the logging record is composed
+     * \param attrs A set of attribute values that are associated with the logging record
+     * \param msg The logging record message
+     */
+    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
         strm << m_T;
     }
 };
 
-//! Specialization to put objects into streams by reference
+/*!
+ * \brief Specialization to put objects into streams by reference
+ * 
+ * The specialization allows to put into the formatting stream external (with regard to
+ * the formatter) objects.
+ */
 template< typename CharT, typename T >
 class fmt_wrapper< CharT, reference_wrapper< T > > :
     public basic_formatter< CharT, fmt_wrapper< CharT, reference_wrapper< T > > >
@@ -89,11 +109,21 @@ private:
     T& m_T;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor
+     * 
+     * \param obj Object to be referenced
+     */
     explicit fmt_wrapper(reference_wrapper< T > const& obj) : m_T(obj.get()) {}
 
-    //! Output operator
-    void operator() (ostream_type& strm, values_view_type const&, string_type const&) const
+    /*!
+     * Formatting operator. Puts the referenced object into the \a strm stream.
+     * 
+     * \param strm A reference to the stream, where the final text of the logging record is composed
+     * \param attrs A set of attribute values that are associated with the logging record
+     * \param msg The logging record message
+     */
+    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
         strm << m_T;
     }
@@ -112,12 +142,14 @@ struct wrap_if_c< CharT, T, false >
     typedef T type;
 };
 
+//! A convenience class that conditionally wraps the type into a formatter
 template< typename CharT, typename T, typename PredT >
 struct wrap_if :
     public wrap_if_c< CharT, T, PredT::value >
 {
 };
 
+//! A convenience class that wraps the type into a formatter if it is not a formatter yet
 template< typename CharT, typename T >
 struct wrap_if_not_formatter :
     public wrap_if< CharT, T, mpl::not_< is_formatter< T > > >

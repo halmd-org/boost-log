@@ -8,7 +8,7 @@
  * at http://www.boost.org/libs/log/doc/log.html.
  */
 /*!
- * \file   attributes/named_scope.hpp
+ * \file
  * \author Andrey Semashev
  * \date   24.06.2007
  * 

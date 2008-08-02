@@ -66,13 +66,33 @@ void add_common_attributes()
 
 } // namespace aux
 
-//! The function adds commonly used attributes to the logging system
+/*!
+ * \brief Simple attribute imitialization routine
+ * 
+ * The function adds commonly used attributes to the logging system. Specifically, the following
+ * attributes are registered globally:
+ * 
+ * \li LineID - logging records counter with value type <tt>unsigned int</tt>
+ * \li TimeStamp - local time generator with value type <tt>boost::posix_time::ptime</tt>
+ * 
+ * The function works for narrow-character logging.
+ */
 inline void add_common_attributes()
 {
     aux::add_common_attributes< char >();
 }
 
-//! The function adds commonly used attributes to the logging system
+/*!
+ * \brief Simple attribute imitialization routine
+ * 
+ * The function adds commonly used attributes to the logging system. Specifically, the following
+ * attributes are registered globally:
+ * 
+ * \li LineID - logging records counter with value type <tt>unsigned int</tt>
+ * \li TimeStamp - local time generator with value type <tt>boost::posix_time::ptime</tt>
+ * 
+ * The function works for wide-character logging.
+ */
 inline void wadd_common_attributes()
 {
     aux::add_common_attributes< wchar_t >();

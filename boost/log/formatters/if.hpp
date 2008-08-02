@@ -54,10 +54,23 @@ private:
     ElseT m_Else;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor
+     * 
+     * \param flt The condition filter
+     * \param th The formatter that gets invoked if \a flt returns \c true
+     * \param el The formatter that gets invoked if \a flt returns \c false
+     */
     fmt_if_else(FilterT const& flt, ThenT const& th, ElseT const& el) : m_Filter(flt), m_Then(th), m_Else(el) {}
 
-    //! Output operator
+    /*!
+     * Formatting operator. Applies the filter to the log record. If the filter returns \c true
+     * passes the received arguments to the aggregated then-formatter. Otherwise calls else-formatter.
+     * 
+     * \param strm A reference to the stream, where the final text of the logging record is composed
+     * \param values A set of attribute values that are associated with the logging record
+     * \param message The logging record message
+     */
     void operator() (ostream_type& strm, values_view_type const& values, string_type const& message) const
     {
         if (m_Filter(values))
@@ -84,6 +97,8 @@ public:
     //! Attribute values set type
     typedef typename base_type::values_view_type values_view_type;
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 private:
     class else_gen
     {
@@ -105,14 +120,36 @@ private:
     };
 
 public:
-    //! Else generation object
+
+    //! Else-formatter generation object
     else_gen else_;
 
+#else // BOOST_LOG_DOXYGEN_PASS
+
+    /*!
+     * Else-formatter generation object
+     */
+    implementation_defined else_;
+
+#endif // BOOST_LOG_DOXYGEN_PASS
+
 public:
-    //! Constructor
+    /*!
+     * Constructor
+     * 
+     * \param flt The condition filter
+     * \param fmt The formatter that gets invoked if \a flt returns \c true
+     */
     fmt_if(FilterT const& flt, FormatterT const& fmt) : else_(flt, fmt) {}
 
-    //! Output operator
+    /*!
+     * Formatting operator. Applies the filter to the log record. If the filter returns \c true
+     * passes the received arguments to the aggregated formatter. Otherwise does nothing.
+     * 
+     * \param strm A reference to the stream, where the final text of the logging record is composed
+     * \param values A set of attribute values that are associated with the logging record
+     * \param message The logging record message
+     */
     void operator() (ostream_type& strm, values_view_type const& values, string_type const& message) const
     {
         if (else_.m_Filter(values))
@@ -139,12 +176,27 @@ namespace aux {
 
 } // namespace aux
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 //! Generator function
 template< typename FilterT >
 inline aux::fmt_if_gen< FilterT > if_(FilterT const& flt)
 {
     return aux::fmt_if_gen< FilterT >(flt);
 }
+
+#else // BOOST_LOG_DOXYGEN_PASS
+
+/*!
+ * The function returns a conditional filter generator object. The generator provides <tt>operator[]</tt> that can be used
+ * to construct the actual formatter.
+ * 
+ * \param flt A Boost.Log filter that represents condition of the formatter
+ */
+template< typename FilterT >
+implementation_defined if_(FilterT const& flt);
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace boost
 

@@ -50,7 +50,16 @@ namespace sources {
 
 namespace keywords {
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
     BOOST_PARAMETER_KEYWORD(tag, severity)
+
+#else // BOOST_LOG_DOXYGEN_PASS
+
+    //! The keyword is used to pass severity level to the severity logger methods
+    implementation_defined severity;
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace keywords
 
@@ -124,7 +133,14 @@ namespace aux {
 
 } // namespace aux
 
-//! Logger class
+/*!
+ * \brief Logger class with severity level support
+ * 
+ * The logger registers a special attribute with an integral value type on construction.
+ * This attribute will provide severity level for each log record being made through the logger.
+ * The severity level can be omitted on logging record construction, in which case the default
+ * level will be used. The default level can also be customized by passing it to the logger constructor.
+ */
 template< typename BaseT >
 class basic_severity_logger :
     public BaseT
@@ -150,7 +166,10 @@ private:
     shared_ptr< severity_attribute > m_pSeverity;
 
 public:
-    //! Constructor
+    /*!
+     * Default constructor. The constructed logger will have a severity attribute registered.
+     * The default level for log records will be 0.
+     */
     basic_severity_logger() :
         base_type(),
         m_DefaultSeverity(0),
@@ -160,7 +179,9 @@ public:
             aux::severity_attribute_name< char_type >::get(),
             m_pSeverity);
     }
-    //! Copy constructor
+    /*!
+     * Copy constructor
+     */
     basic_severity_logger(basic_severity_logger const& that) :
         base_type(static_cast< base_type const& >(that)),
         m_DefaultSeverity(that.m_DefaultSeverity),
@@ -168,7 +189,12 @@ public:
     {
         base_type::attributes()[aux::severity_attribute_name< char_type >::get()] = m_pSeverity;
     }
-    //! Constructor with arguments
+    /*!
+     * Constructor with named arguments. Allows to setup the default level for log records.
+     * 
+     * \param args A set of named arguments. The following arguments are supported:
+     *             \li \c severity - default severity value
+     */
     template< typename ArgsT >
     explicit basic_severity_logger(ArgsT const& args) :
         base_type(args),
@@ -180,14 +206,21 @@ public:
             m_pSeverity);
     }
 
-    //! The method opens a new logging record with the default severity
+    /*!
+     * The method opens a new logging record with the default severity
+     */
     bool open_record()
     {
         m_pSeverity->set_value(m_DefaultSeverity);
         return base_type::open_record();
     }
 
-    //! The method allows to assign a severity to the opening record
+    /*!
+     * The method opens a new logging record. Record level can be specified as one of the named arguments.
+     * 
+     * \param args A set of named arguments. The following arguments are supported:
+     *             \li \c severity - log record severity level
+     */
     template< typename ArgsT >
     bool open_record(ArgsT const& args)
     {
@@ -196,18 +229,26 @@ public:
     }
 
 protected:
-    //! Severity attribute accessor
+    /*!
+     * Severity attribute accessor
+     */
     shared_ptr< severity_attribute > const& severity() const { return m_pSeverity; }
-    //! Default severity value getter
+    /*!
+     * Default severity value getter
+     */
     severity_attribute::held_type default_severity() const { return m_DefaultSeverity; }
 
-    //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
+    /*!
+     * Unlocked \c open_record
+     */
     bool open_record_unlocked()
     {
         m_pSeverity->set_value(m_DefaultSeverity);
         return base_type::open_record_unlocked();
     }
-    //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
+    /*!
+     * Unlocked \c open_record
+     */
     template< typename ArgsT >
     bool open_record_unlocked(ArgsT const& args)
     {
@@ -215,17 +256,15 @@ protected:
         return base_type::open_record_unlocked();
     }
 
-    //! Unlocked swap
+    //! Unlocked \c swap
     void swap_unlocked(basic_severity_logger& that)
     {
         base_type::swap_unlocked(static_cast< base_type& >(that));
         std::swap(m_DefaultSeverity, that.m_DefaultSeverity);
     }
-
-private:
-    //! Assignment (should be implemented in the final type as copy and swap)
-    basic_severity_logger& operator= (basic_severity_logger const&);
 };
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 #ifdef BOOST_LOG_USE_CHAR
 
@@ -251,6 +290,146 @@ BOOST_LOG_DECLARE_WLOGGER_MT(wseverity_logger_mt, (basic_severity_logger));
 
 #endif
 
+#else // BOOST_LOG_DOXYGEN_PASS
+
+/*!
+ * \brief Narrow-char logger. Functionally equivalent to \c basic_severity_logger.
+ * 
+ * See \c basic_severity_logger class template for a more detailed description
+ */
+class severity_logger :
+    public basic_severity_logger<
+        basic_logger< char, severity_logger, single_thread_model >
+    >
+{
+public:
+    /*!
+     * Default constructor
+     */
+    severity_logger();
+    /*!
+     * Copy constructor
+     */
+    severity_logger(severity_logger const& that);
+    /*!
+     * Constructor with named arguments
+     */
+    template< typename... ArgsT >
+    explicit severity_logger(ArgsT... const& args);
+    /*!
+     * Assignment operator
+     */
+    severity_logger& operator= (severity_logger const& that)
+    /*!
+     * Swaps two loggers
+     */
+    void swap(severity_logger& that);
+};
+
+/*!
+ * \brief Narrow-char thread-safe logger. Functionally equivalent to \c basic_severity_logger.
+ * 
+ * See \c basic_severity_logger class template for a more detailed description
+ */
+class severity_logger_mt :
+    public basic_severity_logger<
+        basic_logger< char, severity_logger_mt, multi_thread_model >
+    >
+{
+public:
+    /*!
+     * Default constructor
+     */
+    severity_logger_mt();
+    /*!
+     * Copy constructor
+     */
+    severity_logger_mt(severity_logger_mt const& that);
+    /*!
+     * Constructor with named arguments
+     */
+    template< typename... ArgsT >
+    explicit severity_logger_mt(ArgsT... const& args);
+    /*!
+     * Assignment operator
+     */
+    severity_logger_mt& operator= (severity_logger_mt const& that)
+    /*!
+     * Swaps two loggers
+     */
+    void swap(severity_logger_mt& that);
+};
+
+/*!
+ * \brief Wide-char logger. Functionally equivalent to \c basic_severity_logger.
+ * 
+ * See \c basic_severity_logger class template for a more detailed description
+ */
+class wseverity_logger :
+    public basic_severity_logger<
+        basic_logger< wchar_t, wseverity_logger, single_thread_model >
+    >
+{
+public:
+    /*!
+     * Default constructor
+     */
+    wseverity_logger();
+    /*!
+     * Copy constructor
+     */
+    wseverity_logger(wseverity_logger const& that);
+    /*!
+     * Constructor with named arguments
+     */
+    template< typename... ArgsT >
+    explicit wseverity_logger(ArgsT... const& args);
+    /*!
+     * Assignment operator
+     */
+    wseverity_logger& operator= (wseverity_logger const& that)
+    /*!
+     * Swaps two loggers
+     */
+    void swap(wseverity_logger& that);
+};
+
+/*!
+ * \brief Wide-char thread-safe logger. Functionally equivalent to \c basic_severity_logger.
+ * 
+ * See \c basic_severity_logger class template for a more detailed description
+ */
+class wseverity_logger_mt :
+    public basic_severity_logger<
+        basic_logger< wchar_t, wseverity_logger_mt, multi_thread_model >
+    >
+{
+public:
+    /*!
+     * Default constructor
+     */
+    wseverity_logger_mt();
+    /*!
+     * Copy constructor
+     */
+    wseverity_logger_mt(wseverity_logger_mt const& that);
+    /*!
+     * Constructor with named arguments
+     */
+    template< typename... ArgsT >
+    explicit wseverity_logger_mt(ArgsT... const& args);
+    /*!
+     * Assignment operator
+     */
+    wseverity_logger_mt& operator= (wseverity_logger_mt const& that)
+    /*!
+     * Swaps two loggers
+     */
+    void swap(wseverity_logger_mt& that);
+};
+
+#endif // BOOST_LOG_DOXYGEN_PASS
+
 } // namespace sources
 
 } // namespace log
@@ -261,6 +440,7 @@ BOOST_LOG_DECLARE_WLOGGER_MT(wseverity_logger_mt, (basic_severity_logger));
 #pragma warning(pop)
 #endif // _MSC_VER
 
+//! The macro allows to put a record with a specific severity level into log
 #define BOOST_LOG_SEV(logger, svty)\
     BOOST_LOG_WITH_PARAMS((logger), (::boost::log::sources::keywords::severity = (svty)))
 

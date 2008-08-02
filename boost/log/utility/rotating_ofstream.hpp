@@ -71,9 +71,22 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace keywords {
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
     BOOST_PARAMETER_KEYWORD(tag, rotation_size)
     BOOST_PARAMETER_KEYWORD(tag, rotation_interval)
     BOOST_PARAMETER_KEYWORD(tag, open_mode)
+
+#else // BOOST_LOG_DOXYGEN_PASS
+
+    //! The keyword allows to pass maximum log file size to the rotating file stream methods
+    implementation_defined rotation_size;
+    //! The keyword allows to pass maximum time interval of using the same log file to the rotating file stream methods
+    implementation_defined rotation_interval;
+    //! The keyword allows to pass log file opening parameters to the rotating file stream methods
+    implementation_defined open_mode;
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace keywords
 
@@ -501,7 +514,16 @@ namespace aux {
 } // namespace aux
 
 
-//! A rotating file output stream class
+/*!
+ * \brief A rotating file output stream class
+ * 
+ * The \c basic_rotating_ofstream class provides interface similar to standard
+ * output stream except that it derives from the \c record_writer interface and requires
+ * caller to invoke methods of the interface appropriately.
+ * 
+ * The stream automatically manages underlying files depending on rotation criteria. The
+ * stream also supports calling custom functional objects on closing and opening files.
+ */
 template<
     typename CharT,
     typename TraitsT = std::char_traits< CharT >,
@@ -524,6 +546,9 @@ public:
     typedef aux::file_controller_base::close_handler_type close_handler_type;
 
 private:
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
     //! Composite stream buffer type, that performs encoding translation and passes converted data to the file
     class composite_streambuf :
         private base_from_member< std::string >,
@@ -614,6 +639,8 @@ private:
         std::string& storage() { return base_from_member< std::string >::member; }
     };
 
+#endif // BOOST_LOG_DOXYGEN_PASS
+
 private:
     //! The stream buffer converts record data and puts it to the file
     composite_streambuf m_Buf;
@@ -624,11 +651,16 @@ private:
     close_handler_type m_CloseHandler;
 
 public:
-    //! Default constructor
+    /*!
+     * Default constructor. Creates the stream object in closed state
+     * (i.e. no writing is possible until \c open is called).
+     */
     basic_rotating_ofstream() : stream_base(NULL)
     {
         stream_base::init(&m_Buf);
     }
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 #ifndef BOOST_FILESYSTEM_NARROW_ONLY
 
@@ -683,7 +715,78 @@ public:
 
 #undef BOOST_LOG_ROTATING_OFSTREAM_CTOR
 
-    //! Destructor
+#else // BOOST_LOG_DOXYGEN_PASS
+
+    /*!
+     * Constructor. Creates the stream in open state.
+     * 
+     * \note The construction does not lead to immediate opening or creating a file. The file will be opened
+     *       on the first actual writing operation.
+     * 
+     * \param pattern File name pattern. May contain <tt>%%N</tt> placeholder, which will be replaced with the
+     *                file counter, or any of Boost.DateTime formatting placeholders for date and/or time.
+     * \param args A set of named arguments. The following arguments are supported:
+     *             \li \c rotation_size - file size to change the file at
+     *             \li \c rotation_interval - time interval at which to rotate the file
+     *             \li \c open_mode - a set of flags that describe the way to open files. Should be composed of
+     *                    <tt>std::ios_base::openmode</tt> flags.
+     */
+    template< typename... ArgsT >
+    basic_rotating_ofstreambuf(filesystem::path const& pattern, ArgsT... const& args);
+    /*!
+     * Constructor. Creates the stream in open state.
+     * 
+     * \note The construction does not lead to immediate opening or creating a file. The file will be opened
+     *       on the first actual writing operation.
+     * 
+     * \param pattern File name pattern. May contain <tt>%%N</tt> placeholder, which will be replaced with the
+     *                file counter, or any of Boost.DateTime formatting placeholders for date and/or time.
+     * \param args A set of named arguments. The following arguments are supported:
+     *             \li \c rotation_size - file size to change the file at
+     *             \li \c rotation_interval - time interval at which to rotate the file
+     *             \li \c open_mode - a set of flags that describe the way to open files. Should be composed of
+     *                    <tt>std::ios_base::openmode</tt> flags.
+     */
+    template< typename... ArgsT >
+    basic_rotating_ofstreambuf(filesystem::wpath const& pattern, ArgsT... const& args);
+    /*!
+     * Moves the stream into the open state.
+     * 
+     * \note The method call does not lead to immediate opening or creating a file. The file will be opened
+     *       on the first actual writing operation.
+     * 
+     * \param pattern File name pattern. May contain <tt>%%N</tt> placeholder, which will be replaced with the
+     *                file counter, or any of Boost.DateTime formatting placeholders for date and/or time.
+     * \param args A set of named arguments. The following arguments are supported:
+     *             \li \c rotation_size - file size to change the file at
+     *             \li \c rotation_interval - time interval at which to rotate the file
+     *             \li \c open_mode - a set of flags that describe the way to open files. Should be composed of
+     *                    <tt>std::ios_base::openmode</tt> flags.
+     */
+    template< typename... ArgsT >
+    void open(filesystem::path const& pattern, ArgsT... const& args);
+    /*!
+     * Moves the stream into the open state.
+     * 
+     * \note The method call does not lead to immediate opening or creating a file. The file will be opened
+     *       on the first actual writing operation.
+     * 
+     * \param pattern File name pattern. May contain <tt>%%N</tt> placeholder, which will be replaced with the
+     *                file counter, or any of Boost.DateTime formatting placeholders for date and/or time.
+     * \param args A set of named arguments. The following arguments are supported:
+     *             \li \c rotation_size - file size to change the file at
+     *             \li \c rotation_interval - time interval at which to rotate the file
+     *             \li \c open_mode - a set of flags that describe the way to open files. Should be composed of
+     *                    <tt>std::ios_base::openmode</tt> flags.
+     */
+    template< typename... ArgsT >
+    void open(filesystem::wpath const& pattern, ArgsT... const& args);
+
+#endif // BOOST_LOG_DOXYGEN_PASS
+
+    /*!
+     * Destructor. Automatically closes the file, if it is open.
+     */
     ~basic_rotating_ofstream()
     {
         try
@@ -695,40 +798,54 @@ public:
         }
     }
 
-    //! The method closes the file
+    /*!
+     * The method closes the file, if open, and moves the stream into the closed state.
+     */
     void close()
     {
         m_Buf.close(m_CloseHandler);
     }
     
-    //! The method is called after all data of the record is written to the stream
-    void on_end_record()
+    virtual void on_end_record()
     {
         m_Buf.on_end_record(m_OpenHandler, m_CloseHandler);
     }
 
-    //! Sets a new handler for opening a new file
+    /*!
+     * Sets a new handler for opening a new file
+     * 
+     * \param handler Functional object to receive notifications
+     */
     void set_open_handler(open_handler_type const& handler)
     {
         m_OpenHandler = handler;
     }
-    //! Resets the handler for opening a new file
+    /*!
+     * Removes the handler for opening a new file
+     */
     void clear_open_handler()
     {
         m_OpenHandler.clear();
     }
-    //! Sets a new handler for closing a file
+    /*!
+     * Sets a new handler for closing a file
+     * 
+     * \param handler Functional object to receive notifications
+     */
     void set_close_handler(close_handler_type const& handler)
     {
         m_CloseHandler = handler;
     }
-    //! Resets the handler for closing a file
+    /*!
+     * Removes the handler for closing a file
+     */
     void clear_close_handler()
     {
         m_CloseHandler.clear();
     }
 
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //  Copying and assignment are closed
     basic_rotating_ofstream(basic_rotating_ofstream const&);
     basic_rotating_ofstream& operator= (basic_rotating_ofstream const&);
@@ -743,15 +860,14 @@ private:
             args[keywords::rotation_size | ~static_cast< uintmax_t >(0)],
             args[keywords::rotation_interval | static_cast< unsigned int >(0)]);
     }
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 #ifdef BOOST_LOG_USE_CHAR
-//! Narrow-char stream type
-typedef basic_rotating_ofstream< char > rotating_ofstream;
+typedef basic_rotating_ofstream< char > rotating_ofstream;      //!< Convenience typedef for narrow-character logging
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-//! Wide-char stream type
-typedef basic_rotating_ofstream< wchar_t > rotating_wofstream;
+typedef basic_rotating_ofstream< wchar_t > rotating_wofstream;  //!< Convenience typedef for wide-character logging
 #endif
 
 } // namespace log

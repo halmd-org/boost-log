@@ -31,17 +31,25 @@
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 
+//! \cond
 #ifndef BOOST_LOG_NO_THREADS
 #define BOOST_LOG_CONSOLE_SINK_FRONTEND sinks::synchronous_sink
 #else
 #define BOOST_LOG_CONSOLE_SINK_FRONTEND sinks::unlocked_sink
 #endif
+//! \endcond
 
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-//! The function constructs the sink and adds it to the core
+/*!
+ * The function constructs sink for the specified console stream and adds it to the core
+ * 
+ * \param strm One of the standard console streams: <tt>std::cout</tt>, <tt>std::cerr</tt> or <tt>std::clog</tt>
+ *             (or the corresponding wide-character analogues).
+ * \return Pointer to the constructed sink.
+ */
 template< typename CharT >
 shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND<
@@ -62,7 +70,11 @@ shared_ptr<
     return pSink;
 }
 
-//! The function initializes the logging library to write logs to console
+/*!
+ * The function constructs sink for the <tt>std::clog</tt> stream and adds it to the core
+ * 
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND<
         sinks::text_ostream_backend
@@ -72,7 +84,11 @@ inline shared_ptr<
     return init_log_to_console(std::clog);
 }
 
-//! The function initializes the logging library to write logs to wide console
+/*!
+ * The function constructs sink for the <tt>std::wclog</tt> stream and adds it to the core
+ * 
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND<
         sinks::wtext_ostream_backend

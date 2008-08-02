@@ -66,7 +66,13 @@ namespace syslog {
         typedef basic_attribute_values_view< char_type > values_view_type;
     };
 
-    //! Straightforward syslog level extractor
+    /*!
+     * \brief Straightforward syslog level extractor
+     * 
+     * The level extractor assumes that attribute with a particular name always
+     * provides values that map directly onto syslog levels. The level extractor
+     * simply returns the extracted attribute value as a syslog level.
+     */
     template< typename CharT, typename AttributeValueT = int >
     class straightforward_level_mapping :
         public basic_level_mapping< CharT >
@@ -87,9 +93,19 @@ namespace syslog {
         const string_type m_AttributeName;
 
     public:
-        //! Constructor
+        /*!
+         * Constructor
+         * 
+         * \param name Attribute name
+         */
         explicit straightforward_level_mapping(string_type const& name) : m_AttributeName(name) {}
-        //! Extraction operator
+
+        /*!
+         * Extraction operator
+         * 
+         * \param values A set of attribute values attached to a logging record
+         * \return An extracted attribute value
+         */
         level_t operator() (values_view_type const& values) const
         {
             // Find attribute value
@@ -104,7 +120,11 @@ namespace syslog {
         }
     };
 
-    //! Customizable syslog level extractor
+    /*!
+     * \brief Customizable syslog level extractor
+     * 
+     * The level extractor allows to setup a custom mapping between an attribute and syslog levels
+     */
     template< typename CharT, typename AttributeValueT = int >
     class level_mapping :
         public basic_level_mapping< CharT >
@@ -121,6 +141,8 @@ namespace syslog {
         typedef typename base_type::values_view_type values_view_type;
 
     private:
+        //! \cond
+
         //! Mapping type
         typedef std::map< attribute_value_type, level_t > mapping_type;
         //! Smart reference class for implementing insertion into the map
@@ -142,6 +164,8 @@ namespace syslog {
             }
         };
 
+        //! \endcond
+
     private:
         //! Extracted attribute name
         const string_type m_AttributeName;
@@ -149,9 +173,20 @@ namespace syslog {
         mapping_type m_Mapping;
 
     public:
-        //! Constructor
+        /*!
+         * Constructor
+         * 
+         * \param name Attribute name
+         */
         explicit level_mapping(string_type const& name) : m_AttributeName(name) {}
-        //! Extraction operator
+        /*!
+         * Extraction operator. Extracts the attribute value and attempts to map it onto
+         * a syslog level value.
+         * 
+         * \param values A set of attribute values attached to a logging record
+         * \return A mapped syslog level, if mapping is successfull, or \c info if
+         *         mapping did not succeed.
+         */
         level_t operator() (values_view_type const& values) const
         {
             // Find attribute value
@@ -168,8 +203,19 @@ namespace syslog {
             }
             return info;
         }
-        //! Insertion operator
+        /*!
+         * Insertion operator
+         * 
+         * \param key Attribute value to be mapped
+         * \return An object of unspecified type that allows to insert a new mapping through assignment.
+         *         The \a key argument becomes the key attribute value, and the assigned value becomes the
+         *         mapped syslog level.
+         */
+#ifndef BOOST_LOG_DOXYGEN_PASS
         reference_proxy operator[] (attribute_value_type const& key)
+#else
+        implementation_defined operator[] (attribute_value_type const& key)
+#endif
         {
             return reference_proxy(m_Mapping, key);
         }
@@ -190,7 +236,7 @@ class BOOST_LOG_EXPORT basic_syslog_backend :
 public:
     //! Character type
     typedef typename base_type::char_type char_type;
-    //! String type to be used as a message text holder
+    //! String type
     typedef typename base_type::string_type string_type;
     //! Attribute values view type
     typedef typename base_type::values_view_type values_view_type;
@@ -214,35 +260,60 @@ private:
     implementation* m_pImpl;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor. The first constructed syslog backend initializes syslog API with the provided parameters.
+     * 
+     * \param facility Logging facility
+     * \param options Additional syslog initialization options
+     */
     explicit basic_syslog_backend(
         syslog::facility_t facility = syslog::user,
         syslog::options_t options = syslog::no_delay);
-    //! Destructor
+    /*!
+     * Destructor
+     */
     ~basic_syslog_backend();
 
-    //! The method sets formatter function object
+    /*!
+     * The method sets formatter functional object
+     * 
+     * \param fmt Formatter object
+     */
     void set_formatter(formatter_type const& fmt);
-    //! The method resets the formatter
+    /*!
+     * The method resets the formatter. If the formatter is not set, the result of formatting
+     * is equivalent to the log record message text.
+     */
     void reset_formatter();
 
-    //! The method installs the syslog record level extraction function object
+    /*!
+     * The method installs the syslog record level extraction function object
+     */
     void set_level_extractor(level_extractor_type const& extractor);
 
-    //! The method returns the current locale
+    /*!
+     * The method returns the current locale used for formatting
+     */
     std::locale getloc() const;
-    //! The method sets the locale used during formatting
+    /*!
+     * The method sets the locale used for formatting
+     */
     std::locale imbue(std::locale const& loc);
 
-    //! The method writes the message to the sink
+    /*!
+     * The method formats the message and passes it to the syslog API.
+     * 
+     * \param attributes A set of attribute values attached to the log record
+     * \param message Log record message text
+     */
     void write_message(values_view_type const& attributes, string_type const& message);
 };
 
 #ifdef BOOST_LOG_USE_CHAR
-typedef basic_syslog_backend< char > syslog_backend;
+typedef basic_syslog_backend< char > syslog_backend;        //!< Convenience typedef for narrow-character logging
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_syslog_backend< wchar_t > wsyslog_backend;
+typedef basic_syslog_backend< wchar_t > wsyslog_backend;    //!< Convenience typedef for wide-character logging
 #endif
 
 } // namespace sinks

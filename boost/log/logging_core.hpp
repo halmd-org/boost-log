@@ -47,7 +47,7 @@ namespace BOOST_LOG_NAMESPACE {
  * The logging core is used to interconnect log sources and sinks. It also provides
  * a number of basic features, like global filtering and global and thread-specific attribute storage.
  * 
- * The logging core is a singleton. Users can acquire the core instance by calling the static method <pre>get</pre>.
+ * The logging core is a singleton. Users can acquire the core instance by calling the static method <tt>get</tt>.
  */
 template< typename CharT >
 class BOOST_LOG_EXPORT basic_logging_core : noncopyable
@@ -140,7 +140,7 @@ public:
      * 
      * \param name The attribute name.
      * \param attr Pointer to the attribute. Must not be NULL.
-     * \return A pair of values. If the second member is true, then the attribute is added and the first member points to the
+     * \return A pair of values. If the second member is \c true, then the attribute is added and the first member points to the
      *         attribute. Otherwise the attribute was not added and the first member points to the attribute that prevents
      *         addition.
      */
@@ -164,7 +164,7 @@ public:
      * The method replaces the complete set of currently registered global attributes with the provided set.
      * 
      * \note The method invalidates all iterators that may have been returned
-     *       from the add_global_attribute method.
+     *       from the \c add_global_attribute method.
      * 
      * \param attrs The set of attributes to be installed.
      */
@@ -174,11 +174,12 @@ public:
      * The method adds an attribute to the thread-specific attribute set. The attribute will be implicitly added to
      * every log record made in the current thread.
      * 
-     * \note In single-threaded build the effect is the same as adding the attribute globally.
+     * \note In single-threaded build the effect is the same as adding the attribute globally. This, however, does
+     *       not imply that iterators to thread-specific and global attributes are interchangable.
      * 
      * \param name The attribute name.
      * \param attr Pointer to the attribute. Must not be NULL.
-     * \return A pair of values. If the second member is true, then the attribute is added and the first member points to the
+     * \return A pair of values. If the second member is \c true, then the attribute is added and the first member points to the
      *         attribute. Otherwise the attribute was not added and the first member points to the attribute that prevents
      *         addition.
      */
@@ -202,7 +203,7 @@ public:
      * The method replaces the complete set of currently registered thread-specific attributes with the provided set.
      * 
      * \note The method invalidates all iterators that may have been returned
-     *       from the add_thread_attribute method.
+     *       from the \c add_thread_attribute method.
      * 
      * \param attrs The set of attributes to be installed.
      */
@@ -210,8 +211,8 @@ public:
 
     /*!
      * The method attempts to open a new record to be written. While attempting to open a log record all filtering is applied.
-     * A successfully opened record must be either cancelled by calling cancel_record or pushed further to sinks by calling
-     * the push_record method.
+     * A successfully opened record must be either cancelled by calling \c cancel_record or pushed further to sinks by calling
+     * the \c push_record method.
      * 
      * More than one open records are allowed, such records exist independently. All attribute values are acquired during opening
      * the record and do not interact between records. However, only the last-open record remains active all the time, and
@@ -219,7 +220,7 @@ public:
      * and so on.
      * 
      * \param source_attributes The set of source-specific attributes to be attached to the record to be opened.
-     * \return True if the record is opened, false if not (e.g. because it didn't pass filtering).
+     * \return \c true if the record is opened, \c false if not (e.g. because it didn't pass filtering).
      * \throw Nothing.
      */
     bool open_record(attribute_set_type const& source_attributes);

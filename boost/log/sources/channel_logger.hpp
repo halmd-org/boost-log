@@ -43,7 +43,16 @@ namespace sources {
 
 namespace keywords {
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
     BOOST_PARAMETER_KEYWORD(tag, channel)
+
+#else
+
+    //! The keyword for passing channel name to the channel logger constructor
+    implementation_defined channel;
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace keywords
 
@@ -70,7 +79,13 @@ namespace aux {
 
 } // namespace aux
 
-//! Logger class
+/*!
+ * \brief Logger class with channel support
+ * 
+ * The logger automatically registers constant attribute with the specified on construction
+ * string value, which is a channel name. The channel name cannot be modified through the logger
+ * life time.
+ */
 template< typename BaseT >
 class basic_channel_logger :
     public BaseT
@@ -96,17 +111,26 @@ private:
     shared_ptr< channel_attribute > m_pChannel;
 
 public:
-    //! Constructor
+    /*!
+     * Default constructor. The constructed logger does not have the channel attribute.
+     */
     basic_channel_logger() : base_type()
     {
     }
-    //! Copy constructor
+    /*!
+     * Copy constructor
+     */
     basic_channel_logger(basic_channel_logger const& that) :
         base_type(static_cast< base_type const& >(that)),
         m_pChannel(that.m_pChannel)
     {
     }
-    //! Constructor with arguments
+    /*!
+     * Constructor with arguments. Allows to register a channel name attribute on construction.
+     * 
+     * \param args A set of named arguments. The following arguments are supported:
+     *             \li \c channel - a string that represents the channel name
+     */
     template< typename ArgsT >
     explicit basic_channel_logger(ArgsT const& args) :
         base_type(args)
@@ -123,7 +147,9 @@ public:
     }
 
 protected:
-    //! Unlocked swap
+    /*!
+     * Unlocked swap
+     */
     void swap_unlocked(basic_channel_logger& that)
     {
         base_type::swap_unlocked(static_cast< base_type& >(that));
@@ -131,9 +157,13 @@ protected:
     }
 
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! Constructs an empty string as a default value for the channel name
     static string_type make_default_channel_name() { return string_type(); }
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 #ifdef BOOST_LOG_USE_CHAR
 
@@ -158,6 +188,146 @@ BOOST_LOG_DECLARE_WLOGGER_MT(wchannel_logger_mt, (basic_channel_logger));
 #endif
 
 #endif // BOOST_LOG_USE_WCHAR_T
+
+#else // BOOST_LOG_DOXYGEN_PASS
+
+/*!
+ * \brief Narrow-char logger. Functionally equivalent to \c basic_channel_logger.
+ * 
+ * See \c basic_channel_logger class template for a more detailed description
+ */
+class channel_logger :
+    public basic_channel_logger<
+        basic_logger< char, channel_logger, single_thread_model >
+    >
+{
+public:
+    /*!
+     * Default constructor
+     */
+    channel_logger();
+    /*!
+     * Copy constructor
+     */
+    channel_logger(channel_logger const& that);
+    /*!
+     * Constructor with named arguments
+     */
+    template< typename... ArgsT >
+    explicit channel_logger(ArgsT... const& args);
+    /*!
+     * Assignment operator
+     */
+    channel_logger& operator= (channel_logger const& that)
+    /*!
+     * Swaps two loggers
+     */
+    void swap(channel_logger& that);
+};
+
+/*!
+ * \brief Narrow-char thread-safe logger. Functionally equivalent to \c basic_channel_logger.
+ * 
+ * See \c basic_channel_logger class template for a more detailed description
+ */
+class channel_logger_mt :
+    public basic_channel_logger<
+        basic_logger< char, channel_logger_mt, multi_thread_model >
+    >
+{
+public:
+    /*!
+     * Default constructor
+     */
+    channel_logger_mt();
+    /*!
+     * Copy constructor
+     */
+    channel_logger_mt(channel_logger_mt const& that);
+    /*!
+     * Constructor with named arguments
+     */
+    template< typename... ArgsT >
+    explicit channel_logger_mt(ArgsT... const& args);
+    /*!
+     * Assignment operator
+     */
+    channel_logger_mt& operator= (channel_logger_mt const& that)
+    /*!
+     * Swaps two loggers
+     */
+    void swap(channel_logger_mt& that);
+};
+
+/*!
+ * \brief Wide-char logger. Functionally equivalent to \c basic_channel_logger.
+ * 
+ * See \c basic_channel_logger class template for a more detailed description
+ */
+class wchannel_logger :
+    public basic_channel_logger<
+        basic_logger< wchar_t, wchannel_logger, single_thread_model >
+    >
+{
+public:
+    /*!
+     * Default constructor
+     */
+    wchannel_logger();
+    /*!
+     * Copy constructor
+     */
+    wchannel_logger(wchannel_logger const& that);
+    /*!
+     * Constructor with named arguments
+     */
+    template< typename... ArgsT >
+    explicit wchannel_logger(ArgsT... const& args);
+    /*!
+     * Assignment operator
+     */
+    wchannel_logger& operator= (wchannel_logger const& that)
+    /*!
+     * Swaps two loggers
+     */
+    void swap(wchannel_logger& that);
+};
+
+/*!
+ * \brief Wide-char thread-safe logger. Functionally equivalent to \c basic_channel_logger.
+ * 
+ * See \c basic_channel_logger class template for a more detailed description
+ */
+class wchannel_logger_mt :
+    public basic_channel_logger<
+        basic_logger< wchar_t, wchannel_logger_mt, multi_thread_model >
+    >
+{
+public:
+    /*!
+     * Default constructor
+     */
+    wchannel_logger_mt();
+    /*!
+     * Copy constructor
+     */
+    wchannel_logger_mt(wchannel_logger_mt const& that);
+    /*!
+     * Constructor with named arguments
+     */
+    template< typename... ArgsT >
+    explicit wchannel_logger_mt(ArgsT... const& args);
+    /*!
+     * Assignment operator
+     */
+    wchannel_logger_mt& operator= (wchannel_logger_mt const& that)
+    /*!
+     * Swaps two loggers
+     */
+    void swap(wchannel_logger_mt& that);
+};
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace sources
 

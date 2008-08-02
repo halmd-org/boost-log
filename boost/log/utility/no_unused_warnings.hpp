@@ -39,7 +39,7 @@ inline void no_unused_warnings(T const&) {}
 
 } // namespace boost
 
-//! The macro suppresses compiler warnings for var being unused
+//! The macro suppresses compiler warnings for \c var being unused
 #define BOOST_LOG_NO_UNUSED_WARNINGS(var) ::boost::log::aux::no_unused_warnings(var)
 
 #endif // BOOST_LOG_UTILITY_NO_UNUSED_WARNINGS_HPP_INCLUDED_

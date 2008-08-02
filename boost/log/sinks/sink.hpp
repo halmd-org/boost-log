@@ -30,8 +30,8 @@
 #include <boost/assert.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/static_assert.hpp>
 #include <boost/mpl/or.hpp>
+#include <boost/mpl/assert.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/utility/in_place_factory.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -59,7 +59,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-//! A base class for a logging sink facade
+//! A base class for a logging sink frontend
 template< typename CharT >
 class BOOST_LOG_NO_VTABLE sink : noncopyable
 {
@@ -94,7 +94,9 @@ private:
 public:
     virtual ~sink() {}
 
-    //! The method sets the sink-specific filter
+    /*!
+     * The method sets sink-specific filter functional object
+     */
     template< typename T >
     void set_filter(T const& filter)
     {
@@ -103,7 +105,9 @@ public:
 #endif
         m_Filter = filter;
     }
-    //! The method removes the sink-specific filter
+    /*!
+     * The method removes the sink-specific filter
+     */
     void reset_filter()
     {
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -112,7 +116,11 @@ public:
         m_Filter.clear();
     }
 
-    //! The method returns true if the attribute values pass the filter
+    /*!
+     * The method returns \c true if no filter is set or the attribute values pass the filter
+     * 
+     * \param attributes A set of attribute values of a logging record
+     */
     bool will_write_message(values_view_type const& attributes)
     {
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -121,11 +129,21 @@ public:
         return (m_Filter.empty() || m_Filter(attributes));
     }
 
-    //! The method writes the message to the sink
+    /*!
+     * The method puts logging message to the sink
+     * 
+     * \param attributes A set of attribute values of a logging record
+     * \param message Logging record message text
+     */
     virtual void write_message(values_view_type const& attributes, string_type const& message) = 0;
 };
 
-//! Non-blocking logging sink facade
+/*!
+ * \brief Non-blocking logging sink frontend
+ * 
+ * The sink frontend does not perform thread synchronization and
+ * simply passes logging records to the sink backend.
+ */
 template< typename SinkBackendT >
 class unlocked_sink :
     public sink< typename SinkBackendT::char_type >
@@ -135,12 +153,14 @@ class unlocked_sink :
 public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
-    BOOST_STATIC_ASSERT((is_model_supported< typename sink_backend_type::threading_model, backend_synchronization_tag >::value));
+    //! \cond
+    BOOST_MPL_ASSERT((is_model_supported< typename sink_backend_type::threading_model, backend_synchronization_tag >));
+    //! \endcond
 
     typedef typename base_type::values_view_type values_view_type;
     typedef typename base_type::string_type string_type;
 
-    //! A pointer type that locks the backend until it's destroyed (does not lock for this sink frontend!)
+    //! A type of pointer to the backend
     typedef shared_ptr< sink_backend_type > locked_backend_ptr;
 
 private:
@@ -148,21 +168,36 @@ private:
     shared_ptr< sink_backend_type > m_pBackend;
 
 public:
-    //! Default constructor - requires the backend to be default-constructible
+    /*!
+     * Default constructor. Constructs the sink backend instance.
+     * Requires the backend to be default-constructible.
+     */
     unlocked_sink() : m_pBackend(new sink_backend_type()) {}
-    //! Constructor with ability to attach user-constructed backend
+    /*!
+     * Constructor attaches user-constructed backend instance
+     * 
+     * \param backend Pointer to the backend instance. Must not be NULL.
+     */
     explicit unlocked_sink(shared_ptr< sink_backend_type > const& backend) : m_pBackend(backend)
     {
         BOOST_ASSERT(!!m_pBackend);
     }
 
-    //! The method writes the message to the sink
+    /*!
+     * Locking accessor to the attached backend
+     */
+    locked_backend_ptr locked_backend() const { return m_pBackend; }
+
+    /*!
+     * The method puts logging message to the sink
+     * 
+     * \param attributes A set of attribute values of a logging record
+     * \param message Logging record message text
+     */
     void write_message(values_view_type const& attributes, string_type const& message)
     {
         m_pBackend->write_message(attributes, message);
     }
-    //! Locking accessor to the attached backend
-    locked_backend_ptr locked_backend() const { return m_pBackend; }
 };
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -238,7 +273,11 @@ namespace aux {
 
 } // namespace aux
 
-//! Synchronous logging sink facade
+/*!
+ * \brief Synchronous logging sink frontend
+ * 
+ * The sink frontend serializes threads before passing logging records to the backend
+ */
 template< typename SinkBackendT >
 class synchronous_sink :
     public sink< typename SinkBackendT::char_type >
@@ -253,13 +292,24 @@ class synchronous_sink :
 public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
-    BOOST_STATIC_ASSERT((is_model_supported< typename sink_backend_type::threading_model, frontend_synchronization_tag >::value));
+    //! \cond
+    BOOST_MPL_ASSERT((is_model_supported< typename sink_backend_type::threading_model, frontend_synchronization_tag >));
+    //! \endcond
 
     typedef typename base_type::values_view_type values_view_type;
     typedef typename base_type::string_type string_type;
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
     //! A pointer type that locks the backend until it's destroyed
     typedef aux::locking_ptr< sink_backend_type > locked_backend_ptr;
+
+#else // BOOST_LOG_DOXYGEN_PASS
+
+    //! A pointer type that locks the backend until it's destroyed
+    typedef implementation_defined locked_backend_ptr;
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 private:
     //! Synchronization mutex
@@ -271,27 +321,42 @@ private:
     mutable optional< aux::shared_backend_lock > m_SharedBackendLock;
 
 public:
-    //! Default constructor - requires the backend to be default-constructible
+    /*!
+     * Default constructor. Constructs the sink backend instance.
+     * Requires the backend to be default-constructible.
+     */
     synchronous_sink() : m_pBackend(new sink_backend_type()) {}
-    //! Constructor with ability to attach user-constructed backend
+    /*!
+     * Constructor attaches user-constructed backend instance
+     * 
+     * \param backend Pointer to the backend instance. Must not be NULL.
+     */
     explicit synchronous_sink(shared_ptr< sink_backend_type > const& backend) : m_pBackend(backend)
     {
         BOOST_ASSERT(!!m_pBackend);
     }
 
-    //! The method writes the message to the sink
-    void write_message(values_view_type const& attributes, string_type const& message)
-    {
-        scoped_lock _(m_Mutex);
-        m_pBackend->write_message(attributes, message);
-    }
-    //! Locking accessor to the attached backend
+    /*!
+     * Locking accessor to the attached backend
+     */
     locked_backend_ptr locked_backend() const
     {
         scoped_lock lock(m_Mutex);
         if (!m_SharedBackendLock)
             m_SharedBackendLock = boost::in_place(boost::ref(lock));
         return locked_backend_ptr(m_pBackend, m_SharedBackendLock);
+    }
+
+    /*!
+     * The method puts logging message to the sink
+     * 
+     * \param attributes A set of attribute values of a logging record
+     * \param message Logging record message text
+     */
+    void write_message(values_view_type const& attributes, string_type const& message)
+    {
+        scoped_lock _(m_Mutex);
+        m_pBackend->write_message(attributes, message);
     }
 };
 
@@ -333,7 +398,12 @@ namespace aux {
 
 } // namespace aux
 
-//! Asynchronous logging sink facade
+/*!
+ * \brief Asynchronous logging sink frontend
+ * 
+ * The frontend starts a separate thread on construction. All logging records are passed
+ * to the backend in this dedicated thread only.
+ */
 template< typename SinkBackendT >
 class asynchronous_sink :
     public sink< typename SinkBackendT::char_type >
@@ -343,17 +413,28 @@ class asynchronous_sink :
 public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
-    BOOST_STATIC_ASSERT((mpl::or_<
+    //! \cond
+    BOOST_MPL_ASSERT((mpl::or_<
         is_model_supported< typename sink_backend_type::threading_model, single_thread_tag >,
         is_model_supported< typename sink_backend_type::threading_model, frontend_synchronization_tag >
-    >::value));
+    >));
+    //! \endcond
 
     typedef typename base_type::char_type char_type;
     typedef typename base_type::values_view_type values_view_type;
     typedef typename base_type::string_type string_type;
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
     //! A pointer type that locks the backend until it's destroyed
     typedef aux::locking_ptr< sink_backend_type > locked_backend_ptr;
+
+#else // BOOST_LOG_DOXYGEN_PASS
+
+    //! A pointer type that locks the backend until it's destroyed
+    typedef implementation_defined locked_backend_ptr;
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 private:
     //! Pointer to the sink backend implementation
@@ -362,13 +443,20 @@ private:
     aux::asynchronous_sink_impl< char_type > m_Impl;
 
 public:
-    //! Default constructor - requires the backend to be default-constructible
+    /*!
+     * Default constructor. Constructs the sink backend instance.
+     * Requires the backend to be default-constructible.
+     */
     asynchronous_sink() :
         m_pBackend(new sink_backend_type()),
         m_Impl(m_pBackend.get(), &asynchronous_sink::write_message_trampoline)
     {
     }
-    //! Constructor with ability to attach user-constructed backend
+    /*!
+     * Constructor attaches user-constructed backend instance
+     * 
+     * \param backend Pointer to the backend instance. Must not be NULL.
+     */
     explicit asynchronous_sink(shared_ptr< sink_backend_type > const& backend) :
         m_pBackend(backend),
         m_Impl(m_pBackend.get(), &asynchronous_sink::write_message_trampoline)
@@ -376,24 +464,34 @@ public:
         BOOST_ASSERT(!!backend);
     }
 
-    //! The method writes the message to the sink
-    void write_message(values_view_type const& attributes, string_type const& message)
-    {
-        m_Impl.enqueue_message(attributes, message);
-    }
-    //! Locking accessor to the attached backend
+    /*!
+     * Locking accessor to the attached backend
+     */
     locked_backend_ptr locked_backend() const
     {
         return locked_backend_ptr(m_pBackend, m_Impl.get_shared_backend_lock());
     }
 
+    /*!
+     * The method puts logging message to the sink
+     * 
+     * \param attributes A set of attribute values of a logging record
+     * \param message Logging record message text
+     */
+    void write_message(values_view_type const& attributes, string_type const& message)
+    {
+        m_Impl.enqueue_message(attributes, message);
+    }
+
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! Trampoline function to invoke the backend
     static void write_message_trampoline(void* pBackend, values_view_type const& attributes, string_type const& message)
     {
         sink_backend_type* p = reinterpret_cast< sink_backend_type* >(pBackend);
         p->write_message(attributes, message);
     }
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 #endif // !defined(BOOST_LOG_NO_THREADS)

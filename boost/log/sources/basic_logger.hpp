@@ -90,7 +90,7 @@ struct single_thread_model
 
 #if !defined(BOOST_LOG_NO_THREADS)
 
-//! Multi-thread locking model
+//! Multi-thread locking model with maximum locking capabilities
 struct multi_thread_model
 {
     multi_thread_model() {}
@@ -252,7 +252,31 @@ namespace aux {
 
 } // namespace aux
 
-//! Logger class
+/*!
+ * \brief Basic logger class
+ * 
+ * The \c basic_logger class template serves as a base class for all loggers
+ * provided by the library. It can also be used as a base for user-defined
+ * loggers. The template parameters are:
+ * 
+ * \li \c CharT - logging character type
+ * \li \c FinalT - final type of the logger that eventually derives from
+ *     the \c basic_logger. There may be other classes in the hierarchy
+ *     between the final class and \c basic_logger.
+ * \li \c ThreadingModelT - threading model policy. Must provide methods
+ *     of the Boost.Thread locking concept used in \c basic_logger class
+ *     and all its derivatives in the hierarchy up to the \c FinalT class.
+ *     The \c basic_logger class itself requires methods of the
+ *     SharedLockable concept. The threading model policy must also be
+ *     default and copy-constructible and support member function \c swap.
+ *     There are currently two policies provided: \c single_thread_model
+ *     and \c multi_thread_model.
+ * 
+ * The logger implements fundamental facilities of loggers, such as storing
+ * source-specific attribute set and formatting log record messages. The basic
+ * logger interacts with the logging core in order to apply filtering and
+ * pass records to sinks.
+ */
 template< typename CharT, typename FinalT, typename ThreadingModelT >
 class basic_logger :
     public ThreadingModelT
@@ -275,7 +299,12 @@ public:
     typedef ThreadingModelT threading_model;
 
 protected:
-    //! Record pump type
+    /*!
+     * \brief Record pump type
+     * 
+     * This pump is used to format the logging record message text and then
+     * push it to the logging core.
+     */
     typedef aux::record_pump< final_type > record_pump_type;
 
 private:
@@ -286,31 +315,57 @@ private:
     attribute_set_type m_Attributes;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor. Initializes internal data structures of the basic logger class,
+     * acquires reference to the logging core.
+     */
     basic_logger() :
         m_pLoggingSystem(logging_core_type::get())
     {
     }
-    //! Copy constructor
+    /*!
+     * Copy constructor. Copies all attributes from the source logger.
+     * 
+     * \note Not thread-safe. The source logger must be locked in the final class before copying.
+     * 
+     * \param that Source logger
+     */
     basic_logger(basic_logger const& that) :
         m_pLoggingSystem(logging_core_type::get()),
         m_Attributes(that.m_Attributes)
     {
     }
-    //! Constructor with arguments
+    /*!
+     * Constructor with named arguments. The constructor ignores all arguments. The result of
+     * construction is equivalent to default construction.
+     */
     template< typename ArgsT >
     explicit basic_logger(ArgsT const& args) :
         m_pLoggingSystem(logging_core_type::get())
     {
     }
 
-    //! Logging stream getter
+    /*!
+     * Logging pump getter. The result of this method can be used to format log record message.
+     * The message will be pushed to the logging core on the result destruction.
+     * 
+     * \return Logging pump
+     */
     record_pump_type strm()
     {
         return strm_unlocked();
     }
 
-    //! The method adds an attribute to the logger
+    /*!
+     * The method adds an attribute to the source-specific attribute set. The attribute will be implicitly added to
+     * every log record made with the current logger.
+     * 
+     * \param name The attribute name.
+     * \param attr Pointer to the attribute. Must not be NULL.
+     * \return A pair of values. If the second member is \c true, then the attribute is added and the first member points to the
+     *         attribute. Otherwise the attribute was not added and the first member points to the attribute that prevents
+     *         addition.
+     */
     std::pair< typename attribute_set_type::iterator, bool > add_attribute(
         string_type const& name, shared_ptr< attribute > const& attr)
     {
@@ -319,7 +374,14 @@ public:
 #endif
         return add_attribute_unlocked(name, attr);
     }
-    //! The method removes an attribute from the logger
+    /*!
+     * The method removes an attribute from the thread-specific attribute set.
+     * 
+     * \pre The attribute was added with the add_attribute call for this instance of the logger.
+     * \post The attribute is no longer registered as a source-specific attribute for this logger. The iterator is invalidated after removal.
+     * 
+     * \param it Iterator to the previously added attribute.
+     */
     void remove_attribute(typename attribute_set_type::iterator it)
     {
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -328,7 +390,9 @@ public:
         remove_attribute_unlocked(it);
     }
 
-    //! The method removes all attributes from the logger
+    /*!
+     * The method removes all attributes from the logger. All iterators to the removed attributes are invalidated.
+     */
     void remove_all_attributes()
     {
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -337,7 +401,11 @@ public:
         remove_all_attributes_unlocked();
     }
 
-    //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
+    /*!
+     * The method opens a new log record in the logging core.
+     * 
+     * \return \c true if the logging record is opened successfully, \c false otherwise.
+     */
     bool open_record()
     {
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -345,7 +413,12 @@ public:
 #endif
         return open_record_unlocked();
     }
-    //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
+    /*!
+     * The method opens a new log record in the logging core.
+     *
+     * \param args A set of additional named arguments. The parameter is ignored.
+     * \return \c true if the logging record is opened successfully, \c false otherwise.
+     */
     template< typename ArgsT >
     bool open_record(ArgsT const& args)
     {
@@ -354,89 +427,127 @@ public:
 #endif
         return open_record_unlocked(args);
     }
-    //! The method pushes the constructed message to the sinks and closes the record
+    /*!
+     * The method pushes the constructed message to the logging core
+     * 
+     * \param message The formatted log record message
+     */
     void push_record(string_type const& message)
     {
         push_record_unlocked(message);
     }
-    //! The method cancels the currently opened record
+    /*!
+     * The method cancels the currently opened record in the logging core
+     */
     void cancel_record()
     {
         cancel_record_unlocked();
     }
 
 protected:
-    //! An accessor to the logging system pointer
+    /*!
+     * An accessor to the logging system pointer
+     */
     shared_ptr< logging_core_type > const& core() const { return m_pLoggingSystem; }
-    //! An accessor to the logger attributes
+    /*!
+     * An accessor to the logger attributes
+     */
     attribute_set_type& attributes() { return m_Attributes; }
-    //! An accessor to the logger attributes
+    /*!
+     * An accessor to the logger attributes
+     */
     attribute_set_type const& attributes() const { return m_Attributes; }
-    //! An accessor to the threading model base
+    /*!
+     * An accessor to the threading model base
+     */
     threading_model& threading_base() { return *this; }
-    //! An accessor to the threading model base
+    /*!
+     * An accessor to the threading model base
+     */
     threading_model const& threading_base() const { return *this; }
-    //! An accessor to the final logger type
+    /*!
+     * An accessor to the final logger
+     */
     final_type* final_this()
     {
         BOOST_LOG_ASSUME(this != NULL);
         return static_cast< final_type* >(this);
     }
-    //! An accessor to the final logger type
+    /*!
+     * An accessor to the final logger
+     */
     final_type const* final_this() const
     {
         BOOST_LOG_ASSUME(this != NULL);
         return static_cast< final_type const* >(this);
     }
 
-    //! Unlocked swap
+    /*!
+     * Unlocked \c swap
+     */
     void swap_unlocked(basic_logger& that)
     {
         threading_base().swap(that.threading_base());
         m_Attributes.swap(that.m_Attributes);
     }
 
-    //! Logging stream getter
+    /*!
+     * Unlocked \c strm
+     */
     record_pump_type strm_unlocked()
     {
         return record_pump_type(final_this());
     }
 
-    //! The method adds an attribute to the logger
+    /*!
+     * Unlocked \c add_attribute
+     */
     std::pair< typename attribute_set_type::iterator, bool > add_attribute_unlocked(
         string_type const& name, shared_ptr< attribute > const& attr)
     {
         return m_Attributes.insert(std::make_pair(name, attr));
     }
-    //! The method removes an attribute from the logger
+    /*!
+     * Unlocked \c remove_attribute
+     */
     void remove_attribute_unlocked(typename attribute_set_type::iterator it)
     {
         m_Attributes.erase(it);
     }
 
-    //! The method removes all attributes from the logger
+    /*!
+     * Unlocked \c remove_all_attributes
+     */
     void remove_all_attributes_unlocked()
     {
         m_Attributes.clear();
     }
 
-    //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
+    /*!
+     * Unlocked \c open_record
+     */
     bool open_record_unlocked()
     {
         return m_pLoggingSystem->open_record(m_Attributes);
     }
-    //! The method checks if the message passes filters to be output by at least one sink and opens a record if it does
+    /*!
+     * Unlocked \c open_record
+     */
     template< typename ArgsT >
     bool open_record_unlocked(ArgsT const& args)
     {
         return m_pLoggingSystem->open_record(m_Attributes);
     }
-    //! The method pushes the constructed message to the sinks and closes the record
+    /*!
+     * Unlocked \c push_record
+     */
     void push_record_unlocked(string_type const& message)
     {
         m_pLoggingSystem->push_record(message);
     }
-    //! The method cancels the currently opened record
+    /*!
+     * Unlocked \c cancel_record
+     */
     void cancel_record_unlocked()
     {
         m_pLoggingSystem->cancel_record();
@@ -447,7 +558,9 @@ private:
     basic_logger& operator= (basic_logger const&);
 };
 
-//! Free-standing swap for loggers
+/*!
+ * Free-standing swap for all loggers
+ */
 template< typename CharT, typename FinalT, typename ThreadingModelT >
 inline void swap(
     basic_logger< CharT, FinalT, ThreadingModelT >& left,
@@ -458,11 +571,18 @@ inline void swap(
 
 #ifdef BOOST_LOG_USE_CHAR
 
-//! Narrow-char logger
+/*!
+ * \brief Narrow-char logger. Functionally equivalent to \c basic_logger.
+ * 
+ * See \c basic_logger class template for a more detailed description.
+ */
 class logger :
     public basic_logger< char, logger, single_thread_model >
 {
 public:
+    /*!
+     * Assignment operator
+     */
     logger& operator= (logger const& that)
     {
         if (this != &that)
@@ -473,6 +593,9 @@ public:
         return *this;
     }
 
+    /*!
+     * Swaps two loggers
+     */
     void swap(logger& that)
     {
         swap_unlocked(that);
@@ -481,14 +604,24 @@ public:
 
 #if !defined(BOOST_LOG_NO_THREADS)
 
-//! Narrow-char thread-safe logger
+/*!
+ * \brief Narrow-char thread-safe logger. Functionally equivalent to \c basic_logger.
+ * 
+ * See \c basic_logger class template for a more detailed description.
+ */
 class logger_mt :
     public basic_logger< char, logger_mt, multi_thread_model >
 {
     typedef basic_logger< char, logger_mt, multi_thread_model > base_type;
 
 public:
+    /*!
+     * Default constructor
+     */
     logger_mt() {}
+    /*!
+     * Copy constructor
+     */
     logger_mt(logger_mt const& that) :
         base_type((
             log::aux::shared_lock_guard< const threading_model >(that.threading_base()),
@@ -497,6 +630,9 @@ public:
     {
     }
 
+    /*!
+     * Assignment operator
+     */
     logger_mt& operator= (logger_mt const& that)
     {
         if (this != &that)
@@ -508,6 +644,9 @@ public:
         return *this;
     }
 
+    /*!
+     * Swaps two loggers
+     */
     void swap(logger_mt& that)
     {
         log::aux::multiple_unique_lock2<
@@ -523,11 +662,18 @@ public:
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 
-//! Wide-char logger
+/*!
+ * \brief Wide-char logger. Functionally equivalent to \c basic_logger.
+ * 
+ * See \c basic_logger class template for a more detailed description.
+ */
 class wlogger :
     public basic_logger< wchar_t, wlogger, single_thread_model >
 {
 public:
+    /*!
+     * Assignment operator
+     */
     wlogger& operator= (wlogger const& that)
     {
         if (this != &that)
@@ -538,6 +684,9 @@ public:
         return *this;
     }
 
+    /*!
+     * Swaps two loggers
+     */
     void swap(wlogger& that)
     {
         swap_unlocked(that);
@@ -546,14 +695,24 @@ public:
 
 #if !defined(BOOST_LOG_NO_THREADS)
 
-//! Wide-char thread-safe logger
+/*!
+ * \brief Wide-char thread-safe logger. Functionally equivalent to \c basic_logger.
+ * 
+ * See \c basic_logger class template for a more detailed description.
+ */
 class wlogger_mt :
     public basic_logger< wchar_t, wlogger_mt, multi_thread_model >
 {
     typedef basic_logger< wchar_t, wlogger_mt, multi_thread_model > base_type;
 
 public:
+    /*!
+     * Default constructor
+     */
     wlogger_mt() {}
+    /*!
+     * Copy constructor
+     */
     wlogger_mt(wlogger_mt const& that) :
         base_type((
             log::aux::shared_lock_guard< const threading_model >(that.threading_base()),
@@ -562,6 +721,9 @@ public:
     {
     }
 
+    /*!
+     * Assignment operator
+     */
     wlogger_mt& operator= (wlogger_mt const& that)
     {
         if (this != &that)
@@ -573,6 +735,9 @@ public:
         return *this;
     }
 
+    /*!
+     * Swaps two loggers
+     */
     void swap(wlogger_mt& that)
     {
         log::aux::multiple_unique_lock2<
@@ -603,7 +768,7 @@ public:
     else\
         (logger).strm()
 
-//! The macro writes a record to the log and allows to pass additional arguments to the logger
+//! The macro writes a record to the log and allows to pass additional named arguments to the logger
 #define BOOST_LOG_WITH_PARAMS(logger, params_seq)\
     if (!(logger).open_record((BOOST_PP_SEQ_ENUM(params_seq))))\
         ((void)0);\
@@ -611,17 +776,21 @@ public:
         (logger).strm()
 
 
-#define BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL1(r, data, elem) elem<
-#define BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL2(r, data, elem) >
-
 #ifndef BOOST_LOG_MAX_CTOR_FORWARD_ARGS
 //! The maximum number of arguments that can be forwarded by the logger constructor to its bases
 #define BOOST_LOG_MAX_CTOR_FORWARD_ARGS 16
 #endif
 
+//! \cond
+
+#define BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL1(r, data, elem) elem<
+#define BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL2(r, data, elem) >
+
 #define BOOST_LOG_CTOR_FORWARD(z, n, data)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit data(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) : base_type((BOOST_PP_ENUM_PARAMS(n, arg))) {}
+
+//! \endcond
 
 #if !defined(BOOST_LOG_NO_THREADS)
 

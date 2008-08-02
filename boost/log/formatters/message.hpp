@@ -31,7 +31,11 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace formatters {
 
-//! Message formatter class
+/*!
+ * \brief Message formatter class
+ * 
+ * The formatter simply puts the log record message to the resulting stream
+ */
 template< typename CharT >
 class fmt_message :
     public basic_formatter< CharT, fmt_message< CharT > >
@@ -49,26 +53,41 @@ public:
     typedef typename base_type::values_view_type values_view_type;
 
 public:
-    //! Output operator
-    void operator() (ostream_type& strm, values_view_type const&, string_type const& msg) const
+    /*!
+     * Formatting operator. Puts the log record message \a msg to the \a strm stream.
+     * 
+     * \param strm A reference to the stream, where the final text of the logging record is composed
+     * \param attrs A set of attribute values that are associated with the logging record
+     * \param msg The logging record message
+     */
+    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
         strm << msg;
     }
 };
 
 #ifdef BOOST_LOG_USE_CHAR
-//! Formatter generator
+
+/*!
+ * Formatter generator. Construct the \c fmt_message formatter object for narrow-character logging.
+ */
 inline fmt_message< char > message()
 {
     return fmt_message< char >();
 }
+
 #endif
+
 #ifdef BOOST_LOG_USE_WCHAR_T
-//! Formatter generator
+
+/*!
+ * Formatter generator. Construct the \c fmt_message formatter object for wide-character logging.
+ */
 inline fmt_message< wchar_t > wmessage()
 {
     return fmt_message< wchar_t >();
 }
+
 #endif
 
 } // namespace formatters

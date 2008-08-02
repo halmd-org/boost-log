@@ -34,11 +34,13 @@
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 
+//! \cond
 #ifndef BOOST_LOG_NO_THREADS
 #define BOOST_LOG_FILE_SINK_FRONTEND sinks::synchronous_sink
 #else
 #define BOOST_LOG_FILE_SINK_FRONTEND sinks::unlocked_sink
 #endif
+//! \endcond
 
 namespace boost {
 
@@ -67,7 +69,14 @@ shared_ptr<
 
 } // namespace aux
 
-//! The function initializes the logging library to write logs to a file stream
+/*!
+ * The function initializes the logging library to write logs to a file stream.
+ * The function works for narrow-character logging.
+ * 
+ * \param file_name File name to write log to. Must point to a zero-terminated sequence of characters,
+ *                  must not be NULL.
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::text_ostream_backend
@@ -79,7 +88,13 @@ inline shared_ptr<
     return aux::init_log_to_file(p);
 }
 
-//! The function initializes the logging library to write logs to a file stream
+/*!
+ * The function initializes the logging library to write logs to a file stream.
+ * The function works for narrow-character logging.
+ * 
+ * \param file_name File name to write log to.
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::text_ostream_backend
@@ -89,7 +104,13 @@ inline shared_ptr<
     return init_log_to_file(file_name.c_str());
 }
 
-//! The function initializes the logging library to write logs to a file stream
+/*!
+ * The function initializes the logging library to write logs to a file stream.
+ * The function works for narrow-character logging.
+ * 
+ * \param file_name File name to write log to.
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::text_ostream_backend
@@ -103,7 +124,13 @@ inline shared_ptr<
 
 #ifndef BOOST_FILESYSTEM_NARROW_ONLY
 
-//! The function initializes the logging library to write logs to a file stream
+/*!
+ * The function initializes the logging library to write logs to a file stream.
+ * The function works for narrow-character logging.
+ * 
+ * \param file_name File name to write log to.
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::text_ostream_backend
@@ -115,7 +142,14 @@ inline shared_ptr<
     return aux::init_log_to_file(p);
 }
 
-//! The function initializes the logging library to write logs to a file stream
+/*!
+ * The function initializes the logging library to write logs to a file stream.
+ * The function works for narrow-character logging.
+ * 
+ * \param file_name File name to write log to. Must point to a zero-terminated sequence of characters,
+ *                  must not be NULL.
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::text_ostream_backend
@@ -126,7 +160,13 @@ inline shared_ptr<
     return init_log_to_file(fname);
 }
 
-//! The function initializes the logging library to write logs to a file stream
+/*!
+ * The function initializes the logging library to write logs to a file stream.
+ * The function works for narrow-character logging.
+ * 
+ * \param file_name File name to write log to.
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::text_ostream_backend
@@ -138,7 +178,14 @@ inline shared_ptr<
 
 #endif // BOOST_FILESYSTEM_NARROW_ONLY
 
-//! The function initializes the logging library to write logs to a wide file stream
+/*!
+ * The function initializes the logging library to write logs to a file stream
+ * The function works for wide-character logging.
+ * 
+ * \param file_name File name to write log to. Must point to a zero-terminated sequence of characters,
+ *                  must not be NULL.
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::wtext_ostream_backend
@@ -150,7 +197,13 @@ inline shared_ptr<
     return aux::init_log_to_file(p);
 }
 
-//! The function initializes the logging library to write logs to a wide file stream
+/*!
+ * The function initializes the logging library to write logs to a file stream
+ * The function works for wide-character logging.
+ * 
+ * \param file_name File name to write log to.
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::wtext_ostream_backend
@@ -160,7 +213,13 @@ inline shared_ptr<
     return winit_log_to_file(file_name.c_str());
 }
 
-//! The function initializes the logging library to write logs to a wide file stream
+/*!
+ * The function initializes the logging library to write logs to a file stream
+ * The function works for wide-character logging.
+ * 
+ * \param file_name File name to write log to.
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::wtext_ostream_backend
@@ -174,7 +233,13 @@ inline shared_ptr<
 
 #ifndef BOOST_FILESYSTEM_NARROW_ONLY
 
-//! The function initializes the logging library to write logs to a wide file stream
+/*!
+ * The function initializes the logging library to write logs to a file stream
+ * The function works for wide-character logging.
+ * 
+ * \param file_name File name to write log to.
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::wtext_ostream_backend
@@ -186,7 +251,14 @@ inline shared_ptr<
     return aux::init_log_to_file(p);
 }
 
-//! The function initializes the logging library to write logs to a wide file stream
+/*!
+ * The function initializes the logging library to write logs to a file stream
+ * The function works for wide-character logging.
+ * 
+ * \param file_name File name to write log to. Must point to a zero-terminated sequence of characters,
+ *                  must not be NULL.
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::wtext_ostream_backend
@@ -197,7 +269,13 @@ inline shared_ptr<
     return winit_log_to_file(fname);
 }
 
-//! The function initializes the logging library to write logs to a wide file stream
+/*!
+ * The function initializes the logging library to write logs to a file stream
+ * The function works for wide-character logging.
+ * 
+ * \param file_name File name to write log to.
+ * \return Pointer to the constructed sink.
+ */
 inline shared_ptr<
     BOOST_LOG_FILE_SINK_FRONTEND<
         sinks::wtext_ostream_backend

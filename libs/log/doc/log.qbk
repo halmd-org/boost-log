@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-07-12 18:03:43 $]
+    [last-revision $Date: 2008-08-02 08:37:05 $]
 ]
 
 [c++]
@@ -76,7 +76,7 @@ The documentation is oriented to both newbies and experienced library users. How
 
 If this is your first experience with the library, it is recommended to read the [link log.installation Instalation] and [link tutorial.tutorial Tutorial] sections first. The tutorial gives the overview of the library features with sample code snippets. Some tutorial steps are presented in two forms: simple and advanced. The simple form typically describes the most common and easy way to do the task and it is being recommended to be read by newbies. The advanced form usually gives an expanded way to do the same thing but with ability to do some extra customization. It also often explains the library features behind the simple interface in a more detailed way. This form may come handy for more experienced users and should generally be read if your needs are not satisfied with the easy way.
 
-Besides the tutorial there is an [link log.advanced Advanced features] chapter. This part gives description of other tools provided by the library that were not covered by the tutorial. This chapter is better to be read on per-case basis.
+Besides the tutorial there is an [link advanced.advanced Advanced features] chapter. This part gives description of other tools provided by the library that were not covered by the tutorial. This chapter is better to be read on per-case basis.
 
 Last, but not least, there is a reference which gives the formal description of library components.
 
@@ -133,6 +133,14 @@ You may define configuration macros in the `bjam` command line, like this:
 The logging library also uses several Boost libraries that need building too. These are __boost_filesystem__, __boost_system__, __boost_date_time__, __boost_thread__ and __boost_regex__. Refer to their documentation for detailed instructions on building procedure.
 
 One final thing should be added. The library requires run-time type information (RTTI) to be enabled for both the library compilation and user's code compilation. Normally, this won't need anything from you except to check that RTTI support is not disabled in your project.
+
+[endsect]
+
+[section:design Design overview]
+
+The library was designed to be very modular and extensible. The library consists of three main layers.
+
+[$images/log/Design.png]
 
 [endsect]
 
@@ -231,7 +239,7 @@ There are two posible ways to cope with the problem:
 * Enforce strict serialization of log record being made throughout the application. This solution implies a severe performance impact in multithreaded application because log records that otherwise could be processed concurrently will have to go serial. Since this controverses one of the [link log.moti main library goals], it was rejected.
 * Attempt to maintain log record ordering on the sink level. This solution is more or less viable. On the downside, it would introduce log record buffering, which in turn would compromise logs reliability. In case of application crash all buffered records would be lost. It was decided not to be implemented in the current library version.
 
-However, since log record buffering is already present in asynchronous logging, the latter solution may be implemented as a part of the [link advanced.advanced.sinks.async asynchronous sink frontend] functionality in future library versions.
+However, since log record buffering is already present in asynchronous logging, the latter solution may be implemented as a part of the [link advanced.advanced.sink_frontends.async asynchronous sink frontend] functionality in future library versions.
 
 [endsect]
 
@@ -241,14 +249,15 @@ However, since log record buffering is already present in asynchronous logging, 
 
 [section:todo TODO in future releases]
 
-Points in this section are not necessarilly going to be implemented. These are mainly some thoughts on ways of further improvements of the library.
+Points in this section are not necessarilly going to be implemented. These are mainly some thoughts on further improvements of the library.
 
-* Optimize scoped attributes. The idea is to store both the attribute and the `shared_ptr` counter on the stack. Currently only the attribute is stored on the stack.
+* Optimize scoped attributes. The idea is to store both the attribute and the `shared_ptr` counter on the stack. Currently, only the attribute is stored on the stack.
 * Optimize single-threaded configuration. In many places dynamic memory allocation can be removed if multithreading support is disabled.
-* Support C++0x features, like variadic templates.
+* Support C++0x language features, like variadic templates.
 * Optionally support [@http://www.threadingbuildingblocks.org Intel TBB]. In particular, atomic types and thread-safe queue could be useful.
-* Move from __boost_regex__ to __boost_xpressive__. This would remove the dependency in the Boost.Regex library module. However, Boost.Regex support should be retained.
+* Move from __boost_regex__ to __boost_xpressive__ internally. This would remove the dependency in the __boost_regex__ library module. However, __boost_regex__ support should be retained.
 * Windows NT event log support. For now it is not clear how the support should be implemented. The problem is that event log API expects the user to supply a message ID rather than the message text. There is no problem to put the ID in an attribute, but that makes the formatted message text pretty much useless. Also, to make the event log backend generic enough, there must be some mapping between logging library attributes, event attributes and message IDs.
+* SNMP support. The idea is to implement a sink backend that would emit SNMP traps as a result of processing log records. This needs quite an amount of research and thinking over.
 * Implement log record ordering feature for asynchronous logging (see [link log.rationale.why_weak_record_ordering here]).
 * Improve rotating flexibility. The idea is to make the rotation criteria user-definable. Allow to put attribute values into the file name.
 

@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <functional>
+#include <boost/throw_exception.hpp>
 #include <boost/log/utility/slim_string.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/detail/atomic_count.hpp>
@@ -226,7 +227,10 @@ public:
             return traits_type::compare(m_pBegin + pos1, that, compare_size);
         }
         else
-            throw std::out_of_range("basic_slim_string::compare: the position is out of range");
+        {
+            boost::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
+            return 0; // silence the warning about missing return statement in a non-void function
+        }
     }
 
     //! Increments the reference counter
@@ -361,10 +365,10 @@ template< typename CharT, typename TraitsT >
 typename basic_slim_string< CharT, TraitsT >::const_reference
 basic_slim_string< CharT, TraitsT >::at(size_type n) const
 {
-    if (n < m_pImpl->size())
-        return *(m_pImpl->begin() + n);
-    else
-        throw std::out_of_range("basic_slim_string::at: character index is out of range");
+    if (n >= m_pImpl->size())
+        boost::throw_exception(std::out_of_range("basic_slim_string::at: character index is out of range"));
+
+    return *(m_pImpl->begin() + n);
 }
 template< typename CharT, typename TraitsT >
 typename basic_slim_string< CharT, TraitsT >::const_pointer
@@ -606,9 +610,14 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, b
     const size_type that_size = that.m_pImpl->size();
     // Check that both position and length don't exceed the whole string length
     if (that_size >= (pos2 + n2))
+    {
         return m_pImpl->compare(pos1, n1, that.m_pImpl->begin() + pos2, n2);
+    }
     else
-        throw std::out_of_range("basic_slim_string::compare: the position is out of range");
+    {
+        boost::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
+        return 0; // silence the warning about missing return statement in a non-void function
+    }
 }
 template< typename CharT, typename TraitsT >
 int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, string_type const& s, size_type pos2, size_type n2) const
@@ -616,9 +625,14 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, s
     const size_type that_size = s.size();
     // Check that both position and length don't exceed the whole string length
     if (that_size >= (pos2 + n2))
+    {
         return m_pImpl->compare(pos1, n1, s.data() + pos2, n2);
+    }
     else
-        throw std::out_of_range("basic_slim_string::compare: the position is out of range");
+    {
+        boost::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
+        return 0; // silence the warning about missing return statement in a non-void function
+    }
 }
 template< typename CharT, typename TraitsT >
 int basic_slim_string< CharT, TraitsT >::compare(const_pointer s) const
@@ -649,7 +663,10 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, c
             return res;
     }
     else
-        throw std::out_of_range("basic_slim_string::compare: the position is out of range");
+    {
+        boost::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
+        return 0; // silence the warning about missing return statement in a non-void function
+    }
 }
 template< typename CharT, typename TraitsT >
 int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, const_pointer s, size_type n2) const
@@ -665,7 +682,10 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, c
             return res;
     }
     else
-        throw std::out_of_range("basic_slim_string::compare: the position is out of range");
+    {
+        boost::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
+        return 0; // silence the warning about missing return statement in a non-void function
+    }
 }
 
 #ifdef BOOST_LOG_USE_CHAR

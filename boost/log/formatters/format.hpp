@@ -39,7 +39,15 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace formatters {
 
-//! Formatter to output objects into a Boost.Format object
+/*!
+ * \brief Formatter to output objects into a Boost.Format object
+ * 
+ * The \c fmt_format class template is a hook that allows to construct formatters
+ * with format strings. The formatter basically accumulates formatters of the formatting
+ * expression and invokes them sequentially when called to format a log record. The results
+ * of the aggregated formatters are fed to a Boost.Format formatter instance. The final result
+ * of formatting is put into the resulting stream.
+ */
 template< typename CharT >
 class fmt_format :
     public basic_formatter< CharT, fmt_format< CharT > >
@@ -49,7 +57,7 @@ private:
     typedef basic_formatter< CharT, fmt_format< CharT > > base_type;
 
 public:
-    //! Char type
+    //! Character type
     typedef typename base_type::char_type char_type;
     //! String type
     typedef typename base_type::string_type string_type;
@@ -80,12 +88,18 @@ private:
     mutable ostream_type m_Stream;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor with formatter initialization
+     * 
+     * \param fmt Boost.Format formatter instance
+     */
     explicit fmt_format(format_type const& fmt) : m_Format(fmt), m_StreamBuf(m_Buffer), m_Stream(&m_StreamBuf)
     {
         m_Stream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
     }
-    //! Copy constructor
+    /*!
+     * Copy constructor
+     */
     fmt_format(fmt_format const& that) :
         m_Format(that.m_Format),
         m_Formatters(that.m_Formatters),
@@ -95,7 +109,14 @@ public:
         m_Stream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
     }
 
-    //! Output operator
+    /*!
+     * Formatting operator. Invokes all aggregated formatters, collects their formatting results
+     * and composes them according to the format string passed on construction.
+     * 
+     * \param strm A reference to the stream, where the final text of the logging record is composed
+     * \param attrs A set of attribute values that are associated with the logging record
+     * \param msg The logging record message
+     */
     void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
         log::aux::cleanup_guard< format_type > cleanup1(m_Format);
@@ -111,7 +132,12 @@ public:
 
         strm << m_Format.str();
     }
-    //! Composition operator
+
+    /*!
+     * Composition operator. Consumes the \a fmt formatter.
+     * 
+     * \param fmt A Boost.Log formatter
+     */
     template< typename T >
     fmt_format< char_type >& operator% (T const& fmt)
     {
@@ -127,13 +153,22 @@ private:
 
 #ifdef BOOST_LOG_USE_CHAR
 
-//! Formatter generator
+/*!
+ * Formatter generator. Constructs the formatter instance with the specified format string.
+ * 
+ * \param fmt A format string. Must be a zero-terminated sequence of characters, must not be NULL.
+ */
 inline fmt_format< char > format(const char* fmt)
 {
     typedef fmt_format< char >::format_type format_type;
     return fmt_format< char >(format_type(fmt));
 }
-//! Formatter generator
+
+/*!
+ * Formatter generator. Constructs the formatter instance with the specified format string.
+ * 
+ * \param fmt A format string
+ */
 inline fmt_format< char > format(std::basic_string< char > const& fmt)
 {
     typedef fmt_format< char >::format_type format_type;
@@ -144,13 +179,22 @@ inline fmt_format< char > format(std::basic_string< char > const& fmt)
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 
-//! Formatter generator
+/*!
+ * Formatter generator. Constructs the formatter instance with the specified format string.
+ * 
+ * \param fmt A format string. Must be a zero-terminated sequence of characters, must not be NULL.
+ */
 inline fmt_format< wchar_t > format(const wchar_t* fmt)
 {
     typedef fmt_format< wchar_t >::format_type format_type;
     return fmt_format< wchar_t >(format_type(fmt));
 }
-//! Formatter generator
+
+/*!
+ * Formatter generator. Constructs the formatter instance with the specified format string.
+ * 
+ * \param fmt A format string
+ */
 inline fmt_format< wchar_t > format(std::basic_string< wchar_t > const& fmt)
 {
     typedef fmt_format< wchar_t >::format_type format_type;

@@ -33,7 +33,18 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace formatters {
 
-//! A formatter compound that encapsulates two other formatters
+/*!
+ * \brief A formatter compound that encapsulates two other formatters
+ * 
+ * The formatting lambda expressions are decomposed by compiler into
+ * a sequence of binary operators. This formatter does nothing but to
+ * connect two other formatters that participate in such an expression.
+ * When invoked, the formatter simply calls its first (or left-hand)
+ * aggregated formatter and then calls its second (right-hand) formatter.
+ * 
+ * Chaining formatters can be composed into trees which allows to construct
+ * arbitrary-sized formatting lambda expressions.
+ */
 template< typename CharT, typename LeftFmtT, typename RightFmtT >
 class fmt_chain :
     public basic_formatter< CharT, fmt_chain< CharT, LeftFmtT, RightFmtT > >
@@ -46,7 +57,7 @@ private:
     > base_type;
 
 public:
-    //! Char type
+    //! Character type
     typedef typename base_type::char_type char_type;
     //! String type
     typedef typename base_type::string_type string_type;
@@ -62,11 +73,22 @@ private:
     RightFmtT m_Right;
 
 public:
-    //! Constructor
+    /*!
+     * Constructor
+     * 
+     * \param left Left-hand formatter
+     * \param right Right-hand formatter
+     */
     template< typename RightT >
     fmt_chain(LeftFmtT const& left, RightT const& right) : m_Left(left), m_Right(right) {}
 
-    //! Output operator
+    /*!
+     * Formatting operator. Passes control to the left and right formatters.
+     * 
+     * \param strm A reference to the stream, where the final text of the logging record is composed
+     * \param attrs A set of attribute values that are associated with the logging record
+     * \param msg The logging record message
+     */
     void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
         m_Left(strm, attrs, msg);

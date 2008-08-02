@@ -38,6 +38,8 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sources {
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 #ifdef BOOST_LOG_USE_CHAR
 
 //! Narrow-char logger with severity level and channel support
@@ -61,6 +63,154 @@ BOOST_LOG_DECLARE_WLOGGER_MT(wseverity_channel_logger_mt, (basic_severity_logger
 #endif
 
 #endif
+
+#else // BOOST_LOG_DOXYGEN_PASS
+
+/*!
+ * \brief Narrow-char logger. Functionally equivalent to \c basic_severity_logger and \c basic_channel_logger.
+ * 
+ * See \c basic_severity_logger and \c basic_channel_logger class templates for a more detailed description
+ */
+class severity_channel_logger :
+    public basic_severity_logger<
+        basic_channel_logger<
+            basic_logger< char, severity_channel_logger, single_thread_model >
+        >
+    >
+{
+public:
+    /*!
+     * Default constructor
+     */
+    severity_channel_logger();
+    /*!
+     * Copy constructor
+     */
+    severity_channel_logger(severity_channel_logger const& that);
+    /*!
+     * Constructor with named arguments
+     */
+    template< typename... ArgsT >
+    explicit severity_channel_logger(ArgsT... const& args);
+    /*!
+     * Assignment operator
+     */
+    severity_channel_logger& operator= (severity_channel_logger const& that)
+    /*!
+     * Swaps two loggers
+     */
+    void swap(severity_channel_logger& that);
+};
+
+/*!
+ * \brief Narrow-char thread-safe logger. Functionally equivalent to \c basic_severity_logger and \c basic_channel_logger.
+ * 
+ * See \c basic_severity_logger and \c basic_channel_logger class templates for a more detailed description
+ */
+class severity_channel_logger_mt :
+    public basic_severity_logger<
+        basic_channel_logger<
+            basic_logger< char, severity_channel_logger_mt, multi_thread_model >
+        >
+    >
+{
+public:
+    /*!
+     * Default constructor
+     */
+    severity_channel_logger_mt();
+    /*!
+     * Copy constructor
+     */
+    severity_channel_logger_mt(severity_channel_logger_mt const& that);
+    /*!
+     * Constructor with named arguments
+     */
+    template< typename... ArgsT >
+    explicit severity_channel_logger_mt(ArgsT... const& args);
+    /*!
+     * Assignment operator
+     */
+    severity_channel_logger_mt& operator= (severity_channel_logger_mt const& that)
+    /*!
+     * Swaps two loggers
+     */
+    void swap(severity_channel_logger_mt& that);
+};
+
+/*!
+ * \brief Wide-char logger. Functionally equivalent to \c basic_severity_logger and \c basic_channel_logger.
+ * 
+ * See \c basic_severity_logger and \c basic_channel_logger class templates for a more detailed description
+ */
+class wseverity_channel_logger :
+    public basic_severity_logger<
+        basic_channel_logger<
+            basic_logger< wchar_t, wseverity_channel_logger, single_thread_model >
+        >
+    >
+{
+public:
+    /*!
+     * Default constructor
+     */
+    wseverity_channel_logger();
+    /*!
+     * Copy constructor
+     */
+    wseverity_channel_logger(wseverity_channel_logger const& that);
+    /*!
+     * Constructor with named arguments
+     */
+    template< typename... ArgsT >
+    explicit wseverity_channel_logger(ArgsT... const& args);
+    /*!
+     * Assignment operator
+     */
+    wseverity_channel_logger& operator= (wseverity_channel_logger const& that)
+    /*!
+     * Swaps two loggers
+     */
+    void swap(wseverity_channel_logger& that);
+};
+
+/*!
+ * \brief Wide-char thread-safe logger. Functionally equivalent to \c basic_severity_logger and \c basic_channel_logger.
+ * 
+ * See \c basic_severity_logger and \c basic_channel_logger class templates for a more detailed description
+ */
+class wseverity_channel_logger_mt :
+    public basic_severity_logger<
+        basic_channel_logger<
+            basic_logger< wchar_t, wseverity_channel_logger_mt, multi_thread_model >
+        >
+    >
+{
+public:
+    /*!
+     * Default constructor
+     */
+    wseverity_channel_logger_mt();
+    /*!
+     * Copy constructor
+     */
+    wseverity_channel_logger_mt(wseverity_channel_logger_mt const& that);
+    /*!
+     * Constructor with named arguments
+     */
+    template< typename... ArgsT >
+    explicit wseverity_channel_logger_mt(ArgsT... const& args);
+    /*!
+     * Assignment operator
+     */
+    wseverity_channel_logger_mt& operator= (wseverity_channel_logger_mt const& that)
+    /*!
+     * Swaps two loggers
+     */
+    void swap(wseverity_channel_logger_mt& that);
+};
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace sources
 

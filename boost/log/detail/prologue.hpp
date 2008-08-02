@@ -112,10 +112,12 @@
 #    define BOOST_LOG_USE_WCHAR_T
 #endif // !defined(BOOST_LOG_USE_CHAR) && !defined(BOOST_LOG_USE_WCHAR_T)
 
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
 // Check if multithreading is supported
-#if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_HAS_THREADS)
-#   define BOOST_LOG_NO_THREADS
-#endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_HAS_THREADS)
+#   if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_HAS_THREADS)
+#       define BOOST_LOG_NO_THREADS
+#   endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_HAS_THREADS)
+#endif // !defined(BOOST_LOG_DOXYGEN_PASS)
 
 namespace boost {
 
