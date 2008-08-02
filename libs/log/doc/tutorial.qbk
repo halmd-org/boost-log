@@ -9,7 +9,7 @@
 
 [section:tutorial Tutorial]
 
-In this section we shall walk through the essential steps to get started with the library. After reading this part you should be able to initialize the library and add logging to your application. The code of this tutorial is also available in a single example resided in the `libs/log/examples/basic_usage` directory. You may feel free to play around with it, compile and see the result.
+In this section we shall walk through the essential steps to get started with the library. After reading it you should be able to initialize the library and add logging to your application. The code of this tutorial is also available in a single example resided in the `libs/log/examples/basic_usage` directory. You may feel free to play around with it, compile and see the result.
 
 [section:sinks Step 1: Picking sinks]
 
@@ -69,9 +69,9 @@ Now that we defined where the log is to be stored it's time to go on and try log
 
 Note that unlike sinks sources need not to be registered anywhere since they interact directly with logging core. Also note that there are two versions of loggers provided by the library: the thread-safe ones and not thread-safe. For the not thread-safe loggers it is safe for different threads to write logs through different instances of loggers and thus there should be a separate logger for each thread that writes logs. The thread-safe counterparts may be accessed from different threads concurrently, but this would involve locking and may slow things down in case of intense logging. The thread-safe logger types have the `_mt` suffix in their name.
 
-Regardless of the threas safety, all loggers provided by the library are default and copy-constructible and support swapping, so there should be no problem in making a logger a member of your class. As you will see later, such approach can give you additional benefits.
+Regardless of the thread safety, all loggers provided by the library are default and copy-constructible and support swapping, so there should be no problem in making a logger a member of your class. As you will see later, such approach can give you additional benefits.
 
-[heading Creating loggers: Function oriented programming style]
+[heading Creating loggers: Function-oriented programming style]
 
 In case if you cannot put a logger into your class (suppose you don't have one), the library provides a way of declaring global loggers like this:
 
@@ -126,7 +126,7 @@ Hey, all the fuss is just to have a string in the file, you say? That's right, y
 
 Each log record may have a number of attributes attached. Attributes may contain any essental information about conditions in which the log record occurred, such as position in code, executable module name, current date and time, or any piece of data relevant to your particular application and execution environment. An attribute may behave as a value generator, in which case it would return a different value for each log record it's involved in. As soon as the attribute generates the value, the latter becomes independent from the creator and may be used by different filters, formatters and sinks. But in order to do so one has to know the type of the value, or at least what types it may have. There are a number of commonly used attributes implemented in the library, you may find types of their values in the documentation.
 
-Aside from that, there are three possible scopes of attributes: source-specific, thread-specific and global. The source-specific attributes are registered in sources (loggers, for instance) and are attached only to log records that are written through these particular sources. The thread-specific and global attributes should be registered directly in the logging core and, as follows from the naming, are attached to records made in a particular thread or to every record ever made, respectively. When a log record is made attribute values from these three sets are accumulated into a single view and passed to sinks, so there is no difference for them where the attribute was registered. Any attribute may be registered in any scope. Upon registering an attribute is given a unique name in order to make it possible to search for it. If it happens that the same named attribute is found in several scopes, the attribute from the most specific scope is taken into consideration in any further processing, including filtering and formatting. Such behavior makes it possible to override global or thread-scoped attributes with the ones registered in your local logger, thus reducing thread interference.
+Aside from that, as noted in the [link log.design Design overview] section, there are three possible scopes of attributes: source-specific, thread-specific and global. When a log record is made attribute values from these three sets are accumulated into a single view and passed to sinks, so there is no difference for them where the attribute was registered. Any attribute may be registered in any scope. Upon registering an attribute is given a unique name in order to make it possible to search for it. If it happens that the same named attribute is found in several scopes, the attribute from the most specific scope is taken into consideration in any further processing, including filtering and formatting. Such behavior makes it possible to override global or thread-scoped attributes with the ones registered in your local logger, thus reducing thread interference.
 
 Getting back to our tutorial, let's add some attributes to our application.
 

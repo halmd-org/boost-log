@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-08-02 08:37:05 $]
+    [last-revision $Date: 2008-08-02 18:18:47 $]
 ]
 
 [c++]
@@ -53,28 +53,11 @@ This library aims to make logging significantly easier for the application devel
 
 [endsect]
 
-[section:defs Definitions]
-
-Here are definitions of some terms that will be used widely throughout the documentation:
-
-[variablelist
-    [[Log record][A single pack of information, collected from the user's application, that is candidate to be put in log. In a simple case the log record will be represented as a line of text in the log file after being processed by the logging library.]]
-    [[Log attribute][An "attribute" is basically a piece of information of which the logging record consists. Attributes may have different types (integers, strings and more complex, including user defined types). Some examples of attributes: current time stamp, file name, line number, current scope name, etc..]]
-    [[Log sink][A target, to which all log records are fed after being collected from user's application. It is sink's nature that defines where and how the log is going to be stored.]]
-    [[Log source][An entry point for user's application to put log records to. In a simple case it is an object (logger) which maintains a set of attributes that will form a log record upon user's request. Hovewer, one can surely create a source that would emit log records on some third-party events (for example, by intercepting another application's console output).]]
-    [[Log filter][A predicate that takes a log record and tells weither this record should be passed through or discarded.]]
-    [[Log formatter][A functional object that forms up the final shape of the output. Some sinks, like binary logging sink, may not need it although almost any text-based sink would use a formatter to compose its output.]]
-    [[Logging core][The global entity that maintains connection between sources and sinks and applies filters to records. It is mainly used on the logging library initialization stage.]]
-    [[i18n][Internationalization. The ability to manipulate wide characters.]]
-]
-
-[endsect]
-
 [section:how_to_read How to read the documentation]
 
 The documentation is oriented to both newbies and experienced library users. However, users are expected to be familiar with the commonly used Boost components, such as `shared_ptr`, `make_shared` (see __boost_smart_ptr__), and `function` (__boost_function__). Some parts of the documentation will refer to other Boost libraries as needed.
 
-If this is your first experience with the library, it is recommended to read the [link log.installation Instalation] and [link tutorial.tutorial Tutorial] sections first. The tutorial gives the overview of the library features with sample code snippets. Some tutorial steps are presented in two forms: simple and advanced. The simple form typically describes the most common and easy way to do the task and it is being recommended to be read by newbies. The advanced form usually gives an expanded way to do the same thing but with ability to do some extra customization. It also often explains the library features behind the simple interface in a more detailed way. This form may come handy for more experienced users and should generally be read if your needs are not satisfied with the easy way.
+If this is your first experience with the library, it is recommended to read the [link log.design Design overview] section first in order to have the first glance on the library capabilities and architecture. The [link log.installation Instalation] and [link tutorial.tutorial Tutorial] sections will help to get started experimenting with the library. The tutorial gives the overview of the library features with sample code snippets. Some tutorial steps are presented in two forms: simple and advanced. The simple form typically describes the most common and easy way to do the task and it is being recommended to be read by newbies. The advanced form usually gives an expanded way to do the same thing but with ability to do some extra customization and in-depth explanation. This form may come handy for more experienced users and should generally be read if your needs are not satisfied with the easy way.
 
 Besides the tutorial there is an [link advanced.advanced Advanced features] chapter. This part gives description of other tools provided by the library that were not covered by the tutorial. This chapter is better to be read on per-case basis.
 
@@ -136,11 +119,44 @@ One final thing should be added. The library requires run-time type information 
 
 [endsect]
 
+[section:defs Definitions]
+
+Here are definitions of some terms that will be used widely throughout the documentation:
+
+[variablelist
+    [[Log record][A single pack of information, collected from the user's application, that is candidate to be put in log. In a simple case the log record will be represented as a line of text in the log file after being processed by the logging library.]]
+    [[Log attribute][An "attribute" is basically a piece of information of which the logging record consists. Attributes may have different types (integers, strings and more complex, including user defined types). Some examples of attributes: current time stamp, file name, line number, current scope name, etc..]]
+    [[Log sink][A target, to which all log records are fed after being collected from user's application. It is sink's nature that defines where and how the log is going to be stored.]]
+    [[Log source][An entry point for user's application to put log records to. In a simple case it is an object (logger) which maintains a set of attributes that will form a log record upon user's request. Hovewer, one can surely create a source that would emit log records on some third-party events (for example, by intercepting another application's console output).]]
+    [[Log filter][A predicate that takes a log record and tells weither this record should be passed through or discarded.]]
+    [[Log formatter][A functional object that forms up the final shape of the output. Some sinks, like binary logging sink, may not need it although almost any text-based sink would use a formatter to compose its output.]]
+    [[Logging core][The global entity that maintains connection between sources and sinks and applies filters to records. It is mainly used on the logging library initialization stage.]]
+    [[i18n][Internationalization. The ability to manipulate wide characters.]]
+]
+
+[endsect]
+
 [section:design Design overview]
 
-The library was designed to be very modular and extensible. The library consists of three main layers.
+The library was designed to be very modular and extensible. The logging library supports both narrow-character and wide-character logging. Actually, the two methods of logging are implemented independently (i.e. there are different instances of logging cores for each character type and, therefore, a separate processing pipeline for each character type), so user will probably want to decide, which one he will use. Both narrow and wide-character versions of the library provide similar capabilities, so through most of the documentation only the narrow-character will be described. The library provides configuration facilities to leave only one needed version of the library to be compiled.
+
+The library consists of three main layers: the layer of log data collection, the layer of processing the collected data and the central hub that interconnects the former two layers. The design is presented on the figure below.
 
 [$images/log/Design.png]
+
+The arrows show the direction of logging information flow - from parts of your application at the right to the final storage, if any, at the left.  I say "if any" because the result of log processing may include some actions without actually storing the information anywhere. For example, if the application is in critical state, it can emit a special log record that will be processed so that user sees error message as a baloon tooltip over the application icon in the system tray and hears some alarming sound. This is a very important library feature: it is orthogonal to collecting, processing logging data and, in fact, what data logging records consist of. This allows to use the library not only for classic logging, but to indicate some important events to the user and accumulate statistical data.
+
+Getting back to the scheme, in the right side your application emits log records with help of loggers - special objects that provide streams to format messages that will eventually be put to log. There are a number of different logger types provided by the library and there are much more that you can craft yourself, extending the existing ones. Loggers are designed as a mixture of distinct features that can be combined with each other in any combination. You can simply develop your own feature and add it to the soup. You will be able to use the constructed logger just like the others - embed it into your application classes or create and use a global instance of the logger. Either approach provides its benefits. Embedding a logger into some class provides a way to differentiate logs from different instances of the class. On the other hand, in functional-style programming it may be more convenient to have a single global logger somewhere and a simple access to it.
+
+Generally speaking, the library does not require users to use loggers to write logs. The more generic term "log source" is used to designate entity that initiates logging by forming a record. Other log sources might include captured console output of a child application or data received from network. However, loggers are the most common kind of log sources. In any case, in order to initiate logging the log source must pass all data, associated with the log record, to the logging core. This data or, more precisely, the logic of the data acquision is presented as a set of named attributes. Each attribute is, basically, a function, whose result is called "attribute value" and is actually processed on further stages. An example of attribute is the current time acquision algorithm. Its result - the particular time point - is the attribute value.
+
+There are three kinds of attribute sets: global, thread-specific and source-specific. You may see on the scheme that the former two are maintained by the logging core and thus need not to be passed by the log source in order to initiate logging. Attributes that participate in the global attribute set are attached to any log record ever made. Obviously, thread-specific attributes are attached only to the records made from the thread in which they were registered in the set. Source-specific attribute set is maintained by the source that initiates logging, these attributes are attached only to the records being made through that particular source. When the source initiates logging, attribute values are acquired from attributes of all three attribute sets. These attribute values then form a single view of named attribute values, which is processed further. The situation when the same-named attribute is found in several attribute sets is possible. Such conflicts are solved on priority basis: global attributes have the least priority, source-specific attributes have the highest; the lower priority attributes are discarded from consideration in case of conflicts.
+
+When the set of attribute values is composed, the logging core decides if this log record is going to be processed. This is called filtering. There are two layers of filtering available: the global filtering is applied first within the logging core itself and allows to quickly wipe away unneeded log records; the sink-specific filtering is applied second, for each sink separately. The sink-specific filtering allows to direct log records to particular sinks. Note that it is not significant which log source emitted the record, the filtering relies solely on the set of attribute values attached to the record.
+
+If a log record passes filtering for at least one sink, the record is considered to be consumable. This is the point when log message formatting takes place. The formatted message, along with the composed attribute values view, is passed to the sinks that accepted the record. As you may have noticed on the figure above, sinks consist of two parts: the frontend and the backend. This division is made in order to extract the common functionality of sinks, such as filtering and thread synchronization, into separate entities (frontends). Sink frontends are provided by the library, most likely users won't have to reimplement them. Backends, on the opposite, are one of the most likely places of the library extension. It is sink backends that do the actual log records processing. There may be a sink that formats the attribute values and the log message and stores it into a file; there may be a sink that sends log records over the network to the remote processing center; there may be the aforementioned sink that puts record messages into tooltip baloons - you name it. The most commonly used sink backends are already provided by the library.
+
+Along with the described above primary facilities, the library provides a wide variety of auxiliary tools, such as attributes, support for formatters and filters, represented as lambda expressions, and even basic helpers for the library initialization. You will find their description in the [link advanced.advanced Advanced features] section. However, for newbies it is recommended to start discovering the library from the [link tutorial.tutorial Tutorial] section.
 
 [endsect]
 
@@ -240,6 +256,12 @@ There are two posible ways to cope with the problem:
 * Attempt to maintain log record ordering on the sink level. This solution is more or less viable. On the downside, it would introduce log record buffering, which in turn would compromise logs reliability. In case of application crash all buffered records would be lost. It was decided not to be implemented in the current library version.
 
 However, since log record buffering is already present in asynchronous logging, the latter solution may be implemented as a part of the [link advanced.advanced.sink_frontends.async asynchronous sink frontend] functionality in future library versions.
+
+[endsect]
+
+[section:why_wide_attribute_names Why wide-character version of the library requires wide attribute names?]
+
+The short answer: for consistency. I mean, if a user chooses to write wide logs, he probably knows that national characters may appear in log messages and attributes. Attribute names may too be put into log and, in fact, may too be composed by the application and therefore may contain national characters. Another reason for this decision is the library interface unification. For instance, in many cases users won't have to remember to write either `attr` or `wattr`, but to always write `attr`, whatever character type they are using.
 
 [endsect]
 
