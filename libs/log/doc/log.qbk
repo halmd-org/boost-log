@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-08-02 18:18:47 $]
+    [last-revision $Date: 2008-08-02 19:26:40 $]
 ]
 
 [c++]
@@ -162,7 +162,7 @@ Along with the described above primary facilities, the library provides a wide v
 
 [include:tutorial tutorial.qbk]
 [include:advanced advanced.qbk]
-[include:extension extension.qbk]
+[/ include:extension extension.qbk /]
 
 [section:rationale Rationale]
 
@@ -282,6 +282,8 @@ Points in this section are not necessarilly going to be implemented. These are m
 * SNMP support. The idea is to implement a sink backend that would emit SNMP traps as a result of processing log records. This needs quite an amount of research and thinking over.
 * Implement log record ordering feature for asynchronous logging (see [link log.rationale.why_weak_record_ordering here]).
 * Improve rotating flexibility. The idea is to make the rotation criteria user-definable. Allow to put attribute values into the file name.
+* Provide a compile-time option to remove all logging from the application (the compiled binary should contain no traces of logging internally). There are two reasons for this request: attempting to achieve maximum performance and concealing internal information, such as function names and internal messages, to prevent reverse engineering in no-logging builds. Effectively, this would require not only all library macros to be redefined to emptyness, but also to provide dummy implementations of many library components. Needs more consideration. Perhaps, suppressing only macros would be sufficient.
+* Provide a set of macros for Boost.Exception support. E.g. throwing an exception with call stack embedded or writing a message into log when throwing an exception.
 
 [endsect]
 

@@ -157,7 +157,7 @@ Sometimes it is important to categorize log records based on some constant piece
 
     #include <boost/log/sources/severity_channel_logger.hpp>
 
-If you wonder whether you can use a mixed set of several logger features in one logger, then yes, you certainly can. The library provides `severity_channel_logger` and `severity_channel_logger_mt` (with their wide-char analogues `wseverity_channel_logger` and `wseverity_channel_logger_mt`) which combine features of the described loggers with [link advanced.advanced.sources.severity_level_logger severity level] and [link advanced.advanced.sources.channel_logger channels] support. You can also design your own logger features and combine them with the ones provided by the library, as described in the [link extension.extension.sources Extending the library] section.
+If you wonder whether you can use a mixed set of several logger features in one logger, then yes, you certainly can. The library provides `severity_channel_logger` and `severity_channel_logger_mt` (with their wide-char analogues `wseverity_channel_logger` and `wseverity_channel_logger_mt`) which combine features of the described loggers with [link advanced.advanced.sources.severity_level_logger severity level] and [link advanced.advanced.sources.channel_logger channels] support. You can also design your own logger features and combine them with the ones provided by the library[/, as described in the [link extension.extension.sources Extending the library] section/].
 
 [endsect]
 
