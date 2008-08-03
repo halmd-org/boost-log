@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-08-02 19:26:40 $]
+    [last-revision $Date: 2008-08-03 17:55:29 $]
 ]
 
 [c++]
@@ -43,19 +43,19 @@ This library is not an official part of [@http://www.boost.org Boost libraries c
 
 Today applications grow rapidly, becoming complicated and difficult to test and debug. Most of the time applications run on a remote site, leaving the developer little chance to monitor its execution and figure out the reason of its failure, once it should happen. Moreover, even the local debugging may become problematic if the application behavior depends heavilly on asynchronous third-party events, like device feedback or another process activity.
 
-This is where logging may help. The application stores all essential information of its run time to log, and once something goes wrong this information can be used to analyse program behavior and make necessary corrections. There are other very useful applications of logging, such as gathering statistic information and alarming (i.e. indicating that the application is experiencing some problems). These tasks have proven to be vital for many real-world industrial applications.
+This is where logging may help. The application stores all essential information of its run time to log, and once something goes wrong this information can be used to analyse program behavior and make necessary corrections. There are other very useful applications of logging, such as gathering statistic information and highlighting events (i.e. indicating that some situation has occurred or the application is experiencing some problems). These tasks have proven to be vital for many real-world industrial applications.
 
 This library aims to make logging significantly easier for the application developer. It provides a wide range of out-of-box tools, along with public interfaces ready to be used to extend the library. The main goals of the library are:
 
 * Simplicity. A small example code snippet should be enough to get the feel of the library and be ready to use its basic features.
-* Extensibility. A user should be able to extend library's functionality in ways of collecting and storing information into logs.
+* Extensibility. A user should be able to extend functionality of the library with regard to collecting and storing information into logs.
 * Performance. The library should make as least performance impact on the user's application as possible.
 
 [endsect]
 
 [section:how_to_read How to read the documentation]
 
-The documentation is oriented to both newbies and experienced library users. However, users are expected to be familiar with the commonly used Boost components, such as `shared_ptr`, `make_shared` (see __boost_smart_ptr__), and `function` (__boost_function__). Some parts of the documentation will refer to other Boost libraries as needed.
+The documentation is oriented to both newbies and experienced library users. However, users are expected to be familiar with the commonly used Boost components, such as `shared_ptr`, `make_shared` (see __boost_smart_ptr__), and `function` (__boost_function__). Some parts of the documentation will refer to other Boost libraries, as needed.
 
 If this is your first experience with the library, it is recommended to read the [link log.design Design overview] section first in order to have the first glance on the library capabilities and architecture. The [link log.installation Instalation] and [link tutorial.tutorial Tutorial] sections will help to get started experimenting with the library. The tutorial gives the overview of the library features with sample code snippets. Some tutorial steps are presented in two forms: simple and advanced. The simple form typically describes the most common and easy way to do the task and it is being recommended to be read by newbies. The advanced form usually gives an expanded way to do the same thing but with ability to do some extra customization and in-depth explanation. This form may come handy for more experienced users and should generally be read if your needs are not satisfied with the easy way.
 
@@ -284,6 +284,7 @@ Points in this section are not necessarilly going to be implemented. These are m
 * Improve rotating flexibility. The idea is to make the rotation criteria user-definable. Allow to put attribute values into the file name.
 * Provide a compile-time option to remove all logging from the application (the compiled binary should contain no traces of logging internally). There are two reasons for this request: attempting to achieve maximum performance and concealing internal information, such as function names and internal messages, to prevent reverse engineering in no-logging builds. Effectively, this would require not only all library macros to be redefined to emptyness, but also to provide dummy implementations of many library components. Needs more consideration. Perhaps, suppressing only macros would be sufficient.
 * Provide a set of macros for Boost.Exception support. E.g. throwing an exception with call stack embedded or writing a message into log when throwing an exception.
+* Provide a macro, like `BOOST_LOG_FUNCTION`, but with ability to automatically log all function arguments.
 
 [endsect]
 
