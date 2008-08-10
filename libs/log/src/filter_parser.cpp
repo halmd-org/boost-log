@@ -32,7 +32,7 @@
 #include <boost/spirit/core.hpp>
 #include <boost/spirit/utility/confix.hpp>
 #include <boost/spirit/utility/escape_char.hpp>
-#include <boost/log/logging_core.hpp>
+#include <boost/log/core.hpp>
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>
@@ -54,7 +54,7 @@ struct filter_grammar :
 {
     typedef CharT char_type;
     typedef std::basic_string< char_type > string_type;
-    typedef typename basic_logging_core< char_type >::filter_type filter_type;
+    typedef typename basic_core< char_type >::filter_type filter_type;
     typedef boost::log::aux::char_constants< char_type > constants;
     typedef filter_grammar< char_type > filter_grammar_type;
 
@@ -415,14 +415,14 @@ struct filter_grammar< CharT >::definition
 //! The function parses a filter from the string
 template< typename CharT >
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
-typename basic_logging_core< CharT >::filter_type
+typename basic_core< CharT >::filter_type
 #else
 function1< bool, basic_attribute_values_view< CharT > const& >
 #endif
 parse_filter(const CharT* begin, const CharT* end)
 {
     typedef CharT char_type;
-    typedef typename basic_logging_core< char_type >::filter_type filter_type;
+    typedef typename basic_core< char_type >::filter_type filter_type;
 
     filter_type filt;
     filter_grammar< char_type > gram(filt);
@@ -436,7 +436,7 @@ parse_filter(const CharT* begin, const CharT* end)
 #ifdef BOOST_LOG_USE_CHAR
 template BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
-basic_logging_core< char >::filter_type
+basic_core< char >::filter_type
 #else
 function1< bool, basic_attribute_values_view< char > const& >
 #endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
@@ -446,7 +446,7 @@ parse_filter< char >(const char* begin, const char* end);
 #ifdef BOOST_LOG_USE_WCHAR_T
 template BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
-basic_logging_core< wchar_t >::filter_type
+basic_core< wchar_t >::filter_type
 #else
 function1< bool, basic_attribute_values_view< wchar_t > const& >
 #endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING

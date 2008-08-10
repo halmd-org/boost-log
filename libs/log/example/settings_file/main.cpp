@@ -26,7 +26,7 @@
 #include <fstream>
 #include <boost/shared_ptr.hpp>
 
-#include <boost/log/logging_core.hpp>
+#include <boost/log/core.hpp>
 #include <boost/log/attributes/clock.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/sources/severity_logger.hpp>
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
 
         // Add some attributes
         shared_ptr< logging::attribute > attr(new attrs::local_clock);
-        logging::logging_core::get()->add_global_attribute("TimeStamp", attr);
+        logging::core::get()->add_global_attribute("TimeStamp", attr);
 
         // Try logging
         try_logging();

@@ -31,7 +31,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/barrier.hpp>
 
-#include <boost/log/logging_core.hpp>
+#include <boost/log/core.hpp>
 #include <boost/log/attributes/clock.hpp>
 #include <boost/log/attributes/counter.hpp>
 #include <boost/log/sources/basic_logger.hpp>
@@ -101,13 +101,13 @@ int main(int argc, char* argv[])
             );
 
         // Add it to the core
-        logging::logging_core::get()->add_sink(sink);
+        logging::core::get()->add_sink(sink);
 
         // Add some attributes too
         shared_ptr< logging::attribute > attr(new attrs::local_clock);
-        logging::logging_core::get()->add_global_attribute("TimeStamp", attr);
+        logging::core::get()->add_global_attribute("TimeStamp", attr);
         attr.reset(new attrs::counter< unsigned int >);
-        logging::logging_core::get()->add_global_attribute("Line #", attr);
+        logging::core::get()->add_global_attribute("Line #", attr);
 
         // Create logging threads
         boost::barrier bar(THREAD_COUNT);

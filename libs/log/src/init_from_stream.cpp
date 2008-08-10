@@ -32,7 +32,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/log/logging_core.hpp>
+#include <boost/log/core.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #ifdef BOOST_LOG_USE_SYSLOG
@@ -92,7 +92,7 @@ public:
             boost::algorithm::trim(line, loc);
 
             // Skipping empty lines and comments
-            // NOTE: The comments are only allwed to be the whole line.
+            // NOTE: The comments are only allowed to be the whole line.
             //       Comments beginning in the middle of the line are not supported.
             if (!line.empty() && line[0] != constants::char_comment)
             {
@@ -479,7 +479,7 @@ void apply_core_settings(std::map< std::basic_string< CharT >, std::basic_string
     typedef std::map< string_type, string_type > params_t;
     typedef aux::char_constants< char_type > constants;
     typedef std::basic_istringstream< char_type > isstream;
-    typedef basic_logging_core< char_type > core_t;
+    typedef basic_core< char_type > core_t;
     shared_ptr< core_t > core = core_t::get();
 
     // Filter
@@ -529,7 +529,7 @@ void init_from_stream(std::basic_istream< CharT >& strm)
 {
     typedef CharT char_type;
     typedef std::basic_string< char_type > string_type;
-    typedef basic_logging_core< char_type > core_t;
+    typedef basic_core< char_type > core_t;
     typedef sinks_repository< char_type > sinks_repo_t;
 
     // Parse the settings

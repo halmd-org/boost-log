@@ -4,7 +4,7 @@
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  * 
- * \file   logging_core.cpp
+ * \file   core.cpp
  * \author Andrey Semashev
  * \date   19.04.2007
  * 
@@ -19,7 +19,7 @@
 #include <boost/ref.hpp>
 #include <boost/none.hpp>
 #include <boost/compatibility/cpp_c_headers/cstddef>
-#include <boost/log/logging_core.hpp>
+#include <boost/log/core.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/detail/singleton.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -85,21 +85,21 @@ namespace {
 
 //! Logging system implementation
 template< typename CharT >
-struct basic_logging_core< CharT >::implementation :
+struct basic_core< CharT >::implementation :
     public log::aux::lazy_singleton<
         implementation,
-        shared_ptr< basic_logging_core< CharT > >
+        shared_ptr< basic_core< CharT > >
     >
 {
 public:
     //! Base type of singleton holder
     typedef log::aux::lazy_singleton<
         implementation,
-        shared_ptr< basic_logging_core< CharT > >
+        shared_ptr< basic_core< CharT > >
     > base_type;
 
     //! Front-end class type
-    typedef basic_logging_core< char_type > logging_core_type;
+    typedef basic_core< char_type > core_type;
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Read lock type
     typedef log::aux::shared_lock_guard< shared_mutex > scoped_read_lock;
@@ -168,7 +168,7 @@ public:
     //! Constructor
     implementation() : Enabled(true) {}
 
-    //! The method returns the current therad-specific data
+    //! The method returns the current thread-specific data
     thread_data* get_thread_data()
     {
         thread_data* p = pThreadData.get();
@@ -183,7 +183,7 @@ public:
     //! The function initializes the logging system
     static void init_instance()
     {
-        base_type::get_instance().reset(new logging_core_type());
+        base_type::get_instance().reset(new core_type());
     }
 
 private:
@@ -205,28 +205,28 @@ private:
 
 //! Logging system constructor
 template< typename CharT >
-basic_logging_core< CharT >::basic_logging_core()
+basic_core< CharT >::basic_core()
     : pImpl(new implementation())
 {
 }
 
 //! Logging system destructor
 template< typename CharT >
-basic_logging_core< CharT >::~basic_logging_core()
+basic_core< CharT >::~basic_core()
 {
     delete pImpl;
 }
 
 //! The method returns a pointer to the logging system instance
 template< typename CharT >
-shared_ptr< basic_logging_core< CharT > > basic_logging_core< CharT >::get()
+shared_ptr< basic_core< CharT > > basic_core< CharT >::get()
 {
     return implementation::get();
 }
 
 //! The method enables or disables logging and returns the previous state of logging flag
 template< typename CharT >
-bool basic_logging_core< CharT >::set_logging_enabled(bool enabled)
+bool basic_core< CharT >::set_logging_enabled(bool enabled)
 {
 #if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
@@ -238,7 +238,7 @@ bool basic_logging_core< CharT >::set_logging_enabled(bool enabled)
 
 //! The method adds a new sink
 template< typename CharT >
-void basic_logging_core< CharT >::add_sink(shared_ptr< sink_type > const& s)
+void basic_core< CharT >::add_sink(shared_ptr< sink_type > const& s)
 {
 #if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
@@ -251,7 +251,7 @@ void basic_logging_core< CharT >::add_sink(shared_ptr< sink_type > const& s)
 
 //! The method removes the sink from the output
 template< typename CharT >
-void basic_logging_core< CharT >::remove_sink(shared_ptr< sink_type > const& s)
+void basic_core< CharT >::remove_sink(shared_ptr< sink_type > const& s)
 {
 #if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
@@ -265,8 +265,8 @@ void basic_logging_core< CharT >::remove_sink(shared_ptr< sink_type > const& s)
 
 //! The method adds an attribute to the global attribute set
 template< typename CharT >
-std::pair< typename basic_logging_core< CharT >::attribute_set_type::iterator, bool >
-basic_logging_core< CharT >::add_global_attribute(string_type const& name, shared_ptr< attribute > const& attr)
+std::pair< typename basic_core< CharT >::attribute_set_type::iterator, bool >
+basic_core< CharT >::add_global_attribute(string_type const& name, shared_ptr< attribute > const& attr)
 {
 #if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
@@ -276,7 +276,7 @@ basic_logging_core< CharT >::add_global_attribute(string_type const& name, share
 
 //! The method removes an attribute from the global attribute set
 template< typename CharT >
-void basic_logging_core< CharT >::remove_global_attribute(typename attribute_set_type::iterator it)
+void basic_core< CharT >::remove_global_attribute(typename attribute_set_type::iterator it)
 {
 #if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
@@ -286,7 +286,7 @@ void basic_logging_core< CharT >::remove_global_attribute(typename attribute_set
 
 //! The method returns the complete set of currently registered global attributes
 template< typename CharT >
-typename basic_logging_core< CharT >::attribute_set_type basic_logging_core< CharT >::get_global_attributes() const
+typename basic_core< CharT >::attribute_set_type basic_core< CharT >::get_global_attributes() const
 {
 #if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
@@ -295,7 +295,7 @@ typename basic_logging_core< CharT >::attribute_set_type basic_logging_core< Cha
 }
 //! The method replaces the complete set of currently registered global attributes with the provided set
 template< typename CharT >
-void basic_logging_core< CharT >::set_global_attributes(attribute_set_type const& attrs) const
+void basic_core< CharT >::set_global_attributes(attribute_set_type const& attrs) const
 {
 #if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
@@ -305,8 +305,8 @@ void basic_logging_core< CharT >::set_global_attributes(attribute_set_type const
 
 //! The method adds an attribute to the thread-specific attribute set
 template< typename CharT >
-std::pair< typename basic_logging_core< CharT >::attribute_set_type::iterator, bool >
-basic_logging_core< CharT >::add_thread_attribute(string_type const& name, shared_ptr< attribute > const& attr)
+std::pair< typename basic_core< CharT >::attribute_set_type::iterator, bool >
+basic_core< CharT >::add_thread_attribute(string_type const& name, shared_ptr< attribute > const& attr)
 {
     typename implementation::thread_data* p = pImpl->get_thread_data();
     return p->ThreadAttributes.insert(typename attribute_set_type::key_type(name), attr);
@@ -314,7 +314,7 @@ basic_logging_core< CharT >::add_thread_attribute(string_type const& name, share
 
 //! The method removes an attribute from the thread-specific attribute set
 template< typename CharT >
-void basic_logging_core< CharT >::remove_thread_attribute(typename attribute_set_type::iterator it)
+void basic_core< CharT >::remove_thread_attribute(typename attribute_set_type::iterator it)
 {
     typename implementation::thread_data* p = pImpl->pThreadData.get();
     if (p)
@@ -323,14 +323,14 @@ void basic_logging_core< CharT >::remove_thread_attribute(typename attribute_set
 
 //! The method returns the complete set of currently registered thread-specific attributes
 template< typename CharT >
-typename basic_logging_core< CharT >::attribute_set_type basic_logging_core< CharT >::get_thread_attributes() const
+typename basic_core< CharT >::attribute_set_type basic_core< CharT >::get_thread_attributes() const
 {
     typename implementation::thread_data* p = pImpl->get_thread_data();
     return p->ThreadAttributes;
 }
 //! The method replaces the complete set of currently registered thread-specific attributes with the provided set
 template< typename CharT >
-void basic_logging_core< CharT >::set_thread_attributes(attribute_set_type const& attrs) const
+void basic_core< CharT >::set_thread_attributes(attribute_set_type const& attrs) const
 {
     typename implementation::thread_data* p = pImpl->get_thread_data();
     p->ThreadAttributes = attrs;
@@ -338,7 +338,7 @@ void basic_logging_core< CharT >::set_thread_attributes(attribute_set_type const
 
 //! An internal method to set the global filter
 template< typename CharT >
-void basic_logging_core< CharT >::set_filter(filter_type const& filter)
+void basic_core< CharT >::set_filter(filter_type const& filter)
 {
 #if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
@@ -348,7 +348,7 @@ void basic_logging_core< CharT >::set_filter(filter_type const& filter)
 
 //! The method removes the global logging filter
 template< typename CharT >
-void basic_logging_core< CharT >::reset_filter()
+void basic_core< CharT >::reset_filter()
 {
 #if !defined(BOOST_LOG_NO_THREADS)
     typename implementation::scoped_write_lock lock(pImpl->Mutex);
@@ -358,7 +358,7 @@ void basic_logging_core< CharT >::reset_filter()
 
 //! The method opens a new record to be written and returns true if the record was opened
 template< typename CharT >
-bool basic_logging_core< CharT >::open_record(attribute_set_type const& source_attributes)
+bool basic_core< CharT >::open_record(attribute_set_type const& source_attributes)
 {
     // Try a quick win first
     if (pImpl->Enabled) try
@@ -415,7 +415,7 @@ bool basic_logging_core< CharT >::open_record(attribute_set_type const& source_a
 
 //! The method pushes the record and closes it
 template< typename CharT >
-void basic_logging_core< CharT >::push_record(string_type const& message_text)
+void basic_core< CharT >::push_record(string_type const& message_text)
 {
     typename implementation::thread_data* tsd = pImpl->get_thread_data();
     try
@@ -451,7 +451,7 @@ void basic_logging_core< CharT >::push_record(string_type const& message_text)
 
 //! The method cancels the record
 template< typename CharT >
-void basic_logging_core< CharT >::cancel_record()
+void basic_core< CharT >::cancel_record()
 {
     typename implementation::thread_data* tsd = pImpl->pThreadData.get();
     if (tsd && !tsd->PendingRecords.empty())
@@ -460,12 +460,12 @@ void basic_logging_core< CharT >::cancel_record()
     }
 }
 
-//  Explicitly instantiate logging_core implementation
+//  Explicitly instantiate core implementation
 #ifdef BOOST_LOG_USE_CHAR
-template class BOOST_LOG_EXPORT basic_logging_core< char >;
+template class BOOST_LOG_EXPORT basic_core< char >;
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-template class BOOST_LOG_EXPORT basic_logging_core< wchar_t >;
+template class BOOST_LOG_EXPORT basic_core< wchar_t >;
 #endif
 
 } // namespace log

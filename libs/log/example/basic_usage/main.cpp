@@ -25,7 +25,7 @@
 #include <iostream>
 #include <fstream>
 #include <boost/shared_ptr.hpp>
-#include <boost/log/logging_core.hpp>
+#include <boost/log/core.hpp>
 
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/severity_logger.hpp>
@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
     }
 
     // Ok, we're ready to add the sink to the logging library
-    logging::logging_core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(pSink);
 
     // Now our logs will be written both to the console and to the file.
     // Let's do a quick test and output something. We have to create a logger for this.
@@ -190,11 +190,11 @@ int main(int argc, char* argv[])
 
     // Since we intend to count all logging records ever made by the application,
     // this attribute should clearly be global.
-    logging::logging_core::get()->add_global_attribute("LineID", pCounter);
+    logging::core::get()->add_global_attribute("LineID", pCounter);
 
     // And similarly add a time stamp
     shared_ptr< logging::attribute > pTimeStamp(new attrs::local_clock());
-    logging::logging_core::get()->add_global_attribute("TimeStamp", pTimeStamp);
+    logging::core::get()->add_global_attribute("TimeStamp", pTimeStamp);
 
     // And an up time stopwatch
     BOOST_LOG_SCOPED_THREAD_ATTR("Uptime", attrs::timer);
@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
 
     // Let's also track the execution scope from which the records are made
     boost::shared_ptr< logging::attribute > pNamedScope(new attrs::named_scope());
-    logging::logging_core::get()->add_thread_attribute("Scope", pNamedScope);
+    logging::core::get()->add_thread_attribute("Scope", pNamedScope);
 
     // We can mark the current execution scope now - it's the 'main' function
     BOOST_LOG_FUNCTION();
@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
     // Above we set a filter for this particular sink. Had we another sink, the filter would
     // not influence it. To set a global filter one should call the set_filter method of the
     // logging system like that:
-    // logging::logging_core::get()->set_filter(...);
+    // logging::core::get()->set_filter(...);
 
     // Now, to set logging severity we could perfectly use our previously created logger "lg".
     // But no make it more convenient and efficient there is a special extended logger class.

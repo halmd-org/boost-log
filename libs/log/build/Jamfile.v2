@@ -48,7 +48,7 @@ lib boost_log
         attribute_set.cpp
         attribute_values_view.cpp
         slim_string.cpp
-        logging_core.cpp
+        core.cpp
         stream_provider.cpp
         severity_level.cpp
         global_logger_storage.cpp

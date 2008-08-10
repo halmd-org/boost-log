@@ -39,8 +39,8 @@
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
 #include <boost/log/detail/multiple_lock.hpp>
-#include <boost/log/logging_core.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
+#include <boost/log/core.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
@@ -294,7 +294,7 @@ public:
     //! Attribute set type
     typedef basic_attribute_set< char_type > attribute_set_type;
     //! Logging system core type
-    typedef basic_logging_core< char_type > logging_core_type;
+    typedef basic_core< char_type > core_type;
     //! Threading model type
     typedef ThreadingModelT threading_model;
 
@@ -309,7 +309,7 @@ protected:
 
 private:
     //! A pointer to the logging system
-    shared_ptr< logging_core_type > m_pLoggingSystem;
+    shared_ptr< core_type > m_pLoggingSystem;
 
     //! Logger-specific attribute set
     attribute_set_type m_Attributes;
@@ -320,7 +320,7 @@ public:
      * acquires reference to the logging core.
      */
     basic_logger() :
-        m_pLoggingSystem(logging_core_type::get())
+        m_pLoggingSystem(core_type::get())
     {
     }
     /*!
@@ -331,7 +331,7 @@ public:
      * \param that Source logger
      */
     basic_logger(basic_logger const& that) :
-        m_pLoggingSystem(logging_core_type::get()),
+        m_pLoggingSystem(core_type::get()),
         m_Attributes(that.m_Attributes)
     {
     }
@@ -341,7 +341,7 @@ public:
      */
     template< typename ArgsT >
     explicit basic_logger(ArgsT const& args) :
-        m_pLoggingSystem(logging_core_type::get())
+        m_pLoggingSystem(core_type::get())
     {
     }
 
@@ -448,7 +448,7 @@ protected:
     /*!
      * An accessor to the logging system pointer
      */
-    shared_ptr< logging_core_type > const& core() const { return m_pLoggingSystem; }
+    shared_ptr< core_type > const& core() const { return m_pLoggingSystem; }
     /*!
      * An accessor to the logger attributes
      */

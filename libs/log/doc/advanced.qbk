@@ -216,7 +216,7 @@ which are equivalent. Further usage of the logger is completely the same as it w
 
 [section:sink_frontends Sink Frontends]
 
-Every sink object that is compatible with the logging library is required to support interface `sink< CharT >`, where `CharT` is the appropriate character type. This interface is used by `logging_core` to perform sink-specific filtering and pass log records to sinks. Technically speaking, one can derive his class from the `sink` template and have his new-found sink, but for sake of code reusing and sink implementation simplicity the library suggests separated concepts of sink frontend and sink backend. Sink frontends derive from the `sink` template and encapsulate the logic of filtering and thread synchronization. Most probably you won't have to write your own frontend once you need to create a new type of sink, because the library provides a number of frontends that cover most use cases. See [link advanced.advanced.sink_backends Sink Backends] section for more details on interface between frontends and backends.
+Every sink object that is compatible with the logging library is required to support interface `sink< CharT >`, where `CharT` is the appropriate character type. This interface is used by logging core to perform sink-specific filtering and pass log records to sinks. Technically speaking, one can derive his class from the `sink` template and have his new-found sink, but for sake of code reusing and sink implementation simplicity the library suggests separated concepts of sink frontend and sink backend. Sink frontends derive from the `sink` template and encapsulate the logic of filtering and thread synchronization. Most probably you won't have to write your own frontend once you need to create a new type of sink, because the library provides a number of frontends that cover most use cases. See [link advanced.advanced.sink_backends Sink Backends] section for more details on interface between frontends and backends.
 
 [section:unlocked Unlocked sink frontend]
 
@@ -239,7 +239,7 @@ The unlocked sink frontend is implemented with the `unlocked_sink` class templat
     // The function registers my_backend sink in the logging library
     void foo()
     {
-        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+        boost::shared_ptr< logging::core > core = logging::core::get();
 
         // The simpliest way, the backend is default-constructed
         boost::shared_ptr< sink< char > > sink1(new sinks::unlocked_sink< my_backend >);
@@ -270,7 +270,7 @@ The usage is similar to the `unlocked_sink`.
     // The function registers text output sink in the logging library
     void foo()
     {
-        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+        boost::shared_ptr< logging::core > core = logging::core::get();
 
         // Create a backend and initialize it with a stream
         boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
@@ -303,7 +303,7 @@ The frontend is implemented in the `asynchronous_sink` class template. Like sync
     // The function registers text output sink in the logging library
     void foo()
     {
-        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+        boost::shared_ptr< logging::core > core = logging::core::get();
 
         // Create a backend and initialize it with a stream
         boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
@@ -346,7 +346,7 @@ The backend provides another feature that may come useful when debugging your ap
     // The function registers text output sink in the logging library
     void foo()
     {
-        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+        boost::shared_ptr< logging::core > core = logging::core::get();
 
         // Create a backend and attach a couple of streams to it
         boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
@@ -380,7 +380,7 @@ Anyway, one example is better than a thousand words.
     // The function registers syslog sink in the logging library
     void foo()
     {
-        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+        boost::shared_ptr< logging::core > core = logging::core::get();
 
         // Create a backend. Specify facility and options in the constructor.
         boost::shared_ptr< sinks::syslog_backend > backend(new sinks::syslog_backend(
@@ -476,7 +476,7 @@ This filter is usually used in conjunction with [link advanced.advanced.formatte
     // The function registers two sinks - one for statistic information, and another one for other records
     void foo()
     {
-        boost::shared_ptr< logging_core > core = logging::logging_core::get();
+        boost::shared_ptr< logging::core > core = logging::core::get();
 
         // Create a backend and attach a stream to it
         boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
@@ -892,7 +892,7 @@ One of the "must-have" features of any logging library is the support for attach
 
     void foo()
     {
-        logging::logging_core::get()->register_global_attribute("TimeStamp", boost::make_shared< attrs::local_clock >());
+        logging::core::get()->register_global_attribute("TimeStamp", boost::make_shared< attrs::local_clock >());
 
         // Now every log record ever made will have a time stamp attached
         src::logger_mt& lg = get_my_logger();
@@ -943,7 +943,7 @@ The logging library supports mainaining scopes stack tracking during the applica
 
 The scope stack is implemented through a thread-specific global storage internally. There is a `named_scope` (`wnamed_scope` for wide-character logging) attribute that allows to hook this stack into logging pipeline. This attribute generates value of the nested type `named_scope::scope_stack` which is the instance of the scope stack. The attribute can be registered the following way:
 
-    logging::logging_core::get()->add_global_attribute("Scope", boost::make_shared< attrs::named_scope >());
+    logging::core::get()->add_global_attribute("Scope", boost::make_shared< attrs::named_scope >());
 
 Note it is perfectly valid to register the attribute globally because the scope stack is thread-local anyway. This will also implicitly add scope tracking to all threads of the application, which is often exactly what we need.
 
@@ -1031,7 +1031,7 @@ This attribute is a simple wrapper around a user-defined function object. Each a
 
     void foo()
     {
-        logging::logging_core::get()->register_global_attribute("MyRandomAttr", attrs::make_functor_attr(&std::rand));
+        logging::core::get()->register_global_attribute("MyRandomAttr", attrs::make_functor_attr(&std::rand));
     }
 
 Auto-generated function objects, like the ones defined in __boost_bind__, __boost_lambda__, or STL, are also supported.
@@ -1223,7 +1223,7 @@ Here's a basic usage example:
         sink->locked_backend()->add_stream(boost::make_shared< rotating_ofstream >(
             "file_%02N.log", logging::keywords::rotation_interval = 3600, logging::keywords::rotation_size = 1048576));
 
-        logging::logging_core::get()->add_sink(sink);
+        logging::core::get()->add_sink(sink);
     }
 
 But there's more about the rotating file stream. The stream also supports calling user-defined functions before closing and after opening the underlying file. This can be very useful when the file should have a header and/or footer, like XML files, for example. With support of formatters, it is well possible to store log records in XML, like this:
@@ -1264,7 +1264,7 @@ But there's more about the rotating file stream. The stream also supports callin
                 << "\t\t<![CDATA[" << fmt::message() << "]]>\n"
             << "\t</message>");
 
-        logging::logging_core::get()->add_sink(sink);
+        logging::core::get()->add_sink(sink);
     }
 
 [endsect]

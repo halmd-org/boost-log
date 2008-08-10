@@ -24,7 +24,7 @@
 
 #include <string>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/logging_core.hpp>
+#include <boost/log/core.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -50,7 +50,7 @@ namespace BOOST_LOG_NAMESPACE {
 template< typename CharT >
 BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
-typename basic_logging_core< CharT >::filter_type
+typename basic_core< CharT >::filter_type
 #else
 function1< bool, basic_attribute_values_view< CharT > const& >
 #endif
@@ -64,7 +64,7 @@ parse_filter(const CharT* begin, const CharT* end);
  * \throw An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
  */
 template< typename CharT, typename TraitsT, typename AllocatorT >
-inline typename basic_logging_core< CharT >::filter_type
+inline typename basic_core< CharT >::filter_type
 parse_filter(std::basic_string< CharT, TraitsT, AllocatorT > const& str)
 {
     const CharT* p = str.c_str();
@@ -80,7 +80,7 @@ parse_filter(std::basic_string< CharT, TraitsT, AllocatorT > const& str)
  * \throw An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
  */
 template< typename CharT >
-inline typename basic_logging_core< CharT >::filter_type parse_filter(const CharT* str)
+inline typename basic_core< CharT >::filter_type parse_filter(const CharT* str)
 {
     return parse_filter(str, str + std::char_traits< CharT >::length(str));
 }

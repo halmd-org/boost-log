@@ -8,7 +8,7 @@
  * at http://www.boost.org/libs/log/doc/log.html.
  */
 /*!
- * \file   logging_core.hpp
+ * \file   core.hpp
  * \author Andrey Semashev
  * \date   19.04.2007
  * 
@@ -19,8 +19,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_LOGGING_CORE_HPP_INCLUDED_
-#define BOOST_LOG_LOGGING_CORE_HPP_INCLUDED_
+#ifndef BOOST_LOG_CORE_HPP_INCLUDED_
+#define BOOST_LOG_CORE_HPP_INCLUDED_
 
 #include <string>
 #include <utility>
@@ -42,7 +42,7 @@ namespace boost {
 namespace BOOST_LOG_NAMESPACE {
 
 /*!
- * \brief Logging system core class
+ * \brief Logging library core class
  * 
  * The logging core is used to interconnect log sources and sinks. It also provides
  * a number of basic features, like global filtering and global and thread-specific attribute storage.
@@ -50,7 +50,7 @@ namespace BOOST_LOG_NAMESPACE {
  * The logging core is a singleton. Users can acquire the core instance by calling the static method <tt>get</tt>.
  */
 template< typename CharT >
-class BOOST_LOG_EXPORT basic_logging_core : noncopyable
+class BOOST_LOG_EXPORT basic_core : noncopyable
 {
 public:
     //! Character type
@@ -77,19 +77,19 @@ private:
 
 private:
     //! \cond
-    basic_logging_core();
+    basic_core();
     //! \endcond
 
 public:
     /*!
      * Destructor. Destroys the core, releases any sinks and attributes that were registered.
      */
-    ~basic_logging_core();
+    ~basic_core();
 
     /*!
      * \return The method returns a pointer to the logging system singleton instance.
      */
-    static shared_ptr< basic_logging_core > get();
+    static shared_ptr< basic_core > get();
 
     /*!
      * The method enables or disables logging.
@@ -241,10 +241,10 @@ public:
 };
 
 #ifdef BOOST_LOG_USE_CHAR
-typedef basic_logging_core< char > logging_core;        //!< Convenience typedef for narrow-character logging
+typedef basic_core< char > core;        //!< Convenience typedef for narrow-character logging
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_logging_core< wchar_t > wlogging_core;    //!< Convenience typedef for wide-character logging
+typedef basic_core< wchar_t > wcore;    //!< Convenience typedef for wide-character logging
 #endif
 
 } // namespace log
@@ -255,4 +255,4 @@ typedef basic_logging_core< wchar_t > wlogging_core;    //!< Convenience typedef
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_LOGGING_CORE_HPP_INCLUDED_
+#endif // BOOST_LOG_CORE_HPP_INCLUDED_

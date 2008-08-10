@@ -26,7 +26,7 @@
 #include <boost/utility/addressof.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/logging_core.hpp>
+#include <boost/log/core.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/constant.hpp>
@@ -200,22 +200,22 @@ namespace aux {
     {
     private:
         //! Logging core type
-        typedef basic_logging_core< CharT > logging_core_type;
+        typedef basic_core< CharT > core_type;
 
     private:
         //! A pointer to the logging core
-        mutable shared_ptr< logging_core_type > m_pCore;
+        mutable shared_ptr< core_type > m_pCore;
         //! An iterator to the added attribute
-        typename logging_core_type::attribute_set_type::iterator m_itAttribute;
+        typename core_type::attribute_set_type::iterator m_itAttribute;
 
     public:
         //! Constructor
         scoped_thread_attribute(
-            typename logging_core_type::string_type const& name, shared_ptr< attribute > const& attr) :
-            m_pCore(logging_core_type::get())
+            typename core_type::string_type const& name, shared_ptr< attribute > const& attr) :
+            m_pCore(core_type::get())
         {
             std::pair<
-                typename logging_core_type::attribute_set_type::iterator,
+                typename core_type::attribute_set_type::iterator,
                 bool
             > res = m_pCore->add_thread_attribute(name, attr);
             if (res.second)

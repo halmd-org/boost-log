@@ -39,7 +39,7 @@ If you need a more comprehensive control over sinks configuration, you may consi
         boost::make_shared< std::ofstream >("sample.log"));
 
     // Register the sink in the logging core
-    logging::logging_core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(pSink);
 
 Ok, the first thing you may have noticed about sinks is that they are composed of two classes: the frontend and the backend. The frontend (which is the `synchronous_sink` class template in the snippet above) is responsible for various common tasks for all sinks, such as thread synchronization model and filtering. The backend (the `text_ostream_backend` class above) implements everything specific to the sink nature, text formatting and writing to a file being in this case. Every log record first gets to the frontend, which decides if it is going to be stored and, if it is, passes the record to the backend. There are a number of both frontends and backends provided by the library out of box that may be used with each other. This approach significantly reduces backends complexity (which is one of the most probable areas of the library extension) and improves code reusability.
 
@@ -168,7 +168,7 @@ You can see here that the `open_record` can take named arguments. Some logger ty
 
 Let's see what's under the hood of that `add_common_attributes` function we used in the simple form section. It might look something like this:
 
-    boost::shared_ptr< logging::logging_core > pCore = logging::logging_core::get();
+    boost::shared_ptr< logging::core > pCore = logging::core::get();
     pCore->add_global_attribute(
         "LineID", boost::make_shared< attrs::counter< unsigned int > >(1));
     pCore->add_global_attribute(
@@ -259,7 +259,7 @@ As you can see, filtering is only possible by analyzing attribute values of each
 The filter function object should return `true` if the record have passed the filtering (IOW, it should be written to log) and `false` otherwise. Like with formatters, it is possible to write your own filter from scratch or make use of a lambda-like syntax to generate one.
 
     // Setting global filter
-    logging::logging_core::get()->set_filter(
+    logging::core::get()->set_filter(
         flt::attr< int >("Severity") >= warning); // Write all records with "warning" severity or higher
 
     // Setting a sink-specific filter
