@@ -511,7 +511,7 @@ template< typename CharT, typename StrmTraitsT, typename LitTraitsT >
 inline std::basic_ostream< CharT, StrmTraitsT >& operator<< (
     std::basic_ostream< CharT, StrmTraitsT >& strm, basic_string_literal< CharT, LitTraitsT > const& lit)
 {
-    strm.write(lit.c_str(), lit.size());
+    strm.write(lit.c_str(), static_cast< std::streamsize >(lit.size()));
     return strm;
 }
 

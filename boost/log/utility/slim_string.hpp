@@ -193,7 +193,13 @@ public:
      * \param n Index of the character requested
      * \return Constant reference to the requested character
      */
-    BOOST_LOG_EXPORT const_reference operator[] (size_type n) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    const_reference
+#else
+    CharT const&
+#endif
+    operator[] (size_type n) const;
 
     /*!
      * Lexicographical comparison operator (equality).
@@ -239,11 +245,23 @@ public:
      * \return Constant reference to the requested character
      * \throw An <tt>std::exception</tt>-based exception to indicate that \a n is out of range.
      */
-    BOOST_LOG_EXPORT const_reference at(size_type n) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    const_reference
+#else
+    CharT const&
+#endif
+    at(size_type n) const;
     /*!
      * \return A constant pointer to the beginning of the string
      */
-    BOOST_LOG_EXPORT const_pointer data() const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    const_pointer
+#else
+    CharT const*
+#endif
+    data() const;
     /*!
      * \return A constant pointer to the beginning of the string
      */
@@ -251,7 +269,13 @@ public:
     /*!
      * \return The stored string length
      */
-    BOOST_LOG_EXPORT size_type size() const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    size() const;
     /*!
      * \return The stored string length
      */
@@ -272,11 +296,23 @@ public:
     /*!
      * \return Constant iterator to the beginning of the string
      */
-    BOOST_LOG_EXPORT const_iterator begin() const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    const_iterator
+#else
+    CharT const*
+#endif
+    begin() const;
     /*!
      * \return Constant iterator to the end of the string
      */
-    BOOST_LOG_EXPORT const_iterator end() const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    const_iterator
+#else
+    CharT const*
+#endif
+    end() const;
     /*!
      * \return Constant reverse iterator to the end of the string
      */
@@ -295,7 +331,13 @@ public:
      * \param pos Starting position in the string to begin copying from
      * \return The number of copied symbols
      */
-    BOOST_LOG_EXPORT size_type copy(pointer s, size_type n, size_type pos = 0) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    copy(pointer s, size_type n, size_type pos = 0) const;
     /*!
      * Creates another slim string containing a part of the stored string
      * 
@@ -320,7 +362,13 @@ public:
      * \param pos Search starting position
      * \return Starting position of the found substring within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find(basic_slim_string const& that, size_type pos = 0) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find(basic_slim_string const& that, size_type pos = 0) const;
     /*!
      * Searches the string for a substring
      * 
@@ -328,7 +376,13 @@ public:
      * \param pos Search starting position
      * \return Starting position of the found substring within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find(string_type const& s, size_type pos = 0) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find(string_type const& s, size_type pos = 0) const;
     /*!
      * Searches the string for a substring
      * 
@@ -336,7 +390,13 @@ public:
      * \param pos Search starting position
      * \return Starting position of the found substring within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find(const_pointer s, size_type pos = 0) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find(const_pointer s, size_type pos = 0) const;
     /*!
      * Searches the string for a substring
      * 
@@ -345,7 +405,13 @@ public:
      * \param n Number of characters in the substring \a s
      * \return Starting position of the found substring within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find(const_pointer s, size_type pos, size_type n) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find(const_pointer s, size_type pos, size_type n) const;
     /*!
      * Searches the string for a character
      * 
@@ -353,7 +419,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find(char_type c, size_type pos = 0) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find(char_type c, size_type pos = 0) const;
 
     /*!
      * Searches the string for a substring in the reverse direction
@@ -362,7 +434,13 @@ public:
      * \param pos Search starting position
      * \return Starting position of the found substring within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type rfind(basic_slim_string const& that, size_type pos = npos) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    rfind(basic_slim_string const& that, size_type pos = npos) const;
     /*!
      * Searches the string for a substring in the reverse direction
      * 
@@ -370,7 +448,13 @@ public:
      * \param pos Search starting position
      * \return Starting position of the found substring within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type rfind(string_type const& s, size_type pos = npos) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    rfind(string_type const& s, size_type pos = npos) const;
     /*!
      * Searches the string for a substring in the reverse direction
      * 
@@ -378,7 +462,13 @@ public:
      * \param pos Search starting position
      * \return Starting position of the found substring within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type rfind(const_pointer s, size_type pos = npos) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    rfind(const_pointer s, size_type pos = npos) const;
     /*!
      * Searches the string for a substring in the reverse direction
      * 
@@ -387,7 +477,13 @@ public:
      * \param n Number of characters in the substring \a s
      * \return Starting position of the found substring within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type rfind(const_pointer s, size_type pos, size_type n) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    rfind(const_pointer s, size_type pos, size_type n) const;
     /*!
      * Searches the string for a character in the reverse direction
      * 
@@ -395,7 +491,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type rfind(char_type c, size_type pos = npos) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    rfind(char_type c, size_type pos = npos) const;
 
     /*!
      * Searches the string for one of the specified characters
@@ -404,7 +506,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_first_of(basic_slim_string const& that, size_type pos = 0) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_first_of(basic_slim_string const& that, size_type pos = 0) const;
     /*!
      * Searches the string for one of the specified characters
      * 
@@ -412,7 +520,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_first_of(string_type const& s, size_type pos = 0) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_first_of(string_type const& s, size_type pos = 0) const;
     /*!
      * Searches the string for one of the specified characters
      * 
@@ -420,7 +534,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_first_of(const_pointer s, size_type pos = 0) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_first_of(const_pointer s, size_type pos = 0) const;
     /*!
      * Searches the string for one of the specified characters
      * 
@@ -429,7 +549,13 @@ public:
      * \param n Number of characters in the sequence \a s
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_first_of(const_pointer s, size_type pos, size_type n) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_first_of(const_pointer s, size_type pos, size_type n) const;
     /*!
      * Searches the string for a character
      * 
@@ -437,7 +563,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_first_of(char_type c, size_type pos = 0) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_first_of(char_type c, size_type pos = 0) const;
 
     /*!
      * Searches the string for one of the specified characters in the reverse direction
@@ -446,7 +578,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_last_of(basic_slim_string const& that, size_type pos = npos) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_last_of(basic_slim_string const& that, size_type pos = npos) const;
     /*!
      * Searches the string for one of the specified characters in the reverse direction
      * 
@@ -454,7 +592,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_last_of(string_type const& s, size_type pos = npos) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_last_of(string_type const& s, size_type pos = npos) const;
     /*!
      * Searches the string for one of the specified characters in the reverse direction
      * 
@@ -462,7 +606,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_last_of(const_pointer s, size_type pos = npos) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_last_of(const_pointer s, size_type pos = npos) const;
     /*!
      * Searches the string for one of the specified characters in the reverse direction
      * 
@@ -471,7 +621,13 @@ public:
      * \param n Number of characters in the sequence \a s
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_last_of(const_pointer s, size_type pos, size_type n) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_last_of(const_pointer s, size_type pos, size_type n) const;
     /*!
      * Searches the string for a character in the reverse direction in the reverse direction
      * 
@@ -479,7 +635,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_last_of(char_type c, size_type pos = npos) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_last_of(char_type c, size_type pos = npos) const;
 
     /*!
      * Searches the string for one of the characters, other than specified in the sequence
@@ -488,7 +650,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_first_not_of(basic_slim_string const& that, size_type pos = 0) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_first_not_of(basic_slim_string const& that, size_type pos = 0) const;
     /*!
      * Searches the string for one of the characters, other than specified in the sequence
      * 
@@ -496,7 +664,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_first_not_of(string_type const& s, size_type pos = 0) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_first_not_of(string_type const& s, size_type pos = 0) const;
     /*!
      * Searches the string for one of the characters, other than specified in the sequence
      * 
@@ -504,7 +678,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_first_not_of(const_pointer s, size_type pos = 0) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_first_not_of(const_pointer s, size_type pos = 0) const;
     /*!
      * Searches the string for one of the characters, other than specified in the sequence
      * 
@@ -513,7 +693,13 @@ public:
      * \param n Number of characters in the sequence \a s
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_first_not_of(const_pointer s, size_type pos, size_type n) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_first_not_of(const_pointer s, size_type pos, size_type n) const;
     /*!
      * Searches the string for one of the characters, other than specified
      * 
@@ -521,7 +707,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_first_not_of(char_type c, size_type pos = 0) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_first_not_of(char_type c, size_type pos = 0) const;
 
     /*!
      * Searches the string for one of the characters, other than specified in the sequence, in the reverse direction
@@ -530,7 +722,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_last_not_of(basic_slim_string const& that, size_type pos = npos) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_last_not_of(basic_slim_string const& that, size_type pos = npos) const;
     /*!
      * Searches the string for one of the characters, other than specified in the sequence, in the reverse direction
      * 
@@ -538,7 +736,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_last_not_of(string_type const& s, size_type pos = npos) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_last_not_of(string_type const& s, size_type pos = npos) const;
     /*!
      * Searches the string for one of the characters, other than specified in the sequence, in the reverse direction
      * 
@@ -546,7 +750,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_last_not_of(const_pointer s, size_type pos = npos) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_last_not_of(const_pointer s, size_type pos = npos) const;
     /*!
      * Searches the string for one of the characters, other than specified in the sequence, in the reverse direction
      * 
@@ -555,7 +765,13 @@ public:
      * \param n Number of characters in the sequence \a s
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_last_not_of(const_pointer s, size_type pos, size_type n) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_last_not_of(const_pointer s, size_type pos, size_type n) const;
     /*!
      * Searches the string for one of the characters, other than specified, in the reverse direction
      * 
@@ -563,7 +779,13 @@ public:
      * \param pos Search starting position
      * \return Position of the found character within the string, if lookup was successful, \c npos otherwise
      */
-    BOOST_LOG_EXPORT size_type find_last_not_of(char_type c, size_type pos = npos) const;
+    BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    size_type
+#else
+    std::size_t
+#endif
+    find_last_not_of(char_type c, size_type pos = npos) const;
 
     /*!
      * Lexicographically compares the argument string to this string

@@ -48,7 +48,12 @@ namespace BOOST_LOG_NAMESPACE {
  * \throw An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
  */
 template< typename CharT >
-BOOST_LOG_EXPORT typename basic_logging_core< CharT >::filter_type
+BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+typename basic_logging_core< CharT >::filter_type
+#else
+function1< bool, basic_attribute_values_view< CharT > const& >
+#endif
 parse_filter(const CharT* begin, const CharT* end);
 
 /*!

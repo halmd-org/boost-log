@@ -20,7 +20,6 @@
 #define BOOST_SPIRIT_THREADSAFE
 #endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
 
-#include <boost/ref.hpp>
 #include <boost/bind.hpp>
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
@@ -29,6 +28,7 @@
 #include <boost/variant/variant.hpp>
 #include <boost/variant/static_visitor.hpp>
 #include <boost/utility/in_place_factory.hpp>
+#include <boost/utility/addressof.hpp>
 #include <boost/spirit/core.hpp>
 #include <boost/spirit/utility/confix.hpp>
 #include <boost/spirit/utility/escape_char.hpp>
@@ -308,6 +308,22 @@ struct filter_grammar< CharT >::definition
     //! Boost.Spirit rule type
     typedef spirit::rule< ScannerT > rule_type;
 
+    //! A simple mem_fn-like wrapper (a workaround for MSVC 7.1)
+    struct handler
+    {
+        typedef void result_type;
+        typedef void (filter_grammar_type::*fun_type)(const char_type*, const char_type*) const;
+        handler(fun_type pf) : m_fun(pf) {}
+
+        void operator() (filter_grammar_type const* p, const char_type* b, const char_type* e) const
+        {
+            (p->*m_fun)(b, e);
+        }
+
+    private:
+        fun_type m_fun;
+    };
+
     //! A parser for a single node of the filter expression
     rule_type node;
     //! A parser for a possibly negated node or parenthesized subexpression
@@ -320,51 +336,74 @@ struct filter_grammar< CharT >::definition
     //! Constructor
     definition(filter_grammar_type const& gram)
     {
-        reference_wrapper< const filter_grammar_type > g(gram);
+        const filter_grammar_type* g = boost::addressof(gram);
+
+        // MSVC 7.1 goes wild for some reason if we try to use bind or mem_fn directly
+        // on some of these functions. The simple wrapper helps the compiler to deduce types correctly.
+        handler on_string = &filter_grammar_type::on_quoted_string,
+            on_attr = &filter_grammar_type::on_attribute;
+
         node =
             // A quoted string with C-style escape sequences support
             spirit::confix_p(constants::char_quote, *spirit::c_escape_ch_p, constants::char_quote)
-                [bind(&filter_grammar_type::on_quoted_string, g, _1, _2)] |
+                [bind(on_string, g, _1, _2)] |
             // An attribute name in form %name%
             spirit::confix_p(constants::char_percent, *(spirit::print_p - constants::char_percent), constants::char_percent)
-                [bind(&filter_grammar_type::on_attribute, g, _1, _2)] |
+                [bind(on_attr, g, _1, _2)] |
             spirit::strict_real_p[bind(&filter_grammar_type::on_fp_constant, g, _1)] |
             spirit::int_p[bind(&filter_grammar_type::on_integer_constant, g, _1)];
+
+        handler on_neg = &filter_grammar_type::on_negation;
 
         factor = node |
             (constants::char_paren_bracket_left >> expression >> constants::char_paren_bracket_right) |
             ((spirit::str_p(constants::not_keyword()) | constants::char_exclamation) >> factor)
-                [bind(&filter_grammar_type::on_negation, g, _1, _2)];
+                [bind(on_neg, g, _1, _2)];
+
+        handler on_equal = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::equal_to >,
+            on_greater = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::greater >,
+            on_less = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::less >,
+            on_not_equal = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::not_equal_to >,
+            on_greater_equal = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::greater_equal >,
+            on_less_equal = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::less_equal >,
+            on_begins_with = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::aux::begins_with_fun >,
+            on_ends_with = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::aux::ends_with_fun >,
+            on_contains = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::aux::contains_fun >,
+            on_matches = &filter_grammar_type::on_match_relation;
 
         term = factor >> *(
             (constants::char_equal >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::equal_to >, g, _1, _2)] |
+                [bind(on_equal, g, _1, _2)] |
             (constants::char_greater >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::greater >, g, _1, _2)] |
+                [bind(on_greater, g, _1, _2)] |
             (constants::char_less >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::less >, g, _1, _2)] |
+                [bind(on_less, g, _1, _2)] |
             (spirit::str_p(constants::not_equal_keyword()) >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::not_equal_to >, g, _1, _2)] |
+                [bind(on_not_equal, g, _1, _2)] |
             (spirit::str_p(constants::greater_or_equal_keyword()) >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::greater_equal >, g, _1, _2)] |
+                [bind(on_greater_equal, g, _1, _2)] |
             (spirit::str_p(constants::less_or_equal_keyword()) >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::less_equal >, g, _1, _2)] |
+                [bind(on_less_equal, g, _1, _2)] |
             (spirit::str_p(constants::begins_with_keyword()) >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::aux::begins_with_fun >, g, _1, _2)] |
+                [bind(on_begins_with, g, _1, _2)] |
             (spirit::str_p(constants::ends_with_keyword()) >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::aux::ends_with_fun >, g, _1, _2)] |
+                [bind(on_ends_with, g, _1, _2)] |
             (spirit::str_p(constants::contains_keyword()) >> factor)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::aux::contains_fun >, g, _1, _2)] |
+                [bind(on_contains, g, _1, _2)] |
             (spirit::str_p(constants::matches_keyword()) >> factor)
-                [bind(&filter_grammar_type::on_match_relation, g, _1, _2)]
+                [bind(on_matches, g, _1, _2)]
             );
+
+        handler on_and = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_operation< boost::log::filters::flt_and >,
+            on_or = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_operation< boost::log::filters::flt_or >,
+            on_finished = &filter_grammar_type::on_expression_finished;
 
         expression = (term >> *(
             ((spirit::str_p(constants::and_keyword()) | constants::char_and) >> term)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_operation< boost::log::filters::flt_and >, g, _1, _2)] |
+                [bind(on_and, g, _1, _2)] |
             ((spirit::str_p(constants::or_keyword()) | constants::char_or) >> term)
-                [bind(&filter_grammar_type::BOOST_NESTED_TEMPLATE on_operation< boost::log::filters::flt_or >, g, _1, _2)]
-            ))[bind(&filter_grammar_type::on_expression_finished, g, _1, _2)];
+                [bind(on_or, g, _1, _2)]
+            ))[bind(on_finished, g, _1, _2)];
     }
 
     //! Accessor for the filter rule
@@ -375,7 +414,12 @@ struct filter_grammar< CharT >::definition
 
 //! The function parses a filter from the string
 template< typename CharT >
-typename basic_logging_core< CharT >::filter_type parse_filter(const CharT* begin, const CharT* end)
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+typename basic_logging_core< CharT >::filter_type
+#else
+function1< bool, basic_attribute_values_view< CharT > const& >
+#endif
+parse_filter(const CharT* begin, const CharT* end)
 {
     typedef CharT char_type;
     typedef typename basic_logging_core< char_type >::filter_type filter_type;
@@ -391,12 +435,23 @@ typename basic_logging_core< CharT >::filter_type parse_filter(const CharT* begi
 
 #ifdef BOOST_LOG_USE_CHAR
 template BOOST_LOG_EXPORT
-basic_logging_core< char >::filter_type parse_filter< char >(const char* begin, const char* end);
-#endif
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+basic_logging_core< char >::filter_type
+#else
+function1< bool, basic_attribute_values_view< char > const& >
+#endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+parse_filter< char >(const char* begin, const char* end);
+#endif // BOOST_LOG_USE_CHAR
+
 #ifdef BOOST_LOG_USE_WCHAR_T
 template BOOST_LOG_EXPORT
-basic_logging_core< wchar_t >::filter_type parse_filter< wchar_t >(const wchar_t* begin, const wchar_t* end);
-#endif
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+basic_logging_core< wchar_t >::filter_type
+#else
+function1< bool, basic_attribute_values_view< wchar_t > const& >
+#endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+parse_filter< wchar_t >(const wchar_t* begin, const wchar_t* end);
+#endif // BOOST_LOG_USE_WCHAR_T
 
 } // namespace log
 

@@ -93,7 +93,16 @@ template< typename CharT >
 BOOST_LOG_EXPORT void
 register_formatter_factory(
     const CharT* attr_name,
-    typename formatter_types< CharT >::formatter_factory const& factory);
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    typename formatter_types< CharT >::formatter_factory const& factory
+#else
+    function2<
+        function3< void, std::basic_ostream< CharT >&, basic_attribute_values_view< CharT > const&, std::basic_string< CharT > const& >,
+        std::basic_string< CharT > const&,
+        std::map< std::basic_string< CharT >, std::basic_string< CharT > > const&
+    > const& factory
+#endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    );
 
 /*!
  * \brief The function registers a user-defined formatter factory
@@ -123,7 +132,12 @@ register_formatter_factory(
  * \throw An <tt>std::exception</tt>-based exception, if a formatter cannot be recognized in the character sequence.
  */
 template< typename CharT >
-BOOST_LOG_EXPORT typename formatter_types< CharT >::formatter_type
+BOOST_LOG_EXPORT
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+typename formatter_types< CharT >::formatter_type
+#else
+function3< void, std::basic_ostream< CharT >&, basic_attribute_values_view< CharT > const&, std::basic_string< CharT > const& >
+#endif
 parse_formatter(const CharT* begin, const CharT* end);
 
 /*!

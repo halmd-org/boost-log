@@ -688,7 +688,7 @@ public:
     {
         log::aux::cleanup_guard< formatter_type > _(m_Formatter);
         m_Extractor(attrs, m_Formatter);
-        strm.write(m_Formatter.get().data(), m_Formatter.get().size());
+        strm.write(m_Formatter.get().data(), static_cast< std::streamsize >(m_Formatter.get().size()));
     }
 };
 

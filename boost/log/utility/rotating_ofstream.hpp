@@ -123,7 +123,7 @@ namespace aux {
         {
             va_list args;
             va_start(args, format);
-            int n = vsnprintf(buf, size - 1, format, args);
+            int n = _vsnprintf(buf, size - 1, format, args);
             va_end(args);
             buf[size - 1] = '\0';
             return n;
@@ -165,10 +165,27 @@ namespace aux {
         }
 
         typedef int (*lazy_sprintf)(wchar_t*, size_t, const wchar_t*, ...);
+
+#if defined(_MSC_VER) && _MSC_VER < 1400
+        static int compliant_msvc_swprintf(wchar_t* buf, size_t size, const wchar_t* format, ...)
+        {
+            va_list args;
+            va_start(args, format);
+            int n = _vsnwprintf(buf, size - 1, format, args);
+            va_end(args);
+            buf[size - 1] = L'\0';
+            return n;
+        }
+#endif // defined(_MSC_VER) && _MSC_VER < 1400
         static lazy_sprintf get_lazy_sprintf()
         {
+#if defined(_MSC_VER) && _MSC_VER < 1400
+            return file_controller_traits::compliant_msvc_swprintf;
+#else
+            // MSVC 7.1 ICEs on this code
             using namespace std;
             return &swprintf;
+#endif // defined(_MSC_VER) && _MSC_VER < 1400
         }
     };
 #endif // BOOST_LOG_USE_WCHAR_T
@@ -238,7 +255,7 @@ namespace aux {
             // Check if it's time to rotate the file
             if (m_File.is_open() &&
                 (m_RotationSize < m_Written + static_cast< uintmax_t >(storage.size()) ||
-                (m_RotationInterval > 0 && m_RotationInterval < (std::time(NULL) - m_LastRotation))))
+                (m_RotationInterval > 0U && m_RotationInterval < static_cast< unsigned int >(std::time(NULL) - m_LastRotation))))
             {
                 close(on_close);
             }

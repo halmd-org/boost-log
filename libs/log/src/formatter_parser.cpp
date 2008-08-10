@@ -102,7 +102,14 @@ template< typename CharT >
 struct formatters_repository :
     public log::aux::lazy_singleton< formatters_repository< CharT > >
 {
+    //! Base class type
+    typedef log::aux::lazy_singleton< formatters_repository< CharT > > base_type;
+
+#if !defined(BOOST_MSVC) || _MSC_VER > 1310
     friend class log::aux::lazy_singleton< formatters_repository< CharT > >;
+#else
+    friend class base_type;
+#endif
 
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
@@ -326,7 +333,16 @@ struct formatter_grammar< CharT >::definition
 template< typename CharT >
 void register_formatter_factory(
     const CharT* attr_name,
-    typename formatter_types< CharT >::formatter_factory const& factory)
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    typename formatter_types< CharT >::formatter_factory const& factory
+#else
+    function2<
+        function3< void, std::basic_ostream< CharT >&, basic_attribute_values_view< CharT > const&, std::basic_string< CharT > const& >,
+        std::basic_string< CharT > const&,
+        std::map< std::basic_string< CharT >, std::basic_string< CharT > > const&
+    > const& factory
+#endif
+    )
 {
     typename formatter_types< CharT >::string_type name(attr_name);
     formatters_repository< CharT >& repo = formatters_repository< CharT >::get();
@@ -339,7 +355,11 @@ void register_formatter_factory(
 
 //! The function parses a formatter from the string
 template< typename CharT >
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename formatter_types< CharT >::formatter_type
+#else
+function3< void, std::basic_ostream< CharT >&, basic_attribute_values_view< CharT > const&, std::basic_string< CharT > const& >
+#endif
 parse_formatter(const CharT* begin, const CharT* end)
 {
     typedef CharT char_type;
@@ -357,19 +377,48 @@ parse_formatter(const CharT* begin, const CharT* end)
 template BOOST_LOG_EXPORT
 void register_formatter_factory< char >(
     const char* attr_name,
-    formatter_types< char >::formatter_factory const& factory);
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    formatter_types< char >::formatter_factory const& factory
+#else
+    function2<
+        function3< void, std::basic_ostream< char >&, basic_attribute_values_view< char > const&, std::basic_string< char > const& >,
+        std::basic_string< char > const&,
+        std::map< std::basic_string< char >, std::basic_string< char > > const&
+    > const& factory
+#endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    );
 template BOOST_LOG_EXPORT
-formatter_types< char >::formatter_type parse_formatter< char >(const char* begin, const char* end);
-#endif
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+formatter_types< char >::formatter_type
+#else
+function3< void, std::basic_ostream< char >&, basic_attribute_values_view< char > const&, std::basic_string< char > const& >
+#endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+parse_formatter< char >(const char* begin, const char* end);
+#endif // BOOST_LOG_USE_CHAR
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 template BOOST_LOG_EXPORT
 void register_formatter_factory< wchar_t >(
     const wchar_t* attr_name,
-    formatter_types< wchar_t >::formatter_factory const& factory);
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    formatter_types< wchar_t >::formatter_factory const& factory
+#else
+    function2<
+        function3< void, std::basic_ostream< wchar_t >&, basic_attribute_values_view< wchar_t > const&, std::basic_string< wchar_t > const& >,
+        std::basic_string< wchar_t > const&,
+        std::map< std::basic_string< wchar_t >, std::basic_string< wchar_t > > const&
+    > const& factory
+#endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+    );
+
 template BOOST_LOG_EXPORT
-formatter_types< wchar_t >::formatter_type parse_formatter< wchar_t >(const wchar_t* begin, const wchar_t* end);
-#endif
+#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+formatter_types< wchar_t >::formatter_type
+#else
+function3< void, std::basic_ostream< wchar_t >&, basic_attribute_values_view< wchar_t > const&, std::basic_string< wchar_t > const& >
+#endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+parse_formatter< wchar_t >(const wchar_t* begin, const wchar_t* end);
+#endif // BOOST_LOG_USE_WCHAR_T
 
 } // namespace log
 

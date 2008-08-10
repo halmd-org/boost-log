@@ -195,9 +195,14 @@ template< typename CharT >
 struct sinks_repository :
     public log::aux::lazy_singleton< sinks_repository< CharT > >
 {
-    friend class log::aux::lazy_singleton< sinks_repository< CharT > >;
-
     typedef log::aux::lazy_singleton< sinks_repository< CharT > > base_type;
+
+#if !defined(BOOST_MSVC) || _MSC_VER > 1310
+    friend class log::aux::lazy_singleton< sinks_repository< CharT > >;
+#else
+    friend class base_type;
+#endif
+
     typedef CharT char_type;
     typedef std::basic_string< char_type > string_type;
     typedef boost::log::aux::char_constants< char_type > constants;

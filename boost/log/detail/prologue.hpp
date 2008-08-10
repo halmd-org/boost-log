@@ -36,6 +36,12 @@
 #if defined(BOOST_MSVC)
 // For some reason MSVC 9.0 fails to link the library if static integral constants are defined in cpp
 #   define BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
+#   if _MSC_VER <= 1310
+        // MSVC 7.1 sometimes fails to match out-of-class template function definitions with
+        // their declarations if the return type or arguments of the functions involve typename keyword
+        // and depend on the template parameters.
+#       define BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
+#   endif
 #endif
 
 #if (defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530) && !(defined BOOST_NO_COMPILER_CONFIG)
