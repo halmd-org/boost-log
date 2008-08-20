@@ -35,6 +35,7 @@
 #endif
 #include <boost/log/utility/string_literal.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
+#include <boost/log/utility/no_unused_warnings.hpp>
 #include <boost/log/attributes/attribute.hpp>
 
 #ifdef _MSC_VER
