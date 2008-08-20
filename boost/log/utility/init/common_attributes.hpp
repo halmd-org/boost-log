@@ -26,7 +26,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/logging_core.hpp>
+#include <boost/log/core.hpp>
 #include <boost/log/attributes/clock.hpp>
 #include <boost/log/attributes/counter.hpp>
 
@@ -55,7 +55,7 @@ template< typename CharT >
 void add_common_attributes()
 {
     typedef add_common_attributes_constants< CharT > traits_t;
-    shared_ptr< basic_logging_core< CharT > > pCore = basic_logging_core< CharT >::get();
+    shared_ptr< basic_core< CharT > > pCore = basic_core< CharT >::get();
     pCore->add_global_attribute(
         traits_t::line_id_attr_name(),
         boost::make_shared< attributes::counter< unsigned int > >(1));

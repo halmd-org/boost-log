@@ -26,7 +26,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/logging_core.hpp>
+#include <boost/log/core.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
@@ -65,7 +65,7 @@ shared_ptr<
 
     shared_ptr< BOOST_LOG_CONSOLE_SINK_FRONTEND< backend_t > > pSink =
         boost::make_shared< BOOST_LOG_CONSOLE_SINK_FRONTEND< backend_t > >(pBackend);
-    basic_logging_core< CharT >::get()->add_sink(pSink);
+    basic_core< CharT >::get()->add_sink(pSink);
 
     return pSink;
 }

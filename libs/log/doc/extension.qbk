@@ -11,6 +11,8 @@
 
 [section:sinks Writing your own sinks]
 
+As was described in the [link log.design Design overview] section, sinks consist of two parts: frontend and backend. Frontends are provided by the library and usually need not to be re-implemented. Thanks to frontends, implementing backends is much easier than it could be: all filtering and thread synchronization is done there.
+
 [endsect]
 
 [section:sources Writing your own sources]
