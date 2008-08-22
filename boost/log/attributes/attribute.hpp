@@ -24,8 +24,6 @@
 
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/type_traits/add_const.hpp>
-#include <boost/type_traits/add_reference.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -69,7 +67,7 @@ private:
         public type_visitor< T >
     {
         //! Constructor
-        explicit extractor(optional< T const& >& res) : res_(res) {}
+        explicit extractor(optional< T >& res) : res_(res) {}
         //! Returns itself if the value type matches the requested type
         void* get_visitor(std::type_info const& type)
         {
@@ -87,7 +85,7 @@ private:
 
     private:
         //! The reference to the extracted value
-        optional< T const& >& res_;
+        optional< T >& res_;
     };
 
     //! \endcond
@@ -119,34 +117,25 @@ public:
     /*!
      * An alternative to type dispatching. This is a simpler way to get the stored value in case if one knows its exact type.
      * 
-     * \return An optional constant reference to the stored value. The returned value is present if the
+     * \return An optionally specified stored value. The returned value is present if the
      *         requested type matches the stored type, otherwise the returned value is absent.
      */
     template< typename T >
     optional<
 #ifndef BOOST_LOG_DOXYGEN_PASS
-        typename add_reference<
-            typename add_const<
-                typename remove_cv<
-                    typename remove_reference< T >::type
-                >::type
-            >::type
+        typename remove_cv<
+            typename remove_reference< T >::type
         >::type
 #else
-        T const&
+        T
 #endif // BOOST_LOG_DOXYGEN_PASS
     > get()
     {
         typedef typename remove_cv<
             typename remove_reference< T >::type
         >::type requested_type;
-        typedef optional<
-            typename add_reference<
-                typename add_const< requested_type >::type
-            >::type
-        > result_type;
 
-        result_type res;
+        optional< requested_type > res;
         extractor< requested_type > disp(res);
         this->dispatch(disp);
         return res;

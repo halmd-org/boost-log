@@ -112,7 +112,7 @@ namespace syslog {
             typename values_view_type::const_iterator it = values.find(m_AttributeName);
             if (it != values.end())
             {
-                optional< attribute_value_type const& > value = it->second->get< attribute_value_type >();
+                optional< attribute_value_type > value = it->second->get< attribute_value_type >();
                 if (!!value)
                     return make_level(value.get());
             }
@@ -193,7 +193,7 @@ namespace syslog {
             typename values_view_type::const_iterator it = values.find(m_AttributeName);
             if (it != values.end())
             {
-                optional< attribute_value_type const& > value = it->second->get< attribute_value_type >();
+                optional< attribute_value_type > value = it->second->get< attribute_value_type >();
                 if (!!value)
                 {
                     typename mapping_type::const_iterator mapping = m_Mapping.find(value.get());

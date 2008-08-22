@@ -23,8 +23,8 @@
 #ifndef BOOST_LOG_UTILITY_ATTRIBUTE_VALUE_EXTRACTOR_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_ATTRIBUTE_VALUE_EXTRACTOR_HPP_INCLUDED_
 
+#include <typeinfo>
 #include <string>
-#include <boost/optional.hpp>
 #include <boost/mpl/is_sequence.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -56,6 +56,35 @@ public:
     typedef T value_type;
 
 private:
+    //! A simple type dispatcher to forward the extracted value to the receiver
+    template< typename ReceiverT >
+    struct dispatcher :
+        public type_dispatcher,
+        public type_visitor< value_type >
+    {
+        //! Constructor
+        explicit dispatcher(ReceiverT& receiver) : m_Receiver(receiver) {}
+        //! Returns itself if the value type matches the requested type
+        void* get_visitor(std::type_info const& type)
+        {
+            BOOST_LOG_ASSUME(this != 0);
+            if (type == typeid(value_type))
+                return static_cast< type_visitor< value_type >* >(this);
+            else
+                return 0;
+        }
+        //! Extracts the value
+        void visit(value_type const& value)
+        {
+            m_Receiver(value);
+        }
+
+    private:
+        //! The reference to the receiver functional object
+        ReceiverT& m_Receiver;
+    };
+
+private:
     //! Attribute name to extract
     string_type m_Name;
 
@@ -84,12 +113,8 @@ private:
         typename values_view_type::const_iterator it = attrs.find(m_Name);
         if (it != attrs.end())
         {
-            optional< value_type const& > val = it->second->get< value_type >();
-            if (!!val)
-            {
-                receiver(val.get());
-                return true;
-            }
+            dispatcher< ReceiverT > disp(receiver);
+            return it->second->dispatch(disp);
         }
         return false;
     }
@@ -246,7 +271,7 @@ public:
      * and tries to acquire the stored value of one of the supported types. If extraction succeeds,
      * the extracted value is passed to \a receiver.
      * 
-     * \param attrs A set of attribute values in which to look for the apecified attribute value.
+     * \param attrs A set of attribute values in which to look for the specified attribute value.
      * \param receiver A receiving functional object to pass extracted value to.
      * \return \c true if extraction succeeded, \c false otherwise
      */

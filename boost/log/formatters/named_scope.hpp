@@ -30,7 +30,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
-#include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
+#include <boost/log/utility/attribute_value_extractor.hpp>
 
 namespace boost {
 
@@ -90,13 +90,34 @@ public:
     //! Attribute values set type
     typedef typename base_type::values_view_type values_view_type;
 
-private:
     //! Scope stack container type
     typedef typename attributes::basic_named_scope< char_type >::scope_stack scope_stack;
 
 private:
-    //! Attribute name
-    const string_type m_AttributeName;
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
+    //! A simple call forwarder
+    struct binder;
+    friend struct binder;
+    struct binder
+    {
+        typedef void result_type;
+        explicit binder(const fmt_named_scope* pthis, ostream_type& strm) : m_pThis(pthis), m_Strm(strm) {}
+        void operator() (scope_stack const& scopes) const
+        {
+            m_pThis->format(m_Strm, scopes);
+        }
+
+    private:
+        const fmt_named_scope* m_pThis;
+        ostream_type& m_Strm;
+    };
+
+#endif // BOOST_LOG_DOXYGEN_PASS
+
+private:
+    //! Attribute value extractor
+    attribute_value_extractor< char_type, scope_stack > m_Extractor;
     //! Scope delimiter
     const string_type m_ScopeDelimiter;
     //! Number of scopes to output
@@ -120,7 +141,7 @@ public:
         typename scope_stack::size_type max_scopes,
         keywords::scope_iteration_direction direction
     ) :
-        m_AttributeName(name),
+        m_Extractor(name),
         m_ScopeDelimiter(delimiter),
         m_MaxScopes(max_scopes),
         m_IterationDirection(direction)
@@ -137,47 +158,46 @@ public:
      */
     void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
-        typename values_view_type::const_iterator it = attrs.find(m_AttributeName);
-        if (it != attrs.end())
+        // Extract the value and pass on to the implementation
+        binder receiver(this, strm);
+        m_Extractor(attrs, receiver);
+    }
+
+private:
+    //! The function performs formatting of the extracted scope stack
+    void format(ostream_type& strm, scope_stack const& scopes) const
+    {
+        typename scope_stack::size_type const scopes_to_iterate = (std::min)(m_MaxScopes, scopes.size());
+        if (m_IterationDirection == keywords::forward)
         {
-            optional< scope_stack const& > maybe_scopes = it->second->get< scope_stack >();
-            if (!!maybe_scopes)
+            // Iterating through scopes in forward direction
+            typename scope_stack::const_iterator it = scopes.end(), end = it;
+            std::advance(it, -static_cast< typename scope_stack::difference_type >(scopes_to_iterate));
+
+            if (it != end)
             {
-                // Found the attribute value
-                scope_stack const& scopes = maybe_scopes.get();
-                typename scope_stack::size_type const scopes_to_iterate = (std::min)(m_MaxScopes, scopes.size());
-                if (m_IterationDirection == keywords::forward)
-                {
-                    // Iterating through scopes in forward direction
-                    typename scope_stack::const_iterator it = scopes.end(), end = it;
-                    std::advance(it, -static_cast< typename scope_stack::difference_type >(scopes_to_iterate));
+                if (it != scopes.begin())
+                    strm << "..." << m_ScopeDelimiter;
 
-                    if (it != end)
-                    {
-                        if (it != scopes.begin())
-                            strm << "..." << m_ScopeDelimiter;
+                strm << it->scope_name;
+                for (++it; it != end; ++it)
+                    strm << m_ScopeDelimiter << it->scope_name;
+            }
+        }
+        else
+        {
+            // Iterating through scopes in reverse direction
+            typename scope_stack::const_reverse_iterator it = scopes.rbegin(), end = it;
+            std::advance(end, static_cast< typename scope_stack::difference_type >(scopes_to_iterate));
 
-                        strm << it->scope_name;
-                        for (++it; it != end; ++it)
-                            strm << m_ScopeDelimiter << it->scope_name;
-                    }
-                }
-                else
-                {
-                    // Iterating through scopes in reverse direction
-                    typename scope_stack::const_reverse_iterator it = scopes.rbegin(), end = it;
-                    std::advance(end, static_cast< typename scope_stack::difference_type >(scopes_to_iterate));
+            if (it != end)
+            {
+                strm << it->scope_name;
+                for (++it; it != end; ++it)
+                    strm << m_ScopeDelimiter << it->scope_name;
 
-                    if (it != end)
-                    {
-                        strm << it->scope_name;
-                        for (++it; it != end; ++it)
-                            strm << m_ScopeDelimiter << it->scope_name;
-
-                        if (it != scopes.rend())
-                            strm << m_ScopeDelimiter << "...";
-                    }
-                }
+                if (it != scopes.rend())
+                    strm << m_ScopeDelimiter << "...";
             }
         }
     }
