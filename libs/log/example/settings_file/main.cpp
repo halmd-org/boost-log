@@ -62,11 +62,11 @@ enum severity_level
 };
 
 //  Global logger declaration
-BOOST_LOG_DECLARE_GLOBAL_LOGGER(test_lg, src::severity_logger_mt)
+BOOST_LOG_DECLARE_GLOBAL_LOGGER(test_lg, src::severity_logger_mt< >)
 
 void try_logging()
 {
-    src::severity_logger_mt& lg = get_test_lg();
+    src::severity_logger_mt< >& lg = get_test_lg();
     BOOST_LOG_SEV(lg, normal) << "This is a normal severity record";
     BOOST_LOG_SEV(lg, notification) << "This is a notification severity record";
     BOOST_LOG_SEV(lg, warning) << "This is a warning severity record";

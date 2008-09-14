@@ -29,12 +29,20 @@
 #include <ostream>
 #include <boost/assert.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/mpl/vector.hpp>
+#include <boost/mpl/lambda.hpp>
+#include <boost/mpl/reverse_fold.hpp>
+#include <boost/mpl/placeholders.hpp> // for usage convenience, inspite that it's not used in this header directly
 #include <boost/utility/addressof.hpp>
+#include <boost/preprocessor/facilities/empty.hpp>
+#include <boost/preprocessor/facilities/identity.hpp>
+#include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
-#include <boost/preprocessor/seq/for_each.hpp>
+#include <boost/preprocessor/seq/for_each_i.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
@@ -44,6 +52,11 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#endif
+
+#ifndef BOOST_LOG_MAX_CTOR_FORWARD_ARGS
+//! The maximum number of arguments that can be forwarded by the logger constructor to its bases
+#define BOOST_LOG_MAX_CTOR_FORWARD_ARGS 16
 #endif
 
 #ifdef _MSC_VER
@@ -173,84 +186,91 @@ namespace aux {
         stream_provider& operator= (stream_provider const&);
     };
 
+} // namespace aux
 
-    //! Record pump implementation
-    template< typename LoggerT >
-    class record_pump
+/*!
+ * \brief Logging record pump implementation
+ *
+ * The pump is used to format the logging record message text and then
+ * push it to the logging core. It is constructed on each attempt to write
+ * a log record and destroyed afterwards.
+ *
+ * The pump class template is instentiated on the logger type.
+ */
+template< typename LoggerT >
+class record_pump
+{
+public:
+    //! The metafunction allows to adopt the pump to another logger type
+    template< typename T >
+    struct rebind
     {
-    public:
-        //! The metafunction allows to adopt the pump to another logger type
-        template< typename T >
-        struct rebind
-        {
-            typedef record_pump< T > other;
-        };
-
-    private:
-        //! Logger type
-        typedef LoggerT logger_type;
-        //! Character type
-        typedef typename logger_type::char_type char_type;
-        //! Stream compound provider
-        typedef stream_provider< char_type > stream_provider_type;
-        //! Stream compound type
-        typedef typename stream_provider_type::stream_compound stream_compound;
-
-    protected:
-        //! A reference to the logger
-        mutable logger_type* m_pLogger;
-        //! Stream compound
-        mutable stream_compound* m_pStreamCompound;
-
-    public:
-        //! Constructor
-        explicit record_pump(logger_type* p) :
-            m_pLogger(p),
-            m_pStreamCompound(stream_provider_type::allocate_compound())
-        {
-        }
-        //! Copy constructor (implemented as move)
-        record_pump(record_pump const& that) :
-            m_pLogger(that.m_pLogger),
-            m_pStreamCompound(that.m_pStreamCompound)
-        {
-            that.m_pLogger = 0;
-            that.m_pStreamCompound = 0;
-        }
-        //! Destructor. Pushes the composed message to log.
-        ~record_pump()
-        {
-            if (m_pLogger)
-            {
-                try
-                {
-                    m_pStreamCompound->stream.flush();
-                    m_pLogger->push_record(m_pStreamCompound->message);
-                }
-                catch (std::exception&)
-                {
-                    m_pLogger->cancel_record();
-                }
-
-                stream_provider_type::release_compound(m_pStreamCompound); // doesn't throw
-            }
-        }
-
-        //! Forwarding output operators
-        template< typename T >
-        record_pump const& operator<< (T const& value) const
-        {
-            BOOST_ASSERT(m_pStreamCompound != 0);
-            m_pStreamCompound->stream << value;
-            return *this;
-        }
-
-    private:
-        //! Closed assignment
-        record_pump& operator= (record_pump const&);
+        typedef record_pump< T > other;
     };
 
-} // namespace aux
+private:
+    //! Logger type
+    typedef LoggerT logger_type;
+    //! Character type
+    typedef typename logger_type::char_type char_type;
+    //! Stream compound provider
+    typedef aux::stream_provider< char_type > stream_provider_type;
+    //! Stream compound type
+    typedef typename stream_provider_type::stream_compound stream_compound;
+
+protected:
+    //! A reference to the logger
+    mutable logger_type* m_pLogger;
+    //! Stream compound
+    mutable stream_compound* m_pStreamCompound;
+
+public:
+    //! Constructor
+    explicit record_pump(logger_type* p) :
+        m_pLogger(p),
+        m_pStreamCompound(stream_provider_type::allocate_compound())
+    {
+    }
+    //! Copy constructor (implemented as move)
+    record_pump(record_pump const& that) :
+        m_pLogger(that.m_pLogger),
+        m_pStreamCompound(that.m_pStreamCompound)
+    {
+        that.m_pLogger = 0;
+        that.m_pStreamCompound = 0;
+    }
+    //! Destructor. Pushes the composed message to log.
+    ~record_pump()
+    {
+        if (m_pLogger)
+        {
+            try
+            {
+                m_pStreamCompound->stream.flush();
+                m_pLogger->push_record(m_pStreamCompound->message);
+            }
+            catch (std::exception&)
+            {
+                m_pLogger->cancel_record();
+            }
+
+            stream_provider_type::release_compound(m_pStreamCompound); // doesn't throw
+        }
+    }
+
+    //! Forwarding output operators
+    template< typename T >
+    record_pump const& operator<< (T const& value) const
+    {
+        BOOST_ASSERT(m_pStreamCompound != 0);
+        m_pStreamCompound->stream << value;
+        return *this;
+    }
+
+private:
+    //! Closed assignment
+    record_pump& operator= (record_pump const&);
+};
 
 /*!
  * \brief Basic logger class
@@ -281,8 +301,6 @@ template< typename CharT, typename FinalT, typename ThreadingModelT >
 class basic_logger :
     public ThreadingModelT
 {
-    friend class aux::record_pump< FinalT >;
-
 public:
     //! Character type
     typedef CharT char_type;
@@ -305,11 +323,11 @@ protected:
      * This pump is used to format the logging record message text and then
      * push it to the logging core.
      */
-    typedef aux::record_pump< final_type > record_pump_type;
+    typedef record_pump< final_type > record_pump_type;
 
 private:
     //! A pointer to the logging system
-    shared_ptr< core_type > m_pLoggingSystem;
+    shared_ptr< core_type > m_pCore;
 
     //! Logger-specific attribute set
     attribute_set_type m_Attributes;
@@ -320,7 +338,7 @@ public:
      * acquires reference to the logging core.
      */
     basic_logger() :
-        m_pLoggingSystem(core_type::get())
+        m_pCore(core_type::get())
     {
     }
     /*!
@@ -331,7 +349,7 @@ public:
      * \param that Source logger
      */
     basic_logger(basic_logger const& that) :
-        m_pLoggingSystem(core_type::get()),
+        m_pCore(core_type::get()),
         m_Attributes(that.m_Attributes)
     {
     }
@@ -341,7 +359,7 @@ public:
      */
     template< typename ArgsT >
     explicit basic_logger(ArgsT const& args) :
-        m_pLoggingSystem(core_type::get())
+        m_pCore(core_type::get())
     {
     }
 
@@ -448,7 +466,7 @@ protected:
     /*!
      * An accessor to the logging system pointer
      */
-    shared_ptr< core_type > const& core() const { return m_pLoggingSystem; }
+    shared_ptr< core_type > const& core() const { return m_pCore; }
     /*!
      * An accessor to the logger attributes
      */
@@ -528,7 +546,7 @@ protected:
      */
     bool open_record_unlocked()
     {
-        return m_pLoggingSystem->open_record(m_Attributes);
+        return m_pCore->open_record(m_Attributes);
     }
     /*!
      * Unlocked \c open_record
@@ -536,21 +554,21 @@ protected:
     template< typename ArgsT >
     bool open_record_unlocked(ArgsT const& args)
     {
-        return m_pLoggingSystem->open_record(m_Attributes);
+        return m_pCore->open_record(m_Attributes);
     }
     /*!
      * Unlocked \c push_record
      */
     void push_record_unlocked(string_type const& message)
     {
-        m_pLoggingSystem->push_record(message);
+        m_pCore->push_record(message);
     }
     /*!
      * Unlocked \c cancel_record
      */
     void cancel_record_unlocked()
     {
-        m_pLoggingSystem->cancel_record();
+        m_pCore->cancel_record();
     }
 
 private:
@@ -569,6 +587,186 @@ inline void swap(
     static_cast< FinalT& >(left).swap(static_cast< FinalT& >(right));
 }
 
+namespace aux {
+
+/*!
+ * \brief A helper metafunction that is used to inherit all logger features into the final logger
+ */
+struct inherit_logger_features
+{
+    template< typename PrevT, typename T >
+    struct apply
+    {
+        typedef typename mpl::lambda< T >::type::BOOST_NESTED_TEMPLATE apply< PrevT >::type type;
+    };
+};
+
+} // namespace aux
+
+//! \cond
+
+#define BOOST_LOG_CTOR_FORWARD_INTERNAL(z, n, data)\
+    template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
+    explicit data(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
+        base_type((BOOST_PP_ENUM_PARAMS(n, arg))) {}
+
+
+#define BOOST_LOG_CTOR_FORWARD(z, n, data)\
+    template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
+    explicit BOOST_PP_TUPLE_ELEM(2, 0, data)(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
+        BOOST_PP_TUPLE_ELEM(2, 1, data)() class_type::logger_base((BOOST_PP_ENUM_PARAMS(n, arg))) {}
+
+#define BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS_IMPL(class_type, typename_keyword)\
+    public:\
+        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD, (class_type, typename_keyword))
+
+#define BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_IMPL(class_type, typename_keyword)\
+    public:\
+        class_type() {}\
+        class_type(class_type const& that) : typename_keyword() class_type::logger_base(\
+            static_cast< typename_keyword() class_type::logger_base const& >(that)) {}\
+        BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS_IMPL(class_type, typename_keyword)
+
+//! \endcond
+
+#define BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS(class_type)\
+    BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS_IMPL(class_type, BOOST_PP_EMPTY)
+
+#define BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS_TEMPLATE(class_type)\
+    BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS_IMPL(class_type, BOOST_PP_IDENTITY(typename))
+
+#define BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(class_type)\
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_IMPL(class_type, BOOST_PP_EMPTY)
+
+#define BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(class_type)\
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_IMPL(class_type, BOOST_PP_IDENTITY(typename))
+
+/*!
+ * \brief A composite logger that inherits a number of features
+ *
+ * The composite logger is a helper class that simplifies feature composition into a final logger.
+ * The user's logger class is expected to derive from the composite logger class, instantiated with
+ * the character type, the user's logger class, threading model and the list of the required features.
+ * The former three parameters are passed to the \c basic_logger class template. The feature list
+ * must be an MPL type sequence, where each element is an unary MPL metafunction class, that upon
+ * applying on its argument derives from it. Every logger feature provided by the library can
+ * participate in the feature list if its corresponding template parameter for the base class is
+ * set to the \c mpl::_1 placeholder.
+ */
+template< typename CharT, typename FinalT, typename ThreadingModelT, typename FeaturesT >
+class basic_composite_logger :
+    public mpl::reverse_fold<
+        FeaturesT,
+        basic_logger< CharT, FinalT, ThreadingModelT >,
+        aux::inherit_logger_features
+    >::type
+{
+    //! Base type (the hierarchy of features)
+    typedef typename mpl::reverse_fold<
+        FeaturesT,
+        basic_logger< CharT, FinalT, ThreadingModelT >,
+        aux::inherit_logger_features
+    >::type base_type;
+
+protected:
+    //! The composite logger type (for use in the user's logger class)
+    typedef basic_composite_logger logger_base;
+
+public:
+    //! Threading model being used
+    typedef typename base_type::threading_model threading_model;
+
+#if !defined(BOOST_LOG_NO_THREADS)
+
+public:
+    /*!
+     * Default constructor (default-constructs all features)
+     */
+    basic_composite_logger() {}
+    /*!
+     * Copy constructor
+     */
+    basic_composite_logger(basic_composite_logger const& that) :
+        base_type((
+            log::aux::shared_lock_guard< const threading_model >(that.threading_base()),
+            static_cast< base_type const& >(that)
+        ))
+    {
+    }
+    //  Parametrized constructors that pass all named arguments to the features
+    BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD_INTERNAL, basic_composite_logger)
+
+    /*!
+     * Assignment for the final class. Threadsafe, provides strong exception guarantee.
+     */
+    FinalT& operator= (FinalT const& that)
+    {
+        if (this != boost::addressof(that))
+        {
+            // We'll have to explicitly create the copy in order to make sure it's unlocked when we attempt to lock *this
+            FinalT tmp(that);
+            lock_guard< threading_model > _(this->threading_base());
+            this->swap_unlocked(tmp);
+        }
+        return static_cast< FinalT& >(*this);
+    }
+    /*!
+     * Thread-safe implementation of swap
+     */
+    void swap(basic_composite_logger& that)
+    {
+        log::aux::multiple_unique_lock2<
+            threading_model,
+            threading_model
+        > _(this->threading_base(), that.threading_base());
+        this->swap_unlocked(that);
+    }
+};
+
+//! An optimized composite logger version with no multithreading support
+template< typename CharT, typename FinalT, typename FeaturesT >
+class basic_composite_logger< CharT, FinalT, single_thread_model, FeaturesT > :
+    public mpl::reverse_fold<
+        FeaturesT,
+        basic_logger< CharT, FinalT, single_thread_model >,
+        aux::inherit_logger_features
+    >::type
+{
+    typedef typename mpl::reverse_fold<
+        FeaturesT,
+        basic_logger< CharT, FinalT, single_thread_model >,
+        aux::inherit_logger_features
+    >::type base_type;
+
+protected:
+    typedef basic_composite_logger logger_base;
+
+public:
+    typedef typename base_type::threading_model threading_model;
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
+
+public:
+    basic_composite_logger() {}
+    basic_composite_logger(basic_composite_logger const& that) :
+        base_type(static_cast< base_type const& >(that))
+    {
+    }
+    BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD_INTERNAL, basic_composite_logger)
+
+    FinalT& operator= (FinalT that)
+    {
+        this->swap_unlocked(that);
+        return static_cast< FinalT& >(*this);
+    }
+    void swap(basic_composite_logger& that)
+    {
+        this->swap_unlocked(that);
+    }
+};
+
+#undef BOOST_LOG_CTOR_FORWARD_INTERNAL
+
 #ifdef BOOST_LOG_USE_CHAR
 
 /*!
@@ -577,29 +775,9 @@ inline void swap(
  * See \c basic_logger class template for a more detailed description.
  */
 class logger :
-    public basic_logger< char, logger, single_thread_model >
+    public basic_composite_logger< char, logger, single_thread_model, mpl::vector0< > >
 {
-public:
-    /*!
-     * Assignment operator
-     */
-    logger& operator= (logger const& that)
-    {
-        if (this != &that)
-        {
-            logger tmp(that);
-            swap_unlocked(tmp);
-        }
-        return *this;
-    }
-
-    /*!
-     * Swaps two loggers
-     */
-    void swap(logger& that)
-    {
-        swap_unlocked(that);
-    }
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(logger)
 };
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -610,51 +788,9 @@ public:
  * See \c basic_logger class template for a more detailed description.
  */
 class logger_mt :
-    public basic_logger< char, logger_mt, multi_thread_model >
+    public basic_composite_logger< char, logger_mt, multi_thread_model, mpl::vector0< > >
 {
-    typedef basic_logger< char, logger_mt, multi_thread_model > base_type;
-
-public:
-    /*!
-     * Default constructor
-     */
-    logger_mt() {}
-    /*!
-     * Copy constructor
-     */
-    logger_mt(logger_mt const& that) :
-        base_type((
-            log::aux::shared_lock_guard< const threading_model >(that.threading_base()),
-            static_cast< base_type const& >(that)
-        ))
-    {
-    }
-
-    /*!
-     * Assignment operator
-     */
-    logger_mt& operator= (logger_mt const& that)
-    {
-        if (this != &that)
-        {
-            logger_mt tmp(that);
-            lock_guard< threading_model > _(threading_base());
-            swap_unlocked(tmp);
-        }
-        return *this;
-    }
-
-    /*!
-     * Swaps two loggers
-     */
-    void swap(logger_mt& that)
-    {
-        log::aux::multiple_unique_lock2<
-            threading_model,
-            threading_model
-        > _(threading_base(), that.threading_base());
-        swap_unlocked(that);
-    }
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(logger_mt)
 };
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
@@ -668,29 +804,9 @@ public:
  * See \c basic_logger class template for a more detailed description.
  */
 class wlogger :
-    public basic_logger< wchar_t, wlogger, single_thread_model >
+    public basic_composite_logger< wchar_t, wlogger, single_thread_model, mpl::vector0< > >
 {
-public:
-    /*!
-     * Assignment operator
-     */
-    wlogger& operator= (wlogger const& that)
-    {
-        if (this != &that)
-        {
-            wlogger tmp(that);
-            swap_unlocked(tmp);
-        }
-        return *this;
-    }
-
-    /*!
-     * Swaps two loggers
-     */
-    void swap(wlogger& that)
-    {
-        swap_unlocked(that);
-    }
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(wlogger)
 };
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -701,51 +817,9 @@ public:
  * See \c basic_logger class template for a more detailed description.
  */
 class wlogger_mt :
-    public basic_logger< wchar_t, wlogger_mt, multi_thread_model >
+    public basic_composite_logger< wchar_t, wlogger_mt, multi_thread_model, mpl::vector0< > >
 {
-    typedef basic_logger< wchar_t, wlogger_mt, multi_thread_model > base_type;
-
-public:
-    /*!
-     * Default constructor
-     */
-    wlogger_mt() {}
-    /*!
-     * Copy constructor
-     */
-    wlogger_mt(wlogger_mt const& that) :
-        base_type((
-            log::aux::shared_lock_guard< const threading_model >(that.threading_base()),
-            static_cast< base_type const& >(that)
-        ))
-    {
-    }
-
-    /*!
-     * Assignment operator
-     */
-    wlogger_mt& operator= (wlogger_mt const& that)
-    {
-        if (this != &that)
-        {
-            wlogger_mt tmp(that);
-            lock_guard< threading_model > _(threading_base());
-            swap_unlocked(tmp);
-        }
-        return *this;
-    }
-
-    /*!
-     * Swaps two loggers
-     */
-    void swap(wlogger_mt& that)
-    {
-        log::aux::multiple_unique_lock2<
-            threading_model,
-            threading_model
-        > _(threading_base(), that.threading_base());
-        swap_unlocked(that);
-    }
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(wlogger_mt)
 };
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
@@ -776,24 +850,12 @@ public:
         (logger).strm()
 
 
-#ifndef BOOST_LOG_MAX_CTOR_FORWARD_ARGS
-//! The maximum number of arguments that can be forwarded by the logger constructor to its bases
-#define BOOST_LOG_MAX_CTOR_FORWARD_ARGS 16
-#endif
-
 //! \cond
 
-#define BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL1(r, data, elem) elem<
-#define BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL2(r, data, elem) >
-
-#define BOOST_LOG_CTOR_FORWARD(z, n, data)\
-    template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
-    explicit data(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) : base_type((BOOST_PP_ENUM_PARAMS(n, arg))) {}
+#define BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL(r, data, i, elem) BOOST_PP_COMMA_IF(i) elem< ::boost::mpl::_1 >
 
 //! \endcond
 
-#if !defined(BOOST_LOG_NO_THREADS)
-
 /*!
  *  \brief The macro declares a logger class that inherits a number of base classes
  * 
@@ -804,89 +866,19 @@ public:
  */
 #define BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char_type, base_seq, threading)\
     class type_name :\
-        public BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL1, ~, base_seq)\
-            ::boost::log::sources::basic_logger< char_type, type_name, threading >\
-            BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL2, ~, base_seq)\
+        public ::boost::log::sources::basic_composite_logger<\
+            char_type,\
+            type_name,\
+            threading,\
+            ::boost::mpl::vector<\
+                BOOST_PP_SEQ_FOR_EACH_I(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL, ~, base_seq)\
+            >::type\
+        >\
     {\
-        typedef BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL1, ~, base_seq)\
-            ::boost::log::sources::basic_logger< char_type, type_name, threading >\
-            BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL2, ~, base_seq) base_type;\
-    public:\
-        typedef base_type::threading_model threading_model;\
-    public:\
-        type_name() {}\
-        type_name(type_name const& that) :\
-            base_type((\
-                ::boost::log::aux::shared_lock_guard< const threading_model >(that.threading_base()),\
-                static_cast< base_type const& >(that)\
-            ))\
-        {\
-        }\
-        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD, type_name)\
-        type_name& operator= (type_name const& that)\
-        {\
-            if (this != ::boost::addressof(that))\
-            {\
-                type_name tmp(that);\
-                ::boost::lock_guard< threading_model > _(threading_base());\
-                swap_unlocked(tmp);\
-            }\
-            return *this;\
-        }\
-        void swap(type_name& that)\
-        {\
-            ::boost::log::aux::multiple_unique_lock2<\
-                threading_model,\
-                threading_model\
-            > _(threading_base(), that.threading_base());\
-            swap_unlocked(that);\
-        }\
+        BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(type_name)\
     }
 
-#else // !defined(BOOST_LOG_NO_THREADS)
 
-/*!
- *  \brief The macro declares a logger class that inherits a number of base classes
- * 
- *  \param type_name The name of the logger class to declare
- *  \param char_type The character type of the logger. Either char or wchar_t expected.
- *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
- *  \param threading A threading model class
- */
-#define BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char_type, base_seq, threading)\
-    class type_name :\
-        public BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL1, ~, base_seq)\
-            ::boost::log::sources::basic_logger< char_type, type_name, threading >\
-            BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL2, ~, base_seq)\
-    {\
-        typedef BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL1, ~, base_seq)\
-            ::boost::log::sources::basic_logger< char_type, type_name, threading >\
-            BOOST_PP_SEQ_FOR_EACH(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL2, ~, base_seq) base_type;\
-    public:\
-        typedef base_type::threading_model threading_model;\
-    public:\
-        type_name() {}\
-        type_name(type_name const& that) :\
-            base_type(static_cast< base_type const& >(that))\
-        {\
-        }\
-        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD, type_name)\
-        type_name& operator= (type_name const& that)\
-        {\
-            if (this != ::boost::addressof(that))\
-            {\
-                type_name tmp(that);\
-                swap_unlocked(tmp);\
-            }\
-            return *this;\
-        }\
-        void swap(type_name& that)\
-        {\
-            swap_unlocked(that);\
-        }\
-    }
-
-#endif // !defined(BOOST_LOG_NO_THREADS)
 
 #ifdef BOOST_LOG_USE_CHAR
 

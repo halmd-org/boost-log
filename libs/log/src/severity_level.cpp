@@ -24,62 +24,25 @@ namespace sources {
 namespace aux {
 
 //! Default constructor
-inline severity_level::severity_level()
+inline severity_level_holder::severity_level_holder()
 {
 }
 
 //! Destructor
-severity_level::~severity_level()
+severity_level_holder::~severity_level_holder()
 {
 }
 
 //! Returns an instance of the attribute
-BOOST_LOG_EXPORT shared_ptr< severity_level > severity_level::get()
+BOOST_LOG_EXPORT shared_ptr< severity_level_holder > severity_level_holder::get()
 {
     return singleton_base::get();
 }
 
-//! The method returns the actual attribute value. It must not return NULL.
-shared_ptr< attribute_value > severity_level::get_value()
-{
-    return shared_from_this();
-}
-
-//! The method dispatches the value to the given object
-bool severity_level::dispatch(type_dispatcher& dispatcher)
-{
-    register type_visitor< held_type >* visitor =
-        dispatcher.get_visitor< held_type >();
-    if (visitor)
-    {
-#if !defined(BOOST_LOG_NO_THREADS)
-        visitor->visit(m_Value.get());
-#else
-        visitor->visit(m_Value);
-#endif
-        return true;
-    }
-    else
-        return false;
-}
-
-//! The method is called when the attribute value is passed to another thread
-shared_ptr< attribute_value > severity_level::detach_from_thread()
-{
-#if !defined(BOOST_LOG_NO_THREADS)
-    return boost::make_shared<
-        attributes::basic_attribute_value< held_type >
-    >(m_Value.get());
-#else
-    // With multithreading disabled we may safely return this here. This method will not be called anyway.
-    return shared_from_this();
-#endif
-}
-
 //! Initializes the singleton instance
-void severity_level::init_instance()
+void severity_level_holder::init_instance()
 {
-    singleton_base::get_instance().reset(new severity_level());
+    singleton_base::get_instance().reset(new severity_level_holder());
 }
 
 } // namespace aux

@@ -24,6 +24,8 @@
 
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/mpl/aux_/lambda_support.hpp>
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
@@ -84,51 +86,108 @@ namespace aux {
     };
 #endif
 
-    //! Severity level attribute implementation
-    class severity_level :
-        public attribute,
-        public attribute_value,
-        public enable_shared_from_this< severity_level >,
-        public log::aux::lazy_singleton< severity_level, shared_ptr< severity_level > >
+    //! Severity level storage class
+    class severity_level_holder :
+        public enable_shared_from_this< severity_level_holder >,
+        public log::aux::lazy_singleton< severity_level_holder, shared_ptr< severity_level_holder > >
     {
-        friend class log::aux::lazy_singleton< severity_level, shared_ptr< severity_level > >;
-        typedef log::aux::lazy_singleton< severity_level, shared_ptr< severity_level > > singleton_base;
-
-    public:
-        typedef int held_type;
+        friend class log::aux::lazy_singleton< severity_level_holder, shared_ptr< severity_level_holder > >;
+        typedef log::aux::lazy_singleton< severity_level_holder, shared_ptr< severity_level_holder > > singleton_base;
 
     private:
 #if !defined(BOOST_LOG_NO_THREADS)
         //! The actual severity level value
-        log::aux::thread_specific< held_type > m_Value;
+        log::aux::thread_specific< int > m_Value;
 #else
         //! The actual severity level value
-        held_type m_Value;
+        int m_Value;
 #endif
 
     public:
-        virtual ~severity_level();
+        ~severity_level_holder();
 
-        //! Returns an instance of the attribute
-        static BOOST_LOG_EXPORT shared_ptr< severity_level > get();
+        //! Returns an instance of the holder
+        static BOOST_LOG_EXPORT shared_ptr< severity_level_holder > get();
 
-        //! The method returns the actual attribute value. It must not return NULL.
-        virtual shared_ptr< attribute_value > get_value();
         //! The method sets the actual level
-        void set_value(held_type level)
+        void set_value(int level)
         {
             m_Value = level;
         }
-
-        //! The method dispatches the value to the given object
-        virtual bool dispatch(type_dispatcher& dispatcher);
-        //! The method is called when the attribute value is passed to another thread
-        virtual shared_ptr< attribute_value > detach_from_thread();
+        //! The method returns the current level
+        int get_value() const
+        {
+#if !defined(BOOST_LOG_NO_THREADS)
+            return m_Value.get();
+#else
+            return m_Value;
+#endif
+        }
 
     private:
-        severity_level();
+        severity_level_holder();
         //! Initializes the singleton instance
         static void init_instance();
+    };
+
+    //! Severity level attribute implementation
+    template< typename LevelT >
+    class severity_level :
+        public attribute,
+        public attribute_value,
+        public enable_shared_from_this< severity_level< LevelT > >
+    {
+    public:
+        //! Stored level type
+        typedef LevelT held_type;
+
+    private:
+        //! Pointer to the level storage
+        shared_ptr< severity_level_holder > m_pHolder;
+
+    public:
+        //! Default constructor
+        severity_level() : m_pHolder(severity_level_holder::get())
+        {
+        }
+
+        //! The method returns the actual attribute value. It must not return NULL.
+        virtual shared_ptr< attribute_value > get_value()
+        {
+            return this->shared_from_this();
+        }
+        //! The method sets the actual level
+        void set_value(held_type level)
+        {
+            m_pHolder->set_value(static_cast< int >(level));
+        }
+
+        //! The method dispatches the value to the given object
+        virtual bool dispatch(type_dispatcher& dispatcher)
+        {
+            register type_visitor< held_type >* visitor =
+                dispatcher.get_visitor< held_type >();
+            if (visitor)
+            {
+                visitor->visit(static_cast< held_type >(m_pHolder->get_value()));
+                return true;
+            }
+            else
+                return false;
+        }
+
+        //! The method is called when the attribute value is passed to another thread
+        virtual shared_ptr< attribute_value > detach_from_thread()
+        {
+#if !defined(BOOST_LOG_NO_THREADS)
+            return boost::make_shared<
+                attributes::basic_attribute_value< held_type >
+            >(static_cast< held_type >(m_pHolder->get_value()));
+#else
+            // With multithreading disabled we may safely return this here. This method will not be called anyway.
+            return shared_from_this();
+#endif
+        }
     };
 
 } // namespace aux
@@ -141,7 +200,7 @@ namespace aux {
  * The severity level can be omitted on logging record construction, in which case the default
  * level will be used. The default level can also be customized by passing it to the logger constructor.
  */
-template< typename BaseT >
+template< typename BaseT, typename LevelT = int >
 class basic_severity_logger :
     public BaseT
 {
@@ -156,12 +215,14 @@ public:
     //! Attribute set type
     typedef typename base_type::attribute_set_type attribute_set_type;
 
+    //! Severity level type
+    typedef LevelT severity_level;
     //! Severity attribute type
-    typedef aux::severity_level severity_attribute;
+    typedef aux::severity_level< severity_level > severity_attribute;
 
 private:
     //! Default severity
-    severity_attribute::held_type m_DefaultSeverity;
+    severity_level m_DefaultSeverity;
     //! Severity attribute
     shared_ptr< severity_attribute > m_pSeverity;
 
@@ -172,8 +233,8 @@ public:
      */
     basic_severity_logger() :
         base_type(),
-        m_DefaultSeverity(0),
-        m_pSeverity(severity_attribute::get())
+        m_DefaultSeverity(static_cast< severity_level >(0)),
+        m_pSeverity(boost::make_shared< severity_attribute >()) // make_shared doesn't work in 1.36: http://svn.boost.org/trac/boost/ticket/2126
     {
         base_type::add_attribute_unlocked(
             aux::severity_attribute_name< char_type >::get(),
@@ -185,7 +246,7 @@ public:
     basic_severity_logger(basic_severity_logger const& that) :
         base_type(static_cast< base_type const& >(that)),
         m_DefaultSeverity(that.m_DefaultSeverity),
-        m_pSeverity(severity_attribute::get())
+        m_pSeverity(that.m_pSeverity)
     {
         base_type::attributes()[aux::severity_attribute_name< char_type >::get()] = m_pSeverity;
     }
@@ -199,7 +260,7 @@ public:
     explicit basic_severity_logger(ArgsT const& args) :
         base_type(args),
         m_DefaultSeverity(args[keywords::severity | 0]),
-        m_pSeverity(severity_attribute::get())
+        m_pSeverity(boost::make_shared< severity_attribute >()) // make_shared doesn't work in 1.36: http://svn.boost.org/trac/boost/ticket/2126
     {
         base_type::add_attribute_unlocked(
             aux::severity_attribute_name< char_type >::get(),
@@ -236,7 +297,7 @@ protected:
     /*!
      * Default severity value getter
      */
-    severity_attribute::held_type default_severity() const { return m_DefaultSeverity; }
+    severity_level default_severity() const { return m_DefaultSeverity; }
 
     /*!
      * Unlocked \c open_record
@@ -261,7 +322,13 @@ protected:
     {
         base_type::swap_unlocked(static_cast< base_type& >(that));
         std::swap(m_DefaultSeverity, that.m_DefaultSeverity);
+        m_pSeverity.swap(that.m_pSeverity);
     }
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+public:
+    BOOST_MPL_AUX_LAMBDA_SUPPORT(2, basic_severity_logger, (BaseT, LevelT))
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -269,24 +336,68 @@ protected:
 #ifdef BOOST_LOG_USE_CHAR
 
 //! Narrow-char logger with severity level support
-BOOST_LOG_DECLARE_LOGGER(severity_logger, (basic_severity_logger));
+template< typename LevelT = int >
+class severity_logger :
+    public basic_composite_logger<
+        char,
+        severity_logger< LevelT >,
+        single_thread_model,
+        mpl::vector1< basic_severity_logger< mpl::_1, LevelT > >
+    >
+{
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_logger)
+};
 
 #if !defined(BOOST_LOG_NO_THREADS)
+
 //! Narrow-char thread-safe logger with severity level support
-BOOST_LOG_DECLARE_LOGGER_MT(severity_logger_mt, (basic_severity_logger));
-#endif
+template< typename LevelT = int >
+class severity_logger_mt :
+    public basic_composite_logger<
+        char,
+        severity_logger_mt< LevelT >,
+        multi_thread_model,
+        mpl::vector1< basic_severity_logger< mpl::_1, LevelT > >
+    >
+{
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_logger_mt)
+};
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
 
 #endif
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 
 //! Wide-char logger with severity level support
-BOOST_LOG_DECLARE_WLOGGER(wseverity_logger, (basic_severity_logger));
+template< typename LevelT = int >
+class wseverity_logger :
+    public basic_composite_logger<
+        wchar_t,
+        wseverity_logger< LevelT >,
+        single_thread_model,
+        mpl::vector1< basic_severity_logger< mpl::_1, LevelT > >
+    >
+{
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_logger)
+};
 
 #if !defined(BOOST_LOG_NO_THREADS)
+
 //! Wide-char thread-safe logger with severity level support
-BOOST_LOG_DECLARE_WLOGGER_MT(wseverity_logger_mt, (basic_severity_logger));
-#endif
+template< typename LevelT = int >
+class wseverity_logger_mt :
+    public basic_composite_logger<
+        wchar_t,
+        wseverity_logger_mt< LevelT >,
+        multi_thread_model,
+        mpl::vector1< basic_severity_logger< mpl::_1, LevelT > >
+    >
+{
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_logger_mt)
+};
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
 
 #endif
 
@@ -297,9 +408,11 @@ BOOST_LOG_DECLARE_WLOGGER_MT(wseverity_logger_mt, (basic_severity_logger));
  * 
  * See \c basic_severity_logger class template for a more detailed description
  */
+template< typename LevelT = int >
 class severity_logger :
     public basic_severity_logger<
-        basic_logger< char, severity_logger, single_thread_model >
+        basic_logger< char, severity_logger, single_thread_model >,
+        LevelT
     >
 {
 public:
@@ -331,9 +444,11 @@ public:
  * 
  * See \c basic_severity_logger class template for a more detailed description
  */
+template< typename LevelT = int >
 class severity_logger_mt :
     public basic_severity_logger<
-        basic_logger< char, severity_logger_mt, multi_thread_model >
+        basic_logger< char, severity_logger_mt, multi_thread_model >,
+        LevelT
     >
 {
 public:
@@ -365,9 +480,11 @@ public:
  * 
  * See \c basic_severity_logger class template for a more detailed description
  */
+template< typename LevelT = int >
 class wseverity_logger :
     public basic_severity_logger<
-        basic_logger< wchar_t, wseverity_logger, single_thread_model >
+        basic_logger< wchar_t, wseverity_logger, single_thread_model >,
+        LevelT
     >
 {
 public:
@@ -399,9 +516,11 @@ public:
  * 
  * See \c basic_severity_logger class template for a more detailed description
  */
+template< typename LevelT = int >
 class wseverity_logger_mt :
     public basic_severity_logger<
-        basic_logger< wchar_t, wseverity_logger_mt, multi_thread_model >
+        basic_logger< wchar_t, wseverity_logger_mt, multi_thread_model >,
+        LevelT
     >
 {
 public:
@@ -441,7 +560,7 @@ public:
 #endif // _MSC_VER
 
 //! The macro allows to put a record with a specific severity level into log
-#define BOOST_LOG_SEV(logger, svty)\
-    BOOST_LOG_WITH_PARAMS((logger), (::boost::log::sources::keywords::severity = (svty)))
+#define BOOST_LOG_SEV(logger, lvl)\
+    BOOST_LOG_WITH_PARAMS((logger), (::boost::log::sources::keywords::severity = (lvl)))
 
 #endif // BOOST_LOG_SOURCES_SEVERITY_LOGGER_HPP_INCLUDED_

@@ -24,6 +24,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/mpl/aux_/lambda_support.hpp>
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sources/basic_logger.hpp>
@@ -160,6 +161,9 @@ private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! Constructs an empty string as a default value for the channel name
     static string_type make_default_channel_name() { return string_type(); }
+
+public:
+    BOOST_MPL_AUX_LAMBDA_SUPPORT(1, basic_channel_logger, (BaseT))
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

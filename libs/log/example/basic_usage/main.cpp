@@ -71,6 +71,25 @@ enum severity_level
     critical
 };
 
+// The formatting logic for the severity level
+template< typename CharT, typename TraitsT >
+inline std::basic_ostream< CharT, TraitsT >& operator<< (
+    std::basic_ostream< CharT, TraitsT >& strm, severity_level lvl)
+{
+    static const char* const str[] =
+    {
+        "normal",
+        "notification",
+        "warning",
+        "error",
+        "critical"
+    };
+    if (static_cast< std::size_t >(lvl) < (sizeof(str) / sizeof(*str)))
+        strm << str[lvl];
+    else
+        strm << static_cast< int >(lvl);
+    return strm;
+}
 
 int foo(src::logger& lg)
 {
@@ -141,6 +160,7 @@ int main(int argc, char* argv[])
     pSink->locked_backend()->set_formatter(fmt::ostrm
         << fmt::attr("LineID") // First an attribute "LineID" is written to the log
         << " [" << fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f") 
+        << "] [" << fmt::attr< severity_level >("Severity") 
         << "] [" << fmt::time_duration< boost::posix_time::time_duration >("Uptime") 
         << "] [" // then this delimiter separates it from the rest of the line
         << fmt::attr< std::string >("Tag") // then goes another attribute named "Tag"
@@ -245,9 +265,9 @@ int main(int argc, char* argv[])
     // is filtering based on the record severity level. We've already defined severity levels.
     // Now we can set the filter. A filter is essentially a functor that returns
     // boolean value that tells whether to write the record or not.
-    pSink->set_filter(
-        flt::attr< int >("Severity") >= warning // Write all records with "warning" severity or higher
-        || flt::attr< std::string >("Tag").begins_with("IMPORTANT")); // ...or specifically tagged
+//    pSink->set_filter(
+//        flt::attr< severity_level >("Severity") >= warning // Write all records with "warning" severity or higher
+//        || flt::attr< std::string >("Tag").begins_with("IMPORTANT")); // ...or specifically tagged
 
     // The "attr" placeholder here acts pretty much like the "attr" placeholder in formatters, except
     // that it requires the attribute type (or types in MPL-sequence) to be specified.
@@ -268,7 +288,7 @@ int main(int argc, char* argv[])
     // But no make it more convenient and efficient there is a special extended logger class.
     // Its implementation may serve as an example of extending basic library functionality.
     // You may add your specific capabilities to the logger by deriving your class from it.
-    src::severity_logger slg;
+    src::severity_logger< severity_level > slg;
 
     // These two lines test filtering based on severity
     BOOST_LOG_SEV(slg, normal) << "A normal severity message, will not pass to the output";

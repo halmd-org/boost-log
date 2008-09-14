@@ -68,8 +68,8 @@ struct inherit_visitors
             BOOST_LOG_ASSUME(this != NULL);
             // To honor GCC bugs we have to operate on pointers other than void*
             pEntry->second = std::distance(
-                    reinterpret_cast< char* >(pThis),
-                    reinterpret_cast< char* >(static_cast< type_visitor< supported_type >* >(this)));
+                reinterpret_cast< char* >(pThis),
+                reinterpret_cast< char* >(static_cast< type_visitor< supported_type >* >(this)));
             NextBaseT::init_visitor(pThis, ++pEntry);
         }
     };
