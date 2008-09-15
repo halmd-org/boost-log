@@ -411,7 +411,7 @@ class wseverity_logger_mt :
 template< typename LevelT = int >
 class severity_logger :
     public basic_severity_logger<
-        basic_logger< char, severity_logger, single_thread_model >,
+        basic_logger< char, severity_logger< LevelT >, single_thread_model >,
         LevelT
     >
 {
@@ -447,7 +447,7 @@ public:
 template< typename LevelT = int >
 class severity_logger_mt :
     public basic_severity_logger<
-        basic_logger< char, severity_logger_mt, multi_thread_model >,
+        basic_logger< char, severity_logger_mt< LevelT >, multi_thread_model >,
         LevelT
     >
 {
@@ -483,7 +483,7 @@ public:
 template< typename LevelT = int >
 class wseverity_logger :
     public basic_severity_logger<
-        basic_logger< wchar_t, wseverity_logger, single_thread_model >,
+        basic_logger< wchar_t, wseverity_logger< LevelT >, single_thread_model >,
         LevelT
     >
 {
@@ -519,7 +519,7 @@ public:
 template< typename LevelT = int >
 class wseverity_logger_mt :
     public basic_severity_logger<
-        basic_logger< wchar_t, wseverity_logger_mt, multi_thread_model >,
+        basic_logger< wchar_t, wseverity_logger_mt< LevelT >, multi_thread_model >,
         LevelT
     >
 {
