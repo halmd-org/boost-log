@@ -43,26 +43,82 @@ namespace sources {
 #ifdef BOOST_LOG_USE_CHAR
 
 //! Narrow-char logger with severity level and channel support
-BOOST_LOG_DECLARE_LOGGER(severity_channel_logger, (basic_severity_logger)(basic_channel_logger));
+template< typename LevelT = int, typename ChannelT = std::string >
+class severity_channel_logger :
+    public basic_composite_logger<
+        char,
+        severity_channel_logger< LevelT, ChannelT >,
+        single_thread_model,
+        mpl::vector2<
+            basic_severity_logger< mpl::_1, LevelT >,
+            basic_channel_logger< mpl::_1, ChannelT >
+        >
+    >
+{
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_channel_logger)
+};
 
 #if !defined(BOOST_LOG_NO_THREADS)
-//! Narrow-char thread-safe logger with severity level and channel support
-BOOST_LOG_DECLARE_LOGGER_MT(severity_channel_logger_mt, (basic_severity_logger)(basic_channel_logger));
-#endif
 
-#endif
+//! Narrow-char thread-safe logger with severity level and channel support
+template< typename LevelT = int, typename ChannelT = std::string >
+class severity_channel_logger_mt :
+    public basic_composite_logger<
+        char,
+        severity_channel_logger_mt< LevelT, ChannelT >,
+        multi_thread_model,
+        mpl::vector2<
+            basic_severity_logger< mpl::_1, LevelT >,
+            basic_channel_logger< mpl::_1, ChannelT >
+        >
+    >
+{
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_channel_logger_mt)
+};
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
+
+#endif // BOOST_LOG_USE_CHAR
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 
 //! Wide-char logger with severity level and channel support
-BOOST_LOG_DECLARE_WLOGGER(wseverity_channel_logger, (basic_severity_logger)(basic_channel_logger));
+template< typename LevelT = int, typename ChannelT = std::wstring >
+class wseverity_channel_logger :
+    public basic_composite_logger<
+        wchar_t,
+        wseverity_channel_logger< LevelT, ChannelT >,
+        single_thread_model,
+        mpl::vector2<
+            basic_severity_logger< mpl::_1, LevelT >,
+            basic_channel_logger< mpl::_1, ChannelT >
+        >
+    >
+{
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_channel_logger)
+};
 
 #if !defined(BOOST_LOG_NO_THREADS)
-//! Wide-char thread-safe logger with severity level and channel support
-BOOST_LOG_DECLARE_WLOGGER_MT(wseverity_channel_logger_mt, (basic_severity_logger)(basic_channel_logger));
-#endif
 
-#endif
+//! Wide-char thread-safe logger with severity level and channel support
+template< typename LevelT = int, typename ChannelT = std::wstring >
+class wseverity_channel_logger_mt :
+    public basic_composite_logger<
+        wchar_t,
+        wseverity_channel_logger_mt< LevelT, ChannelT >,
+        multi_thread_model,
+        mpl::vector2<
+            basic_severity_logger< mpl::_1, LevelT >,
+            basic_channel_logger< mpl::_1, ChannelT >
+        >
+    >
+{
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_channel_logger_mt)
+};
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
+
+#endif // BOOST_LOG_USE_WCHAR_T
 
 #else // BOOST_LOG_DOXYGEN_PASS
 
@@ -71,11 +127,14 @@ BOOST_LOG_DECLARE_WLOGGER_MT(wseverity_channel_logger_mt, (basic_severity_logger
  * 
  * See \c basic_severity_logger and \c basic_channel_logger class templates for a more detailed description
  */
+template< typename LevelT = int, typename ChannelT = std::string >
 class severity_channel_logger :
     public basic_severity_logger<
         basic_channel_logger<
-            basic_logger< char, severity_channel_logger, single_thread_model >
-        >
+            basic_logger< char, severity_channel_logger, single_thread_model >,
+            ChannelT
+        >,
+        LevelT
     >
 {
 public:
@@ -107,11 +166,14 @@ public:
  * 
  * See \c basic_severity_logger and \c basic_channel_logger class templates for a more detailed description
  */
+template< typename LevelT = int, typename ChannelT = std::string >
 class severity_channel_logger_mt :
     public basic_severity_logger<
         basic_channel_logger<
-            basic_logger< char, severity_channel_logger_mt, multi_thread_model >
-        >
+            basic_logger< char, severity_channel_logger_mt, multi_thread_model >,
+            ChannelT
+        >,
+        LevelT
     >
 {
 public:
@@ -143,11 +205,14 @@ public:
  * 
  * See \c basic_severity_logger and \c basic_channel_logger class templates for a more detailed description
  */
+template< typename LevelT = int, typename ChannelT = std::wstring >
 class wseverity_channel_logger :
     public basic_severity_logger<
         basic_channel_logger<
-            basic_logger< wchar_t, wseverity_channel_logger, single_thread_model >
-        >
+            basic_logger< wchar_t, wseverity_channel_logger, single_thread_model >,
+            ChannelT
+        >,
+        LevelT
     >
 {
 public:
@@ -179,11 +244,14 @@ public:
  * 
  * See \c basic_severity_logger and \c basic_channel_logger class templates for a more detailed description
  */
+template< typename LevelT = int, typename ChannelT = std::wstring >
 class wseverity_channel_logger_mt :
     public basic_severity_logger<
         basic_channel_logger<
-            basic_logger< wchar_t, wseverity_channel_logger_mt, multi_thread_model >
-        >
+            basic_logger< wchar_t, wseverity_channel_logger_mt, multi_thread_model >,
+            ChannelT
+        >,
+        LevelT
     >
 {
 public:
