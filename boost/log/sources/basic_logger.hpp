@@ -614,7 +614,7 @@ struct inherit_logger_features
 #define BOOST_LOG_CTOR_FORWARD(z, n, data)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit BOOST_PP_TUPLE_ELEM(2, 0, data)(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
-        BOOST_PP_TUPLE_ELEM(2, 1, data)() class_type::logger_base((BOOST_PP_ENUM_PARAMS(n, arg))) {}
+        BOOST_PP_TUPLE_ELEM(2, 1, data)() BOOST_PP_TUPLE_ELEM(2, 0, data)::logger_base((BOOST_PP_ENUM_PARAMS(n, arg))) {}
 
 #define BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS_IMPL(class_type, typename_keyword)\
     public:\
