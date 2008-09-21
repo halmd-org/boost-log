@@ -187,14 +187,14 @@ namespace aux {
         typedef typename values_view_type::size_type size_type;
         //! Supported attribute value types
         typedef AttributeValueTypesT attribute_value_types;
-    
+
     protected:
         //! Attribute name
         string_type m_AttributeName;
-    
+
     public:
         explicit flt_attr_gen_base(string_type const& name) : m_AttributeName(name) {}
-    
+
 #define BOOST_LOG_FILTER_ATTR_MEMBER(member, fun)\
         template< typename T >\
         flt_attr<\
@@ -208,7 +208,7 @@ namespace aux {
             typedef flt_attr< char_type, binder_t, attribute_value_types > flt_attr_t;\
             return flt_attr_t(this->m_AttributeName, binder_t(fun(), arg_type(arg)));\
         }
-    
+
         BOOST_LOG_FILTER_ATTR_MEMBER(operator ==, boost::log::aux::equal_to)
         BOOST_LOG_FILTER_ATTR_MEMBER(operator !=, boost::log::aux::not_equal_to)
         BOOST_LOG_FILTER_ATTR_MEMBER(operator >, boost::log::aux::greater)
