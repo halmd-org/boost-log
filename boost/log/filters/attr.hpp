@@ -38,6 +38,7 @@
 #include <boost/type_traits/is_pointer.hpp>
 #include <boost/type_traits/remove_extent.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
+#include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/functional.hpp>
 #include <boost/log/filters/basic_filters.hpp>
@@ -85,17 +86,17 @@ private:
     {
         typedef void result_type;
 
-        checker_wrapper(checker_type const& fun, bool& res) : m_Fun(fun), m_Result(res) {}
+        checker_wrapper(checker_type const& fun, bool& res) : m_Fun(boost::addressof(fun)), m_Result(&res) {}
 
         template< typename T >
         void operator() (T const& arg) const
         {
-            m_Result = m_Fun(arg);
+            *m_Result = (*m_Fun)(arg);
         }
 
     private:
-        checker_type const& m_Fun;
-        bool& m_Result;
+        checker_type const* m_Fun;
+        bool* m_Result;
     };
 
     //! \endcond

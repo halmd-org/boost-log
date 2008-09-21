@@ -42,7 +42,6 @@
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/preprocessor/seq/for_each_i.hpp>
-#include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
@@ -611,19 +610,19 @@ struct inherit_logger_features
         base_type((BOOST_PP_ENUM_PARAMS(n, arg))) {}
 
 
-#define BOOST_LOG_CTOR_FORWARD(z, n, data)\
+#define BOOST_LOG_CTOR_FORWARD(z, n, class_type)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
-    explicit BOOST_PP_TUPLE_ELEM(2, 0, data)(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
-        BOOST_PP_TUPLE_ELEM(2, 1, data)() BOOST_PP_TUPLE_ELEM(2, 0, data)::logger_base((BOOST_PP_ENUM_PARAMS(n, arg))) {}
+    explicit class_type(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
+        class_type::logger_base((BOOST_PP_ENUM_PARAMS(n, arg))) {}
 
 #define BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS_IMPL(class_type, typename_keyword)\
     public:\
-        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD, (class_type, typename_keyword))
+        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD, class_type)
 
 #define BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_IMPL(class_type, typename_keyword)\
     public:\
         class_type() {}\
-        class_type(class_type const& that) : typename_keyword() class_type::logger_base(\
+        class_type(class_type const& that) : class_type::logger_base(\
             static_cast< typename_keyword() class_type::logger_base const& >(that)) {}\
         BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS_IMPL(class_type, typename_keyword)
 
