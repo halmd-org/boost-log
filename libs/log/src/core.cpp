@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   core.cpp
  * \author Andrey Semashev
  * \date   19.04.2007
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -20,6 +20,7 @@
 #include <boost/none.hpp>
 #include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/log/core.hpp>
+#include <boost/log/sinks/sink.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/detail/singleton.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -368,7 +369,7 @@ bool basic_core< CharT >::open_record(attribute_set_type const& source_attribute
         // Lock the core to be safe against any attribute or sink set modifications
         typename implementation::scoped_read_lock lock(pImpl->Mutex);
 #endif
-    
+
         if (pImpl->Enabled && !pImpl->Sinks.empty())
         {
             // Construct a record

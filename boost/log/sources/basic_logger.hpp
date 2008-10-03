@@ -11,7 +11,7 @@
  * \file   basic_logger.hpp
  * \author Andrey Semashev
  * \date   08.03.2007
- * 
+ *
  * The header contains implementation of a base class for loggers. Convenience macros
  * for defining custom loggers are also provided.
  */
@@ -194,7 +194,7 @@ namespace aux {
  * push it to the logging core. It is constructed on each attempt to write
  * a log record and destroyed afterwards.
  *
- * The pump class template is instentiated on the logger type.
+ * The pump class template is instantiated on the logger type.
  */
 template< typename LoggerT >
 class record_pump
@@ -273,11 +273,11 @@ private:
 
 /*!
  * \brief Basic logger class
- * 
+ *
  * The \c basic_logger class template serves as a base class for all loggers
  * provided by the library. It can also be used as a base for user-defined
  * loggers. The template parameters are:
- * 
+ *
  * \li \c CharT - logging character type
  * \li \c FinalT - final type of the logger that eventually derives from
  *     the \c basic_logger. There may be other classes in the hierarchy
@@ -290,7 +290,7 @@ private:
  *     default and copy-constructible and support member function \c swap.
  *     There are currently two policies provided: \c single_thread_model
  *     and \c multi_thread_model.
- * 
+ *
  * The logger implements fundamental facilities of loggers, such as storing
  * source-specific attribute set and formatting log record messages. The basic
  * logger interacts with the logging core in order to apply filtering and
@@ -318,7 +318,7 @@ public:
 protected:
     /*!
      * \brief Record pump type
-     * 
+     *
      * This pump is used to format the logging record message text and then
      * push it to the logging core.
      */
@@ -342,9 +342,9 @@ public:
     }
     /*!
      * Copy constructor. Copies all attributes from the source logger.
-     * 
+     *
      * \note Not thread-safe. The source logger must be locked in the final class before copying.
-     * 
+     *
      * \param that Source logger
      */
     basic_logger(basic_logger const& that) :
@@ -365,7 +365,7 @@ public:
     /*!
      * Logging pump getter. The result of this method can be used to format log record message.
      * The message will be pushed to the logging core on the result destruction.
-     * 
+     *
      * \return Logging pump
      */
     record_pump_type strm()
@@ -376,7 +376,7 @@ public:
     /*!
      * The method adds an attribute to the source-specific attribute set. The attribute will be implicitly added to
      * every log record made with the current logger.
-     * 
+     *
      * \param name The attribute name.
      * \param attr Pointer to the attribute. Must not be NULL.
      * \return A pair of values. If the second member is \c true, then the attribute is added and the first member points to the
@@ -393,10 +393,10 @@ public:
     }
     /*!
      * The method removes an attribute from the thread-specific attribute set.
-     * 
+     *
      * \pre The attribute was added with the add_attribute call for this instance of the logger.
      * \post The attribute is no longer registered as a source-specific attribute for this logger. The iterator is invalidated after removal.
-     * 
+     *
      * \param it Iterator to the previously added attribute.
      */
     void remove_attribute(typename attribute_set_type::iterator it)
@@ -420,7 +420,7 @@ public:
 
     /*!
      * The method opens a new log record in the logging core.
-     * 
+     *
      * \return \c true if the logging record is opened successfully, \c false otherwise.
      */
     bool open_record()
@@ -446,7 +446,7 @@ public:
     }
     /*!
      * The method pushes the constructed message to the logging core
-     * 
+     *
      * \param message The formatted log record message
      */
     void push_record(string_type const& message)
@@ -770,7 +770,7 @@ public:
 
 /*!
  * \brief Narrow-char logger. Functionally equivalent to \c basic_logger.
- * 
+ *
  * See \c basic_logger class template for a more detailed description.
  */
 class logger :
@@ -783,7 +783,7 @@ class logger :
 
 /*!
  * \brief Narrow-char thread-safe logger. Functionally equivalent to \c basic_logger.
- * 
+ *
  * See \c basic_logger class template for a more detailed description.
  */
 class logger_mt :
@@ -799,7 +799,7 @@ class logger_mt :
 
 /*!
  * \brief Wide-char logger. Functionally equivalent to \c basic_logger.
- * 
+ *
  * See \c basic_logger class template for a more detailed description.
  */
 class wlogger :
@@ -812,7 +812,7 @@ class wlogger :
 
 /*!
  * \brief Wide-char thread-safe logger. Functionally equivalent to \c basic_logger.
- * 
+ *
  * See \c basic_logger class template for a more detailed description.
  */
 class wlogger_mt :
@@ -857,7 +857,7 @@ class wlogger_mt :
 
 /*!
  *  \brief The macro declares a logger class that inherits a number of base classes
- * 
+ *
  *  \param type_name The name of the logger class to declare
  *  \param char_type The character type of the logger. Either char or wchar_t expected.
  *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
@@ -883,9 +883,9 @@ class wlogger_mt :
 
 /*!
  *  \brief The macro declares a narrow-char logger class that inherits a number of base classes
- * 
+ *
  *  Equivalent to BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, single_thread_model)
- * 
+ *
  *  \param type_name The name of the logger class to declare
  *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
  */
@@ -896,9 +896,9 @@ class wlogger_mt :
 
 /*!
  *  \brief The macro declares a narrow-char thread-safe logger class that inherits a number of base classes
- * 
+ *
  *  Equivalent to BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, multi_thread_model)
- * 
+ *
  *  \param type_name The name of the logger class to declare
  *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
  */
@@ -912,9 +912,9 @@ class wlogger_mt :
 
 /*!
  *  \brief The macro declares a wide-char logger class that inherits a number of base classes
- * 
+ *
  *  Equivalent to BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq, single_thread_model)
- * 
+ *
  *  \param type_name The name of the logger class to declare
  *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
  */
@@ -925,9 +925,9 @@ class wlogger_mt :
 
 /*!
  *  \brief The macro declares a wide-char thread-safe logger class that inherits a number of base classes
- * 
+ *
  *  Equivalent to BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq, multi_thread_model)
- * 
+ *
  *  \param type_name The name of the logger class to declare
  *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
  */

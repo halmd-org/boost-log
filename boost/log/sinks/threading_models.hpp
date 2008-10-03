@@ -11,7 +11,7 @@
  * \file   threading_models.hpp
  * \author Andrey Semashev
  * \date   22.04.2007
- * 
+ *
  * The header contains definition of threading models. These models are used to ensure
  * thread safety protocol between sink backends and frontents.
  */
@@ -41,7 +41,7 @@ struct threading_model_tag {};
 struct backend_synchronization_tag : threading_model_tag {};
 //! The sink backend requires to be called in a single thread (IOW, no other threads EVER are allowed to write to the backend)
 struct single_thread_tag : threading_model_tag {};
-//! The sink backend expects pre-synchronized calls, all needed synchronization is implemented in the frontend (IOW, only one thread is writing to the backend concurrently, but is is possible for several threads to write sequentially) 
+//! The sink backend expects pre-synchronized calls, all needed synchronization is implemented in the frontend (IOW, only one thread is writing to the backend concurrently, but is is possible for several threads to write sequentially)
 struct frontend_synchronization_tag : threading_model_tag {};
 
 #else // !defined(BOOST_LOG_NO_THREADS)
@@ -53,7 +53,7 @@ typedef single_thread_tag frontend_synchronization_tag;
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
-//! A helper metafunction to check if a therading model is supported
+//! A helper metafunction to check if a threading model is supported
 template< typename TestedT, typename RequiredT >
 struct is_model_supported :
     public is_base_of< RequiredT, TestedT >
