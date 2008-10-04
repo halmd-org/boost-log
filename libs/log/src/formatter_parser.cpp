@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   formatter_parser.cpp
  * \author Andrey Semashev
  * \date   07.04.2008
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -33,9 +33,9 @@
 #include <boost/mpl/push_back.hpp>
 #include <boost/mpl/back_inserter.hpp>
 #include <boost/mpl/joint_view.hpp>
-#include <boost/spirit/core.hpp>
-#include <boost/spirit/utility/confix.hpp>
-#include <boost/spirit/utility/escape_char.hpp>
+#include <boost/spirit/include/classic_core.hpp>
+#include <boost/spirit/include/classic_confix.hpp>
+#include <boost/spirit/include/classic_escape_char.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -125,7 +125,7 @@ private:
 //! Formatter parsing grammar
 template< typename CharT >
 struct formatter_grammar :
-    public spirit::grammar< formatter_grammar< CharT > >
+    public spirit::classic::grammar< formatter_grammar< CharT > >
 {
     typedef CharT char_type;
     typedef typename formatter_types< char_type >::string_type string_type;
@@ -192,7 +192,7 @@ public:
 #if !defined(BOOST_LOG_NO_THREADS)
             shared_lock< shared_mutex > lock(repo.m_Mutex);
 #endif
-    
+
             typename formatter_types< CharT >::factories_map::const_iterator it = repo.m_Map.find(m_AttrName);
             if (it != repo.m_Map.end())
             {
@@ -269,7 +269,7 @@ template< typename ScannerT >
 struct formatter_grammar< CharT >::definition
 {
     //! Boost.Spirit rule type
-    typedef spirit::rule< ScannerT > rule_type;
+    typedef spirit::classic::rule< ScannerT > rule_type;
 
     //! A parser for an argument value
     rule_type arg_value;
@@ -285,40 +285,40 @@ struct formatter_grammar< CharT >::definition
     {
         reference_wrapper< const formatter_grammar_type > g(gram);
 
-        arg_value = spirit::confix_p(constants::char_quote, *spirit::c_escape_ch_p, constants::char_quote) |
-            *(spirit::print_p - spirit::space_p);
+        arg_value = spirit::classic::confix_p(constants::char_quote, *spirit::classic::c_escape_ch_p, constants::char_quote) |
+            *(spirit::classic::print_p - spirit::classic::space_p);
 
-        arg = *spirit::space_p >>
-            (*spirit::alnum_p)[bind(&formatter_grammar_type::on_arg_name, g, _1, _2)] >>
-            *spirit::space_p >>
+        arg = *spirit::classic::space_p >>
+            (*spirit::classic::alnum_p)[bind(&formatter_grammar_type::on_arg_name, g, _1, _2)] >>
+            *spirit::classic::space_p >>
             constants::char_equal >>
-            *spirit::space_p >>
+            *spirit::classic::space_p >>
             arg_value[bind(&formatter_grammar_type::on_arg_value, g, _1, _2)] >>
-            *spirit::space_p;
+            *spirit::classic::space_p;
 
-        arg_list = spirit::confix_p(
+        arg_list = spirit::classic::confix_p(
             constants::char_paren_bracket_left,
             arg[bind(&formatter_grammar_type::push_arg, g, _1, _2)] >>
-                *(spirit::ch_p(constants::char_comma) >> arg[bind(&formatter_grammar_type::push_arg, g, _1, _2)]),
+                *(spirit::classic::ch_p(constants::char_comma) >> arg[bind(&formatter_grammar_type::push_arg, g, _1, _2)]),
             constants::char_paren_bracket_right);
 
         expression =
-            (*(spirit::c_escape_ch_p - constants::char_percent))
+            (*(spirit::classic::c_escape_ch_p - constants::char_percent))
                 [bind(&formatter_grammar_type::push_string, g, _1, _2)] >>
             *(
-                spirit::confix_p(
+                spirit::classic::confix_p(
                     constants::char_percent,
                     (
-                        spirit::str_p(constants::message_text_keyword())
+                        spirit::classic::str_p(constants::message_text_keyword())
                             [bind(&formatter_grammar_type::on_attr_name, g, _1, _2)] |
                         (
-                            (*(spirit::print_p - constants::char_paren_bracket_left - constants::char_percent))
+                            (*(spirit::classic::print_p - constants::char_paren_bracket_left - constants::char_percent))
                                 [bind(&formatter_grammar_type::on_attr_name, g, _1, _2)] >>
                             !arg_list
                         )
                     ),
                     constants::char_percent)[bind(&formatter_grammar_type::push_attr, g, _1, _2)] >>
-                (*(spirit::c_escape_ch_p - constants::char_percent))
+                (*(spirit::classic::c_escape_ch_p - constants::char_percent))
                     [bind(&formatter_grammar_type::push_string, g, _1, _2)]
             );
     }
@@ -367,7 +367,7 @@ parse_formatter(const CharT* begin, const CharT* end)
 
     formatter_type fmt;
     formatter_grammar< char_type > gram(fmt);
-    if (!spirit::parse(begin, end, gram).full)
+    if (!spirit::classic::parse(begin, end, gram).full)
         boost::throw_exception(std::runtime_error("Could not parse the formatter"));
 
     return fmt;

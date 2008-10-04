@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   filter_parser.cpp
  * \author Andrey Semashev
  * \date   31.03.2008
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -29,9 +29,9 @@
 #include <boost/variant/static_visitor.hpp>
 #include <boost/utility/in_place_factory.hpp>
 #include <boost/utility/addressof.hpp>
-#include <boost/spirit/core.hpp>
-#include <boost/spirit/utility/confix.hpp>
-#include <boost/spirit/utility/escape_char.hpp>
+#include <boost/spirit/include/classic_core.hpp>
+#include <boost/spirit/include/classic_confix.hpp>
+#include <boost/spirit/include/classic_escape_char.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/filters/attr.hpp>
@@ -50,7 +50,7 @@ namespace {
 //! Filter parsing grammar
 template< typename CharT >
 struct filter_grammar :
-    public spirit::grammar< filter_grammar< CharT > >
+    public spirit::classic::grammar< filter_grammar< CharT > >
 {
     typedef CharT char_type;
     typedef std::basic_string< char_type > string_type;
@@ -306,7 +306,7 @@ template< typename ScannerT >
 struct filter_grammar< CharT >::definition
 {
     //! Boost.Spirit rule type
-    typedef spirit::rule< ScannerT > rule_type;
+    typedef spirit::classic::rule< ScannerT > rule_type;
 
     //! A simple mem_fn-like wrapper (a workaround for MSVC 7.1)
     struct handler
@@ -345,19 +345,19 @@ struct filter_grammar< CharT >::definition
 
         node =
             // A quoted string with C-style escape sequences support
-            spirit::confix_p(constants::char_quote, *spirit::c_escape_ch_p, constants::char_quote)
+            spirit::classic::confix_p(constants::char_quote, *spirit::classic::c_escape_ch_p, constants::char_quote)
                 [bind(on_string, g, _1, _2)] |
             // An attribute name in form %name%
-            spirit::confix_p(constants::char_percent, *(spirit::print_p - constants::char_percent), constants::char_percent)
+            spirit::classic::confix_p(constants::char_percent, *(spirit::classic::print_p - constants::char_percent), constants::char_percent)
                 [bind(on_attr, g, _1, _2)] |
-            spirit::strict_real_p[bind(&filter_grammar_type::on_fp_constant, g, _1)] |
-            spirit::int_p[bind(&filter_grammar_type::on_integer_constant, g, _1)];
+            spirit::classic::strict_real_p[bind(&filter_grammar_type::on_fp_constant, g, _1)] |
+            spirit::classic::int_p[bind(&filter_grammar_type::on_integer_constant, g, _1)];
 
         handler on_neg = &filter_grammar_type::on_negation;
 
         factor = node |
             (constants::char_paren_bracket_left >> expression >> constants::char_paren_bracket_right) |
-            ((spirit::str_p(constants::not_keyword()) | constants::char_exclamation) >> factor)
+            ((spirit::classic::str_p(constants::not_keyword()) | constants::char_exclamation) >> factor)
                 [bind(on_neg, g, _1, _2)];
 
         handler on_equal = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::equal_to >,
@@ -378,19 +378,19 @@ struct filter_grammar< CharT >::definition
                 [bind(on_greater, g, _1, _2)] |
             (constants::char_less >> factor)
                 [bind(on_less, g, _1, _2)] |
-            (spirit::str_p(constants::not_equal_keyword()) >> factor)
+            (spirit::classic::str_p(constants::not_equal_keyword()) >> factor)
                 [bind(on_not_equal, g, _1, _2)] |
-            (spirit::str_p(constants::greater_or_equal_keyword()) >> factor)
+            (spirit::classic::str_p(constants::greater_or_equal_keyword()) >> factor)
                 [bind(on_greater_equal, g, _1, _2)] |
-            (spirit::str_p(constants::less_or_equal_keyword()) >> factor)
+            (spirit::classic::str_p(constants::less_or_equal_keyword()) >> factor)
                 [bind(on_less_equal, g, _1, _2)] |
-            (spirit::str_p(constants::begins_with_keyword()) >> factor)
+            (spirit::classic::str_p(constants::begins_with_keyword()) >> factor)
                 [bind(on_begins_with, g, _1, _2)] |
-            (spirit::str_p(constants::ends_with_keyword()) >> factor)
+            (spirit::classic::str_p(constants::ends_with_keyword()) >> factor)
                 [bind(on_ends_with, g, _1, _2)] |
-            (spirit::str_p(constants::contains_keyword()) >> factor)
+            (spirit::classic::str_p(constants::contains_keyword()) >> factor)
                 [bind(on_contains, g, _1, _2)] |
-            (spirit::str_p(constants::matches_keyword()) >> factor)
+            (spirit::classic::str_p(constants::matches_keyword()) >> factor)
                 [bind(on_matches, g, _1, _2)]
             );
 
@@ -399,9 +399,9 @@ struct filter_grammar< CharT >::definition
             on_finished = &filter_grammar_type::on_expression_finished;
 
         expression = (term >> *(
-            ((spirit::str_p(constants::and_keyword()) | constants::char_and) >> term)
+            ((spirit::classic::str_p(constants::and_keyword()) | constants::char_and) >> term)
                 [bind(on_and, g, _1, _2)] |
-            ((spirit::str_p(constants::or_keyword()) | constants::char_or) >> term)
+            ((spirit::classic::str_p(constants::or_keyword()) | constants::char_or) >> term)
                 [bind(on_or, g, _1, _2)]
             ))[bind(on_finished, g, _1, _2)];
     }
@@ -426,7 +426,7 @@ parse_filter(const CharT* begin, const CharT* end)
 
     filter_type filt;
     filter_grammar< char_type > gram(filt);
-    if (!spirit::parse(begin, end, gram, spirit::space_p).full)
+    if (!spirit::classic::parse(begin, end, gram, spirit::classic::space_p).full)
         boost::throw_exception(std::runtime_error("Could not parse the filter"));
     gram.flush();
 
