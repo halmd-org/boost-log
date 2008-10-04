@@ -8,7 +8,7 @@
  * at http://www.boost.org/libs/log/doc/log.html.
  */
 /*!
- * \file   threading_models.hpp
+ * \file   sinks/threading_models.hpp
  * \author Andrey Semashev
  * \date   22.04.2007
  *

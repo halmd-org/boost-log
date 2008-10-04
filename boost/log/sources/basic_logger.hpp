@@ -44,14 +44,10 @@
 #include <boost/preprocessor/seq/for_each_i.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
-#include <boost/log/detail/shared_lock_guard.hpp>
 #include <boost/log/detail/multiple_lock.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
+#include <boost/log/sources/threading_models.hpp>
 #include <boost/log/core.hpp>
-#if !defined(BOOST_LOG_NO_THREADS)
-#include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
-#endif
 
 #ifndef BOOST_LOG_MAX_CTOR_FORWARD_ARGS
 //! The maximum number of arguments that can be forwarded by the logger constructor to its bases
@@ -69,74 +65,6 @@ namespace boost {
 namespace BOOST_LOG_NAMESPACE {
 
 namespace sources {
-
-template< typename CharT, typename FinalT, typename ThreadingModelT >
-class basic_logger;
-
-//! Single thread locking model
-struct single_thread_model
-{
-    // We provide methods for the most advanced locking concept: UpgradeLockable
-    void lock_shared() const {}
-    bool try_lock_shared() const { return true; }
-    template< typename TimeT >
-    bool timed_lock_shared(TimeT const&) const { return true; }
-    void unlock_shared() const {}
-    void lock() const {}
-    bool try_lock() const { return true; }
-    template< typename TimeT >
-    bool timed_lock(TimeT const&) const { return true; }
-    void unlock() const {}
-    void lock_upgrade() const {}
-    bool try_lock_upgrade() const { return true; }
-    template< typename TimeT >
-    bool timed_lock_upgrade(TimeT const&) const { return true; }
-    void unlock_upgrade() const {}
-    void unlock_upgrade_and_lock() const {}
-    void unlock_and_lock_upgrade() const {}
-    void unlock_and_lock_shared() const {}
-    void unlock_upgrade_and_lock_shared() const {}
-
-    void swap(single_thread_model&) {}
-};
-
-#if !defined(BOOST_LOG_NO_THREADS)
-
-//! Multi-thread locking model with maximum locking capabilities
-struct multi_thread_model
-{
-    multi_thread_model() {}
-    multi_thread_model(multi_thread_model const&) {}
-    multi_thread_model& operator= (multi_thread_model const&) { return *this; }
-
-    void lock_shared() const { m_Mutex.lock_shared(); }
-    bool try_lock_shared() const { return m_Mutex.try_lock_shared(); }
-    template< typename TimeT >
-    bool timed_lock_shared(TimeT const& t) const { return m_Mutex.timed_lock_shared(t); }
-    void unlock_shared() const { m_Mutex.unlock_shared(); }
-    void lock() const { m_Mutex.lock(); }
-    bool try_lock() const { return m_Mutex.try_lock(); }
-    template< typename TimeT >
-    bool timed_lock(TimeT const& t) const { return m_Mutex.timed_lock(t); }
-    void unlock() const { m_Mutex.unlock(); }
-    void lock_upgrade() const { m_Mutex.lock_upgrade(); }
-    bool try_lock_upgrade() const { return m_Mutex.try_lock_upgrade(); }
-    template< typename TimeT >
-    bool timed_lock_upgrade(TimeT const& t) const { return m_Mutex.timed_lock_upgrade(t); }
-    void unlock_upgrade() const { m_Mutex.unlock_upgrade(); }
-    void unlock_upgrade_and_lock() const { m_Mutex.unlock_upgrade_and_lock(); }
-    void unlock_and_lock_upgrade() const { m_Mutex.unlock_and_lock_upgrade(); }
-    void unlock_and_lock_shared() const { m_Mutex.unlock_and_lock_shared(); }
-    void unlock_upgrade_and_lock_shared() const { m_Mutex.unlock_upgrade_and_lock_shared(); }
-
-    void swap(multi_thread_model&) {}
-
-private:
-    //! Synchronization primitive
-    mutable shared_mutex m_Mutex;
-};
-
-#endif // !defined(BOOST_LOG_NO_THREADS)
 
 namespace aux {
 
@@ -199,14 +127,6 @@ namespace aux {
 template< typename LoggerT >
 class record_pump
 {
-public:
-    //! The metafunction allows to adopt the pump to another logger type
-    template< typename T >
-    struct rebind
-    {
-        typedef record_pump< T > other;
-    };
-
 private:
     //! Logger type
     typedef LoggerT logger_type;
@@ -386,9 +306,7 @@ public:
     std::pair< typename attribute_set_type::iterator, bool > add_attribute(
         string_type const& name, shared_ptr< attribute > const& attr)
     {
-#if !defined(BOOST_LOG_NO_THREADS)
-        lock_guard< threading_model > _(threading_base());
-#endif
+        add_attribute_lock _(threading_base());
         return add_attribute_unlocked(name, attr);
     }
     /*!
@@ -401,9 +319,7 @@ public:
      */
     void remove_attribute(typename attribute_set_type::iterator it)
     {
-#if !defined(BOOST_LOG_NO_THREADS)
-        lock_guard< threading_model > _(threading_base());
-#endif
+        remove_attribute_lock _(threading_base());
         remove_attribute_unlocked(it);
     }
 
@@ -412,9 +328,7 @@ public:
      */
     void remove_all_attributes()
     {
-#if !defined(BOOST_LOG_NO_THREADS)
-        lock_guard< threading_model > _(threading_base());
-#endif
+        remove_all_attributes_lock _(threading_base());
         remove_all_attributes_unlocked();
     }
 
@@ -425,9 +339,7 @@ public:
      */
     bool open_record()
     {
-#if !defined(BOOST_LOG_NO_THREADS)
-        log::aux::shared_lock_guard< threading_model > _(threading_base());
-#endif
+        open_record_lock _(threading_base());
         return open_record_unlocked();
     }
     /*!
@@ -439,9 +351,7 @@ public:
     template< typename ArgsT >
     bool open_record(ArgsT const& args)
     {
-#if !defined(BOOST_LOG_NO_THREADS)
-        log::aux::shared_lock_guard< threading_model > _(threading_base());
-#endif
+        open_record_lock _(threading_base());
         return open_record_unlocked(args);
     }
     /*!
@@ -499,6 +409,13 @@ protected:
         return static_cast< final_type const* >(this);
     }
 
+    //! Lock requirement for the swap_unlocked method
+#if !defined(BOOST_LOG_NO_THREADS)
+    typedef lock_guard< threading_model > swap_lock;
+#else
+    typedef no_lock swap_lock;
+#endif
+
     /*!
      * Unlocked \c swap
      */
@@ -508,6 +425,9 @@ protected:
         m_Attributes.swap(that.m_Attributes);
     }
 
+    //! Lock requirement for the strm_unlocked method
+    typedef no_lock strm_lock;
+
     /*!
      * Unlocked \c strm
      */
@@ -515,6 +435,13 @@ protected:
     {
         return record_pump_type(final_this());
     }
+
+    //! Lock requirement for the add_attribute_unlocked method
+#if !defined(BOOST_LOG_NO_THREADS)
+    typedef lock_guard< threading_model > add_attribute_lock;
+#else
+    typedef no_lock add_attribute_lock;
+#endif
 
     /*!
      * Unlocked \c add_attribute
@@ -524,6 +451,14 @@ protected:
     {
         return m_Attributes.insert(std::make_pair(name, attr));
     }
+
+    //! Lock requirement for the remove_attribute_unlocked method
+#if !defined(BOOST_LOG_NO_THREADS)
+    typedef lock_guard< threading_model > remove_attribute_lock;
+#else
+    typedef no_lock remove_attribute_lock;
+#endif
+
     /*!
      * Unlocked \c remove_attribute
      */
@@ -532,6 +467,13 @@ protected:
         m_Attributes.erase(it);
     }
 
+    //! Lock requirement for the remove_all_attributes_unlocked method
+#if !defined(BOOST_LOG_NO_THREADS)
+    typedef lock_guard< threading_model > remove_all_attributes_lock;
+#else
+    typedef no_lock remove_all_attributes_lock;
+#endif
+
     /*!
      * Unlocked \c remove_all_attributes
      */
@@ -539,6 +481,13 @@ protected:
     {
         m_Attributes.clear();
     }
+
+    //! Lock requirement for the open_record_unlocked method
+#if !defined(BOOST_LOG_NO_THREADS)
+    typedef log::aux::shared_lock_guard< threading_model > open_record_lock;
+#else
+    typedef no_lock open_record_lock;
+#endif
 
     /*!
      * Unlocked \c open_record
@@ -555,6 +504,10 @@ protected:
     {
         return m_pCore->open_record(m_Attributes);
     }
+
+    //! Lock requirement for the push_record_unlocked method
+    typedef no_lock push_record_lock;
+
     /*!
      * Unlocked \c push_record
      */
@@ -562,6 +515,10 @@ protected:
     {
         m_pCore->push_record(message);
     }
+
+    //! Lock requirement for the cancel_record_unlocked method
+    typedef no_lock cancel_record_lock;
+
     /*!
      * Unlocked \c cancel_record
      */

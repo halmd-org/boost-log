@@ -106,6 +106,8 @@ public:
     typedef typename base_type::attribute_set_type attribute_set_type;
     //! String type
     typedef typename base_type::string_type string_type;
+    //! Threading model being used
+    typedef typename base_type::threading_model threading_model;
 
     //! Channel type
     typedef ChannelT channel_type;
@@ -147,6 +149,16 @@ public:
     }
 
 protected:
+    //! Lock requirement for the swap_unlocked method
+    typedef typename strictiest_lock<
+        typename base_type::swap_lock,
+#ifndef BOOST_LOG_NO_THREADS
+        lock_guard< threading_model >
+#else
+        no_lock
+#endif // !defined(BOOST_LOG_NO_THREADS)
+    >::type swap_lock;
+
     /*!
      * Unlocked swap
      */

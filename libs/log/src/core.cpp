@@ -34,56 +34,6 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-namespace {
-
-    //! A simple exclusive ownership smart-pointer with moving copy semantics
-    template< typename T >
-    class exclusive_ptr
-    {
-    public:
-        //! The pointed to type
-        typedef T element_type;
-
-    private:
-        //! The stored pointer
-        mutable element_type* m_p;
-
-    public:
-        //  Structors
-        exclusive_ptr() : m_p(NULL) {}
-        exclusive_ptr(exclusive_ptr const& that) : m_p(that.m_p) { that.m_p = NULL; }
-        explicit exclusive_ptr(element_type* p) : m_p(p) {}
-        ~exclusive_ptr() { this->reset(); }
-
-        //! Moving assignment
-        exclusive_ptr& operator= (exclusive_ptr const& that)
-        {
-            this->reset(that.m_p);
-            that.m_p = NULL;
-            return *this;
-        }
-        //! Indirection
-        element_type* operator->() const { return this->m_p; }
-
-        //! The method assigns the new value to the pointer
-        void reset(element_type* p = NULL)
-        {
-            delete this->m_p;
-            this->m_p = p;
-        }
-        //! The method releases the stored pointer
-        element_type* release()
-        {
-            register element_type* p = this->m_p;
-            this->m_p = NULL;
-            return p;
-        }
-        //! Returns the value of the pointer
-        element_type* get() const { return this->m_p; }
-    };
-
-} // namespace
-
 //! Logging system implementation
 template< typename CharT >
 struct basic_core< CharT >::implementation :
@@ -117,8 +67,8 @@ public:
         //! A structure that holds a particular logging record data
         struct pending_record
         {
-            //! A list of sinks that will accept the record
-            sink_list AcceptingSinks;
+            //! A list of sinks that will accept the record (mutable to emulate moving semantics)
+            mutable sink_list AcceptingSinks;
             //! Attribute values view
             values_view_type AttributeValues;
 
@@ -130,12 +80,15 @@ public:
             ) : AttributeValues(SourceAttrs, ThreadAttrs, GlobalAttrs)
             {
             }
+            //! Copy constructor (acts as move)
+            pending_record(pending_record const& that) : AttributeValues(that.AttributeValues)
+            {
+                AcceptingSinks.swap(that.AcceptingSinks);
+            }
         };
-        //! A stack of records being validated and pushed to the sinks
-        std::stack<
-            exclusive_ptr< pending_record >,
-            std::vector< exclusive_ptr< pending_record > >
-        > PendingRecords;
+
+        //! A stack of log records being processed
+        std::stack< pending_record > PendingRecords;
 
         //! Thread-specific attribute set
         attribute_set_type ThreadAttributes;
@@ -374,20 +327,19 @@ bool basic_core< CharT >::open_record(attribute_set_type const& source_attribute
         {
             // Construct a record
             typedef typename implementation::thread_data::pending_record pending_record;
-            exclusive_ptr< pending_record > record(new pending_record(
-                source_attributes, tsd->ThreadAttributes, pImpl->GlobalAttributes));
+            pending_record record(source_attributes, tsd->ThreadAttributes, pImpl->GlobalAttributes);
 
-            if (pImpl->Filter.empty() || pImpl->Filter(record->AttributeValues))
+            if (pImpl->Filter.empty() || pImpl->Filter(record.AttributeValues))
             {
                 // The global filter passed, trying the sinks
-                record->AcceptingSinks.reserve(pImpl->Sinks.size());
+                record.AcceptingSinks.reserve(pImpl->Sinks.size());
                 typename implementation::sink_list::iterator it = pImpl->Sinks.begin(), end = pImpl->Sinks.end();
                 for (; it != end; ++it)
                 {
                     try
                     {
-                        if (it->get()->will_write_message(record->AttributeValues))
-                            record->AcceptingSinks.push_back(*it);
+                        if (it->get()->will_write_message(record.AttributeValues))
+                            record.AcceptingSinks.push_back(*it);
                     }
                     catch (...)
                     {
@@ -395,10 +347,10 @@ bool basic_core< CharT >::open_record(attribute_set_type const& source_attribute
                     }
                 }
 
-                if (!record->AcceptingSinks.empty())
+                if (!record.AcceptingSinks.empty())
                 {
                     // Some sinks are willing to process the record
-                    record->AttributeValues.freeze();
+                    record.AttributeValues.freeze();
                     tsd->PendingRecords.push(record);
                     return true;
                 }
@@ -429,14 +381,14 @@ void basic_core< CharT >::push_record(string_type const& message_text)
                 return;
         }
 
-        typename implementation::thread_data::pending_record* record =
-            tsd->PendingRecords.top().get();
+        typename implementation::thread_data::pending_record& record =
+            tsd->PendingRecords.top();
 
-        typename implementation::sink_list::iterator it = record->AcceptingSinks.begin(),
-            end = record->AcceptingSinks.end();
+        typename implementation::sink_list::iterator it = record.AcceptingSinks.begin(),
+            end = record.AcceptingSinks.end();
         for (; it != end; ++it) try
         {
-            (*it)->write_message(record->AttributeValues, message_text);
+            (*it)->write_message(record.AttributeValues, message_text);
         }
         catch (...)
         {

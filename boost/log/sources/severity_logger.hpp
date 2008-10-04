@@ -214,6 +214,8 @@ public:
     typedef typename base_type::final_type final_type;
     //! Attribute set type
     typedef typename base_type::attribute_set_type attribute_set_type;
+    //! Threading model being used
+    typedef typename base_type::threading_model threading_model;
 
     //! Severity level type
     typedef LevelT severity_level;
@@ -272,8 +274,8 @@ public:
      */
     bool open_record()
     {
-        m_pSeverity->set_value(m_DefaultSeverity);
-        return base_type::open_record();
+        open_record_lock _(this->threading_base());
+        return open_record_unlocked();
     }
 
     /*!
@@ -285,8 +287,8 @@ public:
     template< typename ArgsT >
     bool open_record(ArgsT const& args)
     {
-        m_pSeverity->set_value(args[keywords::severity | m_DefaultSeverity]);
-        return base_type::open_record();
+        open_record_lock _(this->threading_base());
+        return open_record_unlocked(args);
     }
 
 protected:
@@ -298,6 +300,12 @@ protected:
      * Default severity value getter
      */
     severity_level default_severity() const { return m_DefaultSeverity; }
+
+    //! Lock requirement for the open_record_unlocked method
+    typedef typename strictiest_lock<
+        typename base_type::open_record_lock,
+        no_lock
+    >::type open_record_lock;
 
     /*!
      * Unlocked \c open_record
@@ -316,6 +324,16 @@ protected:
         m_pSeverity->set_value(args[keywords::severity | m_DefaultSeverity]);
         return base_type::open_record_unlocked();
     }
+
+    //! Lock requirement for the swap_unlocked method
+    typedef typename strictiest_lock<
+        typename base_type::swap_lock,
+#ifndef BOOST_LOG_NO_THREADS
+        lock_guard< threading_model >
+#else
+        no_lock
+#endif // !defined(BOOST_LOG_NO_THREADS)
+    >::type swap_lock;
 
     //! Unlocked \c swap
     void swap_unlocked(basic_severity_logger& that)
