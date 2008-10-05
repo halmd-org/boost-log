@@ -65,9 +65,9 @@ Class `network_connection` in the code snippet above represents an approach of i
 
     #include <boost/log/sources/severity_logger.hpp>
 
-An ability to distinguish some log records from others based on some kind of level of severity or importance is one of the most frequently requested feature. The classes `severity_logger` and `severity_logger_mt` (along with their `wseverity_logger` and `wseverity_logger_mt` wide-char counterparts) provide this functionality.
+An ability to distinguish some log records from others based on some kind of level of severity or importance is one of the most frequently requested feature. The class templates `severity_logger` and `severity_logger_mt` (along with their `wseverity_logger` and `wseverity_logger_mt` wide-char counterparts) provide this functionality.
 
-The loggers automatically register a special source-specific attribute "Severity" (attribute value type is `int`), which can be set for every record in a compact and efficient manner, with a named argument `severity` that can be passed to the constructor and/or the `open_record` method. If passed to the logger constructor, the `severity` argument sets the default value of the severity level that will be used if none provided in the `open_record` arguments. The `severity` argument passed to the `open_record` method sets the level of the particular log record being made.
+The loggers automatically register a special source-specific attribute "Severity", which can be set for every record in a compact and efficient manner, with a named argument `severity` that can be passed to the constructor and/or the `open_record` method. If passed to the logger constructor, the `severity` argument sets the default value of the severity level that will be used if none provided in the `open_record` arguments. The `severity` argument passed to the `open_record` method sets the level of the particular log record being made. The type of the severity level can be provided as a template argument for the logger class template. The default type is `int`.
 
 The actual values of this attribute and their meaning is entirely user-defined. However, it is recommended to use level of value equivalent to zero as a base point for other values. This is because the default-constructed logger object sets default severity level to zero. It is also recommended to define the same levels of severity for the entire application in order to avoid the confusion in the written logs later. The following code snippet shows the usage of `severity_logger`.
 
@@ -81,8 +81,8 @@ The actual values of this attribute and their meaning is entirely user-defined. 
 
     void foo()
     {
-        // The default-constructed logger will use default level 0
-        src::severity_logger lg;
+        // The default-constructed logger will use default level 0. The level type is int.
+        src::severity_logger< > lg;
 
         // The straightforward usage with default severity level (which is 0)
         if (lg.open_record())
@@ -92,8 +92,8 @@ The actual values of this attribute and their meaning is entirely user-defined. 
         if (lg.open_record(src::keywords::severity = warning))
             lg.strm() << "A warning level log record";
 
-        // The default severity can be specified in constructor
-        src::severity_logger error_lg(src::keywords::severity = error);
+        // The default severity can be specified in constructor. This time level type is my_levels.
+        src::severity_logger< my_levels > error_lg(src::keywords::severity = error);
 
         // There are predefined macros that make the usage easier
         BOOST_LOG_SEV(lg, warning) << "A warning level log record";
@@ -110,12 +110,12 @@ And, of course, severity loggers also provide the same functionality the [link a
 
     #include <boost/log/sources/channel_logger.hpp>
 
-Sometimes it is important to categorize log records based on some constant piece information, such as module or class name, relation of the logged information to some specific domain of application functionality (e.g. network or file system related messages) or some constant tag that may be used later to filter these records to a specific sink. This feature is fulfilled with loggers `channel_logger`, `channel_logger_mt` and their wide-char counterparts `wchannel_logger`, `wchannel_logger_mt`. These loggers automatically register a string attribute named "Channel". This attribute can be set only in the logger constructor with a named argument `channel` and cannot be changed during the logger lifetime. Aside from that the usage is similar to the [link advanced.advanced.sources.basic_logger basic loggers]:
+Sometimes it is important to categorize log records based on some constant piece information, such as module or class name, relation of the logged information to some specific domain of application functionality (e.g. network or file system related messages) or some constant tag that may be used later to filter these records to a specific sink. This feature is fulfilled with loggers `channel_logger`, `channel_logger_mt` and their wide-char counterparts `wchannel_logger`, `wchannel_logger_mt`. These loggers automatically register an attribute named "Channel". This attribute can be set only in the logger constructor with a named argument `channel` and cannot be changed during the logger lifetime. The type of the channel attribute value can be specified as a template argument for the logger, with `std::string` (`std::wstring` in case of wide character loggers) as a default. Aside from that the usage is similar to the [link advanced.advanced.sources.basic_logger basic loggers]:
 
     class network_connection
     {
-        src::channel_logger m_net;
-        src::channel_logger m_stat;
+        src::channel_logger< > m_net;
+        src::channel_logger< > m_stat;
         src::logger::attribute_set_type::iterator m_remote_addr;
 
     public:
@@ -157,7 +157,7 @@ Sometimes it is important to categorize log records based on some constant piece
 
     #include <boost/log/sources/severity_channel_logger.hpp>
 
-If you wonder whether you can use a mixed set of several logger features in one logger, then yes, you certainly can. The library provides `severity_channel_logger` and `severity_channel_logger_mt` (with their wide-char analogues `wseverity_channel_logger` and `wseverity_channel_logger_mt`) which combine features of the described loggers with [link advanced.advanced.sources.severity_level_logger severity level] and [link advanced.advanced.sources.channel_logger channels] support. You can also design your own logger features and combine them with the ones provided by the library[/, as described in the [link extension.extension.sources Extending the library] section/].
+If you wonder whether you can use a mixed set of several logger features in one logger, then yes, you certainly can. The library provides `severity_channel_logger` and `severity_channel_logger_mt` (with their wide-char analogues `wseverity_channel_logger` and `wseverity_channel_logger_mt`) which combine features of the described loggers with [link advanced.advanced.sources.severity_level_logger severity level] and [link advanced.advanced.sources.channel_logger channels] support. The composite loggers are templates, too, which allows you to specify severity level and channel types. You can also design your own logger features and combine them with the ones provided by the library[/, as described in the [link extension.extension.sources Extending the library] section/].
 
 [endsect]
 
@@ -171,7 +171,7 @@ The library provides a way to declare global loggers that can be accessed pretty
 
 The easiest way to declare a global logger is to use the following macro:
 
-    BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::severity_logger_mt)
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::severity_logger_mt< >)
 
 The `my_logger` argument gives the logger a name that may be used to acquire the logger instance. The second parameter denotes the logger type. In multithreaded applications, when the logger can be accessed from different threads, users will normally want to use thread-safe versions of loggers.
 
@@ -179,7 +179,7 @@ In case if there is a need to pass arguments to the logger constructor, there is
 
     BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS(
         my_logger,
-        src::severity_channel_logger,
+        src::severity_channel_logger< >,
         (src::keywords::severity = error)(src::keywords::channel = "my_channel"))
 
 The last macro argument is a __boost_preprocessor__ sequence of arguments passed to the logger constructor. Be careful, however, when using non-constant expressions and references to objects as constructor arguments, since the arguments are evaluated only once and it is often difficult to tell the exact moment when it is done. The logger is constructed on the first request from whichever part of the application that has the knowledge of the logger declaration. It is up to user to make sure that all arguments have valid states at that point.
@@ -189,7 +189,7 @@ The third macro of this section provides maximum flexibility, allowing user to a
     BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, src::severity_logger_mt)
     {
         // Do something that needs to be done on logger initialization, e.g. add a stop watch attribute
-        src::severity_logger_mt lg;
+        src::severity_logger_mt< > lg;
         lg.add_attribute("StopWatch", boost::make_shared< attrs::timer >());
         // The initializing routine must return the logger instance
         return lg;
@@ -201,11 +201,11 @@ Like the `BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS` macro, the initializing cod
 
 In order to acquire the logger instance you may use either
 
-    src::severity_logger_mt& lg = get_my_logger();
+    src::severity_logger_mt< >& lg = get_my_logger();
 
 or
 
-    src::severity_logger_mt& lg = my_logger::get();
+    src::severity_logger_mt< >& lg = my_logger::get();
 
 which are equivalent. Further usage of the logger is completely the same as it was a regular logger object of the corresponding type.
 
