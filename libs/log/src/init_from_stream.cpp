@@ -3,14 +3,16 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   init_from_stream.cpp
  * \author Andrey Semashev
  * \date   22.03.2008
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
+
+#ifndef BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
 
 #include <map>
 #include <vector>
@@ -582,3 +584,5 @@ template BOOST_LOG_EXPORT void init_from_stream< wchar_t >(std::basic_istream< w
 } // namespace log
 
 } // namespace boost
+
+#endif // BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT

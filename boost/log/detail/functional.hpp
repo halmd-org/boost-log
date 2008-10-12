@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   functional.hpp
  * \author Andrey Semashev
  * \date   30.03.2008
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -37,7 +37,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-//! Comparison implementation for integral types 
+//! Comparison implementation for integral types
 template< template< typename > class PredT, typename T, typename U >
 inline bool compare_integral(T const& left, U const& right)
 {
@@ -268,7 +268,7 @@ struct contains_fun
         if (left.size() >= right.size())
         {
             bool result = false;
-            typename T::const_iterator search_end = left.end() - right.size();
+            typename T::const_iterator search_end = left.end() - right.size() + 1;
             for (typename T::const_iterator it = left.begin(); it != search_end && !result; ++it)
                 result = std::equal(right.begin(), right.end(), it);
 

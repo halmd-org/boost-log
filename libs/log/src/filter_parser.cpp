@@ -12,6 +12,9 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#ifndef BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
+
+#include <map>
 #include <stack>
 #include <string>
 #include <stdexcept>
@@ -20,15 +23,13 @@
 #define BOOST_SPIRIT_THREADSAFE
 #endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
 
+#include <boost/ref.hpp>
 #include <boost/bind.hpp>
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
 #include <boost/throw_exception.hpp>
-#include <boost/variant/get.hpp>
-#include <boost/variant/variant.hpp>
-#include <boost/variant/static_visitor.hpp>
-#include <boost/utility/in_place_factory.hpp>
 #include <boost/utility/addressof.hpp>
+#include <boost/utility/in_place_factory.hpp>
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_confix.hpp>
 #include <boost/spirit/include/classic_escape_char.hpp>
@@ -36,9 +37,15 @@
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>
+#include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/functional.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/log/detail/shared_lock_guard.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
+#endif // !defined(BOOST_LOG_NO_THREADS)
 #include "parser_utils.hpp"
 
 namespace boost {
@@ -46,6 +53,151 @@ namespace boost {
 namespace BOOST_LOG_NAMESPACE {
 
 namespace {
+
+//! The default filter factory that supports creating filters for the standard types (see utility/type_dispatch/standard_types.hpp)
+template< typename CharT >
+class default_filter_factory :
+    public filter_factory< CharT >
+{
+    //! Base type
+    typedef filter_factory< CharT > base_type;
+    //! Self type
+    typedef default_filter_factory< CharT > this_type;
+
+    //  Type imports
+    typedef typename base_type::char_type char_type;
+    typedef typename base_type::string_type string_type;
+    typedef typename base_type::filter_type filter_type;
+
+    //! The callback for equality relation filter
+    virtual filter_type on_equality_relation(string_type const& name, string_type const& arg)
+    {
+        return parse_argument< log::aux::equal_to >(name, arg);
+    }
+    //! The callback for inequality relation filter
+    virtual filter_type on_inequality_relation(string_type const& name, string_type const& arg)
+    {
+        return parse_argument< log::aux::not_equal_to >(name, arg);
+    }
+    //! The callback for less relation filter
+    virtual filter_type on_less_relation(string_type const& name, string_type const& arg)
+    {
+        return parse_argument< log::aux::less >(name, arg);
+    }
+    //! The callback for greater relation filter
+    virtual filter_type on_greater_relation(string_type const& name, string_type const& arg)
+    {
+        return parse_argument< log::aux::greater >(name, arg);
+    }
+    //! The callback for less or equal relation filter
+    virtual filter_type on_less_or_equal_relation(string_type const& name, string_type const& arg)
+    {
+        return parse_argument< log::aux::less_equal >(name, arg);
+    }
+    //! The callback for greater or equal relation filter
+    virtual filter_type on_greater_or_equal_relation(string_type const& name, string_type const& arg)
+    {
+        return parse_argument< log::aux::greater_equal >(name, arg);
+    }
+
+    //! The callback for custom relation filter
+    virtual filter_type on_custom_relation(string_type const& name, string_type const& rel, string_type const& arg)
+    {
+        typedef log::aux::char_constants< char_type > constants;
+        if (rel == constants::begins_with_keyword())
+            return filter_type(log::filters::attr< string_type >(name).begins_with(arg));
+        else if (rel == constants::ends_with_keyword())
+            return filter_type(log::filters::attr< string_type >(name).ends_with(arg));
+        else if (rel == constants::contains_keyword())
+            return filter_type(log::filters::attr< string_type >(name).contains(arg));
+        else if (rel == constants::matches_keyword())
+            return filter_type(log::filters::attr< string_type >(name).matches(arg));
+        else
+            boost::throw_exception(std::runtime_error("the custom attribute relation is not supported"));
+
+        // To get rid from compiler warnings
+        BOOST_LOG_ASSUME(false);
+        return filter_type();
+    }
+
+    //! The function parses the argument value for a binary relation and constructs the corresponding filter
+    template< typename RelationT >
+    static filter_type parse_argument(string_type const& name, string_type const& arg)
+    {
+        filter_type filter;
+        spirit::classic::rule< spirit::classic::scanner< const char_type* > > r =
+            spirit::classic::strict_real_p[bind(&this_type::BOOST_NESTED_TEMPLATE on_fp_argument< RelationT >, boost::cref(name), _1, boost::ref(filter))] |
+            spirit::classic::int_p[bind(&this_type::BOOST_NESTED_TEMPLATE on_integral_argument< RelationT >, boost::cref(name), _1, boost::ref(filter))] |
+            (+spirit::classic::print_p)[bind(&this_type::BOOST_NESTED_TEMPLATE on_string_argument< RelationT >, boost::cref(name), _1, _2, boost::ref(filter))];
+
+        if (!spirit::classic::parse(arg.c_str(), r).full || filter.empty())
+            boost::throw_exception(std::runtime_error("failed to parse relation operand"));
+
+        return filter;
+    }
+
+    template< typename RelationT >
+    static void on_integral_argument(string_type const& name, long val, filter_type& filter)
+    {
+        filter = log::filters::attr<
+            log::integral_types
+        >(name).satisfies(log::aux::bind2nd(RelationT(), val));
+    }
+    template< typename RelationT >
+    static void on_fp_argument(string_type const& name, double val, filter_type& filter)
+    {
+        filter = log::filters::attr<
+            log::floating_point_types
+        >(name).satisfies(log::aux::bind2nd(RelationT(), val));
+    }
+    template< typename RelationT >
+    static void on_string_argument(string_type const& name, const char_type* b, const char_type* e, filter_type& filter)
+    {
+        filter = log::filters::attr<
+            string_type
+        >(name).satisfies(log::aux::bind2nd(RelationT(), string_type(b, e)));
+    }
+};
+
+//! Filter factories repository
+template< typename CharT >
+struct filters_repository :
+    public log::aux::lazy_singleton< filters_repository< CharT > >
+{
+    typedef CharT char_type;
+    typedef log::aux::lazy_singleton< filters_repository< char_type > > base_type;
+    typedef std::basic_string< char_type > string_type;
+    typedef filter_factory< char_type > filter_factory_type;
+    typedef std::map< string_type, shared_ptr< filter_factory_type > > factories_map;
+
+#if !defined(BOOST_MSVC) || _MSC_VER > 1310
+    friend class log::aux::lazy_singleton< filters_repository< char_type > >;
+#else
+    friend class base_type;
+#endif
+
+#if !defined(BOOST_LOG_NO_THREADS)
+    //! Synchronization mutex
+    mutable shared_mutex m_Mutex;
+#endif
+    //! The map of filter factories
+    factories_map m_Map;
+    //! Default factory
+    mutable default_filter_factory< char_type > m_DefaultFactory;
+
+    //! The method returns the filter factory for the specified attribute name
+    filter_factory_type& get_factory(string_type const& name) const
+    {
+        typename factories_map::const_iterator it = m_Map.find(name);
+        if (it != m_Map.end())
+            return *it->second;
+        else
+            return m_DefaultFactory;
+    }
+
+private:
+    filters_repository() {}
+};
 
 //! Filter parsing grammar
 template< typename CharT >
@@ -55,56 +207,21 @@ struct filter_grammar :
     typedef CharT char_type;
     typedef std::basic_string< char_type > string_type;
     typedef typename basic_core< char_type >::filter_type filter_type;
-    typedef boost::log::aux::char_constants< char_type > constants;
+    typedef log::aux::char_constants< char_type > constants;
     typedef filter_grammar< char_type > filter_grammar_type;
+    typedef filter_factory< char_type > filter_factory_type;
+
+    typedef filter_type (filter_factory_type::*comparison_relation_handler_t)(string_type const&, string_type const&);
 
     template< typename ScannerT >
     struct definition;
 
-    //! Relation operand type
-    typedef variant<
-        long int,
-        double,
-        string_type
-    > arg_type;
-
-    //! A visitor for the arg_type actual type detection
-    template< typename RelationT >
-    struct binary_relation_visitor :
-        public boost::static_visitor< >
-    {
-        explicit binary_relation_visitor(filter_grammar_type const& gram) : m_Grammar(gram) {}
-
-        void operator() (long int& val) const
-        {
-            m_Grammar.m_Subexpressions.push(
-                boost::log::filters::attr<
-                    boost::log::integral_types
-                >(m_Grammar.m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), val)));
-        }
-        void operator() (double& val) const
-        {
-            m_Grammar.m_Subexpressions.push(
-                boost::log::filters::attr<
-                    boost::log::floating_point_types
-                >(m_Grammar.m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), val)));
-        }
-        void operator() (string_type& val) const
-        {
-            m_Grammar.m_Subexpressions.push(
-                boost::log::filters::attr<
-                    string_type
-                >(m_Grammar.m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), val)));
-        }
-
-    private:
-        filter_grammar_type const& m_Grammar;
-    };
-
     //! Parsed attribute name
     mutable optional< string_type > m_AttributeName;
     //! The second operand of a relation
-    mutable optional< arg_type > m_Operand;
+    mutable optional< string_type > m_Operand;
+    //! The custom relation string
+    mutable string_type m_CustomRelation;
 
     //! Filter subexpressions as they are parsed
     mutable std::stack< filter_type > m_Subexpressions;
@@ -122,15 +239,25 @@ struct filter_grammar :
             m_Filter.swap(m_Subexpressions.top());
     }
 
+    //! The operand string handler
+    void on_operand(const char_type* begin, const char_type* end) const
+    {
+        // An attribute name should have been parsed at this time
+        if (!m_AttributeName)
+            boost::throw_exception(std::runtime_error("Invalid filter definition: operand is not expected"));
+
+        m_Operand = boost::in_place(begin, end);
+    }
+
     //! The quoted string handler
     void on_quoted_string(const char_type* begin, const char_type* end) const
     {
         // An attribute name should have been parsed at this time
         if (!m_AttributeName)
-            boost::throw_exception(std::runtime_error("Invalid filter definition: quoted string is not expected"));
+            boost::throw_exception(std::runtime_error("Invalid filter definition: quoted string operand is not expected"));
 
         // Cut off the quotes
-        string_type str(begin + 1, end - 1);
+        string_type str(++begin, --end);
 
         // Translate escape sequences
         constants::translate_escape_sequences(str);
@@ -146,22 +273,6 @@ struct filter_grammar :
         // Cut off the '%'
         m_AttributeName = boost::in_place(++begin, --end);
     }
-    //! The floating point constant handler
-    void on_fp_constant(double val) const
-    {
-        // An attribute name should have been parsed at this time
-        if (!m_AttributeName)
-            boost::throw_exception(std::runtime_error("Invalid filter definition: floating point constant is not expected"));
-        m_Operand = val;
-    }
-    //! The integer constant handler
-    void on_integer_constant(long int val) const
-    {
-        // An attribute name should have been parsed at this time
-        if (!m_AttributeName)
-            boost::throw_exception(std::runtime_error("Invalid filter definition: integer constant is not expected"));
-        m_Operand = val;
-    }
 
     //! The negation operation handler
     void on_negation(const char_type* begin, const char_type* end) const
@@ -169,23 +280,25 @@ struct filter_grammar :
         make_has_attr();
         if (!m_Subexpressions.empty())
         {
-            m_Subexpressions.top() = !boost::log::filters::wrap(m_Subexpressions.top());
+            m_Subexpressions.top() = !log::filters::wrap(m_Subexpressions.top());
         }
         else
         {
             // This would happen if a filter consists of a single '!'
-            boost::throw_exception(std::logic_error("Filter parsing error:"
+            boost::throw_exception(std::runtime_error("Filter parsing error:"
                 " a negation operator applied to nothingness"));
         }
     }
-    //! The binary relation handler
-    template< typename RelationT >
-    void on_binary_relation(const char_type* begin, const char_type* end) const
+    //! The comparison relation handler
+    void on_comparison_relation(const char_type* begin, const char_type* end, comparison_relation_handler_t method) const
     {
         if (!!m_AttributeName && !!m_Operand)
         {
-            binary_relation_visitor< RelationT > vis(*this);
-            m_Operand->apply_visitor(vis);
+            filters_repository< char_type > const& repo = filters_repository< char_type >::get();
+            filter_factory_type& factory = repo.get_factory(m_AttributeName.get());
+
+            m_Subexpressions.push((factory.*method)(m_AttributeName.get(), m_Operand.get()));
+
             m_AttributeName = none;
             m_Operand = none;
         }
@@ -197,56 +310,25 @@ struct filter_grammar :
         }
     }
 
-    //! The binary relation handler for string operands
-    template< typename RelationT >
-    void on_binary_string_relation(const char_type* begin, const char_type* end) const
+    //! The method saves the relation word into an internal string
+    void set_custom_relation(const char_type* begin, const char_type* end) const
     {
-        if (!!m_AttributeName && !!m_Operand)
-        {
-            if (string_type* operand = boost::get< string_type >(m_Operand.get_ptr()))
-            {
-                m_Subexpressions.push(
-                    boost::log::filters::attr<
-                        string_type
-                    >(m_AttributeName.get()).satisfies(boost::log::aux::bind2nd(RelationT(), *operand)));
-                m_AttributeName = none;
-                m_Operand = none;
-            }
-            else
-            {
-                // This can happen if one tries to apply a string-specific relation to a non-string operand
-                boost::throw_exception(std::runtime_error("Filter parser error:"
-                    " the operand type in the subexpression should be string"));
-            }
-        }
-        else
-        {
-            // This should never happen
-            boost::throw_exception(std::logic_error("Filter parser internal error:"
-                " the attribute name or subexpression operand is not set while trying to construct a subexpression"));
-        }
+        m_CustomRelation.assign(begin, end);
     }
 
-    //! The Boost.RegEx match handler for string operands
-    void on_match_relation(const char_type* begin, const char_type* end) const
+    //! The custom relation handler for string operands
+    void on_custom_relation(const char_type* begin, const char_type* end) const
     {
-        if (!!m_AttributeName && !!m_Operand)
+        if (!!m_AttributeName && !!m_Operand && !m_CustomRelation.empty())
         {
-            if (string_type* operand = boost::get< string_type >(m_Operand.get_ptr()))
-            {
-                m_Subexpressions.push(
-                    boost::log::filters::attr<
-                        string_type
-                    >(m_AttributeName.get()).matches(*operand));
-                m_AttributeName = none;
-                m_Operand = none;
-            }
-            else
-            {
-                // This can happen if one tries to apply a string-specific relation to a non-string operand
-                boost::throw_exception(std::runtime_error("Filter parser error:"
-                    " the operand type in the subexpression should be string"));
-            }
+            filters_repository< char_type > const& repo = filters_repository< char_type >::get();
+            filter_factory_type& factory = repo.get_factory(m_AttributeName.get());
+
+            m_Subexpressions.push(factory.on_custom_relation(m_AttributeName.get(), m_CustomRelation, m_Operand.get()));
+
+            m_AttributeName = none;
+            m_Operand = none;
+            m_CustomRelation.clear();
         }
         else
         {
@@ -267,7 +349,7 @@ struct filter_grammar :
             if (!m_Subexpressions.empty())
             {
                 filter_type const& left = m_Subexpressions.top();
-                typedef boost::log::filters::flt_wrap< char_type, filter_type > wrap_t;
+                typedef log::filters::flt_wrap< char_type, filter_type > wrap_t;
                 m_Subexpressions.top() = OperationT< wrap_t, wrap_t >(wrap_t(left), wrap_t(right));
                 return;
             }
@@ -294,7 +376,9 @@ private:
     {
         if (!!m_AttributeName)
         {
-            m_Subexpressions.push(boost::log::filters::has_attr(m_AttributeName.get()));
+            filters_repository< char_type > const& repo = filters_repository< char_type >::get();
+            filter_factory_type& factory = repo.get_factory(m_AttributeName.get());
+            m_Subexpressions.push(factory.on_exists_test(m_AttributeName.get()));
             m_AttributeName = none;
         }
     }
@@ -324,11 +408,15 @@ struct filter_grammar< CharT >::definition
         fun_type m_fun;
     };
 
-    //! A parser for a single node of the filter expression
-    rule_type node;
-    //! A parser for a possibly negated node or parenthesized subexpression
-    rule_type factor;
-    //! A parser for a single condition that consists of two operands and an operation between them
+    //! A parser for an attribute name in a single relation
+    rule_type attr_name;
+    //! A parser for an operand in a single relation
+    rule_type operand;
+    //! A parser for a single relation that consists of two operands and an operation between them
+    rule_type relation;
+    //! A parser for a custom relation word
+    rule_type custom_relation;
+    //! A parser for a term, which can be a relation, an expression in parenthesis or a negation thereof
     rule_type term;
     //! A parser for the complete filter expression that consists of one or several terms with boolean operations between them
     rule_type expression;
@@ -341,69 +429,64 @@ struct filter_grammar< CharT >::definition
         // MSVC 7.1 goes wild for some reason if we try to use bind or mem_fn directly
         // on some of these functions. The simple wrapper helps the compiler to deduce types correctly.
         handler on_string = &filter_grammar_type::on_quoted_string,
+            on_oper = &filter_grammar_type::on_operand,
             on_attr = &filter_grammar_type::on_attribute;
 
-        node =
+        attr_name = (*spirit::classic::space_p) >> (
+            // An attribute name in form %name%
+            spirit::classic::confix_p(constants::char_percent, *(spirit::classic::print_p - constants::char_percent), constants::char_percent)
+                [bind(on_attr, g, _1, _2)]
+        );
+
+        operand = (*spirit::classic::space_p) >> (
             // A quoted string with C-style escape sequences support
             spirit::classic::confix_p(constants::char_quote, *spirit::classic::c_escape_ch_p, constants::char_quote)
                 [bind(on_string, g, _1, _2)] |
-            // An attribute name in form %name%
-            spirit::classic::confix_p(constants::char_percent, *(spirit::classic::print_p - constants::char_percent), constants::char_percent)
-                [bind(on_attr, g, _1, _2)] |
-            spirit::classic::strict_real_p[bind(&filter_grammar_type::on_fp_constant, g, _1)] |
-            spirit::classic::int_p[bind(&filter_grammar_type::on_integer_constant, g, _1)];
+            // A single word, enclosed with white spaces. It cannot contain parenthesis, since is is used by the filter parser.
+            (+(spirit::classic::print_p - spirit::classic::space_p - constants::char_paren_bracket_left - constants::char_paren_bracket_right))
+                [bind(on_oper, g, _1, _2)]
+        );
+
+        // Custom relation is a keyword that may contain either alphanumeric characters or an underscore
+        custom_relation = (+(spirit::classic::alnum_p | spirit::classic::ch_p(constants::char_underline)))
+            [bind(&filter_grammar_type::set_custom_relation, g, _1, _2)];
+
+        relation = attr_name >> (*spirit::classic::space_p) || (
+            (spirit::classic::str_p(constants::not_equal_keyword()) >> operand)
+                [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_inequality_relation)] |
+            (spirit::classic::str_p(constants::greater_or_equal_keyword()) >> operand)
+                [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_greater_or_equal_relation)] |
+            (spirit::classic::str_p(constants::less_or_equal_keyword()) >> operand)
+                [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_less_or_equal_relation)] |
+            (constants::char_equal >> operand)
+                [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_equality_relation)] |
+            (constants::char_greater >> operand)
+                [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_greater_relation)] |
+            (constants::char_less >> operand)
+                [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_less_relation)] |
+            (custom_relation >> operand)
+                [bind(&filter_grammar_type::on_custom_relation, g, _1, _2)]
+        );
 
         handler on_neg = &filter_grammar_type::on_negation;
 
-        factor = node |
-            (constants::char_paren_bracket_left >> expression >> constants::char_paren_bracket_right) |
-            ((spirit::classic::str_p(constants::not_keyword()) | constants::char_exclamation) >> factor)
-                [bind(on_neg, g, _1, _2)];
+        term = (*spirit::classic::space_p) >> (
+            (constants::char_paren_bracket_left >> expression >> (*spirit::classic::space_p) >> constants::char_paren_bracket_right) |
+            ((spirit::classic::str_p(constants::not_keyword()) | constants::char_exclamation) >> term)[bind(on_neg, g, _1, _2)] |
+            relation
+        );
 
-        handler on_equal = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::equal_to >,
-            on_greater = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::greater >,
-            on_less = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::less >,
-            on_not_equal = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::not_equal_to >,
-            on_greater_equal = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::greater_equal >,
-            on_less_equal = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_relation< boost::log::aux::less_equal >,
-            on_begins_with = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::aux::begins_with_fun >,
-            on_ends_with = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::aux::ends_with_fun >,
-            on_contains = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_binary_string_relation< boost::log::aux::contains_fun >,
-            on_matches = &filter_grammar_type::on_match_relation;
-
-        term = factor >> *(
-            (constants::char_equal >> factor)
-                [bind(on_equal, g, _1, _2)] |
-            (constants::char_greater >> factor)
-                [bind(on_greater, g, _1, _2)] |
-            (constants::char_less >> factor)
-                [bind(on_less, g, _1, _2)] |
-            (spirit::classic::str_p(constants::not_equal_keyword()) >> factor)
-                [bind(on_not_equal, g, _1, _2)] |
-            (spirit::classic::str_p(constants::greater_or_equal_keyword()) >> factor)
-                [bind(on_greater_equal, g, _1, _2)] |
-            (spirit::classic::str_p(constants::less_or_equal_keyword()) >> factor)
-                [bind(on_less_equal, g, _1, _2)] |
-            (spirit::classic::str_p(constants::begins_with_keyword()) >> factor)
-                [bind(on_begins_with, g, _1, _2)] |
-            (spirit::classic::str_p(constants::ends_with_keyword()) >> factor)
-                [bind(on_ends_with, g, _1, _2)] |
-            (spirit::classic::str_p(constants::contains_keyword()) >> factor)
-                [bind(on_contains, g, _1, _2)] |
-            (spirit::classic::str_p(constants::matches_keyword()) >> factor)
-                [bind(on_matches, g, _1, _2)]
-            );
-
-        handler on_and = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_operation< boost::log::filters::flt_and >,
-            on_or = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_operation< boost::log::filters::flt_or >,
+        handler on_and = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_operation< log::filters::flt_and >,
+            on_or = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_operation< log::filters::flt_or >,
             on_finished = &filter_grammar_type::on_expression_finished;
 
-        expression = (term >> *(
+        expression = (term >> (*spirit::classic::space_p) >> *(
             ((spirit::classic::str_p(constants::and_keyword()) | constants::char_and) >> term)
                 [bind(on_and, g, _1, _2)] |
             ((spirit::classic::str_p(constants::or_keyword()) | constants::char_or) >> term)
                 [bind(on_or, g, _1, _2)]
-            ))[bind(on_finished, g, _1, _2)];
+            ) >> (*spirit::classic::space_p)
+        )[bind(on_finished, g, _1, _2)];
     }
 
     //! Accessor for the filter rule
@@ -411,6 +494,19 @@ struct filter_grammar< CharT >::definition
 };
 
 } // namespace
+
+//! The function registers a filter factory object for the specified attribute name
+template< typename CharT >
+void register_filter_factory(const CharT* attr_name, shared_ptr< filter_factory< CharT > > const& factory)
+{
+    std::basic_string< CharT > name(attr_name);
+    filters_repository< CharT >& repo = filters_repository< CharT >::get();
+
+#if !defined(BOOST_LOG_NO_THREADS)
+    lock_guard< shared_mutex > _(repo.m_Mutex);
+#endif
+    repo.m_Map[name] = factory;
+}
 
 //! The function parses a filter from the string
 template< typename CharT >
@@ -424,9 +520,14 @@ parse_filter(const CharT* begin, const CharT* end)
     typedef CharT char_type;
     typedef typename basic_core< char_type >::filter_type filter_type;
 
+#if !defined(BOOST_LOG_NO_THREADS)
+    filters_repository< CharT >& repo = filters_repository< CharT >::get();
+    log::aux::shared_lock_guard< shared_mutex > _(repo.m_Mutex);
+#endif
+
     filter_type filt;
     filter_grammar< char_type > gram(filt);
-    if (!spirit::classic::parse(begin, end, gram, spirit::classic::space_p).full)
+    if (!spirit::classic::parse(begin, end, gram).full)
         boost::throw_exception(std::runtime_error("Could not parse the filter"));
     gram.flush();
 
@@ -434,6 +535,10 @@ parse_filter(const CharT* begin, const CharT* end)
 }
 
 #ifdef BOOST_LOG_USE_CHAR
+
+template BOOST_LOG_EXPORT
+void register_filter_factory(const char* name, shared_ptr< filter_factory< char > > const& factory);
+
 template BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 basic_core< char >::filter_type
@@ -441,9 +546,14 @@ basic_core< char >::filter_type
 function1< bool, basic_attribute_values_view< char > const& >
 #endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 parse_filter< char >(const char* begin, const char* end);
+
 #endif // BOOST_LOG_USE_CHAR
 
 #ifdef BOOST_LOG_USE_WCHAR_T
+
+template BOOST_LOG_EXPORT
+void register_filter_factory(const wchar_t* name, shared_ptr< filter_factory< wchar_t > > const& factory);
+
 template BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 basic_core< wchar_t >::filter_type
@@ -451,8 +561,11 @@ basic_core< wchar_t >::filter_type
 function1< bool, basic_attribute_values_view< wchar_t > const& >
 #endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 parse_filter< wchar_t >(const wchar_t* begin, const wchar_t* end);
+
 #endif // BOOST_LOG_USE_WCHAR_T
 
 } // namespace log
 
 } // namespace boost
+
+#endif // BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT

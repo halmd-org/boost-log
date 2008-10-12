@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-08-03 17:55:29 $]
+    [last-revision $Date: 2008-10-12 14:47:40 $]
 ]
 
 [c++]
@@ -28,6 +28,7 @@
 [def __boost_bind__ [@http://www.boost.org/doc/libs/release/libs/bind/bind.html Boost.Bind]]
 [def __boost_lambda__ [@http://www.boost.org/doc/libs/release/doc/html/lambda.html Boost.Lambda]]
 [def __boost_phoenix__ [@http://www.boost.org/doc/libs/release/libs/spirit/doc/phoenix.html Boost.Phoenix]]
+[def __boost_spirit__ [@http://www.boost.org/doc/libs/release/libs/spirit/classic/index.html Boost.Spirit]]
 [def __boost_optional__ [@http://www.boost.org/doc/libs/release/libs/optional/index.html Boost.Optional]]
 [def __boost_intrusive__ [@http://www.boost.org/doc/libs/release/doc/html/intrusive.html Boost.Intrusive]]
 [def __boost_iostreams__ [@http://www.boost.org/doc/libs/release/libs/iostreams/doc/index.html Boost.IOStreams]]
@@ -105,6 +106,7 @@ The library supports a number of configuration macros:
     [[`BOOST_LOG_USE_WCHAR_T`]                  [If defined, enables support for wide character logging. Has effect on both the library compilation and user code compilation. If neither `BOOST_LOG_USE_CHAR` nor `BOOST_LOG_USE_WCHAR_T` is defined, it is assumed the both character types support is enabled. Defining only one of them allows to significantly reduce binary size of the library.]]
     [[`BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER`] [Has effect on Windows platform only, on both the library compilation and user code compilation stages. If defined, disables support for `QueryPerformanceCounter` API in the `timer` attribute. This will result in a significantly less accurate time readings and may reduce performance a little. The macro is intended to solve possible problems with earlier revisions of AMD Athlon CPU, described [@http://support.microsoft.com/?scid=kb;en-us;895980 here] and [@http://support.microsoft.com/?id=896256 here].]]
     [[`BOOST_LOG_USE_NATIVE_SYSLOG`]            [Has effect on the library compilation stage. If for some reason the support for native SysLog API is not detected, define this macro to enable support for SysLog.]]
+    [[`BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT`]  [Has effect on the library compilation stage. If defined, all facilities related to settings parsing are not built into the library binary. This can substantially reduce the binary size, as well as remove dependencies on some other Boost libraries, such as __boost_bind__ and __boost_spirit__.]]
 ]
 
 You may define configuration macros in the `bjam` command line, like this:

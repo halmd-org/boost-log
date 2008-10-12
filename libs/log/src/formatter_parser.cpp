@@ -12,6 +12,8 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#ifndef BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
+
 #include <string>
 #include <locale> // Ticket #1788.
 #include <iterator> // Ticket #1788.
@@ -423,3 +425,5 @@ parse_formatter< wchar_t >(const wchar_t* begin, const wchar_t* end);
 } // namespace log
 
 } // namespace boost
+
+#endif // BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT

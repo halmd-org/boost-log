@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   parser_utils.hpp
  * \author Andrey Semashev
  * \date   31.03.2008
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -48,6 +48,7 @@ struct char_constants< char >
     static const char_type char_equal = '=';
     static const char_type char_greater = '>';
     static const char_type char_less = '<';
+    static const char_type char_underline = '_';
     static const char_type char_section_bracket_left = '[';
     static const char_type char_section_bracket_right = ']';
     static const char_type char_paren_bracket_left = '(';
@@ -120,6 +121,7 @@ struct char_constants< wchar_t >
     static const char_type char_equal = L'=';
     static const char_type char_greater = L'>';
     static const char_type char_less = L'<';
+    static const char_type char_underline = L'_';
     static const char_type char_section_bracket_left = L'[';
     static const char_type char_section_bracket_right = L']';
     static const char_type char_paren_bracket_left = L'(';

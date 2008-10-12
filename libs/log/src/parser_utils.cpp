@@ -3,14 +3,16 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   parser_utils.cpp
  * \author Andrey Semashev
  * \date   31.03.2008
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
+
+#ifndef BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
 
 #include <iterator>
 #include <algorithm>
@@ -36,6 +38,7 @@ const char_constants< char >::char_type char_constants< char >::char_or;
 const char_constants< char >::char_type char_constants< char >::char_equal;
 const char_constants< char >::char_type char_constants< char >::char_greater;
 const char_constants< char >::char_type char_constants< char >::char_less;
+const char_constants< char >::char_type char_constants< char >::char_underline;
 const char_constants< char >::char_type char_constants< char >::char_section_bracket_left;
 const char_constants< char >::char_type char_constants< char >::char_section_bracket_right;
 const char_constants< char >::char_type char_constants< char >::char_paren_bracket_left;
@@ -119,6 +122,7 @@ const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_or;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_equal;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_greater;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_less;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_underline;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_section_bracket_left;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_section_bracket_right;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_paren_bracket_left;
@@ -233,3 +237,5 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
 } // namespace log
 
 } // namespace boost
+
+#endif // BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
