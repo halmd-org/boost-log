@@ -23,9 +23,9 @@
 #define BOOST_LOG_ATTRIBUTES_CLOCK_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/new_shared.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/attributes/time_traits.hpp>
@@ -62,7 +62,7 @@ private:
 public:
     shared_ptr< attribute_value > get_value()
     {
-        return boost::make_shared< result_value >(TimeTraitsT::get_clock());
+        return log::aux::new_shared< result_value >(TimeTraitsT::get_clock());
     }
 };
 

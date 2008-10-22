@@ -23,13 +23,13 @@
 #define BOOST_LOG_SOURCES_CHANNEL_LOGGER_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/aux_/lambda_support.hpp>
 #include <boost/parameter/keyword.hpp>
 #include <boost/parameter/binding.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/new_shared.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/attributes/constant.hpp>
 
@@ -175,7 +175,7 @@ private:
     void init_channel_attribute(ArgsT const& args, mpl::false_ const&)
     {
         channel_type channel_name(args[keywords::channel]);
-        m_pChannel = boost::make_shared< channel_attribute >(channel_name);
+        m_pChannel = log::aux::new_shared< channel_attribute >(channel_name);
         base_type::add_attribute_unlocked(
             aux::channel_attribute_name< char_type >::get(),
             m_pChannel);

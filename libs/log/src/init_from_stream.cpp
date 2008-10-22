@@ -27,13 +27,13 @@
 #include <boost/cstdint.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/compatibility/cpp_c_headers/cstdlib>
 #include <boost/compatibility/cpp_c_headers/cwchar>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/log/detail/new_shared.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
@@ -267,7 +267,7 @@ private:
     {
         typedef std::basic_istringstream< char_type > isstream;
         typedef sinks::basic_text_ostream_backend< char_type > backend_t;
-        shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
+        shared_ptr< backend_t > backend = log::aux::new_shared< backend_t >();
 
         // FileName
 #ifndef BOOST_FILESYSTEM_NARROW_ONLY
@@ -306,7 +306,7 @@ private:
                 strm >> interval;
 
 #ifndef BOOST_LOG_BROKEN_STL_ALIGNMENT
-                file_stream = boost::make_shared< basic_rotating_ofstream< char_type > >(
+                file_stream = log::aux::new_shared< basic_rotating_ofstream< char_type > >(
                     file_name, keywords::rotation_interval = interval);
 #else
                 file_stream.reset(new basic_rotating_ofstream< char_type > (
@@ -324,7 +324,7 @@ private:
                 strm >> size;
 
 #ifndef BOOST_LOG_BROKEN_STL_ALIGNMENT
-                file_stream = boost::make_shared< basic_rotating_ofstream< char_type > >(
+                file_stream = log::aux::new_shared< basic_rotating_ofstream< char_type > >(
                     file_name, keywords::rotation_size = size);
 #else
                 file_stream.reset(new basic_rotating_ofstream< char_type >(
@@ -345,7 +345,7 @@ private:
                 strm_size >> size;
 
 #ifndef BOOST_LOG_BROKEN_STL_ALIGNMENT
-                file_stream = boost::make_shared< basic_rotating_ofstream< char_type > >(
+                file_stream = log::aux::new_shared< basic_rotating_ofstream< char_type > >(
                     file_name, keywords::rotation_interval = interval, keywords::rotation_size = size);
 #else
                 file_stream.reset(new basic_rotating_ofstream< char_type >(
@@ -358,7 +358,7 @@ private:
             {
                 // No rotation required, we can use a simple stream
                 typedef filesystem::basic_ofstream< char_type > stream_t;
-                shared_ptr< stream_t > p = boost::make_shared< stream_t >(
+                shared_ptr< stream_t > p = log::aux::new_shared< stream_t >(
                     file_name, std::ios_base::out | std::ios_base::trunc);
                 if (!p->is_open())
                     boost::throw_exception(std::runtime_error("Failed to open the destination file"));
@@ -376,7 +376,7 @@ private:
     {
         // Construct the backend
         typedef sinks::basic_text_ostream_backend< char_type > backend_t;
-        shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
+        shared_ptr< backend_t > backend = log::aux::new_shared< backend_t >();
         backend->add_stream(
             shared_ptr< typename backend_t::stream_type >(&constants::get_console_log_stream(), empty_deleter()));
 
@@ -389,7 +389,7 @@ private:
     {
         // Construct the backend
         typedef sinks::basic_syslog_backend< char_type > backend_t;
-        shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
+        shared_ptr< backend_t > backend = log::aux::new_shared< backend_t >();
 
         // For now we use only the default level mapping. Will add support for configuration later.
         backend->set_level_extractor(
@@ -458,12 +458,12 @@ private:
 
         // Construct the frontend, considering Asynchronous parameter
         if (!async)
-            p = boost::make_shared< sinks::synchronous_sink< backend_t > >(backend);
+            p = log::aux::new_shared< sinks::synchronous_sink< backend_t > >(backend);
         else
-            p = boost::make_shared< sinks::asynchronous_sink< backend_t > >(backend);
+            p = log::aux::new_shared< sinks::asynchronous_sink< backend_t > >(backend);
 #else
         // When multithreading is disabled we always use the unlocked sink frontend
-        p = boost::make_shared< sinks::unlocked_sink< backend_t > >(backend);
+        p = log::aux::new_shared< sinks::unlocked_sink< backend_t > >(backend);
 #endif
 
         p->set_filter(filt);
