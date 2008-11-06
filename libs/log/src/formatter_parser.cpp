@@ -28,6 +28,7 @@
 
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
+#include <boost/version.hpp>
 #include <boost/compatibility/cpp_c_headers/ctime>
 #include <boost/io/ios_state.hpp> // Ticket #1788.
 #include <boost/mpl/vector.hpp>
@@ -57,6 +58,8 @@
 #include "parser_utils.hpp"
 
 namespace boost {
+
+#if BOOST_VERSION < 103800
 
 // Workaround for Boost.DateTime bug. Ticket #642.
 // http://svn.boost.org/trac/boost/ticket/642
@@ -94,6 +97,8 @@ inline std::basic_ostream<CharT, TraitsT>& operator<<(
 }
 
 } // namespace local_time
+
+#endif // BOOST_VERSION < 103800
 
 namespace BOOST_LOG_NAMESPACE {
 
