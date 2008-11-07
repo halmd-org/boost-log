@@ -138,8 +138,8 @@ struct basic_syslog_backend< CharT >::implementation
 
     //! Formatter
     formatter_type m_Formatter;
-    //! Level extractor
-    level_extractor_type m_LevelExtractor;
+    //! Level mapper
+    level_mapper_type m_LevelMapper;
 
     //! Logging facility
     const syslog::facility_t m_Facility;
@@ -183,11 +183,11 @@ void basic_syslog_backend< CharT >::reset_formatter()
     m_pImpl->m_Formatter.clear();
 }
 
-//! The method installs the syslog record level extraction function object
+//! The method installs the function object that maps application severity levels to Syslog levels
 template< typename CharT >
-void basic_syslog_backend< CharT >::set_level_extractor(level_extractor_type const& extractor)
+void basic_syslog_backend< CharT >::set_level_mapper(level_mapper_type const& mapper)
 {
-    m_pImpl->m_LevelExtractor = extractor;
+    m_pImpl->m_LevelMapper = extractor;
 }
 
 //! The method returns the current locale
@@ -219,7 +219,7 @@ void basic_syslog_backend< CharT >::write_message(
 
     const int facility = m_pImpl->m_Facility;
     const int level =
-        m_pImpl->m_LevelExtractor.empty() ? syslog::info : m_pImpl->m_LevelExtractor(attributes);
+        m_pImpl->m_LevelMapper.empty() ? syslog::info : m_pImpl->m_LevelMapper(attributes);
 
     ::syslog(LOG_MAKEPRI(facility, level), "%s", m_pImpl->m_FormattedRecord.c_str());
 }

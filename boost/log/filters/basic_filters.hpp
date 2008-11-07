@@ -30,6 +30,7 @@
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/has_xxx.hpp>
+#include <boost/mpl/identity.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_base_and_derived.hpp>

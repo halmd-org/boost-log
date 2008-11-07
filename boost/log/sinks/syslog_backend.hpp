@@ -19,8 +19,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_SINKS_SYSLOG_BACKEND_HPP_INCLUDED_HPP_
-#define BOOST_LOG_SINKS_SYSLOG_BACKEND_HPP_INCLUDED_HPP_
+#ifndef BOOST_LOG_SINKS_SYSLOG_BACKEND_HPP_INCLUDED_
+#define BOOST_LOG_SINKS_SYSLOG_BACKEND_HPP_INCLUDED_
 
 #include <map>
 #include <string>
@@ -35,6 +35,7 @@
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/threading_models.hpp>
 #include <boost/log/sinks/syslog_constants.hpp>
+#include <boost/log/sinks/severity_mapping.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 
 #ifdef _MSC_VER
@@ -53,44 +54,23 @@ namespace sinks {
 
 namespace syslog {
 
-    //! Base class for syslog level mapping function objects
-    template< typename CharT >
-    struct basic_level_mapping :
-        public std::unary_function< basic_attribute_values_view< CharT >, level_t >
-    {
-        //! Char type
-        typedef CharT char_type;
-        //! String type
-        typedef std::basic_string< char_type > string_type;
-        //! Attribute values view type
-        typedef basic_attribute_values_view< char_type > values_view_type;
-    };
-
     /*!
-     * \brief Straightforward syslog level extractor
+     * \brief Straightforward severity level mapping
      * 
-     * The level extractor assumes that attribute with a particular name always
-     * provides values that map directly onto syslog levels. The level extractor
-     * simply returns the extracted attribute value as a syslog level.
+     * This type of mapping assumes that attribute with a particular name always
+     * provides values that map directly onto the Syslog levels. The mapping
+     * simply returns the extracted attribute value converted to the Syslog severity level.
      */
     template< typename CharT, typename AttributeValueT = int >
-    class straightforward_level_mapping :
-        public basic_level_mapping< CharT >
+    class direct_severity_mapping :
+        public basic_direct_severity_mapping< CharT, level_t, AttributeValueT >
     {
         //! Base type
-        typedef basic_level_mapping< CharT > base_type;
+        typedef basic_direct_severity_mapping< CharT, level_t, AttributeValueT > base_type;
 
     public:
-        //! Attribute contained value type
-        typedef AttributeValueT attribute_value_type;
         //! String type
         typedef typename base_type::string_type string_type;
-        //! Attribute values view type
-        typedef typename base_type::values_view_type values_view_type;
-
-    private:
-        //! Extracted attribute name
-        const string_type m_AttributeName;
 
     public:
         /*!
@@ -98,79 +78,29 @@ namespace syslog {
          * 
          * \param name Attribute name
          */
-        explicit straightforward_level_mapping(string_type const& name) : m_AttributeName(name) {}
-
-        /*!
-         * Extraction operator
-         * 
-         * \param values A set of attribute values attached to a logging record
-         * \return An extracted attribute value
-         */
-        level_t operator() (values_view_type const& values) const
+        explicit direct_severity_mapping(string_type const& name) :
+            base_type(name, log_always)
         {
-            // Find attribute value
-            typename values_view_type::const_iterator it = values.find(m_AttributeName);
-            if (it != values.end())
-            {
-                optional< attribute_value_type > value = it->second->get< attribute_value_type >();
-                if (!!value)
-                    return make_level(value.get());
-            }
-            return info;
         }
     };
 
     /*!
-     * \brief Customizable syslog level extractor
+     * \brief Customizable severity level mapping
      * 
-     * The level extractor allows to setup a custom mapping between an attribute and syslog levels
+     * The class allows to setup a custom mapping between an attribute and Syslog severity levels.
+     * The mapping should be initialized similarly to the standard \c map container, by using
+     * indexing operator and assignment.
      */
     template< typename CharT, typename AttributeValueT = int >
-    class level_mapping :
-        public basic_level_mapping< CharT >
+    class custom_severity_mapping :
+        public basic_custom_severity_mapping< CharT, level_t, AttributeValueT >
     {
         //! Base type
-        typedef basic_level_mapping< CharT > base_type;
+        typedef basic_custom_severity_mapping< CharT, level_t, AttributeValueT > base_type;
 
     public:
-        //! Attribute contained value type
-        typedef AttributeValueT attribute_value_type;
         //! String type
         typedef typename base_type::string_type string_type;
-        //! Attribute values view type
-        typedef typename base_type::values_view_type values_view_type;
-
-    private:
-        //! \cond
-
-        //! Mapping type
-        typedef std::map< attribute_value_type, level_t > mapping_type;
-        //! Smart reference class for implementing insertion into the map
-        class reference_proxy;
-        friend class reference_proxy;
-        class reference_proxy
-        {
-            mapping_type& m_Mapping;
-            attribute_value_type m_Key;
-
-        public:
-            //! Constructor
-            reference_proxy(mapping_type& mapping, attribute_value_type const& key) : m_Mapping(mapping), m_Key(key) {}
-            //! Insertion
-            reference_proxy const& operator= (level_t const& val) const
-            {
-                m_Mapping[m_Key] = val;
-                return *this;
-            }
-        };
-
-        //! \endcond
-
-    private:
-        //! Extracted attribute name
-        const string_type m_AttributeName;
-        //! Conversion mapping
-        mapping_type m_Mapping;
 
     public:
         /*!
@@ -178,46 +108,9 @@ namespace syslog {
          * 
          * \param name Attribute name
          */
-        explicit level_mapping(string_type const& name) : m_AttributeName(name) {}
-        /*!
-         * Extraction operator. Extracts the attribute value and attempts to map it onto
-         * a syslog level value.
-         * 
-         * \param values A set of attribute values attached to a logging record
-         * \return A mapped syslog level, if mapping is successfull, or \c info if
-         *         mapping did not succeed.
-         */
-        level_t operator() (values_view_type const& values) const
+        explicit custom_severity_mapping(string_type const& name) :
+            base_type(name, log_always)
         {
-            // Find attribute value
-            typename values_view_type::const_iterator it = values.find(m_AttributeName);
-            if (it != values.end())
-            {
-                optional< attribute_value_type > value = it->second->get< attribute_value_type >();
-                if (!!value)
-                {
-                    typename mapping_type::const_iterator mapping = m_Mapping.find(value.get());
-                    if (mapping != m_Mapping.end())
-                        return mapping->second;
-                }
-            }
-            return info;
-        }
-        /*!
-         * Insertion operator
-         * 
-         * \param key Attribute value to be mapped
-         * \return An object of unspecified type that allows to insert a new mapping through assignment.
-         *         The \a key argument becomes the key attribute value, and the assigned value becomes the
-         *         mapped syslog level.
-         */
-#ifndef BOOST_LOG_DOXYGEN_PASS
-        reference_proxy operator[] (attribute_value_type const& key)
-#else
-        implementation_defined operator[] (attribute_value_type const& key)
-#endif
-        {
-            return reference_proxy(m_Mapping, key);
         }
     };
 
@@ -249,11 +142,11 @@ public:
         values_view_type const&,
         string_type const&
     > formatter_type;
-    //! Syslog level extractor type
+    //! Syslog level mapper type
     typedef boost::function1<
         syslog::level_t,
         values_view_type const&
-    > level_extractor_type;
+    > level_mapper_type;
 
 private:
     //! Pointer to the implementation
@@ -287,9 +180,9 @@ public:
     void reset_formatter();
 
     /*!
-     * The method installs the syslog record level extraction function object
+     * The method installs the function object that maps application severity levels to Syslog levels
      */
-    void set_level_extractor(level_extractor_type const& extractor);
+    void set_level_mapper(level_mapper_type const& mapper);
 
     /*!
      * The method returns the current locale used for formatting
@@ -326,4 +219,4 @@ typedef basic_syslog_backend< wchar_t > wsyslog_backend;    //!< Convenience typ
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_SINKS_SYSLOG_BACKEND_HPP_INCLUDED_HPP_
+#endif // BOOST_LOG_SINKS_SYSLOG_BACKEND_HPP_INCLUDED_
