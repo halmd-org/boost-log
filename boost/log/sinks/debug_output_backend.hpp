@@ -59,6 +59,8 @@ class BOOST_LOG_EXPORT basic_debug_output_backend :
     typedef basic_formatting_sink_backend< CharT > base_type;
 
 public:
+    //! Character type
+    typedef typename base_type::char_type char_type;
     //! String type to be used as a message text holder
     typedef typename base_type::target_string_type target_string_type;
     //! Attribute values view type
