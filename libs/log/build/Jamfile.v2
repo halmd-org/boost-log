@@ -33,6 +33,7 @@ project boost/log
 alias platform_log_sources
     : ## winnt sources ##
         nt6_event_log_backend.cpp
+        debug_output_backend.cpp
     : ## requirements ##
         <logapi>winnt
     ;

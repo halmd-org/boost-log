@@ -111,7 +111,7 @@ basic_nt6_event_log_backend< CharT >::~basic_nt6_event_log_backend()
 
 template< typename CharT >
 typename basic_nt6_event_log_backend< CharT >::event_enabled_filter
-basic_nt6_event_log_backend< CharT >::get_event_enabled_filter()
+basic_nt6_event_log_backend< CharT >::get_event_enabled_filter() const
 {
     return event_enabled_filter(m_pImpl);
 }

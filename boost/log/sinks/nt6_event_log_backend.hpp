@@ -194,7 +194,7 @@ public:
     /*!
      * \return A filter that checks whether an event will be consumed by ETW or not
      */
-    event_enabled_filter get_event_enabled_filter();
+    event_enabled_filter get_event_enabled_filter() const;
 
     /*!
      * The method installs the function object that maps application severity levels to WinAPI levels
