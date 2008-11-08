@@ -24,12 +24,6 @@
 #include <streambuf>
 #include <boost/log/detail/prologue.hpp>
 
-#ifndef BOOST_LOG_DEFAULT_ATTACHABLE_SSTREAM_BUF_SIZE
-//! The size (in chars) of a stream buffer used by logger.
-//! \note The Boost.Log library should be rebuilt once this value is modified.
-#define BOOST_LOG_DEFAULT_ATTACHABLE_SSTREAM_BUF_SIZE 16
-#endif // BOOST_LOG_DEFAULT_ATTACHABLE_SSTREAM_BUF_SIZE
-
 #ifdef _MSC_VER
 #pragma warning(push)
 // 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
@@ -54,6 +48,9 @@ namespace aux {
         //! Base type
         typedef std::basic_streambuf< CharT, TraitsT > base_type;
 
+        //! Buffer size
+        enum { buffer_size = 16 };
+
     public:
         //! Character type
         typedef typename base_type::char_type char_type;
@@ -68,7 +65,7 @@ namespace aux {
         //! A reference to the string that will be filled
         string_type& m_Storage;
         //! A buffer used to temporarily store output
-        char_type m_Buffer[BOOST_LOG_DEFAULT_ATTACHABLE_SSTREAM_BUF_SIZE];
+        char_type m_Buffer[buffer_size];
 
     private:
         //! Copy constructor (closed)

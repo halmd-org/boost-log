@@ -28,12 +28,11 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>
-#include <boost/compatibility/cpp_c_headers/cstdlib>
-#include <boost/compatibility/cpp_c_headers/cwchar>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/log/detail/new_shared.hpp>
+#include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
@@ -164,32 +163,12 @@ public:
 };
 
 #ifndef BOOST_FILESYSTEM_NARROW_ONLY
+
 //! A helper trait to generate the appropriate Boost.Filesystem path type
 template< typename > struct make_filesystem_path;
 template< > struct make_filesystem_path< char > { typedef filesystem::path type; };
 template< > struct make_filesystem_path< wchar_t > { typedef filesystem::wpath type; };
-#else
-//! A helper function to create a narrow path
-inline filesystem::path create_narrow_path(std::string const& str)
-{
-    return filesystem::path(str);
-}
-//! A helper function to create a narrow path
-inline filesystem::path create_narrow_path(std::wstring const& wstr)
-{
-    using namespace std; // make sure we can use C functions unqualified
-    mbstate_t state = mbstate_t();
-    size_t len = wcsrtombs(NULL, wstr.c_str(), 0, &state);
-    if (len != size_t(-1))
-    {
-        state = mbstate_t();
-        std::string str(len, '\0');
-        wcsrtombs(&str[0], wstr.c_str(), len, &state);
-        return filesystem::path(str);
-    }
-    else
-        boost::throw_exception(std::runtime_error("Failed to convert wide file name to the narrow encoding"));
-}
+
 #endif // BOOST_FILESYSTEM_NARROW_ONLY
 
 //! The supported sinks repository
@@ -281,7 +260,7 @@ private:
 #ifndef BOOST_FILESYSTEM_NARROW_ONLY
             file_name = it->second;
 #else
-            file_name = create_narrow_path(it->second);
+            file_name = log::aux::to_narrow(it->second);
 #endif // BOOST_FILESYSTEM_NARROW_ONLY
         }
         else

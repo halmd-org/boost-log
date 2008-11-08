@@ -22,18 +22,11 @@
 #ifndef BOOST_LOG_SINKS_SYSLOG_BACKEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_SYSLOG_BACKEND_HPP_INCLUDED_
 
-#include <map>
 #include <string>
-#include <locale>
-#include <ostream>
-#include <functional>
-#include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/function/function1.hpp>
-#include <boost/function/function3.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
-#include <boost/log/sinks/threading_models.hpp>
 #include <boost/log/sinks/syslog_constants.hpp>
 #include <boost/log/sinks/severity_mapping.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
@@ -119,10 +112,10 @@ namespace syslog {
 //! An implementation of a syslog sink backend
 template< typename CharT >
 class BOOST_LOG_EXPORT basic_syslog_backend :
-    public basic_sink_backend< CharT, frontend_synchronization_tag >
+    public basic_formatting_sink_backend< CharT, char >
 {
     //! Base type
-    typedef basic_sink_backend< CharT, frontend_synchronization_tag > base_type;
+    typedef basic_formatting_sink_backend< CharT, char > base_type;
     //! Implementation type
     struct implementation;
 
@@ -131,17 +124,11 @@ public:
     typedef typename base_type::char_type char_type;
     //! String type
     typedef typename base_type::string_type string_type;
+    //! String type that is used to pass message test
+    typedef typename base_type::target_string_type target_string_type;
     //! Attribute values view type
     typedef typename base_type::values_view_type values_view_type;
-    //! Output stream type
-    typedef std::basic_ostream< char_type > stream_type;
-    //! Formatter function type
-    typedef boost::function3<
-        void,
-        stream_type&,
-        values_view_type const&,
-        string_type const&
-    > formatter_type;
+
     //! Syslog level mapper type
     typedef boost::function1<
         syslog::level_t,
@@ -184,22 +171,9 @@ public:
      */
     void set_level_mapper(level_mapper_type const& mapper);
 
-    /*!
-     * The method returns the current locale used for formatting
-     */
-    std::locale getloc() const;
-    /*!
-     * The method sets the locale used for formatting
-     */
-    std::locale imbue(std::locale const& loc);
-
-    /*!
-     * The method formats the message and passes it to the syslog API.
-     * 
-     * \param attributes A set of attribute values attached to the log record
-     * \param message Log record message text
-     */
-    void write_message(values_view_type const& attributes, string_type const& message);
+private:
+    //! The method passes the formatted message to the Syslog API
+    void do_write_message(values_view_type const& attributes, target_string_type const& formatted_message);
 };
 
 #ifdef BOOST_LOG_USE_CHAR

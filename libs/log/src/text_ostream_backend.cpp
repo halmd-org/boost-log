@@ -23,29 +23,29 @@ namespace sinks {
 
 namespace {
 
-//! A simple lookup predicate
-template< typename StreamT >
-struct stream_lookup_fun
-{
-    typedef bool return_type;
-
-    explicit stream_lookup_fun(shared_ptr< StreamT > const& strm) : m_Stream(strm) {}
-
-    template< typename T >
-    return_type operator() (T const& that) const
+    //! A simple lookup predicate
+    template< typename StreamT >
+    struct stream_lookup_fun
     {
-        return (that.strm == m_Stream);
+        typedef bool return_type;
+
+        explicit stream_lookup_fun(shared_ptr< StreamT > const& strm) : m_Stream(strm) {}
+
+        template< typename T >
+        return_type operator() (T const& that) const
+        {
+            return (that.strm == m_Stream);
+        }
+
+    private:
+        shared_ptr< StreamT > const& m_Stream;
+    };
+
+    template< typename StreamT >
+    static inline stream_lookup_fun< StreamT > stream_lookup(shared_ptr< StreamT > const& strm)
+    {
+        return stream_lookup_fun< StreamT >(strm);
     }
-
-private:
-    shared_ptr< StreamT > const& m_Stream;
-};
-
-template< typename StreamT >
-static inline stream_lookup_fun< StreamT > stream_lookup(shared_ptr< StreamT > const& strm)
-{
-    return stream_lookup_fun< StreamT >(strm);
-}
 
 } // namespace
 
@@ -90,7 +90,7 @@ void basic_text_ostream_backend< CharT >::auto_flush(bool f)
 //! The method writes the message to the sink
 template< typename CharT >
 void basic_text_ostream_backend< CharT >::do_write_message(
-    values_view_type const& attributes, string_type const& message)
+    values_view_type const& attributes, target_string_type const& message)
 {
     typename string_type::const_pointer const p = message.data();
     typename string_type::size_type const s = message.size();

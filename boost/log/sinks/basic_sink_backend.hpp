@@ -26,11 +26,14 @@
 #include <locale>
 #include <ostream>
 #include <boost/noncopyable.hpp>
+#include <boost/mpl/if.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/mpl/assert.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <boost/function/function3.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
+#include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/sinks/threading_models.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
@@ -67,8 +70,18 @@ struct basic_sink_backend : noncopyable
  * The \c basic_formatting_sink_backend class template implements logging record
  * formatting. Formatting requires storing auxiliary data, such as formatter and
  * formatting stream. This requires thread synchronization to be done in sink frontend.
+ *
+ * The class also supports performing encoding conversion in case if the sink backend
+ * requires the formatted string in some fixed encoding (e.g. if underlying API
+ * supports only narrow or wide characters). In order to perform conversion one
+ * should specify the desired final character type in the \c TargetCharT template
+ * parameter.
  */
-template< typename CharT, typename ThreadingModelTagT = frontend_synchronization_tag >
+template<
+    typename CharT,
+    typename TargetCharT = CharT,
+    typename ThreadingModelTagT = frontend_synchronization_tag
+>
 class BOOST_LOG_NO_VTABLE basic_formatting_sink_backend :
     public basic_sink_backend< CharT, ThreadingModelTagT >
 {
@@ -83,6 +96,10 @@ public:
 
     //! Output stream type
     typedef std::basic_ostream< char_type > stream_type;
+    //! Target character type
+    typedef TargetCharT target_char_type;
+    //! Target string type
+    typedef std::basic_string< target_char_type > target_string_type;
 
 private:
     //  This type of sink backends require synchronization on the frontend side
@@ -91,11 +108,18 @@ private:
         is_model_supported< threading_model, frontend_synchronization_tag >
     >));
 
+    //! Stream buffer type
+    typedef typename mpl::if_<
+        is_same< char_type, target_char_type >,
+        log::aux::basic_ostringstreambuf< char_type >,
+        log::aux::converting_ostringstreambuf< char_type >
+    >::type streambuf_type;
+
 private:
     //! Formatted log record storage
-    string_type m_FormattedRecord;
+    target_string_type m_FormattedRecord;
     //! Stream buffer to fill the storage
-    log::aux::basic_ostringstreambuf< char_type > m_StreamBuf;
+    streambuf_type m_StreamBuf;
     //! Formatting stream
     stream_type m_FormattingStream;
 
@@ -166,20 +190,19 @@ public:
      */
     void write_message(values_view_type const& attributes, string_type const& message)
     {
+        log::aux::cleanup_guard< stream_type > cleanup1(m_FormattingStream);
+        log::aux::cleanup_guard< target_string_type > cleanup2(m_FormattedRecord);
+
         // Perform the formatting
         if (!m_Formatter.empty())
-        {
-            log::aux::cleanup_guard< stream_type > cleanup1(m_FormattingStream);
-            log::aux::cleanup_guard< string_type > cleanup2(m_FormattedRecord);
-
             m_Formatter(m_FormattingStream, attributes, message);
-            m_FormattingStream.flush();
-
-            // Pass the formatted string to the backend implementation
-            do_write_message(attributes, m_FormattedRecord);
-        }
         else
-            do_write_message(attributes, message);
+            m_FormattingStream << message;
+
+        m_FormattingStream.flush();
+
+        // Pass the formatted string to the backend implementation
+        do_write_message(attributes, m_FormattedRecord);
     }
 
 protected:
@@ -189,7 +212,7 @@ protected:
      * \param attributes A set of attribute values attached to the log record
      * \param formatted_message Formatted log record
      */
-    virtual void do_write_message(values_view_type const& attributes, string_type const& formatted_message) = 0;
+    virtual void do_write_message(values_view_type const& attributes, target_string_type const& formatted_message) = 0;
 };
 
 } // namespace sinks

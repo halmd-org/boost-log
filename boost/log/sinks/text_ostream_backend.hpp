@@ -62,6 +62,8 @@ public:
     typedef typename base_type::char_type char_type;
     //! String type to be used as a message text holder
     typedef typename base_type::string_type string_type;
+    //! String type to be used as a message text holder
+    typedef typename base_type::target_string_type target_string_type;
     //! Attribute values view type
     typedef typename base_type::values_view_type values_view_type;
     //! Output stream type
@@ -119,7 +121,7 @@ public:
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method writes the message to the sink
-    void do_write_message(values_view_type const& attributes, string_type const& formatted_message);
+    void do_write_message(values_view_type const& attributes, target_string_type const& formatted_message);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

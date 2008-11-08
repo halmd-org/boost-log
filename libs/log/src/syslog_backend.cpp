@@ -16,8 +16,6 @@
 #include <boost/weak_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/log/sinks/syslog_backend.hpp>
-#include <boost/log/detail/narrowing_sstream_buf.hpp>
-#include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/singleton.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/locks.hpp>
@@ -126,18 +124,6 @@ namespace {
 template< typename CharT >
 struct basic_syslog_backend< CharT >::implementation
 {
-    //! Stream buffer type
-    typedef typename log::aux::make_narrowing_ostringstreambuf< char_type >::type streambuf_type;
-
-    //! Formatted string
-    std::string m_FormattedRecord;
-    //! Output stream buffer
-    streambuf_type m_StreamBuffer;
-    //! Output stream
-    stream_type m_FormattingStream;
-
-    //! Formatter
-    formatter_type m_Formatter;
     //! Level mapper
     level_mapper_type m_LevelMapper;
 
@@ -148,8 +134,6 @@ struct basic_syslog_backend< CharT >::implementation
 
     //! Constructor
     implementation(syslog::facility_t const& facility, syslog::options_t const& options) :
-        m_StreamBuffer(m_FormattedRecord),
-        m_FormattingStream(&m_StreamBuffer),
         m_Facility(facility),
         m_pSyslogInitializer(syslog_initializer::get_instance(options))
     {
@@ -187,41 +171,19 @@ void basic_syslog_backend< CharT >::reset_formatter()
 template< typename CharT >
 void basic_syslog_backend< CharT >::set_level_mapper(level_mapper_type const& mapper)
 {
-    m_pImpl->m_LevelMapper = extractor;
-}
-
-//! The method returns the current locale
-template< typename CharT >
-std::locale basic_syslog_backend< CharT >::getloc() const
-{
-    return m_pImpl->m_FormattingStream.getloc();
-}
-//! The method sets the locale used during formatting
-template< typename CharT >
-std::locale basic_syslog_backend< CharT >::imbue(std::locale const& loc)
-{
-    return m_pImpl->m_FormattingStream.imbue(loc);
+    m_pImpl->m_LevelMapper = mapper;
 }
 
 //! The method writes the message to the sink
 template< typename CharT >
-void basic_syslog_backend< CharT >::write_message(
-    values_view_type const& attributes, string_type const& message)
+void basic_syslog_backend< CharT >::do_write_message(
+    values_view_type const& attributes, target_string_type const& formatted_message)
 {
-    log::aux::cleanup_guard< std::string > _(m_pImpl->m_FormattedRecord);
-
-    if (!m_pImpl->m_Formatter.empty())
-        m_pImpl->m_Formatter(m_pImpl->m_FormattingStream, attributes, message);
-    else
-        m_pImpl->m_FormattingStream << message;
-
-    m_pImpl->m_FormattingStream.flush();
-
     const int facility = m_pImpl->m_Facility;
     const int level =
         m_pImpl->m_LevelMapper.empty() ? syslog::info : m_pImpl->m_LevelMapper(attributes);
 
-    ::syslog(LOG_MAKEPRI(facility, level), "%s", m_pImpl->m_FormattedRecord.c_str());
+    ::syslog(LOG_MAKEPRI(facility, level), "%s", formatted_message.c_str());
 }
 
 //! Explicitly instantiate sink implementation

@@ -53,7 +53,7 @@
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
-#include <boost/log/detail/narrowing_sstream_buf.hpp>
+#include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 #include <boost/log/utility/record_writer.hpp>
 
@@ -91,6 +91,27 @@ namespace keywords {
 } // namespace keywords
 
 namespace aux {
+
+    //! Stream buffer type generator
+    template<
+        typename CharT,
+        typename TraitsT = std::char_traits< CharT >,
+        typename AllocatorT = std::allocator< CharT >
+    >
+    struct make_narrowing_ostringstreambuf;
+
+    template< typename TraitsT, typename AllocatorT >
+    struct make_narrowing_ostringstreambuf< char, TraitsT, AllocatorT >
+    {
+        typedef basic_ostringstreambuf< char, TraitsT, AllocatorT > type;
+    };
+
+    template< typename TraitsT, typename AllocatorT >
+    struct make_narrowing_ostringstreambuf< wchar_t, TraitsT, AllocatorT >
+    {
+        typedef converting_ostringstreambuf< wchar_t, TraitsT > type;
+    };
+
 
     //! An auxiliary traits that contain various constants and functions regarding string and character operations
     template< typename CharT >
@@ -291,8 +312,8 @@ namespace aux {
                 register const std::streamsize written = m_File.sputn(end - size, block_size);
                 if (written == 0)
                     break;
-                size -= written;
-                m_Written += written;
+                size -= static_cast< std::string::size_type >(written);
+                m_Written += static_cast< uintmax_t >(written);
             }
         }
 

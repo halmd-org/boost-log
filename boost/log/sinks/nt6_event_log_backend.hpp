@@ -131,18 +131,20 @@ namespace winapi {
  */
 template< typename CharT >
 class BOOST_LOG_EXPORT basic_nt6_event_log_backend :
-    public basic_formatting_sink_backend< CharT >
+    public basic_formatting_sink_backend< CharT, wchar_t >
 {
     //! Base type
-    typedef basic_formatting_sink_backend< CharT > base_type;
+    typedef basic_formatting_sink_backend< CharT, wchar_t > base_type;
     //! Implementation type
     struct implementation;
 
 public:
     //! Character type
     typedef typename base_type::char_type char_type;
-    //! String type to be used as a message text holder
+    //! String type
     typedef typename base_type::string_type string_type;
+    //! String type to be used as a message text holder
+    typedef typename base_type::target_string_type target_string_type;
     //! Attribute values view type
     typedef typename base_type::values_view_type values_view_type;
 
@@ -169,7 +171,7 @@ public:
         explicit event_enabled_filter(shared_ptr< implementation > const& impl);
 
     public:
-        bool operator() (values_view_type const& values) const;
+        BOOST_LOG_EXPORT bool operator() (values_view_type const& values) const;
     };
     //! \endcond
 
@@ -201,7 +203,7 @@ public:
 
 private:
     //! The method puts the formatted message to the event log
-    void do_write_message(values_view_type const& values, string_type const& formatted_message);
+    void do_write_message(values_view_type const& values, target_string_type const& formatted_message);
 };
 
 #ifdef BOOST_LOG_USE_CHAR
