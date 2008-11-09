@@ -154,19 +154,6 @@ basic_syslog_backend< CharT >::~basic_syslog_backend()
     delete m_pImpl;
 }
 
-//! The method sets formatter functor object
-template< typename CharT >
-void basic_syslog_backend< CharT >::set_formatter(formatter_type const& fmt)
-{
-    m_pImpl->m_Formatter = fmt;
-}
-//! The method resets the formatter
-template< typename CharT >
-void basic_syslog_backend< CharT >::reset_formatter()
-{
-    m_pImpl->m_Formatter.clear();
-}
-
 //! The method installs the function object that maps application severity levels to Syslog levels
 template< typename CharT >
 void basic_syslog_backend< CharT >::set_severity_mapper(severity_mapper_type const& mapper)

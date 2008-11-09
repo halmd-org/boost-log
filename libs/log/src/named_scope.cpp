@@ -38,11 +38,11 @@ namespace {
     {
         //! Base type
         typedef basic_named_scope_list< CharT > base_type;
-    
+
     public:
         //! Const reference type
         typedef typename base_type::const_reference const_reference;
-    
+
     public:
         //! The method pushes the scope to the back of the list
         BOOST_LOG_FORCEINLINE void push_back(const_reference entry)
@@ -67,7 +67,7 @@ namespace {
             --this->m_Size;
         }
     };
-    
+
     //! Named scope attribute value
     template< typename CharT >
     class basic_named_scope_value :
@@ -78,16 +78,16 @@ namespace {
         typedef CharT char_type;
         //! Scope names stack
         typedef basic_named_scope_list< char_type > scope_stack;
-    
+
         //! Pointer to the actual scope value
         scope_stack* m_pValue;
         //! A thread-independent value
         optional< scope_stack > m_DetachedValue;
-    
+
     public:
         //! Constructor
         explicit basic_named_scope_value(scope_stack* p) : m_pValue(p) {}
-    
+
         //! The method dispatches the value to the given object. It returns true if the
         //! object was capable to consume the real attribute value type and false otherwise.
         bool dispatch(type_dispatcher& dispatcher)
@@ -102,7 +102,7 @@ namespace {
             else
                 return false;
         }
-    
+
         //! The method is called when the attribute value is passed to another thread (e.g.
         //! in case of asynchronous logging). The value should ensure it properly owns all thread-specific data.
         shared_ptr< attribute_value > detach_from_thread()

@@ -282,7 +282,7 @@ public:
         }
         return *this;
     }
-    
+
     /*!
      * \return Constant iterator to the first element of the container.
      */

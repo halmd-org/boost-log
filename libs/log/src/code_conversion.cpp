@@ -61,7 +61,7 @@ namespace {
 template< typename CharT, typename TraitsT >
 converting_ostringstreambuf< CharT, TraitsT >::converting_ostringstreambuf(string_type& storage) :
     m_Storage(storage),
-    m_ConversionState(0)
+    m_ConversionState()
 {
     // Announce the buffer size one character less to implement overflow gracefully
     base_type::setp(m_Buffer, m_Buffer + (sizeof(m_Buffer) / sizeof(*m_Buffer)) - 1);
@@ -216,8 +216,8 @@ void converting_ostringstreambuf< CharT, TraitsT >::write(const char_type*& pBas
 
 // We'll instantiate the buffer for both characters regardless of the configuration macros
 // since code conversion is used in various places of code even if the library is built for only one character type.
-template class BOOST_LOG_EXPORT converting_ostringstreambuf< char, std::char_traits< char > >;
-template class BOOST_LOG_EXPORT converting_ostringstreambuf< wchar_t, std::char_traits< wchar_t > >;
+template class converting_ostringstreambuf< char, std::char_traits< char > >;
+template class converting_ostringstreambuf< wchar_t, std::char_traits< wchar_t > >;
 
 } // namespace aux
 

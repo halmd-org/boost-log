@@ -72,7 +72,7 @@ namespace syslog {
          * \param name Attribute name
          */
         explicit direct_severity_mapping(string_type const& name) :
-            base_type(name, log_always)
+            base_type(name, info)
         {
         }
     };
@@ -102,7 +102,7 @@ namespace syslog {
          * \param name Attribute name
          */
         explicit custom_severity_mapping(string_type const& name) :
-            base_type(name, log_always)
+            base_type(name, info)
         {
         }
     };
@@ -153,18 +153,6 @@ public:
      * Destructor
      */
     ~basic_syslog_backend();
-
-    /*!
-     * The method sets formatter functional object
-     * 
-     * \param fmt Formatter object
-     */
-    void set_formatter(formatter_type const& fmt);
-    /*!
-     * The method resets the formatter. If the formatter is not set, the result of formatting
-     * is equivalent to the log record message text.
-     */
-    void reset_formatter();
 
     /*!
      * The method installs the function object that maps application severity levels to Syslog levels

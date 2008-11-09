@@ -163,6 +163,8 @@ class basic_custom_severity_mapping :
 public:
     //! Attribute contained value type
     typedef AttributeValueT attribute_value_type;
+    //! Char type
+    typedef typename base_type::char_type char_type;
     //! String type
     typedef typename base_type::string_type string_type;
     //! Attribute values view type
@@ -237,7 +239,7 @@ public:
      * \param default_level The default native severity level that is returned if the conversion cannot be performed
      */
     explicit basic_custom_severity_mapping(string_type const& name, mapped_type const& default_level) :
-        m_AttributeName(name),
+        m_Extractor(name),
         m_DefaultLevel(default_level)
     {
     }
