@@ -125,7 +125,7 @@ template< typename CharT >
 struct basic_syslog_backend< CharT >::implementation
 {
     //! Level mapper
-    level_mapper_type m_LevelMapper;
+    severity_mapper_type m_LevelMapper;
 
     //! Logging facility
     const syslog::facility_t m_Facility;
@@ -169,7 +169,7 @@ void basic_syslog_backend< CharT >::reset_formatter()
 
 //! The method installs the function object that maps application severity levels to Syslog levels
 template< typename CharT >
-void basic_syslog_backend< CharT >::set_level_mapper(level_mapper_type const& mapper)
+void basic_syslog_backend< CharT >::set_severity_mapper(severity_mapper_type const& mapper)
 {
     m_pImpl->m_LevelMapper = mapper;
 }

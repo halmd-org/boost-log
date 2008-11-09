@@ -62,7 +62,7 @@ struct basic_nt6_event_log_backend< CharT >::implementation
     //! A handle for the registered event provider
     REGHANDLE m_ProviderHandle;
     //! A level mapping functtor
-    level_mapper_type m_LevelMapper;
+    severity_mapper_type m_LevelMapper;
 
     implementation() : m_ProviderHandle(0)
     {
@@ -118,7 +118,7 @@ basic_nt6_event_log_backend< CharT >::get_event_enabled_filter() const
 
 //! The method installs the WinAPI record level mapping function object
 template< typename CharT >
-void basic_nt6_event_log_backend< CharT >::set_level_mapper(level_mapper_type const& mapper)
+void basic_nt6_event_log_backend< CharT >::set_severity_mapper(severity_mapper_type const& mapper)
 {
     m_pImpl->m_LevelMapper = mapper;
 }

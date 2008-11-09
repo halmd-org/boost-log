@@ -148,11 +148,11 @@ public:
     //! Attribute values view type
     typedef typename base_type::values_view_type values_view_type;
 
-    //! WinAPI level extractor type
+    //! WinAPI severity level mapper type
     typedef boost::function1<
         winapi::level_t,
         values_view_type const&
-    > level_mapper_type;
+    > severity_mapper_type;
 
 public:
     //! \cond
@@ -199,7 +199,7 @@ public:
     /*!
      * The method installs the function object that maps application severity levels to WinAPI levels
      */
-    void set_level_mapper(level_mapper_type const& mapper);
+    void set_severity_mapper(severity_mapper_type const& mapper);
 
 private:
     //! The method puts the formatted message to the event log

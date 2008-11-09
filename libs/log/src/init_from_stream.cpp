@@ -25,12 +25,14 @@
 #include <stdexcept>
 #include <algorithm>
 #include <boost/cstdint.hpp>
+#include <boost/ref.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/new_shared.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/core.hpp>
@@ -39,6 +41,12 @@
 #ifdef BOOST_LOG_USE_SYSLOG
 #include <boost/log/sinks/syslog_backend.hpp>
 #endif
+#ifdef BOOST_WINDOWS
+#include <boost/log/sinks/debug_output_backend.hpp>
+#ifdef BOOST_LOG_USE_WINNT6_API
+#include <boost/log/sinks/nt6_event_log_backend.hpp>
+#endif // BOOST_LOG_USE_WINNT6_API
+#endif // BOOST_WINDOWS
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/rotating_ofstream.hpp>
@@ -51,6 +59,12 @@
 #include <boost/log/detail/shared_lock_guard.hpp>
 #endif
 #include "parser_utils.hpp"
+
+#ifdef BOOST_WINDOWS
+#include <windows.h>
+#include <objbase.h>
+#pragma comment(lib, "ole32.lib")
+#endif // BOOST_WINDOWS
 
 namespace boost {
 
@@ -236,6 +250,14 @@ struct sinks_repository :
         instance.m_Factories[constants::syslog_destination()] =
             &sinks_repository< char_type >::default_syslog_sink_factory;
 #endif // BOOST_LOG_USE_SYSLOG
+#ifdef BOOST_WINDOWS
+        instance.m_Factories[constants::debugger_destination()] =
+            &sinks_repository< char_type >::default_debugger_sink_factory;
+#ifdef BOOST_LOG_USE_WINNT6_API
+        instance.m_Factories[constants::nt6_event_log_destination()] =
+            &sinks_repository< char_type >::default_nt6_event_log_sink_factory;
+#endif // BOOST_LOG_USE_WINNT6_API
+#endif // BOOST_WINDOWS
     }
 
 private:
@@ -371,12 +393,53 @@ private:
         shared_ptr< backend_t > backend = log::aux::new_shared< backend_t >();
 
         // For now we use only the default level mapping. Will add support for configuration later.
-        backend->set_level_extractor(
-            sinks::syslog::straightforward_level_mapping< char_type >(constants::default_level_attribute_name()));
+        backend->set_severity_mapper(
+            sinks::syslog::direct_severity_mapping< char_type >(constants::default_level_attribute_name()));
 
         return init_sink(backend, params);
     }
 #endif // BOOST_LOG_USE_SYSLOG
+
+#ifdef BOOST_WINDOWS
+
+    //! The function constructs a sink that writes log records to the debugger
+    static shared_ptr< sinks::sink< char_type > > default_debugger_sink_factory(params_t const& params)
+    {
+        // Construct the backend
+        typedef sinks::basic_debug_output_backend< char_type > backend_t;
+        shared_ptr< backend_t > backend = log::aux::new_shared< backend_t >();
+
+        return init_sink(backend, params);
+    }
+
+#ifdef BOOST_LOG_USE_WINNT6_API
+
+    //! The function constructs a sink that writes log records to the Windows NT 6 Event Log
+    static shared_ptr< sinks::sink< char_type > > default_nt6_event_log_sink_factory(params_t const& params)
+    {
+        // We have to read provider GUID from settings before creating the backend
+        typename params_t::const_iterator it = params.find(constants::provider_id_param_name());
+        if (it == params.end())
+            boost::throw_exception(std::runtime_error("Provider ID is not specified in the event log destination settings"));
+
+        std::wstring const& guid = log::aux::to_wide(it->second);
+        GUID provider_id;
+        if (CLSIDFromString(const_cast< wchar_t* >(guid.c_str()), &provider_id) != NOERROR)
+            boost::throw_exception(std::runtime_error("Could not recognize Provider ID from string " + log::aux::to_narrow(it->second)));
+
+        // Construct the backend
+        typedef sinks::basic_nt6_event_log_backend< char_type > backend_t;
+        shared_ptr< backend_t > backend = log::aux::new_shared< backend_t >(boost::cref(provider_id));
+
+        // For now we use only the default level mapping. Will add support for configuration later.
+        backend->set_severity_mapper(
+            sinks::winapi::direct_severity_mapping< char_type >(constants::default_level_attribute_name()));
+
+        return init_sink(backend, params);
+    }
+
+#endif // BOOST_LOG_USE_WINNT6_API
+#endif // BOOST_WINDOWS
 
     //! The function initializes common parameters of text stream sink and returns the constructed sink
     static shared_ptr< sinks::sink< char_type > > init_text_ostream_sink(
