@@ -111,7 +111,7 @@ public:
     }
     ~new_shared_allocator()
     {
-        base_type::deallocate(m_pStorage, 1);
+        base_type::deallocate(m_pStorage, (m_pStorage != 0));
     }
 
     pointer address(reference r) const { return &r; }
