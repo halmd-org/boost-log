@@ -165,32 +165,33 @@ void converting_ostringstreambuf< CharT, TraitsT >::write(const char_type*& pBas
 {
     std::locale loc = this->getloc();
     facet_type const& fac = std::use_facet< facet_type >(loc);
+    target_char_type converted_buffer[buffer_size];
 
     while (true)
     {
-        target_char_type* pDest = m_ConvertedBuffer;
+        target_char_type* pDest = converted_buffer;
         std::codecvt_base::result res = convert(
             fac,
             m_ConversionState,
             pBase,
             pPtr,
             pDest,
-            pDest + sizeof(m_ConvertedBuffer) / sizeof(*m_ConvertedBuffer));
+            pDest + sizeof(converted_buffer) / sizeof(*converted_buffer));
 
         switch (res)
         {
         case std::codecvt_base::ok:
             // All characters were successfully converted
-            m_Storage.append(m_ConvertedBuffer, pDest);
+            m_Storage.append(converted_buffer, pDest);
             return;
 
         case std::codecvt_base::partial:
             // Some characters were converted, some were not
-            if (pDest != m_ConvertedBuffer)
+            if (pDest != converted_buffer)
             {
                 // Some conversion took place, so it seems like
                 // the destination buffer might not have been long enough
-                m_Storage.append(m_ConvertedBuffer, pDest);
+                m_Storage.append(converted_buffer, pDest);
 
                 // ...and go on for the next part
             }

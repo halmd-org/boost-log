@@ -73,8 +73,6 @@ private:
     std::mbstate_t m_ConversionState;
     //! A buffer used to temporarily store output
     char_type m_Buffer[buffer_size];
-    //! A buffer used to store the converted output
-    target_char_type m_ConvertedBuffer[buffer_size];
 
 public:
     //! Constructor
