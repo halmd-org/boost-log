@@ -11,7 +11,7 @@
  * \file   date_time.hpp
  * \author Andrey Semashev
  * \date   11.03.2008
- * 
+ *
  * The header contains implementation of date and time-related formatters.
  */
 
@@ -594,7 +594,7 @@ namespace aux {
         template< typename T >
         void to_stream_dispatch(T const& value, unsupported_type_tag const&)
         {
-            // Call a user-defined function to format the unknown type of time period 
+            // Call a user-defined function to format the unknown type of time period
             boost_log_format_time_period(
                 this->m_Stream, value, static_cast< string_type const& >(this->m_Format), this->m_PeriodFormat);
         }
@@ -614,7 +614,7 @@ namespace aux {
 
 /*!
  * \brief Date and time attribute formatter
- * 
+ *
  * The formatter performs formatting for all date and time related types.
  */
 template<
@@ -657,7 +657,7 @@ private:
 public:
     /*!
      * Constructor
-     * 
+     *
      * \param name Attribute name
      */
     explicit fmt_date_time_facade(string_type const& name)
@@ -666,7 +666,7 @@ public:
     }
     /*!
      * Constructor with date and time format specification
-     * 
+     *
      * \param name Attribute name
      * \param args A set of named arguments that describe the format
      */
@@ -679,7 +679,7 @@ public:
     /*!
      * Formatting operator. Formats the attribute with the specified on construction name from
      * \a attrs and puts the result into the \a strm stream.
-     * 
+     *
      * \param strm A reference to the stream, where the final text of the logging record is composed
      * \param attrs A set of attribute values that are associated with the logging record
      * \param msg The logging record message
@@ -792,8 +792,8 @@ public:
 #else // BOOST_LOG_DOXYGEN_PASS
 
 /*!
- * Formatter generator with the explicitly spectfied set of supported types in the first template parameter.
- * 
+ * Formatter generator with the explicitly specified set of supported types in the first template parameter.
+ *
  * \param name Attribute name
  * \param args Optional named arguments. Supported arguments:
  *             \li \c format - format string, must be compliant with Boost.DateTime date format string specification. Default: <tt>%%Y-%%b-%%d</tt>
@@ -806,8 +806,8 @@ fmt_date_time_facade<
 > date(std::basic_string< CharT > const& name, ArgsT... const& args);
 
 /*!
- * Formatter generator with the explicitly spectfied set of supported types in the first template parameter.
- * 
+ * Formatter generator with the explicitly specified set of supported types in the first template parameter.
+ *
  * \param name Attribute name
  * \param args Optional named arguments. Supported arguments:
  *             \li \c format - format string, must be compliant with Boost.DateTime time format string specification. Default: <tt>%%H:%%M:%%S.%%f</tt>
@@ -820,8 +820,8 @@ fmt_date_time_facade<
 > time(std::basic_string< CharT > const& name, ArgsT... const& args);
 
 /*!
- * Formatter generator with the explicitly spectfied set of supported types in the first template parameter.
- * 
+ * Formatter generator with the explicitly specified set of supported types in the first template parameter.
+ *
  * \param name Attribute name
  * \param args Optional named arguments. Supported arguments:
  *             \li \c format - format string, must be compliant with Boost.DateTime date and time format string specification. Default: <tt>%%Y-%%b-%%d %%H:%%M:%%S.%%f</tt>
@@ -834,8 +834,8 @@ fmt_date_time_facade<
 > date_time(std::basic_string< CharT > const& name, ArgsT... const& args);
 
 /*!
- * Formatter generator with the explicitly spectfied set of supported types in the first template parameter.
- * 
+ * Formatter generator with the explicitly specified set of supported types in the first template parameter.
+ *
  * \param name Attribute name
  * \param args Optional named arguments. Supported arguments:
  *             \li \c format - format string, must be compliant with Boost.DateTime time format string specification. Default: <tt>%%-%%H:%%M:%%S.%%f</tt>
@@ -848,8 +848,8 @@ fmt_date_time_facade<
 > time_duration(std::basic_string< CharT > const& name, ArgsT... const& args);
 
 /*!
- * Formatter generator with the explicitly spectfied set of supported types in the first template parameter.
- * 
+ * Formatter generator with the explicitly specified set of supported types in the first template parameter.
+ *
  * \param name Attribute name
  * \param args Optional named arguments. Supported arguments:
  *             \li \c unit_format - format string for period boundaries, must be compliant with Boost.DateTime date and time format string specification. Default: <tt>%%Y-%%b-%%d %%H:%%M:%%S.%%f</tt>
