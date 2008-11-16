@@ -90,7 +90,7 @@ namespace aux {
                 std::size_t dot_pos = source_name.rfind('.');
                 if (dot_pos == std::string::npos || dot_pos < backslash_pos)
                     dot_pos = source_name.size();
-                source_name = source_name.substr(backslash_pos, dot_pos);
+                source_name = source_name.substr(backslash_pos, dot_pos - backslash_pos);
             }
 
             return source_name;
@@ -184,7 +184,7 @@ namespace aux {
                 std::size_t dot_pos = source_name.rfind(L'.');
                 if (dot_pos == std::wstring::npos || dot_pos < backslash_pos)
                     dot_pos = source_name.size();
-                source_name = source_name.substr(backslash_pos, dot_pos);
+                source_name = source_name.substr(backslash_pos, dot_pos - backslash_pos);
             }
 
             return source_name;
