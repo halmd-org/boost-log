@@ -28,7 +28,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/syslog_constants.hpp>
-#include <boost/log/sinks/severity_mapping.hpp>
+#include <boost/log/sinks/attribute_mapping.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 
 #ifdef _MSC_VER
@@ -56,10 +56,10 @@ namespace syslog {
      */
     template< typename CharT, typename AttributeValueT = int >
     class direct_severity_mapping :
-        public basic_direct_severity_mapping< CharT, level_t, AttributeValueT >
+        public basic_direct_mapping< CharT, level_t, AttributeValueT >
     {
         //! Base type
-        typedef basic_direct_severity_mapping< CharT, level_t, AttributeValueT > base_type;
+        typedef basic_direct_mapping< CharT, level_t, AttributeValueT > base_type;
 
     public:
         //! String type
@@ -86,10 +86,10 @@ namespace syslog {
      */
     template< typename CharT, typename AttributeValueT = int >
     class custom_severity_mapping :
-        public basic_custom_severity_mapping< CharT, level_t, AttributeValueT >
+        public basic_custom_mapping< CharT, level_t, AttributeValueT >
     {
         //! Base type
-        typedef basic_custom_severity_mapping< CharT, level_t, AttributeValueT > base_type;
+        typedef basic_custom_mapping< CharT, level_t, AttributeValueT > base_type;
 
     public:
         //! String type

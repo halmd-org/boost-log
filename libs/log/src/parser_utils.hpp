@@ -83,11 +83,15 @@ struct char_constants< char >
     static const char_type* asynchronous_param_name() { return "Asynchronous"; }
     static const char_type* format_param_name() { return "Format"; }
     static const char_type* provider_id_param_name() { return "ProviderID"; }
+    static const char_type* log_name_param_name() { return "LogName"; }
+    static const char_type* source_name_param_name() { return "LogSource"; }
+    static const char_type* force_param_name() { return "ForceRegistration"; }
 
     static const char_type* text_file_destination() { return "TextFile"; }
     static const char_type* console_destination() { return "Console"; }
     static const char_type* syslog_destination() { return "Syslog"; }
-    static const char_type* nt6_event_log_destination() { return "NT6EventLog"; }
+    static const char_type* simple_nt6_event_log_destination() { return "SimpleNT6EventLog"; }
+    static const char_type* simple_event_log_destination() { return "SimpleEventLog"; }
     static const char_type* debugger_destination() { return "Debugger"; }
 
     static std::ostream& get_console_log_stream() { return std::clog; }
@@ -159,11 +163,15 @@ struct char_constants< wchar_t >
     static const char_type* asynchronous_param_name() { return L"Asynchronous"; }
     static const char_type* format_param_name() { return L"Format"; }
     static const char_type* provider_id_param_name() { return L"ProviderID"; }
+    static const char_type* log_name_param_name() { return L"LogName"; }
+    static const char_type* source_name_param_name() { return L"LogSource"; }
+    static const char_type* force_param_name() { return L"ForceRegistration"; }
 
     static const char_type* text_file_destination() { return L"TextFile"; }
     static const char_type* console_destination() { return L"Console"; }
     static const char_type* syslog_destination() { return L"Syslog"; }
-    static const char_type* nt6_event_log_destination() { return L"NT6EventLog"; }
+    static const char_type* simple_nt6_event_log_destination() { return L"SimpleNT6EventLog"; }
+    static const char_type* simple_event_log_destination() { return L"SimpleEventLog"; }
     static const char_type* debugger_destination() { return L"Debugger"; }
 
     static std::wostream& get_console_log_stream() { return std::wclog; }

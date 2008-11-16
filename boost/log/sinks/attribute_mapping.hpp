@@ -8,20 +8,22 @@
  * at http://www.boost.org/libs/log/doc/log.html.
  */
 /*!
- * \file   severity_mapping.hpp
+ * \file   attribute_mapping.hpp
  * \author Andrey Semashev
  * \date   07.11.2008
  * 
- * The header contains facilities that are used in different sinks to map severity levels
- * used throughout the application to levels used with the specific native logging API.
+ * The header contains facilities that are used in different sinks to map attribute values
+ * used throughout the application to values used with the specific native logging API.
+ * These tools are mostly needed to map application severity levels on native levels,
+ * required by OS-specific sink backends.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_SINKS_SEVERITY_MAPPING_HPP_INCLUDED_
-#define BOOST_LOG_SINKS_SEVERITY_MAPPING_HPP_INCLUDED_
+#ifndef BOOST_LOG_SINKS_ATTRIBUTE_MAPPING_HPP_INCLUDED_
+#define BOOST_LOG_SINKS_ATTRIBUTE_MAPPING_HPP_INCLUDED_
 
 #include <map>
 #include <string>
@@ -44,9 +46,9 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-//! Base class for level mapping function objects
+//! Base class for attribute mapping function objects
 template< typename CharT, typename MappedT >
-struct basic_severity_mapping :
+struct basic_mapping :
     public std::unary_function< basic_attribute_values_view< CharT >, MappedT >
 {
     //! Char type
@@ -55,23 +57,23 @@ struct basic_severity_mapping :
     typedef std::basic_string< char_type > string_type;
     //! Attribute values view type
     typedef basic_attribute_values_view< char_type > values_view_type;
-    //! Mapped severity level type
+    //! Mapped value type
     typedef MappedT mapped_type;
 };
 
 /*!
- * \brief Straightforward severity level mapping
+ * \brief Straightforward mapping
  * 
  * This type of mapping assumes that attribute with a particular name always
- * provides values that map directly onto the native levels. The mapping
- * simply returns the extracted attribute value converted to the native severity level.
+ * provides values that map directly onto the native values. The mapping
+ * simply returns the extracted attribute value converted to the native value.
  */
 template< typename CharT, typename MappedT, typename AttributeValueT = int >
-class basic_direct_severity_mapping :
-    public basic_severity_mapping< CharT, MappedT >
+class basic_direct_mapping :
+    public basic_mapping< CharT, MappedT >
 {
     //! Base type
-    typedef basic_severity_mapping< CharT, MappedT > base_type;
+    typedef basic_direct_mapping< CharT, MappedT > base_type;
 
 public:
     //! Attribute contained value type
@@ -82,7 +84,7 @@ public:
     typedef typename base_type::string_type string_type;
     //! Attribute values view type
     typedef typename base_type::values_view_type values_view_type;
-    //! Mapped severity level type
+    //! Mapped value type
     typedef typename base_type::mapped_type mapped_type;
 
 private:
@@ -111,19 +113,19 @@ private:
 private:
     //! Attribute value extractor
     attribute_value_extractor< char_type, attribute_value_type > m_Extractor;
-    //! Default native severity level
-    mapped_type m_DefaultLevel;
+    //! Default native value
+    mapped_type m_DefaultValue;
 
 public:
     /*!
      * Constructor
      * 
      * \param name Attribute name
-     * \param default_level The default native severity level that is returned if the attribute value is not found
+     * \param default_value The default native value that is returned if the attribute value is not found
      */
-    explicit basic_direct_severity_mapping(string_type const& name, mapped_type const& default_level) :
+    explicit basic_direct_mapping(string_type const& name, mapped_type const& default_value) :
         m_Extractor(name),
-        m_DefaultLevel(default_level)
+        m_DefaultValue(default_value)
     {
     }
 
@@ -135,7 +137,7 @@ public:
      */
     mapped_type operator() (values_view_type const& values) const
     {
-        mapped_type res = m_DefaultLevel;
+        mapped_type res = m_DefaultValue;
         receiver rcv(res);
         m_Extractor(values, rcv);
         return res;
@@ -143,9 +145,9 @@ public:
 };
 
 /*!
- * \brief Customizable severity level mapping
+ * \brief Customizable mapping
  * 
- * The class allows to setup a custom mapping between an attribute and native severity levels.
+ * The class allows to setup a custom mapping between an attribute and native values.
  * The mapping should be initialized similarly to the standard \c map container, by using
  * indexing operator and assignment.
  *
@@ -154,11 +156,11 @@ public:
  *       are not supported.
  */
 template< typename CharT, typename MappedT, typename AttributeValueT = int >
-class basic_custom_severity_mapping :
-    public basic_severity_mapping< CharT, MappedT >
+class basic_custom_mapping :
+    public basic_mapping< CharT, MappedT >
 {
     //! Base type
-    typedef basic_severity_mapping< CharT, MappedT > base_type;
+    typedef basic_mapping< CharT, MappedT > base_type;
 
 public:
     //! Attribute contained value type
@@ -169,7 +171,7 @@ public:
     typedef typename base_type::string_type string_type;
     //! Attribute values view type
     typedef typename base_type::values_view_type values_view_type;
-    //! Mapped severity level type
+    //! Mapped value type
     typedef typename base_type::mapped_type mapped_type;
 
 private:
@@ -226,8 +228,8 @@ private:
 private:
     //! Attribute value extractor
     attribute_value_extractor< char_type, attribute_value_type > m_Extractor;
-    //! Default native severity level
-    mapped_type m_DefaultLevel;
+    //! Default native value
+    mapped_type m_DefaultValue;
     //! Conversion mapping
     mapping_type m_Mapping;
 
@@ -236,24 +238,24 @@ public:
      * Constructor
      * 
      * \param name Attribute name
-     * \param default_level The default native severity level that is returned if the conversion cannot be performed
+     * \param default_value The default native value that is returned if the conversion cannot be performed
      */
-    explicit basic_custom_severity_mapping(string_type const& name, mapped_type const& default_level) :
+    explicit basic_custom_mapping(string_type const& name, mapped_type const& default_value) :
         m_Extractor(name),
-        m_DefaultLevel(default_level)
+        m_DefaultValue(default_value)
     {
     }
     /*!
      * Extraction operator. Extracts the attribute value and attempts to map it onto
-     * the native severity level.
+     * the native value.
      * 
      * \param values A set of attribute values attached to a logging record
-     * \return A mapped level, if mapping was successfull, or the default level if
+     * \return A mapped value, if mapping was successfull, or the default value if
      *         mapping did not succeed.
      */
     mapped_type operator() (values_view_type const& values) const
     {
-        mapped_type res = m_DefaultLevel;
+        mapped_type res = m_DefaultValue;
         receiver rcv(m_Mapping, res);
         m_Extractor(values, rcv);
         return res;
@@ -264,7 +266,7 @@ public:
      * \param key Attribute value to be mapped
      * \return An object of unspecified type that allows to insert a new mapping through assignment.
      *         The \a key argument becomes the key attribute value, and the assigned value becomes the
-     *         mapped syslog level.
+     *         mapped native value.
      */
 #ifndef BOOST_LOG_DOXYGEN_PASS
     reference_proxy operator[] (attribute_value_type const& key)
@@ -286,4 +288,4 @@ public:
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_SINKS_SEVERITY_MAPPING_HPP_INCLUDED_
+#endif // BOOST_LOG_SINKS_ATTRIBUTE_MAPPING_HPP_INCLUDED_

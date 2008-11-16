@@ -40,10 +40,10 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-namespace winapi {
+namespace etw {
 
     struct level_tag;
-    //! A tagged integal type that represents log record level for the syslog API
+    //! A tagged integral type that represents log record level for the Windows API
     typedef log::aux::tagged_integer< unsigned char, level_tag > level_t;
     /*!
      * The function constructs log record level from an integer
@@ -62,7 +62,7 @@ namespace winapi {
     BOOST_LOG_EXPORT extern const level_t info;                     //!< Equivalent to WINEVENT_LEVEL_INFO
     BOOST_LOG_EXPORT extern const level_t verbose;                  //!< Equivalent to WINEVENT_LEVEL_VERBOSE
 
-} // namespace winapi
+} // namespace etw
 
 } // namespace sinks
 
