@@ -71,7 +71,7 @@ namespace syslog {
          * 
          * \param name Attribute name
          */
-        explicit direct_severity_mapping(string_type const& name) :
+        explicit basic_direct_severity_mapping(string_type const& name) :
             base_type(name, info)
         {
         }
@@ -101,7 +101,7 @@ namespace syslog {
          * 
          * \param name Attribute name
          */
-        explicit custom_severity_mapping(string_type const& name) :
+        explicit basic_custom_severity_mapping(string_type const& name) :
             base_type(name, info)
         {
         }
