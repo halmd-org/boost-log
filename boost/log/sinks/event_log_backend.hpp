@@ -26,12 +26,11 @@
 #include <map>
 #include <vector>
 #include <string>
-#include <ostream>
+#include <iosfwd>
 #include <boost/filesystem/path.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/function/function3.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/attribute_mapping.hpp>
@@ -619,101 +618,66 @@ namespace event_log {
      *     thus the number and the order of the formatters must correspond to the message definition.
      */
     template< typename CharT >
-    class basic_event_composer
+    class BOOST_LOG_EXPORT basic_event_composer
     {
     public:
         //! Character type
         typedef CharT char_type;
         //! String type to be used as a message text holder
         typedef std::basic_string< char_type > string_type;
+        //! Output stream type
+        typedef std::basic_ostream< char_type > stream_type;
         //! Attribute values view type
         typedef basic_attribute_values_view< char_type > values_view_type;
 
         //! Event identifier mapper type
         typedef function1< event_id_t, values_view_type const& > event_id_mapper_type;
 
+        //! Type of an insertion composer (a formatter)
+        typedef function3<
+            void,
+            stream_type&,
+            values_view_type const&,
+            string_type const&
+        > formatter_type;
         //! Type of the composed insertions list
         typedef std::vector< string_type > insertion_list;
 
     private:
         //! \cond
+
+        //! The class that implements formatting of insertion strings
         class insertion_composer;
-        friend class insertion_composer;
-        class insertion_composer
-        {
-        public:
-            //! Function object result type
-            typedef void result_type;
-
-            //! Output stream type
-            typedef std::basic_ostream< char_type > stream_type;
-
-        private:
-            //! Type of an insertion composer (a formatter)
-            typedef function3<
-                void,
-                stream_type&,
-                values_view_type const&,
-                string_type const&
-            > formatter_type;
-            //! The list of insertion composers (in backward order)
-            typedef std::vector< formatter_type > formatters;
-
-        private:
-            //! The insertion string composers
-            formatters m_Formatters;
-
-        public:
-            //! Default constructor
-            insertion_composer() {}
-            //! Composition operator
-            void operator() (
-                values_view_type const& attributes,
-                string_type const& message,
-                insertion_list& insertions) const
-            {
-                std::size_t size = m_Formatters.size();
-                insertions.resize(size);
-                for (std::size_t i = 0; i < size; ++i)
-                {
-                    log::aux::basic_ostringstreambuf< char_type > buf(insertions[i]);
-                    stream_type strm(&buf);
-                    m_Formatters[i](strm, attributes, message);
-                    strm.flush();
-                }
-            }
-            //! Adds a new formatter to the list
-            template< typename FormatterT >
-            void add_formatter(FormatterT const& fmt)
-            {
-                m_Formatters.push_back(formatter_type(fmt));
-            }
-        };
 
         //! Type of the events map
         typedef std::map< event_id_t, insertion_composer > event_map;
 
+        //! A smart reference that puts formatters into the composer
         class event_map_reference;
         friend class event_map_reference;
         class event_map_reference
         {
+        private:
+            //! Event identifier
             event_id_t m_ID;
-            event_map& m_EventMap;
+            //! A reference to the object that created the reference
+            basic_event_composer< char_type >& m_Owner;
+            //! A hint for the owner to optimize insertion
             insertion_composer* m_Composer;
 
         public:
-            explicit event_map_reference(event_id_t id, event_map& evt_map) :
+            //! Initializing constructor
+            explicit event_map_reference(event_id_t id, basic_event_composer< char_type >& owner) :
                 m_ID(id),
-                m_EventMap(evt_map),
+                m_Owner(owner),
                 m_Composer(0)
             {
             }
+            //! The operator puts the formatter into the composer
             template< typename FormatterT >
             event_map_reference& operator% (FormatterT const& fmt)
             {
-                if (!m_Composer)
-                    m_Composer = &m_EventMap[m_ID];
-                m_Composer->add_formatter(fmt);
+                m_Composer = m_Owner.add_formatter(m_ID, m_Composer, formatter_type(fmt));
             }
         };
 
@@ -727,48 +691,29 @@ namespace event_log {
 
     public:
         //! Default constructor
-        explicit basic_event_composer(event_id_mapper_type const& id_mapper) : m_EventIDMapper(id_mapper) {}
+        explicit basic_event_composer(event_id_mapper_type const& id_mapper);
         //! Copy constructor
-        basic_event_composer(basic_event_composer const& that) :
-            m_EventIDMapper(that.m_EventIDMapper),
-            m_EventMap(that.m_EventMap)
-        {
-        }
+        basic_event_composer(basic_event_composer const& that);
         //! Destructor
-        ~basic_event_composer() {}
+        ~basic_event_composer();
 
         //! Assignment
-        basic_event_composer& operator= (basic_event_composer that)
-        {
-            swap(that);
-            return *this;
-        }
+        basic_event_composer& operator= (basic_event_composer that);
         //! Swapping
-        void swap(basic_event_composer& that)
-        {
-            m_EventIDMapper.swap(that.m_EventIDMapper);
-            m_EventMap.swap(that.m_EventMap);
-        }
+        void swap(basic_event_composer& that);
         //! Creates a new entry for a message
-        event_map_reference operator[] (event_id_t id)
-        {
-            return event_map_reference(id, m_EventMap);
-        }
+        event_map_reference operator[] (event_id_t id);
         //! Creates a new entry for a message
-        event_map_reference operator[] (event_id_t::integer_type id)
-        {
-            return event_map_reference(make_event_id(id), m_EventMap);
-        }
-
+        event_map_reference operator[] (event_id_t::integer_type id);
         //! Event composition operator
-        event_id_t operator() (values_view_type const& attributes, string_type const& message, insertion_list& inserters) const
-        {
-            event_id_t id = m_EventIDMapper(attributes);
-            typename event_map::const_iterator it = m_EventMap.find(id);
-            if (it != m_EventMap.end())
-                it->second(attributes, message, inserters);
-            return id;
-        }
+        event_id_t operator() (
+            values_view_type const& attributes,
+            string_type const& message,
+            insertion_list& inserters) const;
+
+    private:
+        //! Adds a formatter to the insertion composers list
+        insertion_composer* add_formatter(event_id_t id, insertion_composer* composer, formatter_type const& fmt);
     };
 
 #ifdef BOOST_LOG_USE_CHAR

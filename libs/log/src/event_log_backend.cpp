@@ -32,12 +32,14 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <ostream>
 #include <stdexcept>
 #include <boost/scoped_array.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
 #include <boost/log/sinks/event_log_constants.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
+#include <boost/log/detail/attachable_sstream_buf.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
@@ -325,6 +327,133 @@ void basic_simple_event_log_backend< CharT >::do_write_message(values_view_type 
 //////////////////////////////////////////////////////////////////////////
 //  Customizable event log backend implementation
 //////////////////////////////////////////////////////////////////////////
+namespace event_log {
+
+    template< typename CharT >
+    class basic_event_composer< CharT >::insertion_composer
+    {
+    public:
+        //! Function object result type
+        typedef void result_type;
+
+    private:
+        //! The list of insertion composers (in backward order)
+        typedef std::vector< formatter_type > formatters;
+
+    private:
+        //! The insertion string composers
+        formatters m_Formatters;
+
+    public:
+        //! Default constructor
+        insertion_composer() {}
+        //! Composition operator
+        void operator() (
+            values_view_type const& attributes,
+            string_type const& message,
+            insertion_list& insertions) const
+        {
+            std::size_t size = m_Formatters.size();
+            insertions.resize(size);
+            for (std::size_t i = 0; i < size; ++i)
+            {
+                log::aux::basic_ostringstreambuf< char_type > buf(insertions[i]);
+                stream_type strm(&buf);
+                m_Formatters[i](strm, attributes, message);
+                strm.flush();
+            }
+        }
+        //! Adds a new formatter to the list
+        void add_formatter(formatter_type const& fmt)
+        {
+            m_Formatters.push_back(formatter_type(fmt));
+        }
+    };
+
+    //! Default constructor
+    template< typename CharT >
+    basic_event_composer< CharT >::basic_event_composer(event_id_mapper_type const& id_mapper) :
+        m_EventIDMapper(id_mapper)
+    {
+    }
+    //! Copy constructor
+    template< typename CharT >
+    basic_event_composer< CharT >::basic_event_composer(basic_event_composer const& that) :
+        m_EventIDMapper(that.m_EventIDMapper),
+        m_EventMap(that.m_EventMap)
+    {
+    }
+    //! Destructor
+    template< typename CharT >
+    basic_event_composer< CharT >::~basic_event_composer()
+    {
+    }
+
+    //! Assignment
+    template< typename CharT >
+    basic_event_composer< CharT >& basic_event_composer< CharT >::operator= (basic_event_composer that)
+    {
+        swap(that);
+        return *this;
+    }
+    //! Swapping
+    template< typename CharT >
+    void basic_event_composer< CharT >::swap(basic_event_composer& that)
+    {
+        m_EventIDMapper.swap(that.m_EventIDMapper);
+        m_EventMap.swap(that.m_EventMap);
+    }
+    //! Creates a new entry for a message
+    template< typename CharT >
+    typename basic_event_composer< CharT >::event_map_reference
+    basic_event_composer< CharT >::operator[] (event_id_t id)
+    {
+        return event_map_reference(id, *this);
+    }
+    //! Creates a new entry for a message
+    template< typename CharT >
+    typename basic_event_composer< CharT >::event_map_reference
+    basic_event_composer< CharT >::operator[] (event_id_t::integer_type id)
+    {
+        return event_map_reference(make_event_id(id), *this);
+    }
+
+    //! Event composition operator
+    template< typename CharT >
+    event_id_t basic_event_composer< CharT >::operator() (
+        values_view_type const& attributes,
+        string_type const& message,
+        insertion_list& inserters) const
+    {
+        event_id_t id = m_EventIDMapper(attributes);
+        typename event_map::const_iterator it = m_EventMap.find(id);
+        if (it != m_EventMap.end())
+            it->second(attributes, message, inserters);
+        return id;
+    }
+
+    //! Adds a formatter to the insertion composers list
+    template< typename CharT >
+    typename basic_event_composer< CharT >::insertion_composer*
+    basic_event_composer< CharT >::add_formatter(
+        event_id_t id, insertion_composer* composer, formatter_type const& fmt)
+    {
+        if (!composer)
+            composer = &m_EventMap[id];
+        composer->add_formatter(fmt);
+        return composer;
+    }
+
+#ifdef BOOST_LOG_USE_CHAR
+    template class BOOST_LOG_EXPORT basic_event_composer< char >;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
+    template class BOOST_LOG_EXPORT basic_event_composer< wchar_t >;
+#endif
+
+} // namespace event_log
+
+
 //! Backend implementation
 template< typename CharT >
 struct basic_event_log_backend< CharT >::implementation
@@ -437,7 +566,6 @@ typename basic_event_log_backend< CharT >::implementation* basic_event_log_backe
 template< typename CharT >
 void basic_event_log_backend< CharT >::write_message(values_view_type const& values, string_type const& message)
 {
-    DWORD event_id = 0;
     if (!m_pImpl->m_EventComposer.empty())
     {
         log::aux::cleanup_guard< insertion_list > _(m_pImpl->m_Insertions);
