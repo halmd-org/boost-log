@@ -74,7 +74,7 @@ namespace etw {
      * simply returns the extracted attribute value converted to the native severity level.
      */
     template< typename CharT, typename AttributeValueT = int >
-    class direct_severity_mapping :
+    class basic_direct_severity_mapping :
         public basic_direct_mapping< CharT, level_t, AttributeValueT >
     {
         //! Base type
@@ -90,7 +90,7 @@ namespace etw {
          * 
          * \param name Attribute name
          */
-        explicit direct_severity_mapping(string_type const& name) :
+        explicit basic_direct_severity_mapping(string_type const& name) :
             base_type(name, log_always)
         {
         }
@@ -104,7 +104,7 @@ namespace etw {
      * indexing operator and assignment.
      */
     template< typename CharT, typename AttributeValueT = int >
-    class custom_severity_mapping :
+    class basic_custom_severity_mapping :
         public basic_custom_mapping< CharT, level_t, AttributeValueT >
     {
         //! Base type
@@ -120,11 +120,131 @@ namespace etw {
          * 
          * \param name Attribute name
          */
-        explicit custom_severity_mapping(string_type const& name) :
+        explicit basic_custom_severity_mapping(string_type const& name) :
             base_type(name, log_always)
         {
         }
     };
+
+#ifdef BOOST_LOG_USE_CHAR
+
+    /*!
+     * \brief Straightforward severity level mapping
+     * 
+     * This is a convenience template typedef over \c basic_direct_severity_mapping
+     * for narrow-character logging.
+     */
+    template< typename AttributeValueT = int >
+    class direct_severity_mapping :
+        public basic_direct_severity_mapping< char, AttributeValueT >
+    {
+        //! Base type
+        typedef basic_direct_severity_mapping< char, AttributeValueT > base_type;
+
+    public:
+        //! String type
+        typedef typename base_type::string_type string_type;
+
+    public:
+        /*!
+         * Constructor
+         * 
+         * \param name Attribute name
+         */
+        explicit direct_severity_mapping(string_type const& name) : base_type(name)
+        {
+        }
+    };
+
+    /*!
+     * \brief Customizable severity level mapping
+     * 
+     * This is a convenience template typedef over \c basic_custom_severity_mapping
+     * for narrow-character logging.
+     */
+    template< typename AttributeValueT = int >
+    class custom_severity_mapping :
+        public basic_custom_severity_mapping< char, AttributeValueT >
+    {
+        //! Base type
+        typedef basic_custom_severity_mapping< char, AttributeValueT > base_type;
+
+    public:
+        //! String type
+        typedef typename base_type::string_type string_type;
+
+    public:
+        /*!
+         * Constructor
+         * 
+         * \param name Attribute name
+         */
+        explicit custom_severity_mapping(string_type const& name) : base_type(name)
+        {
+        }
+    };
+
+#endif // BOOST_LOG_USE_CHAR
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+
+    /*!
+     * \brief Straightforward severity level mapping
+     * 
+     * This is a convenience template typedef over \c basic_direct_severity_mapping
+     * for wide-character logging.
+     */
+    template< typename AttributeValueT = int >
+    class wdirect_severity_mapping :
+        public basic_direct_severity_mapping< wchar_t, AttributeValueT >
+    {
+        //! Base type
+        typedef basic_direct_severity_mapping< wchar_t, AttributeValueT > base_type;
+
+    public:
+        //! String type
+        typedef typename base_type::string_type string_type;
+
+    public:
+        /*!
+         * Constructor
+         * 
+         * \param name Attribute name
+         */
+        explicit wdirect_severity_mapping(string_type const& name) : base_type(name)
+        {
+        }
+    };
+
+    /*!
+     * \brief Customizable severity level mapping
+     * 
+     * This is a convenience template typedef over \c basic_custom_severity_mapping
+     * for wide-character logging.
+     */
+    template< typename AttributeValueT = int >
+    class wcustom_severity_mapping :
+        public basic_custom_severity_mapping< wchar_t, AttributeValueT >
+    {
+        //! Base type
+        typedef basic_custom_severity_mapping< wchar_t, AttributeValueT > base_type;
+
+    public:
+        //! String type
+        typedef typename base_type::string_type string_type;
+
+    public:
+        /*!
+         * Constructor
+         * 
+         * \param name Attribute name
+         */
+        explicit wcustom_severity_mapping(string_type const& name) : base_type(name)
+        {
+        }
+    };
+
+#endif // BOOST_LOG_USE_WCHAR_T
 
 } // namespace etw
 
@@ -201,36 +321,12 @@ public:
      * Constructor. Registers event provider.
      *
      * \param provider_id GUID that is specific for the event provider. Typically, it will be specific for the application.
-     */
-    basic_simple_nt6_event_log_backend();
-    /*!
-     * Constructor. Registers event log source with the specified parameters.
-     * The following named parameters are supported:
-     *
-     * \li \c log_name - Specifies the log in which the source should be registered.
-     *     The result of \c get_default_log_name is used, if the parameter is not specified.
-     * \li \c log_source - Specifies the source name. The result of \c get_default_source_name
-     *     is used, if the parameter is not specified.
-     * \li \c provider_id - Specifies the GUID that identifies the event provider. The result
-     *     of \c get_default_provider_id is used, if the parameter is not specified.
-     * \li \c force - If \c true and Windows registry already contains the log source
-     *     registration, the registry parameters are overwritten. If \c false, the registry
-     *     is only modified if the log source was not previously registered. Default value: \c false.
+     *        If not specified, the result of the \c get_default_provider_id function is used.
      *
      * \note Since the default provider identifier is always constant, even across different
      *       applications, it is strongly advised to always specify the \c provider_id parameter.
-     *
-     * \param args A set of named parameters.
      */
-    template< typename ArgsT >
-    explicit basic_simple_nt6_event_log_backend(ArgsT const& args) : m_pImpl(construct(
-        args[keywords::log_name || &basic_simple_nt6_event_log_backend::get_default_log_name],
-        args[keywords::log_source || &basic_simple_nt6_event_log_backend::get_default_source_name],
-        args[keywords::provider_id || &basic_simple_nt6_event_log_backend::get_default_provider_id],
-        args[keywords::force | false]))
-    {
-    }
-
+    basic_simple_nt6_event_log_backend(GUID const& provider_id = get_default_provider_id());
     /*!
      * Destructor. Unregisters event provider.
      */
@@ -247,14 +343,6 @@ public:
     void set_severity_mapper(severity_mapper_type const& mapper);
 
     /*!
-     * \returns Default log name: Application
-     */
-    static string_type get_default_log_name();
-    /*!
-     * \returns Default log source name that is based on the application executable file name and the sink name
-     */
-    static string_type get_default_source_name();
-    /*!
      * \returns Default provider GUID.
      *
      * \note The returned GUID is always constant, therefore it is recommended to always generate
@@ -265,10 +353,6 @@ public:
 private:
     //! The method puts the formatted message to the event log
     void do_write_message(values_view_type const& values, target_string_type const& formatted_message);
-
-    //! The method construct the backend implementation
-    static shared_ptr< implementation > construct(
-        string_type const& log_name, string_type const& source_name, GUID const& provider_id, bool force);
 };
 
 #ifdef BOOST_LOG_USE_CHAR

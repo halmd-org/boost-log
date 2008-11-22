@@ -94,6 +94,31 @@ private:
 };
 
 
+//! The function converts one string to the character type of another
+inline void code_convert(std::string const& str1, std::string& str2)
+{
+    str2 = str1;
+}
+//! The function converts one string to the character type of another
+inline void code_convert(std::wstring const& str1, std::string& str2)
+{
+    converting_ostringstreambuf< wchar_t > buf(str2);
+    buf.sputn(str1.data(), static_cast< std::streamsize >(str1.size()));
+    buf.pubsync();
+}
+//! The function converts one string to the character type of another
+inline void code_convert(std::wstring const& str1, std::wstring& str2)
+{
+    str2 = str1;
+}
+//! The function converts one string to the character type of another
+inline void code_convert(std::string const& str1, std::wstring& str2)
+{
+    converting_ostringstreambuf< char > buf(str2);
+    buf.sputn(str1.data(), static_cast< std::streamsize >(str1.size()));
+    buf.pubsync();
+}
+
 //! The function converts the passed string to the narrow-character encoding
 inline std::string const& to_narrow(std::string const& str)
 {
@@ -104,9 +129,7 @@ inline std::string const& to_narrow(std::string const& str)
 inline std::string to_narrow(std::wstring const& str)
 {
     std::string res;
-    converting_ostringstreambuf< wchar_t > buf(res);
-    buf.sputn(str.data(), static_cast< std::streamsize >(str.size()));
-    buf.pubsync();
+    aux::code_convert(str, res);
     return res;
 }
 
@@ -120,9 +143,7 @@ inline std::wstring const& to_wide(std::wstring const& str)
 inline std::wstring to_wide(std::string const& str)
 {
     std::wstring res;
-    converting_ostringstreambuf< char > buf(res);
-    buf.sputn(str.data(), static_cast< std::streamsize >(str.size()));
-    buf.pubsync();
+    aux::code_convert(str, res);
     return res;
 }
 

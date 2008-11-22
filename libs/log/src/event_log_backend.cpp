@@ -33,9 +33,11 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <boost/scoped_array.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
 #include <boost/log/sinks/event_log_constants.hpp>
+#include <boost/log/detail/cleanup_scope_guard.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
@@ -91,6 +93,11 @@ namespace {
     {
         name += " simple event source";
     }
+    //! The function completes default source name for the sink backend
+    inline void complete_default_event_log_source_name(std::string& name)
+    {
+        name += " event source";
+    }
 #endif // BOOST_LOG_USE_CHAR
 
 #ifdef BOOST_LOG_USE_WCHAR_T
@@ -122,6 +129,11 @@ namespace {
     inline void complete_default_simple_event_log_source_name(std::wstring& name)
     {
         name += L" simple event source";
+    }
+    //! The function completes default source name for the sink backend
+    inline void complete_default_event_log_source_name(std::wstring& name)
+    {
+        name += L" event source";
     }
 #endif // BOOST_LOG_USE_WCHAR_T
 
@@ -192,7 +204,9 @@ namespace {
 
 } // namespace
 
-
+//////////////////////////////////////////////////////////////////////////
+//  Simple event log backend implementation
+//////////////////////////////////////////////////////////////////////////
 //! Sink backend implementation
 template< typename CharT >
 struct basic_simple_event_log_backend< CharT >::implementation
@@ -308,11 +322,205 @@ void basic_simple_event_log_backend< CharT >::do_write_message(values_view_type 
         NULL);                      // No data.
 }
 
+//////////////////////////////////////////////////////////////////////////
+//  Customizable event log backend implementation
+//////////////////////////////////////////////////////////////////////////
+//! Backend implementation
+template< typename CharT >
+struct basic_event_log_backend< CharT >::implementation
+{
+    //! A handle for the registered event provider
+    HANDLE m_SourceHandle;
+    //! A functor that composes an event
+    event_composer_type m_EventComposer;
+    //! An array of formatted insertions
+    insertion_list m_Insertions;
+
+    //! An event category mapper
+    event_category_mapper_type m_CategoryMapper;
+    //! A level mapping functor
+    event_type_mapper_type m_LevelMapper;
+
+    implementation() : m_SourceHandle(0)
+    {
+    }
+};
+
+//! Destructor
+template< typename CharT >
+basic_event_log_backend< CharT >::~basic_event_log_backend()
+{
+    DeregisterEventSource(m_pImpl->m_SourceHandle);
+    delete m_pImpl;
+}
+
+//! Constructs backend implementation
+template< typename CharT >
+typename basic_event_log_backend< CharT >::implementation* basic_event_log_backend< CharT >::construct(
+    filesystem::path const& message_file_name,
+    string_type const& log_name,
+    string_type const& source_name,
+    bool force)
+{
+    string_type fname;
+    log::aux::code_convert(message_file_name.string(), fname);
+    return construct_impl(fname, log_name, source_name, force);
+}
+#ifndef BOOST_FILESYSTEM_NARROW_ONLY
+//! Constructs backend implementation
+template< typename CharT >
+typename basic_event_log_backend< CharT >::implementation* basic_event_log_backend< CharT >::construct(
+    filesystem::wpath const& message_file_name,
+    string_type const& log_name,
+    string_type const& source_name,
+    bool force)
+{
+    string_type fname;
+    log::aux::code_convert(message_file_name.string(), fname);
+    return construct_impl(fname, log_name, source_name, force);
+}
+#endif // BOOST_FILESYSTEM_NARROW_ONLY
+//! Constructs backend implementation
+template< typename CharT >
+typename basic_event_log_backend< CharT >::implementation* basic_event_log_backend< CharT >::construct(
+    std::string const& message_file_name,
+    string_type const& log_name,
+    string_type const& source_name,
+    bool force)
+{
+    string_type fname;
+    log::aux::code_convert(message_file_name, fname);
+    return construct_impl(fname, log_name, source_name, force);
+}
+//! Constructs backend implementation
+template< typename CharT >
+typename basic_event_log_backend< CharT >::implementation* basic_event_log_backend< CharT >::construct(
+    std::wstring const& message_file_name,
+    string_type const& log_name,
+    string_type const& source_name,
+    bool force)
+{
+    string_type fname;
+    log::aux::code_convert(message_file_name, fname);
+    return construct_impl(fname, log_name, source_name, force);
+}
+
+//! Constructs backend implementation
+template< typename CharT >
+typename basic_event_log_backend< CharT >::implementation* basic_event_log_backend< CharT >::construct_impl(
+    string_type const& message_file_name,
+    string_type const& log_name,
+    string_type const& source_name,
+    bool force)
+{
+    aux::registry_params< char_type > reg_params;
+    reg_params.event_message_file = message_file_name;
+    reg_params.types_supported = DWORD(
+        EVENTLOG_SUCCESS |
+        EVENTLOG_INFORMATION_TYPE |
+        EVENTLOG_WARNING_TYPE |
+        EVENTLOG_ERROR_TYPE);
+    aux::init_event_log_registry(log_name, source_name, force, reg_params);
+
+    std::auto_ptr< implementation > p(new implementation());
+
+    HANDLE hSource = register_event_source(NULL, source_name.c_str());
+    if (!hSource)
+        boost::throw_exception(std::runtime_error("Could not register event source"));
+
+    p->m_SourceHandle = hSource;
+
+    return p.release();
+}
+
+//! The method puts the formatted message to the event log
+template< typename CharT >
+void basic_event_log_backend< CharT >::write_message(values_view_type const& values, string_type const& message)
+{
+    DWORD event_id = 0;
+    if (!m_pImpl->m_EventComposer.empty())
+    {
+        log::aux::cleanup_guard< insertion_list > _(m_pImpl->m_Insertions);
+
+        // Get event ID and construct insertions
+        DWORD event_id = m_pImpl->m_EventComposer(values, message, m_pImpl->m_Insertions).value;
+        WORD string_count = static_cast< WORD >(m_pImpl->m_Insertions.size());
+        scoped_array< const char_type* > strings(new const char_type*[string_count]);
+        for (WORD i = 0; i < string_count; ++i)
+            strings[i] = m_pImpl->m_Insertions[i].c_str();
+
+        // Get event type
+        WORD event_type = EVENTLOG_INFORMATION_TYPE;
+        if (!m_pImpl->m_LevelMapper.empty())
+            event_type = m_pImpl->m_LevelMapper(values).value;
+
+        WORD event_category = 0;
+        if (!m_pImpl->m_CategoryMapper.empty())
+            event_category = m_pImpl->m_CategoryMapper(values).value;
+
+        report_event(
+            m_pImpl->m_SourceHandle,       // Event log handle. 
+            event_type,                    // Event type. 
+            event_category,                // Event category.  
+            event_id,                      // Event identifier. 
+            NULL,                          // No user security identifier. 
+            string_count,                  // Number of substitution strings. 
+            0,                             // No data. 
+            strings.get(),                 // Pointer to strings. 
+            NULL);                         // No data.
+    }
+}
+
+//! Returns default log name
+template< typename CharT >
+typename basic_event_log_backend< CharT >::string_type
+basic_event_log_backend< CharT >::get_default_log_name()
+{
+    return aux::registry_traits< char_type >::make_default_log_name();
+}
+
+//! Returns default source name
+template< typename CharT >
+typename basic_event_log_backend< CharT >::string_type
+basic_event_log_backend< CharT >::get_default_source_name()
+{
+    string_type source_name = aux::registry_traits< char_type >::make_default_source_name();
+    complete_default_event_log_source_name(source_name);
+    return source_name;
+}
+
+//! The method installs the function object that maps application severity levels to WinAPI event types
+template< typename CharT >
+void basic_event_log_backend< CharT >::set_event_type_mapper(event_type_mapper_type const& mapper)
+{
+    m_pImpl->m_LevelMapper = mapper;
+}
+
+//! The method installs the function object that extracts event category from attribute values
+template< typename CharT >
+void basic_event_log_backend< CharT >::set_event_category_mapper(event_category_mapper_type const& mapper)
+{
+    m_pImpl->m_CategoryMapper = mapper;
+}
+
+/*!
+ * The method installs the function object that extracts event identifier from the attributes and creates
+ * insertion strings that will replace placeholders in the event message.
+ */
+template< typename CharT >
+void basic_event_log_backend< CharT >::set_event_composer(event_composer_type const& composer)
+{
+    m_pImpl->m_EventComposer = composer;
+}
+
+
 #ifdef BOOST_LOG_USE_CHAR
 template class BOOST_LOG_EXPORT basic_simple_event_log_backend< char >;
+template class BOOST_LOG_EXPORT basic_event_log_backend< char >;
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
 template class BOOST_LOG_EXPORT basic_simple_event_log_backend< wchar_t >;
+template class BOOST_LOG_EXPORT basic_event_log_backend< wchar_t >;
 #endif
 
 } // namespace sinks

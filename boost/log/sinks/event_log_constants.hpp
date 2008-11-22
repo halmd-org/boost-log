@@ -42,6 +42,30 @@ namespace sinks {
 
 namespace event_log {
 
+    struct event_id_tag;
+    //! A tagged integal type that represents event identifier for the Windows API
+    typedef log::aux::tagged_integer< unsigned int, event_id_tag > event_id_t;
+    /*!
+     * The function constructs event identifier from an integer
+     */
+    inline event_id_t make_event_id(unsigned int id)
+    {
+        event_id_t iden = { id };
+        return iden;
+    }
+
+    struct event_category_tag;
+    //! A tagged integal type that represents event category for the Windows API
+    typedef log::aux::tagged_integer< unsigned short, event_category_tag > event_category_t;
+    /*!
+     * The function constructs event category from an integer
+     */
+    inline event_category_t make_event_category(unsigned short cat)
+    {
+        event_category_t category = { cat };
+        return category;
+    }
+
     struct event_type_tag;
     //! A tagged integal type that represents log record level for the Windows API
     typedef log::aux::tagged_integer< unsigned short, event_type_tag > event_type_t;

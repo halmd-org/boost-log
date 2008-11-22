@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
             );
 
         // We'll have to map our custom levels to the event log event types
-        sinks::event_log::custom_event_type_mapping< char, severity_levels > mapping("Severity");
+        sinks::event_log::custom_event_type_mapping< severity_levels > mapping("Severity");
         mapping[normal] = sinks::event_log::info;
         mapping[warning] = sinks::event_log::warning;
         mapping[error] = sinks::event_log::error;

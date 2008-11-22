@@ -55,7 +55,7 @@ namespace syslog {
      * simply returns the extracted attribute value converted to the Syslog severity level.
      */
     template< typename CharT, typename AttributeValueT = int >
-    class direct_severity_mapping :
+    class basic_direct_severity_mapping :
         public basic_direct_mapping< CharT, level_t, AttributeValueT >
     {
         //! Base type
@@ -85,7 +85,7 @@ namespace syslog {
      * indexing operator and assignment.
      */
     template< typename CharT, typename AttributeValueT = int >
-    class custom_severity_mapping :
+    class basic_custom_severity_mapping :
         public basic_custom_mapping< CharT, level_t, AttributeValueT >
     {
         //! Base type
@@ -106,6 +106,126 @@ namespace syslog {
         {
         }
     };
+
+#ifdef BOOST_LOG_USE_CHAR
+
+    /*!
+     * \brief Straightforward severity level mapping
+     * 
+     * This is a convenience template typedef over \c basic_direct_severity_mapping
+     * for narrow-character logging.
+     */
+    template< typename AttributeValueT = int >
+    class direct_severity_mapping :
+        public basic_direct_severity_mapping< char, AttributeValueT >
+    {
+        //! Base type
+        typedef basic_direct_severity_mapping< char, AttributeValueT > base_type;
+
+    public:
+        //! String type
+        typedef typename base_type::string_type string_type;
+
+    public:
+        /*!
+         * Constructor
+         * 
+         * \param name Attribute name
+         */
+        explicit direct_severity_mapping(string_type const& name) : base_type(name)
+        {
+        }
+    };
+
+    /*!
+     * \brief Customizable severity level mapping
+     * 
+     * This is a convenience template typedef over \c basic_custom_severity_mapping
+     * for narrow-character logging.
+     */
+    template< typename AttributeValueT = int >
+    class custom_severity_mapping :
+        public basic_custom_severity_mapping< char, AttributeValueT >
+    {
+        //! Base type
+        typedef basic_custom_severity_mapping< char, AttributeValueT > base_type;
+
+    public:
+        //! String type
+        typedef typename base_type::string_type string_type;
+
+    public:
+        /*!
+         * Constructor
+         * 
+         * \param name Attribute name
+         */
+        explicit custom_severity_mapping(string_type const& name) : base_type(name)
+        {
+        }
+    };
+
+#endif // BOOST_LOG_USE_CHAR
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+
+    /*!
+     * \brief Straightforward severity level mapping
+     * 
+     * This is a convenience template typedef over \c basic_direct_severity_mapping
+     * for wide-character logging.
+     */
+    template< typename AttributeValueT = int >
+    class wdirect_severity_mapping :
+        public basic_direct_severity_mapping< wchar_t, AttributeValueT >
+    {
+        //! Base type
+        typedef basic_direct_severity_mapping< wchar_t, AttributeValueT > base_type;
+
+    public:
+        //! String type
+        typedef typename base_type::string_type string_type;
+
+    public:
+        /*!
+         * Constructor
+         * 
+         * \param name Attribute name
+         */
+        explicit wdirect_severity_mapping(string_type const& name) : base_type(name)
+        {
+        }
+    };
+
+    /*!
+     * \brief Customizable severity level mapping
+     * 
+     * This is a convenience template typedef over \c basic_custom_severity_mapping
+     * for wide-character logging.
+     */
+    template< typename AttributeValueT = int >
+    class wcustom_severity_mapping :
+        public basic_custom_severity_mapping< wchar_t, AttributeValueT >
+    {
+        //! Base type
+        typedef basic_custom_severity_mapping< wchar_t, AttributeValueT > base_type;
+
+    public:
+        //! String type
+        typedef typename base_type::string_type string_type;
+
+    public:
+        /*!
+         * Constructor
+         * 
+         * \param name Attribute name
+         */
+        explicit wcustom_severity_mapping(string_type const& name) : base_type(name)
+        {
+        }
+    };
+
+#endif // BOOST_LOG_USE_WCHAR_T
 
 } // namespace syslog
 

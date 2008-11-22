@@ -16,9 +16,6 @@
 #define BOOST_LOG_EVENT_LOG_REGISTRY_HPP_INCLUDED_
 
 #include <windows.h>
-#if defined(BOOST_LOG_USE_WINNT6_API)
-#include <objbase.h>
-#endif
 #include <string>
 #include <sstream>
 #include <stdexcept>
@@ -29,10 +26,6 @@
 #include <boost/log/detail/code_conversion.hpp>
 
 #ifdef _MSC_VER
-#pragma comment(lib, "advapi32.lib")
-#if defined(BOOST_LOG_USE_WINNT6_API)
-#pragma comment(lib, "ole32.lib")
-#endif
 #endif
 
 namespace boost {
@@ -125,19 +118,6 @@ namespace aux {
         static const char* get_category_message_file_param_name() { return "CategoryMessageFile"; }
         static const char* get_category_count_param_name() { return "CategoryCount"; }
         static const char* get_types_supported_param_name() { return "TypesSupported"; }
-
-#if defined(BOOST_LOG_USE_WINNT6_API)
-        static const char* get_provider_guid_param_name() { return "ProviderGuid"; }
-
-        static std::string string_from_guid(GUID const& guid)
-        {
-            wchar_t buf[39];
-            int size = StringFromGUID2(const_cast< GUID& >(guid), buf, sizeof(buf) / sizeof(*buf));
-            if (!size)
-                boost::throw_exception(std::logic_error("Could not convert GUID into string"));
-            return log::aux::to_narrow(std::wstring(buf, buf + (size / sizeof(wchar_t) - 1)));
-        }
-#endif // defined(BOOST_LOG_USE_WINNT6_API)
     };
 #endif // BOOST_LOG_USE_CHAR
 
@@ -220,18 +200,6 @@ namespace aux {
         static const wchar_t* get_category_count_param_name() { return L"CategoryCount"; }
         static const wchar_t* get_types_supported_param_name() { return L"TypesSupported"; }
 
-#if defined(BOOST_LOG_USE_WINNT6_API)
-        static const wchar_t* get_provider_guid_param_name() { return L"ProviderGuid"; }
-
-        static std::wstring string_from_guid(GUID const& guid)
-        {
-            wchar_t buf[39];
-            int size = StringFromGUID2(const_cast< GUID& >(guid), buf, sizeof(buf) / sizeof(*buf));
-            if (!size)
-                boost::throw_exception(std::logic_error("Could not convert GUID into string"));
-            return std::wstring(buf, buf + (size / sizeof(wchar_t) - 1));
-        }
-#endif // defined(BOOST_LOG_USE_WINNT6_API)
     };
 #endif // BOOST_LOG_USE_WCHAR_T
 
@@ -245,9 +213,6 @@ namespace aux {
         optional< string_type > category_message_file;
         optional< DWORD > category_count;
         optional< DWORD > types_supported;
-#if defined(BOOST_LOG_USE_WINNT6_API)
-        optional< GUID > provider_guid;
-#endif
     };
 
     //! A simple guard that closes the registry key on destruction
@@ -302,7 +267,7 @@ namespace aux {
                     hkey,
                     registry::get_event_message_file_param_name(),
                     0,
-                    REG_SZ,
+                    REG_EXPAND_SZ,
                     reinterpret_cast< LPBYTE >(const_cast< CharT* >(module_name.c_str())),
                     static_cast< DWORD >((module_name.size() + 1) * sizeof(CharT)));
                 if (res != ERROR_SUCCESS)
@@ -365,26 +330,6 @@ namespace aux {
                         + log::aux::to_narrow(string_type(registry::get_types_supported_param_name()))));
                 }
             }
-
-#if defined(BOOST_LOG_USE_WINNT6_API)
-            if (!!params.provider_guid)
-            {
-                // Set the event provider GUID
-                string_type guid = registry::string_from_guid(params.provider_guid.get());
-                res = registry::set_value(
-                    hkey,
-                    registry::get_provider_guid_param_name(),
-                    0,
-                    REG_EXPAND_SZ,
-                    reinterpret_cast< LPBYTE >(const_cast< CharT* >(guid.c_str())),
-                    static_cast< DWORD >((guid.size() + 1) * sizeof(CharT)));
-                if (res != ERROR_SUCCESS)
-                {
-                    boost::throw_exception(std::runtime_error("Could not create registry value "
-                        + log::aux::to_narrow(string_type(registry::get_provider_guid_param_name()))));
-                }
-            }
-#endif // defined(BOOST_LOG_USE_WINNT6_API)
         }
     }
 

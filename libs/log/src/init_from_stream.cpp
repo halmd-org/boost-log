@@ -397,7 +397,7 @@ private:
 
         // For now we use only the default level mapping. Will add support for configuration later.
         backend->set_severity_mapper(
-            sinks::syslog::direct_severity_mapping< char_type >(constants::default_level_attribute_name()));
+            sinks::syslog::basic_direct_severity_mapping< char_type >(constants::default_level_attribute_name()));
 
         return init_sink(backend, params);
     }
@@ -450,7 +450,7 @@ private:
 
         // For now we use only the default event type mapping. Will add support for configuration later.
         backend->set_event_type_mapper(
-            sinks::event_log::direct_event_type_mapping< char_type >(constants::default_level_attribute_name()));
+            sinks::event_log::basic_direct_event_type_mapping< char_type >(constants::default_level_attribute_name()));
 
         return init_sink(backend, params);
     }
@@ -462,21 +462,9 @@ private:
     {
         typedef sinks::basic_simple_nt6_event_log_backend< char_type > backend_t;
 
-        // Determine the log name
-        string_type log_name = backend_t::get_default_log_name();
-        typename params_t::const_iterator it = params.find(constants::log_name_param_name());
-        if (it != params.end())
-            log_name = it->second;
-
-        // Determine the log source name
-        string_type source_name = backend_t::get_default_source_name();
-        it = params.find(constants::source_name_param_name());
-        if (it != params.end())
-            source_name = it->second;
-
         // Determine the provider GUID
         GUID provider_id = backend_t::get_default_provider_id();
-        it = params.find(constants::provider_id_param_name());
+        typename params_t::const_iterator it = params.find(constants::provider_id_param_name());
         if (it != params.end())
         {
             std::wstring const& guid = log::aux::to_wide(it->second);
@@ -487,26 +475,12 @@ private:
             }
         }
 
-        // Determine the force flag
-        bool force = false;
-        it = params.find(constants::force_param_name());
-        if (it != params.end())
-        {
-            std::basic_istringstream< char_type > strm(it->second);
-            strm.setf(std::ios_base::boolalpha);
-            strm >> force;
-        }
-
         // Construct the backend
-        shared_ptr< backend_t > backend(new backend_t((
-            sinks::keywords::log_name = log_name,
-            sinks::keywords::log_source = source_name,
-            sinks::keywords::provider_id = provider_id,
-            sinks::keywords::force = force)));
+        shared_ptr< backend_t > backend(log::aux::new_shared< backend_t >(boost::cref(provider_id)));
 
         // For now we use only the default level mapping. Will add support for configuration later.
         backend->set_severity_mapper(
-            sinks::etw::direct_severity_mapping< char_type >(constants::default_level_attribute_name()));
+            sinks::etw::basic_direct_severity_mapping< char_type >(constants::default_level_attribute_name()));
 
         return init_sink(backend, params);
     }

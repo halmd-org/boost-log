@@ -37,7 +37,6 @@
 #include <boost/throw_exception.hpp>
 #include <boost/log/sinks/nt6_event_log_backend.hpp>
 #include <boost/log/sinks/nt6_event_log_constants.hpp>
-#include "event_log_registry.hpp"
 
 namespace boost {
 
@@ -120,50 +119,17 @@ BOOST_LOG_EXPORT bool basic_simple_nt6_event_log_backend< CharT >::event_enabled
 
 
 template< typename CharT >
-basic_simple_nt6_event_log_backend< CharT >::basic_simple_nt6_event_log_backend() :
-    m_pImpl(construct(get_default_log_name(), get_default_source_name(), get_default_provider_id(), false))
+basic_simple_nt6_event_log_backend< CharT >::basic_simple_nt6_event_log_backend(GUID const& provider_id) :
+    m_pImpl(boost::make_shared< implementation >())
 {
+    if (EventRegister(&provider_id, NULL, NULL, &m_pImpl->m_ProviderHandle) != ERROR_SUCCESS)
+        boost::throw_exception(std::runtime_error("Could not register event provider"));
 }
 
 template< typename CharT >
 basic_simple_nt6_event_log_backend< CharT >::~basic_simple_nt6_event_log_backend()
 {
     EventUnregister(m_pImpl->m_ProviderHandle);
-}
-
-//! The method construct the backend implementation
-template< typename CharT >
-shared_ptr< typename basic_simple_nt6_event_log_backend< CharT >::implementation >
-basic_simple_nt6_event_log_backend< CharT >::construct(
-    string_type const& log_name, string_type const& source_name, GUID const& provider_id, bool force)
-{
-    aux::registry_params< char_type > reg_params;
-    reg_params.provider_guid = provider_id;
-    aux::init_event_log_registry(log_name, source_name, force, reg_params);
-
-    shared_ptr< implementation > p(boost::make_shared< implementation >());
-    if (EventRegister(&provider_id, NULL, NULL, &p->m_ProviderHandle) != ERROR_SUCCESS)
-        boost::throw_exception(std::runtime_error("Could not register event provider"));
-
-    return p;
-}
-
-//! Returns default log name
-template< typename CharT >
-typename basic_simple_nt6_event_log_backend< CharT >::string_type
-basic_simple_nt6_event_log_backend< CharT >::get_default_log_name()
-{
-    return aux::registry_traits< char_type >::make_default_log_name();
-}
-
-//! Returns default source name
-template< typename CharT >
-typename basic_simple_nt6_event_log_backend< CharT >::string_type
-basic_simple_nt6_event_log_backend< CharT >::get_default_source_name()
-{
-    string_type source_name = aux::registry_traits< char_type >::make_default_source_name();
-    complete_default_etw_source_name(source_name);
-    return source_name;
 }
 
 //! Returns default provider guid
