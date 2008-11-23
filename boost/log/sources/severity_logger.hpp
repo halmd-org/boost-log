@@ -11,7 +11,7 @@
  * \file   severity_logger.hpp
  * \author Andrey Semashev
  * \date   08.03.2007
- * 
+ *
  * The header contains implementation of a logger with severity level support.
  */
 
@@ -194,7 +194,7 @@ namespace aux {
 
 /*!
  * \brief Logger class with severity level support
- * 
+ *
  * The logger registers a special attribute with an integral value type on construction.
  * This attribute will provide severity level for each log record being made through the logger.
  * The severity level can be omitted on logging record construction, in which case the default
@@ -254,7 +254,7 @@ public:
     }
     /*!
      * Constructor with named arguments. Allows to setup the default level for log records.
-     * 
+     *
      * \param args A set of named arguments. The following arguments are supported:
      *             \li \c severity - default severity value
      */
@@ -280,7 +280,7 @@ public:
 
     /*!
      * The method opens a new logging record. Record level can be specified as one of the named arguments.
-     * 
+     *
      * \param args A set of named arguments. The following arguments are supported:
      *             \li \c severity - log record severity level
      */
@@ -302,7 +302,7 @@ protected:
     severity_level default_severity() const { return m_DefaultSeverity; }
 
     //! Lock requirement for the open_record_unlocked method
-    typedef typename strictiest_lock<
+    typedef typename strictest_lock<
         typename base_type::open_record_lock,
         no_lock
     >::type open_record_lock;
@@ -326,7 +326,7 @@ protected:
     }
 
     //! Lock requirement for the swap_unlocked method
-    typedef typename strictiest_lock<
+    typedef typename strictest_lock<
         typename base_type::swap_lock,
 #ifndef BOOST_LOG_NO_THREADS
         lock_guard< threading_model >
@@ -423,7 +423,7 @@ class wseverity_logger_mt :
 
 /*!
  * \brief Narrow-char logger. Functionally equivalent to \c basic_severity_logger.
- * 
+ *
  * See \c basic_severity_logger class template for a more detailed description
  */
 template< typename LevelT = int >
@@ -459,7 +459,7 @@ public:
 
 /*!
  * \brief Narrow-char thread-safe logger. Functionally equivalent to \c basic_severity_logger.
- * 
+ *
  * See \c basic_severity_logger class template for a more detailed description
  */
 template< typename LevelT = int >
@@ -495,7 +495,7 @@ public:
 
 /*!
  * \brief Wide-char logger. Functionally equivalent to \c basic_severity_logger.
- * 
+ *
  * See \c basic_severity_logger class template for a more detailed description
  */
 template< typename LevelT = int >
@@ -531,7 +531,7 @@ public:
 
 /*!
  * \brief Wide-char thread-safe logger. Functionally equivalent to \c basic_severity_logger.
- * 
+ *
  * See \c basic_severity_logger class template for a more detailed description
  */
 template< typename LevelT = int >

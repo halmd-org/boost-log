@@ -170,7 +170,7 @@ namespace aux {
 
 //! The metafunction selects the most strict lock type of the two
 template< typename LeftLockT, typename RightLockT >
-struct strictiest_lock :
+struct strictest_lock :
     mpl::if_<
         mpl::less< aux::thread_access_mode_of< LeftLockT >, aux::thread_access_mode_of< RightLockT > >,
         RightLockT,
