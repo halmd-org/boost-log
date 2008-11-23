@@ -257,11 +257,11 @@ inline void register_simple_filter_factory(std::basic_string< CharT, TraitsT, Al
 /*!
  * The function parses a filter from the sequence of characters
  *
- * \pre <tt>begin <= end</tt>
- * \param begin Pointer to the first character of the sequence. Must not be NULL.
- * \param end Pointer to the after-the-last character of the sequence. Must not be NULL.
+ * \pre <tt>begin <= end</tt>, both pointers must not be NULL
+ * \param begin Pointer to the first character of the sequence
+ * \param end Pointer to the after-the-last character of the sequence
  * \return A function object that can be used as a filter.
- * \throw An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
+ * \b Throws: An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
  */
 template< typename CharT >
 BOOST_LOG_EXPORT
@@ -277,7 +277,7 @@ parse_filter(const CharT* begin, const CharT* end);
  *
  * \param str A string that contains filter description
  * \return A function object that can be used as a filter.
- * \throw An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
+ * \b Throws: An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
  */
 template< typename CharT, typename TraitsT, typename AllocatorT >
 inline typename basic_core< CharT >::filter_type
@@ -290,10 +290,10 @@ parse_filter(std::basic_string< CharT, TraitsT, AllocatorT > const& str)
 /*!
  * The function parses a filter from the string
  *
- * \param str A string that contains filter description. Must point to a zero-terminated character sequence,
- *            must not be NULL.
+ * \pre <tt>str != NULL</tt>, <tt>str</tt> points to a zero-terminated string.
+ * \param str A string that contains filter description.
  * \return A function object that can be used as a filter.
- * \throw An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
+ * \b Throws: An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
  */
 template< typename CharT >
 inline typename basic_core< CharT >::filter_type parse_filter(const CharT* str)

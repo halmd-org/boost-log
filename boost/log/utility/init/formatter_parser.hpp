@@ -11,7 +11,7 @@
  * \file   formatter_parser.hpp
  * \author Andrey Semashev
  * \date   07.04.2008
- * 
+ *
  * The header contains definition of a formatter parser function, along with facilities to
  * add support for custom formattetrs.
  */
@@ -45,7 +45,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 /*!
  * \brief Auxiliary formatter traits
- * 
+ *
  * The structure generates commonly used types related to formatters and formatter factories.
  */
 template< typename CharT >
@@ -72,7 +72,7 @@ struct formatter_types
      * \param name Attribute name
      * \param args Formatter arguments
      * \return The constructed formatter. The formatter must not be empty.
-     * \throw An <tt>std::exception</tt>-based If an exception is thrown from the method,
+     * \b Throws: An <tt>std::exception</tt>-based If an exception is thrown from the method,
      *        the exception is propagated to the parse_formatter caller
      */
     typedef function2< formatter_type, string_type const&, formatter_factory_args const& > formatter_factory;
@@ -82,10 +82,10 @@ struct formatter_types
 
 /*!
  * \brief The function registers a user-defined formatter factory
- * 
- * The function registers a user-defined formatter factory. The registered factioy function will be
+ *
+ * The function registers a user-defined formatter factory. The registered factory function will be
  * called when the formatter parser detects the specified attribute name in the formatter string.
- * 
+ *
  * \param attr_name Attribute name. Must point to a zero-terminated sequence of characters, must not be NULL.
  * \param factory Formatter factory function
  */
@@ -106,10 +106,10 @@ register_formatter_factory(
 
 /*!
  * \brief The function registers a user-defined formatter factory
- * 
- * The function registers a user-defined formatter factory. The registered factioy function will be
+ *
+ * The function registers a user-defined formatter factory. The registered factory function will be
  * called when the formatter parser detects the specified attribute name in the formatter string.
- * 
+ *
  * \param attr_name Attribute name
  * \param factory Formatter factory function
  */
@@ -124,12 +124,12 @@ register_formatter_factory(
 
 /*!
  * The function parses a formatter from the sequence of characters
- * 
- * \pre <tt>begin <= end</tt>
- * \param begin Pointer to the first character of the sequence. Must not be NULL.
- * \param end Pointer to the after-the-last character of the sequence. Must not be NULL.
+ *
+ * \pre <tt>begin <= end</tt>, both pointers must not be NULL
+ * \param begin Pointer to the first character of the sequence
+ * \param end Pointer to the after-the-last character of the sequence
  * \return A function object that can be used as a formatter.
- * \throw An <tt>std::exception</tt>-based exception, if a formatter cannot be recognized in the character sequence.
+ * \b Throws: An <tt>std::exception</tt>-based exception, if a formatter cannot be recognized in the character sequence.
  */
 template< typename CharT >
 BOOST_LOG_EXPORT
@@ -142,10 +142,10 @@ parse_formatter(const CharT* begin, const CharT* end);
 
 /*!
  * The function parses a formatter from the string
- * 
+ *
  * \param str A string that contains format description
  * \return A function object that can be used as a formatter.
- * \throw An <tt>std::exception</tt>-based exception, if a formatter cannot be recognized in the character sequence.
+ * \b Throws: An <tt>std::exception</tt>-based exception, if a formatter cannot be recognized in the character sequence.
  */
 template< typename CharT, typename TraitsT, typename AllocatorT >
 inline typename formatter_types< CharT >::formatter_type
@@ -157,11 +157,11 @@ parse_formatter(std::basic_string< CharT, TraitsT, AllocatorT > const& str)
 
 /*!
  * The function parses a formatter from the string
- * 
- * \param str A string that contains format description. Must point to a zero-terminated character sequence,
- *            must not be NULL. 
+ *
+ * \pre <tt>str != NULL</tt>, <tt>str</tt> points to a zero-terminated string
+ * \param str A string that contains format description.
  * \return A function object that can be used as a formatter.
- * \throw An <tt>std::exception</tt>-based exception, if a formatter cannot be recognized in the character sequence.
+ * \b Throws: An <tt>std::exception</tt>-based exception, if a formatter cannot be recognized in the character sequence.
  */
 template< typename CharT >
 inline typename formatter_types< CharT >::formatter_type

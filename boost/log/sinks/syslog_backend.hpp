@@ -11,7 +11,7 @@
  * \file   syslog_backend.hpp
  * \author Andrey Semashev
  * \date   08.01.2008
- * 
+ *
  * The header contains implementation of a Syslog sink backend along with its setup facilities.
  */
 
@@ -49,7 +49,7 @@ namespace syslog {
 
     /*!
      * \brief Straightforward severity level mapping
-     * 
+     *
      * This type of mapping assumes that attribute with a particular name always
      * provides values that map directly onto the Syslog levels. The mapping
      * simply returns the extracted attribute value converted to the Syslog severity level.
@@ -68,7 +68,7 @@ namespace syslog {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit basic_direct_severity_mapping(string_type const& name) :
@@ -79,7 +79,7 @@ namespace syslog {
 
     /*!
      * \brief Customizable severity level mapping
-     * 
+     *
      * The class allows to setup a custom mapping between an attribute and Syslog severity levels.
      * The mapping should be initialized similarly to the standard \c map container, by using
      * indexing operator and assignment.
@@ -98,7 +98,7 @@ namespace syslog {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit basic_custom_severity_mapping(string_type const& name) :
@@ -111,7 +111,7 @@ namespace syslog {
 
     /*!
      * \brief Straightforward severity level mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_direct_severity_mapping
      * for narrow-character logging.
      */
@@ -129,7 +129,7 @@ namespace syslog {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit direct_severity_mapping(string_type const& name) : base_type(name)
@@ -139,7 +139,7 @@ namespace syslog {
 
     /*!
      * \brief Customizable severity level mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_custom_severity_mapping
      * for narrow-character logging.
      */
@@ -157,7 +157,7 @@ namespace syslog {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit custom_severity_mapping(string_type const& name) : base_type(name)
@@ -171,7 +171,7 @@ namespace syslog {
 
     /*!
      * \brief Straightforward severity level mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_direct_severity_mapping
      * for wide-character logging.
      */
@@ -189,7 +189,7 @@ namespace syslog {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit wdirect_severity_mapping(string_type const& name) : base_type(name)
@@ -199,7 +199,7 @@ namespace syslog {
 
     /*!
      * \brief Customizable severity level mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_custom_severity_mapping
      * for wide-character logging.
      */
@@ -217,7 +217,7 @@ namespace syslog {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit wcustom_severity_mapping(string_type const& name) : base_type(name)
@@ -262,7 +262,7 @@ private:
 public:
     /*!
      * Constructor. The first constructed syslog backend initializes syslog API with the provided parameters.
-     * 
+     *
      * \param facility Logging facility
      * \param options Additional syslog initialization options
      */
@@ -280,8 +280,10 @@ public:
     void set_severity_mapper(severity_mapper_type const& mapper);
 
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method passes the formatted message to the Syslog API
     void do_write_message(values_view_type const& attributes, target_string_type const& formatted_message);
+#endif
 };
 
 #ifdef BOOST_LOG_USE_CHAR

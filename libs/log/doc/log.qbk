@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-11-19 19:58:28 $]
+    [last-revision $Date: 2008-11-23 15:06:49 $]
 ]
 
 [c++]
@@ -33,6 +33,7 @@
 [def __boost_intrusive__ [@http://www.boost.org/doc/libs/release/doc/html/intrusive.html Boost.Intrusive]]
 [def __boost_iostreams__ [@http://www.boost.org/doc/libs/release/libs/iostreams/doc/index.html Boost.IOStreams]]
 [def __boost_mpl__ [@http://www.boost.org/doc/libs/release/libs/mpl/doc/index.html Boost.MPL]]
+[def __boost_exception__ [@http://www.boost.org/doc/libs/release/libs/exception/doc/boost-exception.html Boost.Exception]]
 
 [section Disclaimer]
 
@@ -60,7 +61,7 @@ The documentation is oriented to both newbies and experienced library users. How
 
 If this is your first experience with the library, it is recommended to read the [link log.design Design overview] section first in order to have the first glance on the library capabilities and architecture. The [link log.installation Instalation] and [link tutorial.tutorial Tutorial] sections will help to get started experimenting with the library. The tutorial gives the overview of the library features with sample code snippets. Some tutorial steps are presented in two forms: simple and advanced. The simple form typically describes the most common and easy way to do the task and it is being recommended to be read by newbies. The advanced form usually gives an expanded way to do the same thing but with ability to do some extra customization and in-depth explanation. This form may come handy for more experienced users and should generally be read if your needs are not satisfied with the easy way.
 
-Besides the tutorial there is an [link advanced.advanced Advanced features] chapter. This part gives description of other tools provided by the library that were not covered by the tutorial. This chapter is better to be read on per-case basis.
+Besides the tutorial there is an [link advanced.advanced Detailed features description] chapter. This part gives description of other tools provided by the library that were not covered by the tutorial. This chapter is better to be read on per-case basis.
 
 Last, but not least, there is a reference which gives the formal description of library components.
 
@@ -158,7 +159,7 @@ When the set of attribute values is composed, the logging core decides if this l
 
 If a log record passes filtering for at least one sink, the record is considered to be consumable. This is the point when log message formatting takes place. The formatted message, along with the composed attribute values view, is passed to the sinks that accepted the record. As you may have noticed on the figure above, sinks consist of two parts: the frontend and the backend. This division is made in order to extract the common functionality of sinks, such as filtering and thread synchronization, into separate entities (frontends). Sink frontends are provided by the library, most likely users won't have to reimplement them. Backends, on the opposite, are one of the most probable places of the library extension. It is sink backends that do the actual processing of log records. There may be a sink that formats the attribute values and the log message and stores it into a file; there may be a sink that sends log records over the network to the remote processing center; there may be the aforementioned sink that puts record messages into tooltip baloons - you name it. The most commonly used sink backends are already provided by the library.
 
-Along with the described above primary facilities, the library provides a wide variety of auxiliary tools, such as attributes, support for formatters and filters, represented as lambda expressions, and even basic helpers for the library initialization. You will find their description in the [link advanced.advanced Advanced features] section. However, for newbies it is recommended to start discovering the library from the [link tutorial.tutorial Tutorial] section.
+Along with the described above primary facilities, the library provides a wide variety of auxiliary tools, such as attributes, support for formatters and filters, represented as lambda expressions, and even basic helpers for the library initialization. You will find their description in the [link advanced.advanced Detailed features description] section. However, for newbies it is recommended to start discovering the library from the [link tutorial.tutorial Tutorial] section.
 
 [endsect]
 
@@ -285,7 +286,7 @@ Points in this section are not necessarilly going to be implemented. These are m
 * Implement log record ordering feature for asynchronous logging (see [link log.rationale.why_weak_record_ordering here]).
 * Improve rotating flexibility. The idea is to make the rotation criteria user-definable. Allow to put attribute values into the file name.
 * Provide a compile-time option to remove all logging from the application (the compiled binary should contain no traces of logging internally). There are two reasons for this request: attempting to achieve maximum performance and concealing internal information, such as function names and internal messages, to prevent reverse engineering in no-logging builds. Effectively, this would require not only all library macros to be redefined to emptyness, but also to provide dummy implementations of many library components. Needs more consideration. Perhaps, suppressing only macros would be sufficient.
-* Provide a set of macros for Boost.Exception support. E.g. throwing an exception with call stack embedded or writing a message into log when throwing an exception.
+* Provide a set of macros for __boost_exception__ support. E.g. throwing an exception with call stack embedded or writing a message into log when throwing an exception.
 * Provide a macro, like `BOOST_LOG_FUNCTION`, but with ability to automatically log all function arguments.
 
 [endsect]

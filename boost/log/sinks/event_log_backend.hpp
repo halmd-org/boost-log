@@ -11,7 +11,7 @@
  * \file   event_log_backend.cpp
  * \author Andrey Semashev
  * \date   07.11.2008
- * 
+ *
  * The header contains a logging sink backend that uses Windows NT event log API
  * for signaling application events.
  */
@@ -70,7 +70,7 @@ namespace event_log {
 
     /*!
      * \brief Straightforward event type mapping
-     * 
+     *
      * This type of mapping assumes that attribute with a particular name always
      * provides values that map directly onto the native event types. The mapping
      * simply returns the extracted attribute value converted to the native event type.
@@ -89,7 +89,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit basic_direct_event_type_mapping(string_type const& name) :
@@ -100,7 +100,7 @@ namespace event_log {
 
     /*!
      * \brief Customizable event type mapping
-     * 
+     *
      * The class allows to setup a custom mapping between an attribute and native event types.
      * The mapping should be initialized similarly to the standard \c map container, by using
      * indexing operator and assignment.
@@ -119,7 +119,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit basic_custom_event_type_mapping(string_type const& name) :
@@ -130,7 +130,7 @@ namespace event_log {
 
     /*!
      * \brief Straightforward event ID mapping
-     * 
+     *
      * This type of mapping assumes that attribute with a particular name always
      * provides values that map directly onto the event identifiers. The mapping
      * simply returns the extracted attribute value converted to the event ID.
@@ -149,7 +149,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit basic_direct_event_id_mapping(string_type const& name) :
@@ -160,7 +160,7 @@ namespace event_log {
 
     /*!
      * \brief Customizable event ID mapping
-     * 
+     *
      * The class allows to setup a custom mapping between an attribute and event identifiers.
      * The mapping should be initialized similarly to the standard \c map container, by using
      * indexing operator and assignment.
@@ -179,7 +179,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit basic_custom_event_id_mapping(string_type const& name) :
@@ -190,7 +190,7 @@ namespace event_log {
 
     /*!
      * \brief Straightforward event category mapping
-     * 
+     *
      * This type of mapping assumes that attribute with a particular name always
      * provides values that map directly onto the event categories. The mapping
      * simply returns the extracted attribute value converted to the event category.
@@ -209,7 +209,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit basic_direct_event_category_mapping(string_type const& name) :
@@ -220,7 +220,7 @@ namespace event_log {
 
     /*!
      * \brief Customizable event category mapping
-     * 
+     *
      * The class allows to setup a custom mapping between an attribute and event categories.
      * The mapping should be initialized similarly to the standard \c map container, by using
      * indexing operator and assignment.
@@ -239,7 +239,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit basic_custom_event_category_mapping(string_type const& name) :
@@ -252,7 +252,7 @@ namespace event_log {
 
     /*!
      * \brief Straightforward event type mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_direct_event_type_mapping
      * for narrow-character logging.
      */
@@ -270,7 +270,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit direct_event_type_mapping(string_type const& name) : base_type(name)
@@ -280,7 +280,7 @@ namespace event_log {
 
     /*!
      * \brief Customizable event type mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_custom_event_type_mapping
      * for narrow-character logging.
      */
@@ -298,7 +298,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit custom_event_type_mapping(string_type const& name) : base_type(name)
@@ -308,7 +308,7 @@ namespace event_log {
 
     /*!
      * \brief Straightforward event id mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_direct_event_id_mapping
      * for narrow-character logging.
      */
@@ -326,7 +326,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit direct_event_id_mapping(string_type const& name) : base_type(name)
@@ -336,7 +336,7 @@ namespace event_log {
 
     /*!
      * \brief Customizable event id mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_custom_event_id_mapping
      * for narrow-character logging.
      */
@@ -354,7 +354,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit custom_event_id_mapping(string_type const& name) : base_type(name)
@@ -364,7 +364,7 @@ namespace event_log {
 
     /*!
      * \brief Straightforward event category mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_direct_event_category_mapping
      * for narrow-character logging.
      */
@@ -382,7 +382,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit direct_event_category_mapping(string_type const& name) : base_type(name)
@@ -392,7 +392,7 @@ namespace event_log {
 
     /*!
      * \brief Customizable event category mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_custom_event_category_mapping
      * for narrow-character logging.
      */
@@ -410,7 +410,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit custom_event_category_mapping(string_type const& name) : base_type(name)
@@ -424,7 +424,7 @@ namespace event_log {
 
     /*!
      * \brief Straightforward event type mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_direct_event_type_mapping
      * for wide-character logging.
      */
@@ -442,7 +442,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit wdirect_event_type_mapping(string_type const& name) : base_type(name)
@@ -452,7 +452,7 @@ namespace event_log {
 
     /*!
      * \brief Customizable event type mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_custom_event_type_mapping
      * for wide-character logging.
      */
@@ -470,7 +470,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit wcustom_event_type_mapping(string_type const& name) : base_type(name)
@@ -480,7 +480,7 @@ namespace event_log {
 
     /*!
      * \brief Straightforward event id mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_direct_event_id_mapping
      * for wide-character logging.
      */
@@ -498,7 +498,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit wdirect_event_id_mapping(string_type const& name) : base_type(name)
@@ -508,7 +508,7 @@ namespace event_log {
 
     /*!
      * \brief Customizable event id mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_custom_event_id_mapping
      * for wide-character logging.
      */
@@ -526,7 +526,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit wcustom_event_id_mapping(string_type const& name) : base_type(name)
@@ -536,7 +536,7 @@ namespace event_log {
 
     /*!
      * \brief Straightforward event category mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_direct_event_category_mapping
      * for wide-character logging.
      */
@@ -554,7 +554,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit wdirect_event_category_mapping(string_type const& name) : base_type(name)
@@ -564,7 +564,7 @@ namespace event_log {
 
     /*!
      * \brief Customizable event category mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_custom_event_category_mapping
      * for wide-character logging.
      */
@@ -582,7 +582,7 @@ namespace event_log {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit wcustom_event_category_mapping(string_type const& name) : base_type(name)
@@ -606,13 +606,15 @@ namespace event_log {
      *     to the composer constructor.
      * \li Event identifiers and insertion string formatters. The composer provides the following
      *     syntax to provide this information:
-     *     <pre>
+     *
+     *     \code
      *     event_composer comp;
      *     comp[MY_EVENT_ID1] % formatter1 % ... % formatterN;
      *     comp[MY_EVENT_ID2] % formatter1 % ... % formatterN;
      *     ...
-     *     </pre>
-     *     The event identifiers in square brackets are provider by the message compiler generated
+     *     \endcode
+     *
+     *     The event identifiers in square brackets are provided by the message compiler generated
      *     header (the actual names are specified in the .mc file). The formatters represent
      *     the insertion strings that will be used to replace placeholders in event messages,
      *     thus the number and the order of the formatters must correspond to the message definition.
@@ -690,30 +692,63 @@ namespace event_log {
         event_map m_EventMap;
 
     public:
-        //! Default constructor
+        /*!
+         * Default constructor. Creates an empty map of events.
+         *
+         * \param id_mapper An event identifier mapping function that will be used to extract event ID from attribute values
+         */
         explicit basic_event_composer(event_id_mapper_type const& id_mapper);
-        //! Copy constructor
+        /*!
+         * Copy constructor. Performs a deep copy of the object.
+         */
         basic_event_composer(basic_event_composer const& that);
-        //! Destructor
+        /*!
+         * Destructor
+         */
         ~basic_event_composer();
 
-        //! Assignment
+        /*!
+         * Assignment. Provides strong exception guarantee.
+         */
         basic_event_composer& operator= (basic_event_composer that);
-        //! Swapping
+        /*!
+         * Swaps \c *this and \c that objects.
+         */
         void swap(basic_event_composer& that);
-        //! Creates a new entry for a message
+        /*!
+         * Initiates creation of a new event description. The result of the operator can be used to
+         * add formatters for insertion strings construction. The returned reference type is implementation detail.
+         *
+         * \param id Event identifier.
+         */
         event_map_reference operator[] (event_id_t id);
-        //! Creates a new entry for a message
+        /*!
+         * Initiates creation of a new event description. The result of the operator can be used to
+         * add formatters for insertion strings construction. The returned reference type is implementation detail.
+         *
+         * \param id Event identifier.
+         */
         event_map_reference operator[] (event_id_t::integer_type id);
-        //! Event composition operator
+        /*!
+         * Event composition operator. Extracts an event identifier from the attribute values by calling event ID mapper.
+         * Then runs all formatters that were registered for the event with the extracted ID. The results of formatting
+         * are returned in the \c insertions parameter.
+         *
+         * \param attributes A set of attribute values of a logging record
+         * \param message Log record message
+         * \param insertions A sequence of formatted insertion strings
+         * \return An event identifier that was extracted from \c attributes
+         */
         event_id_t operator() (
             values_view_type const& attributes,
             string_type const& message,
-            insertion_list& inserters) const;
+            insertion_list& insertions) const;
 
     private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
         //! Adds a formatter to the insertion composers list
         insertion_composer* add_formatter(event_id_t id, insertion_composer* composer, formatter_type const& fmt);
+#endif // BOOST_LOG_DOXYGEN_PASS
     };
 
 #ifdef BOOST_LOG_USE_CHAR
@@ -808,7 +843,7 @@ public:
     }
 
     /*!
-     * Destructor. Unregisters event source.
+     * Destructor. Unregisters event source. The log source description is not removed from the Windows registry.
      */
     ~basic_simple_event_log_backend();
 
@@ -827,11 +862,13 @@ public:
     static string_type get_default_source_name();
 
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method puts the formatted message to the event log
     void do_write_message(values_view_type const& values, target_string_type const& formatted_message);
 
     //! Constructs backend implementation
     static implementation* construct(string_type const& log_name, string_type const& source_name, bool force);
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 /*!
@@ -876,12 +913,12 @@ public:
         values_view_type const&
     > event_type_mapper_type;
     //! Mapper type for the event category
-    typedef boost::function1<
+    typedef function1<
         event_log::event_category_t,
         values_view_type const&
     > event_category_mapper_type;
     //! Event composer type
-    typedef boost::function3<
+    typedef function3<
         event_log::event_id_t,
         values_view_type const&,
         string_type const&,
@@ -939,7 +976,7 @@ public:
     }
 
     /*!
-     * Destructor. Unregisters event source.
+     * Destructor. Unregisters event source. The log source description is not removed from the Windows registry.
      */
     ~basic_event_log_backend();
 
@@ -977,6 +1014,7 @@ public:
     static string_type get_default_source_name();
 
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! Constructs backend implementation
     static implementation* construct(
         filesystem::path const& message_file_name,
@@ -1009,6 +1047,7 @@ private:
         string_type const& log_name,
         string_type const& source_name,
         bool force);
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 #ifdef BOOST_LOG_USE_CHAR

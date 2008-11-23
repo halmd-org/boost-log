@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   event_log_backend.cpp
  * \author Andrey Semashev
  * \date   07.11.2008
- * 
+ *
  * \brief  A logging sink backend that uses Windows NT event log API
  *         for signalling application events.
  */
@@ -313,14 +313,14 @@ void basic_simple_event_log_backend< CharT >::do_write_message(values_view_type 
     }
 
     report_event(
-        m_pImpl->m_SourceHandle,    // Event log handle. 
-        event_type,                 // Event type. 
-        0,                          // Event category.  
-        event_id,                   // Event identifier. 
-        NULL,                       // No user security identifier. 
-        1,                          // Number of substitution strings. 
-        0,                          // No data. 
-        &message,                   // Pointer to strings. 
+        m_pImpl->m_SourceHandle,    // Event log handle.
+        event_type,                 // Event type.
+        0,                          // Event category.
+        event_id,                   // Event identifier.
+        NULL,                       // No user security identifier.
+        1,                          // Number of substitution strings.
+        0,                          // No data.
+        &message,                   // Pointer to strings.
         NULL);                      // No data.
 }
 
@@ -423,12 +423,12 @@ namespace event_log {
     event_id_t basic_event_composer< CharT >::operator() (
         values_view_type const& attributes,
         string_type const& message,
-        insertion_list& inserters) const
+        insertion_list& insertions) const
     {
         event_id_t id = m_EventIDMapper(attributes);
         typename event_map::const_iterator it = m_EventMap.find(id);
         if (it != m_EventMap.end())
-            it->second(attributes, message, inserters);
+            it->second(attributes, message, insertions);
         return id;
     }
 
@@ -587,14 +587,14 @@ void basic_event_log_backend< CharT >::write_message(values_view_type const& val
             event_category = m_pImpl->m_CategoryMapper(values).value;
 
         report_event(
-            m_pImpl->m_SourceHandle,       // Event log handle. 
-            event_type,                    // Event type. 
-            event_category,                // Event category.  
-            event_id,                      // Event identifier. 
-            NULL,                          // No user security identifier. 
-            string_count,                  // Number of substitution strings. 
-            0,                             // No data. 
-            strings.get(),                 // Pointer to strings. 
+            m_pImpl->m_SourceHandle,       // Event log handle.
+            event_type,                    // Event type.
+            event_category,                // Event category.
+            event_id,                      // Event identifier.
+            NULL,                          // No user security identifier.
+            string_count,                  // Number of substitution strings.
+            0,                             // No data.
+            strings.get(),                 // Pointer to strings.
             NULL);                         // No data.
     }
 }

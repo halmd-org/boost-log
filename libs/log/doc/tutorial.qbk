@@ -238,7 +238,7 @@ Some manipulators may accept additional arguments that customize their behavior.
         << "> [" << fmt::named_scope("Scope", scope_iteration = reverse, scope_depth = 4) // make scope iteration top-to-bottom, no more than 4 scopes to be written
         << "] " << fmt::message());
 
-For the reference of the supported arguments see the reference of the corresponding manipulator. More manipulators are described in the [link advanced.advanced.formatters Advanced] section.
+For the reference of the supported arguments see the reference of the corresponding manipulator. More manipulators are described in the [link advanced.advanced.formatters Detailed features description] section.
 
 [heading Boost.Format-style formatters]
 
@@ -286,7 +286,7 @@ The filter function object should return `true` if the record have passed the fi
         flt::has_attr("Tag") && // The sink will only write records that have an attribute "Tag"...
         flt::attr< std::string >("Tag").begins_with("LOGME")); // ...whose value begins with word "LOGME"
 
-The syntax is quite similar to formatters. The difference is that there is no need in a hook placeholder like `ostrm`. You may see a more detailed description of filters in the [link advanced.advanced.filters Advanced] section.
+The syntax is quite similar to formatters. The difference is that there is no need in a hook placeholder like `ostrm`. You may see a more detailed description of filters in the [link advanced.advanced.filters Detailed features description] section.
 
 [endsect]
 

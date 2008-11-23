@@ -11,7 +11,7 @@
  * \file   nt6_event_log_backend.cpp
  * \author Andrey Semashev
  * \date   07.11.2008
- * 
+ *
  * The header contains a logging sink backend that uses Windows NT 6 (Vista/2008 Server) API
  * for signaling application events.
  */
@@ -68,7 +68,7 @@ namespace etw {
 
     /*!
      * \brief Straightforward severity level mapping
-     * 
+     *
      * This type of mapping assumes that attribute with a particular name always
      * provides values that map directly onto the native levels. The mapping
      * simply returns the extracted attribute value converted to the native severity level.
@@ -87,7 +87,7 @@ namespace etw {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit basic_direct_severity_mapping(string_type const& name) :
@@ -98,7 +98,7 @@ namespace etw {
 
     /*!
      * \brief Customizable severity level mapping
-     * 
+     *
      * The class allows to setup a custom mapping between an attribute and native severity levels.
      * The mapping should be initialized similarly to the standard \c map container, by using
      * indexing operator and assignment.
@@ -117,7 +117,7 @@ namespace etw {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit basic_custom_severity_mapping(string_type const& name) :
@@ -130,7 +130,7 @@ namespace etw {
 
     /*!
      * \brief Straightforward severity level mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_direct_severity_mapping
      * for narrow-character logging.
      */
@@ -148,7 +148,7 @@ namespace etw {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit direct_severity_mapping(string_type const& name) : base_type(name)
@@ -158,7 +158,7 @@ namespace etw {
 
     /*!
      * \brief Customizable severity level mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_custom_severity_mapping
      * for narrow-character logging.
      */
@@ -176,7 +176,7 @@ namespace etw {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit custom_severity_mapping(string_type const& name) : base_type(name)
@@ -190,7 +190,7 @@ namespace etw {
 
     /*!
      * \brief Straightforward severity level mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_direct_severity_mapping
      * for wide-character logging.
      */
@@ -208,7 +208,7 @@ namespace etw {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit wdirect_severity_mapping(string_type const& name) : base_type(name)
@@ -218,7 +218,7 @@ namespace etw {
 
     /*!
      * \brief Customizable severity level mapping
-     * 
+     *
      * This is a convenience template typedef over \c basic_custom_severity_mapping
      * for wide-character logging.
      */
@@ -236,7 +236,7 @@ namespace etw {
     public:
         /*!
          * Constructor
-         * 
+         *
          * \param name Attribute name
          */
         explicit wcustom_severity_mapping(string_type const& name) : base_type(name)
@@ -351,8 +351,10 @@ public:
     static GUID const& get_default_provider_id();
 
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method puts the formatted message to the event log
     void do_write_message(values_view_type const& values, target_string_type const& formatted_message);
+#endif
 };
 
 #ifdef BOOST_LOG_USE_CHAR

@@ -11,7 +11,7 @@
  * \file   debug_output_backend.hpp
  * \author Andrey Semashev
  * \date   07.11.2008
- * 
+ *
  * The header contains a logging sink backend that outputs log records to the debugger.
  */
 
@@ -81,7 +81,7 @@ public:
     /*!
      * Constructor. Initializes the sink backend.
      */
-	basic_debug_output_backend();
+    basic_debug_output_backend();
     /*!
      * Destructor
      */
@@ -93,8 +93,10 @@ public:
     debugger_presence_filter get_debugger_presence_filter() const;
 
 private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method puts the formatted message to debugger
     void do_write_message(values_view_type const& values, target_string_type const& formatted_message);
+#endif
 };
 
 #ifdef BOOST_LOG_USE_CHAR

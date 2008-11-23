@@ -7,7 +7,7 @@
     (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 /]
 
-[section:advanced Advanced features]
+[section:advanced Detailed features description]
 
 This section contains a more detailed description of library components and features. Some of them are presented in the [link tutorial.tutorial Tutorual] section, so it is recommended to read it first to get the basic understanding of the library.
 
@@ -371,7 +371,7 @@ The syslog backend, as it comes from its name, provides support for syslog API t
 
 The backend is implemented in the `basic_syslog_backend` class template, `syslog_backend` and `wsyslog_backend` convenience typedefs are also available. The backend supports formatting log records, and therefore requires thread synchronization in the frontend. The backend also supports severity level translation from the application-specific values to the syslog-defined values. This is achieved with an additional function object, level extractor, that receives a set of attribute values of each log record and returns appropriate syslog level value. This value is used by the backend in the `LOG_MAKEPRI` macro to construct the final priority value of the syslog record. The other argument of the `LOG_MAKEPRI` macro, the facility, is constant for each backend object and can be specified in the backend constructor arguments.
 
-Level extractors can be written by library users to map the application log levels to the syslog levels the best way. However, the library provides two extractors that would fit this need in obvious cases. The `straightforward_level_mapping` class template provides a way to directly map values of some integral attribute to syslog levels. The `level_mapping` class template adds some flexibility and allows to map arbitrary values of some integral attribute to syslog levels.
+Level extractors can be written by library users to map the application log levels to the syslog levels the best way. However, the library provides two extractors that would fit this need in obvious cases. The `direct_level_mapping` class template provides a way to directly map values of some integral attribute to syslog levels. The `custom_level_mapping` class template adds some flexibility and allows to map arbitrary values of some integral attribute to syslog levels. The `wdirect_level_mapping` and `wcustom_level_mapping` are also available for wide-character logging.
 
 One additional thing should be noted. Syslog API allows to customize the service behavior by specifying additional flags to the `openlog` call. The backend too supports this feature - the options can be passed to the backend constructor. However, since `openlog` is only called once per logging session, the constructor argument is only taken into consideration for the first backend object being created.
 
@@ -387,7 +387,7 @@ Anyway, one example is better than a thousand words.
             sinks::syslog::user, sinks::syslog::console_fallback | sinks::syslog::log_pid));
 
         // Set the straightforward level translator for the "Severity" attribute of type int
-        backend->set_level_extractor(sinks::syslog::straightforward_level_mapping< char >("Severity"));
+        backend->set_level_extractor(sinks::syslog::direct_level_mapping< >("Severity"));
 
         // Wrap it into the frontend and register in the core. The backend requires synchronization in the frontend.
         boost::shared_ptr< sinks::synchronous_sink< sinks::syslog_backend > > sink(new sinks::synchronous_sink< sinks::syslog_backend >(backend));
@@ -397,7 +397,7 @@ Anyway, one example is better than a thousand words.
         backend.reset(new sinks::syslog_backend(sinks::syslog::local0));
 
         // Create and fill in another level translator for "MyLevel" attribute of type string
-        sinks::syslog::level_mapping< char, std::string > mapping("MyLevel");
+        sinks::syslog::custom_level_mapping< std::string > mapping("MyLevel");
         mapping["debug"] = sinks::syslog::debug;
         mapping["normal"] = sinks::syslog::info;
         mapping["warning"] = sinks::syslog::warning;
@@ -410,6 +410,30 @@ Anyway, one example is better than a thousand words.
     }
 
 Please note that all syslog constants, as well as level extractors, are declared within a nested namespace `syslog`. The library will not accept (and does not declare in the backend interface) native syslog constants, which are macros, actually.
+
+[endsect]
+
+[section:debugger Windows debugger output backend]
+
+    #include <boost/log/sinks/debug_output_backend.hpp>
+
+The Windows OS provides an interesting feature: a process, being run under debugger, is able to emit messages that will be intercepted and displayed in the debugger window. For example, if an application is run under Visual Studio IDE it will be able to write debug messages to the IDE window. This backend provides a simple way of emitting such messages. Additionally, in order to optimize application performance, a special filter is available that checks whether the application is run under debugger. Like many other sink backends, this backend also supports setting a formatter in order to compose message text.
+
+The usage is quite simple and straightforward:
+
+    // The function registers debugger output sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging::core > core = logging::core::get();
+
+        // Create the sink. The backend requires synchronization in the frontend.
+        boost::shared_ptr< sinks::synchronous_sink< sinks::debug_output_backend > > sink(new sinks::synchronous_sink< sinks::debug_output_backend >());
+
+        // Set the special filter to the frontend in order to skip the sink when no debugger is available
+        sink->set_filter(sinks::debug_output_backend::debugger_presence_filter());
+
+        core->add_sink(sink);
+    }
 
 [endsect]
 
@@ -987,7 +1011,7 @@ Now we can mark execution scopes with macros `BOOST_LOG_FUNCTION` and `BOOST_LOG
 
 After executing `foo` we will be able to see in log that the `bar` function was called from `foo` and, more precisely, from the case statement that corresponds the value of `n`. This may be very useful when tracking down subtle bugs that show only when `bar` is called from a specific location (e.g. if `bar` is being passed invalid arguments in that particular location).
 
-Another good use case is attaching the scope stack information to an exception. With help of Boost.Exception, this is possible:
+Another good use case is attaching the scope stack information to an exception. With help of __boost_exception__, this is possible:
 
     typedef boost::error_info< struct tag_scopes, attrs::named_scope::scope_stack > scopes_info;
 
@@ -1072,7 +1096,7 @@ The language support for run time type information is essential for the library.
     [[Life time duration]                       [Static, until the application terminates] [Dynamic]]
     [[Has an empty state]                       [No]                            [Yes. In empty state the type info wrapper is never equal to other non-empty type info wrappers. It is equal to other empty type info wrappers and can be ordered with them.]]
     [[Supports equality comparison]             [Yes]                           [Yes]]
-    [[Supports ordering]                        [Yes, partial ordering with the `before` method.] [Yes, partial ordering with the complete set of comparison operators.]]
+    [[Supports ordering]                        [Yes, partial ordering with the `before` method.] [Yes, partial ordering with the complete set of comparison operators. The semantics of ordering is similar to the `std::type_info::before` method.]]
     [[Supports printable representation of type] [Yes, with `name` and `raw_name` functions.] [Yes, with `pretty_name` function. The function makes its best to print the type name in a human-readable form.]]
 ]
 
