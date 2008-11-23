@@ -92,6 +92,7 @@ inline void register_sink_factory(
  * The function initializes the logging library from a stream containing logging settings
  *
  * \param strm Stream, that provides library settings
+ *
  * \b Throws: An <tt>std::exception</tt>-based exception if the read data cannot be interpreted as the library settings
  */
 template< typename CharT >

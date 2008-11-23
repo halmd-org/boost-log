@@ -72,6 +72,7 @@ struct formatter_types
      * \param name Attribute name
      * \param args Formatter arguments
      * \return The constructed formatter. The formatter must not be empty.
+     *
      * \b Throws: An <tt>std::exception</tt>-based If an exception is thrown from the method,
      *        the exception is propagated to the parse_formatter caller
      */
@@ -129,6 +130,7 @@ register_formatter_factory(
  * \param begin Pointer to the first character of the sequence
  * \param end Pointer to the after-the-last character of the sequence
  * \return A function object that can be used as a formatter.
+ *
  * \b Throws: An <tt>std::exception</tt>-based exception, if a formatter cannot be recognized in the character sequence.
  */
 template< typename CharT >
@@ -145,6 +147,7 @@ parse_formatter(const CharT* begin, const CharT* end);
  *
  * \param str A string that contains format description
  * \return A function object that can be used as a formatter.
+ *
  * \b Throws: An <tt>std::exception</tt>-based exception, if a formatter cannot be recognized in the character sequence.
  */
 template< typename CharT, typename TraitsT, typename AllocatorT >
@@ -161,6 +164,7 @@ parse_formatter(std::basic_string< CharT, TraitsT, AllocatorT > const& str)
  * \pre <tt>str != NULL</tt>, <tt>str</tt> points to a zero-terminated string
  * \param str A string that contains format description.
  * \return A function object that can be used as a formatter.
+ *
  * \b Throws: An <tt>std::exception</tt>-based exception, if a formatter cannot be recognized in the character sequence.
  */
 template< typename CharT >

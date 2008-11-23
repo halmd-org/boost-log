@@ -261,6 +261,7 @@ inline void register_simple_filter_factory(std::basic_string< CharT, TraitsT, Al
  * \param begin Pointer to the first character of the sequence
  * \param end Pointer to the after-the-last character of the sequence
  * \return A function object that can be used as a filter.
+ *
  * \b Throws: An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
  */
 template< typename CharT >
@@ -277,6 +278,7 @@ parse_filter(const CharT* begin, const CharT* end);
  *
  * \param str A string that contains filter description
  * \return A function object that can be used as a filter.
+ *
  * \b Throws: An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
  */
 template< typename CharT, typename TraitsT, typename AllocatorT >
@@ -293,6 +295,7 @@ parse_filter(std::basic_string< CharT, TraitsT, AllocatorT > const& str)
  * \pre <tt>str != NULL</tt>, <tt>str</tt> points to a zero-terminated string.
  * \param str A string that contains filter description.
  * \return A function object that can be used as a filter.
+ *
  * \b Throws: An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
  */
 template< typename CharT >
