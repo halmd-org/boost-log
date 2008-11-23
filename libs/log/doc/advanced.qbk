@@ -169,6 +169,15 @@ Sometimes it is inconvenient to have a logger object to be able to write logs. T
 
 The library provides a way to declare global loggers that can be accessed pretty much like `std::cout`. In fact, this feature can be used with any loggers, including user-defined ones. Having declared a global logger, one can be sure to have a thread-safe access to this logger instance from any place of the application code. The library also guarantees that a global logger instance will be singular even across module boundaries. This allows to employ logging even in header-only components that may be compiled into different modules.
 
+One may wonder why there is need for something special in order to create global loggers. Why not just declaring a logger variable in the namespace scope and use it whereever you need? While technically this is possible, declaring and using global logger variables is complicated for the following reasons:
+
+* Order of initialization of the namespace scope variables is not specified by the C++ Standard. It means that generally you cannot use the logger during this stage of initialization (i.e. before `main`).
+* Initialization of the namespace scope variables is not thread-safe. You may end up initializing the same logger twice or using an uninitialized logger.
+* Using namespace scope variables in a header-only library is quite complicated. One either has to declare a variable with external linkage and define it only in a single translation unit (that is, in a separate .cpp file, which defeats the "header-only" thesis), or define a variable with internal linkage, or as a special case in an anonymous namespace (this will most likely break ODR and give unexpected results when the header is used in different TUs). There are other compiler-specific and standard tricks to tacle the problem, but they are not too trivial and portable.
+* On most platforms namespace scope variables are local to the module where they were compiled in. That is, if variable `a` has external linkage and was compiled into modules X and Y, each of these modules have its independent copy of variable `a`. To make things worse, on other platforms this variable may get shared between the modules.
+
+Global logger storage is intended to eliminate all these problems.
+
 The easiest way to declare a global logger is to use the following macro:
 
     BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::severity_logger_mt< >)
