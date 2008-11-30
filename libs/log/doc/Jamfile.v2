@@ -4,10 +4,12 @@
 
 using quickbook ;
 
+import set ;
 import doxygen ;
 
-doxygen autodoc
-   :
+local document_files =
+    [ set.difference
+        # Document all these files...
         [ glob
             ../../../boost/log/*.hpp
             ../../../boost/log/attributes/*.hpp
@@ -19,7 +21,17 @@ doxygen autodoc
             ../../../boost/log/utility/init/*.hpp
             ../../../boost/log/utility/type_dispatch/*.hpp
         ]
-   :
+    :
+        # ...except these
+        [ glob
+            ../../../boost/log/sinks/nt6_event_log*.hpp
+        ]
+    ] ;
+
+doxygen autodoc
+    :
+        $(document_files)
+    :
         <doxygen:param>RECURSIVE=YES
         <doxygen:param>ALPHABETICAL_INDEX=YES
         <doxygen:param>REPEAT_BRIEF=YES
@@ -44,7 +56,7 @@ doxygen autodoc
                        "BOOST_LOG_EXPORT=""
         <xsl:param>"boost.doxygen.reftitle=Boost.Log Reference"
         <xsl:param>"boost.doxygen.detailns=aux"
-   ;
+    ;
 
 #   <doxygen:param>EXCLUDE_SYMBOLS="aux aux::*"
 

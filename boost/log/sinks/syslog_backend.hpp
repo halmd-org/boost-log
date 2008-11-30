@@ -282,7 +282,7 @@ public:
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method passes the formatted message to the Syslog API
-    void do_write_message(values_view_type const& attributes, target_string_type const& formatted_message);
+    void do_consume(values_view_type const& attributes, target_string_type const& formatted_message);
 #endif
 };
 

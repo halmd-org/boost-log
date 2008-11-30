@@ -310,7 +310,7 @@ public:
         return add_attribute_unlocked(name, attr);
     }
     /*!
-     * The method removes an attribute from the thread-specific attribute set.
+     * The method removes an attribute from the source-specific attribute set.
      *
      * \pre The attribute was added with the add_attribute call for this instance of the logger.
      * \post The attribute is no longer registered as a source-specific attribute for this logger. The iterator is invalidated after removal.

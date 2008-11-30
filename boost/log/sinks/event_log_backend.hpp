@@ -864,7 +864,7 @@ public:
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method puts the formatted message to the event log
-    void do_write_message(values_view_type const& values, target_string_type const& formatted_message);
+    void do_consume(values_view_type const& values, target_string_type const& formatted_message);
 
     //! Constructs backend implementation
     static implementation* construct(string_type const& log_name, string_type const& source_name, bool force);
@@ -986,7 +986,7 @@ public:
      * \param values A set of attribute values that are used to create the event
      * \param message An event message
      */
-    void write_message(values_view_type const& values, string_type const& message);
+    void consume(values_view_type const& values, string_type const& message);
 
     /*!
      * The method installs the function object that maps application severity levels to WinAPI event types

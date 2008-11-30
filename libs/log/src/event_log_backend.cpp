@@ -291,7 +291,7 @@ void basic_simple_event_log_backend< CharT >::set_event_type_mapper(event_type_m
 
 //! The method puts the formatted message to the event log
 template< typename CharT >
-void basic_simple_event_log_backend< CharT >::do_write_message(values_view_type const& values, target_string_type const& formatted_message)
+void basic_simple_event_log_backend< CharT >::do_consume(values_view_type const& values, target_string_type const& formatted_message)
 {
     const char_type* message = formatted_message.c_str();
     WORD event_type = EVENTLOG_INFORMATION_TYPE;
@@ -564,7 +564,7 @@ typename basic_event_log_backend< CharT >::implementation* basic_event_log_backe
 
 //! The method puts the formatted message to the event log
 template< typename CharT >
-void basic_event_log_backend< CharT >::write_message(values_view_type const& values, string_type const& message)
+void basic_event_log_backend< CharT >::consume(values_view_type const& values, string_type const& message)
 {
     if (!m_pImpl->m_EventComposer.empty())
     {

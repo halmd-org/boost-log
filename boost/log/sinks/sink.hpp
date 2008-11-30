@@ -11,7 +11,7 @@
  * \file   sink.hpp
  * \author Andrey Semashev
  * \date   22.04.2007
- * 
+ *
  * The header contains implementation of sink frontents and a general interface of sinks
  * for the logging core.
  */
@@ -118,10 +118,10 @@ public:
 
     /*!
      * The method returns \c true if no filter is set or the attribute values pass the filter
-     * 
+     *
      * \param attributes A set of attribute values of a logging record
      */
-    bool will_write_message(values_view_type const& attributes)
+    bool will_consume(values_view_type const& attributes)
     {
 #if !defined(BOOST_LOG_NO_THREADS)
         scoped_read_lock _(m_FilterMutex);
@@ -131,16 +131,16 @@ public:
 
     /*!
      * The method puts logging message to the sink
-     * 
+     *
      * \param attributes A set of attribute values of a logging record
      * \param message Logging record message text
      */
-    virtual void write_message(values_view_type const& attributes, string_type const& message) = 0;
+    virtual void consume(values_view_type const& attributes, string_type const& message) = 0;
 };
 
 /*!
  * \brief Non-blocking logging sink frontend
- * 
+ *
  * The sink frontend does not perform thread synchronization and
  * simply passes logging records to the sink backend.
  */
@@ -175,7 +175,7 @@ public:
     unlocked_sink() : m_pBackend(new sink_backend_type()) {}
     /*!
      * Constructor attaches user-constructed backend instance
-     * 
+     *
      * \param backend Pointer to the backend instance. Must not be NULL.
      */
     explicit unlocked_sink(shared_ptr< sink_backend_type > const& backend) : m_pBackend(backend)
@@ -190,13 +190,13 @@ public:
 
     /*!
      * The method puts logging message to the sink
-     * 
+     *
      * \param attributes A set of attribute values of a logging record
      * \param message Logging record message text
      */
-    void write_message(values_view_type const& attributes, string_type const& message)
+    void consume(values_view_type const& attributes, string_type const& message)
     {
-        m_pBackend->write_message(attributes, message);
+        m_pBackend->consume(attributes, message);
     }
 };
 
@@ -275,7 +275,7 @@ namespace aux {
 
 /*!
  * \brief Synchronous logging sink frontend
- * 
+ *
  * The sink frontend serializes threads before passing logging records to the backend
  */
 template< typename SinkBackendT >
@@ -328,7 +328,7 @@ public:
     synchronous_sink() : m_pBackend(new sink_backend_type()) {}
     /*!
      * Constructor attaches user-constructed backend instance
-     * 
+     *
      * \param backend Pointer to the backend instance. Must not be NULL.
      */
     explicit synchronous_sink(shared_ptr< sink_backend_type > const& backend) : m_pBackend(backend)
@@ -349,14 +349,14 @@ public:
 
     /*!
      * The method puts logging message to the sink
-     * 
+     *
      * \param attributes A set of attribute values of a logging record
      * \param message Logging record message text
      */
-    void write_message(values_view_type const& attributes, string_type const& message)
+    void consume(values_view_type const& attributes, string_type const& message)
     {
         scoped_lock _(m_Mutex);
-        m_pBackend->write_message(attributes, message);
+        m_pBackend->consume(attributes, message);
     }
 };
 
@@ -374,15 +374,15 @@ namespace aux {
         //! Attribute values view type
         typedef basic_attribute_values_view< char_type > values_view_type;
 
-        //! Callback type to call write_message in the backend
-        typedef void (*write_message_callback_t)(void*, values_view_type const&, string_type const&); 
+        //! Callback type to call \c consume in the backend
+        typedef void (*consume_callback_t)(void*, values_view_type const&, string_type const&);
 
     private:
         class implementation;
         implementation* pImpl;
-        
+
     public:
-        asynchronous_sink_impl(void* pBackend, write_message_callback_t wmc);
+        asynchronous_sink_impl(void* pBackend, consume_callback_t wmc);
         ~asynchronous_sink_impl();
 
         //! The method puts the record into the queue
@@ -400,7 +400,7 @@ namespace aux {
 
 /*!
  * \brief Asynchronous logging sink frontend
- * 
+ *
  * The frontend starts a separate thread on construction. All logging records are passed
  * to the backend in this dedicated thread only.
  */
@@ -449,17 +449,17 @@ public:
      */
     asynchronous_sink() :
         m_pBackend(new sink_backend_type()),
-        m_Impl(m_pBackend.get(), &asynchronous_sink::write_message_trampoline)
+        m_Impl(m_pBackend.get(), &asynchronous_sink::consume_trampoline)
     {
     }
     /*!
      * Constructor attaches user-constructed backend instance
-     * 
+     *
      * \param backend Pointer to the backend instance. Must not be NULL.
      */
     explicit asynchronous_sink(shared_ptr< sink_backend_type > const& backend) :
         m_pBackend(backend),
-        m_Impl(m_pBackend.get(), &asynchronous_sink::write_message_trampoline)
+        m_Impl(m_pBackend.get(), &asynchronous_sink::consume_trampoline)
     {
         BOOST_ASSERT(!!backend);
     }
@@ -474,11 +474,11 @@ public:
 
     /*!
      * The method puts logging message to the sink
-     * 
+     *
      * \param attributes A set of attribute values of a logging record
      * \param message Logging record message text
      */
-    void write_message(values_view_type const& attributes, string_type const& message)
+    void consume(values_view_type const& attributes, string_type const& message)
     {
         m_Impl.enqueue_message(attributes, message);
     }
@@ -486,10 +486,10 @@ public:
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! Trampoline function to invoke the backend
-    static void write_message_trampoline(void* pBackend, values_view_type const& attributes, string_type const& message)
+    static void consume_trampoline(void* pBackend, values_view_type const& attributes, string_type const& message)
     {
         sink_backend_type* p = reinterpret_cast< sink_backend_type* >(pBackend);
-        p->write_message(attributes, message);
+        p->consume(attributes, message);
     }
 #endif // BOOST_LOG_DOXYGEN_PASS
 };

@@ -338,7 +338,7 @@ bool basic_core< CharT >::open_record(attribute_set_type const& source_attribute
                 {
                     try
                     {
-                        if (it->get()->will_write_message(record.AttributeValues))
+                        if (it->get()->will_consume(record.AttributeValues))
                             record.AcceptingSinks.push_back(*it);
                     }
                     catch (...)
@@ -388,7 +388,7 @@ void basic_core< CharT >::push_record(string_type const& message_text)
             end = record.AcceptingSinks.end();
         for (; it != end; ++it) try
         {
-            (*it)->write_message(record.AttributeValues, message_text);
+            (*it)->consume(record.AttributeValues, message_text);
         }
         catch (...)
         {

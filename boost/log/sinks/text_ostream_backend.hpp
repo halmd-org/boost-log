@@ -11,7 +11,7 @@
  * \file   text_ostream_backend.hpp
  * \author Andrey Semashev
  * \date   22.04.2007
- * 
+ *
  * The header contains implementation of a text output stream sink backend.
  */
 
@@ -46,7 +46,7 @@ namespace sinks {
 
 /*!
  * \brief An implementation of a text output stream logging sink backend
- * 
+ *
  * The sink backend puts formatted log records to one or more text streams.
  * The sink supports \c record_writer interface.
  */
@@ -101,14 +101,14 @@ public:
 
     /*!
      * The method adds a new stream to the sink.
-     * 
+     *
      * \param strm Pointer to the stream. Must not be NULL.
      */
     void add_stream(shared_ptr< stream_type > const& strm);
     /*!
      * The method removes a stream from the sink. If the stream is not attached to the sink,
      * the method has no effect.
-     * 
+     *
      * \param strm Pointer to the stream. Must not be NULL.
      */
     void remove_stream(shared_ptr< stream_type > const& strm);
@@ -121,7 +121,7 @@ public:
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method writes the message to the sink
-    void do_write_message(values_view_type const& attributes, target_string_type const& formatted_message);
+    void do_consume(values_view_type const& attributes, target_string_type const& formatted_message);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

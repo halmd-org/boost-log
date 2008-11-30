@@ -163,7 +163,7 @@ void basic_syslog_backend< CharT >::set_severity_mapper(severity_mapper_type con
 
 //! The method writes the message to the sink
 template< typename CharT >
-void basic_syslog_backend< CharT >::do_write_message(
+void basic_syslog_backend< CharT >::do_consume(
     values_view_type const& attributes, target_string_type const& formatted_message)
 {
     const int facility = m_pImpl->m_Facility;

@@ -95,7 +95,7 @@ public:
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method puts the formatted message to debugger
-    void do_write_message(values_view_type const& values, target_string_type const& formatted_message);
+    void do_consume(values_view_type const& values, target_string_type const& formatted_message);
 #endif
 };
 

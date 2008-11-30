@@ -11,7 +11,7 @@
  * \file   basic_sink_backend.hpp
  * \author Andrey Semashev
  * \date   04.11.2007
- * 
+ *
  * The header contains implementation of base classes for sink backends.
  */
 
@@ -46,7 +46,7 @@ namespace sinks {
 
 /*!
  * \brief Base class for a logging sink backend
- * 
+ *
  * The \c basic_sink_backend class template defines a number of types that
  * all sink backends are required to define. All sink backends have to derive from the class.
  */
@@ -66,7 +66,7 @@ struct basic_sink_backend : noncopyable
 
 /*!
  * \brief A base class for a logging sink backend with message formatting support
- * 
+ *
  * The \c basic_formatting_sink_backend class template implements logging record
  * formatting. Formatting requires storing auxiliary data, such as formatter and
  * formatting stream. This requires thread synchronization to be done in sink frontend.
@@ -134,7 +134,7 @@ private:
 public:
     /*!
      * Default constructor
-     * 
+     *
      * \post The sink backend base class is initialized. The formatter is not set.
      */
     basic_formatting_sink_backend() :
@@ -146,7 +146,7 @@ public:
 
     /*!
      * The method sets formatter functional object
-     * 
+     *
      * \param fmt Formatter object
      */
     template< typename T >
@@ -180,15 +180,15 @@ public:
 
     /*!
      * The method formats the message and passes it to the to the sink implementation
-     * by calling \c do_write_message.
-     * 
-     * \note Do not override in derived classes. Use \c do_write_message method to process
+     * by calling \c do_consume.
+     *
+     * \note Do not override in derived classes. Use \c do_consume method to process
      *       the formatted message in a sink-specific manner.
-     * 
+     *
      * \param attributes A set of attribute values attached to the log record
      * \param message Log record message text
      */
-    void write_message(values_view_type const& attributes, string_type const& message)
+    void consume(values_view_type const& attributes, string_type const& message)
     {
         log::aux::cleanup_guard< stream_type > cleanup1(m_FormattingStream);
         log::aux::cleanup_guard< target_string_type > cleanup2(m_FormattedRecord);
@@ -202,17 +202,17 @@ public:
         m_FormattingStream.flush();
 
         // Pass the formatted string to the backend implementation
-        do_write_message(attributes, m_FormattedRecord);
+        do_consume(attributes, m_FormattedRecord);
     }
 
 protected:
     /*!
      * A backend-defined implementation of the formatted message processing
-     * 
+     *
      * \param attributes A set of attribute values attached to the log record
      * \param formatted_message Formatted log record
      */
-    virtual void do_write_message(values_view_type const& attributes, target_string_type const& formatted_message) = 0;
+    virtual void do_consume(values_view_type const& attributes, target_string_type const& formatted_message) = 0;
 };
 
 } // namespace sinks

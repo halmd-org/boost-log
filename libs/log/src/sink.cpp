@@ -85,8 +85,8 @@ private:
     volatile bool m_Finishing;
     //! Opaque pointer to the sink backend
     void* m_pBackend;
-    //! Pointer to the write_message callback
-    write_message_callback_t m_WriteMessageCallback;
+    //! Pointer to the \c consume callback
+    consume_callback_t m_ConsumeCallback;
 
     //! Records queue waiting to be output
     enqueued_records m_EnqueuedRecords;
@@ -106,10 +106,10 @@ private:
 
 public:
     //! Constructor
-    implementation(void* p, write_message_callback_t wmc) :
+    implementation(void* p, consume_callback_t ccb) :
         m_Finishing(false),
         m_pBackend(p),
-        m_WriteMessageCallback(wmc)
+        m_ConsumeCallback(ccb)
     {
         m_Thread = boost::in_place(thread_starter(this));
     }
@@ -179,7 +179,7 @@ private:
                 {
                     enqueued_record const& rec = ExtractedRecords.front();
                     shared_backend_lock::scoped_lock lock(m_SharedBackendMutex);
-                    m_WriteMessageCallback(m_pBackend, rec.Attributes, rec.Message);
+                    m_ConsumeCallback(m_pBackend, rec.Attributes, rec.Message);
                 }
                 catch (...)
                 {
@@ -194,8 +194,8 @@ private:
 
 //! Constructor
 template< typename CharT >
-asynchronous_sink_impl< CharT >::asynchronous_sink_impl(void* pBackend, write_message_callback_t wmc)
-    : pImpl(new implementation(pBackend, wmc))
+asynchronous_sink_impl< CharT >::asynchronous_sink_impl(void* pBackend, consume_callback_t ccb)
+    : pImpl(new implementation(pBackend, ccb))
 {
 }
 

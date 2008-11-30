@@ -9,7 +9,7 @@
 
 [section:advanced Detailed features description]
 
-This section contains a more detailed description of library components and features. Some of them are presented in the [link tutorial.tutorial Tutorual] section, so it is recommended to read it first to get the basic understanding of the library.
+This section contains a more detailed description of library components and features. Some of them are presented in the [link tutorial.tutorial Tutorial] section, so it is recommended to read it first to get the basic understanding of the library.
 
 [section:sources Logging sources]
 
@@ -17,7 +17,7 @@ This section contains a more detailed description of library components and feat
 
     #include <boost/log/sources/basic_logger.hpp>
 
-The simpliest logging sources provided by the library are loggers `logger` and its thread-safe version, `logger_mt` (`wlogger` and `wlogger_mt` for wide-character logging, accordingly). These loggers only provide an ability to store source-specific attributes within themselves and, of course, to form log records. This type of loggers should probably be used in case if there is no need in advanced features like severity level checks. It may well be used as a tool to collect application statistics and register application events, such as notifications and alarms. In such cases the logger is normally used in conjunction with [link advanced.advanced.utilities.scoped_attributes scoped attributes] to attach the needed data to the notification event. Below is an example of usage:
+The simplest logging sources provided by the library are loggers `logger` and its thread-safe version, `logger_mt` (`wlogger` and `wlogger_mt` for wide-character logging, accordingly). These loggers only provide an ability to store source-specific attributes within themselves and, of course, to form log records. This type of loggers should probably be used in case if there is no need in advanced features like severity level checks. It may well be used as a tool to collect application statistics and register application events, such as notifications and alarms. In such cases the logger is normally used in conjunction with [link advanced.advanced.utilities.scoped_attributes scoped attributes] to attach the needed data to the notification event. Below is an example of usage:
 
     class network_connection
     {
@@ -37,7 +37,7 @@ The simpliest logging sources provided by the library are loggers `logger` and i
         }
         void on_disconnected()
         {
-            // The simplier way of logging: the above "if" condition is wrapped into a neat macro
+            // The simpler way of logging: the above "if" condition is wrapped into a neat macro
             BOOST_LOG(m_logger) << "Connection shut down";
 
             // Remove the attribute with the remote address
@@ -45,7 +45,7 @@ The simpliest logging sources provided by the library are loggers `logger` and i
         }
         void on_data_received(std::size_t size)
         {
-            // Put the size as an additional attrubute so it can be collected and accumulated later if needed
+            // Put the size as an additional attribute so it can be collected and accumulated later if needed
             // The attribute will be attached to the only log record that is made within the current scope
             BOOST_LOG_SCOPED_LOGGER_TAG(m_logger, "ReceivedSize", attr::constant< std::size_t >, size);
             BOOST_LOG(m_logger) << "Some data received";
@@ -139,7 +139,7 @@ Sometimes it is important to categorize log records based on some constant piece
         }
         void on_data_received(std::size_t size)
         {
-            // Put the size as an additional attrubute so it can be collected and accumulated later if needed
+            // Put the size as an additional attribute so it can be collected and accumulated later if needed
             // The attribute will be attached to the only log record that is made within the current scope
             BOOST_LOG_SCOPED_LOGGER_TAG(m_stat, "ReceivedSize", attr::constant< std::size_t >, size);
             BOOST_LOG(m_stat) << "Some data received";
@@ -169,11 +169,11 @@ Sometimes it is inconvenient to have a logger object to be able to write logs. T
 
 The library provides a way to declare global loggers that can be accessed pretty much like `std::cout`. In fact, this feature can be used with any loggers, including user-defined ones. Having declared a global logger, one can be sure to have a thread-safe access to this logger instance from any place of the application code. The library also guarantees that a global logger instance will be singular even across module boundaries. This allows to employ logging even in header-only components that may be compiled into different modules.
 
-One may wonder why there is need for something special in order to create global loggers. Why not just declaring a logger variable in the namespace scope and use it whereever you need? While technically this is possible, declaring and using global logger variables is complicated for the following reasons:
+One may wonder why there is need for something special in order to create global loggers. Why not just declaring a logger variable in the namespace scope and use it wherever you need? While technically this is possible, declaring and using global logger variables is complicated for the following reasons:
 
 * Order of initialization of the namespace scope variables is not specified by the C++ Standard. It means that generally you cannot use the logger during this stage of initialization (i.e. before `main`).
 * Initialization of the namespace scope variables is not thread-safe. You may end up initializing the same logger twice or using an uninitialized logger.
-* Using namespace scope variables in a header-only library is quite complicated. One either has to declare a variable with external linkage and define it only in a single translation unit (that is, in a separate .cpp file, which defeats the "header-only" thesis), or define a variable with internal linkage, or as a special case in an anonymous namespace (this will most likely break ODR and give unexpected results when the header is used in different TUs). There are other compiler-specific and standard tricks to tacle the problem, but they are not too trivial and portable.
+* Using namespace scope variables in a header-only library is quite complicated. One either has to declare a variable with external linkage and define it only in a single translation unit (that is, in a separate .cpp file, which defeats the "header-only" thesis), or define a variable with internal linkage, or as a special case in an anonymous namespace (this will most likely break ODR and give unexpected results when the header is used in different TUs). There are other compiler-specific and standard tricks to tackle the problem, but they are not too trivial and portable.
 * On most platforms namespace scope variables are local to the module where they were compiled in. That is, if variable `a` has external linkage and was compiled into modules X and Y, each of these modules have its independent copy of variable `a`. To make things worse, on other platforms this variable may get shared between the modules.
 
 Global logger storage is intended to eliminate all these problems.
@@ -231,7 +231,7 @@ Every sink object that is compatible with the logging library is required to sup
 
     #include <boost/log/sinks/sink.hpp>
 
-The unlocked sink frontend is implemented with the `unlocked_sink` class template. This frontend provides the most basic service for the backend, which is filtering. The `unlocked_sink` performs no thread synchronization when accessing the backend, assuming that either the syncronization is not needed or the syncronization is implemented in the backend. However, filtering is still thread-safe (that is, one can safely change filter in the `unlocked_sink` frontend while other threads are writing logs through this sink). This is the only sink frontend available in a single thread environment. The example of use is as follows:
+The unlocked sink frontend is implemented with the `unlocked_sink` class template. This frontend provides the most basic service for the backend, which is filtering. The `unlocked_sink` performs no thread synchronization when accessing the backend, assuming that either the synchronization is not needed or the synchronization is implemented in the backend. However, filtering is still thread-safe (that is, one can safely change filter in the `unlocked_sink` frontend while other threads are writing logs through this sink). This is the only sink frontend available in a single thread environment. The example of use is as follows:
 
     // Some sink backend (for simplicity synchronization code omitted)
     class my_backend :
@@ -239,7 +239,7 @@ The unlocked sink frontend is implemented with the `unlocked_sink` class templat
     {
     public:
         // The method is called for every log record being put into the sink backend
-        void write_message(values_view_type const& attributes, string_type const& message)
+        void consume(values_view_type const& attributes, string_type const& message)
         {
             std::cout << message << std::endl;
         }
@@ -250,7 +250,7 @@ The unlocked sink frontend is implemented with the `unlocked_sink` class templat
     {
         boost::shared_ptr< logging::core > core = logging::core::get();
 
-        // The simpliest way, the backend is default-constructed
+        // The simplest way, the backend is default-constructed
         boost::shared_ptr< sink< char > > sink1(new sinks::unlocked_sink< my_backend >);
         core->add_sink(sink1);
 
@@ -333,7 +333,7 @@ The frontend is implemented in the `asynchronous_sink` class template. Like sync
         } // the backend gets released here
     }
 
-[important If asynchronous logging is used in multi-module application, one should decide carefully when to unload dynamically loaded modules that write logs. The library has many places where it may end up using resources that are physically reside in the dynamically loaded module. Examples of such resources are virtual tables, string literals and functions. If it appears that either of these resources are used by the library, whereas the module in which they reside gets unloaded, the application will most probably crash. Strictly speaking, this problem persists with any sink type (and is not limited to sinks in the first place), but asynchronous sinks introduce an additional problem. User cannot tell which recources are used by the asynchronous sink because it works in a dedicated thread and use buffered log records. There is no general solution for this issue. Users are advised to either avoid dynamic module unloading during the application work time, or to avoid asynchronous logging. As an additional way to cope with the problem, one may try to shutdown all asynchronous sinks before unloading any modules, and after unloading re-create them. However, avoiding dynamic unloading is the only way to solve the problem completely.]
+[important If asynchronous logging is used in multi-module application, one should decide carefully when to unload dynamically loaded modules that write logs. The library has many places where it may end up using resources that are physically reside in the dynamically loaded module. Examples of such resources are virtual tables, string literals and functions. If it appears that either of these resources are used by the library, whereas the module in which they reside gets unloaded, the application will most probably crash. Strictly speaking, this problem persists with any sink type (and is not limited to sinks in the first place), but asynchronous sinks introduce an additional problem. User cannot tell which resources are used by the asynchronous sink because it works in a dedicated thread and use buffered log records. There is no general solution for this issue. Users are advised to either avoid dynamic module unloading during the application work time, or to avoid asynchronous logging. As an additional way to cope with the problem, one may try to shutdown all asynchronous sinks before unloading any modules, and after unloading re-create them. However, avoiding dynamic unloading is the only way to solve the problem completely.]
 
 [endsect]
 
@@ -446,6 +446,250 @@ The usage is quite simple and straightforward:
 
 [endsect]
 
+[section:event_log Windows event log backends]
+
+    #include <boost/log/sinks/event_log_backend.hpp>
+
+The Windows OS provides a special API for publishing events related to the application execution. Wide range of applications, including Windows components, use this facility to provide user with all essential information about computer health in a single place - an event log. There can be more than one event logs, however, typically all user-space applications use the common Application log. Records from different applications or their parts can be selected from the log by a record source name. Event logs can be read with a standard utility, an Event Viewer, that comes with Windows installation.
+
+Although it looks very tempting, the API is quite complicated and intrusive, which makes it difficult to support. The application is required to provide a dynamic library with special resources that describe all events the application supports. This library must be registered in the Windows registry, which pins its location on the file system. The Event Viewer uses this registration to find the resources and compose and display messages. The positive feature of this approach is that since event resources can describe events differently for different languages, it allows application to support event internationalization in a quite transparent manner: the application simply provides event identifiers and non-localizable event parameters to the API, and it does the rest of the work.
+
+In order to support both the simplistic approach "it just works" and the more elaborate event composition, including internationalization support, the library provides two sink backends that work with event log API.
+
+[heading Simple event log backend]
+
+The `simple_event_log_backend` backend is intended to encapsulate as much of the event log API as possible, leaving interface and usage model very similar to other sink backends. It contains all needed resources that are needed for the Event Viewer to function properly, and registers the Boost.Log library in the Windows registry in order to populate itself as the container of these resources.
+
+[note The library must be built as a dynamic library in order to use this backend flawlessly. Otherwise event description resources are not linked into the executable, and the Event Viewer is not able to display events properly.]
+
+The only thing user has to do to add Windows event log support to his application is to provide event source and log names (which are optional and can be automatically suggested by the library), setup appropriate filter, formatter and event severity mapping. There is an `event_log` example available in the library directory that shows how to use the backend.
+
+    // Define application-specific severity levels
+    enum severity_levels
+    {
+        normal,
+        warning,
+        error
+    };
+
+    // The function registers the Windows event log backend
+    void foo()
+    {
+        // Create an event log sink
+        boost::shared_ptr< sinks::simple_event_log_backend > backend(
+            new sinks::simple_event_log_backend((
+                sinks::keywords::log_name = "My Application", // by default it would have been Application
+                sinks::keywords::log_source = "My Source"     // by default it would have been based on the application executable name
+            ))
+        );
+        boost::shared_ptr< sinks::synchronous_sink< sinks::simple_event_log_backend > > sink(
+            new sinks::synchronous_sink< sinks::simple_event_log_backend >(backend));
+
+        // Setup the message formatter
+        backend->set_formatter(
+            fmt::format("%1%: [%2%] - %3%")
+                % fmt::attr< unsigned int >("Line #")
+                % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
+                % fmt::message()
+            );
+
+        // We'll have to map our custom levels to the event log event types
+        sinks::event_log::custom_event_type_mapping< severity_levels > mapping("Severity");
+        mapping[normal] = sinks::event_log::info;
+        mapping[warning] = sinks::event_log::warning;
+        mapping[error] = sinks::event_log::error;
+
+        backend->set_event_type_mapper(mapping);
+
+        // Add the sink to the core
+        logging::core::get()->add_sink(sink);
+    }
+
+Having done that, all logging records that pass to the sink will be formatted the same way they are in the other sinks. The formatted message will be displayed in the Event Viewer as the event description.
+
+[heading Advanced event log backend]
+
+The `event_log_backend` allows a more detailed control over the logging API, but requires considerably more scaffolding during initialization and usage.
+
+First, user has to build his own library with the event resources (the process is described in [@http://msdn.microsoft.com/en-us/library/aa363681(VS.85).aspx MSDN]). As a part of this process one has to create a message file that describes all events. For sake of example, let's assume the following contents were used as the message file:
+
+[pre
+; /* --------------------------------------------------------
+; HEADER SECTION
+; */
+SeverityNames=(Debug=0x0:MY_SEVERITY_DEBUG
+            Info=0x1:MY_SEVERITY_INFO
+            Warning=0x2:MY_SEVERITY_WARNING
+            Error=0x3:MY_SEVERITY_ERROR
+            )
+
+; /* --------------------------------------------------------
+; MESSAGE DEFINITION SECTION
+; */
+
+MessageIdTypedef=WORD
+
+MessageId=0x1
+SymbolicName=MY_CATEGORY_1
+Language=English
+Category 1
+.
+
+MessageId=0x2
+SymbolicName=MY_CATEGORY_2
+Language=English
+Category 2
+.
+
+MessageId=0x3
+SymbolicName=MY_CATEGORY_3
+Language=English
+Category 3
+.
+
+MessageIdTypedef=DWORD
+
+MessageId=0x100
+Severity=Warning
+Facility=Application
+SymbolicName=LOW_DISK_SPACE_MSG
+Language=English
+The drive %1 has low free disk space. At least %2 Mb of free space is recommended.
+.
+
+MessageId=0x101
+Severity=Error
+Facility=Application
+SymbolicName=DEVICE_INACCESSIBLE_MSG
+Language=English
+The drive %1 is not accessible.
+.
+
+MessageId=0x102
+Severity=Info
+Facility=Application
+SymbolicName=SUCCEEDED_MSG
+Language=English
+Operation finished successfully in %1 seconds.
+.
+]
+
+After compiling the resource library, the path to this library must be provided to the sink backend constructor, among other parameters used with the simple backend. The path may contain placeholders that will be expanded with the appropriate environment variables.
+
+    // Create an event log sink
+    boost::shared_ptr< sinks::event_log_backend > backend(
+        new sinks::event_log_backend((
+            sinks::keywords::message_file = "%SystemDir%\\my_events.dll",
+            sinks::keywords::log_name = "My Application",
+            sinks::keywords::log_source = "My Source"
+        ))
+    );
+
+Like the simple backend, the `event_log_backend` will register itself in the Windows registry, which will enable the Event Viewer to display the emitted events.
+
+Next, user will have to provide mapping between the application logging attributes and event identifiers. These identifiers were provided in the message compiler output as a result of compiling the message file. One can use `event_composer` and one of the event ID mappings, like in the following example:
+
+    // Create an event composer. It is initialized with the event identifier mapping.
+    sinks::event_log::event_composer composer(sinks::event_log::direct_event_id_mapping< int >("EventID"));
+
+    // For each event described in the message file, set up the insertion string formatters
+    composer[LOW_DISK_SPACE_MSG]
+        % fmt::attr< std::string >("Drive")      // the first placeholder in the message will be replaced with contents of the "Drive" attribute
+        % fmt::attr< boost::uintmax_t >("Size"); // the second placeholder in the message will be replaced with contents of the "Size" attribute
+
+    composer[DEVICE_INACCESSIBLE_MSG]
+        % fmt::attr< std::string >("Drive");
+
+    composer[SUCCEEDED_MSG]
+        % fmt::attr< unsigned int >("Duration");
+
+    // Then put the composer to the backend
+    backend->set_event_composer(composer);
+
+As you can see, one can use regular [link advanced.advanced.formatters formatters] to specify which attributes will be inserted instead of placeholders in the final event message. Aside from that, one can specify mappings of attribute values to event types and categories:
+
+    // Define application-specific severity levels
+    enum severity_levels
+    {
+        normal,
+        warning,
+        error
+    };
+
+    // We'll have to map our custom levels to the event log event types
+    sinks::event_log::custom_event_type_mapping< severity_levels > type_mapping("Severity");
+    type_mapping[normal] = sinks::event_log::make_event_type(MY_SEVERITY_INFO);
+    type_mapping[warning] = sinks::event_log::make_event_type(MY_SEVERITY_WARNING);
+    type_mapping[error] = sinks::event_log::make_event_type(MY_SEVERITY_ERROR);
+
+    backend->set_event_type_mapper(type_mapping);
+
+    // Same for event categories. Usually event categories can be restored by the event identifier.
+    sinks::event_log::custom_event_category_mapping< int > cat_mapping("EventID");
+    cat_mapping[LOW_DISK_SPACE_MSG] = sinks::event_log::make_event_category(MY_CATEGORY_1);
+    cat_mapping[DEVICE_INACCESSIBLE_MSG] = sinks::event_log::make_event_category(MY_CATEGORY_2);
+    cat_mapping[SUCCEEDED_MSG] = sinks::event_log::make_event_category(MY_CATEGORY_3);
+
+    backend->set_event_category_mapper(cat_mapping);
+
+[note In Windows NT 6 (Vista, Server 2008) and later it is not needed to specify event type mappings. This information is available in the message definition resources and need not to be duplicated in the API call.]
+
+Now that initialization is done, the sink can be registered into the core.
+
+    // Create the frontend for the sink
+    boost::shared_ptr< sinks::synchronous_sink< sinks::event_log_backend > > sink(
+        new sinks::synchronous_sink< sinks::event_log_backend >(backend));
+
+    // Set up filter to pass only records that have the necessary attribute
+    sink->set_filter(flt::has_attr< int >("EventID"));
+
+    logging::core::get()->add_sink(sink);
+
+In order to emit events it is convenient to create a set of functions that will accept all needed parameters for the corresponding events and announce that the event has occurred.
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER(event_logger, src::severity_logger_mt< severity_levels >)
+
+    // The function raises an event of the disk space depletion
+    void announce_low_disk_space(std::string const& drive, boost::uintmax_t size)
+    {
+        BOOST_LOG_SCOPED_THREAD_TAG("EventID", int, LOW_DISK_SPACE_MSG);
+        BOOST_LOG_SCOPED_THREAD_TAG("Drive", std::string, drive);
+        BOOST_LOG_SCOPED_THREAD_TAG("Size", boost::uintmax_t, size);
+        // Since this record may get accepted by other sinks, this message is not completely useless
+        BOOST_LOG_SEV(event_logger::get(), warning) << "Low disk " << drive
+            << " space, " << size << " Mb is recommended";
+    }
+
+    // The function raises an event of inaccessible disk drive
+    void announce_device_inaccessible(std::string const& drive)
+    {
+        BOOST_LOG_SCOPED_THREAD_TAG("EventID", int, DEVICE_INACCESSIBLE_MSG);
+        BOOST_LOG_SCOPED_THREAD_TAG("Drive", std::string, drive);
+        BOOST_LOG_SEV(event_logger::get(), error) << "Cannot access drive " << drive;
+    }
+
+    // The structure is an activity guard that will emit an event upon the activity completion
+    struct activity_guard
+    {
+        activity_guard()
+        {
+            // Add a stop watch attribute to measure the activity duration
+            boost::shared_ptr< attrs::timer > attr(new attrs::timer());
+            m_it = event_logger::get().add_attribute("Duration", attr);
+        }
+        ~activity_guard()
+        {
+            BOOST_LOG_SCOPED_THREAD_TAG("EventID", int, SUCCEEDED_MSG);
+            BOOST_LOG_SEV(event_logger::get(), normal) << "Activity ended";
+            event_logger::get().remove_attribute(m_it);
+        }
+
+    private:
+        event_logger::logger_type::attribute_set_type::iterator m_it;
+    };
+
+[endsect]
+
 [endsect]
 
 
@@ -481,7 +725,7 @@ This filter is usually used in conjunction with [link advanced.advanced.formatte
         }
 
         // The method is called for every log record being put into the sink backend
-        void write_message(values_view_type const& attributes, string_type const& message)
+        void consume(values_view_type const& attributes, string_type const& message)
         {
             // First, acquire statistic information stream name
             values_view_type::const_iterator itName = attributes.find("StatisticStream");
@@ -551,7 +795,7 @@ This filter is usually used in conjunction with [link advanced.advanced.formatte
         PUT_STAT(lg, "StreamOne", -5);
     }
 
-Please note that in the example above we extended the library in two ways: we defined a new sink backend `my_stat_accumulator` and a new macro `PUT_STAT`. Also note the technique of extracting attrubute value from the view - we need to both check that the needed attribute value is found in the view and that it has the needed type. There is also a mechanism of [link advanced.advanced.utilities.extractors attribute value extractors] that can simplify this, especially when an attribute can have a number of types.
+Please note that in the example above we extended the library in two ways: we defined a new sink backend `my_stat_accumulator` and a new macro `PUT_STAT`. Also note the technique of extracting attribute value from the view - we need to both check that the needed attribute value is found in the view and that it has the needed type. There is also a mechanism of [link advanced.advanced.utilities.extractors attribute value extractors] that can simplify this, especially when an attribute can have a number of types.
 
 [endsect]
 
@@ -571,7 +815,7 @@ Besides generating lambda expressions, the `attr` placeholder allows to construc
 
     sink->set_filter(flt::attr< int >("Severity").is_in_range(3, 5)); // drops all records that have level below 3 or greater than 4
 
-* `satisfies(FunT const& fun)` allows to inject a user-defined unary predicate `fun` into the filter. The preticate should accept an attribute value as an argument and return a value, convertible to boolean. The result of the filter will be equivalent to the result of the predicate. For example:
+* `satisfies(FunT const& fun)` allows to inject a user-defined unary predicate `fun` into the filter. The predicate should accept an attribute value as an argument and return a value, convertible to boolean. The result of the filter will be equivalent to the result of the predicate. For example:
 
     bool check_severity_level(int level);
 
@@ -579,9 +823,9 @@ Besides generating lambda expressions, the `attr` placeholder allows to construc
 
 The `attr` placeholder has an advanced support for string-typed attribute values (that have type `std::string` or `std::wstring`, that is). For string attribute values there are also available the following member functions:
 
-* `begins_with(T const& s)`, `ends_with(T const& s)` and `contains(T const& s)`. As follows from their names, the functions construct filters that rerurn `true` if an attribute value begins with, ends with or contains the specified substring `s`, respectively. The string comparison is case sensitive.
+* `begins_with(T const& s)`, `ends_with(T const& s)` and `contains(T const& s)`. As follows from their names, the functions construct filters that return `true` if an attribute value begins with, ends with or contains the specified substring `s`, respectively. The string comparison is case sensitive.
 
-    sink->set_filter(flt::attr< std::string >("Domain").ends_with(".ru")); // selects only records that are related to russian web domains
+    sink->set_filter(flt::attr< std::string >("Domain").ends_with(".ru")); // selects only records that are related to Russian web domains
 
 * `matches(T const& regex)` allows to set up a filter based on __boost_regex__ regular expressions matching mechanism. The filter returns `true` if the attribute value matches the `regex` expression.
 
@@ -593,7 +837,7 @@ The `attr` placeholder has an advanced support for string-typed attribute values
 
 [section:formatters Formatters]
 
-As it was noted in the [link tutorial.tutorial.formatters tutorial], the library provides two ways of expressing formatters: with a stream-style syntax or __boost_format__-style expression. Which of the two formats is chosen is determined with the apropriate anchor expression. To use stream-style syntax one should begin formatter definition with a `ostrm` or `wostrm` keyword, like that:
+As it was noted in the [link tutorial.tutorial.formatters tutorial], the library provides two ways of expressing formatters: with a stream-style syntax or __boost_format__-style expression. Which of the two formats is chosen is determined with the appropriate anchor expression. To use stream-style syntax one should begin formatter definition with a `ostrm` or `wostrm` keyword, like that:
 
     #include <boost/log/formatters/ostream.hpp>
 
@@ -613,7 +857,7 @@ The format string passed to the `format` keyword should contain positional place
 
     #include <boost/log/formatters/attr.hpp>
 
-The `attr` formatter is the most generic and simple way to format an attribute value. In the simpliest form it is equivalent to putting the specified attribute value into an STL stream with an `operator <<` associated with the attribute value type. For example:
+The `attr` formatter is the most generic and simple way to format an attribute value. In the simplest form it is equivalent to putting the specified attribute value into an STL stream with an `operator <<` associated with the attribute value type. For example:
 
     // A custom attribute value type
     struct A
@@ -682,7 +926,7 @@ The `time_duration` formatter is responsible for formatting time periods that ar
     // Puts a time duration of the specified type into log.
     backend->set_formatter(fmt::ostrm << fmt::time_duration< boost::posix_time::time_duration >("Duration", fmt::keywords::format = "%H:%M:%S"));
 
-The `time_period` formatter composes two time points that denote a time period. It supports tha following types: `boost::posix_time::time_period`, `boost::local_time::local_time_period` and `boost::gregorian::date_period`. The formatter is a bit more special since it supports two kinds of format strings, the one that describes the date format, and the one that describes the dates composition. The former can be specified with the named argument `unit_format` and the latter - with named argument `format`. The time period composition format string may contain either of the three placeholders:
+The `time_period` formatter composes two time points that denote a time period. It supports the following types: `boost::posix_time::time_period`, `boost::local_time::local_time_period` and `boost::gregorian::date_period`. The formatter is a bit more special since it supports two kinds of format strings, the one that describes the date format, and the one that describes the dates composition. The former can be specified with the named argument `unit_format` and the latter - with named argument `format`. The time period composition format string may contain either of the three placeholders:
 
 * `%begin%` - the placeholder will be substituted with the starting time point of the period.
 * `%last%` - the placeholder will be substituted with the last time point of the period.
@@ -786,7 +1030,7 @@ Please note, that for wide character logging there is a similar `wmessage` place
 
 Every attribute supported by the library must derive from the `attribute` interface. This interface has the only virtual method named `get_value`. This method should return the actual attribute value object, derived from the `attribute_value` interface. Such separation allows to implement attributes that can return different values at different time points (like clock-related attributes, for example) and, on the other hand, allows to use different values of the same attribute independently.
 
-The attribute value object is mostly intended to store the actual attribute value and implement type dispatching in order to be able to extract the stored value. One should not confuse the attribute value object type and the stored value type. The former is in most cases not needed by users and is hidden behind the `attribute_value` interface, but the latter is needed to be able to extract the value. For bevity we call the stored attribute value type simply as attribute value type in this documentation.
+The attribute value object is mostly intended to store the actual attribute value and implement type dispatching in order to be able to extract the stored value. One should not confuse the attribute value object type and the stored value type. The former is in most cases not needed by users and is hidden behind the `attribute_value` interface, but the latter is needed to be able to extract the value. For brevity we call the stored attribute value type simply as attribute value type in this documentation.
 
 [section:constant Constants]
 
@@ -815,7 +1059,7 @@ That's it, there's nothing much you can do with a constant attribute. Constants 
 
     #include <boost/log/attribute/mutable_constant.hpp>
 
-This kind of attribute is an extenstion for the [link advanced.advanced.attributes.constant constant attribute]. In addition to being able to store some value, the `mutable_constant` class template has two distinctions:
+This kind of attribute is an extension for the [link advanced.advanced.attributes.constant constant attribute]. In addition to being able to store some value, the `mutable_constant` class template has two distinctions:
 
 * it allows to modify the stored value without re-registering the attribute
 * it allows to synchronize the stores and readings of the stored value
@@ -836,7 +1080,7 @@ In order to change the stored value of the attribute, one must call the `set_val
         BOOST_LOG(lg) << "This record has MyInteger == 100";
     }
 
-In multithreaded applications the `set_value` method calls must be seralized with the `get_value` calls (which, generally speaking, happen on every log record being made). By default `mutable_constant` does not serialize calls in any way, assuming that user will do so externally. However, `mutable_constant` template provides three additional template arguments: synchronization primitive type, scoped exclusive lock type and scoped shareable lock type. If synchronization primitive type is specified, the scoped exclusive lock type is a mandatory parameter. In this case, scoped shareable lock type is not specified, the attribute will fall back to the exclusive lock instead of shared locks. For example:
+In multithreaded applications the `set_value` method calls must be serialized with the `get_value` calls (which, generally speaking, happen on every log record being made). By default `mutable_constant` does not serialize calls in any way, assuming that user will do so externally. However, `mutable_constant` template provides three additional template arguments: synchronization primitive type, scoped exclusive lock type and scoped shareable lock type. If synchronization primitive type is specified, the scoped exclusive lock type is a mandatory parameter. In this case, scoped shareable lock type is not specified, the attribute will fall back to the exclusive lock instead of shared locks. For example:
 
     // This mutable constant will always lock exclusively either for reading or storing the value
     typedef attrs::mutable_constant<
@@ -880,7 +1124,7 @@ In multithreaded applications the `set_value` method calls must be seralized wit
         BOOST_LOG(lg) << "This record has MyInteger2 == 300";
     }
 
-Mutable constants are often used as auxiliary attributes inside loggers to store attriblutes that may change on some events. As opposed to regular constants, which would require re-registering in case of value modification, mutable constants allow to modify the value in-place.
+Mutable constants are often used as auxiliary attributes inside loggers to store attributes that may change on some events. As opposed to regular constants, which would require re-registering in case of value modification, mutable constants allow to modify the value in-place.
 
 [endsect]
 
@@ -888,7 +1132,7 @@ Mutable constants are often used as auxiliary attributes inside loggers to store
 
     #include <boost/log/attributes/counter.hpp>
 
-Counters are one of the simpliest attributes that generate a new value each time requested. Counters are often used to identify log records or to count some events, e.g. accepted network connections. The class template `counter` provides such functionality. This template is parametrized with the counter value type, which should support arithmetic operations, such as `operator +` and `operator -`. The counter attribute allows to specify initial value and step (which can be negative) on construction.
+Counters are one of the simplest attributes that generate a new value each time requested. Counters are often used to identify log records or to count some events, e.g. accepted network connections. The class template `counter` provides such functionality. This template is parametrized with the counter value type, which should support arithmetic operations, such as `operator +` and `operator -`. The counter attribute allows to specify initial value and step (which can be negative) on construction.
 
     BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, src::logger_mt)
     {
@@ -938,7 +1182,7 @@ One of the "must-have" features of any logging library is the support for attach
 
     #include <boost/log/attributes/timer.hpp>
 
-The `timer` attribute is very useful when there is a need to estimate duration of some prolongated process. The attribute returns time duration elapsed since the attribute construction. The attribute value type is `boost::posix_time::ptime::time_duration_type` (see __boost_date_time__).
+The `timer` attribute is very useful when there is a need to estimate duration of some prolonged process. The attribute returns time duration elapsed since the attribute construction. The attribute value type is `boost::posix_time::ptime::time_duration_type` (see __boost_date_time__).
 
     // The class represents a single peer-to-peer connection
     class network_connection
@@ -968,7 +1212,7 @@ The attribute provides high resolution of the time estimation and even can be us
 
     #include <boost/log/attributes/named_scope.hpp>
 
-The logging library supports mainaining scopes stack tracking during the application execution. This stack may either be written to log or be used for other needs (for example, to save the exact call sequence that led to and exception when throwing one). Each stack element contains following information (see `basic_named_scope_entry` structure template definition):
+The logging library supports maintaining scopes stack tracking during the application execution. This stack may either be written to log or be used for other needs (for example, to save the exact call sequence that led to and exception when throwing one). Each stack element contains following information (see `basic_named_scope_entry` structure template definition):
 
 * Scope name. It can be defined by user or generated by compiler, but in any case it [_must be a constant string literal] (see [link log.rationale.why_str_lit Rationale]).
 * Source file name, where the scope begins. It is usually a result of the standard `__FILE__` macro expansion. Like scope name, the file name [_must be a constant string literal].
@@ -1097,8 +1341,8 @@ The language support for run time type information is essential for the library.
 
 [table Type information classes comparison
     [[Feature]                                  [`std::type_info`]              [`type_info_wrapper`]]
-    [[Is default-constructible]                 [No]                            [Yes. The default-constructed wrapper is in an empty state.]]
-    [[Is copy-constructible]                    [No]                            [Yes]]
+    [[Is default-constructable]                 [No]                            [Yes. The default-constructed wrapper is in an empty state.]]
+    [[Is copy-constructable]                    [No]                            [Yes]]
     [[Is assignable]                            [No]                            [Yes]]
     [[Is swappable]                             [No]                            [Yes]]
     [[Is singleton]                             [Yes, as defined in C++ Standard. Not every compiler conforms to this requirement, though.] [No]]
@@ -1185,7 +1429,7 @@ It is quite often convenient to mark a group of log records with a constant valu
 
 The macros are effectively wrappers around `BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR` and `BOOST_LOG_SCOPED_THREAD_ATTR_CTOR`, respectively. For example, the "Tag" scoped attribute from the example above can be registered like this:
 
-    // Note there is no "attrs::constant" type wrapping and no addinional parenthesis around the tag value.
+    // Note there is no "attrs::constant" type wrapping and no additional parenthesis around the tag value.
     BOOST_LOG_SCOPED_THREAD_TAG("Tag", std::string, "Called from A::bar");
 
 [warning When using scoped attributes, make sure that the scoped attribute is not altered in the attribute set in which it was registered. For example, one should not clear attribute set of a logger if there are logger-specific scoped attributes registered in it. Otherwise the program will likely crash. This issue is especially critical in multithreaded application, when one thread may not know whether there are scoped attributes in the logger or there are not. Future releases may solve this limitation but currently the scoped attribute must remain intact until unregistered on scope ending.]
@@ -1405,7 +1649,7 @@ Static type dispatcher also supports another way of use which allows to avoid co
 
 This dispatcher can be used precisely the same way as the previously defined one. Note also that __boost_mpl__ lambda expressions are also supported as visitor generators.
 
-[tip See also [link advanced.advanced.utilities.extractors attribute value extractors] for an even simplier solution if all you want is to get an attribute value.]
+[tip See also [link advanced.advanced.utilities.extractors attribute value extractors] for an even simpler solution if all you want is to get an attribute value.]
 
 [heading Dynamic type dispatcher]
 
@@ -1495,7 +1739,7 @@ There are also a number of time-related type sequences available:
 
     #include <boost/log/utility/attribute_value_extractor.hpp>
 
-Attribute value extractors serve as a helper tool on top of [link advanced.advanced.utilities.type_dispatch type dispatchers] in order to simplify extracting attribute values in generic code. The functionality is implemented in the `attribute_value_extractor` class template, parametrized on character type and type or MPL sequence of types that have to be supported for dispatch. The `attribute_value_extractor` instance is a binary functional object that accepts a set of attribute values and another functional object that will receive the extracted attribute value. The name of the attribute to be extracted is givein as the constructor argument to the extractor. The key advantage of using extractors instead of raw dispatchers is that the receiving functional object may have a template `operator ()`. Obviously, this allows to reduce the amount of code in case of similar processing of attributes of different types. For example:
+Attribute value extractors serve as a helper tool on top of [link advanced.advanced.utilities.type_dispatch type dispatchers] in order to simplify extracting attribute values in generic code. The functionality is implemented in the `attribute_value_extractor` class template, parametrized on character type and type or MPL sequence of types that have to be supported for dispatch. The `attribute_value_extractor` instance is a binary functional object that accepts a set of attribute values and another functional object that will receive the extracted attribute value. The name of the attribute to be extracted is given as the constructor argument to the extractor. The key advantage of using extractors instead of raw dispatchers is that the receiving functional object may have a template `operator ()`. Obviously, this allows to reduce the amount of code in case of similar processing of attributes of different types. For example:
 
     // A generic function object that outputs attribute value
     struct print_attribute_value
@@ -1539,7 +1783,7 @@ This part of the library is provided in order to simplify logging initialization
 
 The library provides a number of functions that simplify some common initialization procedures, like sink and commonly used attributes registration. This is not much of a functionality, however, it allows to save a couple of minutes of learning the library for a newcomer.
 
-Logging to the application console is the simpliest way to see the logging library in action. To achieve this, one can initialize the library with a single function call, like this:
+Logging to the application console is the simplest way to see the logging library in action. To achieve this, one can initialize the library with a single function call, like this:
 
     int main(int, char*[])
     {
@@ -1630,7 +1874,7 @@ Lastly, there is a `add_common_attributes` function that registers two most freq
 
 Filter and formatter parsers allow to construct filters and formatters from a descriptive string. The function `parse_filter` is responsible for recognizing filters and `parse_formatter` - for recognizing formatters.
 
-In case of filters the string is formed of a sequence of condition expressions, interconnected with boolean operations. There are two operations supported: conjunction (designeted as "&" or "and") and disjunction ("|" or "or"). Each condition itself may be either a single condition or a sub-filter, taken in round brackets. Each condition can be negated with the "!" sign or "not" keyword. The condition, if it's not a sub-filter, usually consists of an attribute name enclosed in percent characters ("%"), a relation keyword and an operand. The relation and operand may be omitted, in which case the condition is assumed to be the requirement of the attribute presence (with any type).
+In case of filters the string is formed of a sequence of condition expressions, interconnected with boolean operations. There are two operations supported: conjunction (designated as "&" or "and") and disjunction ("|" or "or"). Each condition itself may be either a single condition or a sub-filter, taken in round brackets. Each condition can be negated with the "!" sign or "not" keyword. The condition, if it's not a sub-filter, usually consists of an attribute name enclosed in percent characters ("%"), a relation keyword and an operand. The relation and operand may be omitted, in which case the condition is assumed to be the requirement of the attribute presence (with any type).
 
 [pre
 filter:
@@ -1672,7 +1916,7 @@ Below are some examples of filters:
 [[`%Tag% contains "net" or %Tag% contains "io" and not %StatFlow%`] [The filter returns `true` if an attribute value with name "Tag" is found and contains words "net" or "io" and if an attribute value "StatFlow" is not found. The "Tag" attribute value must be of one of the [link advanced.advanced.utilities.predef_types string types], the "StatFlow" attribute value type is not considered.]]
 ]
 
-The formatter string syntax is even simplier and pretty much resembles __boost_format__ format string syntax. The string must contain attribute names enclosed in percent signs ("%"), the corresponding attribute value will replace these placeholders. The placeholder "%\_%" is special, it will be replaced with the log record text. For instance, `[%TimeStamp%] *%Severity%* %_%` formatter string will make log records look like this: `[2008-07-05 13:44:23] *0* Hello world`.
+The formatter string syntax is even simpler and pretty much resembles __boost_format__ format string syntax. The string must contain attribute names enclosed in percent signs ("%"), the corresponding attribute value will replace these placeholders. The placeholder "%\_%" is special, it will be replaced with the log record text. For instance, `[%TimeStamp%] *%Severity%* %_%` formatter string will make log records look like this: `[2008-07-05 13:44:23] *0* Hello world`.
 
 You may have noticed that the formatters don't provide means to change the formatting rules of attribute values. This can be changed on a per-attribute basis by registering custom formatters. Having done this, the `parse_formatter` function will use a user-defined function to create the correct formatter. Furthermore, it is possible to pass named arguments to the function from the formatter string, the arguments must be specified in round brackets, separated with commas, right after the attribute name. Here is an example:
 
