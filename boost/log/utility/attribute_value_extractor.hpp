@@ -11,7 +11,7 @@
  * \file   attribute_value_extractor.hpp
  * \author Andrey Semashev
  * \date   01.03.2008
- * 
+ *
  * The header contains implementation of convenience tools to extract an attribute value
  * into a user-defined functor.
  */
@@ -222,11 +222,11 @@ private:
 
 /*!
  * \brief Generic attribute value extractor
- * 
+ *
  * Attribute value extractor is a functional object that attempts to extract the stored
  * attribute value from the attribute value wrapper object. The extracted value is passed to
  * an unary functional object (the receiver) provided by user.
- * 
+ *
  * The extractor can be specialized on one or several attribute value types that should be
  * specified in the second template argument.
  */
@@ -252,7 +252,7 @@ public:
 public:
     /*!
      * Constructor
-     * 
+     *
      * \param name Attribute name to be extracted on invokation
      */
     explicit attribute_value_extractor(string_type const& name) : base_type(name) {}
@@ -270,15 +270,48 @@ public:
      * Extraction operator. Looks for an attribute value with the name specified on construction
      * and tries to acquire the stored value of one of the supported types. If extraction succeeds,
      * the extracted value is passed to \a receiver.
-     * 
+     *
      * \param attrs A set of attribute values in which to look for the specified attribute value.
-     * \param receiver A receiving functional object to pass extracted value to.
+     * \param receiver A receiving functional object to pass the extracted value to.
      * \return \c true if extraction succeeded, \c false otherwise
      */
     template< typename ReceiverT >
     result_type operator() (values_view_type const& attrs, ReceiverT& receiver) const;
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
+
+/*!
+ * The function extracts an attribute value from the view. The user has to explicitly specify the
+ * type or set of possible types of the attribute value to be extracted.
+ *
+ * \pre <tt>name != NULL</tt>, \c name points to a zero-terminated string
+ * \param name An attribute value name to extract.
+ * \param attrs A set of attribute values in which to look for the specified attribute value.
+ * \param receiver A receiving functional object to pass the extracted value to.
+ * \return \c true if extraction succeeded, \c false otherwise
+ */
+template< typename T, typename CharT, typename ReceiverT >
+inline bool extract(const CharT* name, basic_attribute_values_view< CharT > const& attrs, ReceiverT& receiver)
+{
+    attribute_value_extractor< CharT, T > extractor(name);
+    return extractor(attrs, receiver);
+}
+
+/*!
+ * The function extracts an attribute value from the view. The user has to explicitly specify the
+ * type or set of possible types of the attribute value to be extracted.
+ *
+ * \param name An attribute value name to extract.
+ * \param attrs A set of attribute values in which to look for the specified attribute value.
+ * \param receiver A receiving functional object to pass the extracted value to.
+ * \return \c true if extraction succeeded, \c false otherwise
+ */
+template< typename T, typename CharT, typename ReceiverT >
+inline bool extract(std::basic_string< CharT > const& name, basic_attribute_values_view< CharT > const& attrs, ReceiverT& receiver)
+{
+    attribute_value_extractor< CharT, T > extractor(name);
+    return extractor(attrs, receiver);
+}
 
 } // namespace log
 

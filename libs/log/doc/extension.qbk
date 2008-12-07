@@ -11,7 +11,140 @@
 
 [section:sinks Writing your own sinks]
 
+    #include <boost/log/sinks/basic_sink_backend.hpp>
+
 As was described in the [link log.design Design overview] section, sinks consist of two parts: frontend and backend. Frontends are provided by the library and usually need not to be re-implemented. Thanks to frontends, implementing backends is much easier than it could be: all filtering and thread synchronization is done there.
+
+In order to develop a sink backend, you have two options where to start:
+* If you don't need any formatting, the minimalistic `basic_sink_backend` base class template is your choice. Actually, this class only defines types that are needed for the sink to function.
+* If you need to create a sink with formatting capabilities, you may use the `basic_formatting_sink_backend` class template as a base class for your backend. It extends the `basic_sink_backend` class and implements log record formatting and character code conversion, leaving you to only develop the record storing code.
+
+Before we move on and see these instruments in action, one thing should be noted. As it was said before, sink frontends take the thread safety burden from the backend. Also, there are [link advanced.advanced.sink_frontends three types of frontends], each of them provides different guarantees regarding thread safety. The backend has no idea which sink frontend is used with it, yet it may require a certain degree of thread safety from it to function properly. In order to protect itself from misuse the backend declares the threading model it supports to operate with. There are three of them:
+
+# The `backend_synchronization_tag` means that the backend itself is responsible for thread synchronization (which may imply there is no need for synchronization at all). When a backend declares this threading model, any sink frontend can be used with it.
+# The `frontend_synchronization_tag` means that frontend must serialize calls to the backend from different threads. The `unlocked_sink` frontend cannot fulfill this requirement, so it will not compile if instantiated with such a backend.
+# The `single_thread_tag` means that all log records must be passed to the backend in a single thread. Note that other methods can be called in other threads, however, these calls must be serialized. Only `asynchronous_sink` frontend meets this requirement, other frontends will refuse to compile with such a backend.
+
+The threading model tag is used to instantiate the backend base classes. Since `basic_formatting_sink_backend` base class uses internal data to implement log record formatting, it requires the threading model to be either `frontend_synchronization_tag` or `single_thread_tag`. On the other hand, `basic_sink_backend` doesn't have this restriction.
+
+As an example of the `basic_sink_backend` class usage, let's implement a simple statistical information collector backend. Assume we have a network server and we want to monitor how many incoming connections are active and how much data was sent or received. The collected information should be written to a CSV-file every minute. The backend definition could look something like this:
+
+    // The backend collects statistical ingormation about network activity of the application
+    class stat_collector :
+        public sinks::basic_sink_backend<
+            char,                               // Character type. We use narrow-character logging in this example.
+            sinks::frontend_synchronization_tag // We will have to store internal data, so let's require frontend to
+        >                                       // synchronize calls to the backend.
+    {
+    private:
+        // The file to write the collected information to
+        std::ofstream m_CSVFile;
+
+        // Here goes the data collected so far:
+        // Active connections
+        unsigned int m_ActiveConnections;
+        // Sent bytes
+        unsigned int m_SentBytes;
+        // Received bytes
+        unsigned int m_ReceivedBytes;
+
+        // A thread that writes the statistical information to the file
+        std::auto_ptr< boost::thread > m_WriterThread;
+
+    public:
+        // The function creates an instance of the sink
+        template< template< typename > class FrontendT >
+        static boost::shared_ptr< FrontendT< stat_collector > > create(const char* file_name);
+
+        // The function consumes the log records that come from the frontend
+        void consume(values_view_type const& attributes, string_type const& message);
+
+    private:
+        // The constructor initializes the internal data
+        explicit stat_collector(const char* file_name) :
+            m_CSVFile(file_name, std::ios::app),
+            m_ActiveConnections(0)
+        {
+            reset_accumulators();
+            if (!m_CSVFile.is_open())
+                throw std::runtime_error("could not open the CSV file");
+        }
+        // Destructor. Stops the file writing thread.
+        ~stat_collector();
+
+        // The function runs in a separate thread and calls write_data periodically
+        template< template< typename > class FrontendT >
+        static void writer_thread(boost::weak_ptr< FrontendT< stat_collector > > const& sink);
+
+        // The function resets statistical accumulators to initial values
+        void reset_accumulators()
+        {
+            m_SentBytes = m_ReceivedBytes = 0;
+        }
+
+        // The function writes the collected data to the file
+        void write_data()
+        {
+            m_CSVFile << m_ActiveConnections << ',' << m_SentBytes << ',' << m_ReceivedBytes << std::endl;
+            reset_accumulators();
+        }
+    };
+
+As you can see, the public interface of the backend is quite simple. In fact, only the `consume` function is needed by frontends, the `create` function is introduced for our own convenience. The `create` function simply creates the sink and initializes the thread that will write the collected data to the file.
+
+    // The function creates an instance of the sink
+    template< template< typename > class FrontendT >
+    boost::shared_ptr< FrontendT< stat_collector > > stat_collector::create(const char* file_name)
+    {
+        // Create the backend
+        boost::shared_ptr< stat_collector > backend(new stat_collector(file_name));
+
+        // Wrap it into the specified frontend
+        boost::shared_ptr< FrontendT< stat_collector > > sink(new FrontendT< stat_collector >(backend));
+
+        // Now we can start the thread that writes the data to the file
+        backend->m_WriterThread.reset(new boost::thread(
+            &stat_collector::writer_thread< FrontendT >,
+            boost::weak_ptr< FrontendT< stat_collector > >(sink)
+        ));
+
+        return sink;
+    }
+
+Now the `writer_thread` function and destructor can look like this:
+
+    // The function runs in a separate thread and writes the collected data to the file
+    template< template< typename > class FrontendT >
+    void stat_collector::writer_thread(boost::weak_ptr< FrontendT< stat_collector > > const& sink)
+    {
+        while (true)
+        {
+            // Sleep for one minute
+            boost::this_thread::sleep(boost::get_xtime(
+                boost::get_system_time() + boost::posix_time::minutes(1)));
+
+            // Get the pointer to the sink
+            boost::shared_ptr< FrontendT< stat_collector > > p = sink.lock();
+            if (p)
+                p->locked_backend()->write_data(); // write the collected data to the file
+            else
+                break; // the sink is dead, terminate the thread
+        }
+    }
+
+    // Destructor. Stops the file writing thread.
+    stat_collector::~stat_collector()
+    {
+        if (m_WriterThread.get())
+        {
+            m_WriterThread->interrupt();
+            m_WriterThread->join();
+        }
+    }
+
+The `consume` function is called every time the logging record passes filtering in the frontend. The record, as it was stated before, contains a set of attribute values (goes as the first argument of the function) and the message string (goes second). The types of these arguments are defined in the `basic_sink_backend` class.
+
+Since we have no need in the record message, the second argument will not be of interest for us for now.
 
 [endsect]
 

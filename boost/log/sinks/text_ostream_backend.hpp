@@ -93,7 +93,7 @@ public:
     /*!
      * Constructor. No streams attached to the constructed backend, auto flush feature disabled.
      */
-	basic_text_ostream_backend();
+    basic_text_ostream_backend();
     /*!
      * Destructor
      */
