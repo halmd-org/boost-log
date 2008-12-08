@@ -11,7 +11,7 @@
  * \file   channel_logger.hpp
  * \author Andrey Semashev
  * \date   28.02.2008
- * 
+ *
  * The header contains implementation of a logger with channel support.
  */
 
@@ -85,7 +85,7 @@ namespace aux {
 
 /*!
  * \brief Logger class with channel support
- * 
+ *
  * The logger automatically registers constant attribute with the specified on construction
  * string value, which is a channel name. The channel name cannot be modified through the logger
  * life time.
@@ -135,7 +135,7 @@ public:
     }
     /*!
      * Constructor with arguments. Allows to register a channel name attribute on construction.
-     * 
+     *
      * \param args A set of named arguments. The following arguments are supported:
      *             \li \c channel - a string that represents the channel name
      */
@@ -150,7 +150,7 @@ public:
 
 protected:
     //! Lock requirement for the swap_unlocked method
-    typedef typename strictiest_lock<
+    typedef typename strictest_lock<
         typename base_type::swap_lock,
 #ifndef BOOST_LOG_NO_THREADS
         lock_guard< threading_model >
@@ -265,7 +265,7 @@ class wchannel_logger_mt :
 
 /*!
  * \brief Narrow-char logger. Functionally equivalent to \c basic_channel_logger.
- * 
+ *
  * See \c basic_channel_logger class template for a more detailed description
  */
 template< typename ChannelT = std::string >
@@ -301,7 +301,7 @@ public:
 
 /*!
  * \brief Narrow-char thread-safe logger. Functionally equivalent to \c basic_channel_logger.
- * 
+ *
  * See \c basic_channel_logger class template for a more detailed description
  */
 template< typename ChannelT = std::string >
@@ -337,7 +337,7 @@ public:
 
 /*!
  * \brief Wide-char logger. Functionally equivalent to \c basic_channel_logger.
- * 
+ *
  * See \c basic_channel_logger class template for a more detailed description
  */
 template< typename ChannelT = std::wstring >
@@ -373,7 +373,7 @@ public:
 
 /*!
  * \brief Wide-char thread-safe logger. Functionally equivalent to \c basic_channel_logger.
- * 
+ *
  * See \c basic_channel_logger class template for a more detailed description
  */
 template< typename ChannelT = std::wstring >
