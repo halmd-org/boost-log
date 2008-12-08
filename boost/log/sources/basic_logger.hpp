@@ -333,6 +333,29 @@ public:
     }
 
     /*!
+     * The method retrieves a copy of a set with all attributes from the logger.
+     *
+     * \return The copy of the attribute set. Attributes are shallow-copied.
+     */
+    attribute_set_type get_attributes() const
+    {
+        get_attributes_lock _(threading_base());
+        return get_attributes_unlocked();
+    }
+
+    /*!
+     * The method installs the whole attribute set into the logger. All iterators to the previous set are invalidated.
+     * Iterators to the \c attrs set are not valid to be used with the logger.
+     *
+     * \param attrs The set of attributes to install into the logger. Attributes are shallow-copied.
+     */
+    void set_attributes(attribute_set_type const& attrs)
+    {
+        set_attributes_lock _(threading_base());
+        set_attributes_unlocked(attrs);
+    }
+
+    /*!
      * The method opens a new log record in the logging core.
      *
      * \return \c true if the logging record is opened successfully, \c false otherwise.
@@ -525,6 +548,36 @@ protected:
     void cancel_record_unlocked()
     {
         m_pCore->cancel_record();
+    }
+
+    //! Lock requirement for the get_attributes method
+#if !defined(BOOST_LOG_NO_THREADS)
+    typedef log::aux::shared_lock_guard< threading_model > get_attributes_lock;
+#else
+    typedef no_lock get_attributes_lock;
+#endif
+
+    /*!
+     * Unlocked \c get_attributes
+     */
+    attribute_set_type get_attributes_unlocked() const
+    {
+        return m_Attributes;
+    }
+
+    //! Lock requirement for the set_attributes method
+#if !defined(BOOST_LOG_NO_THREADS)
+    typedef lock_guard< threading_model > set_attributes_lock;
+#else
+    typedef no_lock set_attributes_lock;
+#endif
+
+    /*!
+     * Unlocked \c set_attributes
+     */
+    void set_attributes_unlocked(attribute_set_type const& attrs)
+    {
+        m_Attributes = attrs;
     }
 
 private:
