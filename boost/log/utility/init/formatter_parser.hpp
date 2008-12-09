@@ -166,10 +166,12 @@ inline void register_simple_formatter_factory(const CharT* attr_name)
 }
 
 /*!
- * \brief The function registers a user-defined formatter factory
+ * \brief The function registers a simple formatter factory
  *
- * The function registers a user-defined formatter factory. The registered factory function will be
- * called when the formatter parser detects the specified attribute name in the formatter string.
+ * The function registers a simple formatter factory. The registered factory will generate formatters
+ * that will be equivalent to the <tt>log::formatters::attr</tt> formatter (i.e. that will use the
+ * native \c operator<< to format the attribute value). The factory does not use any arguments,
+ * if specified.
  *
  * \param attr_name Attribute name
  * \param factory Formatter factory function
