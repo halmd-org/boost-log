@@ -30,6 +30,7 @@
 #include <boost/function/function3.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/formatters/attr.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -81,18 +82,39 @@ struct formatter_types
     typedef std::map< string_type, formatter_factory > factories_map;
 };
 
+namespace aux {
+
+    /*!
+     * A simple formatter factory function. Provides an easy way to add user-defined types support to
+     * the formatter parser. The factory does not consider any formatter arguments, if specified,
+     * but produces the formatter that uses the native \c operator<< to format the attribute value.
+     *
+     * \param attr_name Attribute name to create formatter for.
+     */
+    template< typename CharT, typename AttributeValueT >
+    typename formatter_types< CharT >::formatter_type make_simple_formatter(
+        typename formatter_types< CharT >::string_type const& attr_name,
+        typename formatter_types< CharT >::formatter_factory_args const&)
+    {
+        typedef typename formatter_types< CharT >::formatter_type formatter_type;
+        return formatter_type(log::formatters::attr< AttributeValueT >(attr_name));
+    }
+
+} // namespace aux
+
 /*!
  * \brief The function registers a user-defined formatter factory
  *
  * The function registers a user-defined formatter factory. The registered factory function will be
  * called when the formatter parser detects the specified attribute name in the formatter string.
  *
- * \param attr_name Attribute name. Must point to a zero-terminated sequence of characters, must not be NULL.
+ * \pre <tt>attr_name != NULL && !factory.empty()</tt>, \c attr_name must point to a zero-terminated sequence of characters.
+ *
+ * \param attr_name Attribute name
  * \param factory Formatter factory function
  */
 template< typename CharT >
-BOOST_LOG_EXPORT void
-register_formatter_factory(
+BOOST_LOG_EXPORT void register_formatter_factory(
     const CharT* attr_name,
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
     typename formatter_types< CharT >::formatter_factory const& factory
@@ -111,16 +133,51 @@ register_formatter_factory(
  * The function registers a user-defined formatter factory. The registered factory function will be
  * called when the formatter parser detects the specified attribute name in the formatter string.
  *
+ * \pre <tt>!factory.empty()</tt>
+ *
  * \param attr_name Attribute name
  * \param factory Formatter factory function
  */
 template< typename CharT, typename TraitsT, typename AllocatorT >
-inline void
-register_formatter_factory(
+inline void register_formatter_factory(
     std::basic_string< CharT, TraitsT, AllocatorT > const& attr_name,
     typename formatter_types< CharT >::formatter_factory const& factory)
 {
     register_formatter_factory(attr_name.c_str(), factory);
+}
+
+/*!
+ * \brief The function registers a simple formatter factory
+ *
+ * The function registers a simple formatter factory. The registered factory will generate formatters
+ * that will be equivalent to the <tt>log::formatters::attr</tt> formatter (i.e. that will use the
+ * native \c operator<< to format the attribute value). The factory does not use any arguments,
+ * if specified
+ *
+ * \pre <tt>attr_name != NULL</tt>, \c attr_name must point to a zero-terminated sequence of characters.
+ *
+ * \param attr_name Attribute name
+ * \param factory Formatter factory function
+ */
+template< typename AttributeValueT, typename CharT >
+inline void register_simple_formatter_factory(const CharT* attr_name)
+{
+    register_formatter_factory(attr_name, &log::aux::make_simple_formatter< CharT, AttributeValueT >);
+}
+
+/*!
+ * \brief The function registers a user-defined formatter factory
+ *
+ * The function registers a user-defined formatter factory. The registered factory function will be
+ * called when the formatter parser detects the specified attribute name in the formatter string.
+ *
+ * \param attr_name Attribute name
+ * \param factory Formatter factory function
+ */
+template< typename AttributeValueT, typename CharT, typename TraitsT, typename AllocatorT >
+inline void register_simple_formatter_factory(std::basic_string< CharT, TraitsT, AllocatorT > const& attr_name)
+{
+    register_formatter_factory(attr_name.c_str(), &log::aux::make_simple_formatter< CharT, AttributeValueT >);
 }
 
 /*!
