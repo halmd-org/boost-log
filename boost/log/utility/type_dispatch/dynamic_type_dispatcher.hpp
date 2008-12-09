@@ -11,7 +11,7 @@
  * \file   dynamic_type_dispatcher.hpp
  * \author Andrey Semashev
  * \date   15.04.2007
- * 
+ *
  * The header contains implementation of the run-time type dispatcher.
  */
 
@@ -25,7 +25,9 @@
 #include <new>
 #include <memory>
 #include <map>
+#include <boost/ref.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
@@ -63,11 +65,11 @@ namespace aux {
 
 /*!
  * \brief A dynamic type dispatcher
- * 
+ *
  * The type dispatcher can be used to pass objects of arbitrary types from one
  * component to another. With regard to the library, the type dispatcher
  * can be used to extract attribute values.
- * 
+ *
  * The dynamic type dispatcher can be initialized in run time and, therefore,
  * can support different types, depending on runtime conditions. Each
  * supported type is associated with a functional object that will be called
@@ -84,16 +86,16 @@ private:
 public:
     /*!
      * The method registers a new type
-     * 
+     *
      * \param fun Function object that will be associated with the type \c T
      */
     template< typename T, typename FunT >
     void register_type(FunT const& fun)
     {
-        boost::shared_ptr< void > p(
-            static_cast< type_visitor< T >* >(new aux::dynamic_type_dispatcher_visitor< T, FunT >(fun)));
+        boost::shared_ptr< type_visitor< T > > p(
+            boost::make_shared< aux::dynamic_type_dispatcher_visitor< T, FunT > >(boost::cref(fun)));
 
-        type_info_wrapper wrapper = { &typeid(T) };
+        type_info_wrapper wrapper(typeid(T));
         m_DispatchingMap[wrapper] = p;
     }
 
@@ -109,7 +111,7 @@ private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     void* get_visitor(std::type_info const& type)
     {
-        type_info_wrapper wrapper = { &type };
+        type_info_wrapper wrapper(type);
         dispatching_map::iterator it = m_DispatchingMap.find(wrapper);
         if (it != m_DispatchingMap.end())
             return it->second.get();
