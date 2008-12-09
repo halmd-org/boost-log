@@ -152,7 +152,7 @@ inline void register_formatter_factory(
  * The function registers a simple formatter factory. The registered factory will generate formatters
  * that will be equivalent to the <tt>log::formatters::attr</tt> formatter (i.e. that will use the
  * native \c operator<< to format the attribute value). The factory does not use any arguments,
- * if specified
+ * if specified.
  *
  * \pre <tt>attr_name != NULL</tt>, \c attr_name must point to a zero-terminated sequence of characters.
  *
