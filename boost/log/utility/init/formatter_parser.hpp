@@ -13,7 +13,7 @@
  * \date   07.04.2008
  *
  * The header contains definition of a formatter parser function, along with facilities to
- * add support for custom formattetrs.
+ * add support for custom formatters.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
