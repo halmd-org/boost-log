@@ -1432,7 +1432,7 @@ The macros are effectively wrappers around `BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR` a
     // Note there is no "attrs::constant" type wrapping and no additional parenthesis around the tag value.
     BOOST_LOG_SCOPED_THREAD_TAG("Tag", std::string, "Called from A::bar");
 
-[warning When using scoped attributes, make sure that the scoped attribute is not altered in the attribute set in which it was registered. For example, one should not clear attribute set of a logger if there are logger-specific scoped attributes registered in it. Otherwise the program will likely crash. This issue is especially critical in multithreaded application, when one thread may not know whether there are scoped attributes in the logger or there are not. Future releases may solve this limitation but currently the scoped attribute must remain intact until unregistered on scope ending.]
+[warning When using scoped attributes, make sure that the scoped attribute is not altered in the attribute set in which it was registered. For example, one should not clear or reinstall attribute set of the logger if there are logger-specific scoped attributes registered in it. Otherwise the program will likely crash. This issue is especially critical in multithreaded application, when one thread may not know whether there are scoped attributes in the logger or there are not. Future releases may solve this limitation but currently the scoped attribute must remain intact until unregistered on leaving the scope.]
 
 Although the described macros are intended to be the primary interface for the functionality, there is also a C++ interface available. It may be useful if user decides to develop his own macros that cannot be based on the existing ones.
 
