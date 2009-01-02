@@ -157,7 +157,6 @@ inline void register_formatter_factory(
  * \pre <tt>attr_name != NULL</tt>, \c attr_name must point to a zero-terminated sequence of characters.
  *
  * \param attr_name Attribute name
- * \param factory Formatter factory function
  */
 template< typename AttributeValueT, typename CharT >
 inline void register_simple_formatter_factory(const CharT* attr_name)
@@ -174,7 +173,6 @@ inline void register_simple_formatter_factory(const CharT* attr_name)
  * if specified.
  *
  * \param attr_name Attribute name
- * \param factory Formatter factory function
  */
 template< typename AttributeValueT, typename CharT, typename TraitsT, typename AllocatorT >
 inline void register_simple_formatter_factory(std::basic_string< CharT, TraitsT, AllocatorT > const& attr_name)
