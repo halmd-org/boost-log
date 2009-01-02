@@ -146,6 +146,24 @@ The `consume` function is called every time the logging record passes filtering 
 
 Since we have no need in the record message, the second argument will not be of interest for us for now.
 
+    // The function consumes the log records that come from the frontend
+    void stat_collector::consume(values_view_type const& attributes, string_type const& message)
+    {
+        namespace bll = boost::lambda;
+
+        if (attributes.count("Connected"))
+            ++m_ActiveConnections;
+        else if (attributes.count("Disconnected"))
+            --m_ActiveConnections;
+        else
+        {
+            logging::extract< unsigned int >("Sent", attributes, bll::var(m_SentBytes) += bll::_1);
+            logging::extract< unsigned int >("Received", attributes, bll::var(m_ReceivedBytes) += bll::_1);
+        }
+    }
+
+The code above is quite straightforward. We can parse through attribute values like through a regular map, or use extractors with functional objects to acquire individual values. __boost_lambda__ and similar libraries simplify generation of functional objects that will receive the extracted value.
+
 [endsect]
 
 [section:sources Writing your own sources]

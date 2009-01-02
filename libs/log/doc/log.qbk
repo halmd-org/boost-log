@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2008-11-30 15:45:07 $]
+    [last-revision $Date: 2009-01-02 18:42:06 $]
 ]
 
 [c++]
@@ -268,6 +268,33 @@ The short answer: for consistency. I mean, if a user chooses to write wide logs,
 
 [endsect]
 
+[section:why_no_attribute_manips Why attributes cannot be set with stream manipulators?]
+
+One may wonder why the following syntax is not supported:
+
+    BOOST_LOG(logger) << set_attr("MyInt", 10) << set_attr("MyString", "string attribute value")
+        << "Some log message";
+
+The answer is quite simple. The streaming expression is executed after the filtering takes place and only if the filter passed the log record. At this point the set of attributes that are attached to the record is already fixed, so these manipulators cannot attach any more attributes to it. So, all attributes that are to be present with the record must be set up before filtering tares place. The easies way to do it is to use scoped attributes or tags (see [link advanced.advanced.utilities.scoped_attributes here]).
+
+[endsect]
+
+[section:why_not_lazy_streaming Why not using lazy streaming?]
+
+One of the possible library implementations would be using lazy expressions to delay log record formatting. That would allow to use manipulators for attributes set up. In essence, the expression:
+
+    logger << "Hello, world!";
+
+would become a lambda-expression, that is only invoked if the filtering is successful. Although this approach has advantages, it must be noted that lazy expression construction is not zero-cost in terms of performance, code size and compile times. The following expression:
+
+    logger << "Received packet from " << ip << " of " << packet.size() << " bytes";
+
+would generate a considerable amount of code (proportionally to the number of streaming operators) to be executed before filtering takes place. Another drawback is that the `packet.size()` is always called, whether or not the record is actually written to log. In order to delay this call, yet more scaffolding is needed, possibly involving __boost_bind__, __boost_lambda__ or __boost_phoenix__. This complication is not acceptable for such a basic use case, like this.
+
+Although lazy streaming is not provided by the library by default, nothing prevents to develop it in a separate hierarchy of loggers.
+
+[endsect]
+
 [endsect]
 
 [xinclude autodoc.xml]
@@ -287,6 +314,7 @@ Points in this section are not necessarily going to be implemented. These are ma
 * Provide a compile-time option to remove all logging from the application (the compiled binary should contain no traces of logging internally). There are two reasons for this request: attempting to achieve maximum performance and concealing internal information, such as function names and internal messages, to prevent reverse engineering in no-logging builds. Effectively, this would require not only all library macros to be redefined to emptiness, but also to provide dummy implementations of many library components. Needs more consideration. Perhaps, suppressing only macros would be sufficient.
 * Provide a set of macros for __boost_exception__ support. E.g. throwing an exception with call stack embedded or writing a message into log when throwing an exception.
 * Provide a macro, like `BOOST_LOG_FUNCTION`, but with ability to automatically log all function arguments.
+* Think over a header-only configuration. Perhaps, with a reduced functionality.
 
 [endsect]
 
