@@ -1768,6 +1768,14 @@ Attribute value extractors serve as a helper tool on top of [link advanced.advan
 
 Note that predefined type sequences provided by the library can be used freely with extractors just as well as with filters and formatters. Also note that specifying a single type of the attribute value instead of type sequence is also perfectly valid.
 
+The library also provides an `extract` convenience function that automatically creates extractor object. The `foo` function from the example above can be rewritten like this:
+
+    void foo(attribute_values_view const& attrs)
+    {
+        assert(extract< logging::numeric_types >("MyAttr", attrs, print_attribute_value()));
+        assert(!extract< std::complex< double > >("MyAttr", attrs, print_attribute_value()));
+    }
+
 [endsect]
 
 

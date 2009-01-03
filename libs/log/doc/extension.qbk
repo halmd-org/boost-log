@@ -27,6 +27,8 @@ Before we move on and see these instruments in action, one thing should be noted
 
 The threading model tag is used to instantiate the backend base classes. Since `basic_formatting_sink_backend` base class uses internal data to implement log record formatting, it requires the threading model to be either `frontend_synchronization_tag` or `single_thread_tag`. On the other hand, `basic_sink_backend` doesn't have this restriction.
 
+[heading Minimalistic sink backend]
+
 As an example of the `basic_sink_backend` class usage, let's implement a simple statistical information collector backend. Assume we have a network server and we want to monitor how many incoming connections are active and how much data was sent or received. The collected information should be written to a CSV-file every minute. The backend definition could look something like this:
 
     // The backend collects statistical ingormation about network activity of the application
@@ -164,9 +166,91 @@ Since we have no need in the record message, the second argument will not be of 
 
 The code above is quite straightforward. We can parse through attribute values like through a regular map, or use extractors with functional objects to acquire individual values. __boost_lambda__ and similar libraries simplify generation of functional objects that will receive the extracted value.
 
+[heading Formatting sink backend]
+
+As an example of the formatting sink backend, let's implement a sink that will emit events to a Windows event trace. Assume there's another process that will receive these events and display them to the user in a baloon window near the notification area. The definition of such backend would look something like this:
+
+    class event_notifier :
+        public sinks::basic_formatting_sink_backend<
+            char,    // the "source" character type
+            wchar_t  // the "target" character type (optional, by default is the same as the source character type)
+        >
+    {
+        // A handle for the event provider
+        REGHANDLE m_ProviderHandle;
+
+    public:
+        // Constructor. Initializes the event source handle.
+        explicit event_notifier(CLSID const& provider_id)
+        {
+            if (EventRegister(&provider_id, NULL, NULL, &m_ProviderHandle) != ERROR_SUCCESS)
+                throw std::runtime_error("Could not register event provider");
+        }
+        // Destructor. Unregisters the event source.
+        ~event_notifier()
+        {
+            EventUnregister(m_ProviderHandle);
+        }
+
+        // The method puts the formatted message to the event trace
+        virtual void do_consume(values_view_type const& values, target_string_type const& formatted_message);
+    };
+
+The `basic_formatting_sink_backend` class template is instantiated on two character types: the one that is used by the rest of logging system and the one that is required by the backend for further usage. Either of these types can be `char` or `wchar_t`. These character types may be the same, in which case the formatting is done without character conversion, pretty much equivalent to streaming attribute values into a regular `std::ostringstream`. In our case the underlying API requires wide strings, so we'll have to do character conversion while formatting. The conversion will be done according to the locale that is set up in the `basic_formatting_sink_backend` base class (see `imbue` and `getloc` functions).
+
+In order to differentiate the resulting string type from the string types used throughout the rest of logging library, the `basic_formatting_sink_backend` class defines the `target_string_type` type along with the standard `string_type`. In our case, `target_string_type` will contain wide characters, while `string_type` will be narrow.
+
+The threading model of the sink backend can be specified as the third optional parameter of the `basic_formatting_sink_backend` class template. The default threading model is `frontend_synchronization_tag`, which fits us just fine.
+
+The `basic_formatting_sink_backend` base class implements just about everything that is required by the library from the backend. The only thing left is to implement the virtual `do_consume` method that receives the set of attributes and the already formatted message. In our case this method will pass the formatted message to the corresponding API:
+
+    // The method puts the formatted message to the event log
+    void event_notifier::do_consume(values_view_type const& values, target_string_type const& formatted_message)
+    {
+        EventWriteString(m_ProviderHandle, WINEVENT_LEVEL_LOG_ALWAYS, 0ULL /* keyword */, formatted_message.c_str());
+    }
+
+That's it. The example can be extended to make use of attribute values to fill other parameters, like event level and keywords mask. A more elaborate version of this example can be found in the library examples.
+
+The resulting sink backend can be used similarly to other formatting sinks, like `text_ostream_backend`:
+
+    boost::shared_ptr< event_notifier > backend(new event_notifier(CLSID_MyNotifier));
+    backend->set_formatter(fmt::ostrm << "[" << fmt::time("TimeStamp") << "] " << fmt::message());
+
+    boost::shared_ptr< sinks::synchronous_sink< event_notifier > > sink(new sinks::synchronous_sink< event_notifier >(backend));
+    logging::core::get()->add_sink(sink);
+
 [endsect]
 
 [section:sources Writing your own sources]
+
+You can extend the library by developing your own sources and, for that matter, ways of collecting log data. Basically, you have two choices how to start: you can either develop a new logger feature or design a whole new type of source. The first approach is good if all you need is to tweak functionality of the existing loggers. The second approach is reasonable if the whole mechanism of collecting logs by the provided loggers is unsuitable for your needs.
+
+[heading Creating a new logger feature]
+
+Every logger provided by the library consists of a number of features that can be combined with each other. Each feature is responsible for a single and independent aspect of the logger functionality. For example, loggers that provide the ability to assign severity levels to the logging records include the `basic_severity_logger` feature. You can implement your own feature and use it along with the ones provided by the library.
+
+A logger feature should follow these basic requirements:
+* A logging feature should be a class template. It should have at least one template parameter type (let's name it `BaseT`).
+* The feature must publicly derive from the `BaseT` template parameter.
+* The feature must be default-constructible.
+* The feature must be able to construct with a single argument of a templated type. The feature may not use this argument itself, but it should pass this argument to the `BaseT` constructor.
+
+These requirements allow to compose a logger from a number of features derived from each other. The root class of the features hierarchy will be the `basic_logger` class template instance. This class implements the most basic functionality of loggers, like storing logger-specific attributes and providing interface for log message composing. The hierarchy composition is done by the `basic_composite_logger` class template, which is instantiated on the MPL sequence of metafunction classes that will construct feature types upon invoking (don't worry, this will be shown in an example in a few moments). The constructor with a templated argument allows to initialize features with named parameters, using the __boost_parameter__ library.
+
+A logging feature may also contain internal data. In that case in order to maintain thread safety for the logger, the feature should follow these additional guidelines:
+# Usually there is no need to introduce a mutex or another synchronization mechanism in each feature. Moreover, it is advised not to do so, because the same feature can be used in both thread-safe and not thread-safe loggers. Instead, features should use threading model of the logger as a synchronization primitive (mutex). The threading model is accessible through the `threading_base` method, defined in the `basic_logger` class template.
+# If the feature has to override methods of the public interface of the `basic_logger` class template (or the same part of the base feature interface), the following should be considered with regard to such methods:
+    * The public interface of the feature should be thread-safe in terms of its own thread safety requirements and its base classes requirements.
+    * The thread safety requirements are expressed with lock types for each public function the feature exposes to the user. These types are available as typedefs in each feature. If the feature exposes a public function `foo`, it will also expose type `foo_lock`, which will express the locking requirements of `foo`. Feature constructors don't need locking, and thus there's no need for lock types for them.
+    * The faeture should also provide a protected interface for the derived features. This interface should provide operations equivalent to the public interface, but should use no locking. If the feature exposes a public function `foo`, it will also expose a protected function `foo_unlocked` with the same meaning.
+    * The feature should not call public methods of the base class interface when the threading model is already locked. Instead, the *`_unlocked` versions of functions should be called.
+# The feature may implement copy constructor. The argument of the constructor is already locked with a shared lock when the constructor is called. Naturally, the feature is expected to forward copy constructor call to the `BaseT` class.
+# The feature need not implement assignment operator. The assignment will be automatically provided by the `basic_composite_logger` class instance. However, the feature must provide `swap_unlocked` method that will swap contents of this feature and the method argument, and call similar method in the `BaseT` class.
+
+In order to illustrate all these lengthy recommendations, let's implement a simple logger feature.
+
+[heading Guidelines for the complete logging source designers]
 
 [endsect]
 
