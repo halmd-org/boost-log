@@ -28,6 +28,13 @@
 #include <boost/mpl/int.hpp>
 #include <boost/mpl/less.hpp>
 #include <boost/mpl/if.hpp>
+#include <boost/preprocessor/arithmetic/sub.hpp>
+#include <boost/preprocessor/punctuation/comma_if.hpp>
+#include <boost/preprocessor/repetition/enum_params.hpp>
+#include <boost/preprocessor/repetition/enum_params_with_a_default.hpp>
+#include <boost/preprocessor/repetition/enum_trailing.hpp>
+#include <boost/preprocessor/repetition/enum_trailing_params.hpp>
+#include <boost/preprocessor/repetition/repeat_from_to.hpp>
 #include <boost/log/detail/prologue.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/mpl/bool.hpp>
@@ -41,6 +48,10 @@
 // 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
 #pragma warning(disable: 4251)
 #endif // _MSC_VER
+
+#ifndef BOOST_LOG_STRICTEST_LOCK_LIMIT
+#define BOOST_LOG_STRICTEST_LOCK_LIMIT 10
+#endif // BOOST_LOG_STRICTEST_LOCK_LIMIT
 
 namespace boost {
 
@@ -166,18 +177,65 @@ namespace aux {
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
+    //! The metafunction selects the most strict lock type of the two
+    template< typename LeftLockT, typename RightLockT >
+    struct strictest_lock_impl :
+        mpl::if_<
+            mpl::less< aux::thread_access_mode_of< LeftLockT >, aux::thread_access_mode_of< RightLockT > >,
+            RightLockT,
+            LeftLockT
+        >
+    {
+    };
+
 } // namespace aux
 
-//! The metafunction selects the most strict lock type of the two
-template< typename LeftLockT, typename RightLockT >
-struct strictest_lock :
-    mpl::if_<
-        mpl::less< aux::thread_access_mode_of< LeftLockT >, aux::thread_access_mode_of< RightLockT > >,
-        RightLockT,
-        LeftLockT
-    >
-{
-};
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
+template<
+    typename TT0,
+    typename TT1,
+    BOOST_PP_ENUM_PARAMS_WITH_A_DEFAULT(BOOST_PP_SUB(BOOST_LOG_STRICTEST_LOCK_LIMIT, 2), typename T, void)
+>
+struct strictest_lock;
+
+#define BOOST_LOG_IDENTITY_INTERNAL(z, i, data) data
+
+#define BOOST_LOG_DEFINE_STRICTEST_LOG_SPEC_INTERNAL(z, i, data)\
+    template< typename TT0, typename TT1 BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_SUB(i, 2), typename T) >\
+    struct strictest_lock<\
+        TT0, TT1\
+        BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_SUB(i, 2), T)\
+        BOOST_PP_ENUM_TRAILING(BOOST_PP_SUB(BOOST_LOG_STRICTEST_LOCK_LIMIT, i), BOOST_LOG_IDENTITY_INTERNAL, void)\
+    >\
+    {\
+        typedef\
+            BOOST_PP_ENUM_PARAMS(BOOST_PP_SUB(i, 2), typename aux::strictest_lock_impl< T)\
+                BOOST_PP_COMMA_IF(BOOST_PP_SUB(i, 2)) typename aux::strictest_lock_impl< TT0, TT1 >::type\
+            BOOST_PP_REPEAT_FROM_TO(2, i, BOOST_LOG_IDENTITY_INTERNAL, >::type)\
+        type;\
+    };
+
+BOOST_PP_REPEAT_FROM_TO(2, BOOST_LOG_STRICTEST_LOCK_LIMIT, BOOST_LOG_DEFINE_STRICTEST_LOG_SPEC_INTERNAL, ~)
+
+#undef BOOST_LOG_DEFINE_STRICTEST_LOG_SPEC_INTERNAL
+#undef BOOST_LOG_IDENTITY_INTERNAL
+
+#else
+
+/*!
+ * The metafunction selects the most strict lock type of the specified.
+ *
+ * The template supports all lock types provided by the Boost.Thread
+ * library (except for \c upgrade_to_unique_lock), plus additional
+ * pseudo-lock \c no_lock that indicates no locking at all.
+ * Exclusive locks are considered the strictest, shared locks are weaker,
+ * and \c no_lock is the weakest.
+ */
+template< typename... LocksT >
+struct strictest_lock;
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace sources
 

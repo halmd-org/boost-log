@@ -31,7 +31,7 @@ The threading model tag is used to instantiate the backend base classes. Since `
 
 As an example of the `basic_sink_backend` class usage, let's implement a simple statistical information collector backend. Assume we have a network server and we want to monitor how many incoming connections are active and how much data was sent or received. The collected information should be written to a CSV-file every minute. The backend definition could look something like this:
 
-    // The backend collects statistical ingormation about network activity of the application
+    // The backend collects statistical information about network activity of the application
     class stat_collector :
         public sinks::basic_sink_backend<
             char,                               // Character type. We use narrow-character logging in this example.
@@ -168,7 +168,7 @@ The code above is quite straightforward. We can parse through attribute values l
 
 [heading Formatting sink backend]
 
-As an example of the formatting sink backend, let's implement a sink that will emit events to a Windows event trace. Assume there's another process that will receive these events and display them to the user in a baloon window near the notification area. The definition of such backend would look something like this:
+As an example of the formatting sink backend, let's implement a sink that will emit events to a Windows event trace. Assume there's another process that will receive these events and display them to the user in a balloon window near the notification area. The definition of such backend would look something like this:
 
     class event_notifier :
         public sinks::basic_formatting_sink_backend<
@@ -224,31 +224,281 @@ The resulting sink backend can be used similarly to other formatting sinks, like
 
 [section:sources Writing your own sources]
 
+    #include <boost/log/sources/threading_models.hpp>
+    #include <boost/log/sources/basic_logger.hpp>
+
 You can extend the library by developing your own sources and, for that matter, ways of collecting log data. Basically, you have two choices how to start: you can either develop a new logger feature or design a whole new type of source. The first approach is good if all you need is to tweak functionality of the existing loggers. The second approach is reasonable if the whole mechanism of collecting logs by the provided loggers is unsuitable for your needs.
 
 [heading Creating a new logger feature]
 
-Every logger provided by the library consists of a number of features that can be combined with each other. Each feature is responsible for a single and independent aspect of the logger functionality. For example, loggers that provide the ability to assign severity levels to the logging records include the `basic_severity_logger` feature. You can implement your own feature and use it along with the ones provided by the library.
+Every logger provided by the library consists of a number of features that can be combined with each other. Each feature is responsible for a single and independent aspect of the logger functionality. For example, loggers that provide the ability to assign severity levels to logging records include the `basic_severity_logger` feature. You can implement your own feature and use it along with the ones provided by the library.
 
 A logger feature should follow these basic requirements:
 * A logging feature should be a class template. It should have at least one template parameter type (let's name it `BaseT`).
 * The feature must publicly derive from the `BaseT` template parameter.
-* The feature must be default-constructible.
-* The feature must be able to construct with a single argument of a templated type. The feature may not use this argument itself, but it should pass this argument to the `BaseT` constructor.
+* The feature must be default-constructible and copy-constructible.
+* The feature must be constructible with a single argument of a templated type. The feature may not use this argument itself, but it should pass this argument to the `BaseT` constructor.
 
-These requirements allow to compose a logger from a number of features derived from each other. The root class of the features hierarchy will be the `basic_logger` class template instance. This class implements the most basic functionality of loggers, like storing logger-specific attributes and providing interface for log message composing. The hierarchy composition is done by the `basic_composite_logger` class template, which is instantiated on the MPL sequence of metafunction classes that will construct feature types upon invoking (don't worry, this will be shown in an example in a few moments). The constructor with a templated argument allows to initialize features with named parameters, using the __boost_parameter__ library.
+These requirements allow to compose a logger from a number of features derived from each other. The root class of the features hierarchy will be the `basic_logger` class template instance. This class implements the most of the basic functionality of loggers, like storing logger-specific attributes and providing interface for log message formatting. The hierarchy composition is done by the `basic_composite_logger` class template, which is instantiated on an MPL sequence of features (don't worry, this will be shown in an example in a few moments). The constructor with a templated argument allows to initialize features with named parameters, using the __boost_parameter__ library.
 
-A logging feature may also contain internal data. In that case in order to maintain thread safety for the logger, the feature should follow these additional guidelines:
-# Usually there is no need to introduce a mutex or another synchronization mechanism in each feature. Moreover, it is advised not to do so, because the same feature can be used in both thread-safe and not thread-safe loggers. Instead, features should use threading model of the logger as a synchronization primitive (mutex). The threading model is accessible through the `threading_base` method, defined in the `basic_logger` class template.
+A logging feature may also contain internal data. In that case, to maintain thread safety for the logger, the feature should follow these additional guidelines:
+# Usually there is no need to introduce a mutex or another synchronization mechanism in each feature. Moreover, it is advised not to do so, because the same feature can be used in both thread-safe and not thread-safe loggers. Instead, features should use threading model of the logger as a synchronization primitive, similarly as they would use mutex. The threading model is accessible through the `threading_base` method, defined in the `basic_logger` class template.
 # If the feature has to override methods of the public interface of the `basic_logger` class template (or the same part of the base feature interface), the following should be considered with regard to such methods:
     * The public interface of the feature should be thread-safe in terms of its own thread safety requirements and its base classes requirements.
     * The thread safety requirements are expressed with lock types for each public function the feature exposes to the user. These types are available as typedefs in each feature. If the feature exposes a public function `foo`, it will also expose type `foo_lock`, which will express the locking requirements of `foo`. Feature constructors don't need locking, and thus there's no need for lock types for them.
-    * The faeture should also provide a protected interface for the derived features. This interface should provide operations equivalent to the public interface, but should use no locking. If the feature exposes a public function `foo`, it will also expose a protected function `foo_unlocked` with the same meaning.
+    * The feature should also provide a protected interface for the derived features. This interface should provide operations equivalent to the public interface, but should use no locking. If the feature exposes a public function `foo`, it will also expose a protected function `foo_unlocked` with the same meaning.
     * The feature should not call public methods of the base class interface when the threading model is already locked. Instead, the *`_unlocked` versions of functions should be called.
 # The feature may implement copy constructor. The argument of the constructor is already locked with a shared lock when the constructor is called. Naturally, the feature is expected to forward copy constructor call to the `BaseT` class.
-# The feature need not implement assignment operator. The assignment will be automatically provided by the `basic_composite_logger` class instance. However, the feature must provide `swap_unlocked` method that will swap contents of this feature and the method argument, and call similar method in the `BaseT` class.
+# The feature need not implement assignment operator. The assignment will be automatically provided by the `basic_composite_logger` class instance. However, the feature may provide `swap_unlocked` method that will swap contents of this feature and the method argument, and call similar method in the `BaseT` class. The automatically generated assignment operator will use this method, along with copy constructor.
 
-In order to illustrate all these lengthy recommendations, let's implement a simple logger feature.
+In order to illustrate all these lengthy recommendations, let's implement a simple logger feature. Assume we want our logger to be able to tag individual log records. In other words, the logger has to temporarily add an attribute to its set of attributes, emit the logging record, and then automatically remove the attribute. Somewhat similar functionality can be achieved with scoped attributes, although the syntax may complicate wrapping it into a neat macro:
+
+    // We want something equivalent to this
+    {
+        BOOST_LOG_SCOPED_LOGGER_TAG(logger, "Tag", std::string, "[GUI]");
+        BOOST_LOG(logger) << "The user has confirmed his choice";
+    }
+
+Let's declare our logger feature:
+
+    template< typename BaseT >
+    class record_tagger :
+        public BaseT  // the feature should derive from other features or the basic_logger class
+    {
+    public:
+        // Let's import some types that we will need. These imports should be public,
+        // in order to allow other features that may derive from record_tagger to do the same.
+        typedef typename BaseT::string_type string_type;
+        typedef typename BaseT::attribute_set_type attribute_set_type;
+        typedef typename BaseT::threading_model threading_model;
+
+    private:
+        // The iterator that points to the temporary tag attribute
+        typename attribute_set_type::iterator m_Tag;
+
+    public:
+        // Default constructor. Initializes m_Tag to an invalid value.
+        record_tagger();
+        // Copy constructor. Initializes m_Tag to a value, equivalent to that.m_Tag.
+        record_tagger(record_tagger const& that);
+        // Forwarding constructor with named parameters
+        template< typename ArgsT >
+        record_tagger(ArgsT const& args);
+
+        // Import the method without arguments from the base class
+        using BaseT::open_record;
+
+        // The method overrides the same named method in the base class.
+        // It initiates a new log record, performs filtering and returns the result of filtering.
+        // It also accepts a number of named parameters, that we will use
+        // to pass our tag.
+        template< typename ArgsT >
+        bool open_record(ArgsT const& args);
+
+        // The method will require locking, so we have to define locking requirements for it.
+        // We use the strictest_lock trait in order to choose the most restricting lock type.
+        typedef typename src::strictest_lock<
+            boost::lock_guard< threading_model >,
+            typename BaseT::open_record_lock,
+            typename BaseT::add_attribute_lock,
+            typename BaseT::remove_attribute_lock
+        >::type open_record_lock;
+
+        // Similarly, declare methods of logging record finalization
+        void push_record(string_type const& message);
+        typedef typename src::strictest_lock<
+            boost::lock_guard< threading_model >,
+            typename BaseT::push_record_lock,
+            typename BaseT::remove_attribute_lock
+        >::type push_record_lock;
+
+        void cancel_record();
+        typedef typename src::strictest_lock<
+            boost::lock_guard< threading_model >,
+            typename BaseT::cancel_record_lock,
+            typename BaseT::remove_attribute_lock
+        >::type cancel_record_lock;
+
+    protected:
+        // Import the method without arguments from the base class
+        using BaseT::open_record_unlocked;
+
+        // Lock-less implementation of operations
+        template< typename ArgsT >
+        bool open_record_unlocked(ArgsT const& args);
+        void push_record_unlocked(string_type const& message);
+        void cancel_record_unlocked();
+
+        // This function will be needed by the assignment operator of the logger
+        void swap_unlocked(record_tagger& that);
+
+    private:
+        void remove_tag();
+
+    public:
+        // In order to simplify feature composition, we make this class capable
+        // to participate in MPL Lambda expressions. On most compilers this line
+        // will expand into nothingness.
+        BOOST_MPL_AUX_LAMBDA_SUPPORT(1, record_tagger, (BaseT))
+    };
+
+You can see that we use the `strictest_lock` template in order to define lock types that would fulfill the base class thread safety requirements for methods that are to be called from the corresponding methods of `record_tagger`. For example, the `open_record_lock` definition shows that the `open_record` implementation in the `record_tagger` feature requires exclusive lock (which `lock_guard` is) for the logger, but it also takes into account locking requirements of the `open_record`, `add_attribute` and `remove_attribute` methods of the base class, because it will have to call them.
+
+Frankly speaking, in this particular example, there was no need in using the `strictest_lock` trait, because all our methods require exclusive locking, which is already the strictest one. However, this template may come handy if you use shared locking.
+
+Now the implementation of the public interface becomes quite simple:
+
+    record_tagger::record_tagger() : m_Tag(BaseT::attributes().end())
+    {
+    }
+
+    record_tagger::record_tagger(record_tagger const& that) :
+        BaseT(static_cast< BaseT const& >(that)),
+        m_Tag(BaseT::attributes().end()) // the tag cannot be set during copying the logger
+    {
+    }
+
+    template< typename ArgsT >
+    record_tagger::record_tagger(ArgsT const& args) : BaseT(args)
+    {
+    }
+
+    template< typename ArgsT >
+    bool record_tagger::open_record(ArgsT const& args)
+    {
+        // Acquire the lock and forward to the unlocked implementation
+        open_record_lock lock(this->threading_base());
+        return open_record_unlocked(args);
+    }
+
+    void record_tagger::push_record(string_type const& message)
+    {
+        push_record_lock lock(this->threading_base());
+        push_record_unlocked(message);
+    }
+
+    void record_tagger::cancel_record()
+    {
+        cancel_record_lock lock(this->threading_base());
+        cancel_record_unlocked();
+    }
+
+Note that the locks we have defined in the feature definition are applied to the threading model. This will allow the compiler to effectively optimize locking away in case of a single-threaded model.
+
+Now, when all locking is extracted into the public interface, we have the most of our feature logic to be implemented in the protected part of the interface. In order to set up tag value in the logger, we will have to introduce a new __boost_parameter__ keyword. Following recommendations from that library documentation, it's better to introduce the keyword in a special namespace:
+
+    namespace keywords {
+
+        BOOST_PARAMETER_KEYWORD(tag_ns, tag)
+
+    }
+
+Opening a new record can now look something like this:
+
+    template< typename ArgsT >
+    bool record_tagger::open_record_unlocked(ArgsT const& args)
+    {
+        // Extract the named argument from the parameters pack
+        string_type tag_value = args[keywords::tag | string_type()];
+
+        if (!tag_value.empty())
+        {
+            // Add the tag as a new attribute
+            boost::shared_ptr< logging::attribute > attr(
+                new logging::constant< string_type >(tag_value));
+            std::pair<
+                typename attribute_set_type::iterator,
+                bool
+            > res = BaseT::add_attribute_unlocked("Tag", attr);
+            if (res.second)
+                m_Tag = res.first;
+        }
+
+        // And forward the call to the base features
+        bool opened = BaseT::open_record_unlocked(args);
+
+        // If the record did not pass filtering, remove the tag
+        if (!opened)
+            remove_tag();
+
+        return opened;
+    }
+
+If a log record passes filtering, either `push_record` or `cancel_record` gets called. Here are their implementation:
+
+    void record_tagger::push_record_unlocked(string_type const& message)
+    {
+        // Push the record as usual
+        BaseT::push_record_unlocked(message);
+
+        // Remove the tag from the set of attributes
+        remove_tag();
+    }
+
+    void record_tagger::cancel_record_unlocked()
+    {
+        // Cancel the record as usual
+        BaseT::cancel_record_unlocked();
+
+        // Remove the tag from the set of attributes
+        remove_tag();
+    }
+
+    void record_tagger::remove_tag()
+    {
+        if (m_Tag != BaseT::attributes().end())
+        {
+            BaseT::remove_attribute_unlocked(m_Tag);
+            m_Tag = BaseT::attributes().end();
+        }
+    }
+
+The last unimplemented method that is left is `swap_unlocked`. This function is somewhat special, because it doesn't need the public counterpart with locking. The public `swap` method will be generated automatically by the composite logger class, and thus it will override any such method in the feature class. Additionally, the composite logger will implement assignment operator that will be using copy constructor and this swap method.
+
+    void record_tagger::swap_unlocked(record_tagger& that)
+    {
+        using std::swap;
+        swap(m_Tag, that.m_Tag);
+        BaseT::swap_unlocked(static_cast< BaseT& >(that));
+    }
+
+Ok, we got our feature, and it's time to inject it into a logger. Assume, we want to combine it with the standard severity level logging. No problems:
+
+    namespace mpl = boost::mpl;
+
+    template< typename LevelT = int >
+    class my_logger :
+        public src::basic_composite_logger<
+            char,                       // character type for the logger
+            my_logger,                  // final logger type
+            src::single_thread_model,   // the logger does not perform thread synchronization
+                                        // use multi_thread_model to declare a thread-safe logger
+            typename mpl::vector<       // the list of features we want to combine
+                src::basic_severity_logger< mpl::_1, LevelT >,
+                record_tagger< mpl::_1 >
+            >::type
+        >
+    {
+        // The following line will automatically generate forwarding constructors that
+        // will call to the corresponding constructors of the base class
+        BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(my_logger)
+    };
+
+As you can see, creating a logger is a quite simple procedure. The `BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE` macro you see here is for mere convenience purpose: it unfolds into a default constructor, copy constructor and a number of constructors to support named arguments. For non-template loggers there is a similar `BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS` macro.
+
+To use this logger we can now write the following:
+
+    my_logger logger;
+
+    if (logger.open_record((src::keywords::severity = 1, keywords::tag = "[GUI]")))
+        logger.strm() << "The user has confirmed his choice";
+
+However, I would prefer defining a special macro to reduce verbosity:
+
+    #define LOG_WITH_TAG(lg, sev, tg) \
+        BOOST_LOG_WITH_PARAMS((lg), (src::keywords::severity = (sev))(keywords::tag = (tg)))
+
+    LOG_WITH_TAG(logger, 1, "[GUI]") << "The user has confirmed his choice";
 
 [heading Guidelines for the complete logging source designers]
 

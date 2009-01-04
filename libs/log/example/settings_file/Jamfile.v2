@@ -4,6 +4,6 @@
 # http://www.boost.org/LICENSE_1_0.txt)
 
 exe settings_file 
-    : main.cpp ../../build/boost_log
+    : main.cpp ../../build//boost_log
     ;
 
