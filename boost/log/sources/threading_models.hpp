@@ -130,6 +130,9 @@ private:
 //! An auxiliary pseudo-lock to express no locking requirements in logger features
 struct no_lock : noncopyable
 {
+    /*!
+     * Constructs the pseudo-lock with any type of mutex. The mutex is not affected during construction.
+     */
     template< typename T >
     explicit no_lock(T&) {}
 };
@@ -193,7 +196,24 @@ namespace aux {
 
 } // namespace aux
 
-#ifndef BOOST_LOG_DOXYGEN_PASS
+#if defined(BOOST_LOG_DOXYGEN_PASS)
+
+/*!
+ * \brief The metafunction selects the most strict lock type of the specified.
+ *
+ * The template supports all lock types provided by the Boost.Thread
+ * library (except for \c upgrade_to_unique_lock), plus additional
+ * pseudo-lock \c no_lock that indicates no locking at all.
+ * Exclusive locks are considered the strictest, shared locks are weaker,
+ * and \c no_lock is the weakest.
+ */
+template< typename... LocksT >
+struct strictest_lock
+{
+    typedef implementation_defined type;
+};
+
+#else
 
 #define BOOST_LOG_IDENTITY_INTERNAL(z, i, data) data
 
@@ -231,27 +251,13 @@ BOOST_PP_REPEAT_FROM_TO(2, BOOST_PP_SUB(BOOST_LOG_STRICTEST_LOCK_LIMIT, 1), BOOS
 #undef BOOST_LOG_DEFINE_STRICTEST_LOG_SPEC_INTERNAL
 #undef BOOST_LOG_IDENTITY_INTERNAL
 
-#else
-
-/*!
- * The metafunction selects the most strict lock type of the specified.
- *
- * The template supports all lock types provided by the Boost.Thread
- * library (except for \c upgrade_to_unique_lock), plus additional
- * pseudo-lock \c no_lock that indicates no locking at all.
- * Exclusive locks are considered the strictest, shared locks are weaker,
- * and \c no_lock is the weakest.
- */
-template< typename... LocksT >
-struct strictest_lock;
-
 #endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace sources
 
 } // namespace log
 
-#if !defined(BOOST_LOG_NO_THREADS)
+#if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_DOXYGEN_PASS)
 
 template< >
 struct is_mutex_type< log::sources::single_thread_model > : mpl::true_

@@ -8,7 +8,7 @@
  * at http://www.boost.org/libs/log/doc/log.html.
  */
 /*!
- * \file   event_log_constants.cpp
+ * \file   event_log_constants.hpp
  * \author Andrey Semashev
  * \date   07.11.2008
  *

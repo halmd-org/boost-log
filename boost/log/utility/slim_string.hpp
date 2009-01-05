@@ -243,7 +243,8 @@ public:
      * 
      * \param n Character index
      * \return Constant reference to the requested character
-     * \throw An <tt>std::exception</tt>-based exception to indicate that \a n is out of range.
+     *
+     * \b Throws: An <tt>std::exception</tt>-based exception to indicate that \a n is out of range.
      */
     BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
@@ -812,7 +813,8 @@ public:
      * \param that Comparand
      * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
      *         a positive value if this string is greater than the comparand.
-     * \throw An <tt>std::exception</tt>-based exception if arguments are out of range.
+     *
+     * \b Throws: An <tt>std::exception</tt>-based exception if arguments are out of range.
      */
     BOOST_LOG_EXPORT int compare(size_type pos1, size_type n1, basic_slim_string const& that) const;
     /*!
@@ -824,7 +826,8 @@ public:
      * \param s Comparand
      * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
      *         a positive value if this string is greater than the comparand.
-     * \throw An <tt>std::exception</tt>-based exception if arguments are out of range.
+     *
+     * \b Throws: An <tt>std::exception</tt>-based exception if arguments are out of range.
      */
     BOOST_LOG_EXPORT int compare(size_type pos1, size_type n1, string_type const& s) const;
     /*!
@@ -838,7 +841,8 @@ public:
      * \param n2 Length of the substring of the comparand to perform comparison to
      * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
      *         a positive value if this string is greater than the comparand.
-     * \throw An <tt>std::exception</tt>-based exception if arguments are out of range.
+     *
+     * \b Throws: An <tt>std::exception</tt>-based exception if arguments are out of range.
      */
     BOOST_LOG_EXPORT int compare(size_type pos1, size_type n1, basic_slim_string const& that, size_type pos2, size_type n2) const;
     /*!
@@ -852,7 +856,8 @@ public:
      * \param n2 Length of the substring of the comparand to perform comparison to
      * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
      *         a positive value if this string is greater than the comparand.
-     * \throw An <tt>std::exception</tt>-based exception if arguments are out of range.
+     *
+     * \b Throws: An <tt>std::exception</tt>-based exception if arguments are out of range.
      */
     BOOST_LOG_EXPORT int compare(size_type pos1, size_type n1, string_type const& s, size_type pos2, size_type n2) const;
     /*!
@@ -881,7 +886,8 @@ public:
      * \param s Comparand. Must point to a sequence of characters, must not be NULL.
      * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
      *         a positive value if this string is greater than the comparand.
-     * \throw An <tt>std::exception</tt>-based exception if arguments are out of range.
+     *
+     * \b Throws: An <tt>std::exception</tt>-based exception if arguments are out of range.
      */
     BOOST_LOG_EXPORT int compare(size_type pos1, size_type n1, const_pointer s) const;
     /*!
@@ -894,7 +900,8 @@ public:
      * \param n2 Number of characters in the sequence \a s.
      * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
      *         a positive value if this string is greater than the comparand.
-     * \throw An <tt>std::exception</tt>-based exception if arguments are out of range.
+     *
+     * \b Throws: An <tt>std::exception</tt>-based exception if arguments are out of range.
      */
     BOOST_LOG_EXPORT int compare(size_type pos1, size_type n1, const_pointer s, size_type n2) const;
 };

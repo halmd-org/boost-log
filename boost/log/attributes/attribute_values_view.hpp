@@ -235,7 +235,7 @@ public:
     /*!
      * Swaps two views
      * 
-     * \throw Nothing.
+     * \b Throws: Nothing.
      */
     void swap(basic_attribute_values_view& that)
     {

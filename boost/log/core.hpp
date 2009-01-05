@@ -227,21 +227,23 @@ public:
      *
      * \param source_attributes The set of source-specific attributes to be attached to the record to be opened.
      * \return \c true if the record is opened, \c false if not (e.g. because it didn't pass filtering).
-     * \throw Nothing.
+     *
+     * \b Throws: Nothing.
      */
     bool open_record(attribute_set_type const& source_attributes);
     /*!
      * The method pushes the record to sinks and closes it. Results are undefined if called before opening a record.
      *
      * \param message_text The formatted log message text.
-     * \throw Nothing.
+     *
+     * \b Throws: Nothing.
      */
     void push_record(string_type const& message_text);
     /*!
      * The method cancels the currently opened record. The record is not passed to any sinks. Results are undefined if called
      * before opening a record.
      *
-     * \throw Nothing.
+     * \b Throws: Nothing.
      */
     void cancel_record();
 };

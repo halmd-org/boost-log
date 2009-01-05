@@ -271,7 +271,7 @@ public:
     /*!
      * Swaps two instances of the container.
      * 
-     * \throw Nothing.
+     * \b Throws: Nothing.
      */
     void swap(basic_attribute_set& that) { std::swap(m_pImpl, that.m_pImpl); }
 

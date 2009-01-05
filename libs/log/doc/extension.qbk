@@ -234,6 +234,7 @@ You can extend the library by developing your own sources and, for that matter, 
 Every logger provided by the library consists of a number of features that can be combined with each other. Each feature is responsible for a single and independent aspect of the logger functionality. For example, loggers that provide the ability to assign severity levels to logging records include the `basic_severity_logger` feature. You can implement your own feature and use it along with the ones provided by the library.
 
 A logger feature should follow these basic requirements:
+
 * A logging feature should be a class template. It should have at least one template parameter type (let's name it `BaseT`).
 * The feature must publicly derive from the `BaseT` template parameter.
 * The feature must be default-constructible and copy-constructible.
@@ -242,16 +243,19 @@ A logger feature should follow these basic requirements:
 These requirements allow to compose a logger from a number of features derived from each other. The root class of the features hierarchy will be the `basic_logger` class template instance. This class implements the most of the basic functionality of loggers, like storing logger-specific attributes and providing interface for log message formatting. The hierarchy composition is done by the `basic_composite_logger` class template, which is instantiated on an MPL sequence of features (don't worry, this will be shown in an example in a few moments). The constructor with a templated argument allows to initialize features with named parameters, using the __boost_parameter__ library.
 
 A logging feature may also contain internal data. In that case, to maintain thread safety for the logger, the feature should follow these additional guidelines:
+
 # Usually there is no need to introduce a mutex or another synchronization mechanism in each feature. Moreover, it is advised not to do so, because the same feature can be used in both thread-safe and not thread-safe loggers. Instead, features should use threading model of the logger as a synchronization primitive, similarly as they would use mutex. The threading model is accessible through the `threading_base` method, defined in the `basic_logger` class template.
 # If the feature has to override methods of the public interface of the `basic_logger` class template (or the same part of the base feature interface), the following should be considered with regard to such methods:
+
     * The public interface of the feature should be thread-safe in terms of its own thread safety requirements and its base classes requirements.
     * The thread safety requirements are expressed with lock types for each public function the feature exposes to the user. These types are available as typedefs in each feature. If the feature exposes a public function `foo`, it will also expose type `foo_lock`, which will express the locking requirements of `foo`. Feature constructors don't need locking, and thus there's no need for lock types for them.
     * The feature should also provide a protected interface for the derived features. This interface should provide operations equivalent to the public interface, but should use no locking. If the feature exposes a public function `foo`, it will also expose a protected function `foo_unlocked` with the same meaning.
     * The feature should not call public methods of the base class interface when the threading model is already locked. Instead, the *`_unlocked` versions of functions should be called.
+
 # The feature may implement copy constructor. The argument of the constructor is already locked with a shared lock when the constructor is called. Naturally, the feature is expected to forward copy constructor call to the `BaseT` class.
 # The feature need not implement assignment operator. The assignment will be automatically provided by the `basic_composite_logger` class instance. However, the feature may provide `swap_unlocked` method that will swap contents of this feature and the method argument, and call similar method in the `BaseT` class. The automatically generated assignment operator will use this method, along with copy constructor.
 
-In order to illustrate all these lengthy recommendations, let's implement a simple logger feature. Assume we want our logger to be able to tag individual log records. In other words, the logger has to temporarily add an attribute to its set of attributes, emit the logging record, and then automatically remove the attribute. Somewhat similar functionality can be achieved with scoped attributes, although the syntax may complicate wrapping it into a neat macro:
+In order to illustrate all these lengthy recommendations, let's implement a simple logger feature. Suppose we want our logger to be able to tag individual log records. In other words, the logger has to temporarily add an attribute to its set of attributes, emit the logging record, and then automatically remove the attribute. Somewhat similar functionality can be achieved with scoped attributes, although the syntax may complicate wrapping it into a neat macro:
 
     // We want something equivalent to this
     {
@@ -462,7 +466,7 @@ The last unimplemented method that is left is `swap_unlocked`. This function is 
         BaseT::swap_unlocked(static_cast< BaseT& >(that));
     }
 
-Ok, we got our feature, and it's time to inject it into a logger. Assume, we want to combine it with the standard severity level logging. No problems:
+Ok, we got our feature, and it's time to inject it into a logger. Assume we want to combine it with the standard severity level logging. No problems:
 
     namespace mpl = boost::mpl;
 
@@ -488,9 +492,16 @@ As you can see, creating a logger is a quite simple procedure. The `BOOST_LOG_FO
 
 To use this logger we can now write the following:
 
-    my_logger logger;
+    enum severity_level
+    {
+        normal,
+        warning,
+        error
+    };
 
-    if (logger.open_record((src::keywords::severity = 1, keywords::tag = "[GUI]")))
+    my_logger< severity_level > logger;
+
+    if (logger.open_record((src::keywords::severity = normal, keywords::tag = "[GUI]")))
         logger.strm() << "The user has confirmed his choice";
 
 However, I would prefer defining a special macro to reduce verbosity:
@@ -498,13 +509,64 @@ However, I would prefer defining a special macro to reduce verbosity:
     #define LOG_WITH_TAG(lg, sev, tg) \
         BOOST_LOG_WITH_PARAMS((lg), (src::keywords::severity = (sev))(keywords::tag = (tg)))
 
-    LOG_WITH_TAG(logger, 1, "[GUI]") << "The user has confirmed his choice";
+    LOG_WITH_TAG(logger, normal, "[GUI]") << "The user has confirmed his choice";
 
 [heading Guidelines for the complete logging source designers]
+
+In general, you can implement new logging sources the way you like, the library does not mandate any design requirements on log sources. However, there are some notes regarding the way log sources should interact with logging core.
+
+# Whenever a logging source is ready to emit a log record, it should call the `open_record` in the corresponding core. The source-specific attributes should be passed into that call. During that call the core allocates resources for the record being made and performs filtering.
+# If the call to `open_record` returned `true`, then the record passed the filtering and is considered to be opened. The record must be either confirmed by the source by subsequently calling `push_record` or withdrawned by calling to `cancel_record`. In either case, after the call the resources associated with the record will be reclaimed (as far as the logging core is concerned, that is). The behavior is undefined if either of these methods is called when no record is opened.
+# If the call to `open_record` returned `false`, it means that the record has not been opened (most likely due to filtering reject). In that case the logging core does not hold any resources associated with the record, and thus the source must not call `push_record` or `cancel_record` for that particular logging attempt.
+# The source may subsequently open more than one records. In that case the state of each record is pushed into an internal stack, so the source must confirm or withdraw the opened records in the reverse order to their opening.
+# The core does not distinguish sources from each other. That means that one source can open a record, then second source can open a record. If the first source closes the record either way, it will close the record that was opened last (the one that was opened by the second source in this example). The core, however, distinguishes between threads in which the log records are manipulated, so that different threads do not interfere with each other.
+# The cores for different character types are completely independent.
 
 [endsect]
 
 [section:attributes Writing your own attributes]
+
+    #include <boost/log/attributes/attribute.hpp>
+    #include <boost/log/attributes/basic_attribute_value.hpp>
+
+Developing your own attributes is quite simple. Generally, you need to do the following:
+
+# Define what will be the attribute value. Most likely, it will be a piece of constant data that you want to participate in filtering and formatting. Encapsulate this data into a class that derives from the `attribute_value` interface. This object will have to implement the `dispatch` method that will extract the stored data (or, in other words, the stored value) to a type dispatcher.
+# Define how attribute values are going to be produced. In a corner case the values need not to be produced (like in case of the `constant` attribute provided by the library), but often there is some logic that need to be invoked to acquire the attribute value. This logic has to be concentrated in a class derived from the `attribute` interface, more precisely - in the `get_value` method. You may think of it as an attribute value factory.
+
+While designing an attribute, one has to strive for making it as independent from values it produces, as possible. The attribute can be called from different threads concurrently to produce a value. Once produced, the attribute value can be used several times by the library (maybe even concurrently), it can outlive the attribute object where it was created, and there can simultaneously exist several attribute values produced by the same attribute.
+
+Each attribute value is considered independent from other attribute values or the attribute itself, from the point of view of the library. That said, it is still possible to implement attributes that are also attribute values, and thus optimize performance. This is possible if either of these fulfills:
+
+* The attribute value never changes, so it's possible to store it into the attribute itself. The `constant` attribute is an example.
+* The attribute stores its value in a global (external with regard to the attribute) storage, that can be accessed from any attribute value. The attribute values must guarantee, though, that their stored values do not change over time.
+
+As a special case for the second point, it is possible to store attribute values (or their parts) in a thread-specific storage. However, in that case user has to implement the `detach_from_thread` method of the attribute value properly. The result of this method - another attribute value - must be independent from the thread is is being called in, but its stored value should be equivalent to the original attribute value. This method will be called by the library when the attribute value passes to thread that is different from the thread where it was created. As of this moment, this will only happen in case of asynchronous logging sink.
+
+But in vast majority of cases attribute values must be self-contained objects with no dependencies on other entities. In fact, this case is so common that the library provides a ready to use attribute value class template `basic_attribute_value`. The template has to be instantiated on the stored value type, and the stored value has to be provided to the attribute value constructor. For example, this is how to implement an attribute that will return system uptime in seconds:
+
+    class system_uptime :
+        public logging::attribute
+    {
+        typedef attrs::basic_attribute_value< unsigned int > attribute_value_type;
+
+    public:
+        boost::shared_ptr< attribute_value > get_value()
+        {
+            unsigned int up;
+
+    #if defined(BOOST_WINDOWS)
+            up = GetTickCount() / 1000;
+    #else // assume other platforms provide sysinfo function
+            struct sysinfo info;
+            if (sysinfo(&info) != 0)
+                throw std::runtime_error("Could not acquire uptime");
+            up = info.uptime;
+    #endif
+
+            return boost::shared_ptr< attribute_value >(new attribute_value_type(up));
+        }
+    };
 
 [endsect]
 

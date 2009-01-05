@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2009-01-02 18:42:06 $]
+    [last-revision $Date: 2009-01-05 17:41:15 $]
 ]
 
 [c++]
@@ -165,7 +165,7 @@ Along with the described above primary facilities, the library provides a wide v
 
 [include:tutorial tutorial.qbk]
 [include:advanced advanced.qbk]
-[/ include:extension extension.qbk /]
+[include:extension extension.qbk]
 
 [section:rationale Rationale]
 
@@ -291,7 +291,7 @@ would become a lambda-expression, that is only invoked if the filtering is succe
 
 would generate a considerable amount of code (proportionally to the number of streaming operators) to be executed before filtering takes place. Another drawback is that the `packet.size()` is always called, whether or not the record is actually written to log. In order to delay this call, yet more scaffolding is needed, possibly involving __boost_bind__, __boost_lambda__ or __boost_phoenix__. This complication is not acceptable for such a basic use case, like this.
 
-Although lazy streaming is not provided by the library by default, nothing prevents to develop it in a separate hierarchy of loggers.
+Although lazy streaming is not provided by the library by default, nothing prevents to develop it in a separate hierarchy of loggers. See the [link extension.extension.sources Extending the library] section for more information.
 
 [endsect]
 

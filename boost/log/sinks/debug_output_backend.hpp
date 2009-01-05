@@ -67,7 +67,8 @@ public:
     typedef typename base_type::values_view_type values_view_type;
 
 public:
-    //! \cond
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
     //! A filter that checks whether the debugger is available
     class debugger_presence_filter :
         public filters::basic_filter< char_type, debugger_presence_filter >
@@ -75,7 +76,8 @@ public:
     public:
         BOOST_LOG_EXPORT bool operator() (values_view_type const& values) const;
     };
-    //! \endcond
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 public:
     /*!

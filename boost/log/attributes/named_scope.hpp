@@ -98,7 +98,8 @@ struct basic_named_scope_entry
      * Initializing constructor
      * 
      * \post <tt>scope_name == sn && file_name == fn && line == ln</tt>
-     * \throw Nothing.
+     *
+     * \b Throws: Nothing.
      */
     template< typename T1, unsigned int N1, typename T2, unsigned int N2 >
     basic_named_scope_entry(T1 (&sn)[N1], T2 (&fn)[N2], unsigned int ln)
@@ -417,13 +418,13 @@ public:
     /*!
      * The method pushes the scope to the back of the current thread's scope list
      * 
-     * \throw Nothing.
+     * \b Throws: Nothing.
      */
     static void push_scope(scope_entry const& entry);
     /*!
      * The method pops the last pushed scope from the current thread's scope list
      * 
-     * \throw Nothing.
+     * \b Throws: Nothing.
      */
     static void pop_scope();
 

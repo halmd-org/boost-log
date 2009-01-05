@@ -260,7 +260,8 @@ public:
      * 
      * \param i Requested character index
      * \return Constant reference to the requested character
-     * \throw An <tt>std::exception</tt>-based exception if index \a i is out of string boundaries
+     *
+     * \b Throws: An <tt>std::exception</tt>-based exception if index \a i is out of string boundaries
      */
     const_reference at(size_type i) const
     {
@@ -382,7 +383,8 @@ public:
      * \param n Maximum number of characters to copy
      * \param pos Starting position to start copying from
      * \return Number of characters copied
-     * \throw An <tt>std::exception</tt>-based exception if \a pos is out of range.
+     *
+     * \b Throws: An <tt>std::exception</tt>-based exception if \a pos is out of range.
      */
     size_type copy(value_type* str, size_type n, size_type pos = 0) const
     {
@@ -406,7 +408,8 @@ public:
      * \param len Number of characters in the sequence \a str.
      * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
      *         a positive value if this string is greater than the comparand.
-     * \throw An <tt>std::exception</tt>-based exception if \a pos is out of range.
+     *
+     * \b Throws: An <tt>std::exception</tt>-based exception if \a pos is out of range.
      */
     int compare(size_type pos, size_type n, const_pointer str, size_type len) const
     {
@@ -427,7 +430,8 @@ public:
      * \param str Comparand. Must point to a zero-terminated sequence of characters, must not be NULL.
      * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
      *         a positive value if this string is greater than the comparand.
-     * \throw An <tt>std::exception</tt>-based exception if \a pos is out of range.
+     *
+     * \b Throws: An <tt>std::exception</tt>-based exception if \a pos is out of range.
      */
     int compare(size_type pos, size_type n, const_pointer str) const
     {
@@ -442,7 +446,8 @@ public:
      * \param that Comparand
      * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
      *         a positive value if this string is greater than the comparand.
-     * \throw An <tt>std::exception</tt>-based exception if \a pos is out of range.
+     *
+     * \b Throws: An <tt>std::exception</tt>-based exception if \a pos is out of range.
      */
     int compare(size_type pos, size_type n, this_type const& that) const
     {
