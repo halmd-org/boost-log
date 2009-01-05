@@ -1526,7 +1526,7 @@ But there's more about the rotating file stream. The stream also supports callin
 
         // Setup open and close handlers
         strm->set_open_handler(&write_header);
-        strm->set_close_handler(&write_header);
+        strm->set_close_handler(&write_footer);
 
         // Create a sink
         boost::shared_ptr< sinks::synchronous_sink< sinks::text_ostream_backend > > sink(
