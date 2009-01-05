@@ -1534,7 +1534,7 @@ But there's more about the rotating file stream. The stream also supports callin
         sink->locked_backend()->add_stream(strm);
 
         // Setup the formatter
-        sink->set_formatter(fmt::ostrm
+        sink->locked_backend()->set_formatter(fmt::ostrm
             << "\t<message id=\"" << fmt::attr< unsigned int >("Line #") << "\">\n"
                 << "\t\t<timestamp>" << fmt::date_time("TimeStamp") << "</timestamp>\n"
                 << "\t\t<level>" << fmt::attr< int >("Severity") << "</level>\n"
