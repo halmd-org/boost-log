@@ -52,6 +52,9 @@
 #ifndef BOOST_LOG_STRICTEST_LOCK_LIMIT
 #define BOOST_LOG_STRICTEST_LOCK_LIMIT 10
 #endif // BOOST_LOG_STRICTEST_LOCK_LIMIT
+#if BOOST_LOG_STRICTEST_LOCK_LIMIT < 3
+#error The BOOST_LOG_STRICTEST_LOCK_LIMIT macro should not be less than 3
+#endif
 
 namespace boost {
 
@@ -192,14 +195,21 @@ namespace aux {
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
+#define BOOST_LOG_IDENTITY_INTERNAL(z, i, data) data
+
 template<
     typename TT0,
     typename TT1,
     BOOST_PP_ENUM_PARAMS_WITH_A_DEFAULT(BOOST_PP_SUB(BOOST_LOG_STRICTEST_LOCK_LIMIT, 2), typename T, void)
 >
-struct strictest_lock;
-
-#define BOOST_LOG_IDENTITY_INTERNAL(z, i, data) data
+struct strictest_lock
+{
+    typedef
+        BOOST_PP_ENUM_PARAMS(BOOST_PP_SUB(BOOST_LOG_STRICTEST_LOCK_LIMIT, 2), typename aux::strictest_lock_impl< T),
+            typename aux::strictest_lock_impl< TT0, TT1 >::type
+        BOOST_PP_REPEAT_FROM_TO(2, BOOST_LOG_STRICTEST_LOCK_LIMIT, BOOST_LOG_IDENTITY_INTERNAL, >::type)
+    type;
+};
 
 #define BOOST_LOG_DEFINE_STRICTEST_LOG_SPEC_INTERNAL(z, i, data)\
     template< typename TT0, typename TT1 BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_SUB(i, 2), typename T) >\
@@ -216,7 +226,7 @@ struct strictest_lock;
         type;\
     };
 
-BOOST_PP_REPEAT_FROM_TO(2, BOOST_LOG_STRICTEST_LOCK_LIMIT, BOOST_LOG_DEFINE_STRICTEST_LOG_SPEC_INTERNAL, ~)
+BOOST_PP_REPEAT_FROM_TO(2, BOOST_PP_SUB(BOOST_LOG_STRICTEST_LOCK_LIMIT, 1), BOOST_LOG_DEFINE_STRICTEST_LOG_SPEC_INTERNAL, ~)
 
 #undef BOOST_LOG_DEFINE_STRICTEST_LOG_SPEC_INTERNAL
 #undef BOOST_LOG_IDENTITY_INTERNAL
