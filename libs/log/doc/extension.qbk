@@ -570,4 +570,14 @@ But in vast majority of cases attribute values must be self-contained objects wi
 
 [endsect]
 
+[section:settings Extending library settings support]
+
+If you write your own logging sinks or use your own types in attributes, you may want to add support for these components to the settings parser provided by the library.
+
+[heading Adding support for user-defined types to formatter parser]
+
+The most obvious example, where such kind of extension is needed, is adding support for custom severity types to the parser, in order to customize the way the logging records are formatted. Without doing so the library won't be able to extract severity levels from the attribute value sets and thus will not be able to format them into a string form.
+
+[endsect]
+
 [endsect]
