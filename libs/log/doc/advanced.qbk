@@ -1783,7 +1783,7 @@ The library also provides an `extract` convenience function that automatically c
 
 This part of the library is provided in order to simplify logging initialization and provide basic tools to develop user-specific initialization mechanisms. It is known that setup capabilities and preferences may vary widely from application to application, therefore the library does not attempt to provide a universal solution for this task. The provided tools are mostly intended to serve as a quick drop-in support for logging setup and a set of instruments to implement something more elaborate and more fitting user's needs.
 
-[heading Convenience functions]
+[section:convenience Convenience functions]
 
     #include <boost/log/utility/init/to_console.hpp>
     #include <boost/log/utility/init/to_file.hpp>
@@ -1875,7 +1875,9 @@ Lastly, there is a `add_common_attributes` function that registers two most freq
         return 0;
     }
 
-[heading Filter and formatter parsers]
+[endsect]
+
+[section:filter_formatter Filter and formatter parsers]
 
     #include <boost/log/utility/init/filter_parser.hpp>
     #include <boost/log/utility/init/formatter_parser.hpp>
@@ -1926,44 +1928,13 @@ Below are some examples of filters:
 
 The formatter string syntax is even simpler and pretty much resembles __boost_format__ format string syntax. The string must contain attribute names enclosed in percent signs ("%"), the corresponding attribute value will replace these placeholders. The placeholder "%\_%" is special, it will be replaced with the log record text. For instance, `[%TimeStamp%] *%Severity%* %_%` formatter string will make log records look like this: `[2008-07-05 13:44:23] *0* Hello world`.
 
-You may have noticed that the formatters don't provide means to change the formatting rules of attribute values. This can be changed on a per-attribute basis by registering custom formatters. Having done this, the `parse_formatter` function will use a user-defined function to create the correct formatter. Furthermore, it is possible to pass named arguments to the function from the formatter string, the arguments must be specified in round brackets, separated with commas, right after the attribute name. Here is an example:
-
-    // The function constructs the appropriate formatter
-    logging::formatter_types< char >::formatter_type time_stamp_formatter_factory(
-        std::string const& attr_name, logging::formatter_types< char >::formatter_factory_args const& formatter_args)
-    {
-        // Find the "format" argument
-        typedef logging::formatter_types< char >::formatter_factory_args args;
-        args::const_iterator it = formatter_args.find("format");
-        if (it != formatter_args.end())
-        {
-            return fmt::date_time< boost::posix_time::ptime >(attr_name, fmt::keywords::format = it->second);
-        }
-        else
-        {
-            return fmt::date_time< boost::posix_time::ptime >(attr_name);
-        }
-    }
-
-    int main(int, char*[])
-    {
-        // Register the formatter for the "TimeStamp" attribute
-        logging::register_formatter_factory("TimeStamp", &time_stamp_formatter_factory);
-
-        // Log records will look like this: "[23.05.2008 17:23:16] Hello world"
-        logging::formatter_types< char >::formatter_type fmt = logging::parse_formatter(
-            "[%TimeStamp(format=\"%d.%m.%Y %H:%M:%S\")%] %_%")
-
-        // ...
-
-        return 0;
-    }
-
-Such custom formatters are required to be registered for all attributes whose types are not known to the library (see [link advanced.advanced.utilities.predef_types which types are known]), if their formatting needs to be supported.
+It must be noted, though, that by default the library only supports those attribute value types [link advanced.advanced.utilities.predef_types which are known] at the library build time. User-defined types will not work properly in parsed filters and formatters until registered in the library. More on this is available in the [link extension.extension.settings Extending the library] section.
 
 [note The parsed formatters and filters are generally less optimal than the equivalent ones written in code. This is because of two reasons: (\*) the programmer usually knows more about types of the attribute values that may be involved in formatting or filtering and (\*) the compiler has a better chance to optimize the formatter or filter if it is known in compile time. Therefore, if the performance matters, it is advised to avoid parsed filters and formatters.]
 
-[heading Library initialization from a settings file]
+[endsect]
+
+[section:settings Library initialization from a settings file]
 
     #include <boost/log/utility/init/from_stream.hpp>
 
@@ -1989,8 +1960,8 @@ Filter\="%Severity% > 3"
 \# section names unique.
 \[Sink:MySink1\]
 
-\# Sink destination type. Mandatory, can have one of the following values: Console, TextFile, Syslog.
-\# The Syslog can be not supported on some platforms.
+\# Sink destination type. Mandatory, can have one of the following values: Console, TextFile, Syslog, SimpleEventLog, Debugger.
+\# Destinations except for Console and TextFile may not be supported on all platforms.
 Destination\=Console
 
 \# Sink-specific filter. Optional, by default no filter is applied.
@@ -2017,32 +1988,20 @@ RotationSize\=65536
 RotationInterval\=3600
 ]
 
-The library also supports registering user-defined sinks in order to be supported with the settings file. User has to pass the sink initializing functor with his sink destination type string to the `register_sink_factory` function. The `init_from_stream` function will invoke it when it encounters the specified destination type. The contents of the sink section of parameters will be passed to the functor.
-
-    // The function reads parameters from the settings section and creates the custom sink
-    shared_ptr< sinks::sink< char > > construct_my_sink(std::map< std::string, std::string > const& args)
-    {
-        std::map< std::string, std::string >::const_iterator it = args.find("Param");
-        if (it != args.end())
-        {
-            // ...
-        }
-
-        // ...
-
-        return sink;
-    }
+Here's the usage example:
 
     int main(int, char*[])
     {
-        // Now all sections with Destination=MySink will be constructed in construct_my_sink
-        logging::register_sink_factory("MySink", &construct_my_sink);
-
+        // Read logging settings from a file
         std::ifstream file("settings.ini");
         logging::init_from_stream(file);
 
         return 0;
     }
+
+The settings parser also allows to be extended to support custom sink types. See the [link extension.extension.settings Extending the library] section for more information.
+
+[endsect]
 
 [endsect]
 

@@ -572,11 +572,273 @@ But in vast majority of cases attribute values must be self-contained objects wi
 
 [section:settings Extending library settings support]
 
-If you write your own logging sinks or use your own types in attributes, you may want to add support for these components to the settings parser provided by the library.
+If you write your own logging sinks or use your own types in attributes, you may want to add support for these components to the settings parser provided by the library. Without doing this, the library will not be aware of your types and thus will not work properly.
 
-[heading Adding support for user-defined types to formatter parser]
+[heading Adding support for user-defined types to the formatter parser]
 
-The most obvious example, where such kind of extension is needed, is adding support for custom severity types to the parser, in order to customize the way the logging records are formatted. Without doing so the library won't be able to extract severity levels from the attribute value sets and thus will not be able to format them into a string form.
+    #include <boost/log/utility/init/formatter_parser.hpp>
+
+In order to add support for user-defined types to the formatter parser, one has to register a formatter factory. The factory is basically a functional object that, upon calling, will construct a formatter for the particular attribute. Factories are registered with the `register_formatter_factory` function, that besides the factory functor accepts the attribute name that will trigger this factory usage. This way the application can expose the knowledge of the particular attribute nature to the library. Here's a quick example:
+
+    // Suppose, this class can be used as an attribute value
+    struct Point
+    {
+        double m_X, m_Y;
+
+        // Streaming operator
+        template< typename CharT, typename TraitsT >
+        friend std::basic_ostream< CharT, TraitsT >& operator<< (
+            std::basic_ostream< CharT, TraitsT >& strm, Point const& point)
+        {
+            strm << "(" << point.m_X << ", " << point.m_Y << ")";
+        }
+    };
+
+    // This is a helper traits that defines most of the types used by the formatter factories
+    typedef logging::formatter_types< char > types;
+
+    // Formatter factory
+    types::formatter_type point_formatter_factory(
+        types::string_type const& attr_name,
+        types::formatter_factory_args const& args)
+    {
+        return types::formatter_type(fmt::attr< Point >(attr_name));
+    }
+
+    // We can associate the attribute with name "Coordinates" with the type Point
+    logging::register_formatter_factory("Coordinates", &point_formatter_factory);
+
+Now, whenever the formatter parser (the `parse_formatter` function) encounters the "Coordinates" attribute in the format string being parsed, the `point_formatter_factory` will be called to construct the appropriate formatter. This formatter, since it is generated in the user's application, will use the custom streaming operator that is defined for the `Point` class.
+
+The formatter factory can additionally accept a number of parameters separated with commas that can be specified in the format string. These parameters are broken into (name, value) pairs and passed as the second argument to the factory. For example, we could allow to customize the way our coordinates are presented in log by accepting an additional parameter in the format string like this:
+
+[pre %TimeStamp% %Coordinates(format\="{%0.3f; %0.3f}")% %\_%]
+
+Now in order to support this parameter we should rewrite our factory like this:
+
+    namespace bll = boost::lambda;
+
+    // This formatter will use custom format string to format the point coordinates
+    void custom_point_formatter(
+        types::string_type const& attr_name,
+        types::ostream_type& strm,
+        types::values_view_type const& attrs,
+        types::string_type const& format)
+    {
+        Point point;
+        if (logging::extract< Point >(attr_name, attrs, bll::var(point) = bll::_1))
+        {
+            // If the attribute set contains the needed attribute value, format it into the stream
+            strm << boost::format(format) % point.m_X % point.m_Y;
+        }
+    }
+
+    // Formatter factory
+    types::formatter_type point_formatter_factory(
+        types::string_type const& attr_name,
+        types::formatter_factory_args const& args)
+    {
+        types::formatter_factory_args::const_iterator it = args.find("format");
+        if (it != args.end())
+        {
+            // The custom format is specified, use the special formatter
+            return types::formatter_type(bll::bind(&custom_point_formatter, attr_name, bll::_1, bll::_2, it->second));
+        }
+        else
+        {
+            // No special format specified, do things the traditional way
+            return types::formatter_type(fmt::attr< Point >(attr_name));
+        }
+    }
+
+However, if you don't need this additional flexibility and all you want is to use your custom streaming operators to format the attribute value, you can omit writing the formatter factory altogether. You can use a simple call like this:
+
+    logging::register_simple_formatter_factory< Point >("Coordinates");
+
+to achieve the same effect that the first version of the `point_formatter_factory` function provides.
+
+[heading Adding support for user-defined types to the filter parser]
+
+    #include <boost/log/utility/init/filter_parser.hpp>
+
+You can extend filter parser the similar way you can extend the formatter parser - by registering your types into the library. However, since it takes a considerably more complex syntax to describe filters, filter factories are more than a mere function.
+
+Filter factories should be objects that derive from the `filter_factory` interface. This base class declares a number of virtual functions that will be called in order to create filters, according to the filter expression. If some functions are not overriden by the factory, the corresponding operations are considered to be not supported by the attribute value. For example, we can define the filter factory for the slightly improved `Point` class defined in the previous section the following way:
+
+    // Suppose, this class can be used as an attribute value
+    struct Point
+    {
+        double m_X, m_Y;
+
+        // Comparison operators
+        bool operator== (Point const& that) const;
+        bool operator!= (Point const& that) const;
+
+        // Streaming operators
+        template< typename CharT, typename TraitsT >
+        friend std::basic_ostream< CharT, TraitsT >& operator<< (
+            std::basic_ostream< CharT, TraitsT >& strm, Point const& point);
+        template< typename CharT, typename TraitsT >
+        friend std::basic_istream< CharT, TraitsT >& operator>> (
+            std::basic_istream< CharT, TraitsT >& strm, Point& point);
+    };
+
+    struct point_filter_factory :
+        public logging::filter_factory< char >
+    {
+        // The callback for filter for the attribute existence test
+        filter_type on_exists_test(string_type const& name)
+        {
+            return filter_type(flt::has_attr< Point >(name));
+        }
+
+        // The callback for equality relation filter
+        filter_type on_equality_relation(string_type const& name, string_type const& arg)
+        {
+            return filter_type(flt::attr< Point >(name) == boost::lexical_cast< Point >(arg));
+        }
+        // The callback for inequality relation filter
+        filter_type on_inequality_relation(string_type const& name, string_type const& arg)
+        {
+            return filter_type(flt::attr< Point >(name) != boost::lexical_cast< Point >(arg));
+        }
+    };
+
+    // The factory can be registered the following way
+    logging::register_filter_factory("Coordinates", boost::make_shared< point_filter_factory >());
+
+Having done that, whenever the filter parser (the `parse_filter` function) encounters the "Coordinates" attribute mentioned in the filter, it will use the `point_filter_factory` object to construct the appropriate filter. For example, in case of filter
+
+[pre %Coordinates% \= "(10, 10)"]
+
+the `on_equality_relation` method will be called with `name` argument being "Coordinates" and `arg` being "10, 10".
+
+[note The quotes around the parenthesis are necessary because the filter parser only supports binary relations, while round brackets are already used to group subexpressions of the filter expression. Whenever there is need to pass several parameters to the relation (like in this case - a number of components of the `Point` class) the parameters should be encoded into a quoted string. The string may include C-style escape sequences that will be unfolded upon parsing.]
+
+The constructed filter will use the corresponding comparison operators for the `Point` class. Some relation operations, like ">" or "<=", will not be supported for attributes named "Coordinates", and this is just the way we want it, because the `Point` class does not support them either.
+
+The library allows not only to add support for new types, but also to associate new relations with them. For instance, we can create a new relation "is_in_rect" that will yield positive if the coordinates fit into a rectangle denoted with two points. The filter might look like this:
+
+[pre %Coordinates% is\_in\_rect "(10, 10) - (20, 20)"]
+
+To support it one has to define the `on_custom_relation` method in the filter factory:
+
+    namespace bll = boost::lambda;
+
+    struct Rectangle
+    {
+        Point m_TopLeft, m_BottomRight;
+
+        // Streaming operators
+        template< typename CharT, typename TraitsT >
+        friend std::basic_ostream< CharT, TraitsT >& operator<< (
+            std::basic_ostream< CharT, TraitsT >& strm, Rectangle const& rect);
+        template< typename CharT, typename TraitsT >
+        friend std::basic_istream< CharT, TraitsT >& operator>> (
+            std::basic_istream< CharT, TraitsT >& strm, Rectangle& rect);
+    };
+
+    // Our custom filter type
+    class is_in_rect_filter :
+        public flt::basic_filter< char, is_in_rect_filter >
+    {
+    private:
+        string_type m_Name;
+        Rectangle m_Rect;
+
+    public:
+        is_in_rect_filter(string_type const& attr_name, Rectangle const& rect) : m_Name(attr_name), m_Rect(rect)
+        {
+        }
+
+        bool operator() (values_view_type const& attrs) const
+        {
+            Point point;
+            if (logging::extract< Point >(m_Name, attrs, bll::var(point) = bll::_1))
+            {
+                // Check that the point fits into the rectangle region
+                return point.m_X >= m_Rect.m_TopLeft.m_X && point.m_X <= m_Rect.m_BottomRight.m_X
+                    && point.m_Y >= m_Rect.m_TopLeft.m_Y && point.m_Y <= m_Rect.m_BottomRight.m_Y;
+            }
+            else
+                return false;
+        }
+    };
+
+    struct point_filter_factory :
+        public logging::filter_factory< char >
+    {
+        // The callback for custom relation filter
+        filter_type on_custom_relation(string_type const& name, string_type const& rel, string_type const& arg)
+        {
+            if (rel == "is_in_rect")
+            {
+                // Parse the coordinates of the rectangle region and construct the filter
+                return filter_type(is_in_rect_filter(name, boost::lexical_cast< Rectangle >(arg));
+            }
+            else
+                throw std::runtime_error("Relation " + rel + " is not supported");
+        }
+    };
+
+Like with formatters, if all these bells and whistles are not needed, user can register a trivial filter factory with a simple call:
+
+    logging::register_simple_filter_factory< Point >("Coordinates");
+
+In this case, however, the `Point` class has to support all standard relational operations and have appropriate streaming operators in order to be parsed from a string.
+
+[heading Adding support for user-defined sinks]
+
+    #include <boost/log/utility/init/from_stream.hpp>
+
+The library provides mechanism of extending support for sinks similar to the formatter and filter parsers. In order to be able to mention user-defined sinks in a settings file, the user has to register a sink factory, which is essentially a functional object that receives a number of named parameters and returns a pointer to the initialized sink. The factory is registered for a specific destination (see the [link advanced.advanced.utilities.init.settings settings file description]), so whenever a sink with the specified destination is mentioned in the settings file, the factory gets called. For instance, if we have a sink that emits SNMP traps as a result of processing log records, we can register it the following way:
+
+    class snmp_backend :
+        public sinks::basic_sink_backend< char, sinks::frontend_synchronization_tag >
+    {
+    public:
+        // The constructor takes an address of the receiver of the traps
+        explicit snmp_backend(std::string const& trap_receiver);
+
+        // The function consumes the log records that come from the frontend and emits SNMP traps
+        void consume(values_view_type const& attributes, string_type const& message);
+    };
+
+    // Factory function for the SNMP sink
+    boost::shared_ptr< sinks::sink< char > > create_snmp_sink(std::map< std::string, std::string > const& params)
+    {
+        // Read parameters for the backend and create it
+        std::map< std::string, std::string >::const_iterator it = params.find("TrapReceiver");
+        if (it == params.end())
+            throw std::runtime_error("TrapReceiver parameter not specified for the SNMP backend");
+
+        boost::shared_ptr< snmp_backend > backend = boost::make_shared< snmp_backend >(it->second);
+
+        // Construct and initialize the final sink
+        boost::shared_ptr< sinks::synchronous_sink< snmp_backend > > sink =
+            boost::make_shared< sinks::synchronous_sink< snmp_backend > >(backend);
+
+        it = params.find("Filter");
+        if (it != params.end())
+            sink->set_filter(logging::parse_filter(it->second));
+
+        return sink;
+    }
+
+    logging::register_sink_factory("SNMP", &create_snmp_sink);
+
+Now the SNMP sink can be constructed with the following settings:
+
+[pre
+\[Sink:MySNMPSink\]
+
+Destination\=SNMP
+Filter\="%Severity% > 3"
+]
+
+[tip Although users are free to name parameters of their sinks the way they like, a good choice would be to follow the naming policy established by the library. That is, it should be obvious that the parameter "Filter" means the same for both the library-provided "TextFile" sink and your custom "SNMP" sink backend.]
+
+[note As the "Destination" parameter is used to determine the sink factory, this parameter is reserved and cannot be used by sink factories for their purpose.]
 
 [endsect]
 
