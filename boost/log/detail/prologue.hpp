@@ -10,7 +10,7 @@
  * 
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html. In this file
- *         an internal configuration macros are defined.
+ *         internal configuration macros are defined.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
@@ -23,18 +23,18 @@
 #include <boost/config.hpp>
 
 #if defined(_MSC_VER) && !defined(_STLPORT_VERSION)
-// MSVC 9.0 mandates packaging of STL classes, which apparently affects alignment and
-// makes alignment_of< T >::value no longer be a power of 2 for types that derive from STL classes.
-// This breaks type_with_alignment and everything that relies on it.
-// This doesn't happen with non-native STLs, such as STLPort. Strangely, this doesn't show with
-// STL classes themselves or most of the user-defined derived classes.
-// Not sure if that happens with other MSVC versions.
-// See: http://svn.boost.org/trac/boost/ticket/1946
+    // MSVC 9.0 mandates packaging of STL classes, which apparently affects alignment and
+    // makes alignment_of< T >::value no longer be a power of 2 for types that derive from STL classes.
+    // This breaks type_with_alignment and everything that relies on it.
+    // This doesn't happen with non-native STLs, such as STLPort. Strangely, this doesn't show with
+    // STL classes themselves or most of the user-defined derived classes.
+    // Not sure if that happens with other MSVC versions.
+    // See: http://svn.boost.org/trac/boost/ticket/1946
 #   define BOOST_LOG_BROKEN_STL_ALIGNMENT
 #endif
 
 #if defined(BOOST_MSVC)
-// For some reason MSVC 9.0 fails to link the library if static integral constants are defined in cpp
+    // For some reason MSVC 9.0 fails to link the library if static integral constants are defined in cpp
 #   define BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
 #   if _MSC_VER <= 1310
         // MSVC 7.1 sometimes fails to match out-of-class template function definitions with
@@ -51,35 +51,37 @@
 
 // Extended declaration macros. Used to implement compiler-specific optimizations.
 #if defined(_MSC_VER)
-#    define BOOST_LOG_FORCEINLINE __forceinline
-#    define BOOST_LOG_NO_VTABLE __declspec(novtable)
+#   define BOOST_LOG_FORCEINLINE __forceinline
+#   define BOOST_LOG_NO_VTABLE __declspec(novtable)
 #elif defined(__GNUC__)
-#    if (__GNUC__ > 3)
-#        define BOOST_LOG_FORCEINLINE inline __attribute__((always_inline))
-#    else
-#        define BOOST_LOG_FORCEINLINE inline
-#    endif
-#    define BOOST_LOG_NO_VTABLE
+#   if (__GNUC__ > 3)
+#       define BOOST_LOG_FORCEINLINE inline __attribute__((always_inline))
+#   else
+#       define BOOST_LOG_FORCEINLINE inline
+#   endif
+#   define BOOST_LOG_NO_VTABLE
 #else
-#    define BOOST_LOG_FORCEINLINE inline
-#    define BOOST_LOG_NO_VTABLE
+#   define BOOST_LOG_FORCEINLINE inline
+#   define BOOST_LOG_NO_VTABLE
 #endif
 
 // An MS-like compilers' extension that allows to optimize away the needless code
 #if defined(_MSC_VER)
-#    define BOOST_LOG_ASSUME(expr) __assume(expr)
+#   define BOOST_LOG_ASSUME(expr) __assume(expr)
 #else
-#    define BOOST_LOG_ASSUME(expr)
+#   define BOOST_LOG_ASSUME(expr)
 #endif
 
 // Some compilers support a special attribute that shows that a function won't return
 #if defined(__GNUC__) || (defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x590)
-// GCC and (supposedly) Sun Studio 12 support attribute syntax
+    // GCC and (supposedly) Sun Studio 12 support attribute syntax
 #   define BOOST_LOG_NORETURN __attribute__((noreturn))
 #elif defined (_MSC_VER)
-// Microsoft-compatible compilers go here
+    // Microsoft-compatible compilers go here
 #   define BOOST_LOG_NORETURN __declspec(noreturn)
 #else
+    // The rest compilers might emit bogus warnings about missing return statements
+    // in functions with non-void return types when throw_exception is used.
 #   define BOOST_LOG_NORETURN
 #endif
 
@@ -90,47 +92,47 @@
 #        define BOOST_LOG_DLL
 #   endif
 
-#    if defined(BOOST_HAS_DECLSPEC) && defined(BOOST_LOG_DLL)
-#        define BOOST_LOG_EXPORT __declspec(dllimport)
-#    else
-#        define BOOST_LOG_EXPORT
-#    endif // defined(BOOST_HAS_DECLSPEC)
+#   if defined(BOOST_HAS_DECLSPEC) && defined(BOOST_LOG_DLL)
+#       define BOOST_LOG_EXPORT __declspec(dllimport)
+#   else
+#       define BOOST_LOG_EXPORT
+#   endif // defined(BOOST_HAS_DECLSPEC)
 //
 // Automatically link to the correct build variant where possible. 
 // 
-#    if !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_LOG_NO_LIB)
-#        define BOOST_LIB_NAME boost_log
-#        if defined(BOOST_LOG_DLL)
-#            define BOOST_DYN_LINK
-#        endif
-#        include <boost/config/auto_link.hpp>
-#    endif  // auto-linking disabled
+#   if !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_LOG_NO_LIB)
+#       define BOOST_LIB_NAME boost_log
+#       if defined(BOOST_LOG_DLL)
+#           define BOOST_DYN_LINK
+#       endif
+#       include <boost/config/auto_link.hpp>
+#   endif  // auto-linking disabled
 
 #else // !defined(BOOST_LOG_BUILDING_THE_LIB)
 
-#    if defined(BOOST_HAS_DECLSPEC) && defined(BOOST_LOG_DLL)
-#        define BOOST_LOG_EXPORT __declspec(dllexport)
-#    elif defined(__GNUC__) && __GNUC__ >= 4 && (defined(linux) || defined(__linux) || defined(__linux__))
-#        define BOOST_LOG_EXPORT __attribute__((visibility("default")))
-#    else
-#        define BOOST_LOG_EXPORT
-#    endif
+#   if defined(BOOST_HAS_DECLSPEC) && defined(BOOST_LOG_DLL)
+#       define BOOST_LOG_EXPORT __declspec(dllexport)
+#   elif defined(__GNUC__) && __GNUC__ >= 4 && (defined(linux) || defined(__linux) || defined(__linux__))
+#       define BOOST_LOG_EXPORT __attribute__((visibility("default")))
+#   else
+#       define BOOST_LOG_EXPORT
+#   endif
 
 #endif // !defined(BOOST_LOG_BUILDING_THE_LIB)
 
 // Define BOOST_LOG_USE_SYSLOG if any syslog API should be supported
 #if !defined(BOOST_LOG_USE_SYSLOG) && defined(BOOST_LOG_USE_NATIVE_SYSLOG)
-#    define BOOST_LOG_USE_SYSLOG
+#   define BOOST_LOG_USE_SYSLOG
 #endif // !defined(BOOST_LOG_USE_SYSLOG) && defined(BOOST_LOG_USE_NATIVE_SYSLOG)
 
 #if !defined(BOOST_LOG_USE_CHAR) && !defined(BOOST_LOG_USE_WCHAR_T)
-// By default we provide support for both char and wchar_t
-#    define BOOST_LOG_USE_CHAR
-#    define BOOST_LOG_USE_WCHAR_T
+    // By default we provide support for both char and wchar_t
+#   define BOOST_LOG_USE_CHAR
+#   define BOOST_LOG_USE_WCHAR_T
 #endif // !defined(BOOST_LOG_USE_CHAR) && !defined(BOOST_LOG_USE_WCHAR_T)
 
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
-// Check if multithreading is supported
+    // Check if multithreading is supported
 #   if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_HAS_THREADS)
 #       define BOOST_LOG_NO_THREADS
 #   endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_HAS_THREADS)
