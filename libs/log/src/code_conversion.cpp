@@ -20,7 +20,7 @@
 #include <string>
 #include <stdexcept>
 #include <algorithm>
-#include <boost/throw_exception.hpp>
+#include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 
 namespace boost {
@@ -210,7 +210,7 @@ void converting_ostringstreambuf< CharT, TraitsT >::write(const char_type*& pBas
             return;
 
         default: // std::codecvt_base::error
-            boost::throw_exception(std::runtime_error("Could not convert character encoding"));
+            boost::log::aux::throw_exception(std::runtime_error("Could not convert character encoding"));
         }
     }
 }

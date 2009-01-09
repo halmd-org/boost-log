@@ -48,6 +48,7 @@
 #include <boost/log/formatters/message.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/detail/singleton.hpp>
+#include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/utility/init/formatter_parser.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include <boost/log/utility/type_dispatch/date_time_types.hpp>
@@ -375,7 +376,7 @@ parse_formatter(const CharT* begin, const CharT* end)
     formatter_type fmt;
     formatter_grammar< char_type > gram(fmt);
     if (!spirit::classic::parse(begin, end, gram).full)
-        boost::throw_exception(std::runtime_error("Could not parse the formatter"));
+        boost::log::aux::throw_exception(std::runtime_error("Could not parse the formatter"));
 
     return fmt;
 }

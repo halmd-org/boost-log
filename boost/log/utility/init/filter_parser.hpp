@@ -27,10 +27,10 @@
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/throw_exception.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/new_shared.hpp>
+#include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>
@@ -74,59 +74,38 @@ struct filter_factory :
     //! The callback for equality relation filter
     virtual filter_type on_equality_relation(string_type const& name, string_type const& arg)
     {
-        boost::throw_exception(std::runtime_error("the equality attribute relation is not supported"));
-        // To get rid from compiler warnings
-        BOOST_LOG_ASSUME(false);
-        return filter_type();
+        boost::log::aux::throw_exception(std::runtime_error("the equality attribute relation is not supported"));
     }
     //! The callback for inequality relation filter
     virtual filter_type on_inequality_relation(string_type const& name, string_type const& arg)
     {
-        boost::throw_exception(std::runtime_error("the inequality attribute relation is not supported"));
-        // To get rid from compiler warnings
-        BOOST_LOG_ASSUME(false);
-        return filter_type();
+        boost::log::aux::throw_exception(std::runtime_error("the inequality attribute relation is not supported"));
     }
     //! The callback for less relation filter
     virtual filter_type on_less_relation(string_type const& name, string_type const& arg)
     {
-        boost::throw_exception(std::runtime_error("the less attribute relation is not supported"));
-        // To get rid from compiler warnings
-        BOOST_LOG_ASSUME(false);
-        return filter_type();
+        boost::log::aux::throw_exception(std::runtime_error("the less attribute relation is not supported"));
     }
     //! The callback for greater relation filter
     virtual filter_type on_greater_relation(string_type const& name, string_type const& arg)
     {
-        boost::throw_exception(std::runtime_error("the greater attribute relation is not supported"));
-        // To get rid from compiler warnings
-        BOOST_LOG_ASSUME(false);
-        return filter_type();
+        boost::log::aux::throw_exception(std::runtime_error("the greater attribute relation is not supported"));
     }
     //! The callback for less or equal relation filter
     virtual filter_type on_less_or_equal_relation(string_type const& name, string_type const& arg)
     {
-        boost::throw_exception(std::runtime_error("the less-or-equal attribute relation is not supported"));
-        // To get rid from compiler warnings
-        BOOST_LOG_ASSUME(false);
-        return filter_type();
+        boost::log::aux::throw_exception(std::runtime_error("the less-or-equal attribute relation is not supported"));
     }
     //! The callback for greater or equal relation filter
     virtual filter_type on_greater_or_equal_relation(string_type const& name, string_type const& arg)
     {
-        boost::throw_exception(std::runtime_error("the greater-or-equal attribute relation is not supported"));
-        // To get rid from compiler warnings
-        BOOST_LOG_ASSUME(false);
-        return filter_type();
+        boost::log::aux::throw_exception(std::runtime_error("the greater-or-equal attribute relation is not supported"));
     }
 
     //! The callback for custom relation filter
     virtual filter_type on_custom_relation(string_type const& name, string_type const& rel, string_type const& arg)
     {
-        boost::throw_exception(std::runtime_error("the custom attribute relation is not supported"));
-        // To get rid from compiler warnings
-        BOOST_LOG_ASSUME(false);
-        return filter_type();
+        boost::log::aux::throw_exception(std::runtime_error("the custom attribute relation is not supported"));
     }
 };
 
@@ -185,10 +164,7 @@ public:
     //! The callback for custom relation filter
     virtual filter_type on_custom_relation(string_type const& name, string_type const& rel, string_type const& arg)
     {
-        boost::throw_exception(std::runtime_error("the custom attribute relation is not supported"));
-        // To get rid from compiler warnings
-        BOOST_LOG_ASSUME(false);
-        return filter_type();
+        boost::log::aux::throw_exception(std::runtime_error("the custom attribute relation is not supported"));
     }
 
     //! The function parses the argument value for a binary relation

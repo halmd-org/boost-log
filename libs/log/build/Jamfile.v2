@@ -20,14 +20,14 @@ feature.set-default logapi : [ default_logapi ] ;
 project boost/log
     : source-location ../src
     : requirements
-        <threading>single:<define>BOOST_LOG_NO_THREADS
         <link>shared:<define>BOOST_LOG_DLL
         <logapi>unix:<define>BOOST_LOG_USE_NATIVE_SYSLOG=1
-        <library>../../thread/build//boost_thread
-        <library>../../regex/build//boost_regex
-        <library>../../filesystem/build//boost_filesystem
-        <library>../../date_time/build//boost_date_time
-        <library>../../system/build//boost_system
+        <library>/boost/date_time//boost_date_time
+        <library>/boost/regex//boost_regex
+        <library>/boost/filesystem//boost_filesystem
+        <library>/boost/system//boost_system
+        <threading>single:<define>BOOST_LOG_NO_THREADS
+        <threading>multi:<library>/boost/thread//boost_thread
     ;
 
 DEPENDS event_log_backend.cpp : simple_event_log.mc ;

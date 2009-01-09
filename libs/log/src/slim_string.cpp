@@ -19,7 +19,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <functional>
-#include <boost/throw_exception.hpp>
+#include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/utility/slim_string.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/detail/atomic_count.hpp>
@@ -232,8 +232,7 @@ public:
         }
         else
         {
-            boost::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
-            return 0; // silence the warning about missing return statement in a non-void function
+            boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
         }
     }
 
@@ -378,7 +377,7 @@ CharT const&
 basic_slim_string< CharT, TraitsT >::at(size_type n) const
 {
     if (n >= m_pImpl->size())
-        boost::throw_exception(std::out_of_range("basic_slim_string::at: character index is out of range"));
+        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::at: character index is out of range"));
 
     return *(m_pImpl->begin() + n);
 }
@@ -768,8 +767,7 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, b
     }
     else
     {
-        boost::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
-        return 0; // silence the warning about missing return statement in a non-void function
+        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
     }
 }
 template< typename CharT, typename TraitsT >
@@ -783,8 +781,7 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, s
     }
     else
     {
-        boost::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
-        return 0; // silence the warning about missing return statement in a non-void function
+        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
     }
 }
 template< typename CharT, typename TraitsT >
@@ -817,8 +814,7 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, c
     }
     else
     {
-        boost::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
-        return 0; // silence the warning about missing return statement in a non-void function
+        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
     }
 }
 template< typename CharT, typename TraitsT >
@@ -836,8 +832,7 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, c
     }
     else
     {
-        boost::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
-        return 0; // silence the warning about missing return statement in a non-void function
+        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
     }
 }
 

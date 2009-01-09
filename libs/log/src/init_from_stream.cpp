@@ -28,13 +28,13 @@
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/throw_exception.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/new_shared.hpp>
 #include <boost/log/detail/code_conversion.hpp>
+#include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
@@ -128,7 +128,7 @@ public:
                         // The section starter is broken
                         std::ostringstream descr;
                         descr << "At line " << line_counter << ". The section header is invalid.";
-                        boost::throw_exception(std::runtime_error(descr.str()));
+                        boost::log::aux::throw_exception(std::runtime_error(descr.str()));
                     }
                 }
                 else
@@ -158,7 +158,7 @@ public:
                             // The parameter name is not valid
                             std::ostringstream descr;
                             descr << "At line " << line_counter << ". Parameter description is not valid.";
-                            boost::throw_exception(std::runtime_error(descr.str()));
+                            boost::log::aux::throw_exception(std::runtime_error(descr.str()));
                         }
                     }
                     else
@@ -166,7 +166,7 @@ public:
                         // The parameter encountered before any section starter
                         std::ostringstream descr;
                         descr << "At line " << line_counter << ". Parameters are only allowed in sections.";
-                        boost::throw_exception(std::runtime_error(descr.str()));
+                        boost::log::aux::throw_exception(std::runtime_error(descr.str()));
                     }
                 }
             }
@@ -229,12 +229,12 @@ struct sinks_repository :
             }
             else
             {
-                boost::throw_exception(std::runtime_error("The sink destination is not supported"));
+                boost::log::aux::throw_exception(std::runtime_error("The sink destination is not supported"));
             }
         }
         else
         {
-            boost::throw_exception(std::runtime_error("The sink destination is not set"));
+            boost::log::aux::throw_exception(std::runtime_error("The sink destination is not set"));
         }
         // To silence compiler warnings. This return never gets executed.
         return shared_ptr< sinks::sink< char_type > >();
@@ -289,7 +289,7 @@ private:
 #endif // BOOST_FILESYSTEM_NARROW_ONLY
         }
         else
-            boost::throw_exception(std::runtime_error("File name is not specified"));
+            boost::log::aux::throw_exception(std::runtime_error("File name is not specified"));
 
         // File rotation params
         shared_ptr< typename backend_t::stream_type > file_stream;
@@ -365,7 +365,7 @@ private:
                 shared_ptr< stream_t > p = log::aux::new_shared< stream_t >(
                     file_name, std::ios_base::out | std::ios_base::trunc);
                 if (!p->is_open())
-                    boost::throw_exception(std::runtime_error("Failed to open the destination file"));
+                    boost::log::aux::throw_exception(std::runtime_error("Failed to open the destination file"));
                 file_stream = p;
             }
         }
@@ -470,7 +470,7 @@ private:
             std::wstring const& guid = log::aux::to_wide(it->second);
             if (CLSIDFromString(const_cast< wchar_t* >(guid.c_str()), &provider_id) != NOERROR)
             {
-                boost::throw_exception(std::runtime_error("Could not recognize Provider ID from string "
+                boost::log::aux::throw_exception(std::runtime_error("Could not recognize Provider ID from string "
                     + log::aux::to_narrow(it->second)));
             }
         }

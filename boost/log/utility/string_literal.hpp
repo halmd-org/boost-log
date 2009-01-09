@@ -29,11 +29,11 @@
 #include <algorithm>
 #include <functional>
 #include <boost/operators.hpp>
-#include <boost/throw_exception.hpp>
 #include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/throw_exception.hpp>
 
 namespace boost {
 
@@ -268,7 +268,7 @@ public:
         if (i < m_Len)
             return m_pStart[i];
         else
-            boost::throw_exception(std::out_of_range("basic_string_literal::at: the index value is out of range"));
+            boost::log::aux::throw_exception(std::out_of_range("basic_string_literal::at: the index value is out of range"));
     }
 
     /*!
@@ -395,7 +395,7 @@ public:
             return len;
         }
         else
-            boost::throw_exception(std::out_of_range("basic_string_literal::copy: the position is out of range"));
+            boost::log::aux::throw_exception(std::out_of_range("basic_string_literal::copy: the position is out of range"));
     }
 
     /*!
@@ -419,7 +419,7 @@ public:
             return compare_internal(m_pStart + pos, compare_size, str, compare_size);
         }
         else
-            boost::throw_exception(std::out_of_range("basic_string_literal::compare: the position is out of range"));
+            boost::log::aux::throw_exception(std::out_of_range("basic_string_literal::compare: the position is out of range"));
     }
     /*!
      * Lexicographically compares the argument string to a part of this string

@@ -31,7 +31,6 @@
 #include <boost/limits.hpp>
 #include <boost/optional.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/throw_exception.hpp>
 #include <boost/compatibility/cpp_c_headers/cctype>
 #include <boost/compatibility/cpp_c_headers/cwctype>
 #include <boost/compatibility/cpp_c_headers/ctime>
@@ -52,6 +51,7 @@
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/attributes/time_traits.hpp>
@@ -481,7 +481,7 @@ namespace aux {
             if (this->m_File.is_open())
                 this->m_LastRotation = std::time(NULL);
             else
-                boost::throw_exception(std::runtime_error("failed to open file"));
+                boost::log::aux::throw_exception(std::runtime_error("failed to open file"));
         }
 
         //! The function closes the file

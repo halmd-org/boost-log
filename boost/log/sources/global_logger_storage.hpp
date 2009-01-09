@@ -26,13 +26,13 @@
 #include <stdexcept>
 #include <boost/limits.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/throw_exception.hpp>
 #include <boost/compatibility/cpp_c_headers/cstdio>
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/function/function0.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/new_shared.hpp>
+#include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 
 #ifdef _MSC_VER
@@ -147,7 +147,7 @@ struct logger_singleton :
                 "\" with the same tag has already been registered at " +
                 holder->m_RegistrationFile + ":" + buf + ".";
 
-            boost::throw_exception(std::logic_error(str));
+            boost::log::aux::throw_exception(std::logic_error(str));
         }
     }
 

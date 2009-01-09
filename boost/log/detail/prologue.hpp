@@ -72,6 +72,17 @@
 #    define BOOST_LOG_ASSUME(expr)
 #endif
 
+// Some compilers support a special attribute that shows that a function won't return
+#if defined(__GNUC__) || (defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x590)
+// GCC and (supposedly) Sun Studio 12 support attribute syntax
+#   define BOOST_LOG_NORETURN __attribute__((noreturn))
+#elif defined (_MSC_VER)
+// Microsoft-compatible compilers go here
+#   define BOOST_LOG_NORETURN __declspec(noreturn)
+#else
+#   define BOOST_LOG_NORETURN
+#endif
+
 #if !defined(BOOST_LOG_BUILDING_THE_LIB)
 
 // Detect if we're dealing with dll
