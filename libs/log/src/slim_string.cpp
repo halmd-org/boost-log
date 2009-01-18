@@ -224,11 +224,15 @@ public:
     //! Comparison implementation
     int compare(size_type pos1, size_type n1, const_pointer that, size_type len) const
     {
-        const size_type sz = this->size();
-        if (pos1 <= sz)
+        const size_type size = this->size();
+        if (pos1 <= size)
         {
-            const size_type compare_size = (std::min)((std::min)(n1, len), (size_type)sz - pos1);
-            return traits_type::compare(m_pBegin + pos1, that, compare_size);
+            const size_type part_size = (std::min)(n1, (size_type)size - pos1);
+            register const int res = traits_type::compare(m_pBegin + pos1, that, (std::min)(part_size, len));
+            if (res == 0)
+                return static_cast< int >(part_size - len);
+            else
+                return res;
         }
         else
         {
@@ -267,7 +271,8 @@ public:
 
 private:
     template< typename IteratorT >
-    static BOOST_LOG_FORCEINLINE IteratorT _find_first_of(IteratorT first, IteratorT last, const_pointer collection, size_type collection_size)
+    static BOOST_LOG_FORCEINLINE IteratorT _find_first_of(
+        IteratorT first, IteratorT last, const_pointer collection, size_type collection_size)
     {
         for (; first != last; ++first)
         {
@@ -280,7 +285,8 @@ private:
         return last;
     }
     template< typename IteratorT >
-    static BOOST_LOG_FORCEINLINE IteratorT _find_first_not_of(IteratorT first, IteratorT last, const_pointer collection, size_type collection_size)
+    static BOOST_LOG_FORCEINLINE IteratorT _find_first_not_of(
+        IteratorT first, IteratorT last, const_pointer collection, size_type collection_size)
     {
         for (; first != last; ++first)
         {
@@ -317,10 +323,15 @@ basic_slim_string< CharT, TraitsT >::basic_slim_string(string_type const& that)
 template< typename CharT, typename TraitsT >
 basic_slim_string< CharT, TraitsT >::basic_slim_string(string_type const& s, size_type pos, size_type n)
 {
-    const size_type size = s.size();
-    const size_type actual_pos = (pos == npos) ? 0 : (std::min)(size, pos);
-    const size_type len = ((actual_pos + n) < size) ? n : (size - actual_pos);
-    m_pImpl = implementation::allocate_and_add_ref(this, s.data() + actual_pos, len);
+    const size_type that_size = s.size();
+    if (pos <= that_size)
+    {
+        m_pImpl = implementation::allocate_and_add_ref(this, s.data() + pos, (std::min)(n, that_size - pos));
+    }
+    else
+    {
+        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::basic_slim_string: the position is out of range"));
+    }
 }
 template< typename CharT, typename TraitsT >
 basic_slim_string< CharT, TraitsT >::basic_slim_string(basic_slim_string const& that, size_type pos, size_type n)
@@ -333,9 +344,14 @@ basic_slim_string< CharT, TraitsT >::basic_slim_string(basic_slim_string const& 
     }
     else
     {
-        const size_type actual_pos = (pos == npos) ? 0 : (std::min)(that_size, pos);
-        const size_type len = (std::min)(n, that_size - actual_pos);
-        m_pImpl = implementation::allocate_and_add_ref(this, that.data() + actual_pos, len);
+        if (pos <= that_size)
+        {
+            m_pImpl = implementation::allocate_and_add_ref(this, that.data() + pos, (std::min)(n, that_size - pos));
+        }
+        else
+        {
+            boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::basic_slim_string: the position is out of range"));
+        }
     }
 }
 template< typename CharT, typename TraitsT >
@@ -421,10 +437,16 @@ std::size_t
 basic_slim_string< CharT, TraitsT >::copy(pointer s, size_type n, size_type pos) const
 {
     const size_type size = m_pImpl->size();
-    const size_type actual_pos = (pos == npos) ? 0 : (std::min)(size, pos);
-    const size_type len = (std::min)(n, size - actual_pos);
-    traits_type::copy(s, m_pImpl->begin() + actual_pos, len);
-    return len;
+    if (pos <= size)
+    {
+        const size_type len = (std::min)(n, size - pos);
+        traits_type::copy(s, m_pImpl->begin() + pos, len);
+        return len;
+    }
+    else
+    {
+        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::copy: the position is out of range"));
+    }
 }
 
 template< typename CharT, typename TraitsT >
@@ -757,13 +779,13 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, s
     return m_pImpl->compare(pos1, n1, s.data(), s.size());
 }
 template< typename CharT, typename TraitsT >
-int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, basic_slim_string const& that, size_type pos2, size_type n2) const
+int basic_slim_string< CharT, TraitsT >::compare(
+    size_type pos1, size_type n1, basic_slim_string const& that, size_type pos2, size_type n2) const
 {
     const size_type that_size = that.m_pImpl->size();
-    // Check that both position and length don't exceed the whole string length
-    if (that_size >= (pos2 + n2))
+    if (that_size >= pos2)
     {
-        return m_pImpl->compare(pos1, n1, that.m_pImpl->begin() + pos2, n2);
+        return m_pImpl->compare(pos1, n1, that.m_pImpl->begin() + pos2, (std::min)(n2, that_size - pos2));
     }
     else
     {
@@ -774,10 +796,9 @@ template< typename CharT, typename TraitsT >
 int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, string_type const& s, size_type pos2, size_type n2) const
 {
     const size_type that_size = s.size();
-    // Check that both position and length don't exceed the whole string length
-    if (that_size >= (pos2 + n2))
+    if (that_size >= pos2)
     {
-        return m_pImpl->compare(pos1, n1, s.data() + pos2, n2);
+        return m_pImpl->compare(pos1, n1, s.data() + pos2, (std::min)(n2, that_size - pos2));
     }
     else
     {
@@ -792,21 +813,16 @@ int basic_slim_string< CharT, TraitsT >::compare(const_pointer s) const
 template< typename CharT, typename TraitsT >
 int basic_slim_string< CharT, TraitsT >::compare(const_pointer s, size_type n2) const
 {
-    register const size_type size = m_pImpl->size();
-    register const int res = traits_type::compare(m_pImpl->begin(), s, (std::min)(n2, size));
-    if (res == 0)
-        return static_cast< int >(size - n2);
-    else
-        return res;
+    return m_pImpl->compare(0, m_pImpl->size(), s, n2);
 }
 template< typename CharT, typename TraitsT >
 int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, const_pointer s) const
 {
+    // A bit more optimal version to avoid traits_type::length cycle
     const size_type size = m_pImpl->size();
-    // Check that both position and length don't exceed the whole string length
-    if (size >= (pos1 + n1))
+    if (size >= pos1)
     {
-        register const int res = traits_type::compare(m_pImpl->begin() + pos1, s, n1);
+        register const int res = traits_type::compare(m_pImpl->begin() + pos1, s, (std::min)(n1, size - pos1));
         if (res == 0)
             return (s[n1] == 0 ? 0 : -1);
         else
@@ -820,20 +836,7 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, c
 template< typename CharT, typename TraitsT >
 int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, const_pointer s, size_type n2) const
 {
-    const size_type size = m_pImpl->size();
-    // Check that both position and length don't exceed the whole string length
-    if (size >= (pos1 + n1))
-    {
-        register const int res = traits_type::compare(m_pImpl->begin() + pos1, s, (std::min)(n1, n2));
-        if (res == 0)
-            return static_cast< int >(n1 - n2);
-        else
-            return res;
-    }
-    else
-    {
-        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
-    }
+    return m_pImpl->compare(pos1, n1, s, n2);
 }
 
 #ifdef BOOST_LOG_USE_CHAR

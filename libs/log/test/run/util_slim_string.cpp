@@ -213,8 +213,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(substrs, CharT, char_types)
 
     slim_string_t test4 = test1.substr(2, 2);
     BOOST_CHECK(traits_t::compare(test1.c_str() + 2, test4.c_str(), 2) == 0);
-    BOOST_CHECK_EQUAL(test4.length(), 2);
-    BOOST_CHECK_EQUAL(test4.size(), 2);
+    BOOST_CHECK_EQUAL(test4.length(), 2UL);
+    BOOST_CHECK_EQUAL(test4.size(), 2UL);
 }
 
 // Tests for comparison and ordering
