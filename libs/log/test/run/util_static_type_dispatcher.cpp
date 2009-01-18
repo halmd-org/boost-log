@@ -59,7 +59,7 @@ namespace {
         BOOST_CHECK(val2.dispatch(disp));
 
         // This one is not
-        my_value< float > val3(-4.3);
+        my_value< float > val3(static_cast< float >(-4.3));
         disp.set_expected();
         BOOST_CHECK(!val3.dispatch(disp));
     }

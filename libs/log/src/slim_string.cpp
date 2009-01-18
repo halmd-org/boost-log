@@ -334,7 +334,7 @@ basic_slim_string< CharT, TraitsT >::basic_slim_string(basic_slim_string const& 
     else
     {
         const size_type actual_pos = (pos == npos) ? 0 : (std::min)(that_size, pos);
-        const size_type len = ((actual_pos + n) < that_size) ? n : (that_size - actual_pos);
+        const size_type len = (std::min)(n, that_size - actual_pos);
         m_pImpl = implementation::allocate_and_add_ref(this, that.data() + actual_pos, len);
     }
 }
@@ -422,7 +422,7 @@ basic_slim_string< CharT, TraitsT >::copy(pointer s, size_type n, size_type pos)
 {
     const size_type size = m_pImpl->size();
     const size_type actual_pos = (pos == npos) ? 0 : (std::min)(size, pos);
-    const size_type len = ((actual_pos + n) < size) ? n : (size - actual_pos);
+    const size_type len = (std::min)(n, size - actual_pos);
     traits_type::copy(s, m_pImpl->begin() + actual_pos, len);
     return len;
 }
