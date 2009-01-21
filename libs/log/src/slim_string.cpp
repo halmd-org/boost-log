@@ -97,7 +97,8 @@ public:
     //  Lookup methods
     size_type find(const_pointer that, size_type len, size_type pos) const
     {
-        if ((pos + len) < size())
+        const size_type size = this->size();
+        if (pos < size && len < (size - pos))
         {
             const_iterator p =
                 std::search(m_pBegin + pos, m_pEnd, that, that + len, eq_traits());
@@ -119,10 +120,10 @@ public:
     }
     size_type rfind(const_pointer that, size_type len, size_type pos) const
     {
-        const size_type sz = this->size();
-        if (sz >= len)
+        const size_type size = this->size();
+        if (size >= len)
         {
-            register const_pointer pBegin = m_pBegin + (std::min)(pos, sz - len);
+            register const_pointer pBegin = m_pBegin + (std::min)(pos, size - len);
             while (pBegin >= m_pBegin)
             {
                 if (0 == traits_type::compare(pBegin, that, len))
@@ -134,10 +135,10 @@ public:
     }
     size_type rfind(value_type c, size_type pos) const
     {
-        const size_type sz = this->size();
-        if (sz > 0 && pos > 0)
+        const size_type size = this->size();
+        if (size > 0)
         {
-            register const_pointer pBegin = m_pBegin + (std::min)(pos, sz - 1) + 1;
+            register const_pointer pBegin = m_pBegin + (std::min)(pos, size - 1) + 1;
             const_reverse_iterator rend(m_pBegin);
             const_reverse_iterator r = std::find_if(const_reverse_iterator(pBegin), rend, eq_char_bound(c));
             return (r != rend ? (size_type)((r.base() - 1) - m_pBegin) : (size_type)npos);
@@ -158,14 +159,13 @@ public:
     }
     size_type find_last_of(const_pointer collection, size_type collection_size, size_type pos) const
     {
-        const size_type sz = this->size();
-        if (sz > 0 && pos > 0)
+        const size_type size = this->size();
+        if (size > 0)
         {
-            const size_type n = (std::min)(pos, sz - 1) + 1;
+            register const_pointer pBegin = m_pBegin + (std::min)(pos, size - 1) + 1;
             const_reverse_iterator rend(m_pBegin);
-            register const_reverse_iterator p =
-                _find_first_of(const_reverse_iterator(m_pBegin + n), rend, collection, collection_size);
-            return ((p != rend) ? (size_type)((p.base() - 1) - m_pBegin) : (size_type)npos);
+            const_reverse_iterator r = _find_first_of(const_reverse_iterator(pBegin), rend, collection, collection_size);
+            return ((r != rend) ? (size_type)((r.base() - 1) - m_pBegin) : (size_type)npos);
         }
         else
             return (size_type)npos;
@@ -183,14 +183,13 @@ public:
     }
     size_type find_last_not_of(const_pointer collection, size_type collection_size, size_type pos) const
     {
-        const size_type sz = this->size();
-        if (sz > 0 && pos > 0)
+        const size_type size = this->size();
+        if (size > 0)
         {
-            const size_type n = (std::min)(pos, sz - 1) + 1;
+            register const_pointer pBegin = m_pBegin + (std::min)(pos, size - 1) + 1;
             const_reverse_iterator rend(m_pBegin);
-            register const_reverse_iterator p =
-                _find_first_not_of(const_reverse_iterator(m_pBegin + n), rend, collection, collection_size);
-            return ((p != rend) ? (size_type)((p.base() - 1) - m_pBegin) : (size_type)npos);
+            const_reverse_iterator r = _find_first_not_of(const_reverse_iterator(pBegin), rend, collection, collection_size);
+            return ((r != rend) ? (size_type)((r.base() - 1) - m_pBegin) : (size_type)npos);
         }
         else
             return (size_type)npos;
@@ -209,13 +208,13 @@ public:
     }
     size_type find_last_not_of(value_type c, size_type pos) const
     {
-        const size_type sz = this->size();
-        if (sz > 0 && pos > 0)
+        const size_type size = this->size();
+        if (size > 0)
         {
-            register const_pointer p = m_pBegin + (std::min)(pos, sz - 1);
+            register const_pointer p = m_pBegin + (std::min)(pos, size - 1);
             while (p >= m_pBegin && traits_type::eq(c, *p))
                 --p;
-            return (p >= m_pBegin ? p - m_pBegin : (size_type)npos);
+            return (p >= m_pBegin ? (size_type)(p - m_pBegin) : (size_type)npos);
         }
         else
             return (size_type)npos;

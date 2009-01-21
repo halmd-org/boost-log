@@ -377,7 +377,7 @@ public:
     /*!
      * The method copies the literal or its portion to an external buffer
      *
-     * \pre <tt>pos < size()</tt> 
+     * \pre <tt>pos <= size()</tt> 
      * \param str Pointer to the external buffer beginning. Must not be NULL.
      *            The buffer must have enough capacity to accommodate the requested number of characters.
      * \param n Maximum number of characters to copy
@@ -401,7 +401,7 @@ public:
     /*!
      * Lexicographically compares the argument string to a part of this string
      * 
-     * \pre <tt>pos < size()</tt> 
+     * \pre <tt>pos <= size()</tt> 
      * \param pos Starting position within this string to perform comparison to
      * \param n Length of the substring of this string to perform comparison to
      * \param str Comparand. Must point to a sequence of characters, must not be NULL.
@@ -424,7 +424,7 @@ public:
     /*!
      * Lexicographically compares the argument string to a part of this string
      * 
-     * \pre <tt>pos < size()</tt> 
+     * \pre <tt>pos <= size()</tt> 
      * \param pos Starting position within this string to perform comparison to
      * \param n Length of the substring of this string to perform comparison to
      * \param str Comparand. Must point to a zero-terminated sequence of characters, must not be NULL.
@@ -440,7 +440,7 @@ public:
     /*!
      * Lexicographically compares the argument string literal to a part of this string
      * 
-     * \pre <tt>pos < size()</tt> 
+     * \pre <tt>pos <= size()</tt> 
      * \param pos Starting position within this string to perform comparison to
      * \param n Length of the substring of this string to perform comparison to
      * \param that Comparand
