@@ -97,7 +97,7 @@ namespace aux {
         typename formatter_types< CharT >::formatter_factory_args const&)
     {
         typedef typename formatter_types< CharT >::formatter_type formatter_type;
-        return formatter_type(log::formatters::attr< AttributeValueT >(attr_name));
+        return formatter_type(boost::log::formatters::attr< AttributeValueT >(attr_name));
     }
 
 } // namespace aux
@@ -161,7 +161,7 @@ inline void register_formatter_factory(
 template< typename AttributeValueT, typename CharT >
 inline void register_simple_formatter_factory(const CharT* attr_name)
 {
-    register_formatter_factory(attr_name, &log::aux::make_simple_formatter< CharT, AttributeValueT >);
+    register_formatter_factory(attr_name, &boost::log::aux::make_simple_formatter< CharT, AttributeValueT >);
 }
 
 /*!
@@ -177,7 +177,7 @@ inline void register_simple_formatter_factory(const CharT* attr_name)
 template< typename AttributeValueT, typename CharT, typename TraitsT, typename AllocatorT >
 inline void register_simple_formatter_factory(std::basic_string< CharT, TraitsT, AllocatorT > const& attr_name)
 {
-    register_formatter_factory(attr_name.c_str(), &log::aux::make_simple_formatter< CharT, AttributeValueT >);
+    register_formatter_factory(attr_name.c_str(), &boost::log::aux::make_simple_formatter< CharT, AttributeValueT >);
 }
 
 /*!

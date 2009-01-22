@@ -44,7 +44,7 @@ namespace syslog {
 
     struct options_tag;
     //! A tagged integal type that represents set of option flags for the syslog API initialization
-    typedef log::aux::tagged_integer< int, options_tag > options_t;
+    typedef boost::log::aux::tagged_integer< int, options_tag > options_t;
     /*!
      * The function constructs options from an integer
      */
@@ -56,7 +56,7 @@ namespace syslog {
 
     struct level_tag;
     //! A tagged integal type that represents log record level for the syslog API
-    typedef log::aux::tagged_integer< int, level_tag > level_t;
+    typedef boost::log::aux::tagged_integer< int, level_tag > level_t;
     /*!
      * The function constructs log record level from an integer
      */
@@ -68,7 +68,7 @@ namespace syslog {
 
     struct facility_tag;
     //! A tagged integal type that represents log source facility for the syslog API
-    typedef log::aux::tagged_integer< int, facility_tag > facility_t;
+    typedef boost::log::aux::tagged_integer< int, facility_tag > facility_t;
     /*!
      * The function constructs log source facility from an integer
      */

@@ -175,7 +175,7 @@ private:
     void init_channel_attribute(ArgsT const& args, mpl::false_ const&)
     {
         channel_type channel_name(args[keywords::channel]);
-        m_pChannel = log::aux::new_shared< channel_attribute >(channel_name);
+        m_pChannel = boost::log::aux::new_shared< channel_attribute >(channel_name);
         base_type::add_attribute_unlocked(
             aux::channel_attribute_name< char_type >::get(),
             m_pChannel);

@@ -72,7 +72,7 @@ public:
     {
         // We have to create a copy of the constant because the attribute object
         // can be created on the stack and get destroyed even if there are shared_ptrs that point to it.
-        return log::aux::new_shared< base_type >(static_cast< base_type const& >(*this));
+        return boost::log::aux::new_shared< base_type >(static_cast< base_type const& >(*this));
     }
 };
 

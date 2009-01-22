@@ -89,15 +89,15 @@ namespace aux {
     //! Severity level storage class
     class severity_level_holder :
         public enable_shared_from_this< severity_level_holder >,
-        public log::aux::lazy_singleton< severity_level_holder, shared_ptr< severity_level_holder > >
+        public boost::log::aux::lazy_singleton< severity_level_holder, shared_ptr< severity_level_holder > >
     {
-        friend class log::aux::lazy_singleton< severity_level_holder, shared_ptr< severity_level_holder > >;
-        typedef log::aux::lazy_singleton< severity_level_holder, shared_ptr< severity_level_holder > > singleton_base;
+        friend class boost::log::aux::lazy_singleton< severity_level_holder, shared_ptr< severity_level_holder > >;
+        typedef boost::log::aux::lazy_singleton< severity_level_holder, shared_ptr< severity_level_holder > > singleton_base;
 
     private:
 #if !defined(BOOST_LOG_NO_THREADS)
         //! The actual severity level value
-        log::aux::thread_specific< int > m_Value;
+        boost::log::aux::thread_specific< int > m_Value;
 #else
         //! The actual severity level value
         int m_Value;
@@ -180,7 +180,7 @@ namespace aux {
         virtual shared_ptr< attribute_value > detach_from_thread()
         {
 #if !defined(BOOST_LOG_NO_THREADS)
-            return log::aux::new_shared<
+            return boost::log::aux::new_shared<
                 attributes::basic_attribute_value< held_type >
             >(static_cast< held_type >(m_pHolder->get_value()));
 #else
@@ -236,7 +236,7 @@ public:
     basic_severity_logger() :
         base_type(),
         m_DefaultSeverity(static_cast< severity_level >(0)),
-        m_pSeverity(log::aux::new_shared< severity_attribute >()) // make_shared doesn't work in 1.36: http://svn.boost.org/trac/boost/ticket/2126
+        m_pSeverity(boost::log::aux::new_shared< severity_attribute >()) // make_shared doesn't work in 1.36: http://svn.boost.org/trac/boost/ticket/2126
     {
         base_type::add_attribute_unlocked(
             aux::severity_attribute_name< char_type >::get(),
@@ -262,7 +262,7 @@ public:
     explicit basic_severity_logger(ArgsT const& args) :
         base_type(args),
         m_DefaultSeverity(args[keywords::severity | 0]),
-        m_pSeverity(log::aux::new_shared< severity_attribute >()) // make_shared doesn't work in 1.36: http://svn.boost.org/trac/boost/ticket/2126
+        m_pSeverity(boost::log::aux::new_shared< severity_attribute >()) // make_shared doesn't work in 1.36: http://svn.boost.org/trac/boost/ticket/2126
     {
         base_type::add_attribute_unlocked(
             aux::severity_attribute_name< char_type >::get(),

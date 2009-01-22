@@ -142,7 +142,7 @@ namespace aux {
         //! String type
         typedef std::basic_string< char_type > string_type;
         //! Stream buffer type
-        typedef log::aux::basic_ostringstreambuf< char_type > ostreambuf_type;
+        typedef boost::log::aux::basic_ostringstreambuf< char_type > ostreambuf_type;
         //! Stream type
         typedef std::basic_ostream< char_type > ostream_type;
 
@@ -686,7 +686,7 @@ public:
      */
     void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
-        log::aux::cleanup_guard< formatter_type > _(m_Formatter);
+        boost::log::aux::cleanup_guard< formatter_type > _(m_Formatter);
         m_Extractor(attrs, m_Formatter);
         strm.write(m_Formatter.get().data(), static_cast< std::streamsize >(m_Formatter.get().size()));
     }

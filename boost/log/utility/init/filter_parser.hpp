@@ -212,7 +212,7 @@ template< typename AttributeValueT, typename CharT >
 inline void register_simple_filter_factory(const CharT* name)
 {
     shared_ptr< filter_factory< CharT > > factory =
-        log::aux::new_shared< basic_filter_factory< CharT, AttributeValueT > >();
+        boost::log::aux::new_shared< basic_filter_factory< CharT, AttributeValueT > >();
     register_filter_factory(name, factory);
 }
 

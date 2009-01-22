@@ -74,7 +74,7 @@ public:
 
     shared_ptr< attribute_value > get_value()
     {
-        return log::aux::new_shared< functor_result_value >(m_Functor());
+        return boost::log::aux::new_shared< functor_result_value >(m_Functor());
     }
 };
 
@@ -99,7 +99,7 @@ inline shared_ptr< attribute > make_functor_attr(T const& fun)
     BOOST_STATIC_ASSERT(!is_void< result_type >::value);
 
     typedef functor< result_type, T > functor_t;
-    return log::aux::new_shared< functor_t >(fun);
+    return boost::log::aux::new_shared< functor_t >(fun);
 }
 
 #endif // BOOST_NO_RESULT_OF
@@ -122,7 +122,7 @@ inline shared_ptr< attribute > make_functor_attr(T const& fun)
     BOOST_STATIC_ASSERT(!is_void< result_type >::value);
 
     typedef functor< result_type, T > functor_t;
-    return log::aux::new_shared< functor_t >(fun);
+    return boost::log::aux::new_shared< functor_t >(fun);
 }
 
 #endif // BOOST_LOG_DOXYGEN_PASS

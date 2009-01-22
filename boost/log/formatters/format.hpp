@@ -83,7 +83,7 @@ private:
     //! Formatting buffer
     mutable string_type m_Buffer;
     //! Stream buffer
-    mutable log::aux::basic_ostringstreambuf< char_type > m_StreamBuf;
+    mutable boost::log::aux::basic_ostringstreambuf< char_type > m_StreamBuf;
     //! Formatting stream
     mutable ostream_type m_Stream;
 
@@ -119,12 +119,12 @@ public:
      */
     void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
-        log::aux::cleanup_guard< format_type > cleanup1(m_Format);
-        log::aux::cleanup_guard< ostream_type > cleanup2(m_Stream);
+        boost::log::aux::cleanup_guard< format_type > cleanup1(m_Format);
+        boost::log::aux::cleanup_guard< ostream_type > cleanup2(m_Stream);
 
         for (typename formatters::const_iterator it = m_Formatters.begin(), end = m_Formatters.end(); it != end; ++it)
         {
-            log::aux::cleanup_guard< string_type > cleanup3(m_Buffer);
+            boost::log::aux::cleanup_guard< string_type > cleanup3(m_Buffer);
             (*it)(m_Stream, attrs, msg);
             m_Stream.flush();
             m_Format % m_Buffer;

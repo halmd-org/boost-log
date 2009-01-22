@@ -229,7 +229,7 @@ public:
      */
     void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
     {
-        log::aux::cleanup_guard< format_type > _(m_Formatter);
+        boost::log::aux::cleanup_guard< format_type > _(m_Formatter);
         format_op op(m_Formatter);
         m_Extractor(attrs, op);
         strm << m_Formatter;

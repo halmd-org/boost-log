@@ -111,8 +111,8 @@ private:
     //! Stream buffer type
     typedef typename mpl::if_<
         is_same< char_type, target_char_type >,
-        log::aux::basic_ostringstreambuf< char_type >,
-        log::aux::converting_ostringstreambuf< char_type >
+        boost::log::aux::basic_ostringstreambuf< char_type >,
+        boost::log::aux::converting_ostringstreambuf< char_type >
     >::type streambuf_type;
 
 private:
@@ -190,8 +190,8 @@ public:
      */
     void consume(values_view_type const& attributes, string_type const& message)
     {
-        log::aux::cleanup_guard< stream_type > cleanup1(m_FormattingStream);
-        log::aux::cleanup_guard< target_string_type > cleanup2(m_FormattedRecord);
+        boost::log::aux::cleanup_guard< stream_type > cleanup1(m_FormattingStream);
+        boost::log::aux::cleanup_guard< target_string_type > cleanup2(m_FormattedRecord);
 
         // Perform the formatting
         if (!m_Formatter.empty())

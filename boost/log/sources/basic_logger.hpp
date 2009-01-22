@@ -77,7 +77,7 @@ namespace aux {
         //! String type to be used as a message text holder
         typedef std::basic_string< char_type > string_type;
         //! Stream device type
-        typedef log::aux::basic_ostringstreambuf< char_type > ostream_buf;
+        typedef boost::log::aux::basic_ostringstreambuf< char_type > ostream_buf;
         //! Output stream type
         typedef std::basic_ostream< char_type > ostream_type;
 
@@ -507,7 +507,7 @@ protected:
 
     //! Lock requirement for the open_record_unlocked method
 #if !defined(BOOST_LOG_NO_THREADS)
-    typedef log::aux::shared_lock_guard< threading_model > open_record_lock;
+    typedef boost::log::aux::shared_lock_guard< threading_model > open_record_lock;
 #else
     typedef no_lock open_record_lock;
 #endif
@@ -552,7 +552,7 @@ protected:
 
     //! Lock requirement for the get_attributes method
 #if !defined(BOOST_LOG_NO_THREADS)
-    typedef log::aux::shared_lock_guard< threading_model > get_attributes_lock;
+    typedef boost::log::aux::shared_lock_guard< threading_model > get_attributes_lock;
 #else
     typedef no_lock get_attributes_lock;
 #endif
@@ -697,7 +697,7 @@ public:
      */
     basic_composite_logger(basic_composite_logger const& that) :
         base_type((
-            log::aux::shared_lock_guard< const threading_model >(that.threading_base()),
+            boost::log::aux::shared_lock_guard< const threading_model >(that.threading_base()),
             static_cast< base_type const& >(that)
         ))
     {
@@ -724,7 +724,7 @@ public:
      */
     void swap(basic_composite_logger& that)
     {
-        log::aux::multiple_unique_lock2<
+        boost::log::aux::multiple_unique_lock2<
             threading_model,
             threading_model
         > _(this->threading_base(), that.threading_base());

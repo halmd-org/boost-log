@@ -44,7 +44,7 @@ namespace event_log {
 
     struct event_id_tag;
     //! A tagged integral type that represents event identifier for the Windows API
-    typedef log::aux::tagged_integer< unsigned int, event_id_tag > event_id_t;
+    typedef boost::log::aux::tagged_integer< unsigned int, event_id_tag > event_id_t;
     /*!
      * The function constructs event identifier from an integer
      */
@@ -56,7 +56,7 @@ namespace event_log {
 
     struct event_category_tag;
     //! A tagged integral type that represents event category for the Windows API
-    typedef log::aux::tagged_integer< unsigned short, event_category_tag > event_category_t;
+    typedef boost::log::aux::tagged_integer< unsigned short, event_category_tag > event_category_t;
     /*!
      * The function constructs event category from an integer
      */
@@ -68,7 +68,7 @@ namespace event_log {
 
     struct event_type_tag;
     //! A tagged integral type that represents log record level for the Windows API
-    typedef log::aux::tagged_integer< unsigned short, event_type_tag > event_type_t;
+    typedef boost::log::aux::tagged_integer< unsigned short, event_type_tag > event_type_t;
     /*!
      * The function constructs log record level from an integer
      */

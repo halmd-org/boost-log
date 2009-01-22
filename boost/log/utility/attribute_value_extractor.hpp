@@ -234,15 +234,15 @@ template< typename CharT, typename T >
 class attribute_value_extractor :
     public mpl::if_<
         mpl::is_sequence< T >,
-        log::aux::type_list_value_extractor< CharT, T >,
-        log::aux::fixed_type_value_extractor< CharT, T >
+        boost::log::aux::type_list_value_extractor< CharT, T >,
+        boost::log::aux::fixed_type_value_extractor< CharT, T >
     >::type
 {
     //! Base type
     typedef typename mpl::if_<
         mpl::is_sequence< T >,
-        log::aux::type_list_value_extractor< CharT, T >,
-        log::aux::fixed_type_value_extractor< CharT, T >
+        boost::log::aux::type_list_value_extractor< CharT, T >,
+        boost::log::aux::fixed_type_value_extractor< CharT, T >
     >::type base_type;
 
 public:

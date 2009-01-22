@@ -101,13 +101,13 @@ private:
 //! The class implements a logger singleton
 template< typename TagT >
 struct logger_singleton :
-    public log::aux::lazy_singleton<
+    public boost::log::aux::lazy_singleton<
         logger_singleton< TagT >,
         shared_ptr< logger_holder< typename TagT::logger_type > >
     >
 {
     //! Base type
-    typedef log::aux::lazy_singleton<
+    typedef boost::log::aux::lazy_singleton<
         logger_singleton< TagT >,
         shared_ptr< logger_holder< typename TagT::logger_type > >
     > base_type;
@@ -155,7 +155,7 @@ private:
     //! Constructs a logger holder
     static shared_ptr< logger_holder_base > construct_logger()
     {
-        return log::aux::new_shared< logger_holder< logger_type > >(
+        return boost::log::aux::new_shared< logger_holder< logger_type > >(
             TagT::registration_file(),
             static_cast< unsigned int >(TagT::registration_line),
             TagT::construct_logger());

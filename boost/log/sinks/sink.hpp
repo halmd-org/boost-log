@@ -78,7 +78,7 @@ private:
     //! Mutex type
     typedef shared_mutex filter_mutex_type;
     //! Read lock type
-    typedef log::aux::shared_lock_guard< filter_mutex_type > scoped_read_lock;
+    typedef boost::log::aux::shared_lock_guard< filter_mutex_type > scoped_read_lock;
     //! Write lock type
     typedef lock_guard< filter_mutex_type > scoped_write_lock;
 #endif

@@ -132,7 +132,7 @@ public:
 
     shared_ptr< attribute_value > get_value()
     {
-        return log::aux::new_shared< result_value >(utc_time_traits::get_clock() - m_BaseTimePoint);
+        return boost::log::aux::new_shared< result_value >(utc_time_traits::get_clock() - m_BaseTimePoint);
     }
 };
 

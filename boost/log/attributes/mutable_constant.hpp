@@ -87,7 +87,7 @@ public:
     shared_ptr< attribute_value > get_value()
     {
         scoped_read_lock _(m_Mutex);
-        return log::aux::new_shared< mutable_constant_value >(m_Value);
+        return boost::log::aux::new_shared< mutable_constant_value >(m_Value);
     }
 
     /*!
@@ -137,7 +137,7 @@ public:
 
     shared_ptr< attribute_value > get_value()
     {
-        return log::aux::new_shared< mutable_constant_value >(m_Value);
+        return boost::log::aux::new_shared< mutable_constant_value >(m_Value);
     }
 
     /*!

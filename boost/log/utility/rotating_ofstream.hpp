@@ -374,7 +374,7 @@ namespace aux {
             {
                 m_pFacet->format(str.c_str());
                 m_Stream.str(m_EmptyString);
-                m_Stream << log::attributes::local_time_traits::get_clock();
+                m_Stream << boost::log::attributes::local_time_traits::get_clock();
                 if (m_Stream.good())
                     str = m_Stream.str();
                 else
@@ -590,7 +590,7 @@ private:
     //! Composite stream buffer type, that performs encoding translation and passes converted data to the file
     class composite_streambuf :
         private base_from_member< std::string >,
-        public log::aux::make_narrowing_ostringstreambuf<
+        public boost::log::aux::make_narrowing_ostringstreambuf<
             CharT,
             TraitsT,
             AllocatorT
@@ -598,7 +598,7 @@ private:
     {
     private:
         //! Narrowing buffer type
-        typedef typename log::aux::make_narrowing_ostringstreambuf<
+        typedef typename boost::log::aux::make_narrowing_ostringstreambuf<
             CharT,
             TraitsT,
             AllocatorT
@@ -631,7 +631,7 @@ private:
         //! The method closes the file
         void close(close_handler_type const& on_close)
         {
-            log::aux::cleanup_guard< std::string > _(storage());
+            boost::log::aux::cleanup_guard< std::string > _(storage());
             narrowing_streambuf::sync();
 
             if (m_pFileCtl.get())
@@ -645,7 +645,7 @@ private:
         //! The method is called after all data of the record is written to the stream
         void on_end_record(open_handler_type const& on_open, close_handler_type const& on_close)
         {
-            log::aux::cleanup_guard< std::string > _(storage());
+            boost::log::aux::cleanup_guard< std::string > _(storage());
             narrowing_streambuf::sync();
 
             if (m_pFileCtl.get()) try

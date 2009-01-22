@@ -42,7 +42,7 @@ namespace attributes {
 template< typename T >
 class basic_attribute_value :
     public attribute_value,
-    public log::aux::templated_shared_from_this
+    public boost::log::aux::templated_shared_from_this
 {
 public:
     //! Value type

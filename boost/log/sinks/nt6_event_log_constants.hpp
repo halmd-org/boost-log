@@ -44,7 +44,7 @@ namespace etw {
 
     struct level_tag;
     //! A tagged integral type that represents log record level for the Windows API
-    typedef log::aux::tagged_integer< unsigned char, level_tag > level_t;
+    typedef boost::log::aux::tagged_integer< unsigned char, level_tag > level_t;
     /*!
      * The function constructs log record level from an integer
      */

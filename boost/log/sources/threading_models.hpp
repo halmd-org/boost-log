@@ -177,7 +177,7 @@ namespace aux {
     };
 
     template< typename MutexT >
-    struct thread_access_mode_of< log::aux::shared_lock_guard< MutexT > > : mpl::int_< shared_access >
+    struct thread_access_mode_of< boost::log::aux::shared_lock_guard< MutexT > > : mpl::int_< shared_access >
     {
     };
 
@@ -260,12 +260,12 @@ BOOST_PP_REPEAT_FROM_TO(2, BOOST_PP_SUB(BOOST_LOG_STRICTEST_LOCK_LIMIT, 1), BOOS
 #if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_DOXYGEN_PASS)
 
 template< >
-struct is_mutex_type< log::sources::single_thread_model > : mpl::true_
+struct is_mutex_type< boost::log::sources::single_thread_model > : mpl::true_
 {
 };
 
 template< >
-struct is_mutex_type< log::sources::multi_thread_model > : mpl::true_
+struct is_mutex_type< boost::log::sources::multi_thread_model > : mpl::true_
 {
 };
 

@@ -62,7 +62,7 @@ private:
 public:
     shared_ptr< attribute_value > get_value()
     {
-        return log::aux::new_shared< result_value >(TimeTraitsT::get_clock());
+        return boost::log::aux::new_shared< result_value >(TimeTraitsT::get_clock());
     }
 };
 

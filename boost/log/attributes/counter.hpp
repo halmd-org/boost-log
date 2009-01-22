@@ -86,7 +86,7 @@ public:
     {
         // TODO: a full featured atomic would do better here
         register long NextValue = --m_Counter;
-        return log::aux::new_shared< counter_value >(m_InitialValue - static_cast< held_type >(NextValue * m_Step));
+        return boost::log::aux::new_shared< counter_value >(m_InitialValue - static_cast< held_type >(NextValue * m_Step));
     }
 };
 
@@ -126,7 +126,7 @@ public:
     shared_ptr< attribute_value > get_value()
     {
         m_Value += static_cast< held_type >(m_Step);
-        return log::aux::new_shared< counter_value >(m_Value);
+        return boost::log::aux::new_shared< counter_value >(m_Value);
     }
 };
 
