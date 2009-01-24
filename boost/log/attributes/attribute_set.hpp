@@ -526,7 +526,7 @@ public:
      * 
      * \param begin A forward iterator that points to the first element to be inserted.
      * \param end A forward iterator that points to the after-the-last element to be inserted.
-     * \param out An output iterator that receives iterators to the inserted elements
+     * \param out An output iterator that receives results of insertion of the elements
      */
     template< typename FwdIteratorT, typename OutputIteratorT >
     void insert(FwdIteratorT begin, FwdIteratorT end, OutputIteratorT out)
