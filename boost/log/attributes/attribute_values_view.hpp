@@ -57,9 +57,12 @@ namespace BOOST_LOG_NAMESPACE {
  * 
  * After the view construction it cannot be modified. However, for sake of performance, the attribute values
  * are not immediately acquired on the view construction. Instead, on-demand acquision is performed either on
- * iterator dereferencing or on call to the freeze method. Once acquired, the attribute value stays within the view
+ * iterator dereferencing or on call to the \c freeze method. Once acquired, the attribute value stays within the view
  * until its destruction. This nuance does not affect other view properties, such as size or lookup ability.
  * The logging core automatically freezes the view at the right point, so users should not be bothered.
+ * 
+ * \note The attribute sets that were used for the view construction must not be modified or destroyed
+ *       until the view is frozen. Otherwise the behavior is undefined.
  */
 template< typename CharT >
 class basic_attribute_values_view :
