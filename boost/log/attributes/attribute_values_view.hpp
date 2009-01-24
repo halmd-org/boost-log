@@ -97,7 +97,7 @@ public:
     typedef typename allocator_type::const_pointer const_pointer;
     //! Size type
     typedef typename allocator_type::size_type size_type;
-    //! Difference type
+    //! Pointer difference type
     typedef typename allocator_type::difference_type difference_type;
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
