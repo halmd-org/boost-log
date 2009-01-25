@@ -20,57 +20,13 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
-#include <boost/mpl/vector.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/utility/slim_string.hpp>
+#include "char_definitions.hpp"
 
 namespace logging = boost::log;
-namespace mpl = boost::mpl;
 
 namespace {
-
-    typedef mpl::vector<
-    #ifdef BOOST_LOG_USE_CHAR
-        char
-    #endif
-    #if defined(BOOST_LOG_USE_CHAR) && defined(BOOST_LOG_USE_WCHAR_T)
-        ,
-    #endif
-    #ifdef BOOST_LOG_USE_WCHAR_T
-        wchar_t
-    #endif
-    >::type char_types;
-
-    template< typename >
-    struct test_data;
-
-    template< >
-    struct test_data< char >
-    {
-        static const char* abc() { return "abc"; }
-        static const char* ABC() { return "ABC"; }
-        static const char* some_test_string() { return "some test string"; }
-        static const char* zero_to_five() { return "012345"; }
-        static const char* def() { return "def"; }
-        static const char* aaa() { return "aaa"; }
-        static const char* abcd() { return "abcd"; }
-        static const char* zz() { return "zz"; }
-        static const char* abcdefg0123456789() { return "abcdefg0123456789"; }
-    };
-
-    template< >
-    struct test_data< wchar_t >
-    {
-        static const wchar_t* abc() { return L"abc"; }
-        static const wchar_t* ABC() { return L"ABC"; }
-        static const wchar_t* some_test_string() { return L"some test string"; }
-        static const wchar_t* zero_to_five() { return L"012345"; }
-        static const wchar_t* def() { return L"def"; }
-        static const wchar_t* aaa() { return L"aaa"; }
-        static const wchar_t* abcd() { return L"abcd"; }
-        static const wchar_t* zz() { return L"zz"; }
-        static const wchar_t* abcdefg0123456789() { return L"abcdefg0123456789"; }
-    };
 
     template< typename CharT >
     inline bool eq_pos(std::size_t ss_pos, std::size_t s_pos)

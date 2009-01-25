@@ -20,7 +20,6 @@
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/mpl/vector.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/attribute.hpp>
@@ -29,45 +28,12 @@
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/utility/slim_string.hpp>
 #include <boost/log/utility/attribute_value_extractor.hpp>
+#include "char_definitions.hpp"
 
-namespace mpl = boost::mpl;
 namespace logging = boost::log;
 namespace attrs = logging::attributes;
 
 namespace {
-
-    typedef mpl::vector<
-    #ifdef BOOST_LOG_USE_CHAR
-        char
-    #endif
-    #if defined(BOOST_LOG_USE_CHAR) && defined(BOOST_LOG_USE_WCHAR_T)
-        ,
-    #endif
-    #ifdef BOOST_LOG_USE_WCHAR_T
-        wchar_t
-    #endif
-    >::type char_types;
-
-    template< typename >
-    struct test_data;
-
-    template< >
-    struct test_data< char >
-    {
-        static const char* attr1() { return "attr1"; }
-        static const char* attr2() { return "attr2"; }
-        static const char* attr3() { return "attr3"; }
-        static const char* attr4() { return "attr4"; }
-    };
-
-    template< >
-    struct test_data< wchar_t >
-    {
-        static const wchar_t* attr1() { return L"attr1"; }
-        static const wchar_t* attr2() { return L"attr2"; }
-        static const wchar_t* attr3() { return L"attr3"; }
-        static const wchar_t* attr4() { return L"attr4"; }
-    };
 
     //! A simple attribute value receiver functional object
     template< typename T >
