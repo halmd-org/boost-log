@@ -12,7 +12,7 @@
  *         with a void-returning functor.
  */
 
-#define BOOST_TEST_MODULE attr_functor
+#define BOOST_TEST_MODULE attr_functor_void_return
 
 #include <boost/shared_ptr.hpp>
 #include <boost/utility/result_of.hpp>
