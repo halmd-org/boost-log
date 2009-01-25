@@ -16,6 +16,7 @@
 #include <string>
 #include <typeinfo>
 #include <boost/mpl/vector.hpp>
+#include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
@@ -110,7 +111,7 @@ namespace {
         void visit(double const& value)
         {
             BOOST_CHECK_EQUAL(m_Expected, double_expected);
-            BOOST_CHECK_EQUAL(m_Double, value);
+            BOOST_CHECK_CLOSE(m_Double, value, 0.001);
         }
         void visit(std::string const& value)
         {

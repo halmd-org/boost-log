@@ -15,6 +15,7 @@
 
 #include <string>
 #include <boost/bind.hpp>
+#include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/utility/type_dispatch/dynamic_type_dispatcher.hpp>
 
@@ -85,7 +86,7 @@ namespace {
         void on_double(double const& value)
         {
             BOOST_CHECK_EQUAL(m_Expected, double_expected);
-            BOOST_CHECK_EQUAL(m_Double, value);
+            BOOST_CHECK_CLOSE(m_Double, value, 0.001);
         }
         void on_string(std::string const& value)
         {
