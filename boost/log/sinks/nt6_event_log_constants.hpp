@@ -38,6 +38,8 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
+namespace experimental {
+
 namespace sinks {
 
 namespace etw {
@@ -65,6 +67,8 @@ namespace etw {
 } // namespace etw
 
 } // namespace sinks
+
+} // namespace experimental
 
 } // namespace log
 

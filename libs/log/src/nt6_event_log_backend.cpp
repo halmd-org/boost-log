@@ -42,6 +42,8 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
+namespace experimental {
+
 namespace sinks {
 
 namespace etw {
@@ -169,6 +171,8 @@ template class BOOST_LOG_EXPORT basic_simple_nt6_event_log_backend< wchar_t >;
 #endif
 
 } // namespace sinks
+
+} // namespace experimental
 
 } // namespace log
 

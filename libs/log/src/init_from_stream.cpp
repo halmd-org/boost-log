@@ -460,7 +460,7 @@ private:
     //! The function constructs a sink that writes log records to the Windows NT 6 Event Log
     static shared_ptr< sinks::sink< char_type > > default_simple_nt6_event_log_sink_factory(params_t const& params)
     {
-        typedef sinks::basic_simple_nt6_event_log_backend< char_type > backend_t;
+        typedef experimental::sinks::basic_simple_nt6_event_log_backend< char_type > backend_t;
 
         // Determine the provider GUID
         GUID provider_id = backend_t::get_default_provider_id();
@@ -480,7 +480,7 @@ private:
 
         // For now we use only the default level mapping. Will add support for configuration later.
         backend->set_severity_mapper(
-            sinks::etw::basic_direct_severity_mapping< char_type >(constants::default_level_attribute_name()));
+            experimental::sinks::etw::basic_direct_severity_mapping< char_type >(constants::default_level_attribute_name()));
 
         return init_sink(backend, params);
     }

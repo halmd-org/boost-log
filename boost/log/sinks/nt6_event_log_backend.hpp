@@ -47,6 +47,8 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
+namespace experimental {
+
 namespace sinks {
 
 namespace keywords {
@@ -75,10 +77,10 @@ namespace etw {
      */
     template< typename CharT, typename AttributeValueT = int >
     class basic_direct_severity_mapping :
-        public basic_direct_mapping< CharT, level_t, AttributeValueT >
+        public boost::log::sinks::basic_direct_mapping< CharT, level_t, AttributeValueT >
     {
         //! Base type
-        typedef basic_direct_mapping< CharT, level_t, AttributeValueT > base_type;
+        typedef boost::log::sinks::basic_direct_mapping< CharT, level_t, AttributeValueT > base_type;
 
     public:
         //! String type
@@ -105,10 +107,10 @@ namespace etw {
      */
     template< typename CharT, typename AttributeValueT = int >
     class basic_custom_severity_mapping :
-        public basic_custom_mapping< CharT, level_t, AttributeValueT >
+        public boost::log::sinks::basic_custom_mapping< CharT, level_t, AttributeValueT >
     {
         //! Base type
-        typedef basic_custom_mapping< CharT, level_t, AttributeValueT > base_type;
+        typedef boost::log::sinks::basic_custom_mapping< CharT, level_t, AttributeValueT > base_type;
 
     public:
         //! String type
@@ -268,10 +270,10 @@ namespace etw {
  */
 template< typename CharT >
 class BOOST_LOG_EXPORT basic_simple_nt6_event_log_backend :
-    public basic_formatting_sink_backend< CharT, wchar_t >
+    public boost::log::sinks::basic_formatting_sink_backend< CharT, wchar_t >
 {
     //! Base type
-    typedef basic_formatting_sink_backend< CharT, wchar_t > base_type;
+    typedef boost::log::sinks::basic_formatting_sink_backend< CharT, wchar_t > base_type;
     //! Implementation type
     struct implementation;
 
@@ -297,7 +299,7 @@ public:
     class event_enabled_filter;
     friend class event_enabled_filter;
     class event_enabled_filter :
-        public filters::basic_filter< char_type, event_enabled_filter >
+        public boost::log::filters::basic_filter< char_type, event_enabled_filter >
     {
         friend class basic_simple_nt6_event_log_backend< char_type >;
 
@@ -365,6 +367,8 @@ typedef basic_simple_nt6_event_log_backend< wchar_t > wsimple_nt6_event_log_back
 #endif
 
 } // namespace sinks
+
+} // namespace experimental
 
 } // namespace log
 
