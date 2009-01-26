@@ -211,8 +211,6 @@ template< typename CharT >
 void basic_named_scope_list< CharT >::swap(basic_named_scope_list& that)
 {
     using std::swap;
-    swap(m_Size, that.m_Size);
-    swap(m_fNeedToDeallocate, that.m_fNeedToDeallocate);
 
     unsigned int choice = 
         static_cast< unsigned int >(this->empty()) | (static_cast< unsigned int >(that.empty()) << 1);
@@ -222,17 +220,26 @@ void basic_named_scope_list< CharT >::swap(basic_named_scope_list& that)
         swap(m_RootNode._m_pNext->_m_pPrev, that.m_RootNode._m_pNext->_m_pPrev);
         swap(m_RootNode._m_pPrev->_m_pNext, that.m_RootNode._m_pPrev->_m_pNext);
         swap(m_RootNode, that.m_RootNode);
+        swap(m_Size, that.m_Size);
+        swap(m_fNeedToDeallocate, that.m_fNeedToDeallocate);
         break;
+
     case 1: // that is not empty
         that.m_RootNode._m_pNext->_m_pPrev = that.m_RootNode._m_pPrev->_m_pNext = &m_RootNode;
         m_RootNode = that.m_RootNode;
         that.m_RootNode._m_pNext = that.m_RootNode._m_pPrev = &that.m_RootNode;
+        swap(m_Size, that.m_Size);
+        swap(m_fNeedToDeallocate, that.m_fNeedToDeallocate);
         break;
+
     case 2: // this is not empty
         m_RootNode._m_pNext->_m_pPrev = m_RootNode._m_pPrev->_m_pNext = &that.m_RootNode;
         that.m_RootNode = m_RootNode;
         m_RootNode._m_pNext = m_RootNode._m_pPrev = &m_RootNode;
+        swap(m_Size, that.m_Size);
+        swap(m_fNeedToDeallocate, that.m_fNeedToDeallocate);
         break;
+
     default: // both containers are empty, nothing to do here
         ;
     }
