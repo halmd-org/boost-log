@@ -13,6 +13,7 @@
  */
 
 #include <memory>
+#include <algorithm>
 #include <boost/optional.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/log/attributes/attribute.hpp>
@@ -199,9 +200,41 @@ basic_named_scope_list< CharT >::~basic_named_scope_list()
     {
         iterator it(m_RootNode._m_pNext);
         iterator end(&m_RootNode);
-        for (; it != end; ++it)
-            allocator_type::destroy(&*it);
+        while (it != end)
+            allocator_type::destroy(&*(it++));
         allocator_type::deallocate(static_cast< pointer >(m_RootNode._m_pNext), m_Size);
+    }
+}
+
+//! Swaps two instances of the container
+template< typename CharT >
+void basic_named_scope_list< CharT >::swap(basic_named_scope_list& that)
+{
+    using std::swap;
+    swap(m_Size, that.m_Size);
+    swap(m_fNeedToDeallocate, that.m_fNeedToDeallocate);
+
+    unsigned int choice = 
+        static_cast< unsigned int >(this->empty()) | (static_cast< unsigned int >(that.empty()) << 1);
+    switch (choice)
+    {
+    case 0: // both containers are not empty
+        swap(m_RootNode._m_pNext->_m_pPrev, that.m_RootNode._m_pNext->_m_pPrev);
+        swap(m_RootNode._m_pPrev->_m_pNext, that.m_RootNode._m_pPrev->_m_pNext);
+        swap(m_RootNode, that.m_RootNode);
+        break;
+    case 1: // that is not empty
+        that.m_RootNode._m_pNext->_m_pPrev = that.m_RootNode._m_pPrev->_m_pNext = &m_RootNode;
+        m_RootNode = that.m_RootNode;
+        that.m_RootNode._m_pNext = that.m_RootNode._m_pPrev = &that.m_RootNode;
+        break;
+    case 2: // this is not empty
+        m_RootNode._m_pNext->_m_pPrev = m_RootNode._m_pPrev->_m_pNext = &that.m_RootNode;
+        that.m_RootNode = m_RootNode;
+        m_RootNode._m_pNext = m_RootNode._m_pPrev = &m_RootNode;
+        break;
+    default: // both containers are empty, nothing to do here
+        ;
     }
 }
 

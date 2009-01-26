@@ -101,9 +101,10 @@ struct basic_named_scope_entry
      *
      * \b Throws: Nothing.
      */
-    template< typename T1, unsigned int N1, typename T2, unsigned int N2 >
-    basic_named_scope_entry(T1 (&sn)[N1], T2 (&fn)[N2], unsigned int ln)
-        : scope_name(sn), file_name(fn), line(ln)
+    basic_named_scope_entry(
+        basic_string_literal< char_type > const& sn,
+        basic_string_literal< char_type > const& fn,
+        unsigned int ln) : scope_name(sn), file_name(fn), line(ln)
     {
     }
 };
@@ -313,13 +314,7 @@ public:
     /*!
      * Swaps two instances of the container
      */
-    void swap(basic_named_scope_list& that)
-    {
-        using std::swap;
-        swap(m_RootNode, that.m_RootNode);
-        swap(m_Size, that.m_Size);
-        swap(m_fNeedToDeallocate, that.m_fNeedToDeallocate);
-    }
+    BOOST_LOG_EXPORT void swap(basic_named_scope_list& that);
 
     /*!
      * \return Last pushed scope entry
@@ -381,8 +376,10 @@ public:
          * \param fn File name, in which the scope is located.
          * \param ln Line number in the file.
          */
-        template< typename T1, unsigned int N1, typename T2, unsigned int N2 >
-        sentry(T1 (&sn)[N1], T2 (&fn)[N2], unsigned int ln) : m_Entry(sn, fn, ln)
+        sentry(
+            basic_string_literal< char_type > const& sn,
+            basic_string_literal< char_type > const& fn,
+            unsigned int ln) : m_Entry(sn, fn, ln)
         {
             named_scope_type::push_scope(m_Entry);
         }
