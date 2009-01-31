@@ -145,26 +145,26 @@ namespace aux {
     template< > struct is_char< wchar_t > : mpl::true_ {};
 
     //! An auxiliary type translator to store strings by value in function objects
-    template< typename StringT, typename ArgT >
-    struct make_embedded_type
+    template< typename ArgT >
+    struct make_embedded_string_type
     {
-        // Make sure that string literals and C string are converted to STL strings
-        typedef typename mpl::if_c<
-            is_char<
-                typename remove_cv<
-                    typename mpl::eval_if<
-                        is_array< ArgT >,
-                        remove_extent< ArgT >,
-                        mpl::eval_if<
-                            is_pointer< ArgT >,
-                            remove_pointer< ArgT >,
-                            mpl::identity< void >
-                        >
-                    >::type
-                >::type
-            >::value,
-            StringT,
-            ArgT
+        // Make sure that string literals and C strings are converted to STL strings
+        typedef typename remove_cv<
+            typename mpl::eval_if<
+                is_array< ArgT >,
+                remove_extent< ArgT >,
+                mpl::eval_if<
+                    is_pointer< ArgT >,
+                    remove_pointer< ArgT >,
+                    mpl::identity< void >
+                >
+            >::type
+        >::type root_type;
+
+        typedef typename mpl::eval_if<
+            is_char< root_type >,
+            mpl::identity< std::basic_string< root_type > >,
+            remove_cv< ArgT >
         >::type type;
     };
 
@@ -199,11 +199,11 @@ namespace aux {
         template< typename T >\
         flt_attr<\
             char_type,\
-            boost::log::aux::binder2nd< fun, typename make_embedded_type< string_type, T >::type >,\
+            boost::log::aux::binder2nd< fun, typename make_embedded_string_type< T >::type >,\
             attribute_value_types\
         > member (T const& arg) const\
         {\
-            typedef typename make_embedded_type< string_type, T >::type arg_type;\
+            typedef typename make_embedded_string_type< T >::type arg_type;\
             typedef boost::log::aux::binder2nd< fun, arg_type > binder_t;\
             typedef flt_attr< char_type, binder_t, attribute_value_types > flt_attr_t;\
             return flt_attr_t(this->m_AttributeName, binder_t(fun(), arg_type(arg)));\
@@ -223,14 +223,14 @@ namespace aux {
             boost::log::aux::binder2nd<
                 boost::log::aux::in_range_fun,
                 std::pair<
-                    typename make_embedded_type< string_type, T >::type,
-                    typename make_embedded_type< string_type, T >::type
+                    typename make_embedded_string_type< T >::type,
+                    typename make_embedded_string_type< T >::type
                 >
             >,
             attribute_value_types
         > is_in_range(T const& lower, T const& upper) const
         {
-            typedef typename make_embedded_type< string_type, T >::type arg_type;
+            typedef typename make_embedded_string_type< T >::type arg_type;
             typedef boost::log::aux::binder2nd< boost::log::aux::in_range_fun, std::pair< arg_type, arg_type > > binder_t;
             typedef flt_attr< char_type, binder_t, attribute_value_types > flt_attr_t;
             return flt_attr_t(
@@ -263,12 +263,16 @@ namespace aux {
         typedef flt_attr_gen_base< CharT, AttributeValueTypesT, false > base_type;
 
     public:
-        //! Character type
+        //! Char type
         typedef typename base_type::char_type char_type;
         //! String type
         typedef typename base_type::string_type string_type;
-        //! Supported attribute value types
+        //! Supported attribute value types (actually, a single string type in this specialization)
         typedef typename base_type::attribute_value_types attribute_value_types;
+
+    private:
+        //! The attribute value character type
+        typedef typename attribute_value_types::value_type attribute_value_char_type;
 
     public:
         explicit flt_attr_gen_base(string_type const& name) : base_type(name) {}
@@ -277,17 +281,19 @@ namespace aux {
         BOOST_LOG_FILTER_ATTR_MEMBER(ends_with, boost::log::aux::ends_with_fun)
         BOOST_LOG_FILTER_ATTR_MEMBER(contains, boost::log::aux::contains_fun)
 
+#undef BOOST_LOG_FILTER_ATTR_MEMBER
+
         //! Filter generator for checking whether the attribute value matches a regex
         template< typename RegexTraitsT >
         flt_attr<
             char_type,
-            boost::log::aux::binder2nd< boost::log::aux::matches_fun, basic_regex< char_type, RegexTraitsT > >,
+            boost::log::aux::binder2nd< boost::log::aux::matches_fun, basic_regex< attribute_value_char_type, RegexTraitsT > >,
             attribute_value_types
-        > matches(basic_regex< char_type, RegexTraitsT > const& expr, match_flag_type flags = match_default) const
+        > matches(basic_regex< attribute_value_char_type, RegexTraitsT > const& expr, match_flag_type flags = match_default) const
         {
             typedef boost::log::aux::binder2nd<
                 boost::log::aux::matches_fun,
-                basic_regex< char_type, RegexTraitsT >
+                basic_regex< attribute_value_char_type, RegexTraitsT >
             > binder_t;
             typedef flt_attr< char_type, binder_t, attribute_value_types > flt_attr_t;
             return flt_attr_t(this->m_AttributeName, binder_t(boost::log::aux::matches_fun(flags), expr));
@@ -296,16 +302,25 @@ namespace aux {
         //! Filter generator for checking whether the attribute value matches a regex
         flt_attr<
             char_type,
-            boost::log::aux::binder2nd< boost::log::aux::matches_fun, basic_regex< char_type, regex_traits< char_type > > >,
+            boost::log::aux::binder2nd< boost::log::aux::matches_fun, basic_regex< attribute_value_char_type, regex_traits< attribute_value_char_type > > >,
             attribute_value_types
-        > matches(string_type const& expr, match_flag_type flags = match_default) const
+        > matches(std::basic_string< attribute_value_char_type > const& expr, match_flag_type flags = match_default) const
         {
-            basic_regex< char_type, regex_traits< char_type > > ex(expr.c_str());
+            basic_regex< attribute_value_char_type, regex_traits< attribute_value_char_type > > ex(expr.c_str());
+            return this->matches(ex, flags);
+        }
+
+        //! Filter generator for checking whether the attribute value matches a regex
+        flt_attr<
+            char_type,
+            boost::log::aux::binder2nd< boost::log::aux::matches_fun, basic_regex< attribute_value_char_type, regex_traits< attribute_value_char_type > > >,
+            attribute_value_types
+        > matches(const attribute_value_char_type* expr, match_flag_type flags = match_default) const
+        {
+            basic_regex< attribute_value_char_type, regex_traits< attribute_value_char_type > > ex(expr);
             return this->matches(ex, flags);
         }
     };
-
-#undef BOOST_LOG_FILTER_ATTR_MEMBER
 
     //! The MPL predicate detects if the type is STL string
     template< typename T >

@@ -71,12 +71,12 @@ struct equal_to
 
 private:
     template< typename T, typename U >
-    bool op(T const& left, U const& right, mpl::false_ const&) const
+    static bool op(T const& left, U const& right, mpl::false_ const&)
     {
         return (left == right);
     }
     template< typename T, typename U >
-    bool op(T const& left, U const& right, mpl::true_ const&) const
+    static bool op(T const& left, U const& right, mpl::true_ const&)
     {
         return compare_integral< std::equal_to >(left, right);
     }
@@ -95,12 +95,12 @@ struct not_equal_to
 
 private:
     template< typename T, typename U >
-    bool op(T const& left, U const& right, mpl::false_ const&) const
+    static bool op(T const& left, U const& right, mpl::false_ const&)
     {
         return (left != right);
     }
     template< typename T, typename U >
-    bool op(T const& left, U const& right, mpl::true_ const&) const
+    static bool op(T const& left, U const& right, mpl::true_ const&)
     {
         return compare_integral< std::not_equal_to >(left, right);
     }
@@ -119,12 +119,12 @@ struct less
 
 private:
     template< typename T, typename U >
-    bool op(T const& left, U const& right, mpl::false_ const&) const
+    static bool op(T const& left, U const& right, mpl::false_ const&)
     {
         return (left < right);
     }
     template< typename T, typename U >
-    bool op(T const& left, U const& right, mpl::true_ const&) const
+    static bool op(T const& left, U const& right, mpl::true_ const&)
     {
         return compare_integral< std::less >(left, right);
     }
@@ -143,12 +143,12 @@ struct greater
 
 private:
     template< typename T, typename U >
-    bool op(T const& left, U const& right, mpl::false_ const&) const
+    static bool op(T const& left, U const& right, mpl::false_ const&)
     {
         return (left > right);
     }
     template< typename T, typename U >
-    bool op(T const& left, U const& right, mpl::true_ const&) const
+    static bool op(T const& left, U const& right, mpl::true_ const&)
     {
         return compare_integral< std::greater >(left, right);
     }
@@ -167,12 +167,12 @@ struct less_equal
 
 private:
     template< typename T, typename U >
-    bool op(T const& left, U const& right, mpl::false_ const&) const
+    static bool op(T const& left, U const& right, mpl::false_ const&)
     {
         return (left <= right);
     }
     template< typename T, typename U >
-    bool op(T const& left, U const& right, mpl::true_ const&) const
+    static bool op(T const& left, U const& right, mpl::true_ const&)
     {
         return compare_integral< std::less_equal >(left, right);
     }
@@ -191,12 +191,12 @@ struct greater_equal
 
 private:
     template< typename T, typename U >
-    bool op(T const& left, U const& right, mpl::false_ const&) const
+    static bool op(T const& left, U const& right, mpl::false_ const&)
     {
         return (left >= right);
     }
     template< typename T, typename U >
-    bool op(T const& left, U const& right, mpl::true_ const&) const
+    static bool op(T const& left, U const& right, mpl::true_ const&)
     {
         return compare_integral< std::greater_equal >(left, right);
     }
@@ -215,12 +215,12 @@ struct in_range_fun
 
 private:
     template< typename T, typename U >
-    bool operator() (T const& value, std::pair< U, U > const& rng, mpl::false_ const&) const
+    static bool op(T const& value, std::pair< U, U > const& rng, mpl::false_ const&)
     {
         return (value >= rng.first && value < rng.second);
     }
     template< typename T, typename U >
-    bool operator() (T const& value, std::pair< U, U > const& rng, mpl::true_ const&) const
+    static bool op(T const& value, std::pair< U, U > const& rng, mpl::true_ const&)
     {
         return (compare_integral< std::greater_equal >(value, rng.first)
             && compare_integral< std::less >(value, rng.second));
