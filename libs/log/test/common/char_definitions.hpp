@@ -14,6 +14,8 @@
 #ifndef BOOST_LOG_TESTS_CHAR_DEFINITIONSS_HPP_INCLUDED_
 #define BOOST_LOG_TESTS_CHAR_DEFINITIONSS_HPP_INCLUDED_
 
+#include <string>
+#include <iostream>
 #include <boost/mpl/vector.hpp>
 
 namespace mpl = boost::mpl;
@@ -33,7 +35,9 @@ typedef mpl::vector<
 template< typename >
 struct test_data;
 
+
 #ifdef BOOST_LOG_USE_CHAR
+
 template< >
 struct test_data< char >
 {
@@ -51,7 +55,23 @@ struct test_data< char >
     static const char* attr2() { return "attr2"; }
     static const char* attr3() { return "attr3"; }
     static const char* attr4() { return "attr4"; }
+
+    static const char* int_format1() { return "%08d"; }
+    static const char* fp_format1() { return "%06.3f"; }
 };
+
+//! The function compares two strings and prints them if they are not equal
+inline bool equal_strings(std::string const& left, std::string const& right)
+{
+    if (left != right)
+    {
+        std::cout << "Left:  \"" << left << "\"\nRight: \"" << right << "\"" << std::endl;
+        return false;
+    }
+    else
+        return true;
+}
+
 #endif
 
 #ifdef BOOST_LOG_USE_WCHAR_T
@@ -72,7 +92,23 @@ struct test_data< wchar_t >
     static const wchar_t* attr2() { return L"attr2"; }
     static const wchar_t* attr3() { return L"attr3"; }
     static const wchar_t* attr4() { return L"attr4"; }
+
+    static const wchar_t* int_format1() { return L"%08d"; }
+    static const wchar_t* fp_format1() { return L"%06.3f"; }
 };
+
+//! The function compares two strings and prints them if they are not equal
+inline bool equal_strings(std::wstring const& left, std::wstring const& right)
+{
+    if (left != right)
+    {
+        std::wcout << L"Left:  \"" << left << L"\"\nRight: \"" << right << L"\"" << std::endl;
+        return false;
+    }
+    else
+        return true;
+}
+
 #endif
 
 #endif // BOOST_LOG_TESTS_CHAR_DEFINITIONSS_HPP_INCLUDED_
