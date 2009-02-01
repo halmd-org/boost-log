@@ -72,9 +72,10 @@ inline bool equal_strings(std::string const& left, std::string const& right)
         return true;
 }
 
-#endif
+#endif // BOOST_LOG_USE_CHAR
 
 #ifdef BOOST_LOG_USE_WCHAR_T
+
 template< >
 struct test_data< wchar_t >
 {
@@ -109,6 +110,6 @@ inline bool equal_strings(std::wstring const& left, std::wstring const& right)
         return true;
 }
 
-#endif
+#endif // BOOST_LOG_USE_WCHAR_T
 
 #endif // BOOST_LOG_TESTS_CHAR_DEFINITIONSS_HPP_INCLUDED_
