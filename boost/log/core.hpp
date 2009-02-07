@@ -93,14 +93,14 @@ public:
     ~basic_core();
 
     /*!
-     * \return The method returns a pointer to the logging system singleton instance.
+     * \return The method returns a pointer to the logging core singleton instance.
      */
     static shared_ptr< basic_core > get();
 
     /*!
      * The method enables or disables logging.
      *
-     * Setting this status to false allows you to completely wipe out any logging activity, including
+     * Setting this status to \c false allows you to completely wipe out any logging activity, including
      * filtering and generation of attribute values. It is useful if you want to completely disable logging
      * in a running application. The state of logging does not alter any other properties of the logging
      * library, such as filters or sinks, so you can enable logging with the very same settings that you had
@@ -155,7 +155,7 @@ public:
     /*!
      * The method removes an attribute from the global attribute set.
      *
-     * \pre The attribute was added with the add_global_attribute call.
+     * \pre The attribute was added with the \c add_global_attribute call.
      * \post The attribute is no longer registered as a global attribute. The iterator is invalidated after removal.
      *
      * \param it Iterator to the previously added attribute.
@@ -194,7 +194,7 @@ public:
     /*!
      * The method removes an attribute from the thread-specific attribute set.
      *
-     * \pre The attribute was added with the add_thread_attribute call.
+     * \pre The attribute was added with the \c add_thread_attribute call.
      * \post The attribute is no longer registered as a thread-specific attribute. The iterator is invalidated after removal.
      *
      * \param it Iterator to the previously added attribute.
