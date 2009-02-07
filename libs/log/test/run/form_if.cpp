@@ -13,12 +13,9 @@
 
 #define BOOST_TEST_MODULE form_if
 
-#include <memory>
 #include <string>
-#include <iomanip>
 #include <ostream>
 #include <sstream>
-#include <algorithm>
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/test/included/unit_test.hpp>
@@ -30,7 +27,6 @@
 #include <boost/log/formatters/attr.hpp>
 #include <boost/log/formatters/ostream.hpp>
 #include <boost/log/filters/has_attr.hpp>
-#include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include "char_definitions.hpp"
 
 namespace logging = boost::log;

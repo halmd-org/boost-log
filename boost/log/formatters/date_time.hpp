@@ -335,7 +335,7 @@ namespace aux {
         //! Constructor with format setup
         template< typename ArgsT >
         explicit basic_date_formatter(ArgsT const& args) :
-            base_type(args[keywords::format | base_type::default_date_format().str()])
+            base_type(string_type(args[keywords::format | base_type::default_date_format().str()]))
         {
         }
         //! Copy constructor
@@ -366,7 +366,7 @@ namespace aux {
         //! Constructor with format setup
         template< typename ArgsT >
         explicit basic_time_formatter(ArgsT const& args) :
-            base_type(args[keywords::format | base_type::default_time_format().str()])
+            base_type(string_type(args[keywords::format | base_type::default_time_format().str()]))
         {
         }
         //! Copy constructor
@@ -406,7 +406,7 @@ namespace aux {
         //! Constructor with format setup
         template< typename ArgsT >
         explicit basic_time_duration_formatter(ArgsT const& args) :
-            base_type(args[keywords::format | base_type::default_time_duration_format().str()])
+            base_type(string_type(args[keywords::format | base_type::default_time_duration_format().str()]))
         {
         }
         //! Copy constructor
@@ -518,7 +518,7 @@ namespace aux {
         template< typename ArgsT >
         explicit basic_time_period_formatter(ArgsT const& args) :
             base_type(keywords::format = args[keywords::unit_format | base_type::default_date_time_format().str()]),
-            m_PeriodFormat(args[keywords::format] | base_type::default_time_period_format().str())
+            m_PeriodFormat(args[keywords::format | base_type::default_time_period_format().str()])
         {
             init_flags();
         }
