@@ -128,17 +128,22 @@ template<
     typename VisitorGenT = mpl::quote1< type_visitor >,
     typename RootT = type_dispatcher
 >
-class static_type_dispatcher
-#ifndef BOOST_LOG_DOXYGEN_PASS
-    : public mpl::inherit_linearly<
+class static_type_dispatcher :
+    public mpl::inherit_linearly<
         TypeSequenceT,
+#ifndef BOOST_LOG_DOXYGEN_PASS
         // Usage of this class instead of mpl::inherit provides substantial improvement in compilation time,
         // binary size and compiler memory footprint on some compilers (for instance, ICL)
         aux::inherit_visitors< typename mpl::lambda< VisitorGenT >::type >,
         aux::static_type_dispatcher_base< RootT >
-    >::type
+#else
+        mpl::inherit< mpl::_1, mpl::apply_wrap1< VisitorGenT, mpl::_2 > >,
+        RootT
 #endif // BOOST_LOG_DOXYGEN_PASS
+    >::type
 {
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
     // The static type dispatcher must eventually derive from the type_dispatcher interface class
     BOOST_MPL_ASSERT((is_base_of< type_dispatcher, RootT >));
 
@@ -147,6 +152,8 @@ class static_type_dispatcher
         aux::inherit_visitors< typename mpl::lambda< VisitorGenT >::type >,
         aux::static_type_dispatcher_base< RootT >
     >::type base_type;
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 public:
     //! Type sequence of the supported types
