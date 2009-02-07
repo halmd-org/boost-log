@@ -20,6 +20,7 @@
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/config.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/attribute.hpp>
@@ -74,7 +75,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
         view1.freeze();
 
         BOOST_CHECK(!view1.empty());
-        BOOST_CHECK_EQUAL(view1.size(), 3);
+        BOOST_CHECK_EQUAL(view1.size(), 3UL);
     }
     {
         attr_set set1, set2, set3;
@@ -86,11 +87,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
         view1.freeze();
 
         BOOST_CHECK(!view1.empty());
-        BOOST_CHECK_EQUAL(view1.size(), 3);
+        BOOST_CHECK_EQUAL(view1.size(), 3UL);
 
         values_view view2 = view1;
         BOOST_CHECK(!view2.empty());
-        BOOST_CHECK_EQUAL(view2.size(), 3);
+        BOOST_CHECK_EQUAL(view2.size(), 3UL);
     }
 
     // Check that the more prioritized attributes replace the less ones
@@ -116,7 +117,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
         view1.freeze();
 
         BOOST_CHECK(!view1.empty());
-        BOOST_CHECK_EQUAL(view1.size(), 4);
+        BOOST_CHECK_EQUAL(view1.size(), 4UL);
 
         int n = 0;
         BOOST_CHECK(logging::extract< int >(data::attr1(), view1, receiver< int >(n)));
@@ -131,7 +132,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
 
         unsigned int m = 0;
         BOOST_CHECK(logging::extract< unsigned int >(data::attr4(), view1, receiver< unsigned int >(m)));
-        BOOST_CHECK_EQUAL(m, 5);
+        BOOST_CHECK_EQUAL(m, 5U);
     }
 }
 
@@ -160,7 +161,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     typename values_view::const_iterator it = view1.find(data::attr1());
     BOOST_CHECK(it != view1.end());
     BOOST_CHECK(it->first == data::attr1());
-    boost::optional< int > val1 = it->second->get< int >();
+    boost::optional< int > val1 = it->second->BOOST_NESTED_TEMPLATE get< int >();
     BOOST_CHECK(!!val1);
     BOOST_CHECK_EQUAL(val1.get(), 10);
 
@@ -168,7 +169,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     it = view1.find(s1);
     BOOST_CHECK(it != view1.end());
     BOOST_CHECK(it->first == data::attr2());
-    boost::optional< double > val2 = it->second->get< double >();
+    boost::optional< double > val2 = it->second->BOOST_NESTED_TEMPLATE get< double >();
     BOOST_CHECK(!!val2);
     BOOST_CHECK_CLOSE(val2.get(), 5.5, 0.001);
 
@@ -176,12 +177,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     it = view1.find(ss1);
     BOOST_CHECK(it != view1.end());
     BOOST_CHECK(it->first == data::attr3());
-    boost::optional< std::string > val3 = it->second->get< std::string >();
+    boost::optional< std::string > val3 = it->second->BOOST_NESTED_TEMPLATE get< std::string >();
     BOOST_CHECK(!!val3);
     BOOST_CHECK_EQUAL(val3.get(), "Hello, world!");
 
     // make an additional check that the result is absent if the value type does not match the requested type
-    val2 = it->second->get< double >();
+    val2 = it->second->BOOST_NESTED_TEMPLATE get< double >();
     BOOST_CHECK(!val2);
 
     it = view1.find(data::attr4());
@@ -189,21 +190,21 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
 
     // Subscript operator
     boost::shared_ptr< logging::attribute_value > p = view1[data::attr1()];
-    BOOST_CHECK_EQUAL(view1.size(), 3);
+    BOOST_CHECK_EQUAL(view1.size(), 3UL);
     BOOST_CHECK(!!p);
     val1 = p->get< int >();
     BOOST_CHECK(!!val1);
     BOOST_CHECK_EQUAL(val1.get(), 10);
 
     p = view1[s1];
-    BOOST_CHECK_EQUAL(view1.size(), 3);
+    BOOST_CHECK_EQUAL(view1.size(), 3UL);
     BOOST_CHECK(!!p);
     val2 = p->get< double >();
     BOOST_CHECK(!!val2);
     BOOST_CHECK_CLOSE(val2.get(), 5.5, 0.001);
 
     p = view1[ss1];
-    BOOST_CHECK_EQUAL(view1.size(), 3);
+    BOOST_CHECK_EQUAL(view1.size(), 3UL);
     BOOST_CHECK(!!p);
     val3 = p->get< std::string >();
     BOOST_CHECK(!!val3);
@@ -211,11 +212,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
 
     p = view1[data::attr4()];
     BOOST_CHECK(!p);
-    BOOST_CHECK_EQUAL(view1.size(), 3);
+    BOOST_CHECK_EQUAL(view1.size(), 3UL);
 
     // Counting elements
-    BOOST_CHECK_EQUAL(view1.count(data::attr1()), 1);
-    BOOST_CHECK_EQUAL(view1.count(s1), 1);
-    BOOST_CHECK_EQUAL(view1.count(ss1), 1);
-    BOOST_CHECK_EQUAL(view1.count(data::attr4()), 0);
+    BOOST_CHECK_EQUAL(view1.count(data::attr1()), 1UL);
+    BOOST_CHECK_EQUAL(view1.count(s1), 1UL);
+    BOOST_CHECK_EQUAL(view1.count(ss1), 1UL);
+    BOOST_CHECK_EQUAL(view1.count(data::attr4()), 0UL);
 }

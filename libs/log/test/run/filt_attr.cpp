@@ -195,23 +195,23 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(satisfies_check, CharT, char_types)
 
     filter f = flt::attr< int >(data::attr1()).satisfies(predicate(call_counter, predicate_result));
     BOOST_CHECK_EQUAL(f(view1), predicate_result);
-    BOOST_CHECK_EQUAL(call_counter, 1);
+    BOOST_CHECK_EQUAL(call_counter, 1U);
 
     predicate_result = true;
     BOOST_CHECK_EQUAL(f(view1), predicate_result);
-    BOOST_CHECK_EQUAL(call_counter, 2);
+    BOOST_CHECK_EQUAL(call_counter, 2U);
 
     f = flt::attr< logging::numeric_types >(data::attr2()).satisfies(predicate(call_counter, predicate_result));
     BOOST_CHECK_EQUAL(f(view1), predicate_result);
-    BOOST_CHECK_EQUAL(call_counter, 3);
+    BOOST_CHECK_EQUAL(call_counter, 3U);
 
     f = flt::attr< int >(data::attr2()).satisfies(predicate(call_counter, predicate_result));
     BOOST_CHECK_EQUAL(f(view1), false);
-    BOOST_CHECK_EQUAL(call_counter, 3);
+    BOOST_CHECK_EQUAL(call_counter, 3U);
 
     f = flt::attr< int >(data::attr4()).satisfies(predicate(call_counter, predicate_result));
     BOOST_CHECK_EQUAL(f(view1), false);
-    BOOST_CHECK_EQUAL(call_counter, 3);
+    BOOST_CHECK_EQUAL(call_counter, 3U);
 }
 
 // The test checks that begins_with condition works

@@ -291,7 +291,7 @@ public:
  * \return \c true if extraction succeeded, \c false otherwise
  */
 template< typename T, typename CharT, typename ReceiverT >
-inline bool extract(const CharT* name, basic_attribute_values_view< CharT > const& attrs, ReceiverT& receiver)
+inline bool extract(const CharT* name, basic_attribute_values_view< CharT > const& attrs, ReceiverT receiver)
 {
     attribute_value_extractor< CharT, T > extractor(name);
     return extractor(attrs, receiver);
@@ -307,7 +307,7 @@ inline bool extract(const CharT* name, basic_attribute_values_view< CharT > cons
  * \return \c true if extraction succeeded, \c false otherwise
  */
 template< typename T, typename CharT, typename ReceiverT >
-inline bool extract(std::basic_string< CharT > const& name, basic_attribute_values_view< CharT > const& attrs, ReceiverT& receiver)
+inline bool extract(std::basic_string< CharT > const& name, basic_attribute_values_view< CharT > const& attrs, ReceiverT receiver)
 {
     attribute_value_extractor< CharT, T > extractor(name);
     return extractor(attrs, receiver);

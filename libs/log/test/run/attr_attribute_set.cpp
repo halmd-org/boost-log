@@ -39,30 +39,30 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
 
     attr_set set1;
     BOOST_CHECK(set1.empty());
-    BOOST_CHECK_EQUAL(set1.size(), 0);
+    BOOST_CHECK_EQUAL(set1.size(), 0UL);
 
     attr_set set2 = set1;
     BOOST_CHECK(set2.empty());
-    BOOST_CHECK_EQUAL(set2.size(), 0);
+    BOOST_CHECK_EQUAL(set2.size(), 0UL);
 
     set2[data::attr1()] = attr1;
     set2[data::attr2()] = attr2;
     BOOST_CHECK(set1.empty());
-    BOOST_CHECK_EQUAL(set1.size(), 0);
+    BOOST_CHECK_EQUAL(set1.size(), 0UL);
     BOOST_CHECK(!set2.empty());
-    BOOST_CHECK_EQUAL(set2.size(), 2);
+    BOOST_CHECK_EQUAL(set2.size(), 2UL);
 
     attr_set set3 = set2;
     BOOST_CHECK(!set3.empty());
-    BOOST_CHECK_EQUAL(set3.size(), 2);
-    BOOST_CHECK_EQUAL(set3.count(data::attr1()), 1);
-    BOOST_CHECK_EQUAL(set3.count(data::attr2()), 1);
-    BOOST_CHECK_EQUAL(set3.count(data::attr3()), 0);
+    BOOST_CHECK_EQUAL(set3.size(), 2UL);
+    BOOST_CHECK_EQUAL(set3.count(data::attr1()), 1UL);
+    BOOST_CHECK_EQUAL(set3.count(data::attr2()), 1UL);
+    BOOST_CHECK_EQUAL(set3.count(data::attr3()), 0UL);
 
     set1[data::attr3()] = attr3;
     BOOST_CHECK(!set1.empty());
-    BOOST_CHECK_EQUAL(set1.size(), 1);
-    BOOST_CHECK_EQUAL(set1.count(data::attr3()), 1);
+    BOOST_CHECK_EQUAL(set1.size(), 1UL);
+    BOOST_CHECK_EQUAL(set1.count(data::attr3()), 1UL);
 
     set2 = set1;
     BOOST_REQUIRE_EQUAL(set1.size(), set2.size());
@@ -105,25 +105,25 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     // Subscript operator
     boost::shared_ptr< logging::attribute > p = set1[data::attr1()];
     BOOST_CHECK_EQUAL(p, attr1);
-    BOOST_CHECK_EQUAL(set1.size(), 2);
+    BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
     p = set1[s1];
     BOOST_CHECK_EQUAL(p, attr2);
-    BOOST_CHECK_EQUAL(set1.size(), 2);
+    BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
     p = set1[ss1];
     BOOST_CHECK_EQUAL(p, attr1);
-    BOOST_CHECK_EQUAL(set1.size(), 2);
+    BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
     p = set1[data::attr3()];
     BOOST_CHECK(!p);
-    BOOST_CHECK_EQUAL(set1.size(), 2);
+    BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
     // Counting elements
-    BOOST_CHECK_EQUAL(set1.count(data::attr1()), 1);
-    BOOST_CHECK_EQUAL(set1.count(s1), 1);
-    BOOST_CHECK_EQUAL(set1.count(ss1), 1);
-    BOOST_CHECK_EQUAL(set1.count(data::attr3()), 0);
+    BOOST_CHECK_EQUAL(set1.count(data::attr1()), 1UL);
+    BOOST_CHECK_EQUAL(set1.count(s1), 1UL);
+    BOOST_CHECK_EQUAL(set1.count(ss1), 1UL);
+    BOOST_CHECK_EQUAL(set1.count(data::attr3()), 0UL);
 }
 
 // The test checks insertion methods
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     BOOST_CHECK(res.first->first == data::attr1());
     BOOST_CHECK_EQUAL(res.first->second, attr1);
     BOOST_CHECK(!set1.empty());
-    BOOST_CHECK_EQUAL(set1.size(), 1);
+    BOOST_CHECK_EQUAL(set1.size(), 1UL);
 
     res = set1.insert(std::make_pair(typename attr_set::key_type(data::attr2()), attr2));
     BOOST_CHECK(res.second);
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     BOOST_CHECK(res.first->first == data::attr2());
     BOOST_CHECK_EQUAL(res.first->second, attr2);
     BOOST_CHECK(!set1.empty());
-    BOOST_CHECK_EQUAL(set1.size(), 2);
+    BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
     // Insertion attempt of an attribute with the name of an already existing attribute
     res = set1.insert(std::make_pair(typename attr_set::key_type(data::attr2()), attr3));
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     BOOST_CHECK(res.first->first == data::attr2());
     BOOST_CHECK_EQUAL(res.first->second, attr2);
     BOOST_CHECK(!set1.empty());
-    BOOST_CHECK_EQUAL(set1.size(), 2);
+    BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
     // Mass insertion
     std::vector< typename attr_set::value_type > elems;
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     attr_set set2;
     set2.insert(elems.begin(), elems.end());
     BOOST_CHECK(!set2.empty());
-    BOOST_REQUIRE_EQUAL(set2.size(), 3);
+    BOOST_REQUIRE_EQUAL(set2.size(), 3UL);
     typename attr_set::const_iterator it = set2.begin();
     BOOST_CHECK(it->first == data::attr1());
     BOOST_CHECK_EQUAL(it->second, attr1);
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     set3.insert(elems.begin(), elems.end(), std::back_inserter(results));
     BOOST_REQUIRE_EQUAL(results.size(), elems.size());
     BOOST_CHECK(!set3.empty());
-    BOOST_REQUIRE_EQUAL(set3.size(), 3);
+    BOOST_REQUIRE_EQUAL(set3.size(), 3UL);
     it = set3.begin();
     BOOST_CHECK(it->first == data::attr1());
     BOOST_CHECK_EQUAL(it->second, attr1);
@@ -222,20 +222,20 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     attr_set set4;
 
     boost::shared_ptr< logging::attribute >& p1 = (set4[data::attr1()] = attr1);
-    BOOST_CHECK_EQUAL(set4.size(), 1);
+    BOOST_CHECK_EQUAL(set4.size(), 1UL);
     BOOST_CHECK_EQUAL(p1, attr1);
 
     boost::shared_ptr< logging::attribute >& p2 = (set4[string(data::attr2())] = attr2);
-    BOOST_CHECK_EQUAL(set4.size(), 2);
+    BOOST_CHECK_EQUAL(set4.size(), 2UL);
     BOOST_CHECK_EQUAL(p2, attr2);
 
     boost::shared_ptr< logging::attribute >& p3 = (set4[slim_string(data::attr3())] = attr3);
-    BOOST_CHECK_EQUAL(set4.size(), 3);
+    BOOST_CHECK_EQUAL(set4.size(), 3UL);
     BOOST_CHECK_EQUAL(p3, attr3);
 
     // subscript operator can replace existing elements
     boost::shared_ptr< logging::attribute >& p4 = (set4[data::attr3()] = attr1);
-    BOOST_CHECK_EQUAL(set4.size(), 3);
+    BOOST_CHECK_EQUAL(set4.size(), 3UL);
     BOOST_CHECK_EQUAL(p4, attr1);
 }
 
@@ -257,33 +257,33 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(erasure, CharT, char_types)
     set1[data::attr3()] = attr3;
 
     attr_set set2 = set1;
-    BOOST_REQUIRE_EQUAL(set2.size(), 3);
+    BOOST_REQUIRE_EQUAL(set2.size(), 3UL);
 
-    BOOST_CHECK_EQUAL(set2.erase(data::attr1()), 1);
-    BOOST_CHECK_EQUAL(set2.size(), 2);
-    BOOST_CHECK_EQUAL(set2.count(data::attr1()), 0);
+    BOOST_CHECK_EQUAL(set2.erase(data::attr1()), 1UL);
+    BOOST_CHECK_EQUAL(set2.size(), 2UL);
+    BOOST_CHECK_EQUAL(set2.count(data::attr1()), 0UL);
 
-    BOOST_CHECK_EQUAL(set2.erase(data::attr1()), 0);
-    BOOST_CHECK_EQUAL(set2.size(), 2);
+    BOOST_CHECK_EQUAL(set2.erase(data::attr1()), 0UL);
+    BOOST_CHECK_EQUAL(set2.size(), 2UL);
 
     set2.erase(set2.begin());
-    BOOST_CHECK_EQUAL(set2.size(), 1);
-    BOOST_CHECK_EQUAL(set2.count(data::attr2()), 0);
+    BOOST_CHECK_EQUAL(set2.size(), 1UL);
+    BOOST_CHECK_EQUAL(set2.count(data::attr2()), 0UL);
 
     set2 = set1;
-    BOOST_REQUIRE_EQUAL(set2.size(), 3);
+    BOOST_REQUIRE_EQUAL(set2.size(), 3UL);
 
     typename attr_set::iterator it = set2.begin();
     set2.erase(++it, set2.end());
-    BOOST_CHECK_EQUAL(set2.size(), 1);
-    BOOST_CHECK_EQUAL(set2.count(data::attr1()), 1);
-    BOOST_CHECK_EQUAL(set2.count(data::attr2()), 0);
-    BOOST_CHECK_EQUAL(set2.count(data::attr3()), 0);
+    BOOST_CHECK_EQUAL(set2.size(), 1UL);
+    BOOST_CHECK_EQUAL(set2.count(data::attr1()), 1UL);
+    BOOST_CHECK_EQUAL(set2.count(data::attr2()), 0UL);
+    BOOST_CHECK_EQUAL(set2.count(data::attr3()), 0UL);
 
     set2 = set1;
-    BOOST_REQUIRE_EQUAL(set2.size(), 3);
+    BOOST_REQUIRE_EQUAL(set2.size(), 3UL);
 
     set2.clear();
     BOOST_CHECK(set2.empty());
-    BOOST_CHECK_EQUAL(set2.size(), 0);
+    BOOST_CHECK_EQUAL(set2.size(), 0UL);
 }

@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
     sentry scope1(scope_data::scope1(), scope_data::file(), line1);
 
     BOOST_CHECK(!named_scope::get_scopes().empty());
-    BOOST_CHECK_EQUAL(named_scope::get_scopes().size(), 1);
+    BOOST_CHECK_EQUAL(named_scope::get_scopes().size(), 1UL);
 
     boost::shared_ptr< logging::attribute_value > val = attr->get_value();
     BOOST_REQUIRE(!!val);
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
     boost::optional< scopes > sc = val->get< scopes >();
     BOOST_REQUIRE(!!sc);
     BOOST_REQUIRE(!sc->empty());
-    BOOST_CHECK_EQUAL(sc->size(), 1);
+    BOOST_CHECK_EQUAL(sc->size(), 1UL);
 
     scope const& s1 = sc->front();
     BOOST_CHECK(s1.scope_name == scope_data::scope1());
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
     named_scope::push_scope(new_scope);
 
     BOOST_CHECK(!named_scope::get_scopes().empty());
-    BOOST_CHECK_EQUAL(named_scope::get_scopes().size(), 2);
+    BOOST_CHECK_EQUAL(named_scope::get_scopes().size(), 2UL);
 
     val = attr->get_value();
     BOOST_REQUIRE(!!val);
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
     sc = val->get< scopes >();
     BOOST_REQUIRE(!!sc);
     BOOST_REQUIRE(!sc->empty());
-    BOOST_CHECK_EQUAL(sc->size(), 2);
+    BOOST_CHECK_EQUAL(sc->size(), 2UL);
 
     typename scopes::const_iterator it = sc->begin();
     scope const& s2 = *(it++);
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
     named_scope::pop_scope();
 
     BOOST_CHECK(!named_scope::get_scopes().empty());
-    BOOST_CHECK_EQUAL(named_scope::get_scopes().size(), 1);
+    BOOST_CHECK_EQUAL(named_scope::get_scopes().size(), 1UL);
 
     val = attr->get_value();
     BOOST_REQUIRE(!!val);
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
     sc = val->get< scopes >();
     BOOST_REQUIRE(!!sc);
     BOOST_REQUIRE(!sc->empty());
-    BOOST_CHECK_EQUAL(sc->size(), 1);
+    BOOST_CHECK_EQUAL(sc->size(), 1UL);
 
     scope const& s4 = sc->back(); // should be the same as front
     BOOST_CHECK(s4.scope_name == scope_data::scope1());
@@ -167,8 +167,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(detaching_from_thread, CharT, char_types)
     boost::optional< scopes > sc1 = val1->get< scopes >(), sc2 = val2->get< scopes >();
     BOOST_REQUIRE(!!sc1);
     BOOST_REQUIRE(!!sc2);
-    BOOST_CHECK_EQUAL(sc1->size(), 1);
-    BOOST_CHECK_EQUAL(sc2->size(), 2);
+    BOOST_CHECK_EQUAL(sc1->size(), 1UL);
+    BOOST_CHECK_EQUAL(sc2->size(), 2UL);
 }
 
 // The test checks that output streaming is possible
@@ -199,6 +199,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(copying, CharT, char_types)
     sentry scope1(scope_data::scope1(), scope_data::file(), __LINE__);
     scopes sc = named_scope::get_scopes();
     sentry scope2(scope_data::scope2(), scope_data::file(), __LINE__);
-    BOOST_CHECK_EQUAL(sc.size(), 1);
-    BOOST_CHECK_EQUAL(named_scope::get_scopes().size(), 2);
+    BOOST_CHECK_EQUAL(sc.size(), 1UL);
+    BOOST_CHECK_EQUAL(named_scope::get_scopes().size(), 2UL);
 }
