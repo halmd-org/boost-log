@@ -40,12 +40,16 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 namespace sinks {
 
 template< typename CharT >
 class sink;
 
 } // namespace sinks
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 /*!
  * \brief Logging library core class
