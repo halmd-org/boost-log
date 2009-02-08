@@ -48,6 +48,8 @@ doxygen autodoc
         <doxygen:param>ENABLE_PREPROCESSING=YES
         <doxygen:param>MACRO_EXPANSION=YES
         <doxygen:param>TAB_SIZE=4
+        <doxygen:param>SOURCE_BROWSER=YES
+        <doxygen:param>VERBATIM_HEADERS=NO
         <doxygen:param>"PREDEFINED=BOOST_LOG_DOXYGEN_PASS \\
                        "BOOST_LOG_NO_VTABLE=" \\
                        "BOOST_STATIC_ASSERT(x)=" \\

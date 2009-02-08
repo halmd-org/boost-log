@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2009-01-25 12:49:03 $]
+    [last-revision $Date: 2009-02-08 14:46:27 $]
 ]
 
 [c++]
@@ -277,7 +277,7 @@ One may wonder why the following syntax is not supported:
     BOOST_LOG(logger) << set_attr("MyInt", 10) << set_attr("MyString", "string attribute value")
         << "Some log message";
 
-The answer is quite simple. The streaming expression is executed after the filtering takes place and only if the filter passed the log record. At this point the set of attributes that are attached to the record is already fixed, so these manipulators cannot attach any more attributes to it. So, all attributes that are to be present with the record must be set up before filtering tares place. The easies way to do it is to use scoped attributes or tags (see [link advanced.advanced.utilities.scoped_attributes here]).
+The answer is quite simple. The streaming expression is executed after the filtering takes place and only if the filter passed the log record. At this point the set of attributes that are attached to the record is already fixed, so these manipulators cannot attach any more attributes to it. So, all attributes that are to be present with the record must be set up before filtering tares place. The easiest way to do it is to use scoped attributes or tags (see [link advanced.advanced.utilities.scoped_attributes here]).
 
 [endsect]
 
@@ -293,7 +293,7 @@ would become a lambda-expression, that is only invoked if the filtering is succe
 
 would generate a considerable amount of code (proportionally to the number of streaming operators) to be executed before filtering takes place. Another drawback is that the `packet.size()` is always called, whether or not the record is actually written to log. In order to delay this call, yet more scaffolding is needed, possibly involving __boost_bind__, __boost_lambda__ or __boost_phoenix__. This complication is not acceptable for such a basic use case, like this.
 
-Although lazy streaming is not provided by the library by default, nothing prevents to develop it in a separate hierarchy of loggers. See the [link extension.extension.sources Extending the library] section for more information.
+Although lazy streaming is not provided by the library out of the box, nothing prevents to develop it in a separate hierarchy of loggers. See the [link extension.extension.sources Extending the library] section for more information.
 
 [endsect]
 
