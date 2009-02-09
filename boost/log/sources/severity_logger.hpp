@@ -185,7 +185,7 @@ namespace aux {
             >(static_cast< held_type >(m_pHolder->get_value()));
 #else
             // With multithreading disabled we may safely return this here. This method will not be called anyway.
-            return shared_from_this();
+            return this->shared_from_this();
 #endif
         }
     };
