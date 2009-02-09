@@ -143,6 +143,10 @@ public:
     {
         m_FormattingStream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
     }
+    /*!
+     * Virtual destructor
+     */
+    virtual ~basic_formatting_sink_backend() {}
 
     /*!
      * The method sets formatter functional object

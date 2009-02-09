@@ -42,6 +42,11 @@ struct BOOST_LOG_NO_VTABLE type_visitor
     typedef T supported_type;
 
     /*!
+     * Virtual destructor
+     */
+    virtual ~type_visitor() {}
+
+    /*!
      * The method invokes the visitor-specific logic with the given value
      * 
      * \param value The dispatched value
@@ -62,6 +67,11 @@ struct BOOST_LOG_NO_VTABLE type_visitor
 struct BOOST_LOG_NO_VTABLE type_dispatcher
 {
 public:
+    /*!
+     * Virtual destructor
+     */
+    virtual ~type_dispatcher() {}
+
     /*!
      * The method requests a type visitor for a value of type \c T
      * 
