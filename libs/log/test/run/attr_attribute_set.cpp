@@ -167,12 +167,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
     // Mass insertion
-    std::vector< typename attr_set::value_type > elems;
-    elems.push_back(std::make_pair(typename attr_set::key_type(data::attr2()), attr2));
-    elems.push_back(std::make_pair(typename attr_set::key_type(data::attr1()), attr1));
-    elems.push_back(std::make_pair(typename attr_set::key_type(data::attr3()), attr3));
+    std::vector< std::pair< slim_string, boost::shared_ptr< logging::attribute > > > elems;
+    elems.push_back(std::make_pair(slim_string(data::attr2()), attr2));
+    elems.push_back(std::make_pair(slim_string(data::attr1()), attr1));
+    elems.push_back(std::make_pair(slim_string(data::attr3()), attr3));
     // ... with element duplication
-    elems.push_back(std::make_pair(typename attr_set::key_type(data::attr1()), attr3));
+    elems.push_back(std::make_pair(slim_string(data::attr1()), attr3));
 
     attr_set set2;
     set2.insert(elems.begin(), elems.end());
