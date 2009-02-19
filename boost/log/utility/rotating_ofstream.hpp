@@ -11,7 +11,7 @@
  * \file   rotating_ofstream.hpp
  * \author Andrey Semashev
  * \date   29.07.2007
- * 
+ *
  * The header contains implementation of a rotating file stream.
  */
 
@@ -54,6 +54,7 @@
 #include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/code_conversion.hpp>
+#include <boost/log/detail/snprintf.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 #include <boost/log/utility/record_writer.hpp>
 
@@ -137,30 +138,11 @@ namespace aux {
             return (isdigit(c) != 0);
         }
 
-        typedef int (*lazy_sprintf)(char*, size_t, const char*, ...);
-
-#if defined(_MSC_VER) && _MSC_VER < 1400
-        static int compliant_msvc_snprintf(char* buf, size_t size, const char* format, ...)
-        {
-            va_list args;
-            va_start(args, format);
-            int n = _vsnprintf(buf, size - 1, format, args);
-            va_end(args);
-            buf[size - 1] = '\0';
-            return n;
-        }
-#endif // defined(_MSC_VER) && _MSC_VER < 1400
+        typedef int (*lazy_sprintf)(char*, std::size_t, const char*, ...);
 
         static lazy_sprintf get_lazy_sprintf()
         {
-            using namespace std;
-#if !defined(_MSC_VER)
-            return &snprintf;
-#elif _MSC_VER < 1400
-            return &file_controller_traits::compliant_msvc_snprintf;
-#else
-            return (lazy_sprintf)&sprintf_s;
-#endif // defined(_MSC_VER)
+            return (lazy_sprintf)&boost::log::aux::snprintf;
         }
     };
 #endif // BOOST_LOG_USE_CHAR
@@ -185,28 +167,11 @@ namespace aux {
             return (iswdigit(c) != 0);
         }
 
-        typedef int (*lazy_sprintf)(wchar_t*, size_t, const wchar_t*, ...);
+        typedef int (*lazy_sprintf)(wchar_t*, std::size_t, const wchar_t*, ...);
 
-#if defined(_MSC_VER) && _MSC_VER < 1400
-        static int compliant_msvc_swprintf(wchar_t* buf, size_t size, const wchar_t* format, ...)
-        {
-            va_list args;
-            va_start(args, format);
-            int n = _vsnwprintf(buf, size - 1, format, args);
-            va_end(args);
-            buf[size - 1] = L'\0';
-            return n;
-        }
-#endif // defined(_MSC_VER) && _MSC_VER < 1400
         static lazy_sprintf get_lazy_sprintf()
         {
-#if defined(_MSC_VER) && _MSC_VER < 1400
-            return file_controller_traits::compliant_msvc_swprintf;
-#else
-            // MSVC 7.1 ICEs on this code
-            using namespace std;
-            return &swprintf;
-#endif // defined(_MSC_VER) && _MSC_VER < 1400
+            return (lazy_sprintf)&boost::log::aux::swprintf;
         }
     };
 #endif // BOOST_LOG_USE_WCHAR_T
@@ -427,7 +392,7 @@ namespace aux {
                 if (it == end)
                     break;
                 typename string_type::const_iterator placeholder_end = parse_format_flag(it, end);
-                
+
                 if (placeholder_end != end)
                 {
                     // We've found the file counter placeholder in the pattern
@@ -554,11 +519,11 @@ namespace aux {
 
 /*!
  * \brief A rotating file output stream class
- * 
+ *
  * The \c basic_rotating_ofstream class provides interface similar to standard
  * output stream except that it derives from the \c record_writer interface and requires
  * caller to invoke methods of the interface appropriately.
- * 
+ *
  * The stream automatically manages underlying files depending on rotation criteria. The
  * stream also supports calling custom functional objects on closing and opening files.
  */
@@ -641,7 +606,7 @@ private:
                 m_pFileCtl.reset();
             }
         }
-        
+
         //! The method is called after all data of the record is written to the stream
         void on_end_record(open_handler_type const& on_open, close_handler_type const& on_close)
         {
@@ -757,10 +722,10 @@ public:
 
     /*!
      * Constructor. Creates the stream in open state.
-     * 
+     *
      * \note The construction does not lead to immediate opening or creating a file. The file will be opened
      *       on the first actual writing operation.
-     * 
+     *
      * \param pattern File name pattern. May contain <tt>%%N</tt> placeholder, which will be replaced with the
      *                file counter, or any of Boost.DateTime formatting placeholders for date and/or time.
      * \param args A set of named arguments. The following arguments are supported:
@@ -773,10 +738,10 @@ public:
     basic_rotating_ofstreambuf(filesystem::path const& pattern, ArgsT... const& args);
     /*!
      * Constructor. Creates the stream in open state.
-     * 
+     *
      * \note The construction does not lead to immediate opening or creating a file. The file will be opened
      *       on the first actual writing operation.
-     * 
+     *
      * \param pattern File name pattern. May contain <tt>%%N</tt> placeholder, which will be replaced with the
      *                file counter, or any of Boost.DateTime formatting placeholders for date and/or time.
      * \param args A set of named arguments. The following arguments are supported:
@@ -789,10 +754,10 @@ public:
     basic_rotating_ofstreambuf(filesystem::wpath const& pattern, ArgsT... const& args);
     /*!
      * Moves the stream into the open state.
-     * 
+     *
      * \note The method call does not lead to immediate opening or creating a file. The file will be opened
      *       on the first actual writing operation.
-     * 
+     *
      * \param pattern File name pattern. May contain <tt>%%N</tt> placeholder, which will be replaced with the
      *                file counter, or any of Boost.DateTime formatting placeholders for date and/or time.
      * \param args A set of named arguments. The following arguments are supported:
@@ -805,10 +770,10 @@ public:
     void open(filesystem::path const& pattern, ArgsT... const& args);
     /*!
      * Moves the stream into the open state.
-     * 
+     *
      * \note The method call does not lead to immediate opening or creating a file. The file will be opened
      *       on the first actual writing operation.
-     * 
+     *
      * \param pattern File name pattern. May contain <tt>%%N</tt> placeholder, which will be replaced with the
      *                file counter, or any of Boost.DateTime formatting placeholders for date and/or time.
      * \param args A set of named arguments. The following arguments are supported:
@@ -843,7 +808,7 @@ public:
     {
         m_Buf.close(m_CloseHandler);
     }
-    
+
     virtual void on_end_record()
     {
         m_Buf.on_end_record(m_OpenHandler, m_CloseHandler);
@@ -851,7 +816,7 @@ public:
 
     /*!
      * Sets a new handler for opening a new file
-     * 
+     *
      * \param handler Functional object to receive notifications
      */
     void set_open_handler(open_handler_type const& handler)
@@ -867,7 +832,7 @@ public:
     }
     /*!
      * Sets a new handler for closing a file
-     * 
+     *
      * \param handler Functional object to receive notifications
      */
     void set_close_handler(close_handler_type const& handler)
