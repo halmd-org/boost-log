@@ -44,7 +44,6 @@ alias platform_log_sources
 
 alias platform_log_sources
     : ## unix sources ##
-        syslog_backend.cpp
     : ## requirements ##
         <logapi>unix
     ;
@@ -63,6 +62,7 @@ lib boost_log
         timer.cpp
         sink.cpp
         text_ostream_backend.cpp
+        syslog_backend.cpp
         thread_specific.cpp
         parser_utils.cpp
         init_from_stream.cpp
