@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   prologue.hpp
  * \author Andrey Semashev
  * \date   08.03.2007
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html. In this file
  *         internal configuration macros are defined.
@@ -98,8 +98,8 @@
 #       define BOOST_LOG_EXPORT
 #   endif // defined(BOOST_HAS_DECLSPEC)
 //
-// Automatically link to the correct build variant where possible. 
-// 
+// Automatically link to the correct build variant where possible.
+//
 #   if !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_LOG_NO_LIB)
 #       define BOOST_LIB_NAME boost_log
 #       if defined(BOOST_LOG_DLL)
@@ -119,11 +119,6 @@
 #   endif
 
 #endif // !defined(BOOST_LOG_BUILDING_THE_LIB)
-
-// Define BOOST_LOG_USE_SYSLOG if any syslog API should be supported
-#if !defined(BOOST_LOG_USE_SYSLOG) && defined(BOOST_LOG_USE_NATIVE_SYSLOG)
-#   define BOOST_LOG_USE_SYSLOG
-#endif // !defined(BOOST_LOG_USE_SYSLOG) && defined(BOOST_LOG_USE_NATIVE_SYSLOG)
 
 #if !defined(BOOST_LOG_USE_CHAR) && !defined(BOOST_LOG_USE_WCHAR_T)
     // By default we provide support for both char and wchar_t

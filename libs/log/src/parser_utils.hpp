@@ -86,6 +86,8 @@ struct char_constants< char >
     static const char_type* log_name_param_name() { return "LogName"; }
     static const char_type* source_name_param_name() { return "LogSource"; }
     static const char_type* force_param_name() { return "ForceRegistration"; }
+    static const char_type* local_address_param_name() { return "LocalAddress"; }
+    static const char_type* target_address_param_name() { return "TargetAddress"; }
 
     static const char_type* text_file_destination() { return "TextFile"; }
     static const char_type* console_destination() { return "Console"; }
@@ -166,6 +168,8 @@ struct char_constants< wchar_t >
     static const char_type* log_name_param_name() { return L"LogName"; }
     static const char_type* source_name_param_name() { return L"LogSource"; }
     static const char_type* force_param_name() { return L"ForceRegistration"; }
+    static const char_type* local_address_param_name() { return L"LocalAddress"; }
+    static const char_type* target_address_param_name() { return L"TargetAddress"; }
 
     static const char_type* text_file_destination() { return L"TextFile"; }
     static const char_type* console_destination() { return L"Console"; }

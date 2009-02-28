@@ -38,9 +38,7 @@
 #include <boost/log/core.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
-#ifdef BOOST_LOG_USE_SYSLOG
 #include <boost/log/sinks/syslog_backend.hpp>
-#endif
 #ifdef BOOST_WINDOWS
 #include <boost/log/sinks/debug_output_backend.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
@@ -49,6 +47,7 @@
 #endif // BOOST_LOG_USE_WINNT6_API
 #endif // BOOST_WINDOWS
 #include <boost/log/detail/singleton.hpp>
+#include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/rotating_ofstream.hpp>
 #include <boost/log/utility/init/from_stream.hpp>
@@ -247,10 +246,8 @@ struct sinks_repository :
             &sinks_repository< char_type >::default_text_file_sink_factory;
         instance.m_Factories[constants::console_destination()] =
             &sinks_repository< char_type >::default_console_sink_factory;
-#ifdef BOOST_LOG_USE_SYSLOG
         instance.m_Factories[constants::syslog_destination()] =
             &sinks_repository< char_type >::default_syslog_sink_factory;
-#endif // BOOST_LOG_USE_SYSLOG
 #ifdef BOOST_WINDOWS
         instance.m_Factories[constants::debugger_destination()] =
             &sinks_repository< char_type >::default_debugger_sink_factory;
@@ -387,7 +384,6 @@ private:
         return init_text_ostream_sink(backend, params);
     }
 
-#ifdef BOOST_LOG_USE_SYSLOG
     //! The function constructs a sink that writes log records to the syslog service
     static shared_ptr< sinks::sink< char_type > > default_syslog_sink_factory(params_t const& params)
     {
@@ -399,9 +395,17 @@ private:
         backend->set_severity_mapper(
             sinks::syslog::basic_direct_severity_mapping< char_type >(constants::default_level_attribute_name()));
 
+        // Setup local and remote addresses
+        typename params_t::const_iterator it = params.find(constants::local_address_param_name());
+        if (it != params.end())
+            backend->set_local_address(log::aux::to_narrow(it->second));
+
+        it = params.find(constants::target_address_param_name());
+        if (it != params.end())
+            backend->set_target_address(log::aux::to_narrow(it->second));
+
         return init_sink(backend, params);
     }
-#endif // BOOST_LOG_USE_SYSLOG
 
 #ifdef BOOST_WINDOWS
 

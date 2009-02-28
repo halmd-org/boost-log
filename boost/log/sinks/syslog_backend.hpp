@@ -24,8 +24,10 @@
 
 #include <string>
 #include <boost/shared_ptr.hpp>
+#include <boost/parameter/keyword.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/asio_fwd.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/syslog_constants.hpp>
 #include <boost/log/sinks/attribute_mapping.hpp>
@@ -45,7 +47,34 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
+namespace keywords {
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
+    BOOST_PARAMETER_KEYWORD(tag, facility)
+    BOOST_PARAMETER_KEYWORD(tag, use_impl)
+
+#else
+
+    //! The keyword is used to pass syslog facility that emits log records
+    implementation_defined facility;
+    //! The keyword is used to pass the type of backend implementation to use
+    implementation_defined use_impl;
+
+#endif // BOOST_LOG_DOXYGEN_PASS
+
+} // namespace keywords
+
 namespace syslog {
+
+    //! The enumeration defined the possible implementation types for the syslog backend
+    enum impl_types
+    {
+#ifdef BOOST_LOG_USE_NATIVE_SYSLOG
+        native = 0,             //!< Use native syslog API
+#endif
+        udp_socket_based = 1    //!< Use UDP sockets, according to RFC3164
+    };
 
     /*!
      * \brief Straightforward severity level mapping
@@ -229,7 +258,28 @@ namespace syslog {
 
 } // namespace syslog
 
-//! An implementation of a syslog sink backend
+/*!
+ * \brief An implementation of a syslog sink backend
+ *
+ * The backend provides support for the syslog protocol, defined in RFC3164.
+ * The backend sends log records to a remote host via UDP. The host name can
+ * be specified by calling the \c set_target_address method. By default log
+ * records will be sent to localhost:514. The local address can be specified
+ * as well, by calling the \c set_local_address method. By default syslog
+ * packets will be sent from localhost:514. It is safe to create several sink
+ * backends with the same local addresses - the backends within the process
+ * will share the same socket.
+ *
+ * On systems with native syslog implementation it may be preferable to utilize
+ * the POSIX syslog API instead of direct socket management in order to bypass
+ * possible security limitations that may be in action. To do so one has to pass
+ * the <tt>use_impl = native</tt> to the backend constructor. Note, however,
+ * that in that case you will only have one chance to specify syslog facility - on
+ * the first native syslog backend construction. Other native syslog backends will
+ * ignore this parameter. Obviously, the \c set_local_address and \c set_target_address
+ * methods have no effect for native backends. Using <tt>use_impl = native</tt>
+ * on platforms with no native support for POSIX syslog API will have no effect.
+ */
 template< typename CharT >
 class BOOST_LOG_EXPORT basic_syslog_backend :
     public basic_formatting_sink_backend< CharT, char >
@@ -261,29 +311,81 @@ private:
 
 public:
     /*!
-     * Constructor. The first constructed syslog backend initializes syslog API with the provided parameters.
-     *
-     * \param facility Logging facility
-     * \param options Additional syslog initialization options
+     * Constructor. Creates a UDP socket-based backend with <tt>syslog::user</tt> facility code.
      */
-    explicit basic_syslog_backend(
-        syslog::facility_t facility = syslog::user,
-        syslog::options_t options = syslog::no_delay);
+    explicit basic_syslog_backend() : m_pImpl(construct(syslog::user, syslog::udp_socket_based))
+    {
+    }
+    /*!
+     * Constructor. Creates a sink backend with the specified named parameters.
+     * The following named parameters are supported:
+     *
+     * \li \c facility - Specifies the facility code. If not specified, <tt>syslog::user</tt> will be used.
+     * \li \c use_impl - Specifies the backend implementation. Can be one of:
+     *                   \li \c native - Use the native syslog API, if available. If no native API
+     *                                   is available, it is equivalent to \c udp_socket_based.
+     *                   \li \c udp_socket_based - Use the UDP socket-based implementation, conforming to
+     *                                             RFC3164 protocol specification. This is the default.
+     */
+    template< typename ArgsT >
+    explicit basic_syslog_backend(ArgsT const& args) :
+        m_pImpl(construct(args[keywords::facility | syslog::user], args[keywords::use_impl | syslog::udp_socket_based]))
+    {
+    }
     /*!
      * Destructor
      */
-    ~basic_syslog_backend();
+    BOOST_LOG_EXPORT ~basic_syslog_backend();
 
     /*!
-     * The method installs the function object that maps application severity levels to Syslog levels
+     * The method installs the function object that maps application severity levels to syslog levels
      */
-    void set_severity_mapper(severity_mapper_type const& mapper);
+    BOOST_LOG_EXPORT void set_severity_mapper(severity_mapper_type const& mapper);
+
+    /*!
+     * The method sets the local address which log records will be sent from.
+     *
+     * \note Does not have effect if the backend was constructed to use native syslog API
+     *
+     * \param addr The local address
+     */
+    BOOST_LOG_EXPORT void set_local_address(std::string const& addr);
+    /*!
+     * The method sets the local address which log records will be sent from.
+     *
+     * \note Does not have effect if the backend was constructed to use native syslog API
+     *
+     * \param addr The local address
+     * \param port The local port number
+     */
+    BOOST_LOG_EXPORT void set_local_address(boost::asio::ip::address const& addr, unsigned short port = 514);
+
+    /*!
+     * The method sets the address of the remote host where log records will be sent to.
+     *
+     * \note Does not have effect if the backend was constructed to use native syslog API
+     *
+     * \param addr The remote host address
+     */
+    BOOST_LOG_EXPORT void set_target_address(std::string const& addr);
+    /*!
+     * The method sets the address of the remote host where log records will be sent to.
+     *
+     * \note Does not have effect if the backend was constructed to use native syslog API
+     *
+     * \param addr The remote host address
+     * \param port The port number on the remote host
+     */
+    BOOST_LOG_EXPORT void set_target_address(boost::asio::ip::address const& addr, unsigned short port = 514);
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method passes the formatted message to the Syslog API
     void do_consume(values_view_type const& attributes, target_string_type const& formatted_message);
-#endif
+
+    //! The method creates the backend implementation
+    BOOST_LOG_EXPORT static implementation* construct(syslog::facility_t facility, syslog::impl_types use_impl);
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 #ifdef BOOST_LOG_USE_CHAR
