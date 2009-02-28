@@ -281,7 +281,7 @@ namespace syslog {
  * on platforms with no native support for POSIX syslog API will have no effect.
  */
 template< typename CharT >
-class BOOST_LOG_EXPORT basic_syslog_backend :
+class basic_syslog_backend :
     public basic_formatting_sink_backend< CharT, char >
 {
     //! Base type
