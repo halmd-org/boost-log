@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
         sink->locked_backend()->set_severity_mapper(mapping);
 
         // Set the remote address to sent syslog messages to
-        sink->locked_backend()->set_target_address("127.0.0.1");
+        sink->locked_backend()->set_target_address("localhost");
 
         // Add the sink to the core
         logging::core::get()->add_sink(sink);

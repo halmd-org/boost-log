@@ -14,6 +14,8 @@
 
 #include "windows_version.hpp"
 #include <memory>
+#include <algorithm>
+#include <stdexcept>
 #include <boost/limits.hpp>
 #include <boost/assert.hpp>
 #include <boost/weak_ptr.hpp>
@@ -31,6 +33,7 @@
 #include <boost/log/sinks/syslog_backend.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/snprintf.hpp>
+#include <boost/log/detail/throw_exception.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
@@ -299,13 +302,10 @@ namespace {
 
     public:
         //! The constructor creates a socket bound to the specified local address and port
-        explicit syslog_udp_socket(asio::io_service& service, asio::ip::udp::endpoint const& local_address) :
+        explicit syslog_udp_socket(asio::io_service& service, asio::ip::udp const& protocol, asio::ip::udp::endpoint const& local_address) :
             m_Socket(service)
         {
-            if (local_address.address().is_v4())
-                m_Socket.open(asio::ip::udp::v4());
-            else
-                m_Socket.open(asio::ip::udp::v6());
+            m_Socket.open(protocol);
             m_Socket.set_option(asio::socket_base::reuse_address(true));
             m_Socket.bind(local_address);
         }
@@ -399,6 +399,8 @@ template< typename CharT >
 struct basic_syslog_backend< CharT >::implementation::udp_socket_based :
     public implementation
 {
+    //! Protocol to be used
+    asio::ip::udp m_Protocol;
     //! Pointer to the list of sockets
     shared_ptr< syslog_udp_service > m_pService;
     //! Pointer to the socket being used
@@ -407,11 +409,23 @@ struct basic_syslog_backend< CharT >::implementation::udp_socket_based :
     asio::ip::udp::endpoint m_TargetHost;
 
     //! Constructor
-    explicit udp_socket_based(syslog::facility_t const& facility) :
+    explicit udp_socket_based(syslog::facility_t const& facility, asio::ip::udp const& protocol) :
         implementation(facility),
-        m_pService(syslog_udp_service::get()),
-        m_TargetHost(asio::ip::address_v4(0x7F000001), 514) // 127.0.0.1:514
+        m_Protocol(protocol),
+        m_pService(syslog_udp_service::get())
     {
+        if (m_Protocol == asio::ip::udp::v4())
+        {
+            m_TargetHost = asio::ip::udp::endpoint(asio::ip::address_v4(0x7F000001), 514); // 127.0.0.1:514
+        }
+        else
+        {
+            // ::1
+            asio::ip::address_v6::bytes_type addr;
+            std::fill_n(addr.c_array(), addr.size() - 1, static_cast< unsigned char >(0));
+            addr[addr.size() - 1] = 1;
+            m_TargetHost = asio::ip::udp::endpoint(asio::ip::address_v6(addr), 514); // 127.0.0.1:514
+        }
     }
 
     //! The method sends the formatted message to the syslog host
@@ -420,7 +434,7 @@ struct basic_syslog_backend< CharT >::implementation::udp_socket_based :
         if (!m_pSocket.get())
         {
             asio::ip::udp::endpoint any_local_address;
-            m_pSocket.reset(new syslog_udp_socket(m_pService->m_IOService, any_local_address));
+            m_pSocket.reset(new syslog_udp_socket(m_pService->m_IOService, m_Protocol, any_local_address));
         }
 
         m_pSocket->send_message(
@@ -463,10 +477,11 @@ void basic_syslog_backend< CharT >::do_consume(
 //! The method creates the backend implementation
 template< typename CharT >
 typename basic_syslog_backend< CharT >::implementation*
-basic_syslog_backend< CharT >::construct(syslog::facility_t facility, syslog::impl_types use_impl)
+basic_syslog_backend< CharT >::construct(
+    syslog::facility_t facility, keywords::syslog_impl_types use_impl, keywords::ip_versions ip_version)
 {
 #ifdef BOOST_LOG_USE_NATIVE_SYSLOG
-    if (use_impl == syslog::native)
+    if (use_impl == keywords::native)
     {
         typedef typename implementation::native native_impl;
         return new native_impl(facility);
@@ -474,7 +489,15 @@ basic_syslog_backend< CharT >::construct(syslog::facility_t facility, syslog::im
 #endif // BOOST_LOG_USE_NATIVE_SYSLOG
 
     typedef typename implementation::udp_socket_based udp_socket_based_impl;
-    return new udp_socket_based_impl(facility);
+    switch (ip_version)
+    {
+    case keywords::v4:
+        return new udp_socket_based_impl(facility, asio::ip::udp::v4());
+    case keywords::v6:
+        return new udp_socket_based_impl(facility, asio::ip::udp::v6());
+    default:
+        boost::log::aux::throw_exception(std::invalid_argument("incorrect IP version specified"));
+    }
 }
 
 //! The method sets the local address which log records will be sent from.
@@ -486,7 +509,11 @@ void basic_syslog_backend< CharT >::set_local_address(std::string const& addr, u
     {
         char service_name[std::numeric_limits< int >::digits10 + 3];
         boost::log::aux::snprintf(service_name, sizeof(service_name), "%d", static_cast< int >(port));
-        asio::ip::udp::resolver::query q(addr, service_name);
+        asio::ip::udp::resolver::query q(
+            impl->m_Protocol,
+            addr,
+            service_name,
+            asio::ip::resolver_query_base::address_configured | asio::ip::resolver_query_base::passive);
         asio::ip::udp::endpoint local_address;
         
         {
@@ -497,7 +524,7 @@ void basic_syslog_backend< CharT >::set_local_address(std::string const& addr, u
             local_address = *impl->m_pService->m_HostNameResolver.resolve(q);
         }
 
-        impl->m_pSocket.reset(new syslog_udp_socket(impl->m_pService->m_IOService, local_address));
+        impl->m_pSocket.reset(new syslog_udp_socket(impl->m_pService->m_IOService, impl->m_Protocol, local_address));
     }
 }
 //! The method sets the local address which log records will be sent from.
@@ -507,7 +534,8 @@ void basic_syslog_backend< CharT >::set_local_address(boost::asio::ip::address c
     typedef typename implementation::udp_socket_based udp_socket_based_impl;
     if (udp_socket_based_impl* impl = dynamic_cast< udp_socket_based_impl* >(m_pImpl))
     {
-        impl->m_pSocket.reset(new syslog_udp_socket(impl->m_pService->m_IOService, asio::ip::udp::endpoint(addr, port)));
+        impl->m_pSocket.reset(new syslog_udp_socket(
+            impl->m_pService->m_IOService, impl->m_Protocol, asio::ip::udp::endpoint(addr, port)));
     }
 }
 
@@ -520,7 +548,7 @@ void basic_syslog_backend< CharT >::set_target_address(std::string const& addr, 
     {
         char service_name[std::numeric_limits< int >::digits10 + 3];
         boost::log::aux::snprintf(service_name, sizeof(service_name), "%d", static_cast< int >(port));
-        asio::ip::udp::resolver::query q(addr, service_name);
+        asio::ip::udp::resolver::query q(impl->m_Protocol, addr, service_name, asio::ip::resolver_query_base::address_configured);
         asio::ip::udp::endpoint remote_address;
 
         {

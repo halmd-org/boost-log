@@ -53,6 +53,7 @@ namespace keywords {
 
     BOOST_PARAMETER_KEYWORD(tag, facility)
     BOOST_PARAMETER_KEYWORD(tag, use_impl)
+    BOOST_PARAMETER_KEYWORD(tag, ip_version)
 
 #else
 
@@ -60,21 +61,30 @@ namespace keywords {
     implementation_defined facility;
     //! The keyword is used to pass the type of backend implementation to use
     implementation_defined use_impl;
+    //! The keyword is used to indicate which version of IP protocol to use
+    implementation_defined ip_version;
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
-} // namespace keywords
-
-namespace syslog {
-
     //! The enumeration defined the possible implementation types for the syslog backend
-    enum impl_types
+    enum syslog_impl_types
     {
 #ifdef BOOST_LOG_USE_NATIVE_SYSLOG
         native = 0,             //!< Use native syslog API
 #endif
         udp_socket_based = 1    //!< Use UDP sockets, according to RFC3164
     };
+
+    //! Supported IP protocol versions
+    enum ip_versions
+    {
+        v4,
+        v6
+    };
+
+} // namespace keywords
+
+namespace syslog {
 
     /*!
      * \brief Straightforward severity level mapping
@@ -316,8 +326,9 @@ private:
 public:
     /*!
      * Constructor. Creates a UDP socket-based backend with <tt>syslog::user</tt> facility code.
+     * IPv4 protocol will be used.
      */
-    explicit basic_syslog_backend() : m_pImpl(construct(syslog::user, syslog::udp_socket_based))
+    explicit basic_syslog_backend() : m_pImpl(construct(syslog::user, keywords::udp_socket_based, keywords::v4))
     {
     }
     /*!
@@ -330,10 +341,15 @@ public:
      *                                   is available, it is equivalent to \c udp_socket_based.
      *                   \li \c udp_socket_based - Use the UDP socket-based implementation, conforming to
      *                                             RFC3164 protocol specification. This is the default.
+     * \li \c ip_version - Specifies IP protocol version to use, in case if socket-based implementation
+     *                     is used. Can be either v4 (the default one) or v6.
      */
     template< typename ArgsT >
     explicit basic_syslog_backend(ArgsT const& args) :
-        m_pImpl(construct(args[keywords::facility | syslog::user], args[keywords::use_impl | syslog::udp_socket_based]))
+        m_pImpl(construct(
+            args[keywords::facility | syslog::user],
+            args[keywords::use_impl | keywords::udp_socket_based],
+            args[keywords::ip_version | keywords::v4]))
     {
     }
     /*!
@@ -392,7 +408,8 @@ private:
     BOOST_LOG_EXPORT void do_consume(values_view_type const& attributes, target_string_type const& formatted_message);
 
     //! The method creates the backend implementation
-    BOOST_LOG_EXPORT static implementation* construct(syslog::facility_t facility, syslog::impl_types use_impl);
+    BOOST_LOG_EXPORT static implementation* construct(
+        syslog::facility_t facility, keywords::syslog_impl_types use_impl, keywords::ip_versions ip_version);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 
