@@ -266,9 +266,13 @@ namespace syslog {
  * be specified by calling the \c set_target_address method. By default log
  * records will be sent to localhost:514. The local address can be specified
  * as well, by calling the \c set_local_address method. By default syslog
- * packets will be sent from localhost:514. It is safe to create several sink
- * backends with the same local addresses - the backends within the process
- * will share the same socket.
+ * packets will be sent from any local address available.
+ *
+ * It is safe to create several sink backends with the same local addresses -
+ * the backends within the process will share the same socket. The same applies
+ * to different processes that use the syslog backends to send records from
+ * the same socket. However, it is not guaranteed to work if some third party
+ * facility is using the socket.
  *
  * On systems with native syslog implementation it may be preferable to utilize
  * the POSIX syslog API instead of direct socket management in order to bypass
@@ -343,13 +347,15 @@ public:
     BOOST_LOG_EXPORT void set_severity_mapper(severity_mapper_type const& mapper);
 
     /*!
-     * The method sets the local address which log records will be sent from.
+     * The method sets the local host name which log records will be sent from. The host name
+     * is resolved to obtain the final IP address.
      *
      * \note Does not have effect if the backend was constructed to use native syslog API
      *
      * \param addr The local address
+     * \param port The local port number
      */
-    BOOST_LOG_EXPORT void set_local_address(std::string const& addr);
+    BOOST_LOG_EXPORT void set_local_address(std::string const& addr, unsigned short port = 514);
     /*!
      * The method sets the local address which log records will be sent from.
      *
@@ -361,13 +367,15 @@ public:
     BOOST_LOG_EXPORT void set_local_address(boost::asio::ip::address const& addr, unsigned short port = 514);
 
     /*!
-     * The method sets the address of the remote host where log records will be sent to.
+     * The method sets the remote host name where log records will be sent to. The host name
+     * is resolved to obtain the final IP address.
      *
      * \note Does not have effect if the backend was constructed to use native syslog API
      *
      * \param addr The remote host address
+     * \param port The port number on the remote host
      */
-    BOOST_LOG_EXPORT void set_target_address(std::string const& addr);
+    BOOST_LOG_EXPORT void set_target_address(std::string const& addr, unsigned short port = 514);
     /*!
      * The method sets the address of the remote host where log records will be sent to.
      *
@@ -381,7 +389,7 @@ public:
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method passes the formatted message to the Syslog API
-    void do_consume(values_view_type const& attributes, target_string_type const& formatted_message);
+    BOOST_LOG_EXPORT void do_consume(values_view_type const& attributes, target_string_type const& formatted_message);
 
     //! The method creates the backend implementation
     BOOST_LOG_EXPORT static implementation* construct(syslog::facility_t facility, syslog::impl_types use_impl);
