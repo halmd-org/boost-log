@@ -12,14 +12,7 @@
  *         for signalling application events.
  */
 
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0500 // Windows 2000
-#endif
-
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
+#include "windows_version.hpp"
 #include <windows.h>
 #include <psapi.h>
 #include "simple_event_log.h"

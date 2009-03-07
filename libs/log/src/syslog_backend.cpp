@@ -12,6 +12,7 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#include "windows_version.hpp"
 #include <boost/assert.hpp>
 #include <boost/weak_ptr.hpp>
 #include <boost/shared_ptr.hpp>

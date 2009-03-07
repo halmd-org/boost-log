@@ -11,14 +11,7 @@
  * \brief  A logging sink backend that uses debugger output
  */
 
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0400 // _WIN32_WINNT_LONGHORN
-#endif
-
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
+#include "windows_version.hpp"
 #include <windows.h>
 #include <string>
 #include <boost/log/sinks/debug_output_backend.hpp>

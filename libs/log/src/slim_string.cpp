@@ -12,10 +12,6 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#ifndef _SCL_SECURE_NO_WARNINGS
-#define _SCL_SECURE_NO_WARNINGS
-#endif
-
 #include <stdexcept>
 #include <algorithm>
 #include <functional>

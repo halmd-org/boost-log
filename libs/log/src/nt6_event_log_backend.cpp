@@ -14,14 +14,7 @@
 
 #if defined(BOOST_LOG_USE_WINNT6_API)
 
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600 // _WIN32_WINNT_LONGHORN
-#endif
-
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
+#include "windows_version.hpp"
 #include <windows.h>
 #include <evntprov.h>
 #include <winmeta.h>
