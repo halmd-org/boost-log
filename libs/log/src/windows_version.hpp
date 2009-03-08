@@ -12,8 +12,8 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#ifndef BOOST_LOG_LIGHT_KEY_HPP_INCLUDED_
-#define BOOST_LOG_LIGHT_KEY_HPP_INCLUDED_
+#ifndef BOOST_LOG_WINDOWS_VERSION_HPP_INCLUDED_
+#define BOOST_LOG_WINDOWS_VERSION_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
 
@@ -35,4 +35,4 @@
 
 #endif // BOOST_WINDOWS
 
-#endif // BOOST_LOG_LIGHT_KEY_HPP_INCLUDED_
+#endif // BOOST_LOG_WINDOWS_VERSION_HPP_INCLUDED_
