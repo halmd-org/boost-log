@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <boost/operators.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/unspecified_bool.hpp>
 
 namespace boost {
 
@@ -55,16 +56,6 @@ private:
 
     //! An inaccessible type to indicate an uninitialized state of the wrapper
     enum uninitialized {};
-
-#ifndef BOOST_NO_UNSPECIFIED_BOOL
-    struct dummy
-    {
-        int data1;
-        int data2;
-    };
-
-    typedef int (dummy::*unspecified_bool);
-#endif // BOOST_NO_UNSPECIFIED_BOOL
 
 #ifdef __GNUC__
     //! A simple scope guard for automatic memory free
@@ -109,17 +100,7 @@ public:
      * \return \c true if the type info wrapper was initialized with a particular type,
      *         \c false if the wrapper was default-constructed and not yet initialized
      */
-#ifdef BOOST_NO_UNSPECIFIED_BOOL
-    operator bool () const { return (*info != typeid(uninitialized)); }
-#else
-    operator unspecified_bool() const
-    {
-        if (*info != typeid(uninitialized))
-            return &dummy::data2;
-        else
-            return 0;
-    }
-#endif // BOOST_NO_UNSPECIFIED_BOOL
+    BOOST_LOG_OPERATOR_UNSPECIFIED_BOOL()
 
     /*!
      * Stored type info getter
