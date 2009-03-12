@@ -213,7 +213,7 @@ private:
         }
 
         //  Dereferencing
-        pointer operator-> () const { return addressof(m_pNode->m_Value); }
+        pointer operator-> () const { return boost::addressof(m_pNode->m_Value); }
         reference operator* () const { return m_pNode->m_Value; }
 
     private:

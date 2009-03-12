@@ -151,9 +151,13 @@ void basic_simple_nt6_event_log_backend< CharT >::set_severity_mapper(severity_m
 //! The method puts the formatted message to the event log
 template< typename CharT >
 void basic_simple_nt6_event_log_backend< CharT >::do_consume(
-    values_view_type const& values, target_string_type const& formatted_message)
+    record_type const& record, target_string_type const& formatted_message)
 {
-    EventWriteString(m_pImpl->m_ProviderHandle, m_pImpl->get_level(values), 0ULL /* keyword */, formatted_message.c_str());
+    EventWriteString(
+        m_pImpl->m_ProviderHandle,
+        m_pImpl->get_level(record.attribute_values()),
+        0ULL /* keyword */,
+        formatted_message.c_str());
 }
 
 #ifdef BOOST_LOG_USE_CHAR

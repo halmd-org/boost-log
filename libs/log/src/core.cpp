@@ -13,11 +13,10 @@
  */
 
 #include <memory>
-#include <stack>
+#include <deque>
 #include <vector>
 #include <algorithm>
-#include <boost/ref.hpp>
-#include <boost/none.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/log/core.hpp>
 #include <boost/log/sinks/sink.hpp>
@@ -33,6 +32,24 @@
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
+
+//! Private record data information, with core-specific structures
+template< typename CharT >
+struct basic_record< CharT >::private_data :
+    public public_data
+{
+    //! Sink interface type
+    typedef sinks::sink< CharT > sink_type;
+    //! Sinks container type
+    typedef std::deque< shared_ptr< sink_type > > sink_list;
+
+    //! A list of sinks that will accept the record
+    sink_list m_AcceptingSinks;
+
+    explicit private_data(values_view_type const& values) : public_data(values)
+    {
+    }
+};
 
 //! Logging system implementation
 template< typename CharT >
@@ -64,32 +81,6 @@ public:
     //! Thread-specific data
     struct thread_data
     {
-        //! A structure that holds a particular logging record data
-        struct pending_record
-        {
-            //! A list of sinks that will accept the record (mutable to emulate moving semantics)
-            mutable sink_list AcceptingSinks;
-            //! Attribute values view
-            values_view_type AttributeValues;
-
-            //! Constructor
-            pending_record(
-                attribute_set_type const& SourceAttrs,
-                attribute_set_type const& ThreadAttrs,
-                attribute_set_type const& GlobalAttrs
-            ) : AttributeValues(SourceAttrs, ThreadAttrs, GlobalAttrs)
-            {
-            }
-            //! Copy constructor (acts as move)
-            pending_record(pending_record const& that) : AttributeValues(that.AttributeValues)
-            {
-                AcceptingSinks.swap(that.AcceptingSinks);
-            }
-        };
-
-        //! A stack of log records being processed
-        std::stack< pending_record > PendingRecords;
-
         //! Thread-specific attribute set
         attribute_set_type ThreadAttributes;
     };
@@ -312,8 +303,10 @@ void basic_core< CharT >::reset_filter()
 
 //! The method opens a new record to be written and returns true if the record was opened
 template< typename CharT >
-bool basic_core< CharT >::open_record(attribute_set_type const& source_attributes)
+typename basic_core< CharT >::record_type basic_core< CharT >::open_record(attribute_set_type const& source_attributes)
 {
+    record_type rec;
+
     // Try a quick win first
     if (pImpl->Enabled) try
     {
@@ -325,34 +318,34 @@ bool basic_core< CharT >::open_record(attribute_set_type const& source_attribute
 
         if (pImpl->Enabled && !pImpl->Sinks.empty())
         {
-            // Construct a record
-            typedef typename implementation::thread_data::pending_record pending_record;
-            pending_record record(source_attributes, tsd->ThreadAttributes, pImpl->GlobalAttributes);
+            // Compose a view of attribute values (unfrozen, yet)
+            values_view_type attr_values(source_attributes, tsd->ThreadAttributes, pImpl->GlobalAttributes);
 
-            if (pImpl->Filter.empty() || pImpl->Filter(record.AttributeValues))
+            if (pImpl->Filter.empty() || pImpl->Filter(attr_values))
             {
                 // The global filter passed, trying the sinks
-                record.AcceptingSinks.reserve(pImpl->Sinks.size());
+                typedef typename record_type::private_data record_private_data;
+                record_private_data* pData = NULL;
                 typename implementation::sink_list::iterator it = pImpl->Sinks.begin(), end = pImpl->Sinks.end();
                 for (; it != end; ++it)
                 {
                     try
                     {
-                        if (it->get()->will_consume(record.AttributeValues))
-                            record.AcceptingSinks.push_back(*it);
+                        if (it->get()->will_consume(attr_values))
+                        {
+                            // If at least one sink accepts the record, it's time to create it
+                            if (!pData)
+                            {
+                                attr_values.freeze();
+                                rec.m_pData = pData = new record_private_data(attr_values);
+                            }
+                            pData->m_AcceptingSinks.push_back(*it);
+                        }
                     }
                     catch (...)
                     {
                         // Assume that the sink is incapable to receive messages now
                     }
-                }
-
-                if (!record.AcceptingSinks.empty())
-                {
-                    // Some sinks are willing to process the record
-                    record.AttributeValues.freeze();
-                    tsd->PendingRecords.push(record);
-                    return true;
                 }
             }
         }
@@ -363,53 +356,27 @@ bool basic_core< CharT >::open_record(attribute_set_type const& source_attribute
         // on the user's code, we simply mimic here that the record is not needed.
     }
 
-    return false;
+    return rec;
 }
 
-//! The method pushes the record and closes it
+//! The method pushes the record
 template< typename CharT >
-void basic_core< CharT >::push_record(string_type const& message_text)
+void basic_core< CharT >::push_record(record_type const& rec)
 {
     typename implementation::thread_data* tsd = pImpl->get_thread_data();
-    try
+
+    typedef typename record_type::private_data record_private_data;
+    record_private_data* pData = static_cast< record_private_data* >(rec.m_pData.get());
+
+    typename record_private_data::sink_list::iterator
+        it = pData->m_AcceptingSinks.begin(),
+        end = pData->m_AcceptingSinks.end();
+    for (; it != end; ++it) try
     {
-        if (tsd->PendingRecords.empty())
-        {
-            // If push_record was called with no prior call to open_record, we call it here
-            attribute_set_type empty_source_attributes;
-            if (!this->open_record(empty_source_attributes))
-                return;
-        }
-
-        typename implementation::thread_data::pending_record& record =
-            tsd->PendingRecords.top();
-
-        typename implementation::sink_list::iterator it = record.AcceptingSinks.begin(),
-            end = record.AcceptingSinks.end();
-        for (; it != end; ++it) try
-        {
-            (*it)->consume(record.AttributeValues, message_text);
-        }
-        catch (...)
-        {
-        }
+        (*it)->consume(rec);
     }
     catch (...)
     {
-    }
-
-    // Inevitably, close the record
-    tsd->PendingRecords.pop();
-}
-
-//! The method cancels the record
-template< typename CharT >
-void basic_core< CharT >::cancel_record()
-{
-    typename implementation::thread_data* tsd = pImpl->pThreadData.get();
-    if (tsd && !tsd->PendingRecords.empty())
-    {
-        tsd->PendingRecords.pop();
     }
 }
 

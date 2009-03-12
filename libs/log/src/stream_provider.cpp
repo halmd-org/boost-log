@@ -94,7 +94,7 @@ private:
 
 //! The method returns an allocated stream compound
 template< typename CharT >
-typename stream_provider< CharT >::stream_compound* stream_provider< CharT >::allocate_compound()
+typename stream_provider< CharT >::stream_compound* stream_provider< CharT >::allocate_compound(record_type const& rec)
 {
     stream_compound_pool< char_type >& pool = stream_compound_pool< char_type >::get();
     if (pool.m_Top)
@@ -102,10 +102,11 @@ typename stream_provider< CharT >::stream_compound* stream_provider< CharT >::al
         register stream_compound* p = pool.m_Top;
         pool.m_Top = p->next;
         p->next = NULL;
+        p->stream.record(rec);
         return p;
     }
     else
-        return new stream_compound();
+        return new stream_compound(rec);
 }
 
 //! The method releases a compound
@@ -115,8 +116,7 @@ void stream_provider< CharT >::release_compound(stream_compound* compound) /* th
     stream_compound_pool< char_type >& pool = stream_compound_pool< char_type >::get();
     compound->next = pool.m_Top;
     pool.m_Top = compound;
-    compound->message.clear();
-    compound->stream.clear();
+    compound->stream.record(record_type());
 }
 
 //! Explicitly instantiate stream_provider implementation

@@ -42,31 +42,8 @@ private:
     //! Lock type
     typedef lock_guard< mutex_type > scoped_lock;
 
-    //! Character type
-    typedef CharT char_type;
-    //! String type to be used as a message text holder
-    typedef std::basic_string< char_type > string_type;
-    //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > values_view_type;
-
-    //! Enqueued record aggregate
-    struct enqueued_record;
-    friend struct enqueued_record;
-    struct enqueued_record
-    {
-        //! Log record attributes
-        values_view_type Attributes;
-        //! Log message
-        string_type Message;
-
-        enqueued_record(values_view_type const& a, string_type const& m)
-            : Attributes(a), Message(m)
-        {
-        }
-    };
-
     //! Pending records queue
-    typedef std::list< enqueued_record > enqueued_records;
+    typedef std::list< record_type > enqueued_records;
 
     //! A simple functor to start internal thread and not involve Boost.Bind
     struct thread_starter;
@@ -129,20 +106,15 @@ public:
     }
 
     //! The method puts the record into the queue
-    void enqueue_message(values_view_type const& attributes, string_type const& message)
+    void enqueue_message(record_type& record)
     {
         // Make sure that no references to the thread-specific data is left in attribute values
-        for (typename values_view_type::const_iterator it = attributes.begin(), end = attributes.end(); it != end; ++it)
-        {
-            // Yep, a bit hackish. I'll need a better backdoor to do it gracefully.
-            it->second->detach_from_thread().swap(
-                const_cast< typename values_view_type::mapped_type& >(it->second));
-        }
+        record.detach_from_thread();
 
         // Put the record into the queue
         {
             scoped_lock _(m_Mutex);
-            m_EnqueuedRecords.push_back(enqueued_record(attributes, message));
+            m_EnqueuedRecords.push_back(record);
         }
 
         m_Condition.notify_one();
@@ -177,16 +149,16 @@ private:
             {
                 try
                 {
-                    enqueued_record const& rec = ExtractedRecords.front();
+                    record_type rec;
+                    rec.swap(ExtractedRecords.front());
+                    ExtractedRecords.pop_front();
                     shared_backend_lock::scoped_lock lock(m_SharedBackendMutex);
-                    m_ConsumeCallback(m_pBackend, rec.Attributes, rec.Message);
+                    m_ConsumeCallback(m_pBackend, rec);
                 }
                 catch (...)
                 {
                     // We do nothing here. There's nothing we can do, actually.
                 }
-
-                ExtractedRecords.pop_front();
             }
         }
     }
@@ -208,9 +180,9 @@ asynchronous_sink_impl< CharT >::~asynchronous_sink_impl()
 
 //! The method puts the record into the queue
 template< typename CharT >
-void asynchronous_sink_impl< CharT >::enqueue_message(values_view_type const& attributes, string_type const& message)
+void asynchronous_sink_impl< CharT >::enqueue_message(record_type record)
 {
-    pImpl->enqueue_message(attributes, message);
+    pImpl->enqueue_message(record);
 }
 
 //! Accessor to the shared lock for the locked_backend_ptr support

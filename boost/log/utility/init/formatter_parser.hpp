@@ -27,9 +27,8 @@
 #include <map>
 #include <string>
 #include <boost/function/function2.hpp>
-#include <boost/function/function3.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/record.hpp>
 #include <boost/log/formatters/attr.hpp>
 
 #ifdef _MSC_VER
@@ -58,10 +57,10 @@ struct formatter_types
     typedef std::basic_string< char_type > string_type;
     //! Output stream type
     typedef std::basic_ostream< char_type > ostream_type;
-    //! Map of attribute values
-    typedef basic_attribute_values_view< char_type > values_view_type;
+    //! Log record type
+    typedef basic_record< char_type > record_type;
     //! The formatter function object
-    typedef function3< void, ostream_type&, values_view_type const&, string_type const& > formatter_type;
+    typedef function2< void, ostream_type&, record_type const& > formatter_type;
 
     /*!
      * Type of the map of formatter factory arguments [argument name -> argument value].
@@ -120,7 +119,7 @@ BOOST_LOG_EXPORT void register_formatter_factory(
     typename formatter_types< CharT >::formatter_factory const& factory
 #else
     function2<
-        function3< void, std::basic_ostream< CharT >&, basic_attribute_values_view< CharT > const&, std::basic_string< CharT > const& >,
+        function2< void, std::basic_ostream< CharT >&, basic_record< CharT > const& >,
         std::basic_string< CharT > const&,
         std::map< std::basic_string< CharT >, std::basic_string< CharT > > const&
     > const& factory
@@ -195,7 +194,7 @@ BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename formatter_types< CharT >::formatter_type
 #else
-function3< void, std::basic_ostream< CharT >&, basic_attribute_values_view< CharT > const&, std::basic_string< CharT > const& >
+function2< void, std::basic_ostream< CharT >&, basic_record< CharT > const& >
 #endif
 parse_formatter(const CharT* begin, const CharT* end);
 

@@ -312,6 +312,8 @@ public:
     typedef typename base_type::target_string_type target_string_type;
     //! Attribute values view type
     typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
 
     //! Syslog severity level mapper type
     typedef boost::function1<
@@ -405,7 +407,7 @@ public:
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method passes the formatted message to the Syslog API
-    BOOST_LOG_EXPORT void do_consume(values_view_type const& attributes, target_string_type const& formatted_message);
+    BOOST_LOG_EXPORT void do_consume(record_type const& record, target_string_type const& formatted_message);
 
     //! The method creates the backend implementation
     BOOST_LOG_EXPORT static implementation* construct(

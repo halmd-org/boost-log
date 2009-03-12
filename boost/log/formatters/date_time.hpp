@@ -641,8 +641,8 @@ public:
     typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
-    //! Attribute values set type
-    typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
 
 private:
     //! Actual formatter type
@@ -681,13 +681,12 @@ public:
      * \a attrs and puts the result into the \a strm stream.
      *
      * \param strm A reference to the stream, where the final text of the logging record is composed
-     * \param attrs A set of attribute values that are associated with the logging record
-     * \param msg The logging record message
+     * \param record A logging record
      */
-    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
+    void operator() (ostream_type& strm, record_type const& record) const
     {
         boost::log::aux::cleanup_guard< formatter_type > _(m_Formatter);
-        m_Extractor(attrs, m_Formatter);
+        m_Extractor(record.attribute_values(), m_Formatter);
         strm.write(m_Formatter.get().data(), static_cast< std::streamsize >(m_Formatter.get().size()));
     }
 };

@@ -28,6 +28,8 @@
 #include <boost/noncopyable.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/record.hpp>
+#include <boost/log/detail/unspecified_bool.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 
 #ifdef _MSC_VER
@@ -44,12 +46,13 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-template< typename CharT >
+template< typename >
 class sink;
 
 } // namespace sinks
 
 #endif // BOOST_LOG_DOXYGEN_PASS
+
 
 /*!
  * \brief Logging library core class
@@ -65,12 +68,14 @@ class BOOST_LOG_EXPORT basic_core : noncopyable
 public:
     //! Character type
     typedef CharT char_type;
+    //! Log record type
+    typedef basic_record< char_type > record_type;
     //! String type to be used as a message text holder
-    typedef std::basic_string< char_type > string_type;
+    typedef typename record_type::string_type string_type;
     //! Attribute set type
     typedef basic_attribute_set< char_type > attribute_set_type;
     //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > values_view_type;
+    typedef typename record_type::values_view_type values_view_type;
     //! Sink interface type
     typedef sinks::sink< char_type > sink_type;
     //! Filter function type
@@ -173,7 +178,7 @@ public:
     /*!
      * The method replaces the complete set of currently registered global attributes with the provided set.
      *
-     * \note The method invalidates all iterators that may have been returned
+     * \note The method invalidates all iterators and references that may have been returned
      *       from the \c add_global_attribute method.
      *
      * \param attrs The set of attributes to be installed.
@@ -212,7 +217,7 @@ public:
     /*!
      * The method replaces the complete set of currently registered thread-specific attributes with the provided set.
      *
-     * \note The method invalidates all iterators that may have been returned
+     * \note The method invalidates all iterators and references that may have been returned
      *       from the \c add_thread_attribute method.
      *
      * \param attrs The set of attributes to be installed.
@@ -221,35 +226,29 @@ public:
 
     /*!
      * The method attempts to open a new record to be written. While attempting to open a log record all filtering is applied.
-     * A successfully opened record must be either cancelled by calling \c cancel_record or pushed further to sinks by calling
-     * the \c push_record method.
+     * A successfully opened record may be pushed further to sinks by calling the \c push_record method or simply destroyed by
+     * destroying the returned handle.
      *
      * More than one open records are allowed, such records exist independently. All attribute values are acquired during opening
-     * the record and do not interact between records. However, only the last-open record remains active all the time, and
-     * consequent record cancellation or pushing will dispatch only the last-open record, making the previously open one active,
-     * and so on.
+     * the record and do not interact between records.
+     *
+     * The returned record handles may be copied, however, they must not be passed between different threads.
      *
      * \param source_attributes The set of source-specific attributes to be attached to the record to be opened.
-     * \return \c true if the record is opened, \c false if not (e.g. because it didn't pass filtering).
+     * \return A valid log record if the record is opened, an invalid record object if not (e.g. because it didn't pass filtering).
      *
      * \b Throws: Nothing.
      */
-    bool open_record(attribute_set_type const& source_attributes);
+    record_type open_record(attribute_set_type const& source_attributes);
     /*!
-     * The method pushes the record to sinks and closes it. Results are undefined if called before opening a record.
+     * The method pushes the record to sinks.
      *
-     * \param message_text The formatted log message text.
-     *
-     * \b Throws: Nothing.
-     */
-    void push_record(string_type const& message_text);
-    /*!
-     * The method cancels the currently opened record. The record is not passed to any sinks. Results are undefined if called
-     * before opening a record.
+     * \pre <tt>!!rec == true</tt>
+     * \param rec A previously successfully opened log record.
      *
      * \b Throws: Nothing.
      */
-    void cancel_record();
+    void push_record(record_type const& rec);
 };
 
 #ifdef BOOST_LOG_USE_CHAR

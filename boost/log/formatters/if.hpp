@@ -45,8 +45,8 @@ public:
     typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
-    //! Attribute values set type
-    typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
 
 private:    
     FilterT m_Filter;
@@ -68,15 +68,14 @@ public:
      * passes the received arguments to the aggregated then-formatter. Otherwise calls else-formatter.
      * 
      * \param strm A reference to the stream, where the final text of the logging record is composed
-     * \param values A set of attribute values that are associated with the logging record
-     * \param message The logging record message
+     * \param record A logging record
      */
-    void operator() (ostream_type& strm, values_view_type const& values, string_type const& message) const
+    void operator() (ostream_type& strm, record_type const& record) const
     {
         if (m_Filter(values))
-            m_Then(strm, values, message);
+            m_Then(strm, record);
         else
-            m_Else(strm, values, message);
+            m_Else(strm, record);
     }
 };
 
@@ -94,8 +93,8 @@ public:
     typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
-    //! Attribute values set type
-    typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
@@ -147,13 +146,12 @@ public:
      * passes the received arguments to the aggregated formatter. Otherwise does nothing.
      * 
      * \param strm A reference to the stream, where the final text of the logging record is composed
-     * \param values A set of attribute values that are associated with the logging record
-     * \param message The logging record message
+     * \param values A logging record
      */
-    void operator() (ostream_type& strm, values_view_type const& values, string_type const& message) const
+    void operator() (ostream_type& strm, record_type const& record) const
     {
         if (else_.m_Filter(values))
-            else_.m_Formatter(strm, values, message);
+            else_.m_Formatter(strm, record);
     }
 };
 

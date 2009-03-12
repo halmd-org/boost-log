@@ -52,14 +52,12 @@ T get_root_type(T const&);
 #endif
 
 
-#if defined(BOOST_LOG_TYPEOF)
-
-#if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 4)) && defined(__GXX_EXPERIMENTAL_CXX0X__)
+#if BOOST_VERSION / 100 >= 1039 && !defined(BOOST_NO_AUTO_DECLARATIONS)
 #define BOOST_LOG_AUTO(var, expr) auto var = (expr)
-#else
-#define BOOST_LOG_AUTO(var, expr) BOOST_LOG_TYPEOF((expr)) var = (expr)
 #endif
 
+#if !defined(BOOST_LOG_AUTO) && defined(BOOST_LOG_TYPEOF)
+#define BOOST_LOG_AUTO(var, expr) BOOST_LOG_TYPEOF((expr)) var = (expr)
 #endif // defined(BOOST_LOG_TYPEOF)
 
 #endif // BOOST_LOG_DETAIL_NATIVE_TYPEOF_HPP_INCLUDED_

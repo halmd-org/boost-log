@@ -36,6 +36,7 @@
 #include <boost/utility/in_place_factory.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
+#include <boost/log/record.hpp>
 #include <boost/log/sinks/threading_models.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -68,6 +69,8 @@ public:
     typedef CharT char_type;
     //! String type to be used as a message text holder
     typedef std::basic_string< char_type > string_type;
+    //! Log record type
+    typedef basic_record< char_type > record_type;
     //! Attribute values view type
     typedef basic_attribute_values_view< char_type > values_view_type;
     //! Filter function type
@@ -132,10 +135,9 @@ public:
     /*!
      * The method puts logging message to the sink
      *
-     * \param attributes A set of attribute values of a logging record
-     * \param message Logging record message text
+     * \param record Logging record to consume
      */
-    virtual void consume(values_view_type const& attributes, string_type const& message) = 0;
+    virtual void consume(record_type const& record) = 0;
 };
 
 /*!
@@ -157,7 +159,7 @@ public:
     BOOST_MPL_ASSERT((is_model_supported< typename sink_backend_type::threading_model, backend_synchronization_tag >));
     //! \endcond
 
-    typedef typename base_type::values_view_type values_view_type;
+    typedef typename base_type::record_type record_type;
     typedef typename base_type::string_type string_type;
 
     //! A type of pointer to the backend
@@ -191,12 +193,11 @@ public:
     /*!
      * The method puts logging message to the sink
      *
-     * \param attributes A set of attribute values of a logging record
-     * \param message Logging record message text
+     * \param record Logging record to consume
      */
-    void consume(values_view_type const& attributes, string_type const& message)
+    void consume(record_type const& record)
     {
-        m_pBackend->consume(attributes, message);
+        m_pBackend->consume(record);
     }
 };
 
@@ -296,7 +297,7 @@ public:
     BOOST_MPL_ASSERT((is_model_supported< typename sink_backend_type::threading_model, frontend_synchronization_tag >));
     //! \endcond
 
-    typedef typename base_type::values_view_type values_view_type;
+    typedef typename base_type::record_type record_type;
     typedef typename base_type::string_type string_type;
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -350,13 +351,12 @@ public:
     /*!
      * The method puts logging message to the sink
      *
-     * \param attributes A set of attribute values of a logging record
-     * \param message Logging record message text
+     * \param record Logging record to consume
      */
-    void consume(values_view_type const& attributes, string_type const& message)
+    void consume(record_type const& record)
     {
         scoped_lock _(m_Mutex);
-        m_pBackend->consume(attributes, message);
+        m_pBackend->consume(record);
     }
 };
 
@@ -371,11 +371,11 @@ namespace aux {
         typedef CharT char_type;
         //! String type to be used as a message text holder
         typedef std::basic_string< char_type > string_type;
-        //! Attribute values view type
-        typedef basic_attribute_values_view< char_type > values_view_type;
+        //! Log record type
+        typedef basic_record< char_type > record_type;
 
         //! Callback type to call \c consume in the backend
-        typedef void (*consume_callback_t)(void*, values_view_type const&, string_type const&);
+        typedef void (*consume_callback_t)(void*, record_type const&);
 
     private:
         class implementation;
@@ -386,7 +386,7 @@ namespace aux {
         ~asynchronous_sink_impl();
 
         //! The method puts the record into the queue
-        void enqueue_message(values_view_type const& attributes, string_type const& message);
+        void enqueue_message(record_type record);
 
         //! Accessor to the shared lock for the locked_backend_ptr support
         optional< shared_backend_lock >& get_shared_backend_lock() const;
@@ -421,7 +421,7 @@ public:
     //! \endcond
 
     typedef typename base_type::char_type char_type;
-    typedef typename base_type::values_view_type values_view_type;
+    typedef typename base_type::record_type record_type;
     typedef typename base_type::string_type string_type;
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -475,21 +475,20 @@ public:
     /*!
      * The method puts logging message to the sink
      *
-     * \param attributes A set of attribute values of a logging record
-     * \param message Logging record message text
+     * \param record Logging record to consume
      */
-    void consume(values_view_type const& attributes, string_type const& message)
+    void consume(record_type const& record)
     {
-        m_Impl.enqueue_message(attributes, message);
+        m_Impl.enqueue_message(record);
     }
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! Trampoline function to invoke the backend
-    static void consume_trampoline(void* pBackend, values_view_type const& attributes, string_type const& message)
+    static void consume_trampoline(void* pBackend, record_type const& record)
     {
         sink_backend_type* p = reinterpret_cast< sink_backend_type* >(pBackend);
-        p->consume(attributes, message);
+        p->consume(record);
     }
 #endif // BOOST_LOG_DOXYGEN_PASS
 };

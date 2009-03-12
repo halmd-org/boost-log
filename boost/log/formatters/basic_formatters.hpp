@@ -27,6 +27,7 @@
 #include <string>
 #include <boost/type_traits/is_base_and_derived.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/record.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 
 namespace boost {
@@ -66,6 +67,8 @@ struct basic_formatter : public formatter_base
     typedef std::basic_ostream< char_type > ostream_type;
     //! Attribute values set type
     typedef basic_attribute_values_view< char_type > values_view_type;
+    //! Log record type
+    typedef basic_record< char_type > record_type;
 
     //! Functor result type
     typedef void result_type;

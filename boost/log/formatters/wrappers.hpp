@@ -50,12 +50,10 @@ private:
     typedef basic_formatter< CharT, fmt_wrapper< CharT, T > > base_type;
 
 public:
-    //! String type
-    typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
-    //! Attribute values set type
-    typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
 
 private:
     //! Object to be output
@@ -73,10 +71,8 @@ public:
      * Formatting operator. Puts the aggregated object into the \a strm stream.
      * 
      * \param strm A reference to the stream, where the final text of the logging record is composed
-     * \param attrs A set of attribute values that are associated with the logging record
-     * \param msg The logging record message
      */
-    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
+    void operator() (ostream_type& strm, record_type const&) const
     {
         strm << m_T;
     }
@@ -97,12 +93,10 @@ private:
     typedef basic_formatter< CharT, fmt_wrapper< CharT, reference_wrapper< T > > > base_type;
 
 public:
-    //! String type
-    typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
-    //! Attribute values set type
-    typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
 
 private:
     //! Reference to object to be output
@@ -120,10 +114,8 @@ public:
      * Formatting operator. Puts the referenced object into the \a strm stream.
      * 
      * \param strm A reference to the stream, where the final text of the logging record is composed
-     * \param attrs A set of attribute values that are associated with the logging record
-     * \param msg The logging record message
      */
-    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
+    void operator() (ostream_type& strm, record_type const&) const
     {
         strm << m_T;
     }

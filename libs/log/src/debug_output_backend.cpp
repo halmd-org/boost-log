@@ -64,7 +64,7 @@ basic_debug_output_backend< CharT >::get_debugger_presence_filter() const
 
 //! The method puts the formatted message to the event log
 template< typename CharT >
-void basic_debug_output_backend< CharT >::do_consume(values_view_type const& values, target_string_type const& formatted_message)
+void basic_debug_output_backend< CharT >::do_consume(record_type const& record, target_string_type const& formatted_message)
 {
     output_debug_string(formatted_message.c_str());
 }

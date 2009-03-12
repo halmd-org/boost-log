@@ -284,12 +284,12 @@ void basic_simple_event_log_backend< CharT >::set_event_type_mapper(event_type_m
 
 //! The method puts the formatted message to the event log
 template< typename CharT >
-void basic_simple_event_log_backend< CharT >::do_consume(values_view_type const& values, target_string_type const& formatted_message)
+void basic_simple_event_log_backend< CharT >::do_consume(record_type const& record, target_string_type const& formatted_message)
 {
     const char_type* message = formatted_message.c_str();
     WORD event_type = EVENTLOG_INFORMATION_TYPE;
     if (!m_pImpl->m_LevelMapper.empty())
-        event_type = m_pImpl->m_LevelMapper(values).value;
+        event_type = m_pImpl->m_LevelMapper(record.attribute_values()).value;
 
     DWORD event_id;
     switch (event_type)
@@ -557,14 +557,15 @@ typename basic_event_log_backend< CharT >::implementation* basic_event_log_backe
 
 //! The method puts the formatted message to the event log
 template< typename CharT >
-void basic_event_log_backend< CharT >::consume(values_view_type const& values, string_type const& message)
+void basic_event_log_backend< CharT >::consume(record_type const& record)
 {
     if (!m_pImpl->m_EventComposer.empty())
     {
         log::aux::cleanup_guard< insertion_list > _(m_pImpl->m_Insertions);
+        values_view_type const& values = record.attribute_values();
 
         // Get event ID and construct insertions
-        DWORD event_id = m_pImpl->m_EventComposer(values, message, m_pImpl->m_Insertions).value;
+        DWORD event_id = m_pImpl->m_EventComposer(values, record.message(), m_pImpl->m_Insertions).value;
         WORD string_count = static_cast< WORD >(m_pImpl->m_Insertions.size());
         scoped_array< const char_type* > strings(new const char_type*[string_count]);
         for (WORD i = 0; i < string_count; ++i)

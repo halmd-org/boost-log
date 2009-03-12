@@ -30,11 +30,12 @@
 #include <boost/mpl/or.hpp>
 #include <boost/mpl/assert.hpp>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/function/function3.hpp>
+#include <boost/function/function2.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/sinks/threading_models.hpp>
+#include <boost/log/record.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 
@@ -59,6 +60,8 @@ struct basic_sink_backend : noncopyable
     typedef std::basic_string< char_type > string_type;
     //! Attribute values view type
     typedef basic_attribute_values_view< char_type > values_view_type;
+    //! Log record type
+    typedef basic_record< char_type > record_type;
 
     //! Threading model tag
     typedef ThreadingModelTagT threading_model;
@@ -93,6 +96,7 @@ public:
     typedef typename base_type::string_type string_type;
     typedef typename base_type::values_view_type values_view_type;
     typedef typename base_type::threading_model threading_model;
+    typedef typename base_type::record_type record_type;
 
     //! Output stream type
     typedef std::basic_ostream< char_type > stream_type;
@@ -124,11 +128,10 @@ private:
     stream_type m_FormattingStream;
 
     //! Formatter functor
-    boost::function3<
+    boost::function2<
         void,
         stream_type&,
-        values_view_type const&,
-        string_type const&
+        record_type const&
     > m_Formatter;
 
 public:
@@ -189,34 +192,33 @@ public:
      * \note Do not override in derived classes. Use \c do_consume method to process
      *       the formatted message in a sink-specific manner.
      *
-     * \param attributes A set of attribute values attached to the log record
-     * \param message Log record message text
+     * \param record Log record to consume
      */
-    void consume(values_view_type const& attributes, string_type const& message)
+    void consume(record_type const& record)
     {
         boost::log::aux::cleanup_guard< stream_type > cleanup1(m_FormattingStream);
         boost::log::aux::cleanup_guard< target_string_type > cleanup2(m_FormattedRecord);
 
         // Perform the formatting
         if (!m_Formatter.empty())
-            m_Formatter(m_FormattingStream, attributes, message);
+            m_Formatter(m_FormattingStream, record);
         else
-            m_FormattingStream << message;
+            m_FormattingStream << record.message();
 
         m_FormattingStream.flush();
 
         // Pass the formatted string to the backend implementation
-        do_consume(attributes, m_FormattedRecord);
+        do_consume(record, m_FormattedRecord);
     }
 
 protected:
     /*!
      * A backend-defined implementation of the formatted message processing
      *
-     * \param attributes A set of attribute values attached to the log record
+     * \param record The original log record
      * \param formatted_message Formatted log record
      */
-    virtual void do_consume(values_view_type const& attributes, target_string_type const& formatted_message) = 0;
+    virtual void do_consume(record_type const& record, target_string_type const& formatted_message) = 0;
 };
 
 } // namespace sinks

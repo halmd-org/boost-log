@@ -25,7 +25,7 @@
 #include <vector>
 #include <ostream>
 #include <boost/format.hpp>
-#include <boost/function/function3.hpp>
+#include <boost/function/function2.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/chain.hpp>
@@ -65,12 +65,12 @@ public:
     typedef typename base_type::ostream_type ostream_type;
     //! Boost.Format type
     typedef basic_format< char_type > format_type;
-    //! Attribute values set type
-    typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
 
 private:
     //! Formatter function object type
-    typedef function3< void, ostream_type&, values_view_type const&, string_type const& > formatter_type;
+    typedef function2< void, ostream_type&, record_type const& > formatter_type;
     //! Sequence of formatters
     typedef std::vector< formatter_type > formatters;
 
@@ -114,10 +114,9 @@ public:
      * and composes them according to the format string passed on construction.
      * 
      * \param strm A reference to the stream, where the final text of the logging record is composed
-     * \param attrs A set of attribute values that are associated with the logging record
-     * \param msg The logging record message
+     * \param record A logging record
      */
-    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
+    void operator() (ostream_type& strm, record_type const& record) const
     {
         boost::log::aux::cleanup_guard< format_type > cleanup1(m_Format);
         boost::log::aux::cleanup_guard< ostream_type > cleanup2(m_Stream);
@@ -125,7 +124,7 @@ public:
         for (typename formatters::const_iterator it = m_Formatters.begin(), end = m_Formatters.end(); it != end; ++it)
         {
             boost::log::aux::cleanup_guard< string_type > cleanup3(m_Buffer);
-            (*it)(m_Stream, attrs, msg);
+            (*it)(m_Stream, record);
             m_Stream.flush();
             m_Format % m_Buffer;
         }

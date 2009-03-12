@@ -168,7 +168,7 @@ public:
         pointer operator-> () const
         {
             freeze_element();
-            return addressof(m_pNode->m_Value);
+            return boost::addressof(m_pNode->m_Value);
         }
         reference operator* () const
         {

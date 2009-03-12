@@ -65,6 +65,8 @@ public:
     typedef typename base_type::target_string_type target_string_type;
     //! Attribute values view type
     typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
 
 public:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -97,7 +99,7 @@ public:
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method puts the formatted message to debugger
-    void do_consume(values_view_type const& values, target_string_type const& formatted_message);
+    void do_consume(record_type const& rec, target_string_type const& formatted_message);
 #endif
 };
 

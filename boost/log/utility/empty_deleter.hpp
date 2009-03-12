@@ -12,11 +12,11 @@
  * \author Andrey Semashev
  * \date   22.04.2007
  * 
- * This header contains an empty_deleter implementation. This is an empty
+ * This header contains an \c empty_deleter implementation. This is an empty
  * function object that receives a pointer and does nothing with it.
  * Such empty deletion strategy may be convenient, for example, when
- * constructing shared_ptrs that point to some object that should not be
- * deleted (i.e. a variable on the stack or some global singleton, like std::cout).
+ * constructing <tt>shared_ptr</tt>s that point to some object that should not be
+ * deleted (i.e. a variable on the stack or some global singleton, like <tt>std::cout</tt>).
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
@@ -32,7 +32,7 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-//! A function object that does nothing and can be used as an empty deleter for shared_ptr
+//! A function object that does nothing and can be used as an empty deleter for \c shared_ptr
 struct empty_deleter
 {
     //! Function object result type

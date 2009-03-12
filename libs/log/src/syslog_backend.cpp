@@ -466,10 +466,10 @@ void basic_syslog_backend< CharT >::set_severity_mapper(severity_mapper_type con
 //! The method writes the message to the sink
 template< typename CharT >
 void basic_syslog_backend< CharT >::do_consume(
-    values_view_type const& attributes, target_string_type const& formatted_message)
+    record_type const& record, target_string_type const& formatted_message)
 {
     m_pImpl->send(
-        m_pImpl->m_LevelMapper.empty() ? syslog::info : m_pImpl->m_LevelMapper(attributes),
+        m_pImpl->m_LevelMapper.empty() ? syslog::info : m_pImpl->m_LevelMapper(record.attribute_values()),
         formatted_message);
 }
 

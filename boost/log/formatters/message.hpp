@@ -45,24 +45,21 @@ private:
     typedef basic_formatter< CharT, fmt_message< CharT > > base_type;
 
 public:
-    //! String type
-    typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
-    //! Attribute values set type
-    typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
 
 public:
     /*!
      * Formatting operator. Puts the log record message \a msg to the \a strm stream.
      * 
      * \param strm A reference to the stream, where the final text of the logging record is composed
-     * \param attrs A set of attribute values that are associated with the logging record
-     * \param msg The logging record message
+     * \param attrs A logging record
      */
-    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
+    void operator() (ostream_type& strm, record_type const& record) const
     {
-        strm << msg;
+        strm << record.message();
     }
 };
 

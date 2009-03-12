@@ -216,6 +216,8 @@ public:
     typedef typename base_type::attribute_set_type attribute_set_type;
     //! Threading model being used
     typedef typename base_type::threading_model threading_model;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
 
     //! Severity level type
     typedef LevelT severity_level;
@@ -272,7 +274,7 @@ public:
     /*!
      * The method opens a new logging record with the default severity
      */
-    bool open_record()
+    record_type open_record()
     {
         open_record_lock _(this->threading_base());
         return open_record_unlocked();
@@ -285,7 +287,7 @@ public:
      *             \li \c severity - log record severity level
      */
     template< typename ArgsT >
-    bool open_record(ArgsT const& args)
+    record_type open_record(ArgsT const& args)
     {
         open_record_lock _(this->threading_base());
         return open_record_unlocked(args);
@@ -310,7 +312,7 @@ protected:
     /*!
      * Unlocked \c open_record
      */
-    bool open_record_unlocked()
+    record_type open_record_unlocked()
     {
         m_pSeverity->set_value(m_DefaultSeverity);
         return base_type::open_record_unlocked();
@@ -319,7 +321,7 @@ protected:
      * Unlocked \c open_record
      */
     template< typename ArgsT >
-    bool open_record_unlocked(ArgsT const& args)
+    record_type open_record_unlocked(ArgsT const& args)
     {
         m_pSeverity->set_value(args[keywords::severity | m_DefaultSeverity]);
         return base_type::open_record_unlocked();

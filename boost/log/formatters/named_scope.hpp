@@ -87,8 +87,8 @@ public:
     typedef typename base_type::string_type string_type;
     //! Stream type
     typedef typename base_type::ostream_type ostream_type;
-    //! Attribute values set type
-    typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
 
     //! Scope stack container type
     typedef typename attributes::basic_named_scope< char_type >::scope_stack scope_stack;
@@ -153,14 +153,13 @@ public:
      * \a attrs and puts its contents into the \a strm stream.
      * 
      * \param strm A reference to the stream, where the final text of the logging record is composed
-     * \param attrs A set of attribute values that are associated with the logging record
-     * \param msg The logging record message
+     * \param attrs A logging record
      */
-    void operator() (ostream_type& strm, values_view_type const& attrs, string_type const& msg) const
+    void operator() (ostream_type& strm, record_type const& record) const
     {
         // Extract the value and pass on to the implementation
         binder receiver(this, strm);
-        m_Extractor(attrs, receiver);
+        m_Extractor(record.attribute_values(), receiver);
     }
 
 private:

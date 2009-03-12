@@ -802,6 +802,8 @@ public:
     typedef typename base_type::target_string_type target_string_type;
     //! Attribute values view type
     typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
 
     //! Mapper type for the event type
     typedef function1<
@@ -864,7 +866,7 @@ public:
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method puts the formatted message to the event log
-    void do_consume(values_view_type const& values, target_string_type const& formatted_message);
+    void do_consume(record_type const& record, target_string_type const& formatted_message);
 
     //! Constructs backend implementation
     static implementation* construct(string_type const& log_name, string_type const& source_name, bool force);
@@ -904,6 +906,8 @@ public:
     typedef typename base_type::string_type string_type;
     //! Attribute values view type
     typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
     //! Type of the composed insertions list
     typedef std::vector< string_type > insertion_list;
 
@@ -983,10 +987,9 @@ public:
     /*!
      * The method creates an event in the event log
      *
-     * \param values A set of attribute values that are used to create the event
-     * \param message An event message
+     * \param record Log record to consume
      */
-    void consume(values_view_type const& values, string_type const& message);
+    void consume(record_type const& record);
 
     /*!
      * The method installs the function object that maps application severity levels to WinAPI event types

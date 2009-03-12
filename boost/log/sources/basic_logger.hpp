@@ -43,11 +43,14 @@
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/preprocessor/seq/for_each_i.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/multiple_lock.hpp>
+#include <boost/log/detail/native_typeof.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/sources/threading_models.hpp>
 #include <boost/log/core.hpp>
+#include <boost/log/record.hpp>
+#include <boost/log/sources/record_ostream.hpp>
+#include <boost/log/sources/threading_models.hpp>
+#include <boost/log/utility/unique_identifier_name.hpp>
 
 #ifndef BOOST_LOG_MAX_CTOR_FORWARD_ARGS
 //! The maximum number of arguments that can be forwarded by the logger constructor to its bases
@@ -74,35 +77,23 @@ namespace aux {
     {
         //! Character type
         typedef CharT char_type;
-        //! String type to be used as a message text holder
-        typedef std::basic_string< char_type > string_type;
-        //! Stream device type
-        typedef boost::log::aux::basic_ostringstreambuf< char_type > ostream_buf;
-        //! Output stream type
-        typedef std::basic_ostream< char_type > ostream_type;
+        //! Record type
+        typedef basic_record< char_type > record_type;
 
         //! Formatting stream compound
         struct stream_compound
         {
             stream_compound* next;
 
-            //! The string to be written to
-            string_type message;
-            //! The streambuf
-            ostream_buf stream_buf;
-            //! Output stream
-            ostream_type stream;
+            //! Log record stream adapter
+            basic_record_ostream< char_type > stream;
 
-            stream_compound() :
-                next(NULL),
-                stream_buf(message),
-                stream(&stream_buf)
-            {
-            }
+            //! Initializing constructor
+            explicit stream_compound(record_type const& rec) : next(NULL), stream(rec) {}
         };
 
         //! The method returns an allocated stream compound
-        BOOST_LOG_EXPORT static stream_compound* allocate_compound();
+        BOOST_LOG_EXPORT static stream_compound* allocate_compound(record_type const& rec);
         //! The method releases a compound
         BOOST_LOG_EXPORT static void release_compound(stream_compound* compound) /* throw() */;
 
@@ -132,10 +123,24 @@ private:
     typedef LoggerT logger_type;
     //! Character type
     typedef typename logger_type::char_type char_type;
+    //! Log record type
+    typedef typename logger_type::record_type record_type;
     //! Stream compound provider
     typedef aux::stream_provider< char_type > stream_provider_type;
     //! Stream compound type
     typedef typename stream_provider_type::stream_compound stream_compound;
+
+    //! Stream compound release guard
+    class auto_release;
+    friend class auto_release;
+    class auto_release
+    {
+        stream_compound* m_pCompound;
+
+    public:
+        explicit auto_release(stream_compound* p) : m_pCompound(p) {}
+        ~auto_release() { stream_provider_type::release_compound(m_pCompound); }
+    };
 
 protected:
     //! A reference to the logger
@@ -145,9 +150,9 @@ protected:
 
 public:
     //! Constructor
-    explicit record_pump(logger_type* p) :
+    explicit record_pump(logger_type* p, record_type const& rec) :
         m_pLogger(p),
-        m_pStreamCompound(stream_provider_type::allocate_compound())
+        m_pStreamCompound(stream_provider_type::allocate_compound(rec))
     {
     }
     //! Copy constructor (implemented as move)
@@ -163,17 +168,9 @@ public:
     {
         if (m_pLogger)
         {
-            try
-            {
-                m_pStreamCompound->stream.flush();
-                m_pLogger->push_record(m_pStreamCompound->message);
-            }
-            catch (std::exception&)
-            {
-                m_pLogger->cancel_record();
-            }
-
-            stream_provider_type::release_compound(m_pStreamCompound); // doesn't throw
+            auto_release _(m_pStreamCompound); // destructor doesn't throw
+            if (!std::uncaught_exception())
+                m_pLogger->push_record(m_pStreamCompound->stream.record());
         }
     }
 
@@ -232,6 +229,8 @@ public:
     typedef basic_attribute_set< char_type > attribute_set_type;
     //! Logging system core type
     typedef basic_core< char_type > core_type;
+    //! Logging record type
+    typedef basic_record< char_type > record_type;
     //! Threading model type
     typedef ThreadingModelT threading_model;
 
@@ -286,12 +285,22 @@ public:
      * Logging pump getter. The result of this method can be used to format log record message.
      * The message will be pushed to the logging core on the result destruction.
      *
+     * \pre <tt>!!rec</tt>
+     * \param rec Log record to format
      * \return Logging pump
      */
-    record_pump_type strm()
+    record_pump_type pump_stream(record_type const& rec)
     {
-        return strm_unlocked();
+        return pump_stream_unlocked(rec);
     }
+
+#if !defined(BOOST_LOG_DOXYGEN_PASS) && !defined(BOOST_LOG_AUTO)
+    //! Internal method for macros support, do not use explicitly
+    record_pump_type _pump_stream(record_handle const& rec)
+    {
+        return pump_stream_unlocked(record_type(rec));
+    }
+#endif // !defined(BOOST_LOG_DOXYGEN_PASS) && !defined(BOOST_LOG_AUTO)
 
     /*!
      * The method adds an attribute to the source-specific attribute set. The attribute will be implicitly added to
@@ -324,7 +333,7 @@ public:
     }
 
     /*!
-     * The method removes all attributes from the logger. All iterators to the removed attributes are invalidated.
+     * The method removes all attributes from the logger. All iterators and references to the removed attributes are invalidated.
      */
     void remove_all_attributes()
     {
@@ -344,8 +353,9 @@ public:
     }
 
     /*!
-     * The method installs the whole attribute set into the logger. All iterators to the previous set are invalidated.
-     * Iterators to the \c attrs set are not valid to be used with the logger.
+     * The method installs the whole attribute set into the logger. All iterators and references to elements of
+     * the previous set are invalidated. Iterators to the \a attrs set are not valid to be used with the logger (that is,
+     * the logger owns a copy of \a attrs after completion).
      *
      * \param attrs The set of attributes to install into the logger. Attributes are shallow-copied.
      */
@@ -358,9 +368,9 @@ public:
     /*!
      * The method opens a new log record in the logging core.
      *
-     * \return \c true if the logging record is opened successfully, \c false otherwise.
+     * \return A valid record handle if the logging record is opened successfully, an invalid handle otherwise.
      */
-    bool open_record()
+    record_type open_record()
     {
         open_record_lock _(threading_base());
         return open_record_unlocked();
@@ -369,10 +379,10 @@ public:
      * The method opens a new log record in the logging core.
      *
      * \param args A set of additional named arguments. The parameter is ignored.
-     * \return \c true if the logging record is opened successfully, \c false otherwise.
+     * \return A valid record handle if the logging record is opened successfully, an invalid handle otherwise.
      */
     template< typename ArgsT >
-    bool open_record(ArgsT const& args)
+    record_type open_record(ArgsT const& args)
     {
         open_record_lock _(threading_base());
         return open_record_unlocked(args);
@@ -380,18 +390,11 @@ public:
     /*!
      * The method pushes the constructed message to the logging core
      *
-     * \param message The formatted log record message
+     * \param record The log record woth the formatted message
      */
-    void push_record(string_type const& message)
+    void push_record(record_type const& record)
     {
-        push_record_unlocked(message);
-    }
-    /*!
-     * The method cancels the currently opened record in the logging core
-     */
-    void cancel_record()
-    {
-        cancel_record_unlocked();
+        push_record_unlocked(record);
     }
 
 protected:
@@ -452,11 +455,11 @@ protected:
     typedef no_lock strm_lock;
 
     /*!
-     * Unlocked \c strm
+     * Unlocked \c pump_stream
      */
-    record_pump_type strm_unlocked()
+    record_pump_type pump_stream_unlocked(record_type const& rec)
     {
-        return record_pump_type(final_this());
+        return record_pump_type(final_this(), rec);
     }
 
     //! Lock requirement for the add_attribute_unlocked method
@@ -515,7 +518,7 @@ protected:
     /*!
      * Unlocked \c open_record
      */
-    bool open_record_unlocked()
+    record_type open_record_unlocked()
     {
         return m_pCore->open_record(m_Attributes);
     }
@@ -523,7 +526,7 @@ protected:
      * Unlocked \c open_record
      */
     template< typename ArgsT >
-    bool open_record_unlocked(ArgsT const& args)
+    record_type open_record_unlocked(ArgsT const& args)
     {
         return m_pCore->open_record(m_Attributes);
     }
@@ -534,20 +537,9 @@ protected:
     /*!
      * Unlocked \c push_record
      */
-    void push_record_unlocked(string_type const& message)
+    void push_record_unlocked(record_type const& record)
     {
-        m_pCore->push_record(message);
-    }
-
-    //! Lock requirement for the cancel_record_unlocked method
-    typedef no_lock cancel_record_lock;
-
-    /*!
-     * Unlocked \c cancel_record
-     */
-    void cancel_record_unlocked()
-    {
-        m_pCore->cancel_record();
+        m_pCore->push_record(record);
     }
 
     //! Lock requirement for the get_attributes method
@@ -844,19 +836,39 @@ class wlogger_mt :
 #pragma warning(pop)
 #endif // _MSC_VER
 
+//! \cond
+
+#ifdef BOOST_LOG_AUTO
+
+#define BOOST_LOG_INTERNAL(logger, rec_var)\
+    for (BOOST_LOG_AUTO(rec_var, (logger).open_record()); !!rec_var; rec_var.reset())\
+        (logger).pump_stream(rec_var)
+
+#define BOOST_LOG_WITH_PARAMS_INTERNAL(logger, rec_var, params_seq)\
+    for (BOOST_LOG_AUTO(rec_var, (logger).open_record((BOOST_PP_SEQ_ENUM(params_seq)))); !!rec_var; rec_var.reset())\
+        (logger).pump_stream(rec_var)
+
+#else // BOOST_LOG_AUTO
+
+#define BOOST_LOG_INTERNAL(logger, rec_var)\
+    for (::boost::log::record_handle rec_var = (logger).open_record().handle(); !!rec_var; rec_var.reset())\
+        (logger)._pump_stream(rec_var)
+
+#define BOOST_LOG_WITH_PARAMS_INTERNAL(logger, rec_var, params_seq)\
+    for (::boost::log::record_handle rec_var = (logger).open_record((BOOST_PP_SEQ_ENUM(params_seq))).handle(); !!rec_var; rec_var.reset())\
+        (logger)._pump_stream(rec_var)
+
+#endif // BOOST_LOG_AUTO
+
+//! \endcond
+
 //! The macro writes a record to the log
 #define BOOST_LOG(logger)\
-    if (!(logger).open_record())\
-        ((void)0);\
-    else\
-        (logger).strm()
+    BOOST_LOG_INTERNAL(logger, BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_record_))
 
 //! The macro writes a record to the log and allows to pass additional named arguments to the logger
 #define BOOST_LOG_WITH_PARAMS(logger, params_seq)\
-    if (!(logger).open_record((BOOST_PP_SEQ_ENUM(params_seq))))\
-        ((void)0);\
-    else\
-        (logger).strm()
+    BOOST_LOG_WITH_PARAMS_INTERNAL(logger, BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_record_), params_seq)
 
 
 //! \cond
