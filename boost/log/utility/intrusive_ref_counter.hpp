@@ -32,6 +32,13 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
+class intrusive_ref_counter;
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+void intrusive_ptr_add_ref(const intrusive_ref_counter* p);
+void intrusive_ptr_release(const intrusive_ref_counter* p);
+#endif // BOOST_LOG_DOXYGEN_PASS
+
 /*!
  * \brief A reference counter base class
  *
@@ -80,7 +87,7 @@ public:
      *
      * \post The reference counter is not modified after assignment
      */
-    intrusive_ref_counter& operator= (intrusive_ref_counter const&) {}
+    intrusive_ref_counter& operator= (intrusive_ref_counter const&) { return *this; }
 
     /*!
      * \return The reference counter
@@ -91,17 +98,22 @@ public:
     }
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    friend void intrusive_ptr_add_ref(const intrusive_ref_counter* p)
-    {
-        ++p->m_RefCounter;
-    }
-    friend void intrusive_ptr_release(const intrusive_ref_counter* p)
-    {
-        if (--p->m_RefCounter == 0)
-            delete p;
-    }
+    friend void intrusive_ptr_add_ref(const intrusive_ref_counter* p);
+    friend void intrusive_ptr_release(const intrusive_ref_counter* p);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+inline void intrusive_ptr_add_ref(const intrusive_ref_counter* p)
+{
+    ++p->m_RefCounter;
+}
+inline void intrusive_ptr_release(const intrusive_ref_counter* p)
+{
+    if (--p->m_RefCounter == 0)
+        delete p;
+}
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace log
 

@@ -24,6 +24,11 @@
 #include <utility>
 #include <stdexcept>
 #include <algorithm>
+
+#if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
+#define BOOST_SPIRIT_THREADSAFE
+#endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
+
 #include <boost/cstdint.hpp>
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
@@ -31,6 +36,8 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/spirit/include/classic_core.hpp>
+#include <boost/spirit/include/classic_assign_actor.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/new_shared.hpp>
 #include <boost/log/detail/code_conversion.hpp>
@@ -60,17 +67,68 @@
 #endif
 #include "parser_utils.hpp"
 
-#ifdef BOOST_WINDOWS
-#include <windows.h>
-#include <objbase.h>
-#pragma comment(lib, "ole32.lib")
-#endif // BOOST_WINDOWS
+#if defined(BOOST_WINDOWS) && defined(BOOST_LOG_USE_WINNT6_API)
+#include <guiddef.h>
+#endif // defined(BOOST_WINDOWS) && defined(BOOST_LOG_USE_WINNT6_API)
 
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
 namespace {
+
+#if defined(BOOST_WINDOWS) && defined(BOOST_LOG_USE_WINNT6_API)
+
+//! The function parses GUIDS from strings in form "{631EF147-9A84-4e33-8ADD-BCE174C4DBD9}"
+template< typename CharT >
+GUID parse_guid(std::basic_string< CharT > const& str)
+{
+    typedef CharT char_type;
+    const char_type
+        open_bracket = static_cast< char_type >('{'),
+        close_bracket = static_cast< char_type >('}'),
+        dash = static_cast< char_type >('-');
+
+    const spirit::classic::uint_parser< unsigned char, 16, 2, 2 > octet_p;
+    const spirit::classic::uint_parser< unsigned short, 16, 4, 4 > word_p;
+    const spirit::classic::uint_parser< unsigned long, 16, 8, 8 > dword_p;
+
+    GUID g;
+    spirit::classic::parse_info< const char_type* > result =
+        spirit::classic::parse(
+            str.c_str(),
+            str.c_str() + str.size(),
+            (
+                spirit::classic::ch_p(open_bracket) >>
+                dword_p[spirit::classic::assign_a(g.Data1)] >>
+                spirit::classic::ch_p(dash) >>
+                word_p[spirit::classic::assign_a(g.Data2)] >>
+                spirit::classic::ch_p(dash) >>
+                word_p[spirit::classic::assign_a(g.Data3)] >>
+                spirit::classic::ch_p(dash) >>
+                octet_p[spirit::classic::assign_a(g.Data4[0])] >>
+                octet_p[spirit::classic::assign_a(g.Data4[1])] >>
+                spirit::classic::ch_p(dash) >>
+                octet_p[spirit::classic::assign_a(g.Data4[2])] >>
+                octet_p[spirit::classic::assign_a(g.Data4[3])] >>
+                octet_p[spirit::classic::assign_a(g.Data4[4])] >>
+                octet_p[spirit::classic::assign_a(g.Data4[5])] >>
+                octet_p[spirit::classic::assign_a(g.Data4[6])] >>
+                octet_p[spirit::classic::assign_a(g.Data4[7])] >>
+                spirit::classic::ch_p(close_bracket)
+            )
+        );
+
+    if (!result.full)
+    {
+        boost::log::aux::throw_exception(std::runtime_error("Could not recognize CLSID from string "
+            + log::aux::to_narrow(str)));
+    }
+
+    return g;
+}
+
+#endif // defined(BOOST_WINDOWS) && defined(BOOST_LOG_USE_WINNT6_API)
 
 //! The class represents parsed logging settings
 template< typename CharT >
@@ -470,14 +528,7 @@ private:
         GUID provider_id = backend_t::get_default_provider_id();
         typename params_t::const_iterator it = params.find(constants::provider_id_param_name());
         if (it != params.end())
-        {
-            std::wstring const& guid = log::aux::to_wide(it->second);
-            if (CLSIDFromString(const_cast< wchar_t* >(guid.c_str()), &provider_id) != NOERROR)
-            {
-                boost::log::aux::throw_exception(std::runtime_error("Could not recognize Provider ID from string "
-                    + log::aux::to_narrow(it->second)));
-            }
-        }
+            provider_id = parse_guid(it->second);
 
         // Construct the backend
         shared_ptr< backend_t > backend(log::aux::new_shared< backend_t >(boost::cref(provider_id)));

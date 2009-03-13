@@ -363,8 +363,6 @@ typename basic_core< CharT >::record_type basic_core< CharT >::open_record(attri
 template< typename CharT >
 void basic_core< CharT >::push_record(record_type const& rec)
 {
-    typename implementation::thread_data* tsd = pImpl->get_thread_data();
-
     typedef typename record_type::private_data record_private_data;
     record_private_data* pData = static_cast< record_private_data* >(rec.m_pData.get());
 
