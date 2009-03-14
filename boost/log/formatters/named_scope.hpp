@@ -30,9 +30,9 @@
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/utility/attribute_value_extractor.hpp>
-#include <boost/keywords/delimiter.hpp>
-#include <boost/keywords/depth.hpp>
-#include <boost/keywords/iteration.hpp>
+#include <boost/log/keywords/delimiter.hpp>
+#include <boost/log/keywords/depth.hpp>
+#include <boost/log/keywords/iteration.hpp>
 
 namespace boost {
 
@@ -104,7 +104,7 @@ private:
     //! Number of scopes to output
     const typename scope_stack::size_type m_MaxScopes;
     //! Scope iteration direction
-    const keywords::scope_iteration_direction m_IterationDirection;
+    const scope_iteration_direction m_IterationDirection;
 
 public:
     /*!
@@ -120,7 +120,7 @@ public:
         T1 const& name,
         T2 const& delimiter,
         typename scope_stack::size_type max_scopes,
-        keywords::scope_iteration_direction direction
+        scope_iteration_direction direction
     ) :
         m_Extractor(name),
         m_ScopeDelimiter(delimiter),
@@ -148,7 +148,7 @@ private:
     void format(ostream_type& strm, scope_stack const& scopes) const
     {
         typename scope_stack::size_type const scopes_to_iterate = (std::min)(m_MaxScopes, scopes.size());
-        if (m_IterationDirection == keywords::forward)
+        if (m_IterationDirection == formatters::forward)
         {
             // Iterating through scopes in forward direction
             typename scope_stack::const_iterator it = scopes.end(), end = it;
