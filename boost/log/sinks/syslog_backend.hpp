@@ -24,7 +24,6 @@
 
 #include <string>
 #include <boost/shared_ptr.hpp>
-#include <boost/parameter/keyword.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/asio_fwd.hpp>
