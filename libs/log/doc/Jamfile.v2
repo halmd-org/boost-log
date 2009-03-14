@@ -56,6 +56,7 @@ doxygen autodoc
                        "BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(x)=" \\
                        "BOOST_LOG_UNIQUE_IDENTIFIER_NAME(x)=anonymous" \\
                        "BOOST_LOG_USE_NATIVE_SYSLOG=1" \\
+                       "BOOST_PARAMETER_KEYWORD(x,y)=keyword y;" \\
                        "BOOST_LOG_EXPORT=""
         <xsl:param>"boost.doxygen.reftitle=Boost.Log Reference"
         <xsl:param>"boost.doxygen.detailns=aux"

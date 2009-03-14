@@ -51,6 +51,7 @@ namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
 namespace sinks = boost::log::sinks;
 namespace fmt = boost::log::formatters;
+namespace keywords = boost::log::keywords;
 
 using boost::shared_ptr;
 

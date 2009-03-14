@@ -47,6 +47,7 @@ namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
 namespace sinks = boost::log::sinks;
 namespace fmt = boost::log::formatters;
+namespace keywords = boost::log::keywords;
 
 using boost::shared_ptr;
 
@@ -58,7 +59,7 @@ int main(int argc, char* argv[])
     {
         // Open a rotating text file
         shared_ptr< std::ostream > strm(
-            new logging::rotating_ofstream("test_%N.log", logging::keywords::rotation_size = 16384));
+            new logging::rotating_ofstream("test_%N.log", keywords::rotation_size = 16384));
         if (!strm->good())
             throw std::runtime_error("Failed to open a text log file");
 

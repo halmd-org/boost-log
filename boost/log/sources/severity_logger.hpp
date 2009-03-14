@@ -25,7 +25,6 @@
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
 #include <boost/mpl/aux_/lambda_support.hpp>
-#include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/new_shared.hpp>
@@ -35,6 +34,7 @@
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/keywords/severity.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -49,21 +49,6 @@ namespace boost {
 namespace BOOST_LOG_NAMESPACE {
 
 namespace sources {
-
-namespace keywords {
-
-#ifndef BOOST_LOG_DOXYGEN_PASS
-
-    BOOST_PARAMETER_KEYWORD(tag, severity)
-
-#else // BOOST_LOG_DOXYGEN_PASS
-
-    //! The keyword is used to pass severity level to the severity logger methods
-    implementation_defined severity;
-
-#endif // BOOST_LOG_DOXYGEN_PASS
-
-} // namespace keywords
 
 namespace aux {
 
@@ -263,7 +248,7 @@ public:
     template< typename ArgsT >
     explicit basic_severity_logger(ArgsT const& args) :
         base_type(args),
-        m_DefaultSeverity(args[keywords::severity | 0]),
+        m_DefaultSeverity(args[keywords::severity | severity_level()]),
         m_pSeverity(boost::log::aux::new_shared< severity_attribute >()) // make_shared doesn't work in 1.36: http://svn.boost.org/trac/boost/ticket/2126
     {
         base_type::add_attribute_unlocked(
@@ -581,7 +566,7 @@ public:
 
 //! The macro allows to put a record with a specific severity level into log
 #define BOOST_LOG_STREAM_SEV(logger, lvl)\
-    BOOST_LOG_STREAM_WITH_PARAMS((logger), (::boost::log::sources::keywords::severity = (lvl)))
+    BOOST_LOG_STREAM_WITH_PARAMS((logger), (::boost::log::keywords::severity = (lvl)))
 
 #ifndef BOOST_LOG_NO_SHORTHAND_NAMES
 

@@ -32,10 +32,13 @@
 #include <boost/function/function3.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/keywords/message_file.hpp>
+#include <boost/log/keywords/log_name.hpp>
+#include <boost/log/keywords/log_source.hpp>
+#include <boost/log/keywords/registration.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/attribute_mapping.hpp>
 #include <boost/log/sinks/event_log_constants.hpp>
-#include <boost/log/sinks/event_log_keywords.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -51,22 +54,15 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-namespace keywords {
-
-#ifndef BOOST_LOG_DOXYGEN_PASS
-
-    BOOST_PARAMETER_KEYWORD(tag, message_file)
-
-#else // BOOST_LOG_DOXYGEN_PASS
-
-    //! The keyword is used to pass the name of the file with event resources to the backend constructor
-    implementation_defined message_file;
-
-#endif // BOOST_LOG_DOXYGEN_PASS
-
-} // namespace keywords
-
 namespace event_log {
+
+    //! Event log source registration modes
+    enum registration_mode
+    {
+        never,      //!< Never register event source, even if it's not registered
+        on_demand,  //!< Register if the source is not registered yet
+        forced      //!< Register always, event if the source is already registered
+    };
 
     /*!
      * \brief Straightforward event type mapping
@@ -830,9 +826,8 @@ public:
      *     The result of \c get_default_log_name is used, if the parameter is not specified.
      * \li \c log_source - Specifies the source name. The result of \c get_default_source_name
      *     is used, if the parameter is not specified.
-     * \li \c force - If \c true and Windows registry already contains the log source
-     *     registration, the registry parameters are overwritten. If \c false, the registry
-     *     is only modified if the log source was not previously registered. Default value: \c false.
+     * \li \c registration - Specifies the event source registration mode in the Windows registry.
+     *                       Can have values of the \c registration_mode enum. Default value: \c on_demand.
      *
      * \param args A set of named parameters.
      */
@@ -840,7 +835,7 @@ public:
     explicit basic_simple_event_log_backend(ArgsT const& args) : m_pImpl(construct(
         args[keywords::log_name || &basic_simple_event_log_backend::get_default_log_name],
         args[keywords::log_source || &basic_simple_event_log_backend::get_default_source_name],
-        args[keywords::force | false]))
+        args[keywords::registration | event_log::on_demand]))
     {
     }
 
@@ -869,7 +864,7 @@ private:
     void do_consume(record_type const& record, target_string_type const& formatted_message);
 
     //! Constructs backend implementation
-    static implementation* construct(string_type const& log_name, string_type const& source_name, bool force);
+    static implementation* construct(string_type const& log_name, string_type const& source_name, event_log::registration_mode reg_mode);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

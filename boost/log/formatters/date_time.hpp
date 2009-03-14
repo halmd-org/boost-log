@@ -41,7 +41,6 @@
 #include <boost/date_time/local_time/conversion.hpp> // work around the problem of to_tm overload resolution in Boost.DateTime facets
 #include <boost/date_time/posix_time/conversion.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
-#include <boost/parameter/keyword.hpp>
 #include <boost/parameter/parameters.hpp>
 #include <boost/mpl/placeholders.hpp>
 #include <boost/type_traits/is_convertible.hpp>
@@ -56,6 +55,8 @@
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
+#include <boost/log/keywords/format.hpp>
+#include <boost/log/keywords/unit_format.hpp>
 #include <boost/log/utility/string_literal.hpp>
 #include <boost/log/utility/attribute_value_extractor.hpp>
 #include <boost/log/utility/type_dispatch/date_time_types.hpp>
@@ -65,24 +66,6 @@ namespace boost {
 namespace BOOST_LOG_NAMESPACE {
 
 namespace formatters {
-
-namespace keywords {
-
-#ifndef BOOST_LOG_DOXYGEN_PASS
-
-    BOOST_PARAMETER_KEYWORD(tag, format)
-    BOOST_PARAMETER_KEYWORD(tag, unit_format)
-
-#else
-
-    //! The keyword for passing format specifiers to date and time fomatters
-    implementation_defined format;
-    //! The keyword for passing boundaries format specifiers to time period fomatters
-    implementation_defined unit_format;
-
-#endif // BOOST_LOG_DOXYGEN_PASS
-
-} // namespace keywords
 
 namespace aux {
 

@@ -478,10 +478,10 @@ void basic_syslog_backend< CharT >::do_consume(
 template< typename CharT >
 typename basic_syslog_backend< CharT >::implementation*
 basic_syslog_backend< CharT >::construct(
-    syslog::facility_t facility, keywords::syslog_impl_types use_impl, keywords::ip_versions ip_version)
+    syslog::facility_t facility, syslog::impl_types use_impl, ip_versions ip_version)
 {
 #ifdef BOOST_LOG_USE_NATIVE_SYSLOG
-    if (use_impl == keywords::native)
+    if (use_impl == syslog::native)
     {
         typedef typename implementation::native native_impl;
         return new native_impl(facility);
@@ -491,9 +491,9 @@ basic_syslog_backend< CharT >::construct(
     typedef typename implementation::udp_socket_based udp_socket_based_impl;
     switch (ip_version)
     {
-    case keywords::v4:
+    case v4:
         return new udp_socket_based_impl(facility, asio::ip::udp::v4());
-    case keywords::v6:
+    case v6:
         return new udp_socket_based_impl(facility, asio::ip::udp::v6());
     default:
         boost::log::aux::throw_exception(std::invalid_argument("incorrect IP version specified"));

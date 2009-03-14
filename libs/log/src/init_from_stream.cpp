@@ -495,20 +495,28 @@ private:
             source_name = it->second;
 
         // Determine the force flag
-        bool force = false;
-        it = params.find(constants::force_param_name());
+        sinks::event_log::registration_mode reg_mode = sinks::event_log::on_demand;
+        it = params.find(constants::registration_param_name());
         if (it != params.end())
         {
-            std::basic_istringstream< char_type > strm(it->second);
-            strm.setf(std::ios_base::boolalpha);
-            strm >> force;
+            if (it->second == constants::registration_never())
+                reg_mode = sinks::event_log::never;
+            else if (it->second == constants::registration_on_demand())
+                reg_mode = sinks::event_log::on_demand;
+            else if (it->second == constants::registration_forced())
+                reg_mode = sinks::event_log::forced;
+            else
+            {
+                boost::log::aux::throw_exception(std::runtime_error(
+                    "The registration mode \"" + log::aux::to_narrow(it->second) + "\" is not supported"));
+            }
         }
 
         // Construct the backend
         shared_ptr< backend_t > backend(new backend_t((
-            sinks::keywords::log_name = log_name,
-            sinks::keywords::log_source = source_name,
-            sinks::keywords::force = force)));
+            keywords::log_name = log_name,
+            keywords::log_source = source_name,
+            keywords::registration = reg_mode)));
 
         // For now we use only the default event type mapping. Will add support for configuration later.
         backend->set_event_type_mapper(

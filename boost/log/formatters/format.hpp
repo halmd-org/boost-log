@@ -8,7 +8,7 @@
  * at http://www.boost.org/libs/log/doc/log.html.
  */
 /*!
- * \file   format.hpp
+ * \file   formatters/format.hpp
  * \author Andrey Semashev
  * \date   16.03.2008
  * 

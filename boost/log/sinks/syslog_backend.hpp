@@ -32,6 +32,9 @@
 #include <boost/log/sinks/syslog_constants.hpp>
 #include <boost/log/sinks/attribute_mapping.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/keywords/facility.hpp>
+#include <boost/log/keywords/use_impl.hpp>
+#include <boost/log/keywords/ip_version.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -47,44 +50,23 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-namespace keywords {
+//! Supported IP protocol versions
+enum ip_versions
+{
+    v4,
+    v6
+};
 
-#ifndef BOOST_LOG_DOXYGEN_PASS
-
-    BOOST_PARAMETER_KEYWORD(tag, facility)
-    BOOST_PARAMETER_KEYWORD(tag, use_impl)
-    BOOST_PARAMETER_KEYWORD(tag, ip_version)
-
-#else
-
-    //! The keyword is used to pass syslog facility that emits log records
-    implementation_defined facility;
-    //! The keyword is used to pass the type of backend implementation to use
-    implementation_defined use_impl;
-    //! The keyword is used to indicate which version of IP protocol to use
-    implementation_defined ip_version;
-
-#endif // BOOST_LOG_DOXYGEN_PASS
+namespace syslog {
 
     //! The enumeration defined the possible implementation types for the syslog backend
-    enum syslog_impl_types
+    enum impl_types
     {
 #ifdef BOOST_LOG_USE_NATIVE_SYSLOG
         native = 0,             //!< Use native syslog API
 #endif
         udp_socket_based = 1    //!< Use UDP sockets, according to RFC3164
     };
-
-    //! Supported IP protocol versions
-    enum ip_versions
-    {
-        v4,
-        v6
-    };
-
-} // namespace keywords
-
-namespace syslog {
 
     /*!
      * \brief Straightforward severity level mapping
@@ -330,7 +312,7 @@ public:
      * Constructor. Creates a UDP socket-based backend with <tt>syslog::user</tt> facility code.
      * IPv4 protocol will be used.
      */
-    explicit basic_syslog_backend() : m_pImpl(construct(syslog::user, keywords::udp_socket_based, keywords::v4))
+    explicit basic_syslog_backend() : m_pImpl(construct(syslog::user, syslog::udp_socket_based, v4))
     {
     }
     /*!
@@ -350,8 +332,8 @@ public:
     explicit basic_syslog_backend(ArgsT const& args) :
         m_pImpl(construct(
             args[keywords::facility | syslog::user],
-            args[keywords::use_impl | keywords::udp_socket_based],
-            args[keywords::ip_version | keywords::v4]))
+            args[keywords::use_impl | syslog::udp_socket_based],
+            args[keywords::ip_version | v4]))
     {
     }
     /*!
@@ -411,7 +393,7 @@ private:
 
     //! The method creates the backend implementation
     BOOST_LOG_EXPORT static implementation* construct(
-        syslog::facility_t facility, keywords::syslog_impl_types use_impl, keywords::ip_versions ip_version);
+        syslog::facility_t facility, syslog::impl_types use_impl, ip_versions ip_version);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

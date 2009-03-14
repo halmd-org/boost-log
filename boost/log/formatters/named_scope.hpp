@@ -26,11 +26,13 @@
 #include <iterator>
 #include <algorithm>
 #include <boost/limits.hpp>
-#include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/utility/attribute_value_extractor.hpp>
+#include <boost/keywords/delimiter.hpp>
+#include <boost/keywords/depth.hpp>
+#include <boost/keywords/iteration.hpp>
 
 namespace boost {
 
@@ -38,33 +40,12 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace formatters {
 
-namespace keywords {
-
-#ifndef BOOST_LOG_DOXYGEN_PASS
-
-    BOOST_PARAMETER_KEYWORD(tag, scope_delimiter)
-    BOOST_PARAMETER_KEYWORD(tag, scope_depth)
-    BOOST_PARAMETER_KEYWORD(tag, scope_iteration)
-
-#else // BOOST_LOG_DOXYGEN_PASS
-
-    //! The keyword for passing scopes delimiter to the \c named_scope formatter
-    implementation_defined scope_delimiter;
-    //! The keyword for passing maximum scopes depth to the \c named_scope formatter
-    implementation_defined scope_depth;
-    //! The keyword for passing scope iteration direction to the \c named_scope formatter
-    implementation_defined scope_iteration;
-
-#endif // BOOST_LOG_DOXYGEN_PASS
-
-    //! Scope iteration directions
-    enum scope_iteration_direction
-    {
-        forward,    //!< Iterate through scopes from outermost to innermost
-        reverse     //!< Iterate through scopes from innermost to outermost
-    };
-
-} // namespace keywords
+//! Scope iteration directions
+enum scope_iteration_direction
+{
+    forward,    //!< Iterate through scopes from outermost to innermost
+    reverse     //!< Iterate through scopes from innermost to outermost
+};
 
 /*!
  * \brief Named scope attribute formatter
@@ -231,14 +212,14 @@ namespace aux {
     {
         typedef fmt_named_scope< CharT > fmt_named_scope_t;
 
-        keywords::scope_iteration_direction direction = args[keywords::scope_iteration | keywords::forward];
+        scope_iteration_direction direction = args[keywords::iteration | formatters::forward];
         const CharT* default_delimiter =
-            (direction == keywords::forward ? default_scope_delimiter< CharT >::forward() : default_scope_delimiter< CharT >::reverse());
+            (direction == formatters::forward ? default_scope_delimiter< CharT >::forward() : default_scope_delimiter< CharT >::reverse());
 
         return fmt_named_scope_t(
             name,
-            args[keywords::scope_delimiter | default_delimiter],
-            args[keywords::scope_depth | (std::numeric_limits< std::size_t >::max)()],
+            args[keywords::delimiter | default_delimiter],
+            args[keywords::depth | (std::numeric_limits< std::size_t >::max)()],
             direction);
     }
     //! Auxiliary function to construct formatter from the complete set of arguments
@@ -247,14 +228,14 @@ namespace aux {
     {
         typedef fmt_named_scope< CharT > fmt_named_scope_t;
 
-        keywords::scope_iteration_direction direction = args[keywords::scope_iteration | keywords::forward];
+        scope_iteration_direction direction = args[keywords::iteration | formatters::forward];
         const CharT* default_delimiter =
-            (direction == keywords::forward ? default_scope_delimiter< CharT >::forward() : default_scope_delimiter< CharT >::reverse());
+            (direction == formatters::forward ? default_scope_delimiter< CharT >::forward() : default_scope_delimiter< CharT >::reverse());
 
         return fmt_named_scope_t(
             name,
-            args[keywords::scope_delimiter | default_delimiter],
-            args[keywords::scope_depth | (std::numeric_limits< std::size_t >::max)()],
+            args[keywords::delimiter | default_delimiter],
+            args[keywords::depth | (std::numeric_limits< std::size_t >::max)()],
             direction);
     }
 
@@ -267,12 +248,12 @@ namespace aux {
 //! Formatter generator
 inline fmt_named_scope< char > named_scope(const char* name)
 {
-    return fmt_named_scope< char >(name, "->", (std::numeric_limits< std::size_t >::max)(), keywords::forward);
+    return fmt_named_scope< char >(name, "->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
 }
 //! Formatter generator
 inline fmt_named_scope< char > named_scope(std::basic_string< char > const& name)
 {
-    return fmt_named_scope< char >(name, "->", (std::numeric_limits< std::size_t >::max)(), keywords::forward);
+    return fmt_named_scope< char >(name, "->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
 }
 
 //! Formatter generator
@@ -321,12 +302,12 @@ inline fmt_named_scope< char > named_scope(std::basic_string< char > const& name
 //! Formatter generator
 inline fmt_named_scope< wchar_t > named_scope(const wchar_t* name)
 {
-    return fmt_named_scope< wchar_t >(name, L"->", (std::numeric_limits< std::size_t >::max)(), keywords::forward);
+    return fmt_named_scope< wchar_t >(name, L"->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
 }
 //! Formatter generator
 inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const& name)
 {
-    return fmt_named_scope< wchar_t >(name, L"->", (std::numeric_limits< std::size_t >::max)(), keywords::forward);
+    return fmt_named_scope< wchar_t >(name, L"->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
 }
 
 //! Formatter generator
@@ -377,9 +358,9 @@ inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const
  * 
  * \param name Attribute name
  * \param args An optional set of named parameters. Supported parameters:
- *             \li \c scope_delimiter - a string that is used to delimit the formatted scope names. Default: "->" or "<-", depending on the iteration direction.
- *             \li \c scope_iteration - iteration direction. Default: forward.
- *             \li \c scope_depth - iteration depth. Default: unlimited.
+ *             \li \c delimiter - a string that is used to delimit the formatted scope names. Default: "->" or "<-", depending on the iteration direction.
+ *             \li \c iteration - iteration direction. Default: forward.
+ *             \li \c depth - iteration depth. Default: unlimited.
  */
 template< typename CharT, typename... ArgsT >
 fmt_named_scope< CharT > named_scope(std::basic_string< CharT > const& name, ArgsT... const& args);

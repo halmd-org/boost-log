@@ -85,9 +85,13 @@ struct char_constants< char >
     static const char_type* provider_id_param_name() { return "ProviderID"; }
     static const char_type* log_name_param_name() { return "LogName"; }
     static const char_type* source_name_param_name() { return "LogSource"; }
-    static const char_type* force_param_name() { return "ForceRegistration"; }
+    static const char_type* registration_param_name() { return "Registration"; }
     static const char_type* local_address_param_name() { return "LocalAddress"; }
     static const char_type* target_address_param_name() { return "TargetAddress"; }
+
+    static const char_type* registration_never() { return "Never"; }
+    static const char_type* registration_on_demand() { return "OnDemand"; }
+    static const char_type* registration_forced() { return "Forced"; }
 
     static const char_type* text_file_destination() { return "TextFile"; }
     static const char_type* console_destination() { return "Console"; }
@@ -167,9 +171,13 @@ struct char_constants< wchar_t >
     static const char_type* provider_id_param_name() { return L"ProviderID"; }
     static const char_type* log_name_param_name() { return L"LogName"; }
     static const char_type* source_name_param_name() { return L"LogSource"; }
-    static const char_type* force_param_name() { return L"ForceRegistration"; }
+    static const char_type* registration_param_name() { return L"Registration"; }
     static const char_type* local_address_param_name() { return L"LocalAddress"; }
     static const char_type* target_address_param_name() { return L"TargetAddress"; }
+
+    static const char_type* registration_never() { return L"Never"; }
+    static const char_type* registration_on_demand() { return L"OnDemand"; }
+    static const char_type* registration_forced() { return L"Forced"; }
 
     static const char_type* text_file_destination() { return L"TextFile"; }
     static const char_type* console_destination() { return L"Console"; }

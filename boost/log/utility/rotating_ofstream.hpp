@@ -45,7 +45,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/utility/base_from_member.hpp>
 #include <boost/utility/in_place_factory.hpp>
-#include <boost/parameter/keyword.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
@@ -57,6 +56,9 @@
 #include <boost/log/detail/snprintf.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 #include <boost/log/utility/record_writer.hpp>
+#include <boost/log/keywords/rotation_size.hpp>
+#include <boost/log/keywords/rotation_interval.hpp>
+#include <boost/log/keywords/open_mode.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -69,27 +71,6 @@
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
-
-namespace keywords {
-
-#ifndef BOOST_LOG_DOXYGEN_PASS
-
-    BOOST_PARAMETER_KEYWORD(tag, rotation_size)
-    BOOST_PARAMETER_KEYWORD(tag, rotation_interval)
-    BOOST_PARAMETER_KEYWORD(tag, open_mode)
-
-#else // BOOST_LOG_DOXYGEN_PASS
-
-    //! The keyword allows to pass maximum log file size to the rotating file stream methods
-    implementation_defined rotation_size;
-    //! The keyword allows to pass maximum time interval of using the same log file to the rotating file stream methods
-    implementation_defined rotation_interval;
-    //! The keyword allows to pass log file opening parameters to the rotating file stream methods
-    implementation_defined open_mode;
-
-#endif // BOOST_LOG_DOXYGEN_PASS
-
-} // namespace keywords
 
 namespace aux {
 

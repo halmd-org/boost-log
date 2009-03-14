@@ -219,7 +219,7 @@ struct basic_simple_event_log_backend< CharT >::implementation
 //! Default constructor. Registers event source Boost.Log <Boost version> in the Application log.
 template< typename CharT >
 basic_simple_event_log_backend< CharT >::basic_simple_event_log_backend() :
-    m_pImpl(construct(get_default_log_name(), get_default_source_name(), false))
+    m_pImpl(construct(get_default_log_name(), get_default_source_name(), event_log::on_demand))
 {
 }
 
@@ -235,16 +235,19 @@ basic_simple_event_log_backend< CharT >::~basic_simple_event_log_backend()
 template< typename CharT >
 typename basic_simple_event_log_backend< CharT >::implementation*
 basic_simple_event_log_backend< CharT >::construct(
-    string_type const& log_name, string_type const& source_name, bool force)
+    string_type const& log_name, string_type const& source_name, event_log::registration_mode reg_mode)
 {
-    aux::registry_params< char_type > reg_params;
-    reg_params.event_message_file = get_current_module_name< char_type >();
-    reg_params.types_supported = DWORD(
-        EVENTLOG_SUCCESS |
-        EVENTLOG_INFORMATION_TYPE |
-        EVENTLOG_WARNING_TYPE |
-        EVENTLOG_ERROR_TYPE);
-    aux::init_event_log_registry(log_name, source_name, force, reg_params);
+    if (reg_mode != event_log::never)
+    {
+        aux::registry_params< char_type > reg_params;
+        reg_params.event_message_file = get_current_module_name< char_type >();
+        reg_params.types_supported = DWORD(
+            EVENTLOG_SUCCESS |
+            EVENTLOG_INFORMATION_TYPE |
+            EVENTLOG_WARNING_TYPE |
+            EVENTLOG_ERROR_TYPE);
+        aux::init_event_log_registry(log_name, source_name, reg_mode == event_log::forced, reg_params);
+    }
 
     std::auto_ptr< implementation > p(new implementation());
 

@@ -46,6 +46,7 @@ namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
 namespace sinks = boost::log::sinks;
 namespace fmt = boost::log::formatters;
+namespace keywords = boost::log::keywords;
 
 using boost::shared_ptr;
 
@@ -90,7 +91,7 @@ int main(int argc, char* argv[])
         logging::core::get()->add_global_attribute("Line #", attr);
 
         // Do some logging
-        src::severity_logger< severity_levels > lg(src::keywords::severity = normal);
+        src::severity_logger< severity_levels > lg(keywords::severity = normal);
         BOOST_LOG_SEV(lg, normal) << "Some record for NT event log with normal level";
         BOOST_LOG_SEV(lg, warning) << "Some record for NT event log with warning level";
         BOOST_LOG_SEV(lg, error) << "Some record for NT event log with error level";

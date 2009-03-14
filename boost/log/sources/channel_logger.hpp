@@ -25,12 +25,12 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/aux_/lambda_support.hpp>
-#include <boost/parameter/keyword.hpp>
 #include <boost/parameter/binding.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/new_shared.hpp>
 #include <boost/log/sources/basic_logger.hpp>
+#include <boost/log/keywords/channel.hpp>
 #include <boost/log/attributes/constant.hpp>
 
 #ifdef _MSC_VER
@@ -44,21 +44,6 @@ namespace boost {
 namespace BOOST_LOG_NAMESPACE {
 
 namespace sources {
-
-namespace keywords {
-
-#ifndef BOOST_LOG_DOXYGEN_PASS
-
-    BOOST_PARAMETER_KEYWORD(tag, channel)
-
-#else
-
-    //! The keyword for passing channel name to the channel logger constructor
-    implementation_defined channel;
-
-#endif // BOOST_LOG_DOXYGEN_PASS
-
-} // namespace keywords
 
 namespace aux {
 

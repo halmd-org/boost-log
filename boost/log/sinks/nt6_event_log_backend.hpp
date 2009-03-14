@@ -33,7 +33,7 @@
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/attribute_mapping.hpp>
 #include <boost/log/sinks/nt6_event_log_constants.hpp>
-#include <boost/log/sinks/event_log_keywords.hpp>
+#include <boost/log/keywords/provider_id.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -50,21 +50,6 @@ namespace BOOST_LOG_NAMESPACE {
 namespace experimental {
 
 namespace sinks {
-
-namespace keywords {
-
-#ifndef BOOST_LOG_DOXYGEN_PASS
-
-    BOOST_PARAMETER_KEYWORD(tag, provider_id)
-
-#else // BOOST_LOG_DOXYGEN_PASS
-
-    //! The keyword is used to pass event provider GUID to the backend constructor
-    implementation_defined provider_id;
-
-#endif // BOOST_LOG_DOXYGEN_PASS
-
-} // namespace keywords
 
 namespace etw {
 
