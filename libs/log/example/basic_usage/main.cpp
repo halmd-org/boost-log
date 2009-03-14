@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 
     BOOST_LOG_SEV(slg, normal) << "A normal severity message, will not pass to the file";
     BOOST_LOG_SEV(slg, warning) << "A warning severity message, will pass to the file";
-    BOOST_LOG_SEV(slg, error) << "An error severity message, will pass to the output";
+    BOOST_LOG_SEV(slg, error) << "An error severity message, will pass to the file";
 
     return 0;
 }
