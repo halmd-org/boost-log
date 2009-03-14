@@ -13,7 +13,7 @@
  */
 
 #include <memory>
-#include <boost/log/sources/basic_logger.hpp>
+#include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/detail/singleton.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/tss.hpp>
@@ -22,8 +22,6 @@
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
-
-namespace sources {
 
 namespace aux {
 
@@ -128,8 +126,6 @@ template struct stream_provider< wchar_t >;
 #endif
 
 } // namespace aux
-
-} // namespace sources
 
 } // namespace log
 

@@ -31,6 +31,7 @@
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
+#include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/utility/init/from_stream.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/scoped_attribute.hpp>

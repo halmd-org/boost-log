@@ -11,7 +11,7 @@
  * \brief  An example of logging to a syslog server (syslogd, for example).
  *
  * The example shows how to initialize logging to a remote syslog server.
- * The code creates a sink that will send syslog messages to local port 63000.
+ * The code creates a sink that will send syslog messages to local port 514.
  */
 
 #define BOOST_LOG_DYN_LINK 1
@@ -24,6 +24,7 @@
 #include <boost/log/core.hpp>
 #include <boost/log/attributes/counter.hpp>
 #include <boost/log/sources/severity_logger.hpp>
+#include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/syslog_backend.hpp>
 #include <boost/log/formatters/format.hpp>

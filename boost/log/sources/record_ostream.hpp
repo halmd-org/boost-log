@@ -28,10 +28,13 @@
 #include <ostream>
 #include <boost/aligned_storage.hpp>
 #include <boost/type_traits/alignment_of.hpp>
+#include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/native_typeof.hpp>
 #include <boost/log/detail/unspecified_bool.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/record.hpp>
+#include <boost/log/utility/unique_identifier_name.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -201,6 +204,183 @@ typedef basic_record_ostream< char > record_ostream;        //!< Convenience typ
 #ifdef BOOST_LOG_USE_WCHAR_T
 typedef basic_record_ostream< wchar_t > wrecord_ostream;    //!< Convenience typedef for wide-character logging
 #endif
+
+namespace aux {
+
+//! Internal class that provides formatting streams for record pumps
+template< typename CharT >
+struct stream_provider
+{
+    //! Character type
+    typedef CharT char_type;
+    //! Record type
+    typedef basic_record< char_type > record_type;
+
+    //! Formatting stream compound
+    struct stream_compound
+    {
+        stream_compound* next;
+
+        //! Log record stream adapter
+        basic_record_ostream< char_type > stream;
+
+        //! Initializing constructor
+        explicit stream_compound(record_type const& rec) : next(NULL), stream(rec) {}
+    };
+
+    //! The method returns an allocated stream compound
+    BOOST_LOG_EXPORT static stream_compound* allocate_compound(record_type const& rec);
+    //! The method releases a compound
+    BOOST_LOG_EXPORT static void release_compound(stream_compound* compound) /* throw() */;
+
+private:
+    //  Non-constructible, non-copyable, non-assignable
+    stream_provider();
+    stream_provider(stream_provider const&);
+    stream_provider& operator= (stream_provider const&);
+};
+
+
+/*!
+ * \brief Logging record pump implementation
+ *
+ * The pump is used to format the logging record message text and then
+ * push it to the logging core. It is constructed on each attempt to write
+ * a log record and destroyed afterwards.
+ *
+ * The pump class template is instantiated on the logger type.
+ */
+template< typename LoggerT >
+class record_pump
+{
+private:
+    //! Logger type
+    typedef LoggerT logger_type;
+    //! Character type
+    typedef typename logger_type::char_type char_type;
+    //! Log record type
+    typedef typename logger_type::record_type record_type;
+    //! Stream compound provider
+    typedef stream_provider< char_type > stream_provider_type;
+    //! Stream compound type
+    typedef typename stream_provider_type::stream_compound stream_compound;
+
+    //! Stream compound release guard
+    class auto_release;
+    friend class auto_release;
+    class auto_release
+    {
+        stream_compound* m_pCompound;
+
+    public:
+        explicit auto_release(stream_compound* p) : m_pCompound(p) {}
+        ~auto_release() { stream_provider_type::release_compound(m_pCompound); }
+    };
+
+protected:
+    //! A reference to the logger
+    mutable logger_type* m_pLogger;
+    //! Stream compound
+    mutable stream_compound* m_pStreamCompound;
+
+public:
+    //! Constructor
+    explicit record_pump(logger_type& lg, record_type const& rec) :
+        m_pLogger(boost::addressof(lg)),
+        m_pStreamCompound(stream_provider_type::allocate_compound(rec))
+    {
+    }
+    //! Copy constructor (implemented as move)
+    record_pump(record_pump const& that) :
+        m_pLogger(that.m_pLogger),
+        m_pStreamCompound(that.m_pStreamCompound)
+    {
+        that.m_pLogger = 0;
+        that.m_pStreamCompound = 0;
+    }
+    //! Destructor. Pushes the composed message to log.
+    ~record_pump()
+    {
+        if (m_pLogger)
+        {
+            auto_release _(m_pStreamCompound); // destructor doesn't throw
+            if (!std::uncaught_exception())
+                m_pLogger->push_record(m_pStreamCompound->stream.record());
+        }
+    }
+
+    //! Forwarding output operators
+    template< typename T >
+    record_pump const& operator<< (T const& value) const
+    {
+        BOOST_ASSERT(m_pStreamCompound != 0);
+        m_pStreamCompound->stream << value;
+        return *this;
+    }
+
+private:
+    //! Closed assignment
+    record_pump& operator= (record_pump const&);
+};
+
+template< typename LoggerT >
+BOOST_LOG_FORCEINLINE record_pump< LoggerT > make_pump_stream(LoggerT& lg, typename LoggerT::record_type const& rec)
+{
+    return record_pump< LoggerT >(lg, rec);
+}
+
+template< typename LoggerT >
+BOOST_LOG_FORCEINLINE record_pump< LoggerT > make_pump_stream(LoggerT& lg, record_handle const& rec)
+{
+    typedef typename LoggerT::record_type record_type;
+    return record_pump< LoggerT >(lg, record_type(rec));
+}
+
+} // namespace aux
+
+//! \cond
+
+#ifdef BOOST_LOG_AUTO
+
+#define BOOST_LOG_STREAM_INTERNAL(logger, rec_var)\
+    for (BOOST_LOG_AUTO(rec_var, (logger).open_record()); !!rec_var; rec_var.reset())\
+        ::boost::log::aux::make_pump_stream((logger), rec_var)
+
+#define BOOST_LOG_STREAM_WITH_PARAMS_INTERNAL(logger, rec_var, params_seq)\
+    for (BOOST_LOG_AUTO(rec_var, (logger).open_record((BOOST_PP_SEQ_ENUM(params_seq)))); !!rec_var; rec_var.reset())\
+        ::boost::log::aux::make_pump_stream((logger), rec_var)
+
+#else // BOOST_LOG_AUTO
+
+#define BOOST_LOG_STREAM_INTERNAL(logger, rec_var)\
+    for (::boost::log::record_handle rec_var = (logger).open_record().handle(); !!rec_var; rec_var.reset())\
+        ::boost::log::aux::make_pump_stream((logger), rec_var)
+
+#define BOOST_LOG_STREAM_WITH_PARAMS_INTERNAL(logger, rec_var, params_seq)\
+    for (::boost::log::record_handle rec_var = (logger).open_record((BOOST_PP_SEQ_ENUM(params_seq))).handle(); !!rec_var; rec_var.reset())\
+        ::boost::log::aux::make_pump_stream((logger), rec_var)
+
+#endif // BOOST_LOG_AUTO
+
+//! \endcond
+
+//! The macro writes a record to the log
+#define BOOST_LOG_STREAM(logger)\
+    BOOST_LOG_STREAM_INTERNAL(logger, BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_record_))
+
+//! The macro writes a record to the log and allows to pass additional named arguments to the logger
+#define BOOST_LOG_STREAM_WITH_PARAMS(logger, params_seq)\
+    BOOST_LOG_STREAM_WITH_PARAMS_INTERNAL(logger, BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_record_), params_seq)
+
+#ifndef BOOST_LOG_NO_SHORTHAND_NAMES
+
+//! An equivalent to BOOST_LOG_STREAM(logger)
+#define BOOST_LOG(logger) BOOST_LOG_STREAM(logger)
+
+//! An equivalent to BOOST_LOG_STREAM_WITH_PARAMS(logger, params_seq)
+#define BOOST_LOG_WITH_PARAMS(logger, params_seq) BOOST_LOG_STREAM_WITH_PARAMS(logger, params_seq)
+
+#endif // BOOST_LOG_NO_SHORTHAND_NAMES
 
 } // namespace log
 

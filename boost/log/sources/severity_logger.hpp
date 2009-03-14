@@ -580,7 +580,14 @@ public:
 #endif // _MSC_VER
 
 //! The macro allows to put a record with a specific severity level into log
-#define BOOST_LOG_SEV(logger, lvl)\
-    BOOST_LOG_WITH_PARAMS((logger), (::boost::log::sources::keywords::severity = (lvl)))
+#define BOOST_LOG_STREAM_SEV(logger, lvl)\
+    BOOST_LOG_STREAM_WITH_PARAMS((logger), (::boost::log::sources::keywords::severity = (lvl)))
+
+#ifndef BOOST_LOG_NO_SHORTHAND_NAMES
+
+//! An equivalent to BOOST_LOG_STREAM_SEV(logger, lvl)
+#define BOOST_LOG_SEV(logger, lvl) BOOST_LOG_STREAM_SEV(logger, lvl)
+
+#endif // BOOST_LOG_NO_SHORTHAND_NAMES
 
 #endif // BOOST_LOG_SOURCES_SEVERITY_LOGGER_HPP_INCLUDED_

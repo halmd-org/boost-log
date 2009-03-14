@@ -29,6 +29,7 @@
 
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/severity_logger.hpp>
+#include <boost/log/sources/record_ostream.hpp>
 
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>

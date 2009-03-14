@@ -33,6 +33,7 @@
 #include <boost/log/attributes/clock.hpp>
 #include <boost/log/attributes/counter.hpp>
 #include <boost/log/sources/severity_logger.hpp>
+#include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
 #include <boost/log/formatters/format.hpp>
