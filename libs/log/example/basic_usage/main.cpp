@@ -107,14 +107,14 @@ int main(int argc, char* argv[])
     // Let's do a quick test and output something. We have to create a logger for this.
     src::logger lg;
 
-    // Let's pretend we also want to profile our code, so add a special timer attribute.
-    lg.add_attribute("Uptime", boost::make_shared< attrs::timer >());
-
     // And output...
     BOOST_LOG(lg) << "Hello, World!";
 
     // Now, let's try logging with severity
     src::severity_logger< severity_level > slg;
+
+    // Let's pretend we also want to profile our code, so add a special timer attribute.
+    slg.add_attribute("Uptime", boost::make_shared< attrs::timer >());
 
     BOOST_LOG_SEV(slg, normal) << "A normal severity message, will not pass to the file";
     BOOST_LOG_SEV(slg, warning) << "A warning severity message, will pass to the file";
