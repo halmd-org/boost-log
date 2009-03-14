@@ -50,20 +50,6 @@ struct add_common_attributes_constants< wchar_t >
     static const wchar_t* time_stamp_attr_name() { return L"TimeStamp"; }
 };
 
-//! The function adds commonly used attributes to the logging system
-template< typename CharT >
-void add_common_attributes()
-{
-    typedef add_common_attributes_constants< CharT > traits_t;
-    shared_ptr< basic_core< CharT > > pCore = basic_core< CharT >::get();
-    pCore->add_global_attribute(
-        traits_t::line_id_attr_name(),
-        boost::make_shared< attributes::counter< unsigned int > >(1));
-    pCore->add_global_attribute(
-        traits_t::time_stamp_attr_name(),
-        boost::make_shared< attributes::local_clock >());
-}
-
 } // namespace aux
 
 /*!
@@ -74,28 +60,42 @@ void add_common_attributes()
  * 
  * \li LineID - logging records counter with value type <tt>unsigned int</tt>
  * \li TimeStamp - local time generator with value type <tt>boost::posix_time::ptime</tt>
- * 
- * The function works for narrow-character logging.
  */
-inline void add_common_attributes()
+template< typename CharT >
+void add_common_attributes()
 {
-    aux::add_common_attributes< char >();
+    typedef aux::add_common_attributes_constants< CharT > traits_t;
+    shared_ptr< basic_core< CharT > > pCore = basic_core< CharT >::get();
+    pCore->add_global_attribute(
+        traits_t::line_id_attr_name(),
+        boost::make_shared< attributes::counter< unsigned int > >(1));
+    pCore->add_global_attribute(
+        traits_t::time_stamp_attr_name(),
+        boost::make_shared< attributes::local_clock >());
 }
 
 /*!
  * \brief Simple attribute imitialization routine
  * 
- * The function adds commonly used attributes to the logging system. Specifically, the following
- * attributes are registered globally:
+ * Equivalent to: <tt>add_common_attributes< char >();</tt>
  * 
- * \li LineID - logging records counter with value type <tt>unsigned int</tt>
- * \li TimeStamp - local time generator with value type <tt>boost::posix_time::ptime</tt>
+ * The function works for narrow-character logging.
+ */
+inline void add_common_attributes()
+{
+    add_common_attributes< char >();
+}
+
+/*!
+ * \brief Simple attribute imitialization routine
+ * 
+ * Equivalent to: <tt>add_common_attributes< wchar_t >();</tt>
  * 
  * The function works for wide-character logging.
  */
 inline void wadd_common_attributes()
 {
-    aux::add_common_attributes< wchar_t >();
+    add_common_attributes< wchar_t >();
 }
 
 } // namespace log
