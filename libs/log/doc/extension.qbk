@@ -391,7 +391,7 @@ Note that the locks we have defined in the feature definition are applied to the
 
 Now, when all locking is extracted into the public interface, we have the most of our feature logic to be implemented in the protected part of the interface. In order to set up tag value in the logger, we will have to introduce a new __boost_parameter__ keyword. Following recommendations from that library documentation, it's better to introduce the keyword in a special namespace:
 
-    namespace keywords {
+    namespace my_keywords {
 
         BOOST_PARAMETER_KEYWORD(tag_ns, tag)
 
@@ -403,7 +403,7 @@ Opening a new record can now look something like this:
     bool record_tagger::open_record_unlocked(ArgsT const& args)
     {
         // Extract the named argument from the parameters pack
-        string_type tag_value = args[keywords::tag | string_type()];
+        string_type tag_value = args[my_keywords::tag | string_type()];
 
         if (!tag_value.empty())
         {
@@ -501,13 +501,13 @@ To use this logger we can now write the following:
 
     my_logger< severity_level > logger;
 
-    if (logger.open_record((src::keywords::severity = normal, keywords::tag = "[GUI]")))
+    if (logger.open_record((keywords::severity = normal, my_keywords::tag = "[GUI]")))
         logger.strm() << "The user has confirmed his choice";
 
 However, I would prefer defining a special macro to reduce verbosity:
 
     #define LOG_WITH_TAG(lg, sev, tg) \
-        BOOST_LOG_WITH_PARAMS((lg), (src::keywords::severity = (sev))(keywords::tag = (tg)))
+        BOOST_LOG_WITH_PARAMS((lg), (keywords::severity = (sev))(my_keywords::tag = (tg)))
 
     LOG_WITH_TAG(logger, normal, "[GUI]") << "The user has confirmed his choice";
 

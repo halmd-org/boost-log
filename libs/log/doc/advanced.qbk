@@ -89,11 +89,11 @@ The actual values of this attribute and their meaning is entirely user-defined. 
             lg.strm() << "A default-severity log record";
 
         // The straightforward usage with a specific level value
-        if (lg.open_record(src::keywords::severity = warning))
+        if (lg.open_record(keywords::severity = warning))
             lg.strm() << "A warning level log record";
 
         // The default severity can be specified in constructor. This time level type is my_levels.
-        src::severity_logger< my_levels > error_lg(src::keywords::severity = error);
+        src::severity_logger< my_levels > error_lg(keywords::severity = error);
 
         // There are predefined macros that make the usage easier
         BOOST_LOG_SEV(lg, warning) << "A warning level log record";
@@ -121,9 +121,9 @@ Sometimes it is important to categorize log records based on some constant piece
     public:
         network_connection() :
             // We can dump network-related messages through this logger and be able to filter them later
-            m_net(src::keywords::channel = "net"),
+            m_net(keywords::channel = "net"),
             // We also can separate statistic records in a different channel in order to route them to a different sink
-            m_stat(src::keywords::channel = "stat")
+            m_stat(keywords::channel = "stat")
         {
         }
 
@@ -189,7 +189,7 @@ In case if there is a need to pass arguments to the logger constructor, there is
     BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS(
         my_logger,
         src::severity_channel_logger< >,
-        (src::keywords::severity = error)(src::keywords::channel = "my_channel"))
+        (keywords::severity = error)(keywords::channel = "my_channel"))
 
 The last macro argument is a __boost_preprocessor__ sequence of arguments passed to the logger constructor. Be careful, however, when using non-constant expressions and references to objects as constructor arguments, since the arguments are evaluated only once and it is often difficult to tell the exact moment when it is done. The logger is constructed on the first request from whichever part of the application that has the knowledge of the logger declaration. It is up to user to make sure that all arguments have valid states at that point.
 
@@ -478,8 +478,8 @@ The only thing user has to do to add Windows event log support to his applicatio
         // Create an event log sink
         boost::shared_ptr< sinks::simple_event_log_backend > backend(
             new sinks::simple_event_log_backend((
-                sinks::keywords::log_name = "My Application", // by default it would have been Application
-                sinks::keywords::log_source = "My Source"     // by default it would have been based on the application executable name
+                keywords::log_name = "My Application", // by default it would have been Application
+                keywords::log_source = "My Source"     // by default it would have been based on the application executable name
             ))
         );
         boost::shared_ptr< sinks::synchronous_sink< sinks::simple_event_log_backend > > sink(
@@ -579,9 +579,9 @@ After compiling the resource library, the path to this library must be provided 
     // Create an event log sink
     boost::shared_ptr< sinks::event_log_backend > backend(
         new sinks::event_log_backend((
-            sinks::keywords::message_file = "%SystemDir%\\my_events.dll",
-            sinks::keywords::log_name = "My Application",
-            sinks::keywords::log_source = "My Source"
+            keywords::message_file = "%SystemDir%\\my_events.dll",
+            keywords::log_name = "My Application",
+            keywords::log_source = "My Source"
         ))
     );
 
@@ -916,7 +916,7 @@ The date and time format can be customized by user. The format should be passed 
 
     // Puts a date and time of one of the specified types into log.
     typedef boost::mpl::vector< std::time_t, std::tm, boost::posix_time::ptime >::type types;
-    backend->set_formatter(fmt::ostrm << fmt::date_time< types >("DateTime", fmt::keywords::format = "%d.%m.%y %H:%M:%S"));
+    backend->set_formatter(fmt::ostrm << fmt::date_time< types >("DateTime", keywords::format = "%d.%m.%y %H:%M:%S"));
 
 The `time_duration` formatter is responsible for formatting time periods that are not bound to a specific time point. It supports types `double` (interpreted as a result of the `difftime` standard function), `boost::posix_time::time_duration` and `boost::gregorian::date_duration`. The formatter also supports the `format` argument. The usage is straightforward:
 
@@ -924,7 +924,7 @@ The `time_duration` formatter is responsible for formatting time periods that ar
     backend->set_formatter(fmt::ostrm << fmt::time_duration("Duration"));
 
     // Puts a time duration of the specified type into log.
-    backend->set_formatter(fmt::ostrm << fmt::time_duration< boost::posix_time::time_duration >("Duration", fmt::keywords::format = "%H:%M:%S"));
+    backend->set_formatter(fmt::ostrm << fmt::time_duration< boost::posix_time::time_duration >("Duration", keywords::format = "%H:%M:%S"));
 
 The `time_period` formatter composes two time points that denote a time period. It supports the following types: `boost::posix_time::time_period`, `boost::local_time::local_time_period` and `boost::gregorian::date_period`. The formatter is a bit more special since it supports two kinds of format strings, the one that describes the date format, and the one that describes the dates composition. The former can be specified with the named argument `unit_format` and the latter - with named argument `format`. The time period composition format string may contain either of the three placeholders:
 
@@ -939,7 +939,7 @@ Here are some usage examples:
 
     // Puts a time period of the specified type into log.
     backend->set_formatter(fmt::ostrm << fmt::time_period< boost::posix_time::time_period >("Period",
-        fmt::keywords::format = "[%begin%; %end%)", fmt::keywords::unit_format = "%d.%m.%y %H:%M:%S"));
+        keywords::format = "[%begin%; %end%)", keywords::unit_format = "%d.%m.%y %H:%M:%S"));
 
 [endsect]
 
@@ -954,26 +954,26 @@ The formatter `named_scope` is intended to add support for flexible formatting o
 
 The formatter supports customization with the following named arguments:
 
-* `scope_iteration`. The argument describes the direction of iteration through scopes. Can have values `forward` (default) or `reverse`.
-* `scope_delimiter`. The argument can be used to specify the delimiters between scopes. The default delimiter depends on the `scope_iteration` argument. If `scope_iteration == forward` the default `scope_delimiter` will be "->", otherwise it will be "<-".
-* `scope_depth`. The argument can be used to limit the number of scopes to put to log. The formatter will print `scope_depth` innermost scopes and, if there are more scopes left, append an ellipsis to the written sequence. By default the formatter will write all scope names.
+* `iteration`. The argument describes the direction of iteration through scopes. Can have values `forward` (default) or `reverse`.
+* `delimiter`. The argument can be used to specify the delimiters between scopes. The default delimiter depends on the `iteration` argument. If `iteration == forward` the default `delimiter` will be "->", otherwise it will be "<-".
+* `depth`. The argument can be used to limit the number of scopes to put to log. The formatter will print `depth` innermost scopes and, if there are more scopes left, append an ellipsis to the written sequence. By default the formatter will write all scope names.
 
 Here are few usage examples:
 
     // Puts the scope stack in reverse order: inner scope <- outer scope
-    backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes", fmt::keywords::scope_iteration = fmt::keywords::reverse));
+    backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes", keywords::iteration = fmt::reverse));
 
     // Puts the scope stack in reverse order with a custom delimiter: inner scope | outer scope
     backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes",
-        fmt::keywords::scope_iteration = fmt::keywords::reverse, fmt::keywords::scope_delimiter = " | "));
+        keywords::iteration = fmt::reverse, keywords::delimiter = " | "));
 
     // Puts the scope stack in forward order, no more than 2 inner scopes: ... -> outer scope -> inner scope
     backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes",
-        fmt::keywords::scope_iteration = fmt::keywords::forward, fmt::keywords::scope_depth = 2));
+        keywords::iteration = fmt::forward, keywords::depth = 2));
 
     // Puts the scope stack in reverse order, no more than 2 inner scopes: inner scope <- outer scope <- ...
     backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes",
-        fmt::keywords::scope_iteration = fmt::keywords::reverse, fmt::keywords::scope_depth = 2));
+        keywords::iteration = fmt::reverse, keywords::depth = 2));
 
 [endsect]
 
@@ -1498,7 +1498,7 @@ Here's a basic usage example:
 
         // The file will rotate every hour and will attempt not to exceed 1 MB.
         sink->locked_backend()->add_stream(boost::make_shared< rotating_ofstream >(
-            "file_%02N.log", logging::keywords::rotation_interval = 3600, logging::keywords::rotation_size = 1048576));
+            "file_%02N.log", keywords::rotation_interval = 3600, keywords::rotation_size = 1048576));
 
         logging::core::get()->add_sink(sink);
     }
@@ -1522,7 +1522,7 @@ But there's more about the rotating file stream. The stream also supports callin
     {
         // Construct the stream
         boost::shared_ptr< rotating_ofstream > strm(
-            new rotating_ofstream("log_%02N.xml", logging::keywords::rotation_interval = 3600, logging::keywords::rotation_size = 1048576));
+            new rotating_ofstream("log_%02N.xml", keywords::rotation_interval = 3600, keywords::rotation_size = 1048576));
 
         // Setup open and close handlers
         strm->set_open_handler(&write_header);

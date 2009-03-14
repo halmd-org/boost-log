@@ -9,7 +9,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2009-03-14 10:28:10 $]
+    [last-revision $Date: 2009-03-14 13:46:29 $]
 ]
 
 [c++]
@@ -73,6 +73,7 @@ For simplicity in the code snippets in this documentation it shall be assumed th
     namespace fmt = boost::log::formatters;
     namespace flt = boost::log::filters;
     namespace attrs = boost::log::attributes;
+    namespace keywords = boost::log::keywords;
 
 Aside from these namespaces the library also provides `boost::log::experimental` namespace. Tools defined in this namespace, as the naming implies, are not stable and thus are not advertized for productional usage. However, adventurous developers are encouraged to explore fresh features that appear in that namespace. Due to lack of their stability, these instruments are not covered by this documentation.
 
