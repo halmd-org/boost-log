@@ -12,6 +12,8 @@
  *         for signalling application events.
  */
 
+#define WIN32_LEAN_AND_MEAN
+
 #include "windows_version.hpp"
 #include <windows.h>
 #include <psapi.h>
@@ -454,17 +456,20 @@ namespace event_log {
 template< typename CharT >
 struct basic_event_log_backend< CharT >::implementation
 {
+    //  NOTE: This order of data members is critical for MSVC 9.0 in debug mode,
+    //        as it ICEs if boost::functions are not the first members. Doh!
+
+    //! An event category mapper
+    event_category_mapper_type m_CategoryMapper;
+    //! A level mapping functor
+    event_type_mapper_type m_LevelMapper;
+
     //! A handle for the registered event provider
     HANDLE m_SourceHandle;
     //! A functor that composes an event
     event_composer_type m_EventComposer;
     //! An array of formatted insertions
     insertion_list m_Insertions;
-
-    //! An event category mapper
-    event_category_mapper_type m_CategoryMapper;
-    //! A level mapping functor
-    event_type_mapper_type m_LevelMapper;
 
     implementation() : m_SourceHandle(0)
     {
