@@ -72,7 +72,7 @@ public:
      */
     void operator() (ostream_type& strm, record_type const& record) const
     {
-        if (m_Filter(values))
+        if (m_Filter(record.attribute_values()))
             m_Then(strm, record);
         else
             m_Else(strm, record);
@@ -150,7 +150,7 @@ public:
      */
     void operator() (ostream_type& strm, record_type const& record) const
     {
-        if (else_.m_Filter(values))
+        if (else_.m_Filter(record.attribute_values()))
             else_.m_Formatter(strm, record);
     }
 };

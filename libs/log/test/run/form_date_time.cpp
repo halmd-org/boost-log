@@ -27,15 +27,17 @@
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/formatters/date_time.hpp>
 #include <boost/log/formatters/ostream.hpp>
 #include <boost/log/utility/string_literal.hpp>
+#include <boost/log/record.hpp>
 #include "char_definitions.hpp"
+#include "make_record.hpp"
 
 namespace logging = boost::log;
 namespace attrs = logging::attributes;
 namespace fmt = logging::formatters;
+namespace keywords = logging::keywords;
 
 typedef boost::posix_time::ptime ptime;
 typedef boost::gregorian::date gdate;
@@ -78,10 +80,10 @@ namespace {
 BOOST_AUTO_TEST_CASE_TEMPLATE(date_time, CharT, char_types)
 {
     typedef logging::basic_attribute_set< CharT > attr_set;
-    typedef logging::basic_attribute_values_view< CharT > values_view;
     typedef std::basic_string< CharT > string;
     typedef std::basic_ostringstream< CharT > osstream;
-    typedef boost::function< void (osstream&, values_view const&, string const&) > formatter;
+    typedef logging::basic_record< CharT > record;
+    typedef boost::function< void (osstream&, record const&) > formatter;
     typedef test_data< CharT > data;
     typedef date_time_formats< CharT > formats;
     typedef boost::date_time::time_facet< ptime, CharT > facet;
@@ -89,17 +91,17 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(date_time, CharT, char_types)
     ptime t1(gdate(2009, 2, 7), ptime::time_duration_type(14, 40, 15));
     boost::shared_ptr< logging::attribute > attr1(new attrs::constant< ptime >(t1));
 
-    attr_set set1, set2, set3;
+    attr_set set1;
     set1[data::attr1()] = attr1;
 
-    values_view view1(set1, set2, set3);
-    view1.freeze();
+    record rec = make_record(set1);
+    rec.message() = data::some_test_string();
 
     // Check for various formats specification
     {
         osstream strm1;
         formatter f = fmt::date_time(data::attr1());
-        f(strm1, view1, data::some_test_string());
+        f(strm1, rec);
         osstream strm2;
         strm2.imbue(std::locale(strm2.getloc(), new facet(formats::default_date_time_format().c_str())));
         strm2 << t1;
@@ -107,8 +109,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(date_time, CharT, char_types)
     }
     {
         osstream strm1;
-        formatter f = fmt::date_time(data::attr1(), fmt::keywords::format = formats::date_time_format().c_str());
-        f(strm1, view1, data::some_test_string());
+        formatter f = fmt::date_time(data::attr1(), keywords::format = formats::date_time_format().c_str());
+        f(strm1, rec);
         osstream strm2;
         strm2.imbue(std::locale(strm2.getloc(), new facet(formats::date_time_format().c_str())));
         strm2 << t1;
@@ -120,10 +122,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(date_time, CharT, char_types)
 BOOST_AUTO_TEST_CASE_TEMPLATE(date, CharT, char_types)
 {
     typedef logging::basic_attribute_set< CharT > attr_set;
-    typedef logging::basic_attribute_values_view< CharT > values_view;
     typedef std::basic_string< CharT > string;
     typedef std::basic_ostringstream< CharT > osstream;
-    typedef boost::function< void (osstream&, values_view const&, string const&) > formatter;
+    typedef logging::basic_record< CharT > record;
+    typedef boost::function< void (osstream&, record const&) > formatter;
     typedef test_data< CharT > data;
     typedef date_time_formats< CharT > formats;
     typedef boost::date_time::date_facet< gdate, CharT > facet;
@@ -131,17 +133,17 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(date, CharT, char_types)
     gdate d1(2009, 2, 7);
     boost::shared_ptr< logging::attribute > attr1(new attrs::constant< gdate >(d1));
 
-    attr_set set1, set2, set3;
+    attr_set set1;
     set1[data::attr1()] = attr1;
 
-    values_view view1(set1, set2, set3);
-    view1.freeze();
+    record rec = make_record(set1);
+    rec.message() = data::some_test_string();
 
     // Check for various formats specification
     {
         osstream strm1;
         formatter f = fmt::date(data::attr1());
-        f(strm1, view1, data::some_test_string());
+        f(strm1, rec);
         osstream strm2;
         strm2.imbue(std::locale(strm2.getloc(), new facet(formats::default_date_format().c_str())));
         strm2 << d1;
@@ -149,8 +151,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(date, CharT, char_types)
     }
     {
         osstream strm1;
-        formatter f = fmt::date(data::attr1(), fmt::keywords::format = formats::date_format().c_str());
-        f(strm1, view1, data::some_test_string());
+        formatter f = fmt::date(data::attr1(), keywords::format = formats::date_format().c_str());
+        f(strm1, rec);
         osstream strm2;
         strm2.imbue(std::locale(strm2.getloc(), new facet(formats::date_format().c_str())));
         strm2 << d1;
@@ -162,10 +164,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(date, CharT, char_types)
 BOOST_AUTO_TEST_CASE_TEMPLATE(time_duration, CharT, char_types)
 {
     typedef logging::basic_attribute_set< CharT > attr_set;
-    typedef logging::basic_attribute_values_view< CharT > values_view;
     typedef std::basic_string< CharT > string;
     typedef std::basic_ostringstream< CharT > osstream;
-    typedef boost::function< void (osstream&, values_view const&, string const&) > formatter;
+    typedef logging::basic_record< CharT > record;
+    typedef boost::function< void (osstream&, record const&) > formatter;
     typedef test_data< CharT > data;
     typedef date_time_formats< CharT > formats;
     typedef boost::date_time::time_facet< ptime, CharT > facet;
@@ -173,17 +175,17 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(time_duration, CharT, char_types)
     ptime::time_duration_type t1(14, 40, 15);
     boost::shared_ptr< logging::attribute > attr1(new attrs::constant< ptime::time_duration_type >(t1));
 
-    attr_set set1, set2, set3;
+    attr_set set1;
     set1[data::attr1()] = attr1;
 
-    values_view view1(set1, set2, set3);
-    view1.freeze();
+    record rec = make_record(set1);
+    rec.message() = data::some_test_string();
 
     // Check for various formats specification
     {
         osstream strm1;
         formatter f = fmt::time_duration(data::attr1());
-        f(strm1, view1, data::some_test_string());
+        f(strm1, rec);
         osstream strm2;
         strm2.imbue(std::locale(strm2.getloc(), new facet(formats::default_time_duration_format().c_str())));
         strm2 << t1;
@@ -191,8 +193,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(time_duration, CharT, char_types)
     }
     {
         osstream strm1;
-        formatter f = fmt::time_duration(data::attr1(), fmt::keywords::format = formats::time_duration_format().c_str());
-        f(strm1, view1, data::some_test_string());
+        formatter f = fmt::time_duration(data::attr1(), keywords::format = formats::time_duration_format().c_str());
+        f(strm1, rec);
         osstream strm2;
         strm2.imbue(std::locale(strm2.getloc(), new facet(formats::time_duration_format().c_str())));
         strm2 << t1;
@@ -204,10 +206,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(time_duration, CharT, char_types)
 BOOST_AUTO_TEST_CASE_TEMPLATE(time_period, CharT, char_types)
 {
     typedef logging::basic_attribute_set< CharT > attr_set;
-    typedef logging::basic_attribute_values_view< CharT > values_view;
     typedef std::basic_string< CharT > string;
     typedef std::basic_ostringstream< CharT > osstream;
-    typedef boost::function< void (osstream&, values_view const&, string const&) > formatter;
+    typedef logging::basic_record< CharT > record;
+    typedef boost::function< void (osstream&, record const&) > formatter;
     typedef test_data< CharT > data;
     typedef date_time_formats< CharT > formats;
     typedef boost::date_time::time_facet< ptime, CharT > facet;
@@ -216,17 +218,17 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(time_period, CharT, char_types)
     period p1(t1, ptime::time_duration_type(2, 3, 44));
     boost::shared_ptr< logging::attribute > attr1(new attrs::constant< period >(p1));
 
-    attr_set set1, set2, set3;
+    attr_set set1;
     set1[data::attr1()] = attr1;
 
-    values_view view1(set1, set2, set3);
-    view1.freeze();
+    record rec = make_record(set1);
+    rec.message() = data::some_test_string();
 
     // Check for various formats specification
     {
         osstream strm1;
         formatter f = fmt::time_period(data::attr1());
-        f(strm1, view1, data::some_test_string());
+        f(strm1, rec);
         osstream strm2;
         strm2.imbue(std::locale(strm2.getloc(), new facet(formats::default_date_time_format().c_str())));
         strm2 << "[" << p1.begin() << " - " << p1.last() << "]";
@@ -234,8 +236,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(time_period, CharT, char_types)
     }
     {
         osstream strm1;
-        formatter f = fmt::time_period(data::attr1(), fmt::keywords::format = formats::time_period_format().c_str());
-        f(strm1, view1, data::some_test_string());
+        formatter f = fmt::time_period(data::attr1(), keywords::format = formats::time_period_format().c_str());
+        f(strm1, rec);
         osstream strm2;
         strm2.imbue(std::locale(strm2.getloc(), new facet(formats::default_date_time_format().c_str())));
         strm2 << "[" << p1.begin() << " - " << p1.end() << ")";
@@ -245,9 +247,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(time_period, CharT, char_types)
         osstream strm1;
         formatter f = fmt::time_period(
             data::attr1(),
-            fmt::keywords::format = formats::time_period_format().c_str(),
-            fmt::keywords::unit_format = formats::date_time_format().c_str());
-        f(strm1, view1, data::some_test_string());
+            keywords::format = formats::time_period_format().c_str(),
+            keywords::unit_format = formats::date_time_format().c_str());
+        f(strm1, rec);
         osstream strm2;
         strm2.imbue(std::locale(strm2.getloc(), new facet(formats::date_time_format().c_str())));
         strm2 << "[" << p1.begin() << " - " << p1.end() << ")";

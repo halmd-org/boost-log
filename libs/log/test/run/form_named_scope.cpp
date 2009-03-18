@@ -22,16 +22,18 @@
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/formatters/named_scope.hpp>
 #include <boost/log/formatters/ostream.hpp>
 #include <boost/log/utility/string_literal.hpp>
+#include <boost/log/record.hpp>
 #include "char_definitions.hpp"
+#include "make_record.hpp"
 
 namespace logging = boost::log;
 namespace attrs = logging::attributes;
 namespace fmt = logging::formatters;
+namespace keywords = logging::keywords;
 
 namespace {
 
@@ -73,10 +75,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     typedef attrs::basic_named_scope_entry< CharT > scope;
 
     typedef logging::basic_attribute_set< CharT > attr_set;
-    typedef logging::basic_attribute_values_view< CharT > values_view;
     typedef std::basic_string< CharT > string;
     typedef std::basic_ostringstream< CharT > osstream;
-    typedef boost::function< void (osstream&, values_view const&, string const&) > formatter;
+    typedef logging::basic_record< CharT > record;
+    typedef boost::function< void (osstream&, record const&) > formatter;
     typedef named_scope_test_data< CharT > data;
 
     boost::shared_ptr< logging::attribute > attr(new named_scope());
@@ -87,17 +89,17 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     const unsigned int line2 = __LINE__;
     sentry scope2(data::scope2(), data::file(), line2);
 
-    attr_set set1, set2, set3;
+    attr_set set1;
     set1[data::attr1()] = attr;
 
-    values_view view1(set1, set2, set3);
-    view1.freeze();
+    record rec = make_record(set1);
+    rec.message() = data::some_test_string();
 
     // Default format
     {
         osstream strm1;
         formatter f = fmt::ostrm << fmt::named_scope(data::attr1());
-        f(strm1, view1, data::some_test_string());
+        f(strm1, rec);
         osstream strm2;
         strm2 << data::scope1() << "->" << data::scope2();
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
@@ -105,8 +107,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     // Different delimiter
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::named_scope(data::attr1(), fmt::keywords::scope_delimiter = data::delimiter1().c_str());
-        f(strm1, view1, data::some_test_string());
+        formatter f = fmt::ostrm << fmt::named_scope(data::attr1(), keywords::delimiter = data::delimiter1().c_str());
+        f(strm1, rec);
         osstream strm2;
         strm2 << data::scope1() << "|" << data::scope2();
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
@@ -114,8 +116,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     // Different direction
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::named_scope(data::attr1(), fmt::keywords::scope_iteration = fmt::keywords::reverse);
-        f(strm1, view1, data::some_test_string());
+        formatter f = fmt::ostrm << fmt::named_scope(data::attr1(), keywords::iteration = fmt::reverse);
+        f(strm1, rec);
         osstream strm2;
         strm2 << data::scope2() << "<-" << data::scope1();
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
@@ -123,9 +125,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     {
         osstream strm1;
         formatter f = fmt::ostrm << fmt::named_scope(data::attr1(),
-            fmt::keywords::scope_delimiter = data::delimiter1().c_str(),
-            fmt::keywords::scope_iteration = fmt::keywords::reverse);
-        f(strm1, view1, data::some_test_string());
+            keywords::delimiter = data::delimiter1().c_str(),
+            keywords::iteration = fmt::reverse);
+        f(strm1, rec);
         osstream strm2;
         strm2 << data::scope2() << "|" << data::scope1();
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
@@ -133,8 +135,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     // Limiting the number of scopes
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::named_scope(data::attr1(), fmt::keywords::scope_depth = 1);
-        f(strm1, view1, data::some_test_string());
+        formatter f = fmt::ostrm << fmt::named_scope(data::attr1(), keywords::depth = 1);
+        f(strm1, rec);
         osstream strm2;
         strm2 << "...->" << data::scope2();
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
@@ -142,9 +144,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     {
         osstream strm1;
         formatter f = fmt::ostrm << fmt::named_scope(data::attr1(),
-            fmt::keywords::scope_depth = 1,
-            fmt::keywords::scope_iteration = fmt::keywords::reverse);
-        f(strm1, view1, data::some_test_string());
+            keywords::depth = 1,
+            keywords::iteration = fmt::reverse);
+        f(strm1, rec);
         osstream strm2;
         strm2 << data::scope2() << "<-...";
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
@@ -152,9 +154,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     {
         osstream strm1;
         formatter f = fmt::ostrm << fmt::named_scope(data::attr1(),
-            fmt::keywords::scope_delimiter = data::delimiter1().c_str(),
-            fmt::keywords::scope_depth = 1);
-        f(strm1, view1, data::some_test_string());
+            keywords::delimiter = data::delimiter1().c_str(),
+            keywords::depth = 1);
+        f(strm1, rec);
         osstream strm2;
         strm2 << "...|" << data::scope2();
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
@@ -162,10 +164,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     {
         osstream strm1;
         formatter f = fmt::ostrm << fmt::named_scope(data::attr1(),
-            fmt::keywords::scope_delimiter = data::delimiter1().c_str(),
-            fmt::keywords::scope_depth = 1,
-            fmt::keywords::scope_iteration = fmt::keywords::reverse);
-        f(strm1, view1, data::some_test_string());
+            keywords::delimiter = data::delimiter1().c_str(),
+            keywords::depth = 1,
+            keywords::iteration = fmt::reverse);
+        f(strm1, rec);
         osstream strm2;
         strm2 << data::scope2() << "|...";
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));

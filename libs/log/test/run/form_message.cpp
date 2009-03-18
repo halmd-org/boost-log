@@ -21,10 +21,11 @@
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/formatters/message.hpp>
 #include <boost/log/formatters/ostream.hpp>
+#include <boost/log/record.hpp>
 #include "char_definitions.hpp"
+#include "make_record.hpp"
 
 namespace logging = boost::log;
 namespace attrs = logging::attributes;
@@ -59,26 +60,26 @@ namespace {
 BOOST_AUTO_TEST_CASE_TEMPLATE(message_formatting, CharT, char_types)
 {
     typedef logging::basic_attribute_set< CharT > attr_set;
-    typedef logging::basic_attribute_values_view< CharT > values_view;
     typedef std::basic_string< CharT > string;
     typedef std::basic_ostringstream< CharT > osstream;
-    typedef boost::function< void (osstream&, values_view const&, string const&) > formatter;
+    typedef logging::basic_record< CharT > record;
+    typedef boost::function< void (osstream&, record const&) > formatter;
     typedef message_test_data< CharT > data;
 
     boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
     boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
 
-    attr_set set1, set2, set3;
+    attr_set set1;
     set1[data::attr1()] = attr1;
     set1[data::attr2()] = attr2;
 
-    values_view view1(set1, set2, set3);
-    view1.freeze();
+    record rec = make_record(set1);
+    rec.message() = data::some_test_string();
 
     {
         osstream strm1;
         formatter f = fmt::ostrm << data::message();
-        f(strm1, view1, data::some_test_string());
+        f(strm1, rec);
         osstream strm2;
         strm2 << data::some_test_string();
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));

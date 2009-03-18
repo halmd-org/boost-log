@@ -27,62 +27,24 @@
 #include <boost/log/filters/has_attr.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/utility/slim_string.hpp>
+#include <boost/log/record.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/thread/thread.hpp>
 #endif // BOOST_LOG_NO_THREADS
 #include "char_definitions.hpp"
+#include "test_sink.hpp"
 
 namespace logging = boost::log;
 namespace attrs = logging::attributes;
 namespace sinks = logging::sinks;
 namespace flt = logging::filters;
 
-namespace {
-
-    //! A sink implementation for testing purpose
-    template< typename CharT >
-    struct test_sink :
-        public sinks::sink< CharT >
-    {
-    private:
-        typedef sinks::sink< CharT > base_type;
-
-    public:
-        typedef typename base_type::char_type char_type;
-        typedef typename base_type::string_type string_type;
-        typedef typename base_type::values_view_type values_view_type;
-        typedef logging::basic_slim_string< char_type > slim_string_type;
-        typedef std::map< slim_string_type, std::size_t > attr_counters_map;
-
-    public:
-        attr_counters_map m_Consumed;
-        std::size_t m_RecordCounter;
-
-    public:
-        test_sink() : m_RecordCounter(0) {}
-
-        void consume(values_view_type const& attributes, string_type const& message)
-        {
-            ++m_RecordCounter;
-            typename values_view_type::const_iterator it = attributes.begin(), end = attributes.end();
-            for (; it != end; ++it)
-                ++m_Consumed[it->first];
-        }
-
-        void clear()
-        {
-            m_RecordCounter = 0;
-            m_Consumed.clear();
-        }
-    };
-
-} // namespace
-
 // The test checks that message filtering works
 BOOST_AUTO_TEST_CASE_TEMPLATE(filtering, CharT, char_types)
 {
     typedef logging::basic_attribute_set< CharT > attr_set;
     typedef logging::basic_core< CharT > core;
+    typedef typename core::record_type record_type;
     typedef std::basic_string< CharT > string;
     typedef test_data< CharT > data;
 
@@ -99,8 +61,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(filtering, CharT, char_types)
 
     // No filtering at all
     {
-        BOOST_CHECK(pCore->open_record(set1));
-        pCore->push_record(string());
+        record_type rec = pCore->open_record(set1);
+        BOOST_REQUIRE(rec);
+        pCore->push_record(rec);
         BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr2()], 1UL);
@@ -112,7 +75,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(filtering, CharT, char_types)
     // Core-level filtering
     {
         pCore->set_filter(flt::has_attr(data::attr3()));
-        BOOST_CHECK(!pCore->open_record(set1));
+        record_type rec = pCore->open_record(set1);
+        BOOST_CHECK(!rec);
         BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 0UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 0UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr2()], 0UL);
@@ -122,8 +86,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(filtering, CharT, char_types)
     }
     {
         pCore->set_filter(flt::has_attr(data::attr2()));
-        BOOST_CHECK(pCore->open_record(set1));
-        pCore->push_record(string());
+        record_type rec = pCore->open_record(set1);
+        BOOST_REQUIRE(rec);
+        pCore->push_record(rec);
         BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr2()], 1UL);
@@ -136,8 +101,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(filtering, CharT, char_types)
     {
         pCore->reset_filter();
         pSink->set_filter(flt::has_attr(data::attr2()));
-        BOOST_CHECK(pCore->open_record(set1));
-        pCore->push_record(string());
+        record_type rec = pCore->open_record(set1);
+        BOOST_REQUIRE(rec);
+        pCore->push_record(rec);
         BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr2()], 1UL);
@@ -147,7 +113,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(filtering, CharT, char_types)
     }
     {
         pSink->set_filter(flt::has_attr(data::attr3()));
-        BOOST_CHECK(!pCore->open_record(set1));
+        record_type rec = pCore->open_record(set1);
+        BOOST_CHECK(!rec);
         BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 0UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 0UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr2()], 0UL);
@@ -164,8 +131,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(filtering, CharT, char_types)
         pCore->add_sink(pSink2);
         pSink2->set_filter(flt::has_attr(data::attr3()));
 
-        BOOST_CHECK(pCore->open_record(set1));
-        pCore->push_record(string());
+        record_type rec = pCore->open_record(set1);
+        BOOST_REQUIRE(rec);
+        pCore->push_record(rec);
 
         BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 1UL);
@@ -195,6 +163,7 @@ namespace {
     {
         typedef test_data< CharT > data;
         typedef logging::basic_core< CharT > core;
+        typedef typename core::record_type record_type;
         typedef std::basic_string< CharT > string;
         typedef logging::basic_attribute_set< CharT > attr_set;
         boost::shared_ptr< logging::attribute > attr4(new attrs::constant< short >(255));
@@ -203,8 +172,10 @@ namespace {
         pCore->add_thread_attribute(data::attr4(), attr4);
 
         attr_set set1;
-        BOOST_CHECK(pCore->open_record(set1));
-        pCore->push_record(string());
+        record_type rec = pCore->open_record(set1);
+        BOOST_CHECK(rec);
+        if (rec)
+            pCore->push_record(rec);
     }
 
 } // namespace
@@ -215,6 +186,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(attributes, CharT, char_types)
 {
     typedef logging::basic_attribute_set< CharT > attr_set;
     typedef logging::basic_core< CharT > core;
+    typedef typename core::record_type record_type;
     typedef std::basic_string< CharT > string;
     typedef test_data< CharT > data;
 
@@ -242,8 +214,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(attributes, CharT, char_types)
         BOOST_CHECK_EQUAL(thr.count(data::attr3()), 1UL);
     }
     {
-        BOOST_CHECK(pCore->open_record(set1));
-        pCore->push_record(string());
+        record_type rec = pCore->open_record(set1);
+        BOOST_REQUIRE(rec);
+        pCore->push_record(rec);
         BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr2()], 1UL);
@@ -271,70 +244,5 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(attributes, CharT, char_types)
 
     pCore->remove_global_attribute(itGlobal);
     pCore->remove_thread_attribute(itThread);
-    pCore->remove_sink(pSink);
-}
-
-// The test checks that recursive open_record works
-BOOST_AUTO_TEST_CASE_TEMPLATE(recursive_open_record, CharT, char_types)
-{
-    typedef logging::basic_attribute_set< CharT > attr_set;
-    typedef logging::basic_core< CharT > core;
-    typedef std::basic_string< CharT > string;
-    typedef test_data< CharT > data;
-
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
-
-    attr_set set1;
-    set1[data::attr1()] = attr1;
-
-    attr_set set2;
-    set2[data::attr2()] = attr2;
-
-    boost::shared_ptr< core > pCore = core::get();
-    boost::shared_ptr< test_sink< CharT > > pSink(new test_sink< CharT >());
-    pCore->add_sink(pSink);
-
-    // Recursive opening and pushing records
-    {
-        BOOST_CHECK(pCore->open_record(set1));
-        BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 0UL);
-        BOOST_CHECK(pCore->open_record(set2));
-        BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 0UL);
-        pCore->push_record(string());
-        BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 1UL);
-        BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 0UL);
-        BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr2()], 1UL);
-        BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr3()], 0UL);
-        BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr4()], 0UL);
-        pSink->clear();
-
-        pCore->push_record(string());
-        BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 1UL);
-        BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 1UL);
-        BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr2()], 0UL);
-        BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr3()], 0UL);
-        BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr4()], 0UL);
-        pSink->clear();
-    }
-
-    // Recursive opening and cancellation
-    {
-        BOOST_CHECK(pCore->open_record(set1));
-        BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 0UL);
-        BOOST_CHECK(pCore->open_record(set2));
-        BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 0UL);
-        pCore->cancel_record();
-        BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 0UL);
-
-        pCore->push_record(string());
-        BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 1UL);
-        BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 1UL);
-        BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr2()], 0UL);
-        BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr3()], 0UL);
-        BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr4()], 0UL);
-        pSink->clear();
-    }
-
     pCore->remove_sink(pSink);
 }
