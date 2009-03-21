@@ -36,6 +36,7 @@
 #include <boost/log/keywords/log_name.hpp>
 #include <boost/log/keywords/log_source.hpp>
 #include <boost/log/keywords/registration.hpp>
+#include <boost/log/keywords/target.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/attribute_mapping.hpp>
 #include <boost/log/sinks/event_log_constants.hpp>
@@ -822,17 +823,20 @@ public:
      * Constructor. Registers event log source with the specified parameters.
      * The following named parameters are supported:
      *
+     * \li \c target - Specifies an UNC path to the remote server to which log records should be sent to.
+     *     The local machine will be used to process log records, if not specified.
      * \li \c log_name - Specifies the log in which the source should be registered.
      *     The result of \c get_default_log_name is used, if the parameter is not specified.
      * \li \c log_source - Specifies the source name. The result of \c get_default_source_name
      *     is used, if the parameter is not specified.
      * \li \c registration - Specifies the event source registration mode in the Windows registry.
-     *                       Can have values of the \c registration_mode enum. Default value: \c on_demand.
+     *     Can have values of the \c registration_mode enum. Default value: \c on_demand.
      *
      * \param args A set of named parameters.
      */
     template< typename ArgsT >
     explicit basic_simple_event_log_backend(ArgsT const& args) : m_pImpl(construct(
+        args[keywords::target | string_type()],
         args[keywords::log_name || &basic_simple_event_log_backend::get_default_log_name],
         args[keywords::log_source || &basic_simple_event_log_backend::get_default_source_name],
         args[keywords::registration | event_log::on_demand]))
@@ -864,7 +868,11 @@ private:
     void do_consume(record_type const& record, target_string_type const& formatted_message);
 
     //! Constructs backend implementation
-    static implementation* construct(string_type const& log_name, string_type const& source_name, event_log::registration_mode reg_mode);
+    static implementation* construct(
+        string_type const& target,
+        string_type const& log_name,
+        string_type const& source_name,
+        event_log::registration_mode reg_mode);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 
@@ -936,7 +944,7 @@ public:
      */
     template< typename T >
     explicit basic_event_log_backend(std::basic_string< T > const& message_file_name) :
-        m_pImpl(construct(message_file_name, get_default_log_name(), get_default_source_name(), false))
+        m_pImpl(construct(message_file_name, string_type(), get_default_log_name(), get_default_source_name(), event_log::on_demand))
     {
     }
     /*!
@@ -946,7 +954,7 @@ public:
      */
     template< typename T, typename U >
     explicit basic_event_log_backend(filesystem::basic_path< T, U > const& message_file_name) :
-        m_pImpl(construct(message_file_name, get_default_log_name(), get_default_source_name(), false))
+        m_pImpl(construct(message_file_name, string_type(), get_default_log_name(), get_default_source_name(), event_log::on_demand))
     {
     }
     /*!
@@ -955,22 +963,24 @@ public:
      *
      * \li \c message_file - Specifies the file name that contains resources that
      *     describe events and categories.
+     * \li \c target - Specifies an UNC path to the remote server to which log records should be sent to.
+     *     The local machine will be used to process log records, if not specified.
      * \li \c log_name - Specifies the log in which the source should be registered.
      *     The result of \c get_default_log_name is used, if the parameter is not specified.
      * \li \c log_source - Specifies the source name. The result of \c get_default_source_name
      *     is used, if the parameter is not specified.
-     * \li \c force - If \c true and Windows registry already contains the log source
-     *     registration, the registry parameters are overwritten. If \c false, the registry
-     *     is only modified if the log source was not previously registered. Default value: \c false.
+     * \li \c registration - Specifies the event source registration mode in the Windows registry.
+     *     Can have values of the \c registration_mode enum. Default value: \c on_demand.
      *
      * \param args A set of named parameters.
      */
     template< typename ArgsT >
     explicit basic_event_log_backend(ArgsT const& args) : m_pImpl(construct(
         args[keywords::message_file],
+        args[keywords::target | string_type()],
         args[keywords::log_name || &basic_event_log_backend::get_default_log_name],
         args[keywords::log_source || &basic_event_log_backend::get_default_source_name],
-        args[keywords::force | false]))
+        args[keywords::registration | event_log::on_demand]))
     {
     }
 
@@ -1016,35 +1026,40 @@ private:
     //! Constructs backend implementation
     static implementation* construct(
         filesystem::path const& message_file_name,
+        string_type const& target,
         string_type const& log_name,
         string_type const& source_name,
-        bool force);
+        event_log::registration_mode reg_mode);
 #ifndef BOOST_FILESYSTEM_NARROW_ONLY
     //! Constructs backend implementation
     static implementation* construct(
         filesystem::wpath const& message_file_name,
+        string_type const& target,
         string_type const& log_name,
         string_type const& source_name,
-        bool force);
+        event_log::registration_mode reg_mode);
 #endif // BOOST_FILESYSTEM_NARROW_ONLY
     //! Constructs backend implementation
     static implementation* construct(
         std::string const& message_file_name,
+        string_type const& target,
         string_type const& log_name,
         string_type const& source_name,
-        bool force);
+        event_log::registration_mode reg_mode);
     //! Constructs backend implementation
     static implementation* construct(
         std::wstring const& message_file_name,
+        string_type const& target,
         string_type const& log_name,
         string_type const& source_name,
-        bool force);
+        event_log::registration_mode reg_mode);
     //! Constructs backend implementation
     static implementation* construct_impl(
         string_type const& message_file_name,
+        string_type const& target,
         string_type const& log_name,
         string_type const& source_name,
-        bool force);
+        event_log::registration_mode reg_mode);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 
