@@ -761,8 +761,8 @@ namespace event_log {
  * \brief An implementation of a simple logging sink backend that emits events into Windows NT event log
  *
  * The sink uses Windows NT 5 (Windows 2000) and later event log API to emit events
- * to an event log. The sink acts as an event source, it implements all needed resources and
- * source registration in the Windows registry that is needed for the event delivery.
+ * to an event log. The sink acts as an event source in terms of the API, it implements all needed resources
+ * and source registration in the Windows registry that is needed for the event delivery.
  *
  * The backend performs message text formatting. The composed text is then passed as the first
  * and only string parameter of the event. The resource embedded into the backend describes the event
@@ -823,7 +823,7 @@ public:
      * Constructor. Registers event log source with the specified parameters.
      * The following named parameters are supported:
      *
-     * \li \c target - Specifies an UNC path to the remote server to which log records should be sent to.
+     * \li \c target - Specifies an UNC path to the remote server which log records should be sent to.
      *     The local machine will be used to process log records, if not specified.
      * \li \c log_name - Specifies the log in which the source should be registered.
      *     The result of \c get_default_log_name is used, if the parameter is not specified.
@@ -887,7 +887,8 @@ private:
  *
  * Besides the file name of the module with event resources, the backend provides the following
  * customizations:
- * \li Log name and source name. These parameters have similar meaning to \c basic_simple_event_log_backend.
+ * \li Remote server UNC address, log name and source name. These parameters have similar meaning
+ *     to \c basic_simple_event_log_backend.
  * \li Event type and category mappings. These are function object that allow to map attribute
  *     values to the according event parameters. One can use mappings in the \c event_log namespace.
  * \li Event composer. This function object extracts event identifier and formats string insertions,
