@@ -38,15 +38,19 @@
 
 #include <boost/log/attributes/counter.hpp>
 #include <boost/log/attributes/constant.hpp>
+#include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/attributes/clock.hpp>
 #include <boost/log/attributes/timer.hpp>
 
 #include <boost/log/filters/attr.hpp>
 
-enum
+#include <boost/log/utility/scoped_attribute.hpp>
+
+enum config
 {
     RECORD_COUNT = 1000000,
-    THREAD_COUNT = 2
+    THREAD_COUNT = 4,
+    SINK_COUNT = 4
 };
 
 namespace logging = boost::log;
@@ -84,6 +88,7 @@ namespace {
 
 void test(unsigned int record_count, boost::barrier& bar)
 {
+    BOOST_LOG_SCOPED_THREAD_TAG("ThreadID", boost::thread::id, boost::this_thread::get_id());
     bar.wait();
 
     src::severity_logger< severity_level > slg;
@@ -95,15 +100,18 @@ void test(unsigned int record_count, boost::barrier& bar)
 
 int main(int argc, char* argv[])
 {
+    std::cout << "Test config: " << THREAD_COUNT << " threads, " << SINK_COUNT << " sinks, " << RECORD_COUNT << " records" << std::endl;
+
     typedef sinks::synchronous_sink< fake_backend< char > > fake_sink;
-    boost::shared_ptr< fake_sink > pSink = boost::make_shared< fake_sink >();
+    for (unsigned int i = 0; i < SINK_COUNT; ++i)
+        logging::core::get()->add_sink(boost::make_shared< fake_sink >());
 
-    logging::core::get()->add_sink(pSink);
-
-    boost::shared_ptr< logging::attribute > pCounter(new attrs::counter< unsigned int >(1));
-    logging::core::get()->add_global_attribute("LineID", pCounter);
-    boost::shared_ptr< logging::attribute > pTimeStamp(new attrs::local_clock());
-    logging::core::get()->add_global_attribute("TimeStamp", pTimeStamp);
+    boost::shared_ptr< logging::attribute > pAttr(new attrs::counter< unsigned int >(1));
+    logging::core::get()->add_global_attribute("LineID", pAttr);
+    pAttr.reset(new attrs::local_clock());
+    logging::core::get()->add_global_attribute("TimeStamp", pAttr);
+    pAttr.reset(new attrs::named_scope());
+    logging::core::get()->add_global_attribute("Scope", pAttr);
 
     logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > normal); // all records pass the filter
     // logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > error); // all records don't pass the filter
@@ -123,7 +131,7 @@ int main(int argc, char* argv[])
 
     unsigned long long duration = (end - start).total_microseconds();
 
-    std::cout << "Test duration: " << duration << " us, " << static_cast< unsigned int >(THREAD_COUNT) << " threads ("
+    std::cout << "Test duration: " << duration << " us ("
         << std::fixed << std::setprecision(3) << static_cast< double >(RECORD_COUNT) / (static_cast< double >(duration) / 1000000.0)
         << " records per second)" << std::endl;
 
