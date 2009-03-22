@@ -133,7 +133,7 @@ struct rotating_ofstream_factory
     template< typename ArgsT >
     static ostream_ptr create(ArgsT const& args)
     {
-        return ostream_ptr(new basic_rotating_ofstream(args[file_name], args));
+        return ostream_ptr(new basic_rotating_ofstream< CharT >(args[keywords::file_name], args));
     }
 };
 
