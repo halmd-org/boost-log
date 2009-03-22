@@ -38,7 +38,6 @@
 
 #include <boost/log/attributes/counter.hpp>
 #include <boost/log/attributes/constant.hpp>
-#include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/attributes/clock.hpp>
 #include <boost/log/attributes/timer.hpp>
 
