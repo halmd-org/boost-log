@@ -37,12 +37,12 @@ struct threading_model_tag {};
 
 #if !defined(BOOST_LOG_NO_THREADS)
 
-//! The sink backend ensures all needed synchronization, it is capable to handle multithreaded calls
-struct backend_synchronization_tag : threading_model_tag {};
 //! The sink backend requires to be called in a single thread (IOW, no other threads EVER are allowed to write to the backend)
 struct single_thread_tag : threading_model_tag {};
 //! The sink backend expects pre-synchronized calls, all needed synchronization is implemented in the frontend (IOW, only one thread is writing to the backend concurrently, but is is possible for several threads to write sequentially)
-struct frontend_synchronization_tag : threading_model_tag {};
+struct frontend_synchronization_tag : single_thread_tag {};
+//! The sink backend ensures all needed synchronization, it is capable to handle multithreaded calls
+struct backend_synchronization_tag : frontend_synchronization_tag {};
 
 #else // !defined(BOOST_LOG_NO_THREADS)
 

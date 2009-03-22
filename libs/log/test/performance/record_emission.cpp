@@ -68,9 +68,9 @@ namespace {
     //! A fake sink backend that receives log records
     template< typename CharT >
     class fake_backend :
-        public sinks::basic_sink_backend< CharT, sinks::frontend_synchronization_tag >
+        public sinks::basic_sink_backend< CharT, sinks::backend_synchronization_tag >
     {
-        typedef sinks::basic_sink_backend< CharT, sinks::frontend_synchronization_tag > base_type;
+        typedef sinks::basic_sink_backend< CharT, sinks::backend_synchronization_tag > base_type;
 
     public:
         typedef typename base_type::record_type record_type;

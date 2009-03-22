@@ -414,10 +414,7 @@ public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
     //! \cond
-    BOOST_MPL_ASSERT((mpl::or_<
-        is_model_supported< typename sink_backend_type::threading_model, single_thread_tag >,
-        is_model_supported< typename sink_backend_type::threading_model, frontend_synchronization_tag >
-    >));
+    BOOST_MPL_ASSERT((is_model_supported< typename sink_backend_type::threading_model, single_thread_tag >));
     //! \endcond
 
     typedef typename base_type::char_type char_type;
