@@ -42,8 +42,8 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/detail/atomic_count.hpp>
 #include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/log/detail/light_rw_mutex.hpp>
 #endif
 
 #ifdef _MSC_VER
@@ -76,18 +76,15 @@ public:
     //! Filter function type
     typedef function1< bool, values_view_type const& > filter_type;
 
-#if !defined(BOOST_LOG_NO_THREADS)
 private:
+#if !defined(BOOST_LOG_NO_THREADS)
     //! Mutex type
-    typedef shared_mutex filter_mutex_type;
+    typedef boost::log::aux::light_rw_mutex filter_mutex_type;
     //! Read lock type
     typedef boost::log::aux::shared_lock_guard< filter_mutex_type > scoped_read_lock;
     //! Write lock type
     typedef lock_guard< filter_mutex_type > scoped_write_lock;
-#endif
 
-private:
-#if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
     filter_mutex_type m_FilterMutex;
 #endif

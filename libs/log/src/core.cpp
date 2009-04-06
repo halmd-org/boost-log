@@ -27,6 +27,7 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
+#include <boost/log/detail/light_rw_mutex.hpp>
 #endif
 
 namespace boost {
@@ -70,9 +71,9 @@ public:
     typedef basic_core< char_type > core_type;
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Read lock type
-    typedef log::aux::shared_lock_guard< shared_mutex > scoped_read_lock;
+    typedef log::aux::shared_lock_guard< log::aux::light_rw_mutex > scoped_read_lock;
     //! Write lock type
-    typedef lock_guard< shared_mutex > scoped_write_lock;
+    typedef lock_guard< log::aux::light_rw_mutex > scoped_write_lock;
 #endif
 
     //! Sinks container type
@@ -88,7 +89,7 @@ public:
 public:
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
-    shared_mutex Mutex;
+    log::aux::light_rw_mutex Mutex;
 #endif
 
     //! List of sinks involved into output

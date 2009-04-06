@@ -39,7 +39,6 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/mpl/bool.hpp>
 #include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
 #endif
 
@@ -92,6 +91,7 @@ struct single_thread_model
 #if !defined(BOOST_LOG_NO_THREADS)
 
 //! Multi-thread locking model with maximum locking capabilities
+template< typename MutexT >
 struct multi_thread_model
 {
     multi_thread_model() {}
@@ -122,7 +122,7 @@ struct multi_thread_model
 
 private:
     //! Synchronization primitive
-    mutable shared_mutex m_Mutex;
+    mutable MutexT m_Mutex;
 };
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
@@ -264,8 +264,8 @@ struct is_mutex_type< boost::log::sources::single_thread_model > : mpl::true_
 {
 };
 
-template< >
-struct is_mutex_type< boost::log::sources::multi_thread_model > : mpl::true_
+template< typename T >
+struct is_mutex_type< boost::log::sources::multi_thread_model< T > > : mpl::true_
 {
 };
 

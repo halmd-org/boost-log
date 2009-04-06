@@ -29,6 +29,7 @@
 #include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/new_shared.hpp>
+#include <boost/log/detail/light_rw_mutex.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/keywords/channel.hpp>
 #include <boost/log/attributes/constant.hpp>
@@ -201,7 +202,7 @@ class channel_logger_mt :
     public basic_composite_logger<
         char,
         channel_logger_mt< ChannelT >,
-        multi_thread_model,
+        multi_thread_model< boost::log::aux::light_rw_mutex >,
         mpl::vector1< basic_channel_logger< mpl::_1, ChannelT > >
     >
 {
@@ -235,7 +236,7 @@ class wchannel_logger_mt :
     public basic_composite_logger<
         wchar_t,
         wchannel_logger< ChannelT >,
-        multi_thread_model,
+        multi_thread_model< boost::log::aux::light_rw_mutex >,
         mpl::vector1< basic_channel_logger< mpl::_1, ChannelT > >
     >
 {
@@ -292,7 +293,7 @@ public:
 template< typename ChannelT = std::string >
 class channel_logger_mt :
     public basic_channel_logger<
-        basic_logger< char, channel_logger_mt< ChannelT >, multi_thread_model >,
+        basic_logger< char, channel_logger_mt< ChannelT >, multi_thread_model< shared_mutex > >,
         ChannelT
     >
 {
@@ -364,7 +365,7 @@ public:
 template< typename ChannelT = std::wstring >
 class wchannel_logger_mt :
     public basic_channel_logger<
-        basic_logger< wchar_t, wchannel_logger_mt< ChannelT >, multi_thread_model >,
+        basic_logger< wchar_t, wchannel_logger_mt< ChannelT >, multi_thread_model< shared_mutex > >,
         ChannelT
     >
 {

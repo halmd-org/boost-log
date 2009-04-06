@@ -30,6 +30,7 @@
 #include <boost/log/detail/new_shared.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/detail/thread_specific.hpp>
+#include <boost/log/detail/light_rw_mutex.hpp>
 #endif
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/attributes/attribute.hpp>
@@ -361,7 +362,7 @@ class severity_logger_mt :
     public basic_composite_logger<
         char,
         severity_logger_mt< LevelT >,
-        multi_thread_model,
+        multi_thread_model< boost::log::aux::light_rw_mutex >,
         mpl::vector1< basic_severity_logger< mpl::_1, LevelT > >
     >
 {
@@ -395,7 +396,7 @@ class wseverity_logger_mt :
     public basic_composite_logger<
         wchar_t,
         wseverity_logger_mt< LevelT >,
-        multi_thread_model,
+        multi_thread_model< boost::log::aux::light_rw_mutex >,
         mpl::vector1< basic_severity_logger< mpl::_1, LevelT > >
     >
 {
@@ -452,7 +453,7 @@ public:
 template< typename LevelT = int >
 class severity_logger_mt :
     public basic_severity_logger<
-        basic_logger< char, severity_logger_mt< LevelT >, multi_thread_model >,
+        basic_logger< char, severity_logger_mt< LevelT >, multi_thread_model< shared_mutex > >,
         LevelT
     >
 {
@@ -524,7 +525,7 @@ public:
 template< typename LevelT = int >
 class wseverity_logger_mt :
     public basic_severity_logger<
-        basic_logger< wchar_t, wseverity_logger_mt< LevelT >, multi_thread_model >,
+        basic_logger< wchar_t, wseverity_logger_mt< LevelT >, multi_thread_model< shared_mutex > >,
         LevelT
     >
 {

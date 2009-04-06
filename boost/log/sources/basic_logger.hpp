@@ -44,6 +44,7 @@
 #include <boost/preprocessor/seq/for_each_i.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/multiple_lock.hpp>
+#include <boost/log/detail/light_rw_mutex.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/record.hpp>
@@ -626,7 +627,7 @@ class logger :
  * See \c basic_logger class template for a more detailed description.
  */
 class logger_mt :
-    public basic_composite_logger< char, logger_mt, multi_thread_model, mpl::vector0< > >
+    public basic_composite_logger< char, logger_mt, multi_thread_model< boost::log::aux::light_rw_mutex >, mpl::vector0< > >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(logger_mt)
 };
@@ -655,7 +656,7 @@ class wlogger :
  * See \c basic_logger class template for a more detailed description.
  */
 class wlogger_mt :
-    public basic_composite_logger< wchar_t, wlogger_mt, multi_thread_model, mpl::vector0< > >
+    public basic_composite_logger< wchar_t, wlogger_mt, multi_thread_model< boost::log::aux::light_rw_mutex >, mpl::vector0< > >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(wlogger_mt)
 };
@@ -721,13 +722,13 @@ class wlogger_mt :
 /*!
  *  \brief The macro declares a narrow-char thread-safe logger class that inherits a number of base classes
  *
- *  Equivalent to BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, multi_thread_model)
+ *  Equivalent to <tt>BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, multi_thread_model< shared_mutex >)</tt>
  *
  *  \param type_name The name of the logger class to declare
  *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
  */
 #define BOOST_LOG_DECLARE_LOGGER_MT(type_name, base_seq)\
-    BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, ::boost::log::sources::multi_thread_model)
+    BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, ::boost::log::sources::multi_thread_model< ::boost::shared_mutex >)
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
 #endif // BOOST_LOG_USE_CHAR
@@ -750,13 +751,13 @@ class wlogger_mt :
 /*!
  *  \brief The macro declares a wide-char thread-safe logger class that inherits a number of base classes
  *
- *  Equivalent to BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq, multi_thread_model)
+ *  Equivalent to <tt>BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq, multi_thread_model< shared_mutex >)</tt>
  *
  *  \param type_name The name of the logger class to declare
  *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
  */
 #define BOOST_LOG_DECLARE_WLOGGER_MT(type_name, base_seq)\
-    BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq, ::boost::log::sources::multi_thread_model)
+    BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq, ::boost::log::sources::multi_thread_model< ::boost::shared_mutex >)
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
 #endif // BOOST_LOG_USE_WCHAR_T

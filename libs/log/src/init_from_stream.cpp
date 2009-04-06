@@ -62,7 +62,7 @@
 #include <boost/log/utility/init/formatter_parser.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
+#include <boost/log/detail/light_rw_mutex.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
 #endif
 #include "parser_utils.hpp"
@@ -265,7 +265,7 @@ struct sinks_repository :
 
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
-    shared_mutex m_Mutex;
+    log::aux::light_rw_mutex m_Mutex;
 #endif
     //! Map of the sink factories
     sink_factories m_Factories;
@@ -277,7 +277,7 @@ struct sinks_repository :
         if (dest != params.end())
         {
 #if !defined(BOOST_LOG_NO_THREADS)
-            log::aux::shared_lock_guard< shared_mutex > _(m_Mutex);
+            log::aux::shared_lock_guard< log::aux::light_rw_mutex > _(m_Mutex);
 #endif
             typename sink_factories::const_iterator it = m_Factories.find(dest->second);
             if (it != m_Factories.end())
@@ -671,7 +671,7 @@ void register_sink_factory(
 {
     sinks_repository< CharT >& repo = sinks_repository< CharT >::get();
 #if !defined(BOOST_LOG_NO_THREADS)
-    lock_guard< shared_mutex > _(repo.m_Mutex);
+    lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);
 #endif
     repo.m_Factories[sink_name] = factory;
 }

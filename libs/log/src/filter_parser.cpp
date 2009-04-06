@@ -43,8 +43,8 @@
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/detail/shared_lock_guard.hpp>
+#include <boost/log/detail/light_rw_mutex.hpp>
 #include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
 #include "parser_utils.hpp"
 
@@ -178,7 +178,7 @@ struct filters_repository :
 
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
-    mutable shared_mutex m_Mutex;
+    mutable log::aux::light_rw_mutex m_Mutex;
 #endif
     //! The map of filter factories
     factories_map m_Map;
@@ -503,7 +503,7 @@ void register_filter_factory(const CharT* attr_name, shared_ptr< filter_factory<
     filters_repository< CharT >& repo = filters_repository< CharT >::get();
 
 #if !defined(BOOST_LOG_NO_THREADS)
-    lock_guard< shared_mutex > _(repo.m_Mutex);
+    lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);
 #endif
     repo.m_Map[name] = factory;
 }
@@ -522,7 +522,7 @@ parse_filter(const CharT* begin, const CharT* end)
 
 #if !defined(BOOST_LOG_NO_THREADS)
     filters_repository< CharT >& repo = filters_repository< CharT >::get();
-    log::aux::shared_lock_guard< shared_mutex > _(repo.m_Mutex);
+    log::aux::shared_lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);
 #endif
 
     filter_type filt;

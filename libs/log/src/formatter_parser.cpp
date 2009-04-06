@@ -54,7 +54,7 @@
 #include <boost/log/utility/type_dispatch/date_time_types.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
+#include <boost/log/detail/light_rw_mutex.hpp>
 #endif
 #include "parser_utils.hpp"
 
@@ -121,7 +121,7 @@ struct formatters_repository :
 
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
-    mutable shared_mutex m_Mutex;
+    mutable log::aux::light_rw_mutex m_Mutex;
 #endif
     //! The map of formatter factories
     typename formatter_types< CharT >::factories_map m_Map;
@@ -198,7 +198,7 @@ public:
         {
             formatters_repository< char_type > const& repo = formatters_repository< char_type >::get();
 #if !defined(BOOST_LOG_NO_THREADS)
-            shared_lock< shared_mutex > lock(repo.m_Mutex);
+            shared_lock< log::aux::light_rw_mutex > lock(repo.m_Mutex);
 #endif
 
             typename formatter_types< CharT >::factories_map::const_iterator it = repo.m_Map.find(m_AttrName);
@@ -356,7 +356,7 @@ void register_formatter_factory(
     formatters_repository< CharT >& repo = formatters_repository< CharT >::get();
 
 #if !defined(BOOST_LOG_NO_THREADS)
-    lock_guard< shared_mutex > _(repo.m_Mutex);
+    lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);
 #endif
     repo.m_Map[name] = factory;
 }

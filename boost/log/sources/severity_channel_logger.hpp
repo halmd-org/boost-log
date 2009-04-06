@@ -66,7 +66,7 @@ class severity_channel_logger_mt :
     public basic_composite_logger<
         char,
         severity_channel_logger_mt< LevelT, ChannelT >,
-        multi_thread_model,
+        multi_thread_model< boost::log::aux::light_rw_mutex >,
         mpl::vector2<
             basic_severity_logger< mpl::_1, LevelT >,
             basic_channel_logger< mpl::_1, ChannelT >
@@ -106,7 +106,7 @@ class wseverity_channel_logger_mt :
     public basic_composite_logger<
         wchar_t,
         wseverity_channel_logger_mt< LevelT, ChannelT >,
-        multi_thread_model,
+        multi_thread_model< boost::log::aux::light_rw_mutex >,
         mpl::vector2<
             basic_severity_logger< mpl::_1, LevelT >,
             basic_channel_logger< mpl::_1, ChannelT >
@@ -170,7 +170,7 @@ template< typename LevelT = int, typename ChannelT = std::string >
 class severity_channel_logger_mt :
     public basic_severity_logger<
         basic_channel_logger<
-            basic_logger< char, severity_channel_logger_mt, multi_thread_model >,
+            basic_logger< char, severity_channel_logger_mt, multi_thread_model< shared_mutex > >,
             ChannelT
         >,
         LevelT
@@ -248,7 +248,7 @@ template< typename LevelT = int, typename ChannelT = std::wstring >
 class wseverity_channel_logger_mt :
     public basic_severity_logger<
         basic_channel_logger<
-            basic_logger< wchar_t, wseverity_channel_logger_mt, multi_thread_model >,
+            basic_logger< wchar_t, wseverity_channel_logger_mt, multi_thread_model< shared_mutex > >,
             ChannelT
         >,
         LevelT
