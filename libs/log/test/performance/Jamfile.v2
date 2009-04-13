@@ -3,7 +3,7 @@
 # accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-exe record_emission 
-    : main.cpp ../../build//boost_log
+exe record_emission
+    : record_emission.cpp ../../build//boost_log
     ;
 

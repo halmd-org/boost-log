@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
     logging::core::get()->add_global_attribute("Scope", pAttr);
 
     logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > normal); // all records pass the filter
-    // logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > error); // all records don't pass the filter
+//    logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > error); // all records don't pass the filter
 
     const unsigned int record_count = RECORD_COUNT / THREAD_COUNT;
     boost::barrier bar(THREAD_COUNT);

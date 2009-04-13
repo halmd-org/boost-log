@@ -19,7 +19,7 @@ project
         <library>/boost/test//boost_unit_test_framework
         <threading>single:<define>BOOST_LOG_NO_THREADS
         <threading>multi:<library>/boost/thread//boost_thread
-        <link>static
+#        <link>static
     ;
 
 # this rule enumerates through all the sources and invokes
