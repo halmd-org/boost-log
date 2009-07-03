@@ -45,15 +45,11 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/multiple_lock.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
+#include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/record.hpp>
 #include <boost/log/sources/threading_models.hpp>
-
-#ifndef BOOST_LOG_MAX_CTOR_FORWARD_ARGS
-//! The maximum number of arguments that can be forwarded by the logger constructor to its bases
-#define BOOST_LOG_MAX_CTOR_FORWARD_ARGS 16
-#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -450,21 +446,12 @@ struct inherit_logger_features
         base_type((BOOST_PP_ENUM_PARAMS(n, arg))) {}
 
 
-#define BOOST_LOG_CTOR_FORWARD(z, n, class_type)\
-    template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
-    explicit class_type(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
-        class_type::logger_base((BOOST_PP_ENUM_PARAMS(n, arg))) {}
-
-#define BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS_IMPL(class_type, typename_keyword)\
-    public:\
-        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD, class_type)
-
 #define BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_IMPL(class_type, typename_keyword)\
     public:\
         class_type() {}\
         class_type(class_type const& that) : class_type::logger_base(\
             static_cast< typename_keyword() class_type::logger_base const& >(that)) {}\
-        BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS_IMPL(class_type, typename_keyword)
+        BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_FORWARD(class_type, class_type::logger_base)
 
 //! \endcond
 

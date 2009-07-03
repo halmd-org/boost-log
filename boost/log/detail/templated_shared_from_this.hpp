@@ -30,10 +30,10 @@ namespace BOOST_LOG_NAMESPACE {
 namespace aux {
 
     /*!
-     *  \brief A type-neutral version for the enable_shared_from_this class
+     *  \brief A type-neutral version for the \c enable_shared_from_this class
      * 
      *  This class can be useful when several base classes in the hierarchy need to
-     *  obtain a valid shared_ptr from this pointer.
+     *  obtain a valid \c shared_ptr from \c this pointer.
      */
     class templated_shared_from_this :
         public enable_shared_from_this< templated_shared_from_this >

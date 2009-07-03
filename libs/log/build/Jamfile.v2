@@ -66,6 +66,7 @@ lib boost_log
         timer.cpp
         sink.cpp
         text_ostream_backend.cpp
+        text_file_backend.cpp
         syslog_backend.cpp
         thread_specific.cpp
         parser_utils.cpp
