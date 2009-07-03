@@ -52,6 +52,6 @@
 // into an ArgumentsPack and pass it to a function call.
 #define BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(class_type, fun)\
     public:\
-        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD, (class_type, fun))
+        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_CALL, (class_type, fun))
 
 #endif // BOOST_LOG_DETAIL_PARAMETER_TOOLS_HPP_INCLUDED_

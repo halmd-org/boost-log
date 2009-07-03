@@ -116,13 +116,6 @@ namespace {
         {
             return (isdigit(c) != 0);
         }
-
-        typedef int (*lazy_sprintf)(char*, std::size_t, const char*, ...);
-
-        static lazy_sprintf get_lazy_sprintf()
-        {
-            return (lazy_sprintf)&boost::log::aux::snprintf;
-        }
     };
 
     template< >
@@ -149,13 +142,6 @@ namespace {
         static bool is_digit(wchar_t c)
         {
             return (iswdigit(c) != 0);
-        }
-
-        typedef int (*lazy_sprintf)(wchar_t*, std::size_t, const wchar_t*, ...);
-
-        static lazy_sprintf get_lazy_sprintf()
-        {
-            return (lazy_sprintf)&boost::log::aux::swprintf;
         }
     };
 
@@ -488,17 +474,15 @@ void fifo_file_collector::construct(
 
         ++placeholder_count;
 
-        if (!counter_found)
+        if (!counter_found && parse_counter_placeholder(it, end, width, precision))
         {
-            if (counter_found = parse_counter_placeholder(it, end, width, precision))
-            {
-                // We've found the file counter placeholder in the pattern
-                counter_pos = placeholder_begin - name_pattern.begin();
-                name_pattern.erase(counter_pos, it - placeholder_begin);
-                --placeholder_count;
-                it = name_pattern.begin() + counter_pos;
-                end = name_pattern.end();
-            }
+            // We've found the file counter placeholder in the pattern
+            counter_found = true;
+            counter_pos = placeholder_begin - name_pattern.begin();
+            name_pattern.erase(counter_pos, it - placeholder_begin);
+            --placeholder_count;
+            it = name_pattern.begin() + counter_pos;
+            end = name_pattern.end();
         }
     }
     while (it != end);
