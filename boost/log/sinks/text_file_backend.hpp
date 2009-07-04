@@ -152,11 +152,35 @@ public:
      * Scans the target directory for the files that have already been stored. The found
      * files are added to the collector in order to be tracked and erased, if needed.
      *
-     * \param method The scan method. If \c no_scan is specified, the call has no effect.
+     * The function may scan the directory in two ways: it will either consider every
+     * file in the directory a log file, or will only consider files with names that
+     * match the specified pattern. The pattern may contain the following placeholders:
+     *
+     * \li %y, %Y, %m, %d - date components, in Boost.DateTime meaning.
+     * \li %H, %M, %S, %F - time components, in Boost.DateTime meaning.
+     * \li %N - numeric file counter. May also contain width specification
+     *     in printf-compatible form (e.g. %5N). The resulting number will always be zero-filled.
+     * \li %% - a percent sign
+     *
+     * All other placeholders are not supported.
+     *
+     * \param method The method of scanning. If \c no_scan is specified, the call has no effect.
      * \param pattern The target directory, in case if \a method is \c scan_all. The target
      *                directory and the file name pattern if \a method is \c scan_matching.
+     * \param update_counter If \c true and \a method is \c scan_matching, the method attempts
+     *                       to update the file counter according to the files found in the target
+     *                       directory. The counter is unaffected otherwise. It usually should be
+     *                       \c false unless you're scanning the target directory.
+     * \return The number of found files.
+     *
+     * \note In case if \a method is \c scan_matching the effect of this function is highly dependent
+     *       on the \a pattern definition. It is recommended to choose patterns with easily
+     *       distinguished placeholders (i.e. having delimiters between them). Otherwise
+     *       either some files can be mistakenly found or not found, which in turn may lead
+     *       to an incorrect file deletion.
      */
-    void scan_for_files(file_scan_method method, boost::log::aux::universal_path const& pattern);
+    unsigned int scan_for_files(
+        file_scan_method method, boost::log::aux::universal_path const& pattern, bool update_counter = false);
 
 private:
     //! Constructor implementation

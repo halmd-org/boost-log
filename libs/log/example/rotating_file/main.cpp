@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 
         // Set up where the rotated files will be stored
         sink->locked_backend()->file_collector(sinks::fifo_file_collector(
-            keywords::file_name = "logs/%Y%m%d_%H%M%S.log",     // the resulting file name pattern
+            keywords::file_name = "logs/%Y%m%d_%H%M%S_%5N.log", // the resulting file name pattern
             keywords::max_size = 16 * 1024 * 1024,              // maximum total size of the stored files, in bytes
             keywords::min_free_space = 100 * 1024 * 1024,       // minimum free space on the drive, in bytes
             keywords::scan_method = sinks::scan_matching        // upon restart, scan the directory for files matching the file_name pattern

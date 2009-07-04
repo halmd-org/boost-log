@@ -17,6 +17,7 @@
 #include <locale>
 #include <ostream>
 #include <sstream>
+#include <iterator>
 #include <algorithm>
 #include <stdexcept>
 
@@ -201,27 +202,25 @@ namespace {
     private:
         //! The position in the pattern where the file counter placeholder is
         path_string_type::size_type m_FileCounterPosition;
+        //! File counter width
+        std::streamsize m_Width;
         //! The file counter formatting stream
         mutable std::basic_ostringstream< path_char_type > m_Stream;
 
     public:
         //! Initializing constructor
-        file_counter_formatter(path_string_type::size_type pos, unsigned int width, unsigned int precision) :
-            m_FileCounterPosition(pos)
+        file_counter_formatter(path_string_type::size_type pos, unsigned int width) :
+            m_FileCounterPosition(pos),
+            m_Width(width)
         {
             typedef file_controller_traits< path_char_type > traits_t;
-            if (width != (std::numeric_limits< unsigned int >::max)())
-                m_Stream.width(width);
-            if (precision != (std::numeric_limits< unsigned int >::max)())
-                m_Stream.precision(precision);
             m_Stream.fill(traits_t::zero);
         }
         //! Copy constructor
         file_counter_formatter(file_counter_formatter const& that) :
-            m_FileCounterPosition(that.m_FileCounterPosition)
+            m_FileCounterPosition(that.m_FileCounterPosition),
+            m_Width(that.m_Width)
         {
-            m_Stream.width(that.m_Stream.width());
-            m_Stream.precision(that.m_Stream.precision());
             m_Stream.fill(that.m_Stream.fill());
         }
 
@@ -231,6 +230,7 @@ namespace {
             path_string_type file_name = pattern;
 
             m_Stream.str(path_string_type());
+            m_Stream.width(m_Width);
             m_Stream << counter;
             file_name.insert(m_FileCounterPosition, m_Stream.str());
 
@@ -268,8 +268,7 @@ namespace {
     bool parse_counter_placeholder(
         path_string_type::const_iterator& it,
         path_string_type::const_iterator end,
-        unsigned int& width,
-        unsigned int& precision)
+        unsigned int& width)
     {
         typedef file_controller_traits< path_char_type > traits_t;
         spirit::classic::parse_info< path_string_type::const_iterator > result = spirit::classic::parse(it, end,
@@ -283,7 +282,7 @@ namespace {
             !spirit::classic::uint_p[spirit::classic::assign_a(width)] >>
             !(
                 spirit::classic::ch_p(static_cast< path_char_type >(traits_t::dot)) >>
-                spirit::classic::uint_p[spirit::classic::assign_a(precision)]
+                spirit::classic::uint_p
             ) >>
             spirit::classic::ch_p(static_cast< path_char_type >(traits_t::number_placeholder))
         ));
@@ -298,9 +297,28 @@ namespace {
     }
 
     //! The function matches the file name and the pattern
-    bool match_pattern(path_string_type const& file_name, path_string_type const& pattern)
+    bool match_pattern(path_string_type const& file_name, path_string_type const& pattern, unsigned int& file_counter)
     {
         typedef file_controller_traits< path_char_type > traits_t;
+
+        struct local
+        {
+            // Verifies that the string contains exactly n digits
+            static bool scan_digits(
+                path_string_type::const_iterator& it,
+                path_string_type::const_iterator end,
+                unsigned int n)
+            {
+                for (; n > 0; --n)
+                {
+                    path_char_type c = *it++;
+                    if (!traits_t::is_digit(c) || it == end)
+                        return false;
+                }
+                return true;
+            }
+        };
+
         path_string_type::const_iterator
             f_it = file_name.begin(),
             f_end = file_name.end(),
@@ -327,24 +345,6 @@ namespace {
             }
             else
             {
-                struct local
-                {
-                    // Verifies that the string contains exactly n digits
-                    static bool scan_digits(
-                        path_string_type::const_iterator& it,
-                        path_string_type::const_iterator end,
-                        unsigned int n)
-                    {
-                        for (; n > 0; --n)
-                        {
-                            path_char_type c = *it++;
-                            if (!traits_t::is_digit(c) || it == end)
-                                return false;
-                        }
-                        return true;
-                    }
-                };
-
                 switch (p_c)
                 {
                 case traits_t::percent: // An escaped '%'
@@ -386,26 +386,23 @@ namespace {
                 default: // This should be the file counter placeholder or some unsupported placeholder
                     {
                         path_string_type::const_iterator p = p_it;
-                        unsigned int width = (std::numeric_limits< unsigned int >::max)(), precision = 0;
-                        if (!parse_counter_placeholder(p, p_end, width, precision))
+                        unsigned int width = 0;
+                        if (!parse_counter_placeholder(p, p_end, width))
                         {
                             boost::log::aux::throw_exception(std::logic_error(
                                 "unsupported placeholder used in pattern for file scanning"));
                         }
 
-                        // There will be at least precision and at most width digits
-                        if (precision > width)
-                            precision = width;
-                        if (!local::scan_digits(f_it, f_end, precision))
+                        // Find where the file number ends
+                        path_string_type::const_iterator f = f_it;
+                        if (!local::scan_digits(f, f_end, width))
                             return false;
-                        for (unsigned int extra_digits = width - precision; extra_digits > 0; --extra_digits)
-                        {
-                            path_char_type c = *f_it;
-                            if (!traits_t::is_digit(c) || ++f_it == f_end)
-                                break;
-                        }
+                        for (; f != f_end && traits_t::is_digit(*f); ++f);
 
-                        p_it = ++p;
+                        spirit::classic::parse(f_it, f, spirit::classic::uint_p[spirit::classic::assign_a(file_counter)]);
+
+                        f_it = f;
+                        p_it = p;
                     }
                     break;
                 }
@@ -414,7 +411,19 @@ namespace {
             }
         }
 
-        return (f_it == f_end && p_it == p_end);
+        if (p_it == p_end)
+        {
+            if (f_it != f_end)
+            {
+                // The actual file name may end with an additional counter
+                // that is added by the collector in case if file name clash
+                return local::scan_digits(f_it, f_end, std::distance(f_it, f_end));
+            }
+            else
+                return true;
+        }
+        else
+            return false;
     }
 
 } // namespace
@@ -456,8 +465,7 @@ void fifo_file_collector::construct(
     // Let's try to find the file counter placeholder
     typedef file_controller_traits< path_char_type > traits_t;
     unsigned int placeholder_count = 0;
-    unsigned int width = (std::numeric_limits< unsigned int >::max)();
-    unsigned int precision = (std::numeric_limits< unsigned int >::max)();
+    unsigned int width = 0;
     bool counter_found = false;
     path_string_type::size_type counter_pos = 0;
     path_string_type::const_iterator end = name_pattern.end();
@@ -480,7 +488,7 @@ void fifo_file_collector::construct(
 
         ++placeholder_count;
 
-        if (!counter_found && parse_counter_placeholder(it, end, width, precision))
+        if (!counter_found && parse_counter_placeholder(it, end, width))
         {
             // We've found the file counter placeholder in the pattern
             counter_found = true;
@@ -499,21 +507,21 @@ void fifo_file_collector::construct(
     switch (choice)
     {
     case 1: // Only counter placeholder in the pattern
-        m_FileNameGenerator = boost::bind(file_counter_formatter(counter_pos, width, precision), name_pattern, _1);
+        m_FileNameGenerator = boost::bind(file_counter_formatter(counter_pos, width), name_pattern, _1);
         break;
     case 2: // Only date/time placeholders in the pattern
         m_FileNameGenerator = boost::bind(date_and_time_formatter(), name_pattern, _1);
         break;
     case 3: // Counter and date/time placeholder in the pattern
         m_FileNameGenerator = boost::bind(date_and_time_formatter(),
-            boost::bind(file_counter_formatter(counter_pos, width, precision), name_pattern, _1), _1);
+            boost::bind(file_counter_formatter(counter_pos, width), name_pattern, _1), _1);
         break;
     default: // No placeholders detected
         m_FileNameGenerator = empty_formatter(name_pattern);
         break;
     }
 
-    scan_for_files(scan, scan == scan_all ? pattern.parent_path() : pattern);
+    scan_for_files(scan, (scan == scan_all ? pattern.parent_path() : pattern), true);
 }
 
 fifo_file_collector& fifo_file_collector::operator= (fifo_file_collector that)
@@ -539,12 +547,22 @@ void fifo_file_collector::operator() (boost::log::aux::universal_path const& p)
     file_info info;
     info.m_TimeStamp = filesystem::last_write_time(p);
     info.m_Size = filesystem::file_size(p);
-    do
+
+    path_string_type file_name = m_FileNameGenerator(m_FileCounter++);
+    info.m_Path = m_StorageDir / file_name;
+    if (filesystem::exists(info.m_Path))
     {
-        path_string_type file_name = m_FileNameGenerator(m_FileCounter++);
-        info.m_Path = m_StorageDir / file_name;
+        // If the file already exists, try to mangle the file name
+        // to ensure there's no conflict. I'll need to make this customizable some day.
+        file_counter_formatter formatter(file_name.size(), 5);
+        unsigned int n = 0;
+        do
+        {
+            path_string_type alt_file_name = formatter(file_name, n++);
+            info.m_Path = m_StorageDir / alt_file_name;
+        }
+        while (filesystem::exists(info.m_Path) && n < (std::numeric_limits< unsigned int >::max)());
     }
-    while (filesystem::exists(info.m_Path));
 
     // Check if an old file should be erased
     filesystem::create_directories(m_StorageDir);
@@ -587,8 +605,10 @@ void fifo_file_collector::operator() (boost::log::aux::universal_path const& p)
     m_TotalSize += info.m_Size;
 }
 
-void fifo_file_collector::scan_for_files(file_scan_method method, boost::log::aux::universal_path const& pattern)
+unsigned int fifo_file_collector::scan_for_files(
+    file_scan_method method, boost::log::aux::universal_path const& pattern, bool update_counter)
 {
+    unsigned int file_count = 0;
     if (method != no_scan)
     {
         boost::log::aux::universal_path dir;
@@ -599,7 +619,10 @@ void fifo_file_collector::scan_for_files(file_scan_method method, boost::log::au
             mask = pattern.leaf();
         }
         else
+        {
             dir = pattern;
+            update_counter = false;
+        }
 
         if (filesystem::exists(dir) && filesystem::is_directory(dir))
         {
@@ -625,12 +648,17 @@ void fifo_file_collector::scan_for_files(file_scan_method method, boost::log::au
                         boost::bind(&local::equivalent, boost::cref(info.m_Path), _1)) == m_Files.end())
                     {
                         // Check that the file name matches the pattern
-                        if (method != scan_matching || match_pattern(info.m_Path.leaf(), mask))
+                        unsigned int file_number = 0;
+                        if (method != scan_matching || match_pattern(info.m_Path.leaf(), mask, file_number))
                         {
                             info.m_Size = filesystem::file_size(info.m_Path);
                             total_size += info.m_Size;
                             info.m_TimeStamp = filesystem::last_write_time(info.m_Path);
                             files.push_back(info);
+                            ++file_count;
+
+                            if (update_counter && file_number >= m_FileCounter)
+                                m_FileCounter = file_number + 1;
                         }
                     }
                 }
@@ -642,6 +670,8 @@ void fifo_file_collector::scan_for_files(file_scan_method method, boost::log::au
             files.sort(boost::bind(&file_info::m_TimeStamp, _1) < boost::bind(&file_info::m_TimeStamp, _2));
         }
     }
+
+    return file_count;
 }
 
 //! Sink implementation data
