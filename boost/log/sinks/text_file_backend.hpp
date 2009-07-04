@@ -37,6 +37,8 @@
 #include <boost/log/keywords/open_mode.hpp>
 #include <boost/log/keywords/auto_flush.hpp>
 #include <boost/log/keywords/scan_method.hpp>
+#include <boost/log/keywords/rotation_size.hpp>
+#include <boost/log/keywords/rotation_interval.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/universal_path.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
@@ -279,16 +281,18 @@ private:
     void construct(ArgsT const& args)
     {
         construct(
-            args[keywords::file_name | boost::log::aux::universal_path()],
+            boost::log_mt::aux::to_universal_path(args[keywords::file_name | boost::log::aux::universal_path()]),
             args[keywords::open_mode | (std::ios_base::trunc | std::ios_base::out)],
-            args[keywords::max_size | (std::numeric_limits< uintmax_t >::max)()],
+            args[keywords::rotation_size | (std::numeric_limits< uintmax_t >::max)()],
+            args[keywords::rotation_interval | (std::numeric_limits< unsigned int >::max)()],
             args[keywords::auto_flush | false]);
     }
     //! Constructor implementation
     void construct(
         boost::log::aux::universal_path const& temp,
         std::ios_base::openmode mode,
-        uintmax_t max_size,
+        uintmax_t rotation_size,
+        unsigned int rotation_interval,
         bool auto_flush);
 
     //! The method writes the message to the sink

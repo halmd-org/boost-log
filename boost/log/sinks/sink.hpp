@@ -36,6 +36,7 @@
 #include <boost/utility/in_place_factory.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
+#include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/record.hpp>
 #include <boost/log/sinks/threading_models.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
@@ -137,6 +138,11 @@ public:
     virtual void consume(record_type const& record) = 0;
 };
 
+#define BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL(z, n, types)\
+    template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
+    explicit BOOST_PP_TUPLE_ELEM(2, 0, types)(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
+        m_pBackend(new BOOST_PP_TUPLE_ELEM(2, 1, types)((BOOST_PP_ENUM_PARAMS(n, arg)))) {}
+
 /*!
  * \brief Non-blocking logging sink frontend
  *
@@ -181,6 +187,9 @@ public:
     {
         BOOST_ASSERT(!!m_pBackend);
     }
+
+    // Constructors that pass arbitrary parameters to the backend constructor
+    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_GEN(BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL, (unlocked_sink, sink_backend_type))
 
     /*!
      * Locking accessor to the attached backend
@@ -334,6 +343,9 @@ public:
         BOOST_ASSERT(!!m_pBackend);
     }
 
+    // Constructors that pass arbitrary parameters to the backend constructor
+    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_GEN(BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL, (synchronous_sink, sink_backend_type))
+
     /*!
      * Locking accessor to the attached backend
      */
@@ -356,6 +368,8 @@ public:
         m_pBackend->consume(record);
     }
 };
+
+#undef BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL
 
 namespace aux {
 
@@ -394,6 +408,13 @@ namespace aux {
     };
 
 } // namespace aux
+
+#define BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL(z, n, types)\
+    template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
+    explicit BOOST_PP_TUPLE_ELEM(2, 0, types)(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
+        m_pBackend(new BOOST_PP_TUPLE_ELEM(2, 1, types)((BOOST_PP_ENUM_PARAMS(n, arg)))),\
+        m_Impl(m_pBackend.get(), &asynchronous_sink::consume_trampoline)\
+    {}
 
 /*!
  * \brief Asynchronous logging sink frontend
@@ -458,6 +479,9 @@ public:
         BOOST_ASSERT(!!backend);
     }
 
+    // Constructors that pass arbitrary parameters to the backend constructor
+    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_GEN(BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL, (asynchronous_sink, sink_backend_type))
+
     /*!
      * Locking accessor to the attached backend
      */
@@ -488,6 +512,8 @@ private:
 };
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
+
+#undef BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL
 
 } // namespace sinks
 

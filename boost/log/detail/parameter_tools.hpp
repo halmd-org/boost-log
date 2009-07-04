@@ -31,6 +31,12 @@
 #define BOOST_LOG_MAX_CTOR_FORWARD_ARGS 16
 #endif
 
+// The macro applies the passed macro with the specified arguments BOOST_LOG_MAX_CTOR_FORWARD_ARGS times
+#define BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_GEN(macro, args)\
+    public:\
+        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, macro, args)
+
+
 #define BOOST_LOG_CTOR_FORWARD(z, n, types)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit BOOST_PP_TUPLE_ELEM(2, 0, types)(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
@@ -39,8 +45,7 @@
 // The macro expands to a number of templated constructors that aggregate their named arguments
 // into an ArgumentsPack and pass it to the base class constructor.
 #define BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_FORWARD(class_type, base_type)\
-    public:\
-        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD, (class_type, base_type))
+    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_GEN(BOOST_LOG_CTOR_FORWARD, (class_type, base_type))
 
 
 #define BOOST_LOG_CTOR_CALL(z, n, types)\
@@ -51,7 +56,6 @@
 // The macro expands to a number of templated constructors that aggregate their named arguments
 // into an ArgumentsPack and pass it to a function call.
 #define BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(class_type, fun)\
-    public:\
-        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_CALL, (class_type, fun))
+    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_GEN(BOOST_LOG_CTOR_CALL, (class_type, fun))
 
 #endif // BOOST_LOG_DETAIL_PARAMETER_TOOLS_HPP_INCLUDED_

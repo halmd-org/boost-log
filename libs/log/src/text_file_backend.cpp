@@ -436,6 +436,11 @@ fifo_file_collector::fifo_file_collector(fifo_file_collector const& that) :
 {
 }
 
+//! Destructor implementation
+fifo_file_collector::~fifo_file_collector()
+{
+}
+
 //! Constructor implementation
 void fifo_file_collector::construct(
     uintmax_t max_size, uintmax_t min_free_space, boost::log::aux::universal_path const& pattern, file_scan_method scan)
@@ -446,6 +451,7 @@ void fifo_file_collector::construct(
     path_string_type name_pattern = pattern.leaf();
 
     m_TotalSize = static_cast< uintmax_t >(0);
+    m_FileCounter = 0;
 
     // Let's try to find the file counter placeholder
     typedef file_controller_traits< path_char_type > traits_t;
@@ -541,6 +547,7 @@ void fifo_file_collector::operator() (boost::log::aux::universal_path const& p)
     while (filesystem::exists(info.m_Path));
 
     // Check if an old file should be erased
+    filesystem::create_directories(m_StorageDir);
     uintmax_t free_space = m_MinFreeSpace ? filesystem::space(m_StorageDir).available : static_cast< uintmax_t >(0);
     file_list::iterator it = m_Files.begin(), end = m_Files.end();
     while (it != end &&
@@ -574,7 +581,6 @@ void fifo_file_collector::operator() (boost::log::aux::universal_path const& p)
     }
 
     // Move/rename the file to the target storage
-    filesystem::create_directories(m_StorageDir);
     filesystem::rename(p, info.m_Path);
 
     m_Files.push_back(info);
@@ -652,25 +658,32 @@ struct basic_text_file_backend< CharT >::implementation
     filesystem::basic_ofstream< CharT > m_File;
     //! Characters written
     uintmax_t m_CharactersWritten;
+    //! The time point when the file was last rotated
+    std::time_t m_LastRotation;
 
     //! File collector functional object
     file_collector_type m_FileCollector;
 
-    //! The maximum file size, in characters written to the stream
-    uintmax_t m_MaxFileSize;
+    //! The maximum temp file size, in characters written to the stream
+    uintmax_t m_FileRotationSize;
+    //! The maximum interval between file rotations
+    unsigned int m_FileRotationInterval;
     //! The flag shows if every written record should be flushed
     bool m_AutoFlush;
 
     implementation(
         boost::log::aux::universal_path const& temp,
         std::ios_base::openmode mode,
-        uintmax_t max_size,
+        uintmax_t rotation_size,
+        unsigned int rotation_interval,
         bool auto_flush
     ) :
         m_FileOpenMode(mode),
         m_FileName(temp),
         m_CharactersWritten(0),
-        m_MaxFileSize(max_size),
+        m_LastRotation(0),
+        m_FileRotationSize(rotation_size),
+        m_FileRotationInterval(rotation_interval),
         m_AutoFlush(auto_flush)
     {
     }
@@ -706,17 +719,18 @@ template< typename CharT >
 void basic_text_file_backend< CharT >::construct(
     boost::log::aux::universal_path const& temp,
     std::ios_base::openmode mode,
-    uintmax_t max_size,
+    uintmax_t rotation_size,
+    unsigned int rotation_interval,
     bool auto_flush)
 {
-    m_pImpl = new implementation(temp, mode, max_size, auto_flush);
+    m_pImpl = new implementation(temp, mode, rotation_size, rotation_interval, auto_flush);
 }
 
 
 template< typename CharT >
 void basic_text_file_backend< CharT >::max_file_size(uintmax_t size)
 {
-    m_pImpl->m_MaxFileSize = size;
+    m_pImpl->m_FileRotationSize = size;
 }
 
 template< typename CharT >
@@ -729,9 +743,17 @@ template< typename CharT >
 void basic_text_file_backend< CharT >::do_consume(
     record_type const& record, target_string_type const& formatted_message)
 {
-    if ((m_pImpl->m_File.is_open()
-        && m_pImpl->m_CharactersWritten + formatted_message.size() >= m_pImpl->m_MaxFileSize)
-        || !m_pImpl->m_File.good())
+    if
+    (
+        (
+            m_pImpl->m_File.is_open() &&
+            (
+                m_pImpl->m_CharactersWritten + formatted_message.size() >= m_pImpl->m_FileRotationSize ||
+                std::time(NULL) - m_pImpl->m_LastRotation > m_pImpl->m_FileRotationInterval
+            )
+        ) ||
+        !m_pImpl->m_File.good()
+    )
     {
         rotate_file();
     }
@@ -742,13 +764,14 @@ void basic_text_file_backend< CharT >::do_consume(
             m_pImpl->m_FileName = make_temp_file_name();
 
         m_pImpl->m_File.open(m_pImpl->m_FileName, m_pImpl->m_FileOpenMode);
-        if (!!m_pImpl->m_File.is_open())
+        if (!m_pImpl->m_File.is_open())
         {
             boost::throw_exception(filesystem::basic_filesystem_error< boost::log::aux::universal_path >(
                 "failed to open file for writing",
                 m_pImpl->m_FileName,
                 system::error_code(system::errc::io_error, system::get_generic_category())));
         }
+        m_pImpl->m_LastRotation = std::time(NULL);
     }
 
     m_pImpl->m_File.write(formatted_message.data(), static_cast< std::streamsize >(formatted_message.size()));
