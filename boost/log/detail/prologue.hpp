@@ -133,20 +133,32 @@
 #   endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_HAS_THREADS)
 #endif // !defined(BOOST_LOG_DOXYGEN_PASS)
 
+#if !defined(BOOST_LOG_NO_THREADS)
+#   include <boost/thread/detail/platform.hpp>
+#endif // !defined(BOOST_LOG_NO_THREADS)
+
 namespace boost {
 
 // Setup namespace name
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
 #   if defined(BOOST_LOG_NO_THREADS)
-namespace log_st {}
-namespace log = log_st;
 #       define BOOST_LOG_NAMESPACE log_st
 #   else
-namespace log_mt {}
-namespace log = log_mt;
-#       define BOOST_LOG_NAMESPACE log_mt
+#       if defined(BOOST_THREAD_PLATFORM_PTHREAD)
+#           define BOOST_LOG_NAMESPACE log_mt_posix
+#       elif defined(BOOST_THREAD_WIN32)
+#           if defined(BOOST_LOG_USE_WINNT6_API)
+#               define BOOST_LOG_NAMESPACE log_mt_nt6
+#           else
+#               define BOOST_LOG_NAMESPACE log_mt_nt4
+#           endif // defined(BOOST_LOG_USE_WINNT6_API)
+#       else
+#           define BOOST_LOG_NAMESPACE log_mt
+#       endif
 #   endif // defined(BOOST_LOG_NO_THREADS)
-#else
+namespace BOOST_LOG_NAMESPACE {}
+namespace log = BOOST_LOG_NAMESPACE;
+#else // !defined(BOOST_LOG_DOXYGEN_PASS)
 namespace log {}
 #   define BOOST_LOG_NAMESPACE log
 #endif // !defined(BOOST_LOG_DOXYGEN_PASS)
