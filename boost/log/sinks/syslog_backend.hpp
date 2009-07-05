@@ -27,6 +27,7 @@
 #include <boost/function/function1.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/asio_fwd.hpp>
+#include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/syslog_constants.hpp>
 #include <boost/log/sinks/attribute_mapping.hpp>
@@ -311,9 +312,7 @@ public:
      * Constructor. Creates a UDP socket-based backend with <tt>syslog::user</tt> facility code.
      * IPv4 protocol will be used.
      */
-    explicit basic_syslog_backend() : m_pImpl(construct(syslog::user, syslog::udp_socket_based, v4))
-    {
-    }
+    BOOST_LOG_EXPORT basic_syslog_backend();
     /*!
      * Constructor. Creates a sink backend with the specified named parameters.
      * The following named parameters are supported:
@@ -327,14 +326,13 @@ public:
      * \li \c ip_version - Specifies IP protocol version to use, in case if socket-based implementation
      *                     is used. Can be either v4 (the default one) or v6.
      */
-    template< typename ArgsT >
-    explicit basic_syslog_backend(ArgsT const& args) :
-        m_pImpl(construct(
-            args[keywords::facility | syslog::user],
-            args[keywords::use_impl | syslog::udp_socket_based],
-            args[keywords::ip_version | v4]))
-    {
-    }
+#ifndef BOOST_LOG_DOXYGEN_PASS
+    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(basic_syslog_backend, construct)
+#else
+    template< typename... ArgsT >
+    explicit basic_syslog_backend(ArgsT... const& args);
+#endif
+
     /*!
      * Destructor
      */
@@ -391,7 +389,15 @@ private:
     BOOST_LOG_EXPORT void do_consume(record_type const& record, target_string_type const& formatted_message);
 
     //! The method creates the backend implementation
-    BOOST_LOG_EXPORT static implementation* construct(
+    template< typename ArgsT >
+    void construct(ArgsT const& args)
+    {
+        construct(
+            args[keywords::facility | syslog::user],
+            args[keywords::use_impl | syslog::udp_socket_based],
+            args[keywords::ip_version | v4]);
+    }
+    BOOST_LOG_EXPORT void construct(
         syslog::facility_t facility, syslog::impl_types use_impl, ip_versions ip_version);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };

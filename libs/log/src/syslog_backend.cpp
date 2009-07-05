@@ -449,6 +449,12 @@ struct basic_syslog_backend< CharT >::implementation::udp_socket_based :
 ////////////////////////////////////////////////////////////////////////////////
 //  Sink backend implementation
 ////////////////////////////////////////////////////////////////////////////////
+template< typename CharT >
+basic_syslog_backend< CharT >::basic_syslog_backend()
+{
+    construct(log::aux::empty_arg_list());
+}
+
 //! Destructor
 template< typename CharT >
 basic_syslog_backend< CharT >::~basic_syslog_backend()
@@ -476,15 +482,15 @@ void basic_syslog_backend< CharT >::do_consume(
 
 //! The method creates the backend implementation
 template< typename CharT >
-typename basic_syslog_backend< CharT >::implementation*
-basic_syslog_backend< CharT >::construct(
+void basic_syslog_backend< CharT >::construct(
     syslog::facility_t facility, syslog::impl_types use_impl, ip_versions ip_version)
 {
 #ifdef BOOST_LOG_USE_NATIVE_SYSLOG
     if (use_impl == syslog::native)
     {
         typedef typename implementation::native native_impl;
-        return new native_impl(facility);
+        m_pImpl = new native_impl(facility);
+        return;
     }
 #endif // BOOST_LOG_USE_NATIVE_SYSLOG
 
@@ -492,9 +498,11 @@ basic_syslog_backend< CharT >::construct(
     switch (ip_version)
     {
     case v4:
-        return new udp_socket_based_impl(facility, asio::ip::udp::v4());
+        m_pImpl = new udp_socket_based_impl(facility, asio::ip::udp::v4());
+        break;
     case v6:
-        return new udp_socket_based_impl(facility, asio::ip::udp::v6());
+        m_pImpl = new udp_socket_based_impl(facility, asio::ip::udp::v6());
+        break;
     default:
         boost::log::aux::throw_exception(std::invalid_argument("incorrect IP version specified"));
     }
@@ -515,7 +523,7 @@ void basic_syslog_backend< CharT >::set_local_address(std::string const& addr, u
             service_name,
             asio::ip::resolver_query_base::address_configured | asio::ip::resolver_query_base::passive);
         asio::ip::udp::endpoint local_address;
-        
+
         {
 #if !defined(BOOST_LOG_NO_THREADS)
             lock_guard< mutex > _(impl->m_pService->m_Mutex);

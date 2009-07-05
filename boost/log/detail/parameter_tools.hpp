@@ -58,4 +58,19 @@
 #define BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(class_type, fun)\
     BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_GEN(BOOST_LOG_CTOR_CALL, (class_type, fun))
 
+namespace boost {
+
+namespace BOOST_LOG_NAMESPACE {
+
+namespace aux {
+
+    // Yeah, not too cute. The empty_arg_list class should really be public.
+    typedef boost::parameter::aux::empty_arg_list empty_arg_list;
+
+} // namespace aux
+
+} // namespace log
+
+} // namespace boost
+
 #endif // BOOST_LOG_DETAIL_PARAMETER_TOOLS_HPP_INCLUDED_

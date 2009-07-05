@@ -430,8 +430,7 @@ namespace {
 
 fifo_file_collector::fifo_file_collector()
 {
-    // Yeah, not too cute. The empty_arg_list class should really be public.
-    construct(parameter::aux::empty_arg_list());
+    construct(log::aux::empty_arg_list());
 }
 
 fifo_file_collector::fifo_file_collector(fifo_file_collector const& that) :
@@ -723,8 +722,7 @@ struct basic_text_file_backend< CharT >::implementation
 template< typename CharT >
 basic_text_file_backend< CharT >::basic_text_file_backend()
 {
-    // Yeah, not too cute. The empty_arg_list class should really be public.
-    construct(parameter::aux::empty_arg_list());
+    construct(log::aux::empty_arg_list());
 }
 
 //! Destructor

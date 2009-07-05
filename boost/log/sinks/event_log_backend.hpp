@@ -31,6 +31,8 @@
 #include <boost/function/function1.hpp>
 #include <boost/function/function3.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/universal_path.hpp>
+#include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/keywords/message_file.hpp>
 #include <boost/log/keywords/log_name.hpp>
@@ -834,14 +836,12 @@ public:
      *
      * \param args A set of named parameters.
      */
-    template< typename ArgsT >
-    explicit basic_simple_event_log_backend(ArgsT const& args) : m_pImpl(construct(
-        args[keywords::target | string_type()],
-        args[keywords::log_name || &basic_simple_event_log_backend::get_default_log_name],
-        args[keywords::log_source || &basic_simple_event_log_backend::get_default_source_name],
-        args[keywords::registration | event_log::on_demand]))
-    {
-    }
+#ifndef BOOST_LOG_DOXYGEN_PASS
+    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(basic_simple_event_log_backend, construct)
+#else
+    template< typename... ArgsT >
+    explicit basic_simple_event_log_backend(ArgsT... const& args);
+#endif
 
     /*!
      * Destructor. Unregisters event source. The log source description is not removed from the Windows registry.
@@ -868,7 +868,16 @@ private:
     void do_consume(record_type const& record, target_string_type const& formatted_message);
 
     //! Constructs backend implementation
-    static implementation* construct(
+    template< typename ArgsT >
+    void construct(ArgsT const& args)
+    {
+        construct(
+            args[keywords::target | string_type()],
+            args[keywords::log_name || &basic_simple_event_log_backend::get_default_log_name],
+            args[keywords::log_source || &basic_simple_event_log_backend::get_default_source_name],
+            args[keywords::registration | event_log::on_demand]);
+    }
+    void construct(
         string_type const& target,
         string_type const& log_name,
         string_type const& source_name,
@@ -944,9 +953,9 @@ public:
      * present, it is not overridden.
      */
     template< typename T >
-    explicit basic_event_log_backend(std::basic_string< T > const& message_file_name) :
-        m_pImpl(construct(message_file_name, string_type(), get_default_log_name(), get_default_source_name(), event_log::on_demand))
+    explicit basic_event_log_backend(std::basic_string< T > const& message_file_name)
     {
+        construct(keywords::message_file = message_file_name);
     }
     /*!
      * Constructor. Registers event source with name based on the application
@@ -954,9 +963,9 @@ public:
      * present, it is not overridden.
      */
     template< typename T, typename U >
-    explicit basic_event_log_backend(filesystem::basic_path< T, U > const& message_file_name) :
-        m_pImpl(construct(message_file_name, string_type(), get_default_log_name(), get_default_source_name(), event_log::on_demand))
+    explicit basic_event_log_backend(filesystem::basic_path< T, U > const& message_file_name)
     {
+        construct(keywords::message_file = message_file_name);
     }
     /*!
      * Constructor. Registers event log source with the specified parameters.
@@ -975,15 +984,12 @@ public:
      *
      * \param args A set of named parameters.
      */
-    template< typename ArgsT >
-    explicit basic_event_log_backend(ArgsT const& args) : m_pImpl(construct(
-        args[keywords::message_file],
-        args[keywords::target | string_type()],
-        args[keywords::log_name || &basic_event_log_backend::get_default_log_name],
-        args[keywords::log_source || &basic_event_log_backend::get_default_source_name],
-        args[keywords::registration | event_log::on_demand]))
-    {
-    }
+#ifndef BOOST_LOG_DOXYGEN_PASS
+    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(basic_event_log_backend, construct)
+#else
+    template< typename... ArgsT >
+    explicit basic_event_log_backend(ArgsT... const& args);
+#endif
 
     /*!
      * Destructor. Unregisters event source. The log source description is not removed from the Windows registry.
@@ -1025,38 +1031,18 @@ public:
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! Constructs backend implementation
-    static implementation* construct(
-        filesystem::path const& message_file_name,
-        string_type const& target,
-        string_type const& log_name,
-        string_type const& source_name,
-        event_log::registration_mode reg_mode);
-#ifndef BOOST_FILESYSTEM_NARROW_ONLY
-    //! Constructs backend implementation
-    static implementation* construct(
-        filesystem::wpath const& message_file_name,
-        string_type const& target,
-        string_type const& log_name,
-        string_type const& source_name,
-        event_log::registration_mode reg_mode);
-#endif // BOOST_FILESYSTEM_NARROW_ONLY
-    //! Constructs backend implementation
-    static implementation* construct(
-        std::string const& message_file_name,
-        string_type const& target,
-        string_type const& log_name,
-        string_type const& source_name,
-        event_log::registration_mode reg_mode);
-    //! Constructs backend implementation
-    static implementation* construct(
-        std::wstring const& message_file_name,
-        string_type const& target,
-        string_type const& log_name,
-        string_type const& source_name,
-        event_log::registration_mode reg_mode);
-    //! Constructs backend implementation
-    static implementation* construct_impl(
-        string_type const& message_file_name,
+    template< typename ArgsT >
+    void construct(ArgsT const& args)
+    {
+        construct(
+            boost::log::aux::to_universal_path(args[keywords::message_file]),
+            args[keywords::target | string_type()],
+            args[keywords::log_name || &basic_event_log_backend::get_default_log_name],
+            args[keywords::log_source || &basic_event_log_backend::get_default_source_name],
+            args[keywords::registration | event_log::on_demand]);
+    }
+    void construct(
+        boost::log::aux::universal_path const& message_file_name,
         string_type const& target,
         string_type const& log_name,
         string_type const& source_name,

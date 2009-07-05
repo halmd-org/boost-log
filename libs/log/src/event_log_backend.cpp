@@ -220,9 +220,9 @@ struct basic_simple_event_log_backend< CharT >::implementation
 
 //! Default constructor. Registers event source Boost.Log <Boost version> in the Application log.
 template< typename CharT >
-basic_simple_event_log_backend< CharT >::basic_simple_event_log_backend() :
-    m_pImpl(construct(string_type(), get_default_log_name(), get_default_source_name(), event_log::on_demand))
+basic_simple_event_log_backend< CharT >::basic_simple_event_log_backend()
 {
+    construct(log::aux::empty_arg_list());
 }
 
 //! Destructor
@@ -235,8 +235,7 @@ basic_simple_event_log_backend< CharT >::~basic_simple_event_log_backend()
 
 //! Constructs backend implementation
 template< typename CharT >
-typename basic_simple_event_log_backend< CharT >::implementation*
-basic_simple_event_log_backend< CharT >::construct(
+void basic_simple_event_log_backend< CharT >::construct(
     string_type const& target, string_type const& log_name, string_type const& source_name, event_log::registration_mode reg_mode)
 {
     if (reg_mode != event_log::never)
@@ -263,7 +262,7 @@ basic_simple_event_log_backend< CharT >::construct(
 
     p->m_SourceHandle = hSource;
 
-    return p.release();
+    m_pImpl = p.release();
 }
 
 //! Returns default log name
@@ -490,63 +489,8 @@ basic_event_log_backend< CharT >::~basic_event_log_backend()
 
 //! Constructs backend implementation
 template< typename CharT >
-typename basic_event_log_backend< CharT >::implementation* basic_event_log_backend< CharT >::construct(
-    filesystem::path const& message_file_name,
-    string_type const& target,
-    string_type const& log_name,
-    string_type const& source_name,
-    event_log::registration_mode reg_mode)
-{
-    string_type fname;
-    log::aux::code_convert(message_file_name.string(), fname);
-    return construct_impl(fname, target, log_name, source_name, reg_mode);
-}
-#ifndef BOOST_FILESYSTEM_NARROW_ONLY
-//! Constructs backend implementation
-template< typename CharT >
-typename basic_event_log_backend< CharT >::implementation* basic_event_log_backend< CharT >::construct(
-    filesystem::wpath const& message_file_name,
-    string_type const& target,
-    string_type const& log_name,
-    string_type const& source_name,
-    event_log::registration_mode reg_mode)
-{
-    string_type fname;
-    log::aux::code_convert(message_file_name.string(), fname);
-    return construct_impl(fname, target, log_name, source_name, reg_mode);
-}
-#endif // BOOST_FILESYSTEM_NARROW_ONLY
-//! Constructs backend implementation
-template< typename CharT >
-typename basic_event_log_backend< CharT >::implementation* basic_event_log_backend< CharT >::construct(
-    std::string const& message_file_name,
-    string_type const& target,
-    string_type const& log_name,
-    string_type const& source_name,
-    event_log::registration_mode reg_mode)
-{
-    string_type fname;
-    log::aux::code_convert(message_file_name, fname);
-    return construct_impl(fname, target, log_name, source_name, reg_mode);
-}
-//! Constructs backend implementation
-template< typename CharT >
-typename basic_event_log_backend< CharT >::implementation* basic_event_log_backend< CharT >::construct(
-    std::wstring const& message_file_name,
-    string_type const& target,
-    string_type const& log_name,
-    string_type const& source_name,
-    event_log::registration_mode reg_mode)
-{
-    string_type fname;
-    log::aux::code_convert(message_file_name, fname);
-    return construct_impl(fname, target, log_name, source_name, reg_mode);
-}
-
-//! Constructs backend implementation
-template< typename CharT >
-typename basic_event_log_backend< CharT >::implementation* basic_event_log_backend< CharT >::construct_impl(
-    string_type const& message_file_name,
+void basic_event_log_backend< CharT >::construct(
+    boost::log::aux::universal_path const& message_file_name,
     string_type const& target,
     string_type const& log_name,
     string_type const& source_name,
@@ -555,7 +499,9 @@ typename basic_event_log_backend< CharT >::implementation* basic_event_log_backe
     if (reg_mode != event_log::never)
     {
         aux::registry_params< char_type > reg_params;
-        reg_params.event_message_file = message_file_name;
+        string_type file_name;
+        log::aux::code_convert(message_file_name.string(), file_name);
+        reg_params.event_message_file = file_name;
         reg_params.types_supported = DWORD(
             EVENTLOG_SUCCESS |
             EVENTLOG_INFORMATION_TYPE |
@@ -576,7 +522,7 @@ typename basic_event_log_backend< CharT >::implementation* basic_event_log_backe
 
     p->m_SourceHandle = hSource;
 
-    return p.release();
+    m_pImpl = p.release();
 }
 
 //! The method puts the formatted message to the event log
