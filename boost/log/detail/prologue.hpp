@@ -146,7 +146,7 @@ namespace boost {
 #   else
 #       if defined(BOOST_THREAD_PLATFORM_PTHREAD)
 #           define BOOST_LOG_NAMESPACE log_mt_posix
-#       elif defined(BOOST_THREAD_WIN32)
+#       elif defined(BOOST_THREAD_PLATFORM_WIN32)
 #           if defined(BOOST_LOG_USE_WINNT6_API)
 #               define BOOST_LOG_NAMESPACE log_mt_nt6
 #           else
