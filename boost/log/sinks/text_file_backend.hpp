@@ -484,9 +484,9 @@ namespace file {
         //! The adopted formatter
         formatter_type m_Formatter;
         //! Formatted file name storage
-        result_type::string_type m_FileName;
+        mutable result_type::string_type m_FileName;
         //! Stream buffer to fill the storage
-        streambuf_type m_StreamBuf;
+        mutable streambuf_type m_StreamBuf;
         //! Formatting stream
         mutable stream_type m_FormattingStream;
 

@@ -811,6 +811,7 @@ void basic_text_file_backend< CharT >::do_consume(
         if (m_pImpl->m_FileName.empty())
             m_pImpl->m_FileName = make_temp_file_name();
 
+        filesystem::create_directories(m_pImpl->m_FileName.parent_path());
         m_pImpl->m_File.open(m_pImpl->m_FileName, m_pImpl->m_FileOpenMode);
         if (!m_pImpl->m_File.is_open())
         {
@@ -945,6 +946,7 @@ void basic_text_multifile_backend< CharT >::do_consume(
     if (!m_pImpl->m_FileNameComposer.empty())
     {
         boost::log::aux::universal_path file_name = m_pImpl->m_FileNameComposer(record);
+        filesystem::create_directories(file_name.parent_path());
         m_pImpl->m_File.open(file_name, std::ios_base::out | std::ios_base::app);
         if (m_pImpl->m_File.is_open())
         {
