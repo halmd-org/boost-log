@@ -90,10 +90,10 @@ namespace {
 
     //! An auxiliary traits that contain various constants and functions regarding string and character operations
     template< typename CharT >
-    struct file_controller_traits;
+    struct file_char_traits;
 
     template< >
-    struct file_controller_traits< char >
+    struct file_char_traits< char >
     {
         enum
         {
@@ -111,7 +111,8 @@ namespace {
             plus = '+',
             minus = '-',
             zero = '0',
-            dot = '.'
+            dot = '.',
+            newline = '\n'
         };
         static bool is_digit(char c)
         {
@@ -120,7 +121,7 @@ namespace {
     };
 
     template< >
-    struct file_controller_traits< wchar_t >
+    struct file_char_traits< wchar_t >
     {
         enum
         {
@@ -138,7 +139,8 @@ namespace {
             plus = L'+',
             minus = L'-',
             zero = L'0',
-            dot = L'.'
+            dot = L'.',
+            newline = L'\n'
         };
         static bool is_digit(wchar_t c)
         {
@@ -213,7 +215,7 @@ namespace {
             m_FileCounterPosition(pos),
             m_Width(width)
         {
-            typedef file_controller_traits< path_char_type > traits_t;
+            typedef file_char_traits< path_char_type > traits_t;
             m_Stream.fill(traits_t::zero);
         }
         //! Copy constructor
@@ -270,7 +272,7 @@ namespace {
         path_string_type::const_iterator end,
         unsigned int& width)
     {
-        typedef file_controller_traits< path_char_type > traits_t;
+        typedef file_char_traits< path_char_type > traits_t;
         spirit::classic::parse_info< path_string_type::const_iterator > result = spirit::classic::parse(it, end,
         (
             !(
@@ -299,7 +301,7 @@ namespace {
     //! The function matches the file name and the pattern
     bool match_pattern(path_string_type const& file_name, path_string_type const& pattern, unsigned int& file_counter)
     {
-        typedef file_controller_traits< path_char_type > traits_t;
+        typedef file_char_traits< path_char_type > traits_t;
 
         struct local
         {
@@ -428,12 +430,14 @@ namespace {
 
 } // namespace
 
-fifo_file_collector::fifo_file_collector()
+namespace file {
+
+fifo_collector::fifo_collector()
 {
     construct(log::aux::empty_arg_list());
 }
 
-fifo_file_collector::fifo_file_collector(fifo_file_collector const& that) :
+fifo_collector::fifo_collector(fifo_collector const& that) :
     m_MaxSize(that.m_MaxSize),
     m_MinFreeSpace(that.m_MinFreeSpace),
     m_StorageDir(that.m_StorageDir),
@@ -445,13 +449,13 @@ fifo_file_collector::fifo_file_collector(fifo_file_collector const& that) :
 }
 
 //! Destructor implementation
-fifo_file_collector::~fifo_file_collector()
+fifo_collector::~fifo_collector()
 {
 }
 
 //! Constructor implementation
-void fifo_file_collector::construct(
-    uintmax_t max_size, uintmax_t min_free_space, boost::log::aux::universal_path const& pattern, file_scan_method scan)
+void fifo_collector::construct(
+    uintmax_t max_size, uintmax_t min_free_space, boost::log::aux::universal_path const& pattern, file::scan_method scan)
 {
     m_MaxSize = max_size;
     m_MinFreeSpace = min_free_space;
@@ -462,7 +466,7 @@ void fifo_file_collector::construct(
     m_FileCounter = 0;
 
     // Let's try to find the file counter placeholder
-    typedef file_controller_traits< path_char_type > traits_t;
+    typedef file_char_traits< path_char_type > traits_t;
     unsigned int placeholder_count = 0;
     unsigned int width = 0;
     bool counter_found = false;
@@ -520,16 +524,18 @@ void fifo_file_collector::construct(
         break;
     }
 
-    scan_for_files(scan, (scan == scan_all ? pattern.parent_path() : pattern), true);
+    scan_for_files(scan, (scan == file::scan_all ? pattern.parent_path() : pattern), true);
 }
 
-fifo_file_collector& fifo_file_collector::operator= (fifo_file_collector that)
+//! Assignment
+fifo_collector& fifo_collector::operator= (fifo_collector that)
 {
     this->swap(that);
     return *this;
 }
 
-void fifo_file_collector::swap(fifo_file_collector& that)
+//! Swaps two instances of the collector
+void fifo_collector::swap(fifo_collector& that)
 {
     std::swap(m_MaxSize, that.m_MaxSize);
     std::swap(m_MinFreeSpace, that.m_MinFreeSpace);
@@ -540,7 +546,8 @@ void fifo_file_collector::swap(fifo_file_collector& that)
     std::swap(m_TotalSize, that.m_TotalSize);
 }
 
-void fifo_file_collector::operator() (boost::log::aux::universal_path const& p)
+//! The operator stores the specified file in the storage.
+void fifo_collector::operator() (boost::log::aux::universal_path const& p)
 {
     // Let's construct the new file name
     file_info info;
@@ -604,15 +611,16 @@ void fifo_file_collector::operator() (boost::log::aux::universal_path const& p)
     m_TotalSize += info.m_Size;
 }
 
-unsigned int fifo_file_collector::scan_for_files(
-    file_scan_method method, boost::log::aux::universal_path const& pattern, bool update_counter)
+//! Scans the target directory for the files that have already been stored.
+unsigned int fifo_collector::scan_for_files(
+    file::scan_method method, boost::log::aux::universal_path const& pattern, bool update_counter)
 {
     unsigned int file_count = 0;
-    if (method != no_scan)
+    if (method != file::no_scan)
     {
         boost::log::aux::universal_path dir;
         path_string_type mask;
-        if (method == scan_matching)
+        if (method == file::scan_matching)
         {
             dir = pattern.parent_path();
             mask = pattern.leaf();
@@ -648,7 +656,7 @@ unsigned int fifo_file_collector::scan_for_files(
                     {
                         // Check that the file name matches the pattern
                         unsigned int file_number = 0;
-                        if (method != scan_matching || match_pattern(info.m_Path.leaf(), mask, file_number))
+                        if (method != file::scan_matching || match_pattern(info.m_Path.leaf(), mask, file_number))
                         {
                             info.m_Size = filesystem::file_size(info.m_Path);
                             total_size += info.m_Size;
@@ -673,6 +681,11 @@ unsigned int fifo_file_collector::scan_for_files(
     return file_count;
 }
 
+} // namespace file
+
+////////////////////////////////////////////////////////////////////////////////
+//  File sink backend implementation
+////////////////////////////////////////////////////////////////////////////////
 //! Sink implementation data
 template< typename CharT >
 struct basic_text_file_backend< CharT >::implementation
@@ -692,6 +705,10 @@ struct basic_text_file_backend< CharT >::implementation
 
     //! File collector functional object
     file_collector_type m_FileCollector;
+    //! File open handler
+    open_handler_type m_OpenHandler;
+    //! File close handler
+    close_handler_type m_CloseHandler;
 
     //! The maximum temp file size, in characters written to the stream
     uintmax_t m_FileRotationSize;
@@ -754,23 +771,26 @@ void basic_text_file_backend< CharT >::construct(
     m_pImpl = new implementation(temp, mode, rotation_size, rotation_interval, auto_flush);
 }
 
-
+//! The method sets maximum file size.
 template< typename CharT >
 void basic_text_file_backend< CharT >::max_file_size(uintmax_t size)
 {
     m_pImpl->m_FileRotationSize = size;
 }
 
+//! Sets the flag to automatically flush buffers of all attached streams after each log record
 template< typename CharT >
 void basic_text_file_backend< CharT >::auto_flush(bool f)
 {
     m_pImpl->m_AutoFlush = f;
 }
 
+//! The method writes the message to the sink
 template< typename CharT >
 void basic_text_file_backend< CharT >::do_consume(
     record_type const& record, target_string_type const& formatted_message)
 {
+    typedef file_char_traits< typename target_string_type::value_type > traits_t;
     if
     (
         (
@@ -800,10 +820,15 @@ void basic_text_file_backend< CharT >::do_consume(
                 system::error_code(system::errc::io_error, system::get_generic_category())));
         }
         m_pImpl->m_LastRotation = std::time(NULL);
+
+        if (!m_pImpl->m_OpenHandler.empty())
+            m_pImpl->m_OpenHandler(m_pImpl->m_File);
+
+        m_pImpl->m_CharactersWritten = static_cast< std::streamoff >(m_pImpl->m_File.tellp());
     }
 
     m_pImpl->m_File.write(formatted_message.data(), static_cast< std::streamsize >(formatted_message.size()));
-    m_pImpl->m_File.put(static_cast< typename target_string_type::value_type >('\n'));
+    m_pImpl->m_File.put(static_cast< typename target_string_type::value_type >(traits_t::newline));
 
     m_pImpl->m_CharactersWritten += formatted_message.size() + 1;
 
@@ -811,6 +836,7 @@ void basic_text_file_backend< CharT >::do_consume(
         m_pImpl->m_File.flush();
 }
 
+//! The method sets file name mask
 template< typename CharT >
 void basic_text_file_backend< CharT >::set_temp_file_name(boost::log::aux::universal_path const& temp)
 {
@@ -825,9 +851,12 @@ void basic_text_file_backend< CharT >::set_temp_file_name(boost::log::aux::unive
     }
 }
 
+//! The method rotates the file
 template< typename CharT >
 void basic_text_file_backend< CharT >::rotate_file()
 {
+    if (!m_pImpl->m_CloseHandler.empty())
+        m_pImpl->m_CloseHandler(m_pImpl->m_File);
     m_pImpl->m_File.close();
     m_pImpl->m_File.clear();
     m_pImpl->m_CharactersWritten = 0;
@@ -841,6 +870,7 @@ void basic_text_file_backend< CharT >::rotate_file()
     }
 }
 
+//! The method sets the file open mode
 template< typename CharT >
 void basic_text_file_backend< CharT >::open_mode(std::ios_base::openmode mode)
 {
@@ -851,18 +881,88 @@ void basic_text_file_backend< CharT >::open_mode(std::ios_base::openmode mode)
     m_pImpl->m_FileOpenMode = mode;
 }
 
+//! The method sets file collector
 template< typename CharT >
 void basic_text_file_backend< CharT >::set_file_collector(file_collector_type const& collector)
 {
     m_pImpl->m_FileCollector = collector;
 }
 
-//! Explicitly instantiate sink backend implementation
+//! The method sets file open handler
+template< typename CharT >
+void basic_text_file_backend< CharT >::set_open_handler(open_handler_type const& handler)
+{
+    m_pImpl->m_OpenHandler = handler;
+}
+
+//! The method sets file close handler
+template< typename CharT >
+void basic_text_file_backend< CharT >::set_close_handler(close_handler_type const& handler)
+{
+    m_pImpl->m_CloseHandler = handler;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//  Multifile sink backend implementation
+////////////////////////////////////////////////////////////////////////////////
+//! Sink implementation data
+template< typename CharT >
+struct basic_text_multifile_backend< CharT >::implementation
+{
+    //! File name composer
+    file_name_composer_type m_FileNameComposer;
+    //! File stream
+    filesystem::basic_ofstream< CharT > m_File;
+};
+
+//! Default constructor
+template< typename CharT >
+basic_text_multifile_backend< CharT >::basic_text_multifile_backend() : m_pImpl(new implementation)
+{
+}
+
+//! Destructor
+template< typename CharT >
+basic_text_multifile_backend< CharT >::~basic_text_multifile_backend()
+{
+    delete m_pImpl;
+}
+
+//! The method sets the file name composer
+template< typename CharT >
+void basic_text_multifile_backend< CharT >::set_file_name_composer(file_name_composer_type const& composer)
+{
+    m_pImpl->m_FileNameComposer = composer;
+}
+
+//! The method writes the message to the sink
+template< typename CharT >
+void basic_text_multifile_backend< CharT >::do_consume(
+    record_type const& record, target_string_type const& formatted_message)
+{
+    typedef file_char_traits< typename target_string_type::value_type > traits_t;
+    if (!m_pImpl->m_FileNameComposer.empty())
+    {
+        boost::log::aux::universal_path file_name = m_pImpl->m_FileNameComposer(record);
+        m_pImpl->m_File.open(file_name, std::ios_base::out | std::ios_base::app);
+        if (m_pImpl->m_File.is_open())
+        {
+            m_pImpl->m_File.write(formatted_message.data(), static_cast< std::streamsize >(formatted_message.size()));
+            m_pImpl->m_File.put(static_cast< typename target_string_type::value_type >(traits_t::newline));
+            m_pImpl->m_File.close();
+        }
+    }
+}
+
+//! Explicitly instantiate sink backend implementations
 #ifdef BOOST_LOG_USE_CHAR
-template class BOOST_LOG_EXPORT basic_text_file_backend< char >;
+template class basic_text_file_backend< char >;
+template class basic_text_multifile_backend< char >;
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-template class BOOST_LOG_EXPORT basic_text_file_backend< wchar_t >;
+template class basic_text_file_backend< wchar_t >;
+template class basic_text_multifile_backend< wchar_t >;
 #endif
 
 } // namespace sinks

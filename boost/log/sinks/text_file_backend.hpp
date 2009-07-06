@@ -25,12 +25,17 @@
 #include <ios>
 #include <list>
 #include <string>
+#include <locale>
 #include <boost/limits.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/mpl/if.hpp>
+#include <boost/mpl/bool.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/compatibility/cpp_c_headers/ctime>
+#include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/keywords/max_size.hpp>
 #include <boost/log/keywords/min_free_space.hpp>
 #include <boost/log/keywords/file_name.hpp>
@@ -42,6 +47,9 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/universal_path.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
+#include <boost/log/detail/cleanup_scope_guard.hpp>
+#include <boost/log/detail/code_conversion.hpp>
+#include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 
 #ifdef _MSC_VER
@@ -58,8 +66,10 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
+namespace file {
+
 //! The enumeration of the stored files scan methods
-enum file_scan_method
+enum scan_method
 {
     no_scan,        //!< Don't scan for stored files
     scan_matching,  //!< Scan for files with names matching the specified mask
@@ -74,7 +84,7 @@ enum file_scan_method
  * monitors the size of the stored files and/or the free space on the target drive
  * and deletes the oldest files to fit within the specified limits.
  */
-class fifo_file_collector
+class fifo_collector
 {
 public:
     //! Functor result type
@@ -119,7 +129,7 @@ public:
     /*!
      * Constructor. Creates collector with default values for all parameters used.
      */
-    BOOST_LOG_EXPORT fifo_file_collector();
+    BOOST_LOG_EXPORT fifo_collector();
     /*!
      * Copy constructor.
      *
@@ -127,7 +137,7 @@ public:
      *       collector instance should not be used simultaneously as it would introduce unexpected
      *       results due to conflicting access to the target directory.
      */
-    BOOST_LOG_EXPORT fifo_file_collector(fifo_file_collector const& that);
+    BOOST_LOG_EXPORT fifo_collector(fifo_collector const& that);
 
     /*!
      * Constructor. Creates a file collector with the specified named parameters.
@@ -153,7 +163,7 @@ public:
      *                      directory that may have been left since previous runs of the application. All
      *                      found files will be considered as if they were stored during the current run
      *                      of the application and thus being candidates for deletion. The parameter
-     *                      should be one of the \s file_scan_method values, with \c no_scan being the
+     *                      should be one of the <tt>file::scan_method</tt> values, with \c no_scan being the
      *                      default. Note that if \c scan_matching is specified, the collector will try
      *                      to adjust file counter according to the found files.
      *
@@ -161,23 +171,23 @@ public:
      *       described in the \c scan_for_files documentation.
      */
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(fifo_file_collector, construct)
+    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(fifo_collector, construct)
 #else
     template< typename... ArgsT >
-    explicit fifo_file_collector(ArgsT... const& args);
+    explicit fifo_collector(ArgsT... const& args);
 #endif
 
     /*!
      * Destructor
      */
-    BOOST_LOG_EXPORT ~fifo_file_collector();
+    BOOST_LOG_EXPORT ~fifo_collector();
 
     /*!
      * Assignment.
      *
      * \note See warning in the copy constructor documentation.
      */
-    BOOST_LOG_EXPORT fifo_file_collector& operator= (fifo_file_collector that);
+    BOOST_LOG_EXPORT fifo_collector& operator= (fifo_collector that);
 
     /*!
      * The operator stores the specified file in the storage. May lead to an older file
@@ -190,7 +200,7 @@ public:
     /*!
      * Swaps two instances of the collector
      */
-    BOOST_LOG_EXPORT void swap(fifo_file_collector& that);
+    BOOST_LOG_EXPORT void swap(fifo_collector& that);
 
     /*!
      * Scans the target directory for the files that have already been stored. The found
@@ -224,7 +234,7 @@ public:
      *       to an incorrect file deletion.
      */
     BOOST_LOG_EXPORT unsigned int scan_for_files(
-        file_scan_method method, boost::log::aux::universal_path const& pattern, bool update_counter = false);
+        file::scan_method method, boost::log::aux::universal_path const& pattern, bool update_counter = false);
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -236,16 +246,19 @@ private:
             args[keywords::max_size | (std::numeric_limits< uintmax_t >::max)()],
             args[keywords::min_free_space | static_cast< uintmax_t >(0)],
             boost::log::aux::to_universal_path(args[keywords::file_name | "./%5N.log"]),
-            args[keywords::scan_method | no_scan]);
+            args[keywords::scan_method | file::no_scan]);
     }
     //! Constructor implementation
     BOOST_LOG_EXPORT void construct(
         uintmax_t max_size,
         uintmax_t min_free_space,
         boost::log::aux::universal_path const& pattern,
-        file_scan_method scan);
+        file::scan_method scan);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
+
+} // namespace file
+
 
 /*!
  * \brief An implementation of a text file logging sink backend
@@ -268,13 +281,17 @@ public:
     typedef typename base_type::string_type string_type;
     //! String type to be used as a message text holder
     typedef typename base_type::target_string_type target_string_type;
-    //! Attribute values view type
-    typedef typename base_type::values_view_type values_view_type;
     //! Log record type
     typedef typename base_type::record_type record_type;
+    //! Stream type
+    typedef typename base_type::stream_type stream_type;
 
     //! File collector functor type
     typedef function1< void, boost::log::aux::universal_path > file_collector_type;
+    //! File open handler
+    typedef function1< void, stream_type& > open_handler_type;
+    //! File close handler
+    typedef function1< void, stream_type& > close_handler_type;
 
 private:
     //! \cond
@@ -352,6 +369,32 @@ public:
     }
 
     /*!
+     * The method sets file opening handler. The handler will be called every time
+     * the backend opens a new temporary file. The handler may write a header to the
+     * opened file in order to maintain file validity.
+     *
+     * \param handler The file open handler function object
+     */
+    template< typename HandlerT >
+    void open_handler(HandlerT const& handler)
+    {
+        set_open_handler(handler);
+    }
+
+    /*!
+     * The method sets file closing handler. The handler will be called every time
+     * the backend closes a temporary file. The handler may write a footer to the
+     * opened file in order to maintain file validity.
+     *
+     * \param handler The file close handler function object
+     */
+    template< typename HandlerT >
+    void close_handler(HandlerT const& handler)
+    {
+        set_close_handler(handler);
+    }
+
+    /*!
      * The method sets maximum file size. When the size is reached, file rotation is performed.
      *
      * \note The size does not count any possible character translations that may happen in
@@ -396,16 +439,205 @@ private:
     //! The method sets file collector
     BOOST_LOG_EXPORT void set_file_collector(file_collector_type const& collector);
 
+    //! The method sets file open handler
+    BOOST_LOG_EXPORT void set_open_handler(open_handler_type const& handler);
+
+    //! The method sets file close handler
+    BOOST_LOG_EXPORT void set_close_handler(close_handler_type const& handler);
+
     //! The method rotates the file
     void rotate_file();
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 
+
+namespace file {
+
+    /*!
+     * An adapter class that allows to use regular formatters as file name generators.
+     */
+    template< typename FormatterT >
+    class file_name_composer_adapter
+    {
+    public:
+        //! Functor result type
+        typedef boost::log::aux::universal_path result_type;
+        //! The adopted formatter type
+        typedef FormatterT formatter_type;
+        //! Character type used by the formatter
+        typedef typename formatter_type::char_type char_type;
+        //! String type used by the formatter
+        typedef typename formatter_type::string_type string_type;
+        //! Log record type
+        typedef typename formatter_type::record_type record_type;
+
+        //! Stream buffer type used to store formatted data
+        typedef typename mpl::if_<
+            is_same< char_type, result_type::string_type::value_type >,
+            boost::log::aux::basic_ostringstreambuf< char_type >,
+            boost::log::aux::converting_ostringstreambuf< char_type >
+        >::type streambuf_type;
+        //! Stream type used for formatting
+        typedef std::basic_ostream< char_type > stream_type;
+
+    private:
+        //! The adopted formatter
+        formatter_type m_Formatter;
+        //! Formatted file name storage
+        result_type::string_type m_FileName;
+        //! Stream buffer to fill the storage
+        streambuf_type m_StreamBuf;
+        //! Formatting stream
+        mutable stream_type m_FormattingStream;
+
+    public:
+        /*!
+         * Initializing constructor
+         */
+        explicit file_name_composer_adapter(formatter_type const& formatter, std::locale const& loc = std::locale()) :
+            m_Formatter(formatter),
+            m_StreamBuf(m_FileName),
+            m_FormattingStream(&m_StreamBuf)
+        {
+            m_FormattingStream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
+            m_FormattingStream.imbue(loc);
+        }
+        /*!
+         * Copy constructor
+         */
+        file_name_composer_adapter(file_name_composer_adapter const& that) :
+            m_Formatter(that.m_Formatter),
+            m_StreamBuf(m_FileName),
+            m_FormattingStream(&m_StreamBuf)
+        {
+            m_FormattingStream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
+            m_FormattingStream.imbue(that.m_FormattingStream.getloc());
+        }
+        /*!
+         * Assignment
+         */
+        file_name_composer_adapter& operator= (file_name_composer_adapter const& that)
+        {
+            m_Formatter = that.m_Formatter;
+            return *this;
+        }
+
+        /*!
+         * The operator generates a file name based on the log record
+         */
+        result_type operator() (record_type const& rec) const
+        {
+            boost::log::aux::cleanup_guard< stream_type > cleanup1(m_FormattingStream);
+            boost::log::aux::cleanup_guard< result_type::string_type > cleanup2(m_FileName);
+
+            m_Formatter(m_FormattingStream, record);
+            m_FormattingStream.flush();
+
+            return result_type(m_FileName);
+        }
+    };
+
+    /*!
+     * The function adopts a log record formatter into a file name generator
+     */
+    template< typename FormatterT >
+    inline file_name_composer_adapter< FormatterT > as_file_name_composer(
+        FormatterT const& fmt, std::locale const& loc = std::locale())
+    {
+        return file_name_composer_adapter< FormatterT >(fmt, loc);
+    }
+
+} // namespace file
+
+
+/*!
+ * \brief An implementation of a text multiple files logging sink backend
+ *
+ * The sink backend puts formatted log records to one of the text files.
+ * The particular file is chosen upon each record's attribute values, which allows
+ * to distribute records into individual files or to group records related to
+ * some entity or process in a separate file.
+ */
+template< typename CharT >
+class basic_text_multifile_backend :
+    public basic_formatting_sink_backend< CharT >
+{
+    //! Base type
+    typedef basic_formatting_sink_backend< CharT > base_type;
+
+public:
+    //! Character type
+    typedef typename base_type::char_type char_type;
+    //! String type to be used as a message text holder
+    typedef typename base_type::string_type string_type;
+    //! String type to be used as a message text holder
+    typedef typename base_type::target_string_type target_string_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
+
+    //! File name composer functor type
+    typedef function1< boost::log::aux::universal_path, record_type const& > file_name_composer_type;
+
+private:
+    //! \cond
+
+    struct implementation;
+    implementation* m_pImpl;
+
+    //! \endcond
+
+public:
+    /*!
+     * Default constructor. The constructed sink backend has no file name composer and
+     * thus will not write any files.
+     */
+    BOOST_LOG_EXPORT basic_text_multifile_backend();
+
+    /*!
+     * Destructor
+     */
+    BOOST_LOG_EXPORT ~basic_text_multifile_backend();
+
+    /*!
+     * The method sets file name composer functional object. Log record formatters are accepted, too.
+     *
+     * \param composer File name composer functor
+     */
+    template< typename ComposerT >
+    void file_name_composer(ComposerT const& composer)
+    {
+        set_file_name_composer(composer, typename formatters::is_formatter< ComposerT >::type());
+    }
+
+private:
+#ifndef BOOST_LOG_DOXYGEN_PASS
+    //! The method writes the message to the sink
+    BOOST_LOG_EXPORT void do_consume(record_type const& record, target_string_type const& formatted_message);
+
+    //! The method sets the file name composer
+    template< typename ComposerT >
+    void set_file_name_composer(ComposerT const& composer, mpl::true_ const&)
+    {
+        set_file_name_composer(file::as_file_name_composer(composer));
+    }
+    //! The method sets the file name composer
+    template< typename ComposerT >
+    void set_file_name_composer(ComposerT const& composer, mpl::false_ const&)
+    {
+        set_file_name_composer(composer);
+    }
+    //! The method sets the file name composer
+    BOOST_LOG_EXPORT void set_file_name_composer(file_name_composer_type const& composer);
+#endif // BOOST_LOG_DOXYGEN_PASS
+};
+
 #ifdef BOOST_LOG_USE_CHAR
-typedef basic_text_file_backend< char > text_file_backend;        //!< Convenience typedef for narrow-character logging
+typedef basic_text_file_backend< char > text_file_backend;               //!< Convenience typedef for narrow-character logging
+typedef basic_text_multifile_backend< char > text_multifile_backend;     //!< Convenience typedef for narrow-character logging
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_text_file_backend< wchar_t > wtext_file_backend;    //!< Convenience typedef for wide-character logging
+typedef basic_text_file_backend< wchar_t > wtext_file_backend;           //!< Convenience typedef for wide-character logging
+typedef basic_text_multifile_backend< wchar_t > wtext_multifile_backend; //!< Convenience typedef for wide-character logging
 #endif
 
 } // namespace sinks
