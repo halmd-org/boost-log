@@ -525,7 +525,7 @@ namespace file {
         /*!
          * The operator generates a file name based on the log record
          */
-        result_type operator() (record_type const& rec) const
+        result_type operator() (record_type const& record) const
         {
             boost::log::aux::cleanup_guard< stream_type > cleanup1(m_FormattingStream);
             boost::log::aux::cleanup_guard< result_type::string_type > cleanup2(m_FileName);
