@@ -11,7 +11,7 @@
  * \file   formatters/format.hpp
  * \author Andrey Semashev
  * \date   16.03.2008
- * 
+ *
  * The header contains implementation of a hook for Boost.Format-like formatters.
  */
 
@@ -25,6 +25,7 @@
 #include <vector>
 #include <ostream>
 #include <boost/format.hpp>
+#include <boost/io/ios_state.hpp>
 #include <boost/function/function2.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
@@ -41,7 +42,7 @@ namespace formatters {
 
 /*!
  * \brief Formatter to output objects into a Boost.Format object
- * 
+ *
  * The \c fmt_format class template is a hook that allows to construct formatters
  * with format strings. The formatter basically accumulates formatters of the formatting
  * expression and invokes them sequentially when called to format a log record. The results
@@ -69,6 +70,11 @@ public:
     typedef typename base_type::record_type record_type;
 
 private:
+    //! Streambuffer saver type
+    typedef io::basic_ios_rdbuf_saver<
+        typename ostream_type::char_type,
+        typename ostream_type::traits_type
+    > rdbuf_saver;
     //! Formatter function object type
     typedef function2< void, ostream_type&, record_type const& > formatter_type;
     //! Sequence of formatters
@@ -84,18 +90,15 @@ private:
     mutable string_type m_Buffer;
     //! Stream buffer
     mutable boost::log::aux::basic_ostringstreambuf< char_type > m_StreamBuf;
-    //! Formatting stream
-    mutable ostream_type m_Stream;
 
 public:
     /*!
      * Constructor with formatter initialization
-     * 
+     *
      * \param fmt Boost.Format formatter instance
      */
-    explicit fmt_format(format_type const& fmt) : m_Format(fmt), m_StreamBuf(m_Buffer), m_Stream(&m_StreamBuf)
+    explicit fmt_format(format_type const& fmt) : m_Format(fmt), m_StreamBuf(m_Buffer)
     {
-        m_Stream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
     }
     /*!
      * Copy constructor
@@ -103,30 +106,29 @@ public:
     fmt_format(fmt_format const& that) :
         m_Format(that.m_Format),
         m_Formatters(that.m_Formatters),
-        m_StreamBuf(m_Buffer),
-        m_Stream(&m_StreamBuf)
+        m_StreamBuf(m_Buffer)
     {
-        m_Stream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
     }
 
     /*!
      * Formatting operator. Invokes all aggregated formatters, collects their formatting results
      * and composes them according to the format string passed on construction.
-     * 
+     *
      * \param strm A reference to the stream, where the final text of the logging record is composed
      * \param record A logging record
      */
     void operator() (ostream_type& strm, record_type const& record) const
     {
         boost::log::aux::cleanup_guard< format_type > cleanup1(m_Format);
-        boost::log::aux::cleanup_guard< ostream_type > cleanup2(m_Stream);
-
-        for (typename formatters::const_iterator it = m_Formatters.begin(), end = m_Formatters.end(); it != end; ++it)
         {
-            boost::log::aux::cleanup_guard< string_type > cleanup3(m_Buffer);
-            (*it)(m_Stream, record);
-            m_Stream.flush();
-            m_Format % m_Buffer;
+            rdbuf_saver cleanup2(strm, &m_StreamBuf);
+            for (typename formatters::const_iterator it = m_Formatters.begin(), end = m_Formatters.end(); it != end; ++it)
+            {
+                boost::log::aux::cleanup_guard< string_type > cleanup3(m_Buffer);
+                (*it)(strm, record);
+                strm.flush();
+                m_Format % m_Buffer;
+            }
         }
 
         strm << m_Format.str();
@@ -134,7 +136,7 @@ public:
 
     /*!
      * Composition operator. Consumes the \a fmt formatter.
-     * 
+     *
      * \param fmt A Boost.Log formatter
      */
     template< typename T >
@@ -154,7 +156,7 @@ private:
 
 /*!
  * Formatter generator. Constructs the formatter instance with the specified format string.
- * 
+ *
  * \param fmt A format string. Must be a zero-terminated sequence of characters, must not be NULL.
  */
 inline fmt_format< char > format(const char* fmt)
@@ -165,7 +167,7 @@ inline fmt_format< char > format(const char* fmt)
 
 /*!
  * Formatter generator. Constructs the formatter instance with the specified format string.
- * 
+ *
  * \param fmt A format string
  */
 inline fmt_format< char > format(std::basic_string< char > const& fmt)
@@ -180,7 +182,7 @@ inline fmt_format< char > format(std::basic_string< char > const& fmt)
 
 /*!
  * Formatter generator. Constructs the formatter instance with the specified format string.
- * 
+ *
  * \param fmt A format string. Must be a zero-terminated sequence of characters, must not be NULL.
  */
 inline fmt_format< wchar_t > format(const wchar_t* fmt)
@@ -191,7 +193,7 @@ inline fmt_format< wchar_t > format(const wchar_t* fmt)
 
 /*!
  * Formatter generator. Constructs the formatter instance with the specified format string.
- * 
+ *
  * \param fmt A format string
  */
 inline fmt_format< wchar_t > format(std::basic_string< wchar_t > const& fmt)

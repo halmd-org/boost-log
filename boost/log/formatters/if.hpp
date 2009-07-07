@@ -186,7 +186,7 @@ inline aux::fmt_if_gen< FilterT > if_(FilterT const& flt)
 #else // BOOST_LOG_DOXYGEN_PASS
 
 /*!
- * The function returns a conditional filter generator object. The generator provides <tt>operator[]</tt> that can be used
+ * The function returns a conditional formatter generator object. The generator provides <tt>operator[]</tt> that can be used
  * to construct the actual formatter.
  * 
  * \param flt A Boost.Log filter that represents condition of the formatter
@@ -196,10 +196,10 @@ implementation_defined if_(FilterT const& flt);
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
-} // namespace boost
+} // namespace formatters
 
 } // namespace log
 
-} // namespace formatters
+} // namespace boost
 
 #endif // BOOST_LOG_FORMATTERS_IF_HPP_INCLUDED_
