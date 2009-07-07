@@ -22,6 +22,7 @@
 #ifndef BOOST_LOG_FORMATTERS_C_DECORATOR_HPP_INCLUDED_
 #define BOOST_LOG_FORMATTERS_C_DECORATOR_HPP_INCLUDED_
 
+#include <boost/limits.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/io/ios_state.hpp>
 #include <boost/range/iterator_range.hpp>
