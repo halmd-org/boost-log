@@ -103,7 +103,7 @@ basic_simple_nt6_event_log_backend< CharT >::event_enabled_filter::event_enabled
 }
 
 template< typename CharT >
-BOOST_LOG_EXPORT bool basic_simple_nt6_event_log_backend< CharT >::event_enabled_filter::operator() (values_view_type const& values) const
+bool basic_simple_nt6_event_log_backend< CharT >::event_enabled_filter::operator() (values_view_type const& values) const
 {
     boost::shared_ptr< implementation > impl = m_pImpl.lock();
     if (!!impl)
@@ -161,10 +161,10 @@ void basic_simple_nt6_event_log_backend< CharT >::do_consume(
 }
 
 #ifdef BOOST_LOG_USE_CHAR
-template class BOOST_LOG_EXPORT basic_simple_nt6_event_log_backend< char >;
+template class basic_simple_nt6_event_log_backend< char >;
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-template class BOOST_LOG_EXPORT basic_simple_nt6_event_log_backend< wchar_t >;
+template class basic_simple_nt6_event_log_backend< wchar_t >;
 #endif
 
 } // namespace sinks

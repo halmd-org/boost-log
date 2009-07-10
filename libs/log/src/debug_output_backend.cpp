@@ -40,7 +40,7 @@ namespace {
 } // namespace
 
 template< typename CharT >
-BOOST_LOG_EXPORT bool basic_debug_output_backend< CharT >::debugger_presence_filter::operator() (values_view_type const& values) const
+bool basic_debug_output_backend< CharT >::debugger_presence_filter::operator() (values_view_type const& values) const
 {
     return (IsDebuggerPresent() != FALSE);
 }
@@ -70,10 +70,10 @@ void basic_debug_output_backend< CharT >::do_consume(record_type const& record, 
 }
 
 #ifdef BOOST_LOG_USE_CHAR
-template class BOOST_LOG_EXPORT basic_debug_output_backend< char >;
+template class basic_debug_output_backend< char >;
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-template class BOOST_LOG_EXPORT basic_debug_output_backend< wchar_t >;
+template class basic_debug_output_backend< wchar_t >;
 #endif
 
 } // namespace sinks

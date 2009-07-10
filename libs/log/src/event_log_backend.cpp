@@ -607,12 +607,12 @@ void basic_event_log_backend< CharT >::set_event_composer(event_composer_type co
 
 
 #ifdef BOOST_LOG_USE_CHAR
-template class BOOST_LOG_EXPORT basic_simple_event_log_backend< char >;
-template class BOOST_LOG_EXPORT basic_event_log_backend< char >;
+template class basic_simple_event_log_backend< char >;
+template class basic_event_log_backend< char >;
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-template class BOOST_LOG_EXPORT basic_simple_event_log_backend< wchar_t >;
-template class BOOST_LOG_EXPORT basic_event_log_backend< wchar_t >;
+template class basic_simple_event_log_backend< wchar_t >;
+template class basic_event_log_backend< wchar_t >;
 #endif
 
 } // namespace sinks

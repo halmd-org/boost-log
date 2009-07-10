@@ -52,7 +52,7 @@ namespace sinks {
  * formatting.
  */
 template< typename CharT >
-class BOOST_LOG_EXPORT basic_debug_output_backend :
+class basic_debug_output_backend :
     public basic_formatting_sink_backend< CharT >
 {
     //! Base type
@@ -85,21 +85,21 @@ public:
     /*!
      * Constructor. Initializes the sink backend.
      */
-    basic_debug_output_backend();
+    BOOST_LOG_EXPORT basic_debug_output_backend();
     /*!
      * Destructor
      */
-    ~basic_debug_output_backend();
+    BOOST_LOG_EXPORT ~basic_debug_output_backend();
 
     /*!
      * \return A filter that checks whether the debugger is available
      */
-    debugger_presence_filter get_debugger_presence_filter() const;
+    BOOST_LOG_EXPORT debugger_presence_filter get_debugger_presence_filter() const;
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method puts the formatted message to debugger
-    void do_consume(record_type const& rec, target_string_type const& formatted_message);
+    BOOST_LOG_EXPORT void do_consume(record_type const& rec, target_string_type const& formatted_message);
 #endif
 };
 

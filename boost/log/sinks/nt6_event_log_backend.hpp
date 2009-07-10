@@ -254,7 +254,7 @@ namespace etw {
  * and elide unnecessary formatting of event messages.
  */
 template< typename CharT >
-class BOOST_LOG_EXPORT basic_simple_nt6_event_log_backend :
+class basic_simple_nt6_event_log_backend :
     public boost::log::sinks::basic_formatting_sink_backend< CharT, wchar_t >
 {
     //! Base type
@@ -315,21 +315,21 @@ public:
      * \note Since the default provider identifier is always constant, even across different
      *       applications, it is strongly advised to always specify the \c provider_id parameter.
      */
-    basic_simple_nt6_event_log_backend(GUID const& provider_id = get_default_provider_id());
+    BOOST_LOG_EXPORT basic_simple_nt6_event_log_backend(GUID const& provider_id = get_default_provider_id());
     /*!
      * Destructor. Unregisters event provider.
      */
-    ~basic_simple_nt6_event_log_backend();
+    BOOST_LOG_EXPORT ~basic_simple_nt6_event_log_backend();
 
     /*!
      * \return A filter that checks whether an event will be consumed by ETW or not
      */
-    event_enabled_filter get_event_enabled_filter() const;
+    BOOST_LOG_EXPORT event_enabled_filter get_event_enabled_filter() const;
 
     /*!
      * The method installs the function object that maps application severity levels to WinAPI levels
      */
-    void set_severity_mapper(severity_mapper_type const& mapper);
+    BOOST_LOG_EXPORT void set_severity_mapper(severity_mapper_type const& mapper);
 
     /*!
      * \returns Default provider GUID.
@@ -337,12 +337,12 @@ public:
      * \note The returned GUID is always constant, therefore it is recommended to always generate
      *       your own application-specific event provider GUID in order not to conflict with other applications.
      */
-    static GUID const& get_default_provider_id();
+    BOOST_LOG_EXPORT static GUID const& get_default_provider_id();
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! The method puts the formatted message to the event log
-    void do_consume(record_type const& record, target_string_type const& formatted_message);
+    BOOST_LOG_EXPORT void do_consume(record_type const& record, target_string_type const& formatted_message);
 #endif
 };
 
