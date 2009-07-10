@@ -234,15 +234,6 @@ public:
     sections_t const& sections() const { return m_Sections; }
 };
 
-#ifndef BOOST_FILESYSTEM_NARROW_ONLY
-
-//! A helper trait to generate the appropriate Boost.Filesystem path type
-template< typename > struct make_filesystem_path;
-template< > struct make_filesystem_path< char > { typedef filesystem::path type; };
-template< > struct make_filesystem_path< wchar_t > { typedef filesystem::wpath type; };
-
-#endif // BOOST_FILESYSTEM_NARROW_ONLY
-
 //! The supported sinks repository
 template< typename CharT >
 struct sinks_repository :
