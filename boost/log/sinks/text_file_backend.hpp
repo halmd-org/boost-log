@@ -23,25 +23,23 @@
 #define BOOST_LOG_SINKS_TEXT_FILE_BACKEND_HPP_INCLUDED_
 
 #include <ios>
-#include <list>
 #include <string>
 #include <locale>
 #include <boost/limits.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/noncopyable.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/function/function1.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/compatibility/cpp_c_headers/ctime>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/keywords/max_size.hpp>
 #include <boost/log/keywords/min_free_space.hpp>
+#include <boost/log/keywords/target.hpp>
 #include <boost/log/keywords/file_name.hpp>
 #include <boost/log/keywords/open_mode.hpp>
 #include <boost/log/keywords/auto_flush.hpp>
-#include <boost/log/keywords/scan_method.hpp>
 #include <boost/log/keywords/rotation_size.hpp>
 #include <boost/log/keywords/rotation_interval.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -77,130 +75,28 @@ enum scan_method
 };
 
 /*!
- * \brief A FIFO log file collector.
+ * \brief Base class for file collectors
  *
- * The collector attempts to store files in the order they are written. It supports
- * flexible file naming, including a time stamp and file number embedding. The collector
- * monitors the size of the stored files and/or the free space on the target drive
- * and deletes the oldest files to fit within the specified limits.
+ * All file collectors, supported by file sink backends, should inherit this class.
  */
-class fifo_collector
+struct BOOST_LOG_NO_VTABLE collector :
+    public noncopyable
 {
-public:
-    //! Functor result type
-    typedef void result_type;
+    //! Path type that is used by Boost.Log
+    typedef boost::log::aux::universal_path path_type;
 
-private:
-    //! \cond
-
-    //! Information about a single stored file
-    struct file_info
-    {
-        uintmax_t m_Size;
-        std::time_t m_TimeStamp;
-        boost::log::aux::universal_path m_Path;
-    };
-    //! A list of the stored files
-    typedef std::list< file_info > file_list;
-    //! The string type compatible with the universal path type
-    typedef boost::log::aux::universal_path::string_type path_string_type;
-
-private:
-    //! Total file size upper limit
-    uintmax_t m_MaxSize;
-    //! Free space lower limit
-    uintmax_t m_MinFreeSpace;
-    //! Target directory to store files to
-    boost::log::aux::universal_path m_StorageDir;
-
-    //! File name generator
-    function1< path_string_type, unsigned int > m_FileNameGenerator;
-
-    //! The list of stored files
-    file_list m_Files;
-    //! Stored files counter
-    unsigned int m_FileCounter;
-    //! Total size of the stored files
-    uintmax_t m_TotalSize;
-
-    //! \endcond
-
-public:
     /*!
-     * Constructor. Creates collector with default values for all parameters used.
+     * Virtual destructor
      */
-    BOOST_LOG_EXPORT fifo_collector();
-    /*!
-     * Copy constructor.
-     *
-     * \note The constructor is provided for technical reasons only. Different copies of the same
-     *       collector instance should not be used simultaneously as it would introduce unexpected
-     *       results due to conflicting access to the target directory.
-     */
-    BOOST_LOG_EXPORT fifo_collector(fifo_collector const& that);
+    virtual ~collector() {}
 
     /*!
-     * Constructor. Creates a file collector with the specified named parameters.
-     * The following named parameters are supported:
-     *
-     * \li \c file_name - Specifies the file name pattern for the files being stored. The file name
-     *                    portion of the pattern may contain placeholders for date and time in the form
-     *                    compatible to Boost.DateTime. Addidionally, %N placeholder for the integral
-     *                    file counter is supported. The placeholder may additionally contain width
-     *                    specification in the printf-compatible form (e.g. %5N). Note that the
-     *                    directory portion of the pattern should not contain any placeholders. If
-     *                    not specified, the pattern "./%5N.log" will be used.
-     * \li \c max_size - Specifies the maximum total size, in bytes, of stored files that the collector
-     *                   will try not to exceed. If the size exceeds this threshold the oldest file(s) is
-     *                   deleted to free space. Note that the threshold may be exceeded if the size of
-     *                   individual files exceed the \c max_size value. The threshold is not maintained,
-     *                   if not specified.
-     * \li \c min_free_space - Specifies the minimum free space, in bytes, in the target directory that
-     *                         the collector tries to maintain. If the threshold is exceeded, the oldest
-     *                         file(s) is deleted to free space. The threshold is not maintained, if not
-     *                         specified.
-     * \li \c scan_method - Specifies how the collector should perform scanning for files in the target
-     *                      directory that may have been left since previous runs of the application. All
-     *                      found files will be considered as if they were stored during the current run
-     *                      of the application and thus being candidates for deletion. The parameter
-     *                      should be one of the <tt>file::scan_method</tt> values, with \c no_scan being the
-     *                      default. Note that if \c scan_matching is specified, the collector will try
-     *                      to adjust file counter according to the found files.
-     *
-     * \note As file scanning may occur during construction, it is recommended to follow the restrictions
-     *       described in the \c scan_for_files documentation.
-     */
-#ifndef BOOST_LOG_DOXYGEN_PASS
-    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(fifo_collector, construct)
-#else
-    template< typename... ArgsT >
-    explicit fifo_collector(ArgsT... const& args);
-#endif
-
-    /*!
-     * Destructor
-     */
-    BOOST_LOG_EXPORT ~fifo_collector();
-
-    /*!
-     * Assignment.
-     *
-     * \note See warning in the copy constructor documentation.
-     */
-    BOOST_LOG_EXPORT fifo_collector& operator= (fifo_collector that);
-
-    /*!
-     * The operator stores the specified file in the storage. May lead to an older file
+     * The function stores the specified file in the storage. May lead to an older file
      * deletion and a long file moving.
      *
-     * \param p The name of the file to be stored
+     * \param src_path The name of the file to be stored
      */
-    BOOST_LOG_EXPORT void operator()(boost::log::aux::universal_path const& p);
-
-    /*!
-     * Swaps two instances of the collector
-     */
-    BOOST_LOG_EXPORT void swap(fifo_collector& that);
+    virtual void store_file(path_type const& src_path) = 0;
 
     /*!
      * Scans the target directory for the files that have already been stored. The found
@@ -219,12 +115,11 @@ public:
      * All other placeholders are not supported.
      *
      * \param method The method of scanning. If \c no_scan is specified, the call has no effect.
-     * \param pattern The target directory, in case if \a method is \c scan_all. The target
-     *                directory and the file name pattern if \a method is \c scan_matching.
-     * \param update_counter If \c true and \a method is \c scan_matching, the method attempts
-     *                       to update the file counter according to the files found in the target
-     *                       directory. The counter is unaffected otherwise. It usually should be
-     *                       \c false unless you're scanning the target directory.
+     * \param pattern The file name pattern if \a method is \c scan_matching. Otherwise the parameter
+     *                is not used.
+     * \param counter If not \c NULL and \a method is \c scan_matching, the method suggests initial value
+     *                of a file counter that may be used in the file name pattern. The parameter
+     *                is not used otherwise.
      * \return The number of found files.
      *
      * \note In case if \a method is \c scan_matching the effect of this function is highly dependent
@@ -233,29 +128,84 @@ public:
      *       either some files can be mistakenly found or not found, which in turn may lead
      *       to an incorrect file deletion.
      */
-    BOOST_LOG_EXPORT unsigned int scan_for_files(
-        file::scan_method method, boost::log::aux::universal_path const& pattern, bool update_counter = false);
-
-private:
-#ifndef BOOST_LOG_DOXYGEN_PASS
-    //! Constructor implementation
-    template< typename ArgsT >
-    void construct(ArgsT const& args)
-    {
-        construct(
-            args[keywords::max_size | (std::numeric_limits< uintmax_t >::max)()],
-            args[keywords::min_free_space | static_cast< uintmax_t >(0)],
-            boost::log::aux::to_universal_path(args[keywords::file_name | "./%5N.log"]),
-            args[keywords::scan_method | file::no_scan]);
-    }
-    //! Constructor implementation
-    BOOST_LOG_EXPORT void construct(
-        uintmax_t max_size,
-        uintmax_t min_free_space,
-        boost::log::aux::universal_path const& pattern,
-        file::scan_method scan);
-#endif // BOOST_LOG_DOXYGEN_PASS
+    virtual uintmax_t scan_for_files(
+        scan_method method, path_type const& pattern = path_type(), unsigned int* counter = 0) = 0;
 };
+
+namespace aux {
+
+    //! Creates and returns a file collector with the specified parameters
+    BOOST_LOG_EXPORT shared_ptr< collector > make_collector(
+        collector::path_type const& target_dir,
+        uintmax_t max_size,
+        uintmax_t min_free_space
+    );
+    template< typename ArgsT >
+    inline shared_ptr< collector > make_collector(ArgsT const& args)
+    {
+        return aux::make_collector(
+            boost::log::aux::to_universal_path(args[keywords::target]),
+            args[keywords::max_size | (std::numeric_limits< uintmax_t >::max)()],
+            args[keywords::min_free_space | static_cast< uintmax_t >(0)]);
+    }
+
+} // namespace aux
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
+template< typename T1 >
+inline shared_ptr< collector > make_collector(T1 const& a1)
+{
+    return aux::make_collector(a1);
+}
+template< typename T1, typename T2 >
+inline shared_ptr< collector > make_collector(T1 const& a1, T2 const& a2)
+{
+    return aux::make_collector((a1, a2));
+}
+template< typename T1, typename T2, typename T3 >
+inline shared_ptr< collector > make_collector(T1 const& a1, T2 const& a2, T3 const& a3)
+{
+    return aux::make_collector((a1, a2, a3));
+}
+
+#else
+
+/*!
+ * The function creates a file collector for the specified target directory.
+ * Each target directory is managed by a single file collector, so if
+ * this function is called several times for the same directory,
+ * it will return a reference to the same file collector. It is safe
+ * to use the same collector in different sinks, even in a multithreaded
+ * application.
+ *
+ * One can specify certain restrictions for the stored files, such as
+ * maximum total size or minimum free space left in the target directory.
+ * If any of the specified restrictions is not met, the oldest stored file
+ * is deleted. If the same collector is requested more than once with
+ * different restrictions, the collector will act according to the most strict
+ * combination of all specified restrictions.
+ *
+ * The following named parameters are supported:
+ *
+ * \li \c target - Specifies the target directory for the files being stored in. This parameter
+ *                 is mandatory.
+ * \li \c max_size - Specifies the maximum total size, in bytes, of stored files that the collector
+ *                   will try not to exceed. If the size exceeds this threshold the oldest file(s) is
+ *                   deleted to free space. Note that the threshold may be exceeded if the size of
+ *                   individual files exceed the \c max_size value. The threshold is not maintained,
+ *                   if not specified.
+ * \li \c min_free_space - Specifies the minimum free space, in bytes, in the target directory that
+ *                         the collector tries to maintain. If the threshold is exceeded, the oldest
+ *                         file(s) is deleted to free space. The threshold is not maintained, if not
+ *                         specified.
+ *
+ * \return The file collector.
+ */
+template< typename... ArgsT >
+shared_ptr< collector > make_collector(ArgsT... const& args);
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace file
 
@@ -285,9 +235,9 @@ public:
     typedef typename base_type::record_type record_type;
     //! Stream type
     typedef typename base_type::stream_type stream_type;
+    //! Path type that is used by Boost.Log
+    typedef boost::log::aux::universal_path path_type;
 
-    //! File collector functor type
-    typedef function1< void, boost::log::aux::universal_path > file_collector_type;
     //! File open handler
     typedef function1< void, stream_type& > open_handler_type;
     //! File close handler
@@ -311,8 +261,14 @@ public:
      * Constructor. Creates a sink backend with the specified named parameters.
      * The following named parameters are supported:
      *
-     * \li \c file_name - Specifies the temporary file name where logs are actually written to. A temporary
-     *                    file name will be automatically generated if not specified.
+     * \li \c file_name - Specifies the file name pattern where logs are actually written to. The pattern may
+     *                    contain directory and file name portions, but only the file name may contain
+     *                    placeholders. The backend supports Boost.DateTime placeholders for injecting
+     *                    current time and date into the file name. Also, an additional %N placeholder is
+     *                    supported, it will be replaced with an integral increasing file counter. The placeholder
+     *                    may also contain width specification in the printf-compatible form (e.g. %5N). The
+     *                    printed file counter will always be zero-filled. If \c file_name is not specified,
+     *                    pattern "%5N.log" will be used.
      * \li \c open_mode - File open mode. The mode should be presented in form of mask compatible to
      *                    <tt>std::ios_base::openmode</tt>. If not specified, <tt>trunc | out</tt> will be used.
      * \li \c rotation_size - Specifies the approximate size, in characters written, of the temporary file
@@ -324,6 +280,9 @@ public:
      *                            rotations will be performed, if not specified.
      * \li \c auto_flush - Specifies a flag, whether or not to automatically flush the file after each
      *                     written log record. By default, is \c false.
+     *
+     * \note Read caution regarding file name pattern in the <tt>file::collector::scan_for_files</tt>
+     *       documentation.
      */
 #ifndef BOOST_LOG_DOXYGEN_PASS
     BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(basic_text_file_backend, construct)
@@ -341,12 +300,12 @@ public:
      * The method sets file name wildcard for the files being written. The wildcard supports
      * date and time injection into the file name.
      *
-     * \param temp The mask for the file being written.
+     * \param pattern The name pattern for the file being written.
      */
     template< typename PathT >
-    void temp_file_name(PathT const& temp)
+    void set_file_name_pattern(PathT const& pattern)
     {
-        set_temp_file_name(boost::log::aux::to_universal_path(temp));
+        set_file_name_pattern_internal(boost::log::aux::to_universal_path(pattern));
     }
 
     /*!
@@ -354,7 +313,7 @@ public:
      *
      * \param mode File open mode
      */
-    BOOST_LOG_EXPORT void open_mode(std::ios_base::openmode mode);
+    BOOST_LOG_EXPORT void set_open_mode(std::ios_base::openmode mode);
 
     /*!
      * The method sets the log file collector function. The function is called
@@ -362,11 +321,7 @@ public:
      *
      * \param collector The file collector function object
      */
-    template< typename CollectorT >
-    void file_collector(CollectorT const& collector)
-    {
-        set_file_collector(collector);
-    }
+    BOOST_LOG_EXPORT void set_file_collector(shared_ptr< file::collector > const& collector);
 
     /*!
      * The method sets file opening handler. The handler will be called every time
@@ -375,11 +330,7 @@ public:
      *
      * \param handler The file open handler function object
      */
-    template< typename HandlerT >
-    void open_handler(HandlerT const& handler)
-    {
-        set_open_handler(handler);
-    }
+    BOOST_LOG_EXPORT void set_open_handler(open_handler_type const& handler);
 
     /*!
      * The method sets file closing handler. The handler will be called every time
@@ -388,11 +339,7 @@ public:
      *
      * \param handler The file close handler function object
      */
-    template< typename HandlerT >
-    void close_handler(HandlerT const& handler)
-    {
-        set_close_handler(handler);
-    }
+    BOOST_LOG_EXPORT void set_close_handler(close_handler_type const& handler);
 
     /*!
      * The method sets maximum file size. When the size is reached, file rotation is performed.
@@ -402,12 +349,44 @@ public:
      *
      * \param size The maximum file size, in characters.
      */
-    BOOST_LOG_EXPORT void max_file_size(uintmax_t size);
+    BOOST_LOG_EXPORT void set_rotation_size(uintmax_t size);
+
+    /*!
+     * The method sets the maximum number of seconds between file rotations.
+     *
+     * \note The rotation always accurs on writing a log record, so the rotation is
+     *       not strictly bound to the specified time interval.
+     *
+     * \param interval The file rotation interval, in seconds.
+     */
+    BOOST_LOG_EXPORT void set_rotation_interval(unsigned int interval);
 
     /*!
      * Sets the flag to automatically flush buffers of all attached streams after each log record
      */
     BOOST_LOG_EXPORT void auto_flush(bool f = true);
+
+    /*!
+     * Performs scanning of the target directory for log files that may have been left from
+     * previous runs of the application. The found files are considered by the file collector
+     * as if they were rotated.
+     *
+     * The file scan can be performed in two ways: either all files in the target directory will
+     * be considered as log files, or only those files that satisfy the file name pattern.
+     * See documentation on <tt>file::collector::scan_for_files</tt> for more information.
+     *
+     * \pre File collector and the proper file name patter have already been set.
+     *
+     * \param method File scanning method
+     * \param update_counter If \c true and \a method is \c scan_matching, the method attempts
+     *        to update the internal file counter according to the found files. The counter
+     *        is unaffected otherwise.
+     * \return The number of files found.
+     *
+     * \note The method essentially delegates to the same-named function of the file collector.
+     */
+    BOOST_LOG_EXPORT uintmax_t scan_for_files(
+        file::scan_method method = file::scan_matching, bool update_counter = true);
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -416,7 +395,7 @@ private:
     void construct(ArgsT const& args)
     {
         construct(
-            boost::log::aux::to_universal_path(args[keywords::file_name | boost::log::aux::universal_path()]),
+            boost::log::aux::to_universal_path(args[keywords::file_name | path_type()]),
             args[keywords::open_mode | (std::ios_base::trunc | std::ios_base::out)],
             args[keywords::rotation_size | (std::numeric_limits< uintmax_t >::max)()],
             args[keywords::rotation_interval | (std::numeric_limits< unsigned int >::max)()],
@@ -424,7 +403,7 @@ private:
     }
     //! Constructor implementation
     BOOST_LOG_EXPORT void construct(
-        boost::log::aux::universal_path const& temp,
+        path_type const& pattern,
         std::ios_base::openmode mode,
         uintmax_t rotation_size,
         unsigned int rotation_interval,
@@ -434,16 +413,7 @@ private:
     BOOST_LOG_EXPORT void do_consume(record_type const& record, target_string_type const& formatted_message);
 
     //! The method sets file name mask
-    BOOST_LOG_EXPORT void set_temp_file_name(boost::log::aux::universal_path const& temp);
-
-    //! The method sets file collector
-    BOOST_LOG_EXPORT void set_file_collector(file_collector_type const& collector);
-
-    //! The method sets file open handler
-    BOOST_LOG_EXPORT void set_open_handler(open_handler_type const& handler);
-
-    //! The method sets file close handler
-    BOOST_LOG_EXPORT void set_close_handler(close_handler_type const& handler);
+    BOOST_LOG_EXPORT void set_file_name_pattern_internal(path_type const& pattern);
 
     //! The method rotates the file
     void rotate_file();
@@ -574,9 +544,11 @@ public:
     typedef typename base_type::target_string_type target_string_type;
     //! Log record type
     typedef typename base_type::record_type record_type;
+    //! Path type that is used by Boost.Log
+    typedef boost::log::aux::universal_path path_type;
 
     //! File name composer functor type
-    typedef function1< boost::log::aux::universal_path, record_type const& > file_name_composer_type;
+    typedef function1< path_type, record_type const& > file_name_composer_type;
 
 private:
     //! \cond

@@ -88,6 +88,13 @@ struct char_constants< char >
     static const char_type* registration_param_name() { return "Registration"; }
     static const char_type* local_address_param_name() { return "LocalAddress"; }
     static const char_type* target_address_param_name() { return "TargetAddress"; }
+    static const char_type* target_param_name() { return "Target"; }
+    static const char_type* max_size_param_name() { return "MaxSize"; }
+    static const char_type* min_free_space_param_name() { return "MinFreeSpace"; }
+    static const char_type* scan_for_files_param_name() { return "ScanForFiles"; }
+
+    static const char_type* scan_method_all() { return "All"; }
+    static const char_type* scan_method_matching() { return "Matching"; }
 
     static const char_type* registration_never() { return "Never"; }
     static const char_type* registration_on_demand() { return "OnDemand"; }
@@ -174,6 +181,13 @@ struct char_constants< wchar_t >
     static const char_type* registration_param_name() { return L"Registration"; }
     static const char_type* local_address_param_name() { return L"LocalAddress"; }
     static const char_type* target_address_param_name() { return L"TargetAddress"; }
+    static const char_type* target_param_name() { return L"Target"; }
+    static const char_type* max_size_param_name() { return L"MaxSize"; }
+    static const char_type* min_free_space_param_name() { return L"MinFreeSpace"; }
+    static const char_type* scan_for_files_param_name() { return L"ScanForFiles"; }
+
+    static const char_type* scan_method_all() { return L"All"; }
+    static const char_type* scan_method_matching() { return L"Matching"; }
 
     static const char_type* registration_never() { return L"Never"; }
     static const char_type* registration_on_demand() { return L"OnDemand"; }

@@ -26,15 +26,15 @@
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/log/detail/prologue.hpp>
 
-#ifndef BOOST_LOG_MAX_CTOR_FORWARD_ARGS
-//! The maximum number of named arguments that are accepted by constructors
-#define BOOST_LOG_MAX_CTOR_FORWARD_ARGS 16
+#ifndef BOOST_LOG_MAX_PARAMETER_ARGS
+//! The maximum number of named arguments that are accepted by constructors and functions
+#define BOOST_LOG_MAX_PARAMETER_ARGS 16
 #endif
 
-// The macro applies the passed macro with the specified arguments BOOST_LOG_MAX_CTOR_FORWARD_ARGS times
+// The macro applies the passed macro with the specified arguments BOOST_LOG_MAX_PARAMETER_ARGS times
 #define BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_GEN(macro, args)\
     public:\
-        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, macro, args)
+        BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_PARAMETER_ARGS, macro, args)
 
 
 #define BOOST_LOG_CTOR_FORWARD(z, n, types)\

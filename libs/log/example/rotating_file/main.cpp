@@ -59,17 +59,19 @@ int main(int argc, char* argv[])
         // Create a text file sink
         typedef sinks::synchronous_sink< sinks::text_file_backend > file_sink;
         shared_ptr< file_sink > sink(new file_sink(
-            keywords::file_name = "temp.log",       // temporary file name
-            keywords::rotation_size = 16384         // rotation size, in characters
+            keywords::file_name = "%Y%m%d_%H%M%S_%5N.log",      // file name pattern
+            keywords::rotation_size = 16384                     // rotation size, in characters
             ));
 
         // Set up where the rotated files will be stored
-        sink->locked_backend()->file_collector(sinks::file::fifo_collector(
-            keywords::file_name = "logs/%Y%m%d_%H%M%S_%5N.log", // the resulting file name pattern
+        sink->locked_backend()->set_file_collector(sinks::file::make_collector(
+            keywords::target = "logs",                          // where to store rotated files
             keywords::max_size = 16 * 1024 * 1024,              // maximum total size of the stored files, in bytes
-            keywords::min_free_space = 100 * 1024 * 1024,       // minimum free space on the drive, in bytes
-            keywords::scan_method = sinks::file::scan_matching        // upon restart, scan the directory for files matching the file_name pattern
+            keywords::min_free_space = 100 * 1024 * 1024        // minimum free space on the drive, in bytes
             ));
+
+        // Upon restart, scan the target directory for files matching the file_name pattern
+        sink->locked_backend()->scan_for_files();
 
         sink->locked_backend()->set_formatter(
             fmt::format("%1%: [%2%] - %3%")

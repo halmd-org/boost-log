@@ -24,11 +24,15 @@
 
 #include <iostream>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/sink_init_helpers.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
-#include <boost/log/utility/init/to_file.hpp>
+#include <boost/log/keywords/format.hpp>
+#include <boost/log/keywords/filter.hpp>
+#include <boost/log/keywords/auto_flush.hpp>
 
 //! \cond
 #ifndef BOOST_LOG_NO_THREADS
@@ -53,7 +57,25 @@ shared_ptr<
 > init_log_to_console(std::basic_ostream< CharT >& strm, ArgsT const& args)
 {
     shared_ptr< std::basic_ostream< CharT > > pStream(&strm, empty_deleter());
-    return aux::init_log_to_file(pStream, args);
+
+    typedef sinks::basic_text_ostream_backend< CharT > backend_t;
+    shared_ptr< backend_t > pBackend = boost::make_shared< backend_t >();
+
+    pBackend->add_stream(pStream);
+    pBackend->auto_flush(args[keywords::auto_flush | false]);
+
+    aux::setup_formatter(*pBackend, args,
+        typename is_void< typename parameter::binding< ArgsT, keywords::tag::format, void >::type >::type());
+
+    typedef BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL< backend_t > sink_t;
+    shared_ptr< sink_t > pSink = boost::make_shared< sink_t >(pBackend);
+
+    aux::setup_filter(*pSink, args,
+        typename is_void< typename parameter::binding< ArgsT, keywords::tag::filter, void >::type >::type());
+
+    basic_core< CharT >::get()->add_sink(pSink);
+
+    return pSink;
 }
 
 template< typename CharT >

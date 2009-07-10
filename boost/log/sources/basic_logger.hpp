@@ -520,7 +520,7 @@ public:
     {
     }
     //  Parametrized constructors that pass all named arguments to the features
-    BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD_INTERNAL, basic_composite_logger)
+    BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_PARAMETER_ARGS, BOOST_LOG_CTOR_FORWARD_INTERNAL, basic_composite_logger)
 
     /*!
      * Assignment for the final class. Threadsafe, provides strong exception guarantee.
@@ -578,7 +578,7 @@ public:
         base_type(static_cast< base_type const& >(that))
     {
     }
-    BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_CTOR_FORWARD_ARGS, BOOST_LOG_CTOR_FORWARD_INTERNAL, basic_composite_logger)
+    BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_PARAMETER_ARGS, BOOST_LOG_CTOR_FORWARD_INTERNAL, basic_composite_logger)
 
     FinalT& operator= (FinalT that)
     {

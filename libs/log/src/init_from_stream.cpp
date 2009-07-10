@@ -29,22 +29,25 @@
 #define BOOST_SPIRIT_THREADSAFE
 #endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
 
+#include <boost/limits.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/fstream.hpp>
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_assign_actor.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/new_shared.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/throw_exception.hpp>
+#include <boost/log/detail/singleton.hpp>
+#include <boost/log/detail/universal_path.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
+#include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/sinks/syslog_backend.hpp>
 #ifdef BOOST_WINDOWS
 #include <boost/log/sinks/debug_output_backend.hpp>
@@ -53,10 +56,7 @@
 #include <boost/log/sinks/nt6_event_log_backend.hpp>
 #endif // BOOST_LOG_USE_WINNT6_API
 #endif // BOOST_WINDOWS
-#include <boost/log/detail/singleton.hpp>
-#include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
-#include <boost/log/utility/rotating_ofstream.hpp>
 #include <boost/log/utility/init/from_stream.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
 #include <boost/log/utility/init/formatter_parser.hpp>
@@ -162,7 +162,7 @@ public:
         {
             line.clear();
             std::getline(strm, line);
-            boost::algorithm::trim(line, loc);
+            algorithm::trim(line, loc);
 
             // Skipping empty lines and comments
             // NOTE: The comments are only allowed to be the whole line.
@@ -174,7 +174,7 @@ public:
                 {
                     str_iterator it = std::find(line.begin() + 1, line.end(), constants::char_section_bracket_right);
                     string_type section_name(line.begin() + 1, it);
-                    boost::algorithm::trim(section_name, loc);
+                    algorithm::trim(section_name, loc);
                     if (it != line.end() && !section_name.empty())
                     {
                         // Creating a new section
@@ -196,12 +196,12 @@ public:
                         // Find the '=' between the parameter name and value
                         str_iterator it = std::find(line.begin(), line.end(), constants::char_equal);
                         string_type param_name(line.begin(), it);
-                        boost::algorithm::trim_right(param_name, loc);
+                        algorithm::trim_right(param_name, loc);
                         if (it != line.end() && !param_name.empty())
                         {
                             // Put the parameter value into the map
                             string_type param_value(++it, line.end());
-                            boost::algorithm::trim_left(param_value, loc);
+                            algorithm::trim_left(param_value, loc);
                             if (param_value.size() >= 2
                                 && param_value[0] == constants::char_quote && *param_value.rbegin() == constants::char_quote)
                             {
@@ -325,109 +325,96 @@ private:
     static shared_ptr< sinks::sink< char_type > > default_text_file_sink_factory(params_t const& params)
     {
         typedef std::basic_istringstream< char_type > isstream;
-        typedef sinks::basic_text_ostream_backend< char_type > backend_t;
-        shared_ptr< backend_t > backend = log::aux::new_shared< backend_t >();
+        typedef sinks::basic_text_file_backend< char_type > backend_t;
+        typedef typename backend_t::path_type path_type;
+        shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
 
         // FileName
-#ifndef BOOST_FILESYSTEM_NARROW_ONLY
-        typename make_filesystem_path< char_type >::type file_name;
-#else
-        filesystem::path file_name;
-#endif // BOOST_FILESYSTEM_NARROW_ONLY
+        path_type file_name;
         typename params_t::const_iterator it = params.find(constants::file_name_param_name());
         if (it != params.end())
-        {
-#ifndef BOOST_FILESYSTEM_NARROW_ONLY
-            file_name = it->second;
-#else
-            file_name = log::aux::to_narrow(it->second);
-#endif // BOOST_FILESYSTEM_NARROW_ONLY
-        }
+            file_name = boost::log::aux::to_universal_path(it->second);
         else
             boost::log::aux::throw_exception(std::runtime_error("File name is not specified"));
 
-        // File rotation params
-        shared_ptr< typename backend_t::stream_type > file_stream;
-        typename params_t::const_iterator
-            rotation_size_param = params.find(constants::rotation_size_param_name()),
-            rotation_interval_param = params.find(constants::rotation_interval_param_name());
-        unsigned int cond =
-            (static_cast< unsigned int >(rotation_size_param != params.end()) << 1)
-            | static_cast< unsigned int >(rotation_interval_param != params.end());
-
-        switch (cond)
+        // File rotation size
+        it = params.find(constants::rotation_size_param_name());
+        if (it != params.end())
         {
-            case 1:
+            uintmax_t size = (std::numeric_limits< uintmax_t >::max)();
+            isstream strm(it->second);
+            strm >> size;
+            backend->set_rotation_size(size);
+        }
+
+        // File rotation interval
+        it = params.find(constants::rotation_interval_param_name());
+        if (it != params.end())
+        {
+            unsigned int interval = (std::numeric_limits< unsigned int >::max)();
+            isstream strm(it->second);
+            strm >> interval;
+            backend->set_rotation_interval(interval);
+        }
+
+        // Auto flush
+        it = params.find(constants::auto_flush_param_name());
+        if (it != params.end())
+        {
+            bool f = false;
+            isstream strm(it->second);
+            strm.setf(std::ios_base::boolalpha);
+            strm >> f;
+            backend->auto_flush(f);
+        }
+
+        // File collector parameters
+        // Target directory
+        it = params.find(constants::target_param_name());
+        if (it != params.end())
+        {
+            path_type target_dir = boost::log::aux::to_universal_path(it->second);
+
+            // Max total size
+            uintmax_t max_size = (std::numeric_limits< uintmax_t >::max)();
+            it = params.find(constants::max_size_param_name());
+            if (it != params.end())
             {
-                // Only rotation interval is set
-                unsigned int interval = 0;
-                isstream strm(rotation_interval_param->second);
-                strm >> interval;
-
-#ifndef BOOST_LOG_BROKEN_STL_ALIGNMENT
-                file_stream = log::aux::new_shared< basic_rotating_ofstream< char_type > >(
-                    file_name, keywords::rotation_interval = interval);
-#else
-                file_stream.reset(new basic_rotating_ofstream< char_type > (
-                    file_name, keywords::rotation_interval = interval));
-#endif // BOOST_LOG_BROKEN_STL_ALIGNMENT
-
+                isstream strm(it->second);
+                strm >> max_size;
             }
-            break;
 
-            case 2:
+            // Min free space
+            uintmax_t space = 0;
+            it = params.find(constants::min_free_space_param_name());
+            if (it != params.end())
             {
-                // Only rotation size is set
-                uintmax_t size = ~static_cast< uintmax_t >(0);
-                isstream strm(rotation_size_param->second);
-                strm >> size;
-
-#ifndef BOOST_LOG_BROKEN_STL_ALIGNMENT
-                file_stream = log::aux::new_shared< basic_rotating_ofstream< char_type > >(
-                    file_name, keywords::rotation_size = size);
-#else
-                file_stream.reset(new basic_rotating_ofstream< char_type >(
-                    file_name, keywords::rotation_size = size));
-#endif // BOOST_LOG_BROKEN_STL_ALIGNMENT
+                isstream strm(it->second);
+                strm >> space;
             }
-            break;
 
-            case 3:
+            backend->set_file_collector(sinks::file::make_collector(
+                keywords::target = target_dir,
+                keywords::max_size = max_size,
+                keywords::min_free_space = space));
+
+            // Scan for log files
+            it = params.find(constants::scan_for_files_param_name());
+            if (it != params.end())
             {
-                // Both rotation interval and size are set
-                unsigned int interval = 0;
-                isstream strm_interval(rotation_interval_param->second);
-                strm_interval >> interval;
-
-                uintmax_t size = ~static_cast< uintmax_t >(0);
-                isstream strm_size(rotation_size_param->second);
-                strm_size >> size;
-
-#ifndef BOOST_LOG_BROKEN_STL_ALIGNMENT
-                file_stream = log::aux::new_shared< basic_rotating_ofstream< char_type > >(
-                    file_name, keywords::rotation_interval = interval, keywords::rotation_size = size);
-#else
-                file_stream.reset(new basic_rotating_ofstream< char_type >(
-                    file_name, keywords::rotation_interval = interval, keywords::rotation_size = size));
-#endif // BOOST_LOG_BROKEN_STL_ALIGNMENT
-            }
-            break;
-
-            default:
-            {
-                // No rotation required, we can use a simple stream
-                typedef filesystem::basic_ofstream< char_type > stream_t;
-                shared_ptr< stream_t > p = log::aux::new_shared< stream_t >(
-                    file_name, std::ios_base::out | std::ios_base::trunc);
-                if (!p->is_open())
-                    boost::log::aux::throw_exception(std::runtime_error("Failed to open the destination file"));
-                file_stream = p;
+                if (it->second == constants::scan_method_all())
+                    backend->scan_for_files(sinks::file::scan_all);
+                else if (it->second == constants::scan_method_matching())
+                    backend->scan_for_files(sinks::file::scan_matching);
+                else
+                {
+                    boost::log::aux::throw_exception(std::runtime_error(
+                        "File scan method \"" + boost::log::aux::to_narrow(it->second) + "\" is not supported"));
+                }
             }
         }
 
-        backend->add_stream(file_stream);
-
-        return init_text_ostream_sink(backend, params);
+        return init_sink(backend, params);
     }
 
     //! The function constructs a sink that writes log records to the console
@@ -435,7 +422,7 @@ private:
     {
         // Construct the backend
         typedef sinks::basic_text_ostream_backend< char_type > backend_t;
-        shared_ptr< backend_t > backend = log::aux::new_shared< backend_t >();
+        shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
         backend->add_stream(
             shared_ptr< typename backend_t::stream_type >(&constants::get_console_log_stream(), empty_deleter()));
 
@@ -447,7 +434,7 @@ private:
     {
         // Construct the backend
         typedef sinks::basic_syslog_backend< char_type > backend_t;
-        shared_ptr< backend_t > backend = log::aux::new_shared< backend_t >();
+        shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
 
         // For now we use only the default level mapping. Will add support for configuration later.
         backend->set_severity_mapper(
