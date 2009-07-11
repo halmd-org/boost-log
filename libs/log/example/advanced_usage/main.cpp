@@ -34,7 +34,7 @@
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 
-#include <boost/log/formatters/ostream.hpp>
+#include <boost/log/formatters/stream.hpp>
 // #include <boost/log/formatters/format.hpp>
 #include <boost/log/formatters/attr.hpp>
 #include <boost/log/formatters/date_time.hpp>
@@ -159,7 +159,7 @@ int main(int argc, char* argv[])
     // Each logging record may have a number of attributes in addition to the
     // message body itself. By setting up formatter we define which of them
     // will be written to log and in what way they will look there.
-    pSink->locked_backend()->set_formatter(fmt::ostrm
+    pSink->locked_backend()->set_formatter(fmt::stream
         << fmt::attr("LineID") // First an attribute "LineID" is written to the log
         << " [" << fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f") 
         << "] [" << fmt::attr< severity_level >("Severity") 

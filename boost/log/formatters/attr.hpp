@@ -36,6 +36,42 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace formatters {
 
+namespace aux {
+
+    //! Output stream operator
+    template< typename StreamT >
+    struct ostream_op
+    {
+        typedef void result_type;
+        explicit ostream_op(StreamT& strm) : m_Stream(strm) {}
+        template< typename T >
+        void operator() (T const& value) const
+        {
+            m_Stream << value;
+        }
+
+    private:
+        StreamT& m_Stream;
+    };
+
+    //! Boost.Format binding operator
+    template< typename FormatT >
+    struct format_op
+    {
+        typedef void result_type;
+        explicit format_op(FormatT& fmt) : m_Format(fmt) {}
+        template< typename T >
+        void operator() (T const& value) const
+        {
+            m_Format % value;
+        }
+
+    private:
+        FormatT& m_Format;
+    };
+
+} // namespace aux
+
 /*!
  * \brief Generic attribute value formatter
  * 
@@ -63,22 +99,6 @@ public:
     typedef typename base_type::record_type record_type;
 
 private:
-    //! Output stream operator
-    struct ostream_op
-    {
-        typedef void result_type;
-        explicit ostream_op(ostream_type& strm) : m_Stream(strm) {}
-        template< typename T >
-        void operator() (T const& value) const
-        {
-            m_Stream << value;
-        }
-
-    private:
-        ostream_type& m_Stream;
-    };
-
-private:
     //! Attribute value extractor
     attribute_value_extractor< char_type, AttributeValueTypesT > m_Extractor;
 
@@ -99,7 +119,7 @@ public:
      */
     void operator() (ostream_type& strm, record_type const& record) const
     {
-        ostream_op op(strm);
+        aux::ostream_op< ostream_type > op(strm);
         m_Extractor(record.attribute_values(), op);
     }
 };
@@ -187,22 +207,6 @@ public:
     typedef typename base_type::record_type record_type;
 
 private:
-    //! Boost.Format binding operator
-    struct format_op
-    {
-        typedef void result_type;
-        explicit format_op(format_type& fmt) : m_Format(fmt) {}
-        template< typename T >
-        void operator() (T const& value) const
-        {
-            m_Format % value;
-        }
-
-    private:
-        format_type& m_Format;
-    };
-
-private:
     //! Attribute value extractor
     attribute_value_extractor< char_type, AttributeValueTypesT > m_Extractor;
     //! Formatter object
@@ -228,7 +232,7 @@ public:
     void operator() (ostream_type& strm, record_type const& record) const
     {
         boost::log::aux::cleanup_guard< format_type > _(m_Formatter);
-        format_op op(m_Formatter);
+        aux::format_op< format_type > op(m_Formatter);
         m_Extractor(record.attribute_values(), op);
         strm << m_Formatter;
     }

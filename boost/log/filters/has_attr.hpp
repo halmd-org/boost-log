@@ -24,6 +24,7 @@
 
 #include <string>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/functional.hpp>
 #include <boost/log/utility/attribute_value_extractor.hpp>
 #include <boost/log/filters/basic_filters.hpp>
 
@@ -57,24 +58,6 @@ public:
     typedef typename base_type::string_type string_type;
 
 private:
-    //! The function object that receives the extracted attribute value
-    struct receiver
-    {
-        typedef void result_type;
-
-        explicit receiver(bool& received) : m_Received(received) {}
-
-        template< typename T >
-        void operator() (T const&) const
-        {
-            m_Received = true;
-        }
-
-    private:
-        bool& m_Received;
-    };
-
-private:
     //! Attribute extractor
     extractor m_Extractor;
 
@@ -94,10 +77,7 @@ public:
      */
     bool operator() (values_view_type const& values) const
     {
-        bool received = false;
-        receiver r(received);
-        m_Extractor(values, r);
-        return received;
+        return m_Extractor(values, boost::log::aux::nop());
     }
 };
 

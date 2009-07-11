@@ -80,7 +80,12 @@ namespace aux {
         {
             const wchar_t* format;
             register unsigned int val;
-            if (sizeof(wchar_t) == 2)
+            if (sizeof(wchar_t) == 1)
+            {
+                format = L"\\x%0.2X";
+                val = static_cast< uint8_t >(c);
+            }
+            else if (sizeof(wchar_t) == 2)
             {
                 format = L"\\x%0.4X";
                 val = static_cast< uint16_t >(c);

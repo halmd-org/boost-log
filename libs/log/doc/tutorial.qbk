@@ -221,18 +221,18 @@ You can create a formatter with a lambda-style expression like this:
     // This makes the sink to write log records that look like this:
     // 1: <normal> [main] A normal severity message
     // 2: <error> [main] An error severity message
-    pSink->locked_backend()->set_formatter(fmt::ostrm
+    pSink->locked_backend()->set_formatter(fmt::stream
         << fmt::attr< unsigned int >("LineID")
         << ": <" << fmt::attr< severity_level >("Severity")
         << "> [" << fmt::named_scope("Scope")
         << "] " << fmt::message());
 
-Here the `ostrm` is a placeholder for the stream to format the record in (the `strm` argument in terms of the formatter signature above). Other insertion arguments, such as `attr`, `named_scope` and `message`, are manipulators that define what should be stored in the stream. The `message` manipulator is a bit special since unlike all other manipulators it writes a preformatted message text acquired from the logger, not an attribute. As you can see, adding support for user-defined types is quite simple, since the library uses the regular technique of putting attribute values into a stream. All we needed to do to support textual representation of the severity level in logs was to define according streaming operator.
+Here the `stream` is a placeholder for the stream to format the record in (the `strm` argument in terms of the formatter signature above). Other insertion arguments, such as `attr`, `named_scope` and `message`, are manipulators that define what should be stored in the stream. The `message` manipulator is a bit special since unlike all other manipulators it writes a preformatted message text acquired from the logger, not an attribute. As you can see, adding support for user-defined types is quite simple, since the library uses the regular technique of putting attribute values into a stream. All we needed to do to support textual representation of the severity level in logs was to define according streaming operator.
 
 Some manipulators may accept additional arguments that customize their behavior. Most of these arguments are named and may be passed in __boost_parameter__ style. For example, `attr` supports format specifier in a printf-style string and with `named_scope` manipulator you may decide the direction of iteration through the list of scopes and the depth of iteration:
 
     using namespace keywords; // All argument name keywords reside in this namespace
-    pSink->locked_backend()->set_formatter(fmt::ostrm
+    pSink->locked_backend()->set_formatter(fmt::stream
         << fmt::attr< unsigned int >("LineID", format = "%08x") // make the line numbers to be written in hex, 8 symbols long
         << ": <" << fmt::attr< severity_level >("Severity")
         << "> [" << fmt::named_scope("Scope", iteration = fmt::reverse, depth = 4) // make scope iteration top-to-bottom, no more than 4 scopes to be written
@@ -286,7 +286,7 @@ The filter function object should return `true` if the record have passed the fi
         flt::has_attr("Tag") && // The sink will only write records that have an attribute "Tag"...
         flt::attr< std::string >("Tag").begins_with("LOGME")); // ...whose value begins with word "LOGME"
 
-The syntax is quite similar to formatters. The difference is that there is no need in a hook placeholder like `ostrm`. You may see a more detailed description of filters in the [link advanced.advanced.filters Detailed features description] section.
+The syntax is quite similar to formatters. The difference is that there is no need in a hook placeholder like `stream`. You may see a more detailed description of filters in the [link advanced.advanced.filters Detailed features description] section.
 
 [endsect]
 

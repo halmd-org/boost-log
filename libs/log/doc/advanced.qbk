@@ -296,7 +296,7 @@ The usage is similar to the `unlocked_sink`.
         {
             sinks::synchronous_sink< sinks::text_ostream_backend >::locked_backend_ptr p = sink.locked_backend();
             p->add_stream(boost::make_shared< std::ofstream >("test.log"));
-            p->set_formatter(fmt::ostrm << "Level: " << fmt::attr< int >("Severity") << "Message: " << fmt::message());
+            p->set_formatter(fmt::stream << "Level: " << fmt::attr< int >("Severity") << "Message: " << fmt::message());
         } // the backend gets released here
     }
 
@@ -329,7 +329,7 @@ The frontend is implemented in the `asynchronous_sink` class template. Like sync
         {
             sinks::asynchronous_sink< sinks::text_ostream_backend >::locked_backend_ptr p = sink.locked_backend();
             p->add_stream(boost::make_shared< std::ofstream >("test.log"));
-            p->set_formatter(fmt::ostrm << "Level: " << fmt::attr< int >("Severity") << "Message: " << fmt::message());
+            p->set_formatter(fmt::stream << "Level: " << fmt::attr< int >("Severity") << "Message: " << fmt::message());
         } // the backend gets released here
     }
 
@@ -837,11 +837,11 @@ The `attr` placeholder has an advanced support for string-typed attribute values
 
 [section:formatters Formatters]
 
-As it was noted in the [link tutorial.tutorial.formatters tutorial], the library provides two ways of expressing formatters: with a stream-style syntax or __boost_format__-style expression. Which of the two formats is chosen is determined with the appropriate anchor expression. To use stream-style syntax one should begin formatter definition with a `ostrm` or `wostrm` keyword, like that:
+As it was noted in the [link tutorial.tutorial.formatters tutorial], the library provides two ways of expressing formatters: with a stream-style syntax or __boost_format__-style expression. Which of the two formats is chosen is determined with the appropriate anchor expression. To use stream-style syntax one should begin formatter definition with a `stream` or `wstream` keyword, like that:
 
-    #include <boost/log/formatters/ostream.hpp>
+    #include <boost/log/formatters/stream.hpp>
 
-    backend->set_formatter(fmt::ostrm << expr1 << expr2 << ... << exprN);
+    backend->set_formatter(fmt::stream << expr1 << expr2 << ... << exprN);
 
 Here expressions `expr1` through `exprN` may be either manipulators, described in this section, or other expressions resulting in an object that supports putting into an STL-stream. Note that `boost::ref` is also supported, which allows to inject references into the formatter object.
 
@@ -851,7 +851,7 @@ To use __boost_format__-style syntax one should use `format` construct:
 
     backend->set_formatter(fmt::format("format string") % expr1 % expr2 % ... % exprN);
 
-The format string passed to the `format` keyword should contain positional placeholders for the appropriate expressions. In case of wide-character logging the format string should be wide. Expressions `expr1` through `exprN` have the same meaning as in stream-like variant. It should be noted, though, that using stream-like syntax usually results in a faster formatter than the one is constructed with the `format` keyword.
+The format string passed to the `format` keyword should contain positional placeholders for the appropriate expressions. In case of wide-character logging the format string should be wide. Expressions `expr1` through `exprN` have the same meaning as in stream-like variant. It should be noted though that using stream-like syntax usually results in a faster formatter than the one is constructed with the `format` keyword.
 
 [section:attr Generic attribute formatter]
 
@@ -874,7 +874,7 @@ The `attr` formatter is the most generic and simple way to format an attribute v
     }
 
     // Sets the formatter to a sink backend
-    backend->set_formatter(fmt::ostrm << fmt::attr< A >("MyAttribute"));
+    backend->set_formatter(fmt::stream << fmt::attr< A >("MyAttribute"));
 
 This will also work with __boost_format__-style syntax since it falls back to streams internally:
 
@@ -884,12 +884,12 @@ This will also work with __boost_format__-style syntax since it falls back to st
 Like filters, formatters also support specifying a set of possible types of the attribute values in MPL-compatible sequences. For example, you can format an attribute that may have some integral type like this:
 
     typedef boost::mpl::vector< short, int, long >::type types;
-    backend->set_formatter(fmt::ostrm << fmt::attr< types >("MyInteger"));
+    backend->set_formatter(fmt::stream << fmt::attr< types >("MyInteger"));
 
 The `attr` formatter also supports an additional argument with a __boost_format__ format string. This feature can be used to specify formatting rules for numbers and/or decorate the formatted attribute somehow. For example:
 
     typedef boost::mpl::vector< short, int, long >::type types;
-    backend->set_formatter(fmt::ostrm << fmt::attr< types >("MyInteger", "[%08x]")); // will print the "MyInteger" attribute value as 8-digit hex in square brackets
+    backend->set_formatter(fmt::stream << fmt::attr< types >("MyInteger", "[%08x]")); // will print the "MyInteger" attribute value as 8-digit hex in square brackets
 
 Please note, though, that the format string should be valid for all attribute value types that are specified as the template argument for the `attr` formatter. If this is not possible, one should consider using [link advanced.advanced.formatters.conditional conditional formatters] to split types into several groups and specify a valid format string for each group.
 
@@ -906,25 +906,25 @@ As it comes from its name, `date_time` is responsible for formatting time points
 The date and time format can be customized by user. The format should be passed as a named argument `format` to the appropriate formatter. This argument should be a format string, containing placeholders described in __boost_date_time__ documentation. Some usage examples as follows:
 
     // Puts a date of any of the supported types into log. The default format is "%Y-%b-%d".
-    backend->set_formatter(fmt::ostrm << fmt::date("Date"));
+    backend->set_formatter(fmt::stream << fmt::date("Date"));
 
     // Puts a time point of any of the supported types into log. The default format is "%H:%M:%S.%f".
-    backend->set_formatter(fmt::ostrm << fmt::time("Time"));
+    backend->set_formatter(fmt::stream << fmt::time("Time"));
 
     // Puts a date and time of the specified type into log. The default format is "%Y-%b-%d %H:%M:%S.%f".
-    backend->set_formatter(fmt::ostrm << fmt::date_time< std::tm >("DateTime"));
+    backend->set_formatter(fmt::stream << fmt::date_time< std::tm >("DateTime"));
 
     // Puts a date and time of one of the specified types into log.
     typedef boost::mpl::vector< std::time_t, std::tm, boost::posix_time::ptime >::type types;
-    backend->set_formatter(fmt::ostrm << fmt::date_time< types >("DateTime", keywords::format = "%d.%m.%y %H:%M:%S"));
+    backend->set_formatter(fmt::stream << fmt::date_time< types >("DateTime", keywords::format = "%d.%m.%y %H:%M:%S"));
 
 The `time_duration` formatter is responsible for formatting time periods that are not bound to a specific time point. It supports types `double` (interpreted as a result of the `difftime` standard function), `boost::posix_time::time_duration` and `boost::gregorian::date_duration`. The formatter also supports the `format` argument. The usage is straightforward:
 
     // Puts a time duration of any of the supported types into log. The default format is "%-%H:%M:%S.%f".
-    backend->set_formatter(fmt::ostrm << fmt::time_duration("Duration"));
+    backend->set_formatter(fmt::stream << fmt::time_duration("Duration"));
 
     // Puts a time duration of the specified type into log.
-    backend->set_formatter(fmt::ostrm << fmt::time_duration< boost::posix_time::time_duration >("Duration", keywords::format = "%H:%M:%S"));
+    backend->set_formatter(fmt::stream << fmt::time_duration< boost::posix_time::time_duration >("Duration", keywords::format = "%H:%M:%S"));
 
 The `time_period` formatter composes two time points that denote a time period. It supports the following types: `boost::posix_time::time_period`, `boost::local_time::local_time_period` and `boost::gregorian::date_period`. The formatter is a bit more special since it supports two kinds of format strings, the one that describes the date format, and the one that describes the dates composition. The former can be specified with the named argument `unit_format` and the latter - with named argument `format`. The time period composition format string may contain either of the three placeholders:
 
@@ -935,10 +935,10 @@ The `time_period` formatter composes two time points that denote a time period. 
 Here are some usage examples:
 
     // Puts a time period of any of the supported types into log. The default composition format is [%begin% - %last%].
-    backend->set_formatter(fmt::ostrm << fmt::time_period("Period"));
+    backend->set_formatter(fmt::stream << fmt::time_period("Period"));
 
     // Puts a time period of the specified type into log.
-    backend->set_formatter(fmt::ostrm << fmt::time_period< boost::posix_time::time_period >("Period",
+    backend->set_formatter(fmt::stream << fmt::time_period< boost::posix_time::time_period >("Period",
         keywords::format = "[%begin%; %end%)", keywords::unit_format = "%d.%m.%y %H:%M:%S"));
 
 [endsect]
@@ -950,7 +950,7 @@ Here are some usage examples:
 The formatter `named_scope` is intended to add support for flexible formatting of the [link advanced.advanced.attributes.named_scope named scope] attribute. The basic usage is quite straightforward and its result is similar to what [link advanced.advanced.formatters.attr `attr`] provides:
 
     // Puts the scope stack from outer ones towards inner ones: outer scope -> inner scope
-    backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes"));
+    backend->set_formatter(fmt::stream << fmt::named_scope("Scopes"));
 
 The formatter supports customization with the following named arguments:
 
@@ -961,18 +961,18 @@ The formatter supports customization with the following named arguments:
 Here are few usage examples:
 
     // Puts the scope stack in reverse order: inner scope <- outer scope
-    backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes", keywords::iteration = fmt::reverse));
+    backend->set_formatter(fmt::stream << fmt::named_scope("Scopes", keywords::iteration = fmt::reverse));
 
     // Puts the scope stack in reverse order with a custom delimiter: inner scope | outer scope
-    backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes",
+    backend->set_formatter(fmt::stream << fmt::named_scope("Scopes",
         keywords::iteration = fmt::reverse, keywords::delimiter = " | "));
 
     // Puts the scope stack in forward order, no more than 2 inner scopes: ... -> outer scope -> inner scope
-    backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes",
+    backend->set_formatter(fmt::stream << fmt::named_scope("Scopes",
         keywords::iteration = fmt::forward, keywords::depth = 2));
 
     // Puts the scope stack in reverse order, no more than 2 inner scopes: inner scope <- outer scope <- ...
-    backend->set_formatter(fmt::ostrm << fmt::named_scope("Scopes",
+    backend->set_formatter(fmt::stream << fmt::named_scope("Scopes",
         keywords::iteration = fmt::reverse, keywords::depth = 2));
 
 [endsect]
@@ -996,15 +996,15 @@ Ones that are familiar with __boost_phoenix__ lambda expressions will find this 
 
     backend->set_formatter
     (
-        fmt::ostrm
+        fmt::stream
             << fmt::date_time("TimeStamp") << " "                      // First, put the current time
             << fmt::if_ (flt::has_attr< int >("ID"))
                [
-                   fmt::ostrm << fmt::attr< int >("ID", "[0x%08x]")    // if "ID" is integral then format it as a hex number
+                   fmt::stream << fmt::attr< int >("ID", "[0x%08x]")    // if "ID" is integral then format it as a hex number
                ]
                .else_
                [
-                   fmt::ostrm << "[" << fmt::attr("ID") << "]"         // otherwise put it as it is
+                   fmt::stream << "[" << fmt::attr("ID") << "]"         // otherwise put it as it is
                ]
             << " " << fmt::message()                                   // and after that goes the log record text
     );
@@ -1018,7 +1018,7 @@ Ones that are familiar with __boost_phoenix__ lambda expressions will find this 
 With all these attributes we shouldn't forget the log message itself, should we? There is a `message` placeholder that represents text of logging records being formatted. The usage is quite simple:
 
     // Sets up a formatter that will ignore all attributes and only print log record text
-    backend->set_formatter(fmt::ostrm << fmt::message());
+    backend->set_formatter(fmt::stream << fmt::message());
 
 Please note, that for wide character logging there is a similar `wmessage` placeholder.
 
@@ -1534,7 +1534,7 @@ But there's more about the rotating file stream. The stream also supports callin
         sink->locked_backend()->add_stream(strm);
 
         // Setup the formatter
-        sink->locked_backend()->set_formatter(fmt::ostrm
+        sink->locked_backend()->set_formatter(fmt::stream
             << "\t<message id=\"" << fmt::attr< unsigned int >("Line #") << "\">\n"
                 << "\t\t<timestamp>" << fmt::date_time("TimeStamp") << "</timestamp>\n"
                 << "\t\t<level>" << fmt::attr< int >("Severity") << "</level>\n"
@@ -1852,7 +1852,7 @@ Lastly, there is a `add_common_attributes` function that registers two most freq
         logging::init_log_to_console()->set_filter(flt::attr< int >("Severity") >= 4);
 
         boost::function< void (std::ostream&, attribute_values_view const&, std::string const&) > formatter =
-            fmt::ostrm
+            fmt::stream
                 << fmt::attr< unsigned int >("LineID", "[% 9u] ")
                 << fmt::date_time< boost::posix_time::ptime >("TimeStamp") << " *"
                 << fmt::attr< int >("Severity") << "* " << fmt::message();

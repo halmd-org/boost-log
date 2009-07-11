@@ -215,7 +215,7 @@ That's it. The example can be extended to make use of attribute values to fill o
 The resulting sink backend can be used similarly to other formatting sinks, like `text_ostream_backend`:
 
     boost::shared_ptr< event_notifier > backend(new event_notifier(CLSID_MyNotifier));
-    backend->set_formatter(fmt::ostrm << "[" << fmt::time("TimeStamp") << "] " << fmt::message());
+    backend->set_formatter(fmt::stream << "[" << fmt::time("TimeStamp") << "] " << fmt::message());
 
     boost::shared_ptr< sinks::synchronous_sink< event_notifier > > sink(new sinks::synchronous_sink< event_notifier >(backend));
     logging::core::get()->add_sink(sink);

@@ -299,6 +299,15 @@ public:
     }
 };
 
+//! The function object that does nothing
+struct nop
+{
+    typedef void result_type;
+
+    template< typename T >
+    void operator() (T const&) const {}
+};
+
 //! Second argument binder
 template< typename FunT, typename SecondArgT >
 struct binder2nd :

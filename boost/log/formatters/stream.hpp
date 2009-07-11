@@ -8,7 +8,7 @@
  * at http://www.boost.org/libs/log/doc/log.html.
  */
 /*!
- * \file   ostream.hpp
+ * \file   stream.hpp
  * \author Andrey Semashev
  * \date   22.04.2007
  * 
@@ -19,8 +19,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_FORMATTERS_OSTREAM_HPP_INCLUDED_
-#define BOOST_LOG_FORMATTERS_OSTREAM_HPP_INCLUDED_
+#ifndef BOOST_LOG_FORMATTERS_STREAM_HPP_INCLUDED_
+#define BOOST_LOG_FORMATTERS_STREAM_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
@@ -76,11 +76,11 @@ namespace {
 
 #ifdef BOOST_LOG_USE_CHAR
     //! A placeholder used to construct lambda expressions of streaming formatters for narrow-character logging
-    stream_placeholder< char > const& ostrm = stream_placeholder< char >::instance;
+    stream_placeholder< char > const& stream = stream_placeholder< char >::instance;
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
     //! A placeholder used to construct lambda expressions of streaming formatters for wide-character logging
-    stream_placeholder< wchar_t > const& wostrm = stream_placeholder< wchar_t >::instance;
+    stream_placeholder< wchar_t > const& wstream = stream_placeholder< wchar_t >::instance;
 #endif
 
 } // namespace
@@ -142,4 +142,4 @@ inline fmt_chain<
 
 } // namespace boost
 
-#endif // BOOST_LOG_FORMATTERS_OSTREAM_HPP_INCLUDED_
+#endif // BOOST_LOG_FORMATTERS_STREAM_HPP_INCLUDED_

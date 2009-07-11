@@ -36,7 +36,7 @@
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/formatters/ostream.hpp>
+#include <boost/log/formatters/stream.hpp>
 #include <boost/log/formatters/format.hpp>
 #include <boost/log/formatters/attr.hpp>
 #include <boost/log/formatters/date_time.hpp>
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
 
         // Set up how the file names will be generated
         sink->locked_backend()->file_name_composer(
-            fmt::ostrm << "logs/" << fmt::attr< boost::thread::id >("ThreadID") << ".log");
+            fmt::stream << "logs/" << fmt::attr< boost::thread::id >("ThreadID") << ".log");
 
         // Set the log record formatter
         sink->locked_backend()->set_formatter(

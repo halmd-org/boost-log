@@ -63,10 +63,19 @@ public:
     }
 };
 
+/*!
+ * Formatter generator. Constructs the \c fmt_message formatter object.
+ */
+template< typename CharT >
+inline fmt_message< CharT > message()
+{
+    return fmt_message< CharT >();
+}
+
 #ifdef BOOST_LOG_USE_CHAR
 
 /*!
- * Formatter generator. Construct the \c fmt_message formatter object for narrow-character logging.
+ * Formatter generator. Constructs the \c fmt_message formatter object for narrow-character logging.
  */
 inline fmt_message< char > message()
 {
@@ -78,7 +87,7 @@ inline fmt_message< char > message()
 #ifdef BOOST_LOG_USE_WCHAR_T
 
 /*!
- * Formatter generator. Construct the \c fmt_message formatter object for wide-character logging.
+ * Formatter generator. Constructs the \c fmt_message formatter object for wide-character logging.
  */
 inline fmt_message< wchar_t > wmessage()
 {

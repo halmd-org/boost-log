@@ -51,6 +51,29 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace filters {
 
+namespace aux {
+
+    //! Function adapter that saves the checker function result into a referenced variable
+    template< typename PredicateT >
+    struct predicate_wrapper
+    {
+        typedef void result_type;
+
+        predicate_wrapper(PredicateT const& fun, bool& res) : m_Fun(fun), m_Result(res) {}
+
+        template< typename T >
+        void operator() (T const& arg) const
+        {
+            m_Result = m_Fun(arg);
+        }
+
+    private:
+        PredicateT const& m_Fun;
+        bool& m_Result;
+    };
+
+} // namespace aux
+
 /*!
  * \brief The filter checks that the attribute value satisfies the predicate \c FunT
  * 
@@ -79,29 +102,6 @@ public:
     typedef FunT checker_type;
 
 private:
-    //! \cond
-
-    //! Function adapter that saves the checker function result into a referenced variable
-    struct checker_wrapper
-    {
-        typedef void result_type;
-
-        checker_wrapper(checker_type const& fun, bool& res) : m_Fun(boost::addressof(fun)), m_Result(&res) {}
-
-        template< typename T >
-        void operator() (T const& arg) const
-        {
-            *m_Result = (*m_Fun)(arg);
-        }
-
-    private:
-        checker_type const* m_Fun;
-        bool* m_Result;
-    };
-
-    //! \endcond
-
-private:
     //! Attribute value extractor
     extractor m_Extractor;
     //! Attribute value checker
@@ -128,8 +128,7 @@ public:
     bool operator() (values_view_type const& values) const
     {
         bool result = false;
-        checker_wrapper receiver(m_Checker, result);
-
+        aux::predicate_wrapper< checker_type > receiver(m_Checker, result);
         m_Extractor(values, receiver);
 
         return result;
