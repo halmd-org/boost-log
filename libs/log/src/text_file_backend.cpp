@@ -509,9 +509,9 @@ namespace {
     file_collector::file_collector(
         path_type const& target_dir, uintmax_t max_size, uintmax_t min_free_space
     ) :
-        m_StorageDir(filesystem::complete(target_dir)),
         m_MaxSize(max_size),
         m_MinFreeSpace(min_free_space),
+        m_StorageDir(filesystem::complete(target_dir)),
         m_TotalSize(0)
     {
     }
