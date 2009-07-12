@@ -26,19 +26,14 @@
 #include <boost/make_shared.hpp>
 
 #include <boost/log/common.hpp>
+#include <boost/log/formatters.hpp>
+#include <boost/log/filters.hpp>
 
 #include <boost/log/utility/init/to_file.hpp>
 #include <boost/log/utility/init/to_console.hpp>
 #include <boost/log/utility/init/common_attributes.hpp>
 
-#include <boost/log/formatters/format.hpp>
-#include <boost/log/formatters/attr.hpp>
-#include <boost/log/formatters/date_time.hpp>
-#include <boost/log/formatters/message.hpp>
-
 #include <boost/log/attributes/timer.hpp>
-
-#include <boost/log/filters/attr.hpp>
 
 namespace logging = boost::log;
 namespace fmt = boost::log::formatters;

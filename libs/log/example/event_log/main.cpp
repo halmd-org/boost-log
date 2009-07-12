@@ -29,17 +29,11 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
-#include <boost/log/core.hpp>
-#include <boost/log/attributes/clock.hpp>
-#include <boost/log/attributes/counter.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
+#include <boost/log/common.hpp>
+#include <boost/log/attributes.hpp>
+#include <boost/log/formatters.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
-#include <boost/log/formatters/format.hpp>
-#include <boost/log/formatters/attr.hpp>
-#include <boost/log/formatters/date_time.hpp>
-#include <boost/log/formatters/message.hpp>
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;

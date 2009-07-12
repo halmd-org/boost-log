@@ -26,15 +26,9 @@
 #include <fstream>
 #include <boost/shared_ptr.hpp>
 
-#include <boost/log/core.hpp>
-#include <boost/log/attributes/clock.hpp>
-#include <boost/log/attributes/constant.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/global_logger_storage.hpp>
-#include <boost/log/sources/record_ostream.hpp>
+#include <boost/log/common.hpp>
+#include <boost/log/attributes.hpp>
 #include <boost/log/utility/init/from_stream.hpp>
-#include <boost/log/utility/empty_deleter.hpp>
-#include <boost/log/utility/scoped_attribute.hpp>
 
 // Auto-link static libs
 #define BOOST_LIB_NAME boost_system

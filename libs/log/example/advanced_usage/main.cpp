@@ -25,31 +25,11 @@
 #include <iostream>
 #include <fstream>
 #include <boost/shared_ptr.hpp>
-#include <boost/log/core.hpp>
-
-#include <boost/log/sources/basic_logger.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-
-#include <boost/log/sinks/sink.hpp>
-#include <boost/log/sinks/text_ostream_backend.hpp>
-
-#include <boost/log/formatters/stream.hpp>
-// #include <boost/log/formatters/format.hpp>
-#include <boost/log/formatters/attr.hpp>
-#include <boost/log/formatters/date_time.hpp>
-#include <boost/log/formatters/named_scope.hpp>
-#include <boost/log/formatters/message.hpp>
-
-#include <boost/log/attributes/counter.hpp>
-#include <boost/log/attributes/constant.hpp>
-#include <boost/log/attributes/named_scope.hpp>
-#include <boost/log/attributes/clock.hpp>
-#include <boost/log/attributes/timer.hpp>
-
-#include <boost/log/filters/attr.hpp>
-#include <boost/log/filters/has_attr.hpp>
-
+#include <boost/log/common.hpp>
+#include <boost/log/filters.hpp>
+#include <boost/log/formatters.hpp>
+#include <boost/log/attributes.hpp>
+#include <boost/log/sinks.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/scoped_attribute.hpp>
 

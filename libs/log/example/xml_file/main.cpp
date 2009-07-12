@@ -27,18 +27,11 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
-#include <boost/log/core.hpp>
-#include <boost/log/attributes/clock.hpp>
-#include <boost/log/attributes/counter.hpp>
-#include <boost/log/sources/basic_logger.hpp>
-#include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/sinks/sink.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/formatters/format.hpp>
-#include <boost/log/formatters/attr.hpp>
-#include <boost/log/formatters/date_time.hpp>
-#include <boost/log/formatters/message.hpp>
-#include <boost/log/formatters/xml_decorator.hpp>
+#include <boost/log/common.hpp>
+#include <boost/log/filters.hpp>
+#include <boost/log/formatters.hpp>
+#include <boost/log/attributes.hpp>
+#include <boost/log/sinks.hpp>
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
