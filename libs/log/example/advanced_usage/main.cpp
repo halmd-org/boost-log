@@ -267,9 +267,9 @@ int main(int argc, char* argv[])
     // is filtering based on the record severity level. We've already defined severity levels.
     // Now we can set the filter. A filter is essentially a functor that returns
     // boolean value that tells whether to write the record or not.
-//    pSink->set_filter(
-//        flt::attr< severity_level >("Severity") >= warning // Write all records with "warning" severity or higher
-//        || flt::attr< std::string >("Tag").begins_with("IMPORTANT")); // ...or specifically tagged
+    pSink->set_filter(
+        flt::attr< severity_level >("Severity") >= warning // Write all records with "warning" severity or higher
+        || flt::attr< std::string >("Tag").begins_with("IMPORTANT")); // ...or specifically tagged
 
     // The "attr" placeholder here acts pretty much like the "attr" placeholder in formatters, except
     // that it requires the attribute type (or types in MPL-sequence) to be specified.
