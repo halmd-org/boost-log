@@ -11,7 +11,7 @@
  * \file   stream.hpp
  * \author Andrey Semashev
  * \date   22.04.2007
- * 
+ *
  * The header contains implementation of a hook for streaming formatters.
  */
 
@@ -22,7 +22,10 @@
 #ifndef BOOST_LOG_FORMATTERS_STREAM_HPP_INCLUDED_
 #define BOOST_LOG_FORMATTERS_STREAM_HPP_INCLUDED_
 
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/utility/string_literal.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/chain.hpp>
 #include <boost/log/formatters/wrappers.hpp>
@@ -35,7 +38,7 @@ namespace formatters {
 
 /*!
  * \brief A placeholder class to represent a stream in lambda expressions of formatters
- * 
+ *
  * The \c stream_placeholder class template is a hook that allows to construct formatters
  * from streaming lambda expressions.
  */
@@ -44,7 +47,7 @@ struct stream_placeholder
 {
     /*!
      * Trap operator to begin building the lambda expression
-     * 
+     *
      * \param fmt Either a formatter or an object to be wrapped into a formatter
      */
     template< typename T >
@@ -57,13 +60,45 @@ struct stream_placeholder
     /*!
      * An overload for C-style strings. These need a special treatment in order to keep
      * a copy of the string in the formatter instead of a raw pointer.
-     * 
+     *
      * \param s A string constant to be wrapped
      */
     fmt_wrapper< CharT, std::basic_string< CharT > > operator<< (const CharT* s) const
     {
         return fmt_wrapper< CharT, std::basic_string< CharT > >(s);
     }
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
+#ifdef BOOST_LOG_USE_CHAR
+    template< typename T, std::size_t LenV >
+    inline typename enable_if<
+        is_same< T, const char >,
+        fmt_wrapper<
+            char,
+            string_literal
+        >
+    >::type operator<< (T(&str)[LenV])
+    {
+        return fmt_wrapper< char, string_literal >(str);
+    }
+#endif // BOOST_LOG_USE_CHAR
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+    template< typename T, std::size_t LenV >
+    inline typename enable_if<
+        is_same< T, const wchar_t >,
+        fmt_wrapper<
+            wchar_t,
+            wstring_literal
+        >
+    >::type operator<< (T(&str)[LenV])
+    {
+        return fmt_wrapper< wchar_t, wstring_literal >(str);
+    }
+#endif // BOOST_LOG_USE_WCHAR_T
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
     static const stream_placeholder instance;
 };
@@ -87,7 +122,7 @@ namespace {
 
 /*!
  * The operator chains streaming formatters or a formatter and a wrapped object
- * 
+ *
  * \param left Left-hand formatter
  * \param right Right-hand operand. May either be a formatter or some another object. In the latter case the object
  *              will be wrapped into a surrogate formatter that will attempt to put the object into the formatting stream.
@@ -111,7 +146,7 @@ inline fmt_chain<
 /*!
  * The operator chains a formatter and a C-style string. This case needs a special treatment in order to keep
  * a copy of the string in the formatter instead of a raw pointer.
- * 
+ *
  * \param left Left-hand formatter
  * \param str Right-hand string. Must be a zero-terminated sequence of characters, must not be NULL.
  * \return The constructed chained formatters
@@ -135,6 +170,64 @@ inline fmt_chain<
         >
     >(static_cast< FmtT const& >(left), fmt_wrapper< CharT, std::basic_string< CharT > >(str));
 }
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
+#ifdef BOOST_LOG_USE_CHAR
+
+template< typename FmtT, typename T, std::size_t LenV >
+inline typename enable_if<
+    is_same< T, const char >,
+    fmt_chain<
+        char,
+        FmtT,
+        fmt_wrapper<
+            char,
+            string_literal
+        >
+    >
+>::type operator<< (basic_formatter< char, FmtT > const& left, T(&str)[LenV])
+{
+    return fmt_chain<
+        char,
+        FmtT,
+        fmt_wrapper<
+            char,
+            string_literal
+        >
+    >(static_cast< FmtT const& >(left), fmt_wrapper< char, string_literal >(str));
+}
+
+#endif // BOOST_LOG_USE_CHAR
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+
+template< typename FmtT, typename T, std::size_t LenV >
+inline typename enable_if<
+    is_same< T, const wchar_t >,
+    fmt_chain<
+        wchar_t,
+        FmtT,
+        fmt_wrapper<
+            wchar_t,
+            wstring_literal
+        >
+    >
+>::type operator<< (basic_formatter< wchar_t, FmtT > const& left, T(&str)[LenV])
+{
+    return fmt_chain<
+        wchar_t,
+        FmtT,
+        fmt_wrapper<
+            wchar_t,
+            wstring_literal
+        >
+    >(static_cast< FmtT const& >(left), fmt_wrapper< wchar_t, wstring_literal >(str));
+}
+
+#endif // BOOST_LOG_USE_WCHAR_T
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace formatters
 
