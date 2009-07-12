@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   sink.cpp
  * \author Andrey Semashev
  * \date   03.11.2007
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -22,6 +22,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/exceptions.hpp>
 #include <boost/thread/condition_variable.hpp>
 
 namespace boost {
@@ -58,6 +59,8 @@ private:
     };
 
 private:
+    //! Exception handler function
+    exception_handler_type m_ExceptionHandler;
     //! The flag shows that the output thread should finish
     volatile bool m_Finishing;
     //! Opaque pointer to the sink backend
@@ -78,7 +81,7 @@ private:
     //! Shared lock to support locked_backend_ptr
     optional< shared_backend_lock > m_SharedBackendLock;
 
-    //! Record output thread
+    //! Backend feeding thread
     optional< thread > m_Thread;
 
 public:
@@ -129,6 +132,13 @@ public:
         return m_SharedBackendLock;
     }
 
+    //! The method sets an exception handler function
+    void set_exception_handler(exception_handler_type const& handler)
+    {
+        unique_lock< mutex_type > lock(m_Mutex);
+        m_ExceptionHandler = handler;
+    }
+
 private:
     //! Output thread routine
     void output_thread()
@@ -155,9 +165,16 @@ private:
                     shared_backend_lock::scoped_lock lock(m_SharedBackendMutex);
                     m_ConsumeCallback(m_pBackend, rec);
                 }
+                catch (thread_interrupted&)
+                {
+                    throw;
+                }
                 catch (...)
                 {
-                    // We do nothing here. There's nothing we can do, actually.
+                    unique_lock< mutex_type > lock(m_Mutex);
+                    if (m_ExceptionHandler.empty())
+                        throw; // will terminate here
+                    m_ExceptionHandler();
                 }
             }
         }
@@ -183,6 +200,13 @@ template< typename CharT >
 void asynchronous_sink_impl< CharT >::enqueue_message(record_type record)
 {
     pImpl->enqueue_message(record);
+}
+
+//! The method sets an exception handler function
+template< typename CharT >
+void asynchronous_sink_impl< CharT >::set_exception_handler(exception_handler_type const& handler)
+{
+    pImpl->set_exception_handler(handler);
 }
 
 //! Accessor to the shared lock for the locked_backend_ptr support

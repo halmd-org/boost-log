@@ -26,6 +26,7 @@
 #include <utility>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/function/function0.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/record.hpp>
@@ -80,6 +81,8 @@ public:
     typedef sinks::sink< char_type > sink_type;
     //! Filter function type
     typedef function1< bool, values_view_type const& > filter_type;
+    //! Exception handler function type
+    typedef function0< void > exception_handler_type;
 
 private:
     //! Implementation type
@@ -225,6 +228,23 @@ public:
     void set_thread_attributes(attribute_set_type const& attrs) const;
 
     /*!
+     * The method sets exception handler function. The function will be called with no arguments
+     * in case if an exception occurs during either \c open_record or \c push_record method
+     * execution. Since exception handler is called from a \c catch statement, the exception
+     * can be rethrown in order to determine its type.
+     *
+     * By default no handler is installed, thus any exception is propagated as usual.
+     *
+     * \sa <tt>utility/exception_handler.hpp</tt>
+     * \param handler Exception handling function
+     *
+     * \note The exception handler can be invoked in several threads concurrently.
+     *
+     * \note Thread interruptions are not affected by exception handlers.
+     */
+    void set_exception_handler(exception_handler_type const& handler);
+
+    /*!
      * The method attempts to open a new record to be written. While attempting to open a log record all filtering is applied.
      * A successfully opened record may be pushed further to sinks by calling the \c push_record method or simply destroyed by
      * destroying the returned handle.
@@ -237,7 +257,8 @@ public:
      * \param source_attributes The set of source-specific attributes to be attached to the record to be opened.
      * \return A valid log record if the record is opened, an invalid record object if not (e.g. because it didn't pass filtering).
      *
-     * \b Throws: Nothing.
+     * \b Throws: If an exception handler is installed, only throws if the handler throws. Otherwise may
+     *            throw if one of the sinks throws, or some system resource limitation has been reached.
      */
     record_type open_record(attribute_set_type const& source_attributes);
     /*!
@@ -246,7 +267,8 @@ public:
      * \pre <tt>!!rec == true</tt>
      * \param rec A previously successfully opened log record.
      *
-     * \b Throws: Nothing.
+     * \b Throws: If an exception handler is installed, only throws if the handler throws. Otherwise may
+     *            throw if one of the sinks throws.
      */
     void push_record(record_type const& rec);
 };

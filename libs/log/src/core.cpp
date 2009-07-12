@@ -24,8 +24,8 @@
 #include <boost/log/detail/singleton.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/tss.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/locks.hpp>
+#include <boost/thread/exceptions.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 #endif
@@ -109,6 +109,9 @@ public:
     volatile bool Enabled;
     //! Global filter
     filter_type Filter;
+
+    //! Exception handler
+    exception_handler_type ExceptionHandler;
 
 public:
     //! Constructor
@@ -302,6 +305,16 @@ void basic_core< CharT >::reset_filter()
     pImpl->Filter.clear();
 }
 
+//! The method sets exception handler function
+template< typename CharT >
+void basic_core< CharT >::set_exception_handler(exception_handler_type const& handler)
+{
+#if !defined(BOOST_LOG_NO_THREADS)
+    typename implementation::scoped_write_lock lock(pImpl->Mutex);
+#endif
+    pImpl->ExceptionHandler = handler;
+}
+
 //! The method opens a new record to be written and returns true if the record was opened
 template< typename CharT >
 typename basic_core< CharT >::record_type basic_core< CharT >::open_record(attribute_set_type const& source_attributes)
@@ -343,18 +356,46 @@ typename basic_core< CharT >::record_type basic_core< CharT >::open_record(attri
                             pData->m_AcceptingSinks.push_back(*it);
                         }
                     }
+#if !defined(BOOST_LOG_NO_THREADS)
+                    catch (thread_interrupted&)
+                    {
+                        throw;
+                    }
+#endif // !defined(BOOST_LOG_NO_THREADS)
                     catch (...)
                     {
+                        if (pImpl->ExceptionHandler.empty())
+                            throw;
+
                         // Assume that the sink is incapable to receive messages now
+                        pImpl->ExceptionHandler();
+
+                        if (pData && pData->m_AcceptingSinks.empty())
+                        {
+                            pData = NULL;
+                            rec.m_pData = NULL; // destroy record implementation
+                        }
                     }
                 }
             }
         }
     }
+#if !defined(BOOST_LOG_NO_THREADS)
+    catch (thread_interrupted&)
+    {
+        throw;
+    }
+#endif // !defined(BOOST_LOG_NO_THREADS)
     catch (...)
     {
-        // Something has gone wrong. As the library should impose minimum influence
-        // on the user's code, we simply mimic here that the record is not needed.
+#if !defined(BOOST_LOG_NO_THREADS)
+        // Lock the core to be safe against any attribute or sink set modifications
+        typename implementation::scoped_read_lock lock(pImpl->Mutex);
+#endif
+        if (pImpl->ExceptionHandler.empty())
+            throw;
+
+        pImpl->ExceptionHandler();
     }
 
     return rec;
@@ -374,8 +415,22 @@ void basic_core< CharT >::push_record(record_type const& rec)
     {
         (*it)->consume(rec);
     }
+#if !defined(BOOST_LOG_NO_THREADS)
+    catch (thread_interrupted&)
+    {
+        throw;
+    }
+#endif // !defined(BOOST_LOG_NO_THREADS)
     catch (...)
     {
+#if !defined(BOOST_LOG_NO_THREADS)
+        // Lock the core to be safe against any attribute or sink set modifications
+        typename implementation::scoped_read_lock lock(pImpl->Mutex);
+#endif
+        if (pImpl->ExceptionHandler.empty())
+            throw;
+
+        pImpl->ExceptionHandler();
     }
 }
 

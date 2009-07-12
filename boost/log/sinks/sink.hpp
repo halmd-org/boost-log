@@ -32,6 +32,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/mpl/assert.hpp>
+#include <boost/function/function0.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/utility/in_place_factory.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -384,6 +385,8 @@ namespace aux {
         typedef std::basic_string< char_type > string_type;
         //! Log record type
         typedef basic_record< char_type > record_type;
+        //! An exception handler type
+        typedef function0< void > exception_handler_type;
 
         //! Callback type to call \c consume in the backend
         typedef void (*consume_callback_t)(void*, record_type const&);
@@ -398,6 +401,8 @@ namespace aux {
 
         //! The method puts the record into the queue
         void enqueue_message(record_type record);
+        //! The method sets an exception handler function
+        void set_exception_handler(exception_handler_type const& handler);
 
         //! Accessor to the shared lock for the locked_backend_ptr support
         optional< shared_backend_lock >& get_shared_backend_lock() const;
@@ -438,6 +443,8 @@ public:
     typedef typename base_type::char_type char_type;
     typedef typename base_type::record_type record_type;
     typedef typename base_type::string_type string_type;
+    //! An exception handler type
+    typedef function0< void > exception_handler_type;
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
@@ -498,6 +505,25 @@ public:
     void consume(record_type const& record)
     {
         m_Impl.enqueue_message(record);
+    }
+
+    /*!
+     * The method sets exception handler function. The function will be called with no arguments
+     * in case if an exception occurs during backend interaction. Since exception handler is called
+     * from a \c catch statement, the exception can be rethrown in order to determine its type.
+     *
+     * \sa <tt>utility/exception_handler.hpp</tt>
+     * \param handler Exception handler
+     *
+     * \note The exception handler will be called in the dedicated thread that is used for feeding
+     *       log records to the backend. If the handler is not installed, the exception will
+     *       propagate further and terminate the thread.
+     *
+     * \note Thread interruptions are not affected by exception handlers.
+     */
+    void set_exception_handler(exception_handler_type const& handler)
+    {
+        m_Impl.set_exception_handler(handler);
     }
 
 private:

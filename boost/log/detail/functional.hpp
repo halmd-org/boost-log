@@ -304,6 +304,7 @@ struct nop
 {
     typedef void result_type;
 
+    void operator() () const {}
     template< typename T >
     void operator() (T const&) const {}
 };
