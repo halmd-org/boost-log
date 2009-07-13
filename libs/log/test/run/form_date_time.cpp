@@ -30,7 +30,7 @@
 #include <boost/log/formatters/date_time.hpp>
 #include <boost/log/formatters/ostream.hpp>
 #include <boost/log/utility/string_literal.hpp>
-#include <boost/log/record.hpp>
+#include <boost/log/core/record.hpp>
 #include "char_definitions.hpp"
 #include "make_record.hpp"
 

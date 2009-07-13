@@ -35,7 +35,7 @@
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/sinks/threading_models.hpp>
-#include <boost/log/record.hpp>
+#include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 

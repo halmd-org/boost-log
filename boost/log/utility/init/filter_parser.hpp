@@ -34,7 +34,7 @@
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>
-#include <boost/log/core.hpp>
+#include <boost/log/core/core.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)

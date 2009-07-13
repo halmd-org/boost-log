@@ -21,7 +21,7 @@
 #include <boost/type_traits/is_void.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/core.hpp>
+#include <boost/log/core/core.hpp>
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>

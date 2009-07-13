@@ -44,7 +44,7 @@
 #include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/universal_path.hpp>
-#include <boost/log/core.hpp>
+#include <boost/log/core/core.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>

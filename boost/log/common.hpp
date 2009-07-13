@@ -27,7 +27,6 @@
 #include <boost/log/detail/prologue.hpp>
 
 #include <boost/log/core.hpp>
-#include <boost/log/record.hpp>
 
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/record_ostream.hpp>

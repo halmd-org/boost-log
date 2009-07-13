@@ -28,7 +28,7 @@
 #include <string>
 #include <boost/function/function2.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/record.hpp>
+#include <boost/log/core/record.hpp>
 #include <boost/log/formatters/attr.hpp>
 
 #ifdef _MSC_VER

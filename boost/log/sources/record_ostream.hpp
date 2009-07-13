@@ -33,7 +33,7 @@
 #include <boost/log/detail/native_typeof.hpp>
 #include <boost/log/detail/unspecified_bool.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
-#include <boost/log/record.hpp>
+#include <boost/log/core/record.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
 
 #ifdef _MSC_VER

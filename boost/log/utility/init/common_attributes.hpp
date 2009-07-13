@@ -26,7 +26,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/core.hpp>
+#include <boost/log/core/core.hpp>
 #include <boost/log/attributes/clock.hpp>
 #include <boost/log/attributes/counter.hpp>
 

@@ -34,7 +34,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/sink_init_helpers.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
-#include <boost/log/core.hpp>
+#include <boost/log/core/core.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/keywords/scan_method.hpp>

@@ -19,7 +19,7 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/test/included/unit_test.hpp>
-#include <boost/log/core.hpp>
+#include <boost/log/core/core.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
@@ -27,7 +27,7 @@
 #include <boost/log/filters/has_attr.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/utility/slim_string.hpp>
-#include <boost/log/record.hpp>
+#include <boost/log/core/record.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/thread/thread.hpp>
 #endif // BOOST_LOG_NO_THREADS

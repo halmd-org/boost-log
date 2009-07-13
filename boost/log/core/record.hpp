@@ -19,8 +19,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_RECORD_HPP_INCLUDED_
-#define BOOST_LOG_RECORD_HPP_INCLUDED_
+#ifndef BOOST_LOG_CORE_RECORD_HPP_INCLUDED_
+#define BOOST_LOG_CORE_RECORD_HPP_INCLUDED_
 
 #include <string>
 #include <boost/assert.hpp>
@@ -368,4 +368,4 @@ typedef basic_record< wchar_t > wrecord;    //!< Convenience typedef for wide-ch
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_RECORD_HPP_INCLUDED_
+#endif // BOOST_LOG_CORE_RECORD_HPP_INCLUDED_

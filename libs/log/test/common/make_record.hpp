@@ -16,7 +16,7 @@
 
 #include <boost/assert.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/log/core.hpp>
+#include <boost/log/core/core.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include "test_sink.hpp"

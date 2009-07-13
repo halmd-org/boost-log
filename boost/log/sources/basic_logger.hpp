@@ -47,8 +47,8 @@
 #include <boost/log/detail/light_rw_mutex.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/record.hpp>
+#include <boost/log/core/core.hpp>
+#include <boost/log/core/record.hpp>
 #include <boost/log/sources/threading_models.hpp>
 
 #ifdef _MSC_VER

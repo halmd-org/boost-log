@@ -27,7 +27,7 @@
 #include <string>
 #include <boost/type_traits/is_base_and_derived.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/record.hpp>
+#include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 
 namespace boost {

@@ -28,7 +28,7 @@
 #include <boost/log/formatters/attr.hpp>
 #include <boost/log/formatters/ostream.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
-#include <boost/log/record.hpp>
+#include <boost/log/core/record.hpp>
 #include "char_definitions.hpp"
 #include "make_record.hpp"
 

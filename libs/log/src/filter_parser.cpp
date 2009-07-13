@@ -32,7 +32,7 @@
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_confix.hpp>
 #include <boost/spirit/include/classic_escape_char.hpp>
-#include <boost/log/core.hpp>
+#include <boost/log/core/core.hpp>
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>

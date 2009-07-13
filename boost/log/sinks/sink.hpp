@@ -38,7 +38,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
-#include <boost/log/record.hpp>
+#include <boost/log/core/record.hpp>
 #include <boost/log/sinks/threading_models.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
