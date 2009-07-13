@@ -25,7 +25,7 @@
 #include <exception>
 #include <boost/mpl/bind.hpp>
 #include <boost/mpl/quote.hpp>
-#include <boost/mpl/reverse_fold.hpp>
+#include <boost/mpl/fold.hpp>
 #include <boost/mpl/placeholders.hpp>
 #include <boost/mpl/has_xxx.hpp>
 #include <boost/mpl/vector.hpp>
@@ -123,14 +123,14 @@ struct make_self_contained_exception_handler
  */
 template< typename SequenceT, typename HandlerT >
 class exception_handler :
-    public mpl::reverse_fold<
+    public mpl::fold<
         SequenceT,
         aux::eh_root< HandlerT >,
         mpl::bind< mpl::quote2< aux::eh_cons >, mpl::_2, mpl::_1 >
     >::type
 {
     //! Base type
-    typedef typename mpl::reverse_fold<
+    typedef typename mpl::fold<
         SequenceT,
         aux::eh_root< HandlerT >,
         mpl::bind< mpl::quote2< aux::eh_cons >, mpl::_2, mpl::_1 >
