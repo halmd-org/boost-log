@@ -365,10 +365,10 @@ public:
 public:
     //! The flag shows that the output thread should finish
     volatile bool m_Finishing;
-    //! Synchronization mutex
+    //! Backend synchronization mutex
     mutex m_BackendMutex;
     //! Sleep condition
-    condition_variable_any m_Condition;
+    condition_variable m_Condition;
 
     //! Pointer to the backend
     shared_ptr< void > m_pBackend;
@@ -413,7 +413,7 @@ public:
             }
             else
             {
-                unique_lock< typename base_type::mutex_type > lock(this->m_Mutex);
+                unique_lock< mutex > lock(this->m_BackendMutex);
                 m_Condition.wait(lock);
             }
         }
