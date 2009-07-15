@@ -97,9 +97,9 @@ int main(int argc, char* argv[])
 {
     std::cout << "Test config: " << THREAD_COUNT << " threads, " << SINK_COUNT << " sinks, " << RECORD_COUNT << " records" << std::endl;
 
-//    typedef sinks::unlocked_sink< fake_backend< char > > fake_sink;
+    typedef sinks::unlocked_sink< fake_backend< char > > fake_sink;
 //    typedef sinks::synchronous_sink< fake_backend< char > > fake_sink;
-    typedef sinks::asynchronous_sink< fake_backend< char > > fake_sink;
+//    typedef sinks::asynchronous_sink< fake_backend< char > > fake_sink;
     for (unsigned int i = 0; i < SINK_COUNT; ++i)
         logging::core::get()->add_sink(boost::make_shared< fake_sink >());
 
