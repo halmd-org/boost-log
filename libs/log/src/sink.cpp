@@ -92,7 +92,7 @@ template< typename CharT >
 void basic_sink_frontend< CharT >::set_filter(filter_type const& filter)
 {
 #if !defined(BOOST_LOG_NO_THREADS)
-    implementation::scoped_write_lock _(m_pImpl->m_Mutex);
+    typename implementation::scoped_write_lock _(m_pImpl->m_Mutex);
 #endif
     m_pImpl->m_Filter = filter;
 }
@@ -102,7 +102,7 @@ template< typename CharT >
 void basic_sink_frontend< CharT >::reset_filter()
 {
 #if !defined(BOOST_LOG_NO_THREADS)
-    implementation::scoped_write_lock _(m_pImpl->m_Mutex);
+    typename implementation::scoped_write_lock _(m_pImpl->m_Mutex);
 #endif
     m_pImpl->m_Filter.clear();
 }
@@ -112,7 +112,7 @@ template< typename CharT >
 void basic_sink_frontend< CharT >::set_exception_handler(exception_handler_type const& handler)
 {
 #if !defined(BOOST_LOG_NO_THREADS)
-    implementation::scoped_write_lock _(m_pImpl->m_Mutex);
+    typename implementation::scoped_write_lock _(m_pImpl->m_Mutex);
 #endif
     m_pImpl->m_ExceptionHandler = handler;
 }
@@ -122,7 +122,7 @@ template< typename CharT >
 bool basic_sink_frontend< CharT >::will_consume(values_view_type const& attributes)
 {
 #if !defined(BOOST_LOG_NO_THREADS)
-    implementation::scoped_read_lock _(m_pImpl->m_Mutex);
+    typename implementation::scoped_read_lock _(m_pImpl->m_Mutex);
 #endif
     try
     {
@@ -184,13 +184,13 @@ unlocked_frontend< CharT >::unlocked_frontend(shared_ptr< void > const& backend,
 template< typename CharT >
 shared_ptr< void > const& unlocked_frontend< CharT >::get_backend() const
 {
-    return this->get_impl< implementation >()->m_pBackend;
+    return this->BOOST_NESTED_TEMPLATE get_impl< implementation >()->m_pBackend;
 }
 
 template< typename CharT >
 void unlocked_frontend< CharT >::consume(record_type const& record)
 {
-    register implementation* pImpl = this->get_impl< implementation >();
+    register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
     {
         (pImpl->m_Consume)(pImpl->m_pBackend.get(), record);
@@ -204,7 +204,7 @@ void unlocked_frontend< CharT >::consume(record_type const& record)
     catch (...)
     {
 #if !defined(BOOST_LOG_NO_THREADS)
-        implementation::scoped_read_lock _(pImpl->m_Mutex);
+        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
 #endif
         if (pImpl->m_ExceptionHandler.empty())
             throw;
@@ -260,19 +260,19 @@ synchronous_frontend< CharT >::synchronous_frontend(shared_ptr< void > const& ba
 template< typename CharT >
 shared_ptr< void > const& synchronous_frontend< CharT >::get_backend() const
 {
-    return this->get_impl< implementation >()->m_pBackend;
+    return this->BOOST_NESTED_TEMPLATE get_impl< implementation >()->m_pBackend;
 }
 
 template< typename CharT >
 boost::log::aux::locking_ptr_counter_base& synchronous_frontend< CharT >::get_backend_locker() const
 {
-    return *this->get_impl< implementation >();
+    return *this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
 }
 
 template< typename CharT >
 void synchronous_frontend< CharT >::consume(record_type const& record)
 {
-    register implementation* pImpl = this->get_impl< implementation >();
+    register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
     {
         lock_guard< mutex > _(pImpl->m_BackendMutex);
@@ -284,7 +284,7 @@ void synchronous_frontend< CharT >::consume(record_type const& record)
     }
     catch (...)
     {
-        implementation::scoped_read_lock _(pImpl->m_Mutex);
+        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
         if (pImpl->m_ExceptionHandler.empty())
             throw;
         pImpl->m_ExceptionHandler();
@@ -294,7 +294,7 @@ void synchronous_frontend< CharT >::consume(record_type const& record)
 template< typename CharT >
 bool synchronous_frontend< CharT >::try_consume(record_type const& record)
 {
-    register implementation* pImpl = this->get_impl< implementation >();
+    register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
     {
         unique_lock< mutex > lock(pImpl->m_BackendMutex, try_to_lock);
@@ -312,7 +312,7 @@ bool synchronous_frontend< CharT >::try_consume(record_type const& record)
     }
     catch (...)
     {
-        implementation::scoped_read_lock _(pImpl->m_Mutex);
+        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
         if (pImpl->m_ExceptionHandler.empty())
             throw;
         pImpl->m_ExceptionHandler();
@@ -500,7 +500,7 @@ asynchronous_frontend< CharT >::asynchronous_frontend(
     BOOST_ASSERT(!!backend);
     if (start_thread)
     {
-        implementation* pImpl = this->get_impl< implementation >();
+        implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
         pImpl->m_Thread = boost::in_place(boost::bind(&implementation::run, pImpl));
     }
 }
@@ -509,7 +509,7 @@ asynchronous_frontend< CharT >::asynchronous_frontend(
 template< typename CharT >
 asynchronous_frontend< CharT >::~asynchronous_frontend()
 {
-    implementation* pImpl = this->get_impl< implementation >();
+    implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     if (!!pImpl->m_Thread)
     {
         {
@@ -525,19 +525,19 @@ asynchronous_frontend< CharT >::~asynchronous_frontend()
 template< typename CharT >
 shared_ptr< void > const& asynchronous_frontend< CharT >::get_backend() const
 {
-    return this->get_impl< implementation >()->m_pBackend;
+    return this->BOOST_NESTED_TEMPLATE get_impl< implementation >()->m_pBackend;
 }
 
 template< typename CharT >
 boost::log::aux::locking_ptr_counter_base& asynchronous_frontend< CharT >::get_backend_locker() const
 {
-    return *this->get_impl< implementation >();
+    return *this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
 }
 
 template< typename CharT >
 void asynchronous_frontend< CharT >::consume(record_type const& record)
 {
-    register implementation* pImpl = this->get_impl< implementation >();
+    register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
     {
         pImpl->m_EnqueuedRecords.push(record);
@@ -549,7 +549,7 @@ void asynchronous_frontend< CharT >::consume(record_type const& record)
     }
     catch (...)
     {
-        implementation::scoped_read_lock _(pImpl->m_Mutex);
+        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
         if (pImpl->m_ExceptionHandler.empty())
             throw;
         pImpl->m_ExceptionHandler();
@@ -559,7 +559,7 @@ void asynchronous_frontend< CharT >::consume(record_type const& record)
 template< typename CharT >
 bool asynchronous_frontend< CharT >::try_consume(record_type const& record)
 {
-    register implementation* pImpl = this->get_impl< implementation >();
+    register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
     {
         if (pImpl->m_EnqueuedRecords.try_push(record))
@@ -576,7 +576,7 @@ bool asynchronous_frontend< CharT >::try_consume(record_type const& record)
     }
     catch (...)
     {
-        implementation::scoped_read_lock _(pImpl->m_Mutex);
+        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
         if (pImpl->m_ExceptionHandler.empty())
             throw;
         pImpl->m_ExceptionHandler();
@@ -588,7 +588,7 @@ bool asynchronous_frontend< CharT >::try_consume(record_type const& record)
 template< typename CharT >
 void asynchronous_frontend< CharT >::run()
 {
-    register implementation* pImpl = this->get_impl< implementation >();
+    register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     if (!pImpl->is_thread_running())
         pImpl->run();
     else
@@ -599,7 +599,7 @@ void asynchronous_frontend< CharT >::run()
 template< typename CharT >
 void asynchronous_frontend< CharT >::feed_records()
 {
-    register implementation* pImpl = this->get_impl< implementation >();
+    register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     if (!pImpl->is_thread_running())
         pImpl->feed_records();
     else
