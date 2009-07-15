@@ -33,15 +33,9 @@
 
 #include <boost/log/core.hpp>
 #include <boost/log/common.hpp>
-
-#include <boost/log/sinks/sink.hpp>
+#include <boost/log/attributes.hpp>
+#include <boost/log/sinks.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
-
-#include <boost/log/attributes/counter.hpp>
-#include <boost/log/attributes/constant.hpp>
-#include <boost/log/attributes/named_scope.hpp>
-#include <boost/log/attributes/clock.hpp>
-#include <boost/log/attributes/timer.hpp>
 
 #include <boost/log/filters/attr.hpp>
 

@@ -32,7 +32,7 @@
 #include <boost/log/common.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/formatters.hpp>
-#include <boost/log/sinks/sink.hpp>
+#include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
 
 namespace logging = boost::log;

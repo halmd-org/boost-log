@@ -45,17 +45,10 @@
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/universal_path.hpp>
 #include <boost/log/core/core.hpp>
-#include <boost/log/sinks/sink.hpp>
-#include <boost/log/sinks/text_ostream_backend.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/sinks/syslog_backend.hpp>
-#ifdef BOOST_WINDOWS
-#include <boost/log/sinks/debug_output_backend.hpp>
-#include <boost/log/sinks/event_log_backend.hpp>
-#ifdef BOOST_LOG_USE_WINNT6_API
+#include <boost/log/sinks.hpp>
+#if defined(BOOST_WINDOWS) && defined(BOOST_LOG_USE_WINNT6_API)
 #include <boost/log/sinks/nt6_event_log_backend.hpp>
-#endif // BOOST_LOG_USE_WINNT6_API
-#endif // BOOST_WINDOWS
+#endif // BOOST_WINDOWS && BOOST_LOG_USE_WINNT6_API
 #include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/init/from_stream.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
@@ -573,7 +566,7 @@ private:
             backend->set_formatter(parse_formatter(it->second));
         }
 
-        shared_ptr< sinks::sink< char_type > > p;
+        shared_ptr< sinks::basic_sink_frontend< char_type > > p;
 
 #if !defined(BOOST_LOG_NO_THREADS)
         // Asynchronous
@@ -588,9 +581,9 @@ private:
 
         // Construct the frontend, considering Asynchronous parameter
         if (!async)
-            p = log::aux::new_shared< sinks::synchronous_sink< backend_t > >(backend);
+            p = boost::make_shared< sinks::synchronous_sink< backend_t > >(backend);
         else
-            p = log::aux::new_shared< sinks::asynchronous_sink< backend_t > >(backend);
+            p = boost::make_shared< sinks::asynchronous_sink< backend_t > >(backend);
 #else
         // When multithreading is disabled we always use the unlocked sink frontend
         p = log::aux::new_shared< sinks::unlocked_sink< backend_t > >(backend);

@@ -25,6 +25,13 @@
 #include <boost/log/detail/prologue.hpp>
 
 #include <boost/log/sinks/sink.hpp>
+
+#include <boost/log/sinks/unlocked_frontend.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/log/sinks/sync_frontend.hpp>
+#include <boost/log/sinks/async_frontend.hpp>
+#endif // !defined(BOOST_LOG_NO_THREADS)
+
 #include <boost/log/sinks/syslog_backend.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>

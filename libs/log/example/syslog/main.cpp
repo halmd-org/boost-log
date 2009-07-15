@@ -25,7 +25,7 @@
 #include <boost/log/filters.hpp>
 #include <boost/log/formatters.hpp>
 #include <boost/log/attributes.hpp>
-#include <boost/log/sinks/sink.hpp>
+#include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/syslog_backend.hpp>
 
 namespace logging = boost::log;
