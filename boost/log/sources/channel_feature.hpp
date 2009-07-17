@@ -31,6 +31,10 @@
 #include <boost/log/detail/new_shared.hpp>
 #include <boost/log/keywords/channel.hpp>
 #include <boost/log/attributes/constant.hpp>
+#include <boost/log/sources/threading_models.hpp> // strictest_lock
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/locks.hpp>
+#endif // !defined(BOOST_LOG_NO_THREADS)
 
 #ifdef _MSC_VER
 #pragma warning(push)

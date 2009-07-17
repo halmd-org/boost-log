@@ -24,13 +24,15 @@
 
 #include <algorithm> // swap
 #include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/new_shared.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/detail/thread_specific.hpp>
-#include <boost/log/detail/light_rw_mutex.hpp>
+#include <boost/thread/locks.hpp>
 #endif
+#include <boost/log/sources/threading_models.hpp> // strictest_lock
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/keywords/severity.hpp>
@@ -250,28 +252,6 @@ public:
             m_pSeverity);
     }
 
-    /*!
-     * The method opens a new logging record with the default severity
-     */
-    record_type open_record()
-    {
-        open_record_lock _(this->threading_base());
-        return open_record_unlocked();
-    }
-
-    /*!
-     * The method opens a new logging record. Record level can be specified as one of the named arguments.
-     *
-     * \param args A set of named arguments. The following arguments are supported:
-     *             \li \c severity - log record severity level
-     */
-    template< typename ArgsT >
-    record_type open_record(ArgsT const& args)
-    {
-        open_record_lock _(this->threading_base());
-        return open_record_unlocked(args);
-    }
-
 protected:
     /*!
      * Severity attribute accessor
@@ -288,14 +268,6 @@ protected:
         no_lock
     >::type open_record_lock;
 
-    /*!
-     * Unlocked \c open_record
-     */
-    record_type open_record_unlocked()
-    {
-        m_pSeverity->set_value(m_DefaultSeverity);
-        return base_type::open_record_unlocked();
-    }
     /*!
      * Unlocked \c open_record
      */
