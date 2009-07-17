@@ -150,7 +150,7 @@ namespace boost {
 #           if defined(BOOST_LOG_USE_WINNT6_API)
 #               define BOOST_LOG_NAMESPACE log_mt_nt6
 #           else
-#               define BOOST_LOG_NAMESPACE log_mt_nt4
+#               define BOOST_LOG_NAMESPACE log_mt_nt5
 #           endif // defined(BOOST_LOG_USE_WINNT6_API)
 #       else
 #           define BOOST_LOG_NAMESPACE log_mt
