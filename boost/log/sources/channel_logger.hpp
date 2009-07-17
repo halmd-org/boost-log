@@ -24,7 +24,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/mpl/bool.hpp>
-#include <boost/mpl/aux_/lambda_support.hpp>
+#include <boost/mpl/if.hpp>
 #include <boost/parameter/binding.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -70,13 +70,9 @@ namespace aux {
 } // namespace aux
 
 /*!
- * \brief Logger class with channel support
- *
- * The logger automatically registers constant attribute with the specified on construction
- * string value, which is a channel name. The channel name cannot be modified through the logger
- * life time.
+ * \brief Channel feature implementation
  */
-template< typename BaseT, typename ChannelT = typename BaseT::string_type >
+template< typename BaseT, typename ChannelT >
 class basic_channel_logger :
     public BaseT
 {
@@ -171,10 +167,34 @@ private:
     void init_channel_attribute(ArgsT const& args, mpl::true_ const&)
     {
     }
-
-public:
-    BOOST_MPL_AUX_LAMBDA_SUPPORT(1, basic_channel_logger, (BaseT))
 #endif // BOOST_LOG_DOXYGEN_PASS
+};
+
+/*!
+ * \brief Channel support feature
+ *
+ * The logger with this feature automatically registers constant attribute with the specified
+ * on construction value, which is a channel name. The channel name cannot be modified
+ * through the logger life time.
+ *
+ * The type of the channel name can be customized by providing it as a template parameter
+ * to the feature template. By default, a string with the corresponding character type will be used.
+ */
+template< typename ChannelT = void >
+struct channel
+{
+    template< typename BaseT >
+    struct apply
+    {
+        typedef basic_channel_logger<
+            BaseT,
+            typename mpl::if_<
+                is_void< ChannelT >,
+                typename BaseT::string_type,
+                ChannelT
+            >::type
+        > type;
+    };
 };
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -188,7 +208,7 @@ class channel_logger :
         char,
         channel_logger< ChannelT >,
         single_thread_model,
-        mpl::vector1< basic_channel_logger< mpl::_1, ChannelT > >
+        typename features< channel< ChannelT > >::type
     >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(channel_logger)
@@ -203,7 +223,7 @@ class channel_logger_mt :
         char,
         channel_logger_mt< ChannelT >,
         multi_thread_model< boost::log::aux::light_rw_mutex >,
-        mpl::vector1< basic_channel_logger< mpl::_1, ChannelT > >
+        typename features< channel< ChannelT > >::type
     >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(channel_logger_mt)
@@ -222,7 +242,7 @@ class wchannel_logger :
         wchar_t,
         wchannel_logger< ChannelT >,
         single_thread_model,
-        mpl::vector1< basic_channel_logger< mpl::_1, ChannelT > >
+        typename features< channel< ChannelT > >::type
     >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wchannel_logger)
@@ -237,7 +257,7 @@ class wchannel_logger_mt :
         wchar_t,
         wchannel_logger< ChannelT >,
         multi_thread_model< boost::log::aux::light_rw_mutex >,
-        mpl::vector1< basic_channel_logger< mpl::_1, ChannelT > >
+        typename features< channel< ChannelT > >::type
     >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wchannel_logger_mt)
@@ -252,13 +272,15 @@ class wchannel_logger_mt :
 /*!
  * \brief Narrow-char logger. Functionally equivalent to \c basic_channel_logger.
  *
- * See \c basic_channel_logger class template for a more detailed description
+ * See \c channel class template for a more detailed description
  */
 template< typename ChannelT = std::string >
 class channel_logger :
-    public basic_channel_logger<
-        basic_logger< char, channel_logger< ChannelT >, single_thread_model >,
-        ChannelT
+    public basic_composite_logger<
+        char,
+        channel_logger< ChannelT >,
+        single_thread_model,
+        features< channel< ChannelT > >
     >
 {
 public:
@@ -288,13 +310,15 @@ public:
 /*!
  * \brief Narrow-char thread-safe logger. Functionally equivalent to \c basic_channel_logger.
  *
- * See \c basic_channel_logger class template for a more detailed description
+ * See \c channel class template for a more detailed description
  */
 template< typename ChannelT = std::string >
 class channel_logger_mt :
-    public basic_channel_logger<
-        basic_logger< char, channel_logger_mt< ChannelT >, multi_thread_model< shared_mutex > >,
-        ChannelT
+    public basic_composite_logger<
+        char,
+        channel_logger_mt< ChannelT >,
+        multi_thread_model< implementation_defined >,
+        features< channel< ChannelT > >
     >
 {
 public:
@@ -324,13 +348,15 @@ public:
 /*!
  * \brief Wide-char logger. Functionally equivalent to \c basic_channel_logger.
  *
- * See \c basic_channel_logger class template for a more detailed description
+ * See \c channel class template for a more detailed description
  */
 template< typename ChannelT = std::wstring >
 class wchannel_logger :
-    public basic_channel_logger<
-        basic_logger< wchar_t, wchannel_logger< ChannelT >, single_thread_model >,
-        ChannelT
+    public basic_composite_logger<
+        wchar_t,
+        wchannel_logger< ChannelT >,
+        single_thread_model,
+        features< channel< ChannelT > >
     >
 {
 public:
@@ -360,13 +386,15 @@ public:
 /*!
  * \brief Wide-char thread-safe logger. Functionally equivalent to \c basic_channel_logger.
  *
- * See \c basic_channel_logger class template for a more detailed description
+ * See \c channel class template for a more detailed description
  */
 template< typename ChannelT = std::wstring >
 class wchannel_logger_mt :
-    public basic_channel_logger<
-        basic_logger< wchar_t, wchannel_logger_mt< ChannelT >, multi_thread_model< shared_mutex > >,
-        ChannelT
+    public basic_composite_logger<
+        wchar_t,
+        wchannel_logger< ChannelT >,
+        multi_thread_model< implementation_defined >,
+        features< channel< ChannelT > >
     >
 {
 public:

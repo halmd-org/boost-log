@@ -24,7 +24,6 @@
 
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
-#include <boost/mpl/aux_/lambda_support.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/new_shared.hpp>
@@ -330,12 +329,32 @@ protected:
         std::swap(m_DefaultSeverity, that.m_DefaultSeverity);
         m_pSeverity.swap(that.m_pSeverity);
     }
-
-#ifndef BOOST_LOG_DOXYGEN_PASS
-public:
-    BOOST_MPL_AUX_LAMBDA_SUPPORT(2, basic_severity_logger, (BaseT, LevelT))
-#endif // BOOST_LOG_DOXYGEN_PASS
 };
+
+/*!
+ * \brief Severity level support feature
+ *
+ * The logger with this feature registers a special attribute with an integral value type on construction.
+ * This attribute will provide severity level for each log record being made through the logger.
+ * The severity level can be omitted on logging record construction, in which case the default
+ * level will be used. The default level can also be customized by passing it to the logger constructor.
+ *
+ * The type of the severity level attribute can be specified as a template parameter for the feature
+ * template. By default, \c int will be used.
+ */
+template< typename LevelT = int >
+struct severity
+{
+    template< typename BaseT >
+    struct apply
+    {
+        typedef basic_severity_logger<
+            BaseT,
+            LevelT
+        > type;
+    };
+};
+
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
@@ -348,7 +367,7 @@ class severity_logger :
         char,
         severity_logger< LevelT >,
         single_thread_model,
-        mpl::vector1< basic_severity_logger< mpl::_1, LevelT > >
+        typename features< severity< LevelT > >::type
     >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_logger)
@@ -363,7 +382,7 @@ class severity_logger_mt :
         char,
         severity_logger_mt< LevelT >,
         multi_thread_model< boost::log::aux::light_rw_mutex >,
-        mpl::vector1< basic_severity_logger< mpl::_1, LevelT > >
+        typename features< severity< LevelT > >::type
     >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_logger_mt)
@@ -382,7 +401,7 @@ class wseverity_logger :
         wchar_t,
         wseverity_logger< LevelT >,
         single_thread_model,
-        mpl::vector1< basic_severity_logger< mpl::_1, LevelT > >
+        typename features< severity< LevelT > >::type
     >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_logger)
@@ -397,7 +416,7 @@ class wseverity_logger_mt :
         wchar_t,
         wseverity_logger_mt< LevelT >,
         multi_thread_model< boost::log::aux::light_rw_mutex >,
-        mpl::vector1< basic_severity_logger< mpl::_1, LevelT > >
+        typename features< severity< LevelT > >::type
     >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_logger_mt)
@@ -412,13 +431,15 @@ class wseverity_logger_mt :
 /*!
  * \brief Narrow-char logger. Functionally equivalent to \c basic_severity_logger.
  *
- * See \c basic_severity_logger class template for a more detailed description
+ * See \c severity class template for a more detailed description
  */
 template< typename LevelT = int >
 class severity_logger :
-    public basic_severity_logger<
-        basic_logger< char, severity_logger< LevelT >, single_thread_model >,
-        LevelT
+    public basic_composite_logger<
+        char,
+        severity_logger< LevelT >,
+        single_thread_model,
+        features< severity< LevelT > >
     >
 {
 public:
@@ -448,13 +469,15 @@ public:
 /*!
  * \brief Narrow-char thread-safe logger. Functionally equivalent to \c basic_severity_logger.
  *
- * See \c basic_severity_logger class template for a more detailed description
+ * See \c severity class template for a more detailed description
  */
 template< typename LevelT = int >
 class severity_logger_mt :
-    public basic_severity_logger<
-        basic_logger< char, severity_logger_mt< LevelT >, multi_thread_model< shared_mutex > >,
-        LevelT
+    public basic_composite_logger<
+        char,
+        severity_logger_mt< LevelT >,
+        multi_thread_model< implementation_defined >,
+        features< severity< LevelT > >
     >
 {
 public:
@@ -484,13 +507,15 @@ public:
 /*!
  * \brief Wide-char logger. Functionally equivalent to \c basic_severity_logger.
  *
- * See \c basic_severity_logger class template for a more detailed description
+ * See \c severity class template for a more detailed description
  */
 template< typename LevelT = int >
 class wseverity_logger :
-    public basic_severity_logger<
-        basic_logger< wchar_t, wseverity_logger< LevelT >, single_thread_model >,
-        LevelT
+    public basic_composite_logger<
+        wchar_t,
+        wseverity_logger< LevelT >,
+        single_thread_model,
+        features< severity< LevelT > >
     >
 {
 public:
@@ -520,13 +545,15 @@ public:
 /*!
  * \brief Wide-char thread-safe logger. Functionally equivalent to \c basic_severity_logger.
  *
- * See \c basic_severity_logger class template for a more detailed description
+ * See \c severity class template for a more detailed description
  */
 template< typename LevelT = int >
 class wseverity_logger_mt :
-    public basic_severity_logger<
-        basic_logger< wchar_t, wseverity_logger_mt< LevelT >, multi_thread_model< shared_mutex > >,
-        LevelT
+    public basic_composite_logger<
+        wchar_t,
+        wseverity_logger_mt< LevelT >,
+        multi_thread_model< implementation_defined >,
+        features< severity< LevelT > >
     >
 {
 public:

@@ -29,27 +29,26 @@
 #include <ostream>
 #include <boost/assert.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/mpl/vector.hpp>
 #include <boost/mpl/lambda.hpp>
 #include <boost/mpl/reverse_fold.hpp>
-#include <boost/mpl/placeholders.hpp> // for usage convenience, inspite that it's not used in this header directly
 #include <boost/utility/addressof.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
 #include <boost/preprocessor/facilities/identity.hpp>
-#include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
-#include <boost/preprocessor/seq/for_each_i.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/multiple_lock.hpp>
-#include <boost/log/detail/light_rw_mutex.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/core/core.hpp>
 #include <boost/log/core/record.hpp>
+#include <boost/log/sources/features.hpp>
 #include <boost/log/sources/threading_models.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/log/detail/multiple_lock.hpp>
+#include <boost/log/detail/light_rw_mutex.hpp>
+#endif // !defined(BOOST_LOG_NO_THREADS)
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -475,9 +474,8 @@ struct inherit_logger_features
  * the character type, the user's logger class, threading model and the list of the required features.
  * The former three parameters are passed to the \c basic_logger class template. The feature list
  * must be an MPL type sequence, where each element is an unary MPL metafunction class, that upon
- * applying on its argument derives from it. Every logger feature provided by the library can
- * participate in the feature list if its corresponding template parameter for the base class is
- * set to the \c mpl::_1 placeholder.
+ * applying on its argument results in a logging feature class that derives from the argument.
+ * Every logger feature provided by the library can participate in the feature list.
  */
 template< typename CharT, typename FinalT, typename ThreadingModelT, typename FeaturesT >
 class basic_composite_logger :
@@ -601,7 +599,7 @@ public:
  * See \c basic_logger class template for a more detailed description.
  */
 class logger :
-    public basic_composite_logger< char, logger, single_thread_model, mpl::vector0< > >
+    public basic_composite_logger< char, logger, single_thread_model, features< >::type >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(logger)
 };
@@ -614,7 +612,7 @@ class logger :
  * See \c basic_logger class template for a more detailed description.
  */
 class logger_mt :
-    public basic_composite_logger< char, logger_mt, multi_thread_model< boost::log::aux::light_rw_mutex >, mpl::vector0< > >
+    public basic_composite_logger< char, logger_mt, multi_thread_model< boost::log::aux::light_rw_mutex >, features< >::type >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(logger_mt)
 };
@@ -630,7 +628,7 @@ class logger_mt :
  * See \c basic_logger class template for a more detailed description.
  */
 class wlogger :
-    public basic_composite_logger< wchar_t, wlogger, single_thread_model, mpl::vector0< > >
+    public basic_composite_logger< wchar_t, wlogger, single_thread_model, features< >::type >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(wlogger)
 };
@@ -643,7 +641,7 @@ class wlogger :
  * See \c basic_logger class template for a more detailed description.
  */
 class wlogger_mt :
-    public basic_composite_logger< wchar_t, wlogger_mt, multi_thread_model< boost::log::aux::light_rw_mutex >, mpl::vector0< > >
+    public basic_composite_logger< wchar_t, wlogger_mt, multi_thread_model< boost::log::aux::light_rw_mutex >, features< >::type >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(wlogger_mt)
 };
@@ -661,12 +659,6 @@ class wlogger_mt :
 #pragma warning(pop)
 #endif // _MSC_VER
 
-//! \cond
-
-#define BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL(r, data, i, elem) BOOST_PP_COMMA_IF(i) elem< ::boost::mpl::_1 >
-
-//! \endcond
-
 /*!
  *  \brief The macro declares a logger class that inherits a number of base classes
  *
@@ -681,9 +673,7 @@ class wlogger_mt :
             char_type,\
             type_name,\
             threading,\
-            ::boost::mpl::vector<\
-                BOOST_PP_SEQ_FOR_EACH_I(BOOST_LOG_DECLARE_LOGGER_TYPE_INTERNAL, ~, base_seq)\
-            >::type\
+            ::boost::log::sources::features< BOOST_PP_SEQ_ENUM(base_seq) >::type\
         >\
     {\
         BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(type_name)\
