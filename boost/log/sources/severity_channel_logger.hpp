@@ -23,8 +23,14 @@
 #define BOOST_LOG_SOURCES_SEVERITY_CHANNEL_LOGGER_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/sources/channel_logger.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/log/detail/light_rw_mutex.hpp>
+#endif // !defined(BOOST_LOG_NO_THREADS)
+#include <boost/log/sources/features.hpp>
+#include <boost/log/sources/basic_logger.hpp>
+#include <boost/log/sources/threading_models.hpp>
+#include <boost/log/sources/severity_feature.hpp>
+#include <boost/log/sources/channel_feature.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
