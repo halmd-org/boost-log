@@ -22,9 +22,11 @@
 #ifndef BOOST_LOG_SOURCES_EXCEPTION_HANDLER_FEATURE_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_EXCEPTION_HANDLER_FEATURE_HPP_INCLUDED_
 
+#include <boost/mpl/if.hpp>
 #include <boost/function/function0.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/sources/threading_models.hpp> // strictest_lock
+#include <boost/log/sources/threading_models.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/locks.hpp>
 #include <boost/thread/exceptions.hpp>
@@ -57,6 +59,8 @@ public:
     typedef typename base_type::record_type record_type;
     //! Threading model being used
     typedef typename base_type::threading_model threading_model;
+    //! Final logger type
+    typedef typename base_type::final_type final_type;
     //! Exception handler function type
     typedef function0< void > exception_handler_type;
 
@@ -116,11 +120,7 @@ protected:
     //! Lock requirement for the open_record_unlocked method
     typedef typename strictest_lock<
         typename base_type::open_record_lock,
-#ifndef BOOST_LOG_NO_THREADS
-        boost::log::aux::shared_lock_guard< threading_model >
-#else
         no_lock
-#endif // !defined(BOOST_LOG_NO_THREADS)
     >::type open_record_lock;
 
     /*!
@@ -141,6 +141,22 @@ protected:
 #endif
         catch (...)
         {
+#ifndef BOOST_LOG_NO_THREADS
+            // Here's the trick with the lock type. Since the lock
+            // is only needed when an exception is caught, we indicate
+            // no locking requirements in the open_record_lock type.
+            // However, if other features don't require locking either,
+            // we shall acquire a read lock here, when an exception is caught.
+            // If other features do require locking, the thread model is
+            // already locked by now, and we don't do locking at all.
+            typedef typename mpl::if_<
+                is_same< no_lock, typename final_type::open_record_lock >,
+                boost::log::aux::shared_lock_guard< threading_model >,
+                no_lock
+            >::type lock_type;
+            lock_type _(base_type::get_threading_model());
+#endif // !defined(BOOST_LOG_NO_THREADS)
+
             if (m_ExceptionHandler.empty())
                 throw;
             m_ExceptionHandler();
@@ -151,11 +167,7 @@ protected:
     //! Lock requirement for the push_record_unlocked method
     typedef typename strictest_lock<
         typename base_type::push_record_lock,
-#ifndef BOOST_LOG_NO_THREADS
-        boost::log::aux::shared_lock_guard< threading_model >
-#else
         no_lock
-#endif // !defined(BOOST_LOG_NO_THREADS)
     >::type push_record_lock;
 
     /*!
@@ -165,7 +177,7 @@ protected:
     {
         try
         {
-            base_type::push_record(record);
+            base_type::push_record_unlocked(record);
         }
 #ifndef BOOST_LOG_NO_THREADS
         catch (thread_interrupted&)
@@ -175,6 +187,22 @@ protected:
 #endif
         catch (...)
         {
+#ifndef BOOST_LOG_NO_THREADS
+            // Here's the trick with the lock type. Since the lock
+            // is only needed when an exception is caught, we indicate
+            // no locking requirements in the push_record_lock type.
+            // However, if other features don't require locking either,
+            // we shall acquire a read lock here, when an exception is caught.
+            // If other features do require locking, the thread model is
+            // already locked by now, and we don't do locking at all.
+            typedef typename mpl::if_<
+                is_same< no_lock, typename final_type::push_record_lock >,
+                boost::log::aux::shared_lock_guard< threading_model >,
+                no_lock
+            >::type lock_type;
+            lock_type _(base_type::get_threading_model());
+#endif // !defined(BOOST_LOG_NO_THREADS)
+
             if (m_ExceptionHandler.empty())
                 throw;
             m_ExceptionHandler();
@@ -194,7 +222,7 @@ protected:
     /*!
      * Unlocked swap
      */
-    void swap_unlocked(basic_channel_logger& that)
+    void swap_unlocked(basic_exception_handler_logger& that)
     {
         base_type::swap_unlocked(static_cast< base_type& >(that));
         m_ExceptionHandler.swap(that.m_ExceptionHandler);

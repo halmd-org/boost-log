@@ -35,6 +35,7 @@
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/channel_logger.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp>
+#include <boost/log/sources/exception_handler_feature.hpp>
 
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/named_scope.hpp>
