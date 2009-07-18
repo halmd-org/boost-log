@@ -41,6 +41,7 @@
 #include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
+#include <boost/log/support/regex.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/detail/shared_lock_guard.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
@@ -111,13 +112,12 @@ class default_filter_factory :
         else if (rel == constants::contains_keyword())
             return filter_type(log::filters::attr< string_type >(name).contains(arg));
         else if (rel == constants::matches_keyword())
-            return filter_type(log::filters::attr< string_type >(name).matches(arg));
+        {
+            basic_regex< char_type > rex(arg);
+            return filter_type(log::filters::attr< string_type >(name).matches(rex));
+        }
         else
             boost::log::aux::throw_exception(std::runtime_error("the custom attribute relation is not supported"));
-
-        // To get rid from compiler warnings
-        BOOST_LOG_ASSUME(false);
-        return filter_type();
     }
 
     //! The function parses the argument value for a binary relation and constructs the corresponding filter

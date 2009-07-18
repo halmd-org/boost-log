@@ -11,7 +11,7 @@
  * \file
  * \author Andrey Semashev
  * \date   22.04.2007
- * 
+ *
  * The header contains implementation of a generic attribute placeholder in filters.
  */
 
@@ -24,7 +24,6 @@
 
 #include <string>
 #include <utility>
-#include <boost/regex.hpp>
 #include <boost/mpl/at.hpp>
 #include <boost/mpl/size.hpp>
 #include <boost/mpl/bool.hpp>
@@ -76,10 +75,10 @@ namespace aux {
 
 /*!
  * \brief The filter checks that the attribute value satisfies the predicate \c FunT
- * 
+ *
  * The \c flt_attr filter extracts stored attribute value and applies the predicate
  * to it. The result of the predicate is returned as a result of filtering.
- * 
+ *
  * One should not resort to direct usage of this class. The filter is constructed
  * with the \c attr helper function and lambda expression. See "Advanced features ->
  * Filters -> Generic attribute placeholder" section of the library documentation.
@@ -110,7 +109,7 @@ private:
 public:
     /*!
      * Constructs the filter
-     * 
+     *
      * \param name The attribute name
      * \param checker A predicate that is applied to the attribute value
      */
@@ -121,7 +120,7 @@ public:
 
     /*!
      * Applies the filter
-     * 
+     *
      * \param values A set of attribute values of a single log record
      * \return true if the log record passed the filter, false otherwise
      */
@@ -283,41 +282,33 @@ namespace aux {
 #undef BOOST_LOG_FILTER_ATTR_MEMBER
 
         //! Filter generator for checking whether the attribute value matches a regex
-        template< typename RegexTraitsT >
+        template< typename ExpressionT >
         flt_attr<
             char_type,
-            boost::log::aux::binder2nd< boost::log::aux::matches_fun, basic_regex< attribute_value_char_type, RegexTraitsT > >,
+            boost::log::aux::binder2nd< boost::log::aux::matches_fun, ExpressionT >,
             attribute_value_types
-        > matches(basic_regex< attribute_value_char_type, RegexTraitsT > const& expr, match_flag_type flags = match_default) const
+        > matches(ExpressionT const& expr) const
         {
             typedef boost::log::aux::binder2nd<
                 boost::log::aux::matches_fun,
-                basic_regex< attribute_value_char_type, RegexTraitsT >
+                ExpressionT
             > binder_t;
             typedef flt_attr< char_type, binder_t, attribute_value_types > flt_attr_t;
-            return flt_attr_t(this->m_AttributeName, binder_t(boost::log::aux::matches_fun(flags), expr));
+            return flt_attr_t(this->m_AttributeName, binder_t(boost::log::aux::matches_fun(), expr));
         }
 
         //! Filter generator for checking whether the attribute value matches a regex
+        template< typename ExpressionT, typename ArgT >
         flt_attr<
             char_type,
-            boost::log::aux::binder2nd< boost::log::aux::matches_fun, basic_regex< attribute_value_char_type, regex_traits< attribute_value_char_type > > >,
+            boost::log::aux::binder2nd< boost::log::aux::binder3rd< boost::log::aux::matches_fun, ArgT >, ExpressionT >,
             attribute_value_types
-        > matches(std::basic_string< attribute_value_char_type > const& expr, match_flag_type flags = match_default) const
+        > matches(ExpressionT const& expr, ArgT const& arg) const
         {
-            basic_regex< attribute_value_char_type, regex_traits< attribute_value_char_type > > ex(expr.c_str());
-            return this->matches(ex, flags);
-        }
-
-        //! Filter generator for checking whether the attribute value matches a regex
-        flt_attr<
-            char_type,
-            boost::log::aux::binder2nd< boost::log::aux::matches_fun, basic_regex< attribute_value_char_type, regex_traits< attribute_value_char_type > > >,
-            attribute_value_types
-        > matches(const attribute_value_char_type* expr, match_flag_type flags = match_default) const
-        {
-            basic_regex< attribute_value_char_type, regex_traits< attribute_value_char_type > > ex(expr);
-            return this->matches(ex, flags);
+            typedef boost::log::aux::binder3rd< boost::log::aux::matches_fun, ArgT > binder3rd_t;
+            typedef boost::log::aux::binder2nd< binder3rd_t, ExpressionT > binder2nd_t;
+            typedef flt_attr< char_type, binder2nd_t, attribute_value_types > flt_attr_t;
+            return flt_attr_t(this->m_AttributeName, binder2nd_t(binder3rd_t(boost::log::aux::matches_fun(), arg), expr));
         }
     };
 
@@ -380,7 +371,7 @@ namespace aux {
 
 /*!
  * The function generates an attribute placeholder in filter expressions
- * 
+ *
  * \param name Attribute name. Must point to a zero-terminated string, must not be NULL.
  * \return An object that will, upon applying a corresponding operation to it, construct the filter.
  */
@@ -398,7 +389,7 @@ attr(const CharT* name)
 
 /*!
  * The function generates an attribute placeholder in filter expressions
- * 
+ *
  * \param name Attribute name.
  * \return An object that will, upon applying a corresponding operation to it, construct the filter.
  */

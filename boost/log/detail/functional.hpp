@@ -21,7 +21,6 @@
 
 #include <algorithm>
 #include <functional>
-#include <boost/regex.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/eval_if.hpp>
 #include <boost/mpl/identity.hpp>
@@ -279,23 +278,46 @@ struct contains_fun
     }
 };
 
+//! This tag type is returned if an expression is not supported for matching against strings
+struct unsupported_match_expression_tag {};
+//! The function is used to determine the kind of regex expression
+BOOST_LOG_FORCEINLINE unsupported_match_expression_tag match_expression_tag_of(...)
+{
+    return unsupported_match_expression_tag();
+}
+
+//! The regex matching functor implementation
+template< typename TagT >
+struct matches_fun_impl;
+
 //! The regex matching functor
 struct matches_fun
 {
     typedef bool result_type;
 
-private:
-    match_flag_type m_Flags;
-
-public:
-    explicit matches_fun(match_flag_type flags = match_default) : m_Flags(flags)
+    template< typename StringT, typename ExpressionT >
+    bool operator() (StringT const& str, ExpressionT const& expr) const
     {
+        return call_impl(str, expr, match_expression_tag_of(static_cast< ExpressionT* >(NULL)));
+    }
+    template< typename StringT, typename ExpressionT, typename ArgT >
+    bool operator() (StringT const& str, ExpressionT const& expr, ArgT const& arg) const
+    {
+        return call_impl(str, expr, arg, match_expression_tag_of(static_cast< ExpressionT* >(NULL)));
     }
 
-    template< typename T, typename CharT, typename RegexTraitsT >
-    bool operator() (T const& str, basic_regex< CharT, RegexTraitsT > const& expr) const
+private:
+    template< typename StringT, typename ExpressionT, typename TagT >
+    static bool call_impl(StringT const& str, ExpressionT const& expr, TagT const&)
     {
-        return regex_match(str.begin(), str.end(), expr, m_Flags);
+        typedef matches_fun_impl< TagT > impl;
+        return impl::matches(str, expr);
+    }
+    template< typename StringT, typename ExpressionT, typename ArgT, typename TagT >
+    static bool call_impl(StringT const& str, ExpressionT const& expr, ArgT const& arg, TagT const&)
+    {
+        typedef matches_fun_impl< TagT > impl;
+        return impl::matches(str, expr, arg);
     }
 };
 
@@ -332,6 +354,31 @@ template< typename FunT, typename SecondArgT >
 inline binder2nd< FunT, SecondArgT > bind2nd(FunT const& fun, SecondArgT const& arg)
 {
     return binder2nd< FunT, SecondArgT >(fun, arg);
+}
+
+//! Third argument binder
+template< typename FunT, typename ThirdArgT >
+struct binder3rd :
+    private FunT
+{
+    typedef typename FunT::result_type result_type;
+
+    binder3rd(FunT const& fun, ThirdArgT const& arg) : FunT(fun), m_Arg(arg) {}
+
+    template< typename T1, typename T2 >
+    result_type operator() (T1 const& arg1, T2 const& arg2) const
+    {
+        return FunT::operator() (arg1, arg2, m_Arg);
+    }
+
+private:
+    ThirdArgT m_Arg;
+};
+
+template< typename FunT, typename ThirdArgT >
+inline binder3rd< FunT, ThirdArgT > bind3rd(FunT const& fun, ThirdArgT const& arg)
+{
+    return binder3rd< FunT, ThirdArgT >(fun, arg);
 }
 
 } // namespace aux
