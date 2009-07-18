@@ -436,8 +436,14 @@ public:
     static scope_stack const& get_scopes();
 };
 
-typedef basic_named_scope< char > named_scope;      //!< Convenience typedef for narrow-character logging
-typedef basic_named_scope< wchar_t > wnamed_scope;  //!< Convenience typedef for wide-character logging
+#if defined(BOOST_LOG_USE_CHAR)
+typedef basic_named_scope_list< char > named_scope_list;        //!< Convenience typedef for narrow-character logging
+typedef basic_named_scope< char > named_scope;                  //!< Convenience typedef for narrow-character logging
+#endif
+#if defined(BOOST_LOG_USE_WCHAR_T)
+typedef basic_named_scope_list< wchar_t > wnamed_scope_list;    //!< Convenience typedef for wide-character logging
+typedef basic_named_scope< wchar_t > wnamed_scope;              //!< Convenience typedef for wide-character logging
+#endif
 
 } // namespace attributes
 
