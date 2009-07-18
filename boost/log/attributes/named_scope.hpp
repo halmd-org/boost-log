@@ -11,7 +11,7 @@
  * \file
  * \author Andrey Semashev
  * \date   24.06.2007
- * 
+ *
  * The header contains implementation of named scope container and an attribute that allows to
  * put the named scope to log. A number of convenience macros are also provided.
  */
@@ -67,7 +67,7 @@ namespace aux {
 
 /*!
  * \brief The structure contains all information about a named scope
- * 
+ *
  * The named scope entries are stored as elements of \c basic_named_scope_list container, which
  * in turn can be acquired either from the \c basic_named_scope attribute value or from a thread-local
  * instance.
@@ -82,7 +82,7 @@ struct basic_named_scope_entry
     typedef CharT char_type;
 
     /*!
-     * The scope name (e.g. function signatute)
+     * The scope name (e.g. a function signature)
      */
     basic_string_literal< char_type > scope_name;
     /*!
@@ -96,7 +96,7 @@ struct basic_named_scope_entry
 
     /*!
      * Initializing constructor
-     * 
+     *
      * \post <tt>scope_name == sn && file_name == fn && line == ln</tt>
      *
      * \b Throws: Nothing.
@@ -111,7 +111,7 @@ struct basic_named_scope_entry
 
 /*!
  * \brief The class implements the list of scopes
- * 
+ *
  * The scope list provides a read-only access to a doubly-linked list of scopes.
  */
 template< typename CharT >
@@ -255,13 +255,13 @@ protected:
 public:
     /*!
      * Default constructor
-     * 
+     *
      * \post <tt>empty() == true</tt>
      */
     basic_named_scope_list() : m_Size(0), m_fNeedToDeallocate(false) {}
     /*!
      * Copy constructor
-     * 
+     *
      * \post <tt>std::equal(begin(), end(), that.begin()) == true</tt>
      */
     BOOST_LOG_EXPORT basic_named_scope_list(basic_named_scope_list const& that);
@@ -272,7 +272,7 @@ public:
 
     /*!
      * Assignment operator
-     * 
+     *
      * \post <tt>std::equal(begin(), end(), that.begin()) == true</tt>
      */
     basic_named_scope_list& operator= (basic_named_scope_list const& that)
@@ -341,12 +341,12 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (
 
 /*!
  * \brief A class of an attribute that holds stack of named scopes of the current thread
- * 
+ *
  * The basic_named_scope attribute is essentially a hook to the thread-specific instance of
  * scope list. This means that the attribute will generate different values if get_value is
  * called in different threads. The attribute generates value with stored type
  * <tt>basic_named_scope_list< CharT ></tt>.
- * 
+ *
  * The attribute class can also be used to gain access to the scope stack instance, e.g. to
  * get its copy or to push or pop a scope entry. However, it is highly not recommended to
  * maintain scope list manually. Use \c BOOST_LOG_NAMED_SCOPE or \c BOOST_LOG_FUNCTION macros instead.
@@ -371,7 +371,7 @@ public:
 
         /*!
          * Constructor. Pushes the specified scope to the end of the thread-local list of scopes.
-         * 
+         *
          * \param sn Scope name.
          * \param fn File name, in which the scope is located.
          * \param ln Line number in the file.
@@ -414,20 +414,20 @@ public:
 
     /*!
      * The method pushes the scope to the back of the current thread's scope list
-     * 
+     *
      * \b Throws: Nothing.
      */
     static void push_scope(scope_entry const& entry);
     /*!
      * The method pops the last pushed scope from the current thread's scope list
-     * 
+     *
      * \b Throws: Nothing.
      */
     static void pop_scope();
 
     /*!
      *  \return The current thread's list of scopes
-     * 
+     *
      *  \note The returned reference is only valid until the current thread ends. The scopes in the
      *        returned container may change if the execution scope is changed (i.e. either \c push_scope
      *        or \c pop_scope is called). User has to copy the stack if he wants to keep it intact regardless
@@ -451,8 +451,8 @@ typedef basic_named_scope< wchar_t > wnamed_scope;  //!< Convenience typedef for
 
 //! \cond
 
-#define BOOST_LOG_NAMED_SCOPE_INTERNAL(var, name, file, line)\
-    ::boost::log::attributes::named_scope::sentry var(name, file, line);\
+#define BOOST_LOG_NAMED_SCOPE_INTERNAL(char_type, var, name, file, line)\
+    ::boost::log::attributes::basic_named_scope< char_type >::sentry var(name, file, line);\
     BOOST_LOG_NO_UNUSED_WARNINGS(var)
 
 //! \endcond
@@ -463,12 +463,12 @@ typedef basic_named_scope< wchar_t > wnamed_scope;  //!< Convenience typedef for
  * Macro for scope markup. The specified scope name is pushed to the end of the current thread scope list.
  */
 #define BOOST_LOG_NAMED_SCOPE(name)\
-    BOOST_LOG_NAMED_SCOPE_INTERNAL(BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_named_scope_sentry_), name, __FILE__, __LINE__)
+    BOOST_LOG_NAMED_SCOPE_INTERNAL(char, BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_named_scope_sentry_), name, __FILE__, __LINE__)
 
 /*!
  * Macro for function scope markup. The scope name is constructed with help of compiler and contains current function name.
  * The scope name is pushed to the end of the current thread scope list.
- * 
+ *
  * Not all compilers have support for this macro. The exact form of the scope name may vary from one compiler to another.
  */
 #define BOOST_LOG_FUNCTION() BOOST_LOG_NAMED_SCOPE(BOOST_CURRENT_FUNCTION)
@@ -481,15 +481,15 @@ typedef basic_named_scope< wchar_t > wnamed_scope;  //!< Convenience typedef for
  * Macro for scope markup. The specified scope name is pushed to the end of the current thread scope list.
  */
 #define BOOST_LOG_WNAMED_SCOPE(name)\
-    BOOST_LOG_NAMED_SCOPE_INTERNAL(BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_named_scope_sentry_), name, BOOST_PP_CAT(L, __FILE__), __LINE__)
+    BOOST_LOG_NAMED_SCOPE_INTERNAL(wchar_t, BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_named_scope_sentry_), name, BOOST_PP_CAT(L, __FILE__), __LINE__)
 
 /*!
  * Macro for function scope markup. The scope name is constructed with help of compiler and contains current function name.
  * The scope name is pushed to the end of the current thread scope list.
- * 
+ *
  * Not all compilers have support for this macro. The exact form of the scope name may vary from one compiler to another.
  */
-#define BOOST_LOG_WFUNCTION() BOOST_LOG_WNAMED_SCOPE(BOOST_PP_CAT(L, BOOST_CURRENT_FUNCTION))
+#define BOOST_LOG_WFUNCTION() BOOST_LOG_WFUNCTION_(BOOST_PP_CAT(L, BOOST_CURRENT_FUNCTION))
 
 #endif
 
