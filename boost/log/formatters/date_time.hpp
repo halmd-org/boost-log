@@ -157,9 +157,17 @@ namespace aux {
         }
 
         //! Cleanup method
-        void clear() { m_Buffer.clear(); }
+        void clear()
+        {
+            m_Stream.clear();
+            m_StreamBuf.clear();
+            m_Buffer.clear();
+        }
         //! Returns the formatted string
-        string_type const& get() const { return m_Buffer; }
+        string_type const& get() const
+        {
+            return m_Buffer;
+        }
 
     protected:
         //! The method puts the date/time object into stream

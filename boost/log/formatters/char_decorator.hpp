@@ -146,19 +146,12 @@ public:
     void operator() (ostream_type& strm, record_type const& record) const
     {
         boost::log::aux::cleanup_guard< string_type > cleanup1(m_Storage);
+        boost::log::aux::cleanup_guard< streambuf_type > cleanup2(m_StreamBuf);
 
         // Perform formatting
-        try
-        {
-            rdbuf_saver cleanup2(strm, &m_StreamBuf);
-            m_Formatter(strm, record);
-            strm.flush();
-        }
-        catch (...)
-        {
-            m_StreamBuf.pubsync();
-            throw;
-        }
+        rdbuf_saver cleanup2(strm, &m_StreamBuf);
+        m_Formatter(strm, record);
+        strm.flush();
 
         // Apply decorations
         typedef typename decorations_list::const_iterator dec_iterator;

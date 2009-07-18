@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   code_conversion.cpp
  * \author Andrey Semashev
  * \date   08.11.2008
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -71,6 +71,17 @@ converting_ostringstreambuf< CharT, TraitsT >::converting_ostringstreambuf(strin
 template< typename CharT, typename TraitsT >
 converting_ostringstreambuf< CharT, TraitsT >::~converting_ostringstreambuf()
 {
+}
+
+//! Clears the buffer to the initial state
+template< typename CharT, typename TraitsT >
+void converting_ostringstreambuf< CharT, TraitsT >::clear()
+{
+    const char_type* pBase = this->pbase();
+    const char_type* pPtr = this->pptr();
+    if (pBase != pPtr)
+        this->pbump(static_cast< int >(pBase - pPtr));
+    m_ConversionState = std::mbstate_t();
 }
 
 //! Puts all buffered data to the string

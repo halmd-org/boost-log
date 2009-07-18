@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   code_conversion.hpp
  * \author Andrey Semashev
  * \date   08.11.2008
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -79,6 +79,9 @@ public:
     explicit converting_ostringstreambuf(string_type& storage);
     //! Destructor
     ~converting_ostringstreambuf();
+
+    //! Clears the buffer to the initial state
+    void clear();
 
 protected:
     //! Puts all buffered data to the string

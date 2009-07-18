@@ -197,7 +197,8 @@ public:
     void consume(record_type const& record)
     {
         boost::log::aux::cleanup_guard< stream_type > cleanup1(m_FormattingStream);
-        boost::log::aux::cleanup_guard< target_string_type > cleanup2(m_FormattedRecord);
+        boost::log::aux::cleanup_guard< streambuf_type > cleanup2(m_StreamBuf);
+        boost::log::aux::cleanup_guard< target_string_type > cleanup3(m_FormattedRecord);
 
         // Perform the formatting
         if (!m_Formatter.empty())

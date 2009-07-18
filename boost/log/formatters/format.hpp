@@ -79,6 +79,8 @@ private:
     typedef function2< void, ostream_type&, record_type const& > formatter_type;
     //! Sequence of formatters
     typedef std::vector< formatter_type > formatters;
+    //! Stream buffer type
+    typedef boost::log::aux::basic_ostringstreambuf< char_type > streambuf_type;
 
 private:
     //! Boost.Format object
@@ -89,7 +91,7 @@ private:
     //! Formatting buffer
     mutable string_type m_Buffer;
     //! Stream buffer
-    mutable boost::log::aux::basic_ostringstreambuf< char_type > m_StreamBuf;
+    mutable streambuf_type m_StreamBuf;
 
 public:
     /*!
@@ -120,11 +122,12 @@ public:
     void operator() (ostream_type& strm, record_type const& record) const
     {
         boost::log::aux::cleanup_guard< format_type > cleanup1(m_Format);
+        boost::log::aux::cleanup_guard< streambuf_type > cleanup2(m_StreamBuf);
         {
-            rdbuf_saver cleanup2(strm, &m_StreamBuf);
+            rdbuf_saver cleanup3(strm, &m_StreamBuf);
             for (typename formatters::const_iterator it = m_Formatters.begin(), end = m_Formatters.end(); it != end; ++it)
             {
-                boost::log::aux::cleanup_guard< string_type > cleanup3(m_Buffer);
+                boost::log::aux::cleanup_guard< string_type > cleanup4(m_Buffer);
                 (*it)(strm, record);
                 strm.flush();
                 m_Format % m_Buffer;

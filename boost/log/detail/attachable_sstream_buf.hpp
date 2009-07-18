@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   attachable_sstream_buf.hpp
  * \author Andrey Semashev
  * \date   29.07.2007
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -78,6 +78,15 @@ namespace aux {
         explicit basic_ostringstreambuf(string_type& storage) : m_Storage(storage)
         {
             base_type::setp(m_Buffer, m_Buffer + (sizeof(m_Buffer) / sizeof(*m_Buffer)));
+        }
+
+        //! Clears the buffer to the initial state
+        void clear()
+        {
+            register char_type* pBase = this->pbase();
+            register char_type* pPtr = this->pptr();
+            if (pBase != pPtr)
+                this->pbump(static_cast< int >(pBase - pPtr));
         }
 
     protected:
