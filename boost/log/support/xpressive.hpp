@@ -43,8 +43,8 @@ private:
     typedef char yes_type;
     struct no_type { char dummy[2]; };
 
-    template< typename T >
-    static yes_type check(xpressive::basic_regex< T > const&);
+    template< typename U >
+    static yes_type check(xpressive::basic_regex< U > const&);
     static no_type check(...);
     static T& get_T();
 

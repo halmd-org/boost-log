@@ -60,8 +60,8 @@ private:
     typedef char yes_type;
     struct no_type { char dummy[2]; };
 
-    template< typename T >
-    static yes_type check(spirit::classic::parser< T > const&);
+    template< typename U >
+    static yes_type check(spirit::classic::parser< U > const&);
     static no_type check(...);
     static T& get_T();
 

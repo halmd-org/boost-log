@@ -41,7 +41,9 @@
 #include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
-#include <boost/log/support/regex.hpp>
+//#include <boost/log/support/regex.hpp>
+#include <boost/log/support/xpressive.hpp>
+#include <boost/xpressive/xpressive_dynamic.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/detail/shared_lock_guard.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
@@ -113,7 +115,9 @@ class default_filter_factory :
             return filter_type(log::filters::attr< string_type >(name).contains(arg));
         else if (rel == constants::matches_keyword())
         {
-            basic_regex< char_type > rex(arg);
+//            basic_regex< char_type > rex(arg);
+            typedef xpressive::basic_regex< typename string_type::const_iterator > regex_t;
+            regex_t rex = regex_t::compile(arg, regex_t::ECMAScript | regex_t::optimize);
             return filter_type(log::filters::attr< string_type >(name).matches(rex));
         }
         else
