@@ -22,20 +22,24 @@
 #ifndef BOOST_LOG_SUPPORT_SPIRIT_CLASSIC_HPP_INCLUDED_
 #define BOOST_LOG_SUPPORT_SPIRIT_CLASSIC_HPP_INCLUDED_
 
+#include <boost/mpl/bool.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/functional.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
-// As Boost.Log filters may be called in multiple threads concurrently,
-// this may lead to using Boost.Spirit parsers in a multithreaded context.
-// In order to protect parsers properly, BOOST_SPIRIT_THREADSAFE macro should
-// be defined.
-// If we got here, it means that the user did not define that macro and we
-// have to define it ourselves. However, it may also lead to ODR violations
-// or even total ignorance of this macro, if the user has included Boost.Spirit
-// headers before including this header, or uses Boost.Spirit without the macro
-// in other translation units. The only reliable way to settle this problem is to
-// define the macro for the whole project (i.e. all translation units).
+/*
+ * As Boost.Log filters may be called in multiple threads concurrently,
+ * this may lead to using Boost.Spirit parsers in a multithreaded context.
+ * In order to protect parsers properly, BOOST_SPIRIT_THREADSAFE macro should
+ * be defined.
+ *
+ * If we got here, it means that the user did not define that macro and we
+ * have to define it ourselves. However, it may also lead to ODR violations
+ * or even total ignorance of this macro, if the user has included Boost.Spirit
+ * headers before including this header, or uses Boost.Spirit without the macro
+ * in other translation units. The only reliable way to settle this problem is to
+ * define the macro for the whole project (i.e. all translation units).
+ */
 #warning Boost.Log: Boost.Spirit requires BOOST_SPIRIT_THREADSAFE macro to be defined if parsers are used in a multithreaded context. It is strongly recommended to define this macro project-wide.
 #define BOOST_SPIRIT_THREADSAFE 1
 #endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
