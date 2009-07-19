@@ -278,13 +278,26 @@ struct contains_fun
     }
 };
 
-//! This tag type is returned if an expression is not supported for matching against strings
-struct unsupported_match_expression_tag {};
-//! The function is used to determine the kind of regex expression
-BOOST_LOG_FORCEINLINE unsupported_match_expression_tag match_expression_tag_of(...)
+//! This tag type is used if an expression is not supported for matching against strings
+struct unsupported_match_expression_tag;
+//! This tag type is used if an expression is recognized as a Boost.Regex expression
+struct boost_regex_expression_tag;
+//! This tag type is used if an expression is recognized as a Boost.Xpressive expression
+struct boost_xpressive_expression_tag;
+
+//! Preliminary declaration of a trait that detects if an expression is a Boost.Regex expression
+template< typename, bool = true >
+struct is_regex :
+    public mpl::false_
 {
-    return unsupported_match_expression_tag();
-}
+};
+
+//! Preliminary declaration of a trait that detects if an expression is a Boost.Xpressive expression
+template< typename, bool = true >
+struct is_xpressive_regex :
+    public mpl::false_
+{
+};
 
 //! The regex matching functor implementation
 template< typename TagT >
@@ -295,28 +308,35 @@ struct matches_fun
 {
     typedef bool result_type;
 
+private:
+    //! A traits to obtain the tag of the expression
+    template< typename ExpressionT >
+    struct match_traits
+    {
+        typedef typename mpl::eval_if<
+            is_regex< ExpressionT >,
+            mpl::identity< boost_regex_expression_tag >,
+            mpl::if_<
+                is_xpressive_regex< ExpressionT >,
+                boost_xpressive_expression_tag,
+                unsupported_match_expression_tag
+            >
+        >::type tag_type;
+    };
+
+public:
     template< typename StringT, typename ExpressionT >
     bool operator() (StringT const& str, ExpressionT const& expr) const
     {
-        return call_impl(str, expr, match_expression_tag_of(static_cast< ExpressionT* >(NULL)));
+        typedef typename match_traits< ExpressionT >::tag_type tag_type;
+        typedef matches_fun_impl< tag_type > impl;
+        return impl::matches(str, expr);
     }
     template< typename StringT, typename ExpressionT, typename ArgT >
     bool operator() (StringT const& str, ExpressionT const& expr, ArgT const& arg) const
     {
-        return call_impl(str, expr, arg, match_expression_tag_of(static_cast< ExpressionT* >(NULL)));
-    }
-
-private:
-    template< typename StringT, typename ExpressionT, typename TagT >
-    static bool call_impl(StringT const& str, ExpressionT const& expr, TagT const&)
-    {
-        typedef matches_fun_impl< TagT > impl;
-        return impl::matches(str, expr);
-    }
-    template< typename StringT, typename ExpressionT, typename ArgT, typename TagT >
-    static bool call_impl(StringT const& str, ExpressionT const& expr, ArgT const& arg, TagT const&)
-    {
-        typedef matches_fun_impl< TagT > impl;
+        typedef typename match_traits< ExpressionT >::tag_type tag_type;
+        typedef matches_fun_impl< tag_type > impl;
         return impl::matches(str, expr, arg);
     }
 };

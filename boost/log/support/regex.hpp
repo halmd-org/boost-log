@@ -23,7 +23,7 @@
 #define BOOST_LOG_SUPPORT_REGEX_HPP_INCLUDED_
 
 #include <boost/regex.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <boost/mpl/bool.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/functional.hpp>
 
@@ -33,10 +33,9 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-struct boost_regex_expression_tag {};
-
+//! The trait verifies if the type can be converted to a Boost.Regex expression
 template< typename T >
-struct is_regex
+struct is_regex< T, true >
 {
 private:
     typedef char yes_type;
@@ -52,16 +51,6 @@ public:
     typedef mpl::bool_< value > type;
 };
 
-//! The function is used to determine the kind of regex expression
-template< typename ExpressionT >
-BOOST_LOG_FORCEINLINE typename enable_if<
-    is_regex< ExpressionT >,
-    boost_regex_expression_tag
->::type match_expression_tag_of(ExpressionT*)
-{
-    return boost_regex_expression_tag();
-}
-
 //! The regex matching functor implementation
 template< >
 struct matches_fun_impl< boost_regex_expression_tag >
@@ -72,7 +61,7 @@ struct matches_fun_impl< boost_regex_expression_tag >
         basic_regex< CharT, TraitsT > const& expr,
         match_flag_type flags = match_default)
     {
-        return regex_match(str.begin(), str.end(), expr, flags);
+        return boost::regex_match(str.begin(), str.end(), expr, flags);
     }
 };
 

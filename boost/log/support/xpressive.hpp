@@ -22,10 +22,10 @@
 #ifndef BOOST_LOG_SUPPORT_XPRESSIVE_HPP_INCLUDED_
 #define BOOST_LOG_SUPPORT_XPRESSIVE_HPP_INCLUDED_
 
+#include <boost/mpl/bool.hpp>
 #include <boost/xpressive/basic_regex.hpp>
 #include <boost/xpressive/regex_constants.hpp>
 #include <boost/xpressive/regex_algorithms.hpp>
-#include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/functional.hpp>
 
@@ -35,10 +35,9 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-struct boost_xpressive_expression_tag {};
-
+//! The trait verifies if the type can be converted to a Boost.Xpressive regex
 template< typename T >
-struct is_xpressive_regex
+struct is_xpressive_regex< T, true >
 {
 private:
     typedef char yes_type;
@@ -53,16 +52,6 @@ public:
     enum { value = sizeof(check(get_T())) == sizeof(yes_type) };
     typedef mpl::bool_< value > type;
 };
-
-//! The function is used to determine the kind of regex expression
-template< typename ExpressionT >
-BOOST_LOG_FORCEINLINE typename enable_if<
-    is_xpressive_regex< ExpressionT >,
-    boost_xpressive_expression_tag
->::type match_expression_tag_of(ExpressionT*)
-{
-    return boost_xpressive_expression_tag();
-}
 
 //! The regex matching functor implementation
 template< >
