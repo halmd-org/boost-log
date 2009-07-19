@@ -284,6 +284,8 @@ struct unsupported_match_expression_tag;
 struct boost_regex_expression_tag;
 //! This tag type is used if an expression is recognized as a Boost.Xpressive expression
 struct boost_xpressive_expression_tag;
+//! This tag type is used if an expression is recognized as a Boost.Spirit (classic) expression
+struct boost_spirit_classic_expression_tag;
 
 //! Preliminary declaration of a trait that detects if an expression is a Boost.Regex expression
 template< typename, bool = true >
@@ -295,6 +297,13 @@ struct is_regex :
 //! Preliminary declaration of a trait that detects if an expression is a Boost.Xpressive expression
 template< typename, bool = true >
 struct is_xpressive_regex :
+    public mpl::false_
+{
+};
+
+//! Preliminary declaration of a trait that detects if an expression is a Boost.Spirit (classic) expression
+template< typename, bool = true >
+struct is_spirit_classic_parser :
     public mpl::false_
 {
 };
@@ -316,10 +325,14 @@ private:
         typedef typename mpl::eval_if<
             is_regex< ExpressionT >,
             mpl::identity< boost_regex_expression_tag >,
-            mpl::if_<
+            mpl::eval_if<
                 is_xpressive_regex< ExpressionT >,
-                boost_xpressive_expression_tag,
-                unsupported_match_expression_tag
+                mpl::identity< boost_xpressive_expression_tag >,
+                mpl::if_<
+                    is_spirit_classic_parser< ExpressionT >,
+                    boost_spirit_classic_expression_tag,
+                    unsupported_match_expression_tag
+                >
             >
         >::type tag_type;
     };
