@@ -542,7 +542,9 @@ void asynchronous_frontend< CharT >::consume(record_type const& record)
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
     {
-        pImpl->m_EnqueuedRecords.push(record);
+        record_type rec = record;
+        rec.detach_from_thread();
+        pImpl->m_EnqueuedRecords.push(rec);
         pImpl->m_Condition.notify_one();
     }
     catch (thread_interrupted&)
@@ -564,7 +566,9 @@ bool asynchronous_frontend< CharT >::try_consume(record_type const& record)
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
     {
-        if (pImpl->m_EnqueuedRecords.try_push(record))
+        record_type rec = record;
+        rec.detach_from_thread();
+        if (pImpl->m_EnqueuedRecords.try_push(rec))
         {
             pImpl->m_Condition.notify_one();
             return true;

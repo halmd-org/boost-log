@@ -170,6 +170,8 @@ private:
     struct public_data :
         public intrusive_ref_counter
     {
+        //! Shows if the record has already been detached from thread
+        bool m_Detached;
         //! Attribute values view
         values_view_type m_AttributeValues;
         //! Record message
@@ -177,6 +179,7 @@ private:
 
         //! Constructor from the attribute sets
         explicit public_data(values_view_type const& values) :
+            m_Detached(false),
             m_AttributeValues(values)
         {
         }
@@ -331,14 +334,19 @@ public:
      */
     void detach_from_thread()
     {
-        typename values_view_type::const_iterator
-            it = m_pData->m_AttributeValues.begin(),
-            end = m_pData->m_AttributeValues.end();
-        for (; it != end; ++it)
+        if (!m_pData->m_Detached)
         {
-            // Yep, a bit hackish. I'll need a better backdoor to do it gracefully.
-            it->second->detach_from_thread().swap(
-                const_cast< typename values_view_type::mapped_type& >(it->second));
+            typename values_view_type::const_iterator
+                it = m_pData->m_AttributeValues.begin(),
+                end = m_pData->m_AttributeValues.end();
+            for (; it != end; ++it)
+            {
+                // Yep, a bit hackish. I'll need a better backdoor to do it gracefully.
+                it->second->detach_from_thread().swap(
+                    const_cast< typename values_view_type::mapped_type& >(it->second));
+            }
+
+            m_pData->m_Detached = true;
         }
     }
 };
