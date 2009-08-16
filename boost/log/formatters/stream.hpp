@@ -25,6 +25,7 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/embedded_string_type.hpp>
 #include <boost/log/utility/string_literal.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/chain.hpp>
@@ -45,27 +46,23 @@ namespace formatters {
 template< typename CharT >
 struct stream_placeholder
 {
+public:
     /*!
      * Trap operator to begin building the lambda expression
      *
      * \param fmt Either a formatter or an object to be wrapped into a formatter
      */
     template< typename T >
-    typename wrap_if_not_formatter< CharT, T >::type operator<< (T const& fmt) const
+    typename wrap_if_not_formatter<
+        CharT,
+        typename boost::log::aux::make_embedded_string_type< T >::type
+    >::type operator<< (T const& fmt) const
     {
-        typedef typename wrap_if_not_formatter< CharT, T >::type result_type;
+        typedef typename wrap_if_not_formatter<
+            CharT,
+            typename boost::log::aux::make_embedded_string_type< T >::type
+        >::type result_type;
         return result_type(fmt);
-    }
-
-    /*!
-     * An overload for C-style strings. These need a special treatment in order to keep
-     * a copy of the string in the formatter instead of a raw pointer.
-     *
-     * \param s A string constant to be wrapped
-     */
-    fmt_wrapper< CharT, std::basic_string< CharT > > operator<< (const CharT* s) const
-    {
-        return fmt_wrapper< CharT, std::basic_string< CharT > >(s);
     }
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -78,7 +75,7 @@ struct stream_placeholder
             char,
             string_literal
         >
-    >::type operator<< (T(&str)[LenV])
+    >::type operator<< (T(&str)[LenV]) const
     {
         return fmt_wrapper< char, string_literal >(str);
     }
@@ -92,7 +89,7 @@ struct stream_placeholder
             wchar_t,
             wstring_literal
         >
-    >::type operator<< (T(&str)[LenV])
+    >::type operator<< (T(&str)[LenV]) const
     {
         return fmt_wrapper< wchar_t, wstring_literal >(str);
     }
@@ -132,43 +129,21 @@ template< typename CharT, typename LeftFmtT, typename RightT >
 inline fmt_chain<
     CharT,
     LeftFmtT,
-    typename wrap_if_not_formatter< CharT, RightT >::type
+    typename wrap_if_not_formatter<
+        CharT,
+        typename boost::log::aux::make_embedded_string_type< RightT >::type
+    >::type
 > operator<< (basic_formatter< CharT, LeftFmtT > const& left, RightT const& right)
 {
     typedef fmt_chain<
         CharT,
         LeftFmtT,
-        typename wrap_if_not_formatter< CharT, RightT >::type
+        typename wrap_if_not_formatter<
+            CharT,
+            typename boost::log::aux::make_embedded_string_type< RightT >::type
+        >::type
     > result_type;
     return result_type(static_cast< LeftFmtT const& >(left), right);
-}
-
-/*!
- * The operator chains a formatter and a C-style string. This case needs a special treatment in order to keep
- * a copy of the string in the formatter instead of a raw pointer.
- *
- * \param left Left-hand formatter
- * \param str Right-hand string. Must be a zero-terminated sequence of characters, must not be NULL.
- * \return The constructed chained formatters
- */
-template< typename FmtT, typename CharT >
-inline fmt_chain<
-    CharT,
-    FmtT,
-    fmt_wrapper<
-        CharT,
-        std::basic_string< CharT >
-    >
-> operator<< (basic_formatter< CharT, FmtT > const& left, const CharT* str)
-{
-    return fmt_chain<
-        CharT,
-        FmtT,
-        fmt_wrapper<
-            CharT,
-            std::basic_string< CharT >
-        >
-    >(static_cast< FmtT const& >(left), fmt_wrapper< CharT, std::basic_string< CharT > >(str));
 }
 
 #ifndef BOOST_LOG_DOXYGEN_PASS

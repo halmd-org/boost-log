@@ -7,7 +7,7 @@
  * \file   locking_ptr.hpp
  * \author Andrey Semashev
  * \date   15.07.2009
- * 
+ *
  * This header is the Boost.Log library implementation, see the library documentation
  * at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -28,7 +28,6 @@ namespace boost {
 namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
-
 
     //! Shared lock object to support locking_ptr
     struct BOOST_LOG_NO_VTABLE locking_ptr_counter_base

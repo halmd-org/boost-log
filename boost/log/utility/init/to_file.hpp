@@ -35,7 +35,11 @@
 #include <boost/log/detail/sink_init_helpers.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/core/core.hpp>
-#include <boost/log/sinks/sink.hpp>
+#ifndef BOOST_LOG_NO_THREADS
+#include <boost/log/sinks/sync_frontend.hpp>
+#else
+#include <boost/log/sinks/unlocked_frontend.hpp>
+#endif
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/keywords/scan_method.hpp>
 
@@ -60,7 +64,7 @@ inline shared_ptr< sinks::file::collector > setup_file_collector(ArgsT const&, m
     return shared_ptr< sinks::file::collector >();
 }
 template< typename ArgsT >
-inline shared_ptr< sinks::file::collector > setup_file_collector(ArgsT const&, mpl::false_ const&)
+inline shared_ptr< sinks::file::collector > setup_file_collector(ArgsT const& args, mpl::false_ const&)
 {
     return sinks::file::make_collector(args);
 }

@@ -33,13 +33,10 @@
 #include <boost/mpl/equal_to.hpp>
 #include <boost/mpl/identity.hpp>
 #include <boost/mpl/is_sequence.hpp>
-#include <boost/type_traits/is_array.hpp>
-#include <boost/type_traits/is_pointer.hpp>
-#include <boost/type_traits/remove_extent.hpp>
-#include <boost/type_traits/remove_pointer.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/functional.hpp>
+#include <boost/log/detail/embedded_string_type.hpp>
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/utility/attribute_value_extractor.hpp>
@@ -138,34 +135,6 @@ public:
 
 namespace aux {
 
-    template< typename > struct is_char : mpl::false_ {};
-    template< > struct is_char< char > : mpl::true_ {};
-    template< > struct is_char< wchar_t > : mpl::true_ {};
-
-    //! An auxiliary type translator to store strings by value in function objects
-    template< typename ArgT >
-    struct make_embedded_string_type
-    {
-        // Make sure that string literals and C strings are converted to STL strings
-        typedef typename remove_cv<
-            typename mpl::eval_if<
-                is_array< ArgT >,
-                remove_extent< ArgT >,
-                mpl::eval_if<
-                    is_pointer< ArgT >,
-                    remove_pointer< ArgT >,
-                    mpl::identity< void >
-                >
-            >::type
-        >::type root_type;
-
-        typedef typename mpl::eval_if<
-            is_char< root_type >,
-            mpl::identity< std::basic_string< root_type > >,
-            remove_cv< ArgT >
-        >::type type;
-    };
-
     //! The base class for attr filter generator
     template< typename CharT, typename AttributeValueTypesT, bool >
     class flt_attr_gen_base;
@@ -197,11 +166,11 @@ namespace aux {
         template< typename T >\
         flt_attr<\
             char_type,\
-            boost::log::aux::binder2nd< fun, typename make_embedded_string_type< T >::type >,\
+            boost::log::aux::binder2nd< fun, typename boost::log::aux::make_embedded_string_type< T >::type >,\
             attribute_value_types\
         > member (T const& arg) const\
         {\
-            typedef typename make_embedded_string_type< T >::type arg_type;\
+            typedef typename boost::log::aux::make_embedded_string_type< T >::type arg_type;\
             typedef boost::log::aux::binder2nd< fun, arg_type > binder_t;\
             typedef flt_attr< char_type, binder_t, attribute_value_types > flt_attr_t;\
             return flt_attr_t(this->m_AttributeName, binder_t(fun(), arg_type(arg)));\
@@ -221,14 +190,14 @@ namespace aux {
             boost::log::aux::binder2nd<
                 boost::log::aux::in_range_fun,
                 std::pair<
-                    typename make_embedded_string_type< T >::type,
-                    typename make_embedded_string_type< T >::type
+                    typename boost::log::aux::make_embedded_string_type< T >::type,
+                    typename boost::log::aux::make_embedded_string_type< T >::type
                 >
             >,
             attribute_value_types
         > is_in_range(T const& lower, T const& upper) const
         {
-            typedef typename make_embedded_string_type< T >::type arg_type;
+            typedef typename boost::log::aux::make_embedded_string_type< T >::type arg_type;
             typedef boost::log::aux::binder2nd< boost::log::aux::in_range_fun, std::pair< arg_type, arg_type > > binder_t;
             typedef flt_attr< char_type, binder_t, attribute_value_types > flt_attr_t;
             return flt_attr_t(

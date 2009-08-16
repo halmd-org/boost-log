@@ -11,7 +11,7 @@
  * \file   to_console.hpp
  * \author Andrey Semashev
  * \date   16.05.2008
- * 
+ *
  * The header contains implementation of convenience functions for enabling logging to console.
  */
 
@@ -27,7 +27,11 @@
 #include <boost/make_shared.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/sink_init_helpers.hpp>
-#include <boost/log/sinks/sink.hpp>
+#ifndef BOOST_LOG_NO_THREADS
+#include <boost/log/sinks/sync_frontend.hpp>
+#else
+#include <boost/log/sinks/unlocked_frontend.hpp>
+#endif
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/keywords/format.hpp>
@@ -157,7 +161,7 @@ inline shared_ptr<
 
 /*!
  * The function constructs sink for the specified console stream and adds it to the core
- * 
+ *
  * \param strm One of the standard console streams: <tt>std::cout</tt>, <tt>std::cerr</tt> or <tt>std::clog</tt>
  *             (or the corresponding wide-character analogues).
  * \param args Optional additional named arguments for the sink initialization. The following arguments are supported:
@@ -193,7 +197,7 @@ inline shared_ptr<
 
 /*!
  * The function constructs sink for the <tt>std::clog</tt> stream and adds it to the core
- * 
+ *
  * \return Pointer to the constructed sink.
  */
 inline shared_ptr<
@@ -211,7 +215,7 @@ inline shared_ptr<
 
 /*!
  * The function constructs sink for the <tt>std::wclog</tt> stream and adds it to the core
- * 
+ *
  * \return Pointer to the constructed sink.
  */
 inline shared_ptr<
