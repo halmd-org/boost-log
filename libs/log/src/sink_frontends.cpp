@@ -405,17 +405,19 @@ public:
     void run()
     {
         records_list records;
-        while (!m_Finishing) try
+        while (true) try
         {
             if (eject_records(records))
             {
                 feed_records(records);
             }
-            else
+            else if (!m_Finishing)
             {
                 unique_lock< mutex > lock(this->m_BackendMutex);
                 m_Condition.wait(lock);
             }
+            else
+                break;
         }
         catch (...)
         {
@@ -510,7 +512,7 @@ template< typename CharT >
 asynchronous_frontend< CharT >::~asynchronous_frontend()
 {
     implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
-    if (!!pImpl->m_Thread)
+    if (pImpl->is_thread_running())
     {
         {
             typename implementation::scoped_write_lock _(pImpl->m_Mutex);
