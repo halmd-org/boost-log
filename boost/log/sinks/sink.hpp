@@ -74,7 +74,7 @@ public:
      *
      * \param attributes A set of attribute values of a logging record
      */
-    virtual bool will_consume(values_view_type const& attributes);
+    virtual bool will_consume(values_view_type const& attributes) = 0;
 
     /*!
      * The method puts logging message to the sink
