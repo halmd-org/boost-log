@@ -28,7 +28,7 @@
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/formatters/date_time.hpp>
-#include <boost/log/formatters/ostream.hpp>
+#include <boost/log/formatters/stream.hpp>
 #include <boost/log/utility/string_literal.hpp>
 #include <boost/log/core/record.hpp>
 #include "char_definitions.hpp"

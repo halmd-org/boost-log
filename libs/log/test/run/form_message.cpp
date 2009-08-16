@@ -22,7 +22,7 @@
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/formatters/message.hpp>
-#include <boost/log/formatters/ostream.hpp>
+#include <boost/log/formatters/stream.hpp>
 #include <boost/log/core/record.hpp>
 #include "char_definitions.hpp"
 #include "make_record.hpp"
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(message_formatting, CharT, char_types)
 
     {
         osstream strm1;
-        formatter f = fmt::ostrm << data::message();
+        formatter f = fmt::stream << data::message();
         f(strm1, rec);
         osstream strm2;
         strm2 << data::some_test_string();

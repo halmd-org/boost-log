@@ -26,7 +26,7 @@
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/formatters/attr.hpp>
-#include <boost/log/formatters/ostream.hpp>
+#include <boost/log/formatters/stream.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include <boost/log/core/record.hpp>
 #include "char_definitions.hpp"
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(default_formatting, CharT, char_types)
     // Check for various modes of attribute value type specification
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::attr(data::attr1()) << fmt::attr(data::attr2());
+        formatter f = fmt::stream << fmt::attr(data::attr1()) << fmt::attr(data::attr2());
         f(strm1, rec);
         osstream strm2;
         strm2 << 10 << 5.5;
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(default_formatting, CharT, char_types)
     }
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::attr< int >(data::attr1()) << fmt::attr< double >(data::attr2());
+        formatter f = fmt::stream << fmt::attr< int >(data::attr1()) << fmt::attr< double >(data::attr2());
         f(strm1, rec);
         osstream strm2;
         strm2 << 10 << 5.5;
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(default_formatting, CharT, char_types)
     }
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::attr< logging::numeric_types >(data::attr1()) << fmt::attr< logging::numeric_types >(data::attr2());
+        formatter f = fmt::stream << fmt::attr< logging::numeric_types >(data::attr1()) << fmt::attr< logging::numeric_types >(data::attr2());
         f(strm1, rec);
         osstream strm2;
         strm2 << 10 << 5.5;
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(default_formatting, CharT, char_types)
     // Check that custom types as attribute values are also supported
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::attr< my_class >(data::attr3());
+        formatter f = fmt::stream << fmt::attr< my_class >(data::attr3());
         f(strm1, rec);
         osstream strm2;
         strm2 << my_class(77);
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(default_formatting, CharT, char_types)
     // Check that not found attribute values are ignored
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::attr< int >(data::attr1()) << fmt::attr(data::attr4()) << fmt::attr< double >(data::attr2());
+        formatter f = fmt::stream << fmt::attr< int >(data::attr1()) << fmt::attr(data::attr4()) << fmt::attr< double >(data::attr2());
         f(strm1, rec);
         osstream strm2;
         strm2 << 10 << 5.5;
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(format_specification, CharT, char_types)
 
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::attr< int >(data::attr1(), data::int_format1()) << fmt::attr< double >(data::attr2(), data::fp_format1());
+        formatter f = fmt::stream << fmt::attr< int >(data::attr1(), data::int_format1()) << fmt::attr< double >(data::attr2(), data::fp_format1());
         f(strm1, rec);
         osstream strm2;
         strm2 << std::fixed << std::setfill(data::abcdefg0123456789()[7]) << std::setw(8) << 10

@@ -27,6 +27,7 @@
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
+#include <boost/log/support/regex.hpp>
 #include "char_definitions.hpp"
 
 namespace logging = boost::log;
@@ -351,20 +352,19 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(matches_check, CharT, char_types)
     values_view view1(set1, set2, set3);
     view1.freeze();
 
-    filter f = flt::attr< std::string >(data::attr3()).matches(".*ello.*");
-    BOOST_CHECK(f(view1));
-
-    f = flt::attr< std::string >(data::attr3()).matches("hello");
+    boost::regex rex("hello");
+    filter f = flt::attr< std::string >(data::attr3()).matches(rex);
     BOOST_CHECK(!f(view1));
 
-    boost::regex rex(".*world.*");
+    rex = ".*world.*";
     f = flt::attr< std::string >(data::attr3()).matches(rex);
     BOOST_CHECK(f(view1));
 
-    f = flt::attr< std::string >(data::attr2()).matches(".*");
+    rex = ".*";
+    f = flt::attr< std::string >(data::attr2()).matches(rex);
     BOOST_CHECK(!f(view1));
 
-    f = flt::attr< std::string >(data::attr4()).matches(".*");
+    f = flt::attr< std::string >(data::attr4()).matches(rex);
     BOOST_CHECK(!f(view1));
 }
 

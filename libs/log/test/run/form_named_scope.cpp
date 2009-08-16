@@ -24,7 +24,7 @@
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/formatters/named_scope.hpp>
-#include <boost/log/formatters/ostream.hpp>
+#include <boost/log/formatters/stream.hpp>
 #include <boost/log/utility/string_literal.hpp>
 #include <boost/log/core/record.hpp>
 #include "char_definitions.hpp"
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     // Default format
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::named_scope(data::attr1());
+        formatter f = fmt::stream << fmt::named_scope(data::attr1());
         f(strm1, rec);
         osstream strm2;
         strm2 << data::scope1() << "->" << data::scope2();
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     // Different delimiter
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::named_scope(data::attr1(), keywords::delimiter = data::delimiter1().c_str());
+        formatter f = fmt::stream << fmt::named_scope(data::attr1(), keywords::delimiter = data::delimiter1().c_str());
         f(strm1, rec);
         osstream strm2;
         strm2 << data::scope1() << "|" << data::scope2();
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     // Different direction
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::named_scope(data::attr1(), keywords::iteration = fmt::reverse);
+        formatter f = fmt::stream << fmt::named_scope(data::attr1(), keywords::iteration = fmt::reverse);
         f(strm1, rec);
         osstream strm2;
         strm2 << data::scope2() << "<-" << data::scope1();
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     }
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::named_scope(data::attr1(),
+        formatter f = fmt::stream << fmt::named_scope(data::attr1(),
             keywords::delimiter = data::delimiter1().c_str(),
             keywords::iteration = fmt::reverse);
         f(strm1, rec);
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     // Limiting the number of scopes
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::named_scope(data::attr1(), keywords::depth = 1);
+        formatter f = fmt::stream << fmt::named_scope(data::attr1(), keywords::depth = 1);
         f(strm1, rec);
         osstream strm2;
         strm2 << "...->" << data::scope2();
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     }
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::named_scope(data::attr1(),
+        formatter f = fmt::stream << fmt::named_scope(data::attr1(),
             keywords::depth = 1,
             keywords::iteration = fmt::reverse);
         f(strm1, rec);
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     }
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::named_scope(data::attr1(),
+        formatter f = fmt::stream << fmt::named_scope(data::attr1(),
             keywords::delimiter = data::delimiter1().c_str(),
             keywords::depth = 1);
         f(strm1, rec);
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     }
     {
         osstream strm1;
-        formatter f = fmt::ostrm << fmt::named_scope(data::attr1(),
+        formatter f = fmt::stream << fmt::named_scope(data::attr1(),
             keywords::delimiter = data::delimiter1().c_str(),
             keywords::depth = 1,
             keywords::iteration = fmt::reverse);

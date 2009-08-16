@@ -24,7 +24,7 @@
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/formatters/if.hpp>
 #include <boost/log/formatters/attr.hpp>
-#include <boost/log/formatters/ostream.hpp>
+#include <boost/log/formatters/stream.hpp>
 #include <boost/log/filters/has_attr.hpp>
 #include <boost/log/core/record.hpp>
 #include "char_definitions.hpp"
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(conditional_formatting, CharT, char_types)
         formatter f =
             fmt::if_(flt::has_attr< int >(data::attr1()))
             [
-                fmt::ostrm << fmt::attr(data::attr1())
+                fmt::stream << fmt::attr(data::attr1())
             ];
         f(strm1, rec);
         osstream strm2;
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(conditional_formatting, CharT, char_types)
         formatter f =
             fmt::if_(flt::has_attr< int >(data::attr2()))
             [
-                fmt::ostrm << fmt::attr(data::attr2())
+                fmt::stream << fmt::attr(data::attr2())
             ];
         f(strm1, rec);
         BOOST_CHECK(equal_strings(strm1.str(), string()));
@@ -83,11 +83,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(conditional_formatting, CharT, char_types)
         formatter f =
             fmt::if_(flt::has_attr< int >(data::attr1()))
             [
-                fmt::ostrm << fmt::attr(data::attr1())
+                fmt::stream << fmt::attr(data::attr1())
             ]
             .else_
             [
-                fmt::ostrm << fmt::attr(data::attr2())
+                fmt::stream << fmt::attr(data::attr2())
             ];
         f(strm1, rec);
         osstream strm2;
@@ -99,11 +99,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(conditional_formatting, CharT, char_types)
         formatter f =
             fmt::if_(flt::has_attr< int >(data::attr2()))
             [
-                fmt::ostrm << fmt::attr(data::attr1())
+                fmt::stream << fmt::attr(data::attr1())
             ]
             .else_
             [
-                fmt::ostrm << fmt::attr(data::attr2())
+                fmt::stream << fmt::attr(data::attr2())
             ];
         f(strm1, rec);
         osstream strm2;
