@@ -199,7 +199,7 @@ public:
      * Initializing constructor
      */
     explicit fmt_c_ascii_decorator(formatter_type const& fmt) :
-        m_Formatter(fmt, boost::make_iterator_range(traits_t::g_From), boost::make_iterator_range(traits_t::g_To)),
+        m_Formatter(fmt, traits_t::get_patterns(), traits_t::get_replacements()),
         m_StreamBuf(m_Storage)
     {
     }
