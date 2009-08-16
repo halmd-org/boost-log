@@ -113,7 +113,7 @@ struct formatters_repository :
     //! Base class type
     typedef log::aux::lazy_singleton< formatters_repository< CharT > > base_type;
 
-#if !defined(BOOST_MSVC) || _MSC_VER > 1310
+#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS)
     friend class log::aux::lazy_singleton< formatters_repository< CharT > >;
 #else
     friend class base_type;

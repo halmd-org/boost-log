@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   event_log_registry.hpp
  * \author Andrey Semashev
  * \date   16.11.2008
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -25,9 +25,6 @@
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/throw_exception.hpp>
 
-#ifdef _MSC_VER
-#endif
-
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
@@ -35,6 +32,10 @@ namespace BOOST_LOG_NAMESPACE {
 namespace sinks {
 
 namespace aux {
+
+    // MSVC versions up to 2008 (or their Platform SDKs, to be more precise) don't define LSTATUS.
+    // Perhaps, that is also the case for MinGW and Cygwin (untested).
+    typedef DWORD LSTATUS;
 
     //! Helper traits to integrate with WinAPI
     template< typename CharT >

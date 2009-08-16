@@ -42,6 +42,10 @@
         // and depend on the template parameters.
 #       define BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 #   endif
+#   if _MSC_VER <= 1400
+        // Older MSVC versions reject friend declarations for class template instantiations
+#       define BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS
+#   endif
 #endif
 
 #if (defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530) && !(defined BOOST_NO_COMPILER_CONFIG)
