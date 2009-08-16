@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   main.cpp
  * \author Andrey Semashev
  * \date   26.04.2008
- * 
+ *
  * \brief  An example of logging into a rotating XML text file.
  *         See the library tutorial for expanded comments on this code.
  *         It may also be worthwhile reading the Wiki requirements page:
@@ -52,17 +52,19 @@ int main(int argc, char* argv[])
         // Create a text file sink
         typedef sinks::synchronous_sink< sinks::text_file_backend > file_sink;
         shared_ptr< file_sink > sink(new file_sink(
-            keywords::file_name = "temp.log",       // temporary file name
-            keywords::rotation_size = 16384         // rotation size, in characters
+            keywords::file_name = "%Y%m%d_%H%M%S_%5N.xml",  // the resulting file name pattern
+            keywords::rotation_size = 16384                 // rotation size, in characters
             ));
 
         // Set up where the rotated files will be stored
-        sink->locked_backend()->file_collector(sinks::file::fifo_collector(
-            keywords::file_name = "logs/%Y%m%d_%H%M%S_%5N.xml", // the resulting file name pattern
+        sink->locked_backend()->set_file_collector(sinks::file::make_collector(
+            keywords::target = "logs",                          // the target directory
             keywords::max_size = 16 * 1024 * 1024,              // maximum total size of the stored files, in bytes
-            keywords::min_free_space = 100 * 1024 * 1024,       // minimum free space on the drive, in bytes
-            keywords::scan_method = sinks::file::scan_matching        // upon restart, scan the directory for files matching the file_name pattern
+            keywords::min_free_space = 100 * 1024 * 1024        // minimum free space on the drive, in bytes
             ));
+
+        // Upon restart, scan the directory for files matching the file_name pattern
+        sink->locked_backend()->scan_for_files();
 
         sink->locked_backend()->set_formatter(
             fmt::format("\t<record id=\"%1%\" timestamp=\"%2%\">%3%</record>")
@@ -72,8 +74,8 @@ int main(int argc, char* argv[])
             );
 
         // Set header and footer writing functors
-        sink->locked_backend()->open_handler(_1 << "<?xml version=\"1.0\"?>\n<log>\n");
-        sink->locked_backend()->close_handler(_1 << "</log>\n");
+        sink->locked_backend()->set_open_handler(_1 << "<?xml version=\"1.0\"?>\n<log>\n");
+        sink->locked_backend()->set_close_handler(_1 << "</log>\n");
 
         // Add the sink to the core
         logging::core::get()->add_sink(sink);

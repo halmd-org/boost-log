@@ -48,9 +48,22 @@ namespace aux {
     template< >
     struct c_decorator_traits< char >
     {
-        static const char* const g_From[11];
-        static const char* const g_To[11];
-
+        static boost::iterator_range< const char* const* > get_patterns()
+        {
+            static const char* const patterns[] =
+            {
+                "\\", "\a", "\b", "\f", "\n", "\r", "\t", "\v", "'", "\"", "?"
+            };
+            return boost::make_iterator_range(patterns);
+        }
+        static boost::iterator_range< const char* const* > get_replacements()
+        {
+            static const char* const replacements[] =
+            {
+                "\\\\", "\\a", "\\b", "\\f", "\\n", "\\r", "\\t", "\\v", "\\'", "\\\"", "\\?"
+            };
+            return boost::make_iterator_range(replacements);
+        }
         template< unsigned int N >
         static std::size_t print_escaped(char (&buf)[N], char c)
         {
@@ -58,23 +71,28 @@ namespace aux {
                 boost::log::aux::snprintf(buf, N, "\\x%0.2X", static_cast< unsigned int >(static_cast< uint8_t >(c))));
         }
     };
-    const char* const c_decorator_traits< char >::g_From[11] =
-    {
-        "\\", "\a", "\b", "\f", "\n", "\r", "\t", "\v", "'", "\"", "?"
-    };
-    const char* const c_decorator_traits< char >::g_To[11] =
-    {
-        "\\\\", "\\a", "\\b", "\\f", "\\n", "\\r", "\\t", "\\v", "\\'", "\\\"", "\\?"
-    };
 #endif // BOOST_LOG_USE_CHAR
 
 #ifdef BOOST_LOG_USE_WCHAR_T
     template< >
     struct c_decorator_traits< wchar_t >
     {
-        static const wchar_t* const g_From[11];
-        static const wchar_t* const g_To[11];
-
+        static boost::iterator_range< const wchar_t* const* > get_patterns()
+        {
+            static const wchar_t* const patterns[] =
+            {
+                L"\\", L"\a", L"\b", L"\f", L"\n", L"\r", L"\t", L"\v", L"'", L"\"", L"?"
+            };
+            return boost::make_iterator_range(patterns);
+        }
+        static boost::iterator_range< const wchar_t* const* > get_replacements()
+        {
+            static const wchar_t* const replacements[] =
+            {
+                L"\\\\", L"\\a", L"\\b", L"\\f", L"\\n", L"\\r", L"\\t", L"\\v", L"\\'", L"\\\"", L"\\?"
+            };
+            return boost::make_iterator_range(replacements);
+        }
         template< unsigned int N >
         static std::size_t print_escaped(wchar_t (&buf)[N], wchar_t c)
         {
@@ -100,14 +118,6 @@ namespace aux {
                 boost::log::aux::swprintf(buf, N, format, val));
         }
     };
-    const wchar_t* const c_decorator_traits< wchar_t >::g_From[11] =
-    {
-        L"\\", L"\a", L"\b", L"\f", L"\n", L"\r", L"\t", L"\v", L"'", L"\"", L"?"
-    };
-    const wchar_t* const c_decorator_traits< wchar_t >::g_To[11] =
-    {
-        L"\\\\", L"\\a", L"\\b", L"\\f", L"\\n", L"\\r", L"\\t", L"\\v", L"\\'", L"\\\"", L"\\?"
-    };
 #endif // BOOST_LOG_USE_WCHAR_T
 
     struct fmt_c_decorator_gen
@@ -119,8 +129,8 @@ namespace aux {
             typedef c_decorator_traits< typename decorator::char_type > traits_t;
             return decorator(
                 fmt,
-                boost::make_iterator_range(traits_t::g_From),
-                boost::make_iterator_range(traits_t::g_To));
+                traits_t::get_patterns(),
+                traits_t::get_replacements());
         }
     };
 
@@ -154,6 +164,8 @@ private:
     typedef basic_formatter< typename FormatterT::char_type, fmt_c_ascii_decorator< FormatterT > > base_type;
 
 public:
+    //! Character type
+    typedef typename base_type::char_type char_type;
     //! Decorated formatter type
     typedef FormatterT formatter_type;
     //! String type
@@ -209,11 +221,12 @@ public:
      */
     void operator() (ostream_type& strm, record_type const& record) const
     {
+        typedef aux::c_decorator_traits< char_type > traits_t;
         boost::log::aux::cleanup_guard< string_type > cleanup1(m_Storage);
         boost::log::aux::cleanup_guard< streambuf_type > cleanup2(m_StreamBuf);
 
         // Perform formatting
-        rdbuf_saver cleanup2(strm, &m_StreamBuf);
+        rdbuf_saver cleanup3(strm, &m_StreamBuf);
         m_Formatter(strm, record);
         strm.flush();
 

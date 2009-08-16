@@ -42,22 +42,46 @@ namespace aux {
     template< >
     struct csv_decorator_traits< char >
     {
-        static const char* const g_From[1];
-        static const char* const g_To[1];
+        static boost::iterator_range< const char* const* > get_patterns()
+        {
+            static const char* const patterns[] =
+            {
+                "\""
+            };
+            return boost::make_iterator_range(patterns);
+        }
+        static boost::iterator_range< const char* const* > get_replacements()
+        {
+            static const char* const replacements[] =
+            {
+                "\"\""
+            };
+            return boost::make_iterator_range(replacements);
+        }
     };
-    const char* const csv_decorator_traits< char >::g_From[1] = { "\"" };
-    const char* const csv_decorator_traits< char >::g_To[1] = { "\"\"" };
 #endif // BOOST_LOG_USE_CHAR
 
 #ifdef BOOST_LOG_USE_WCHAR_T
     template< >
     struct csv_decorator_traits< wchar_t >
     {
-        static const wchar_t* const g_From[1];
-        static const wchar_t* const g_To[1];
+        static boost::iterator_range< const wchar_t* const* > get_patterns()
+        {
+            static const wchar_t* const patterns[] =
+            {
+                L"\""
+            };
+            return boost::make_iterator_range(patterns);
+        }
+        static boost::iterator_range< const wchar_t* const* > get_replacements()
+        {
+            static const wchar_t* const replacements[] =
+            {
+                L"\"\""
+            };
+            return boost::make_iterator_range(replacements);
+        }
     };
-    const wchar_t* const csv_decorator_traits< wchar_t >::g_From[1] = { L"\"" };
-    const wchar_t* const csv_decorator_traits< wchar_t >::g_To[1] = { L"\"\"" };
 #endif // BOOST_LOG_USE_WCHAR_T
 
     struct fmt_csv_decorator_gen
@@ -69,8 +93,8 @@ namespace aux {
             typedef csv_decorator_traits< typename decorator::char_type > traits_t;
             return decorator(
                 fmt,
-                boost::make_iterator_range(traits_t::g_From),
-                boost::make_iterator_range(traits_t::g_To));
+                traits_t::get_patterns(),
+                traits_t::get_replacements());
         }
     };
 

@@ -61,6 +61,8 @@ private:
     typedef basic_formatter< typename FormatterT::char_type, fmt_char_decorator< FormatterT > > base_type;
 
 public:
+    //! Character type
+    typedef typename base_type::char_type char_type;
     //! Decorated formatter type
     typedef FormatterT formatter_type;
     //! String type
@@ -149,7 +151,7 @@ public:
         boost::log::aux::cleanup_guard< streambuf_type > cleanup2(m_StreamBuf);
 
         // Perform formatting
-        rdbuf_saver cleanup2(strm, &m_StreamBuf);
+        rdbuf_saver cleanup3(strm, &m_StreamBuf);
         m_Formatter(strm, record);
         strm.flush();
 
