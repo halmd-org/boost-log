@@ -407,17 +407,22 @@ public:
         records_list records;
         while (true) try
         {
-            if (eject_records(records))
-            {
+            while (eject_records(records))
                 feed_records(records);
-            }
-            else if (!m_Finishing)
+
+            unique_lock< mutex > lock(this->m_BackendMutex);
+            if (!m_Finishing)
             {
-                unique_lock< mutex > lock(this->m_BackendMutex);
                 m_Condition.wait(lock);
             }
             else
+            {
+                lock.unlock();
+                while (eject_records(records))
+                    feed_records(records);
+
                 break;
+            }
         }
         catch (...)
         {

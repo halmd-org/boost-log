@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
     // simply not compile.
 
     // For now we only create a text output sink:
-    typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
+    typedef sinks::asynchronous_sink< sinks::text_ostream_backend > text_sink;
     shared_ptr< text_sink > pSink(new text_sink);
 
     // Here synchronous_sink is a sink frontend that performs thread synchronization
