@@ -99,22 +99,44 @@ public:
 private:
     typedef typename AllocatorT::BOOST_NESTED_TEMPLATE rebind< node >::other internal_allocator;
 
-private:
-    node* m_pLast;
+    struct implementation
+    {
+        node* m_pLast;
 #if !defined(BOOST_LOG_CAS_PTR)
-    mutex m_Mutex;
+        mutex m_Mutex;
 #endif // !defined(BOOST_LOG_CAS_PTR)
+    };
+
+    enum
+    {
+        // Padding size to avoid false aliasing
+        cache_line_size = 64
+    };
+
+private:
+    unsigned char padding1[cache_line_size];
+    implementation m_Impl;
+    unsigned char padding2
+    [
+        cache_line_size > sizeof(implementation) ?
+        cache_line_size - sizeof(implementation) :
+            (cache_line_size == sizeof(implementation) ?
+             cache_line_size :
+             cache_line_size - (sizeof(implementation) % cache_line_size))
+    ];
+
     static internal_allocator g_Allocator;
 
 public:
     //! Constructor. Creates an empty queue.
-    atomic_queue() : m_pLast(NULL)
+    atomic_queue()
     {
+        m_Impl.m_pLast = NULL;
     }
     //! Destructor. Destroys all contained elements, if any.
     ~atomic_queue()
     {
-        register node* p = m_pLast;
+        register node* p = m_Impl.m_pLast;
         while (p != NULL)
         {
             register node* prev = p->m_pPrev;
@@ -128,10 +150,10 @@ public:
     {
 #if !defined(BOOST_LOG_CAS_PTR)
 
-        lock_guard< mutex > _(m_Mutex);
+        lock_guard< mutex > _(m_Impl.m_Mutex);
         register node* p = new node(val);
-        p->m_pPrev = m_pLast;
-        m_pLast = p;
+        p->m_pPrev = m_Impl.m_pLast;
+        m_Impl.m_pLast = p;
 
 #else // !defined(BOOST_LOG_CAS_PTR)
 
@@ -139,10 +161,10 @@ public:
         register node* last;
         do
         {
-            last = static_cast< node* volatile& >(m_pLast);
+            last = static_cast< node* volatile& >(m_Impl.m_pLast);
             p->m_pPrev = last;
         }
-        while (!BOOST_LOG_CAS_PTR(last, p, &m_pLast));
+        while (!BOOST_LOG_CAS_PTR(last, p, &m_Impl.m_pLast));
 
 #endif // !defined(BOOST_LOG_CAS_PTR)
     }
@@ -152,12 +174,12 @@ public:
     {
 #if !defined(BOOST_LOG_CAS_PTR)
 
-        unique_lock< mutex > lock(m_Mutex, try_to_lock);
+        unique_lock< mutex > lock(m_Impl.m_Mutex, try_to_lock);
         if (lock)
         {
             register node* p = new node(val);
-            p->m_pPrev = m_pLast;
-            m_pLast = p;
+            p->m_pPrev = m_Impl.m_pLast;
+            m_Impl.m_pLast = p;
             return true;
         }
         else
@@ -168,9 +190,9 @@ public:
 /*
         register node* p = new node(val);
         register node* last;
-        last = static_cast< node* volatile& >(m_pLast);
+        last = static_cast< node* volatile& >(m_Impl.m_pLast);
         p->m_pPrev = last;
-        register bool done = BOOST_LOG_CAS_PTR(last, p, &m_pLast);
+        register bool done = BOOST_LOG_CAS_PTR(last, p, &m_Impl.m_pLast);
         if (!done)
             delete p;
         return done;
@@ -191,18 +213,18 @@ public:
 #if !defined(BOOST_LOG_CAS_PTR)
 
         {
-            lock_guard< mutex > _(m_Mutex);
-            p = m_pLast;
-            m_pLast = NULL;
+            lock_guard< mutex > _(m_Impl.m_Mutex);
+            p = m_Impl.m_pLast;
+            m_Impl.m_pLast = NULL;
         }
 
 #else // !defined(BOOST_LOG_CAS_PTR)
 
         do
         {
-            p = static_cast< node* volatile& >(m_pLast);
+            p = static_cast< node* volatile& >(m_Impl.m_pLast);
         }
-        while (!BOOST_LOG_CAS_PTR(p, static_cast< node* >(NULL), &m_pLast));
+        while (!BOOST_LOG_CAS_PTR(p, static_cast< node* >(NULL), &m_Impl.m_pLast));
 
 #endif // !defined(BOOST_LOG_CAS_PTR)
 
