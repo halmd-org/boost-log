@@ -408,9 +408,13 @@ void basic_core< CharT >::push_record(record_type const& rec)
     typedef typename record_type::private_data record_private_data;
     record_private_data* pData = static_cast< record_private_data* >(rec.m_pData.get());
 
+    // We have to move references to the accepting sinks from the record
+    // in order not to introduce cyclic dependencies between the sinks and the record.
+    typename record_private_data::sink_list accepting_sinks;
+    accepting_sinks.swap(pData->m_AcceptingSinks);
     typename record_private_data::sink_list::iterator
-        it = pData->m_AcceptingSinks.begin(),
-        end = pData->m_AcceptingSinks.end();
+        it = accepting_sinks.begin(),
+        end = accepting_sinks.end();
     for (; it != end; ++it) try
     {
         (*it)->consume(rec);

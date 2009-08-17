@@ -331,6 +331,43 @@ template class synchronous_frontend< wchar_t >;
 /////////////////////////////////////////////////////////////////////
 //  Asynchronous sink frontend implementation
 /////////////////////////////////////////////////////////////////////
+
+namespace {
+
+    //! A simple scope guard that automatically clears processing thread id
+    struct thread_id_cleanup
+    {
+        explicit thread_id_cleanup(optional< thread::id >& tid, mutex& mtx, condition_variable* cond = NULL) :
+            m_ThreadID(tid),
+            m_Mutex(mtx),
+            m_pCond(cond),
+            m_Active(false)
+        {
+        }
+        ~thread_id_cleanup()
+        {
+            if (m_Active)
+            {
+                lock_guard< mutex > _(m_Mutex);
+                m_ThreadID = none;
+                if (m_pCond)
+                    m_pCond->notify_all();
+            }
+        }
+        void activate()
+        {
+            m_Active = true;
+        }
+
+    private:
+        optional< thread::id >& m_ThreadID;
+        mutex& m_Mutex;
+        condition_variable* m_pCond;
+        bool m_Active;
+    };
+
+} // namespace
+
 //! Implementation data
 template< typename CharT >
 struct asynchronous_frontend< CharT >::implementation :
@@ -365,10 +402,14 @@ public:
 public:
     //! The flag shows that the output thread should finish
     volatile bool m_Finishing;
+    //! Frontend synchronization mutex
+    mutex m_FrontendMutex;
     //! Backend synchronization mutex
     mutex m_BackendMutex;
     //! Sleep condition
     condition_variable m_Condition;
+    //! The condition for synchronizing with \c run finishing
+    condition_variable m_FinishingCondition;
 
     //! Pointer to the backend
     shared_ptr< void > m_pBackend;
@@ -378,8 +419,10 @@ public:
     //! Records queue waiting to be output
     enqueued_records m_EnqueuedRecords;
 
-    //! Backend feeding thread
+    //! Dedicated backend feeding thread
     optional< thread > m_Thread;
+    //! Thread identifier that is being inside the \c run or \c feed_records
+    optional< thread::id > m_FeedingThreadID;
 
 public:
     //! Constructor
@@ -404,24 +447,30 @@ public:
     //! Output thread routine
     void run()
     {
-        records_list records;
-        while (true) try
+        thread_id_cleanup cleanup(m_FeedingThreadID, m_FrontendMutex, &m_FinishingCondition);
         {
-            while (eject_records(records))
-                feed_records(records);
+            lock_guard< mutex > lock(m_FrontendMutex);
+            if (m_FeedingThreadID)
+                boost::log::aux::throw_exception(std::logic_error("Asynchronous sink frontend already runs a thread"));
+            m_FeedingThreadID = this_thread::get_id();
+            cleanup.activate();
+            m_Finishing = false;
+        }
 
-            unique_lock< mutex > lock(this->m_BackendMutex);
-            if (!m_Finishing)
+        records_list records;
+        while (!m_Finishing) try
+        {
+            if (eject_records(records))
             {
-                m_Condition.wait(lock);
+                feed_records(records);
             }
             else
             {
-                lock.unlock();
-                while (eject_records(records))
-                    feed_records(records);
-
-                break;
+                unique_lock< mutex > lock(m_FrontendMutex);
+                if (!m_Finishing)
+                    m_Condition.wait(lock);
+                else
+                    break;
             }
         }
         catch (...)
@@ -432,9 +481,39 @@ public:
         }
     }
 
+    //! The method softly interrupts record feeding loop
+    bool stop()
+    {
+        unique_lock< mutex > lock(m_FrontendMutex);
+        if (m_FeedingThreadID)
+        {
+            m_Finishing = true;
+            m_Condition.notify_one();
+            m_FinishingCondition.wait(lock);
+
+            if (m_Thread)
+            {
+                m_Thread->join();
+                m_Thread = none;
+            }
+            return true;
+        }
+        else
+            return false;
+    }
+
     //! The function feeds records to the backend
     void feed_records()
     {
+        thread_id_cleanup cleanup(m_FeedingThreadID, m_FrontendMutex);
+        {
+            lock_guard< mutex > lock(m_FrontendMutex);
+            if (m_FeedingThreadID)
+                boost::log::aux::throw_exception(std::logic_error("Asynchronous sink frontend already runs a thread"));
+            m_FeedingThreadID = this_thread::get_id();
+            cleanup.activate();
+        }
+
         records_list records;
         if (eject_records(records)) try
         {
@@ -472,28 +551,25 @@ private:
     //! The function feeds records to the backend
     void feed_records(records_list& records)
     {
-        while (!records.empty())
+        while (!records.empty()) try
         {
-            try
-            {
-                typedef typename enqueued_records::node node;
-                record_type rec;
-                rec.swap(records.front().m_Value);
-                records.pop_front_and_dispose(checked_deleter< node >());
-                lock_guard< mutex > _(m_BackendMutex);
-                m_Consume(m_pBackend.get(), rec);
-            }
-            catch (thread_interrupted&)
-            {
+            typedef typename enqueued_records::node node;
+            record_type rec;
+            rec.swap(records.front().m_Value);
+            records.pop_front_and_dispose(checked_deleter< node >());
+            lock_guard< mutex > _(m_BackendMutex);
+            m_Consume(m_pBackend.get(), rec);
+        }
+        catch (thread_interrupted&)
+        {
+            throw;
+        }
+        catch (...)
+        {
+            typename base_type::scoped_read_lock _(this->m_Mutex);
+            if (this->m_ExceptionHandler.empty())
                 throw;
-            }
-            catch (...)
-            {
-                typename base_type::scoped_read_lock _(this->m_Mutex);
-                if (this->m_ExceptionHandler.empty())
-                    throw;
-                this->m_ExceptionHandler();
-            }
+            this->m_ExceptionHandler();
         }
     }
 };
@@ -516,17 +592,7 @@ asynchronous_frontend< CharT >::asynchronous_frontend(
 template< typename CharT >
 asynchronous_frontend< CharT >::~asynchronous_frontend()
 {
-    implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
-    if (pImpl->is_thread_running())
-    {
-        {
-            typename implementation::scoped_write_lock _(pImpl->m_Mutex);
-            pImpl->m_Finishing = true;
-        }
-        pImpl->m_Condition.notify_one();
-        pImpl->m_Thread->join();
-        pImpl->m_Thread = none;
-    }
+    stop();
 }
 
 template< typename CharT >
@@ -600,10 +666,15 @@ template< typename CharT >
 void asynchronous_frontend< CharT >::run()
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
-    if (!pImpl->is_thread_running())
-        pImpl->run();
-    else
-        boost::log::aux::throw_exception(std::logic_error("Asynchronous sink frontend already runs a thread"));
+    pImpl->run();
+}
+
+//! The method softly interrupts record feeding loop
+template< typename CharT >
+bool asynchronous_frontend< CharT >::stop()
+{
+    implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
+    return pImpl->stop();
 }
 
 //! The method feeds log records that may have been buffered to the backend and returns
@@ -611,10 +682,7 @@ template< typename CharT >
 void asynchronous_frontend< CharT >::feed_records()
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
-    if (!pImpl->is_thread_running())
-        pImpl->feed_records();
-    else
-        boost::log::aux::throw_exception(std::logic_error("Asynchronous sink frontend already runs a thread"));
+    pImpl->feed_records();
 }
 
 #ifdef BOOST_LOG_USE_CHAR

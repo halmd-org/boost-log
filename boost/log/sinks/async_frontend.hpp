@@ -79,6 +79,8 @@ namespace aux {
     public:
         //! The method starts record feeding loop
         BOOST_LOG_EXPORT void run();
+        //! The method softly interrupts record feeding loop
+        BOOST_LOG_EXPORT bool stop();
         //! The method feeds log records that may have been buffered to the backend and returns
         BOOST_LOG_EXPORT void feed_records();
     };
@@ -175,13 +177,32 @@ public:
     /*!
      * The method starts record feeding loop and effectively blocks until either of this happens:
      *
-     * \li the thread is interrupted
+     * \li the thread is interrupted due to either standard thread interruption or a call to \c stop
      * \li an exception is thrown while processing a log record in the backend, and the exception is
      *     not terminated by the exception handler, if one is installed
      *
      * \pre The sink frontend must be constructed without spawning a dedicated thread
      */
     void run();
+
+    /*!
+     * The method softly interrupts record feeding loop. This method must be called when the \c run
+     * method execution has to be interrupted. Unlike regular thread interruption, calling
+     * \c stop will not interrupt the record processing in the middle. Instead, the sink frontend
+     * will attempt to finish its business (including feeding the rest of the buffered records to the
+     * backend) and return afterwards. This method can be called either if the sink was created
+     * with a dedicated thread, or if the \c run method was called by user.
+     *
+     * \retval true If execution has been cancelled
+     * \retval false If no execution was in process
+     *
+     * \note Returning from this method does not guarantee that there are no records left buffered
+     *       in the sink frontend. It is possible that log records keep coming during and after this
+     *       method is called. At some point of execution of this method log records stop being processed,
+     *       and all records that come after this point are put into the queue. These records will be
+     *       processed upon further calls to \c run or \c feed_records.
+     */
+    bool stop();
 
     /*!
      * The method feeds log records that may have been buffered to the backend and returns
