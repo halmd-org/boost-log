@@ -809,6 +809,8 @@ public:
         m_Order(order),
         m_OrderingWindow(ordering_window)
     {
+        if (m_Order.empty())
+            boost::log::aux::throw_exception(std::logic_error("Ordering predicate not specified"));
     }
 
     //! Destructor
