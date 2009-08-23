@@ -384,14 +384,14 @@ public:
     //! Node traits for putting enqueued records into a Boost.Intrusive list
     struct enqueued_records_node_traits
     {
-       typedef typename enqueued_records::node node;
-       typedef node* node_ptr;
-       typedef const node* const_node_ptr;
+        typedef typename enqueued_records::node node;
+        typedef node* node_ptr;
+        typedef const node* const_node_ptr;
 
-       static node* get_next(const node* n) { return n->m_pNext; }
-       static void set_next(node* n, node* next) { n->m_pNext = next; }
-       static node* get_previous(const node *n) { return n->m_pPrev; }
-       static void set_previous(node* n, node* prev) { n->m_pPrev = prev; }
+        static node* get_next(const node* n) { return n->m_pNext; }
+        static void set_next(node* n, node* next) { n->m_pNext = next; }
+        static node* get_previous(const node *n) { return n->m_pPrev; }
+        static void set_previous(node* n, node* prev) { n->m_pPrev = prev; }
     };
     //! Boost.Intrusive list type for enqueued records
     typedef intrusive::list<
