@@ -39,6 +39,7 @@
 #include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/async_frontend.hpp>
+#include <boost/log/sinks/ordering_async_frontend.hpp>
 #include "atomic_queue.hpp"
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
@@ -690,6 +691,387 @@ template class asynchronous_frontend< char >;
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
 template class asynchronous_frontend< wchar_t >;
+#endif
+
+
+
+/////////////////////////////////////////////////////////////////////
+//  Ordering asynchronous sink frontend implementation
+/////////////////////////////////////////////////////////////////////
+
+//! Implementation data
+template< typename CharT >
+struct ordering_asynchronous_frontend< CharT >::implementation :
+    public basic_sink_frontend< CharT >::implementation,
+    public boost::log::aux::locking_ptr_counter_base
+{
+public:
+    //! Base type
+    typedef typename basic_sink_frontend< CharT >::implementation base_type;
+
+    //! Enqueued record type
+    struct enqueued_record
+    {
+        record_type m_Record;
+        posix_time::ptime m_TimeStamp;
+
+        enqueued_record() {}
+        explicit enqueued_record(record_type const& rec) :
+            m_Record(rec),
+            m_TimeStamp(posix_time::microsec_clock::universal_time())
+        {
+        }
+    };
+    //! Pending records queue
+    typedef boost::log::aux::atomic_queue< enqueued_record > enqueued_records;
+
+    //! Node traits for putting enqueued records into a Boost.Intrusive list
+    struct enqueued_records_node_traits
+    {
+        typedef typename enqueued_records::node node;
+        typedef node* node_ptr;
+        typedef const node* const_node_ptr;
+
+        static node* get_next(const node* n) { return n->m_pNext; }
+        static void set_next(node* n, node* next) { n->m_pNext = next; }
+        static node* get_previous(const node *n) { return n->m_pPrev; }
+        static void set_previous(node* n, node* prev) { n->m_pPrev = prev; }
+    };
+    //! Boost.Intrusive list type for enqueued records
+    typedef intrusive::list<
+        typename enqueued_records::node,
+        intrusive::value_traits< intrusive::trivial_value_traits< enqueued_records_node_traits, intrusive::normal_link > >,
+        intrusive::constant_time_size< false >
+    > records_list;
+
+    //! Record ordering predicate wrapper
+    struct order_wrapper
+    {
+        typedef bool result_type;
+        typedef typename enqueued_records::node node;
+
+        explicit order_wrapper(order_type const& order) : m_Order(order)
+        {
+        }
+
+        result_type operator() (node const& left, node const& right) const
+        {
+            return m_Order(left.m_Value.m_Record, right.m_Value.m_Record);
+        }
+
+    private:
+        order_type const& m_Order;
+    };
+
+public:
+    //! The flag shows that the output thread should finish
+    volatile bool m_Finishing;
+    //! Frontend synchronization mutex
+    mutex m_FrontendMutex;
+    //! Backend synchronization mutex
+    mutex m_BackendMutex;
+    //! Sleep condition
+    condition_variable m_Condition;
+    //! The condition for synchronizing with \c run finishing
+    condition_variable m_FinishingCondition;
+
+    //! Pointer to the backend
+    shared_ptr< void > m_pBackend;
+    //! Pointer to the consume trampoline function
+    consume_trampoline_t m_Consume;
+
+    //! Ordering function
+    order_type m_Order;
+    //! Ordering window latency
+    posix_time::time_duration m_OrderingWindow;
+
+    //! Records queue waiting to be output
+    enqueued_records m_EnqueuedRecords;
+    //! Ejected records that are in the ordering window
+    records_list m_OrderedRecords;
+
+    //! Dedicated backend feeding thread
+    optional< thread > m_Thread;
+    //! Thread identifier that is being inside the \c run or \c feed_records
+    optional< thread::id > m_FeedingThreadID;
+
+public:
+    //! Constructor
+    implementation(
+        shared_ptr< void > const& backend,
+        consume_trampoline_t consume_tramp,
+        order_type const& order,
+        posix_time::time_duration const& ordering_window
+    ) :
+        m_Finishing(false),
+        m_pBackend(backend),
+        m_Consume(consume_tramp),
+        m_Order(order),
+        m_OrderingWindow(ordering_window)
+    {
+    }
+
+    //! Destructor
+    ~implementation()
+    {
+        typedef typename enqueued_records::node node;
+        m_OrderedRecords.clear_and_dispose(checked_deleter< node >());
+    }
+
+    // locking_ptr_counter_base methods
+    void lock() { m_BackendMutex.lock(); }
+    bool try_lock() { return m_BackendMutex.try_lock(); }
+    void unlock() { m_BackendMutex.unlock(); }
+
+    //! The function returns \c true if the frontend already runs a thread
+    bool is_thread_running() const
+    {
+        return !!m_Thread;
+    }
+
+    //! Output thread routine
+    void run()
+    {
+        thread_id_cleanup cleanup(m_FeedingThreadID, m_FrontendMutex, &m_FinishingCondition);
+        {
+            lock_guard< mutex > lock(m_FrontendMutex);
+            if (m_FeedingThreadID)
+                boost::log::aux::throw_exception(std::logic_error("Asynchronous sink frontend already runs a thread"));
+            m_FeedingThreadID = this_thread::get_id();
+            cleanup.activate();
+            m_Finishing = false;
+        }
+
+        while (!m_Finishing)
+        {
+            if (eject_records())
+            {
+                feed_records(posix_time::microsec_clock::universal_time() - m_OrderingWindow);
+            }
+            else
+            {
+                unique_lock< mutex > lock(m_FrontendMutex);
+                if (!m_Finishing)
+                    m_Condition.timed_wait(lock, m_OrderingWindow);
+                else
+                    break;
+            }
+        }
+    }
+
+    //! The method softly interrupts record feeding loop
+    bool stop()
+    {
+        unique_lock< mutex > lock(m_FrontendMutex);
+        if (m_FeedingThreadID)
+        {
+            m_Finishing = true;
+            m_Condition.notify_one();
+            m_FinishingCondition.wait(lock);
+
+            if (m_Thread)
+            {
+                m_Thread->join();
+                m_Thread = none;
+            }
+
+            return true;
+        }
+        else
+            return false;
+    }
+
+    //! The function feeds records to the backend
+    void feed_records()
+    {
+        thread_id_cleanup cleanup(m_FeedingThreadID, m_FrontendMutex);
+        {
+            lock_guard< mutex > lock(m_FrontendMutex);
+            if (m_FeedingThreadID)
+                boost::log::aux::throw_exception(std::logic_error("Asynchronous sink frontend already runs a thread"));
+            m_FeedingThreadID = this_thread::get_id();
+            cleanup.activate();
+        }
+
+        eject_records();
+        feed_records(posix_time::microsec_clock::universal_time() - m_OrderingWindow);
+    }
+
+    //! The function ejects records from the queue and puts them into list
+    bool eject_records()
+    {
+        typedef typename enqueued_records::node node;
+        std::pair< node*, node* > range = m_EnqueuedRecords.eject_nodes();
+        if (range.first != NULL)
+        {
+            // Introduce artifical "end" node
+            node end_node;
+            range.first->m_pPrev = range.second->m_pNext = &end_node;
+            end_node.m_pPrev = range.second;
+            end_node.m_pNext = range.second;
+
+            // Inject all nodes into the list
+            records_list records;
+            records_list::node_algorithms::transfer(records.end().pointed_node(), range.first, &end_node);
+
+            order_wrapper order(m_Order);
+            records.sort(order);
+            m_OrderedRecords.merge(records, order);
+
+            return true;
+        }
+        else
+            return false;
+    }
+
+private:
+    //! The function feeds records to the backend
+    void feed_records(posix_time::ptime const& until)
+    {
+        while (!m_OrderedRecords.empty() && m_OrderedRecords.front().m_Value.m_TimeStamp < until) try
+        {
+            typedef typename enqueued_records::node node;
+            record_type rec;
+            rec.swap(m_OrderedRecords.front().m_Value.m_Record);
+            m_OrderedRecords.pop_front_and_dispose(checked_deleter< node >());
+            lock_guard< mutex > _(m_BackendMutex);
+            m_Consume(m_pBackend.get(), rec);
+        }
+        catch (thread_interrupted&)
+        {
+            throw;
+        }
+        catch (...)
+        {
+            typename base_type::scoped_read_lock _(this->m_Mutex);
+            if (this->m_ExceptionHandler.empty())
+                throw;
+            this->m_ExceptionHandler();
+        }
+    }
+};
+
+//! Constructor
+template< typename CharT >
+ordering_asynchronous_frontend< CharT >::ordering_asynchronous_frontend(
+    shared_ptr< void > const& backend,
+    consume_trampoline_t consume_tramp,
+    bool start_thread,
+    order_type const& order,
+    posix_time::time_duration const& ordering_window
+) :
+    base_type(new implementation(backend, consume_tramp, order, ordering_window))
+{
+    BOOST_ASSERT(!!backend);
+    if (start_thread)
+    {
+        implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
+        pImpl->m_Thread = boost::in_place(boost::bind(&implementation::run, pImpl));
+    }
+}
+
+//! Destructor
+template< typename CharT >
+ordering_asynchronous_frontend< CharT >::~ordering_asynchronous_frontend()
+{
+    stop();
+}
+
+template< typename CharT >
+shared_ptr< void > const& ordering_asynchronous_frontend< CharT >::get_backend() const
+{
+    return this->BOOST_NESTED_TEMPLATE get_impl< implementation >()->m_pBackend;
+}
+
+template< typename CharT >
+boost::log::aux::locking_ptr_counter_base& ordering_asynchronous_frontend< CharT >::get_backend_locker() const
+{
+    return *this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
+}
+
+template< typename CharT >
+void ordering_asynchronous_frontend< CharT >::consume(record_type const& record)
+{
+    register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
+    try
+    {
+        typename implementation::enqueued_record rec(record);
+        rec.m_Record.detach_from_thread();
+        pImpl->m_EnqueuedRecords.push(rec);
+        pImpl->m_Condition.notify_one();
+    }
+    catch (thread_interrupted&)
+    {
+        throw;
+    }
+    catch (...)
+    {
+        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
+        if (pImpl->m_ExceptionHandler.empty())
+            throw;
+        pImpl->m_ExceptionHandler();
+    }
+}
+
+template< typename CharT >
+bool ordering_asynchronous_frontend< CharT >::try_consume(record_type const& record)
+{
+    register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
+    try
+    {
+        typename implementation::enqueued_record rec(record);
+        rec.m_Record.detach_from_thread();
+        if (pImpl->m_EnqueuedRecords.try_push(rec))
+        {
+            pImpl->m_Condition.notify_one();
+            return true;
+        }
+        else
+            return false;
+    }
+    catch (thread_interrupted&)
+    {
+        throw;
+    }
+    catch (...)
+    {
+        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
+        if (pImpl->m_ExceptionHandler.empty())
+            throw;
+        pImpl->m_ExceptionHandler();
+        return false;
+    }
+}
+
+//! The method starts record feeding loop
+template< typename CharT >
+void ordering_asynchronous_frontend< CharT >::run()
+{
+    register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
+    pImpl->run();
+}
+
+//! The method softly interrupts record feeding loop
+template< typename CharT >
+bool ordering_asynchronous_frontend< CharT >::stop()
+{
+    implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
+    return pImpl->stop();
+}
+
+//! The method feeds log records that may have been buffered to the backend and returns
+template< typename CharT >
+void ordering_asynchronous_frontend< CharT >::feed_records()
+{
+    register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
+    pImpl->feed_records();
+}
+
+#ifdef BOOST_LOG_USE_CHAR
+template class ordering_asynchronous_frontend< char >;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
+template class ordering_asynchronous_frontend< wchar_t >;
 #endif
 
 #endif // !defined(BOOST_LOG_NO_THREADS)

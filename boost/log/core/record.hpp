@@ -126,6 +126,14 @@ public:
         m_pData.reset();
     }
 
+    /*!
+     * Returns a non-<tt>NULL</tt> pointer if the handle is valid, <tt>NULL</tt> otherwise.
+     */
+    void* get() const
+    {
+        return m_pData.get();
+    }
+
 #ifndef BOOST_LOG_DOXYGEN_PASS
 private:
     explicit record_handle(intrusive_ref_counter* p) : m_pData(p)
