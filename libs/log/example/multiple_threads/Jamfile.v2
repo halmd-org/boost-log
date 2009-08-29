@@ -20,6 +20,6 @@ project
         <threading>multi:<library>/boost/thread//boost_thread
     ;
 
-exe rotating_file
+exe multiple_threads
     : main.cpp
     ;
