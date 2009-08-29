@@ -111,7 +111,7 @@ public:
      * \param name The attribute value name to be compared
      * \param fun The ordering functor
      */
-    handle_ordering(string_type const& name, FunT const& fun = FunT()) : FunT(fun), m_Name(name)
+    attribute_value_ordering(string_type const& name, FunT const& fun = FunT()) : FunT(fun), m_Name(name)
     {
     }
 
