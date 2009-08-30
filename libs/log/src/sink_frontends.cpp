@@ -884,7 +884,7 @@ public:
     }
 
     //! The function feeds records to the backend
-    void feed_records()
+    void feed_records(posix_time::time_duration ordering_window)
     {
         thread_id_cleanup cleanup(m_FeedingThreadID, m_FrontendMutex);
         {
@@ -896,7 +896,7 @@ public:
         }
 
         eject_records();
-        feed_records(posix_time::microsec_clock::universal_time() - m_OrderingWindow);
+        feed_records(posix_time::microsec_clock::universal_time() - ordering_window);
     }
 
     //! The function ejects records from the queue and puts them into list
@@ -930,7 +930,7 @@ private:
     //! The function feeds records to the backend
     void feed_records(posix_time::ptime const& until)
     {
-        while (!m_OrderedRecords.empty() && m_OrderedRecords.front().m_Value.m_TimeStamp < until) try
+        while (!m_OrderedRecords.empty() && m_OrderedRecords.front().m_Value.m_TimeStamp <= until) try
         {
             typedef typename enqueued_records::node node;
             record_type rec;
@@ -1063,10 +1063,32 @@ bool ordering_asynchronous_frontend< CharT >::stop()
 
 //! The method feeds log records that may have been buffered to the backend and returns
 template< typename CharT >
-void ordering_asynchronous_frontend< CharT >::feed_records()
+void ordering_asynchronous_frontend< CharT >::feed_records(posix_time::time_duration ordering_window)
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
-    pImpl->feed_records();
+    pImpl->feed_records(ordering_window);
+}
+
+//! Ordering window size
+template< typename CharT >
+posix_time::time_duration ordering_asynchronous_frontend< CharT >::get_ordering_window() const
+{
+    register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
+    return pImpl->m_OrderingWindow;
+}
+
+//! Default ordering window size
+template< typename CharT >
+posix_time::time_duration ordering_asynchronous_frontend< CharT >::get_default_ordering_window()
+{
+    // The main idea behind this parameter is that the ordering window should be large enough
+    // to make the frontend capable to order records from different threads on an attribute
+    // that contains system time. Thus this value should should:
+    // * Include the minimum time resolution quant that the Boost.DateTime provides on the current OS.
+    //   For instance, on Windows it's around 15-16 ms.
+    // * Include thread switching quant on the current OS. For now 30 ms is enough window size to
+    //   switch threads on any known OS. It can be tuned for other platforms as needed.
+    return posix_time::milliseconds(30);
 }
 
 #ifdef BOOST_LOG_USE_CHAR

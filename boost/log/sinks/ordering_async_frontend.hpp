@@ -92,7 +92,16 @@ namespace aux {
         //! The method softly interrupts record feeding loop
         BOOST_LOG_EXPORT bool stop();
         //! The method feeds log records that may have been buffered to the backend and returns
-        BOOST_LOG_EXPORT void feed_records();
+        void feed_records()
+        {
+            feed_records(get_ordering_window());
+        }
+        //! The method feeds log records that may have been buffered to the backend and returns
+        BOOST_LOG_EXPORT void feed_records(posix_time::time_duration ordering_window);
+        //! Ordering window size
+        BOOST_LOG_EXPORT posix_time::time_duration get_ordering_window() const;
+        //! Default ordering window size
+        BOOST_LOG_EXPORT static posix_time::time_duration get_default_ordering_window();
     };
 
 } // namespace aux
@@ -112,7 +121,7 @@ namespace aux {
                   &ordering_asynchronous_sink::consume_trampoline,\
                   (BOOST_PP_ENUM_PARAMS(n, arg))[keywords::start_thread | true],\
                   (BOOST_PP_ENUM_PARAMS(n, arg))[keywords::order],\
-                  (BOOST_PP_ENUM_PARAMS(n, arg))[keywords::ordering_window | posix_time::milliseconds(30)])\
+                  (BOOST_PP_ENUM_PARAMS(n, arg))[keywords::ordering_window || &base_type::get_default_ordering_window])\
     {}
 
 /*!
@@ -244,9 +253,25 @@ public:
     /*!
      * The method feeds log records that may have been buffered to the backend and returns
      *
+     * \param ordering_window The function will not feed records that arrived to the frontend
+     *                        within the specified ordering window time duration.
+     *
      * \pre The sink frontend must be constructed without spawning a dedicated thread
+     *
+     * \note In order to perform a full flush the \a ordering_window parameter should be specified as 0.
      */
-    void feed_records();
+    void feed_records(posix_time::time_duration ordering_window = get_ordering_window());
+
+    /*!
+     * Returns ordering window size specified during initialization
+     */
+    posix_time::time_duration get_ordering_window() const;
+
+    /*!
+     * Returns default ordering window size.
+     * The default window size is specific to the operating system thread scheduling mechanism.
+     */
+    static posix_time::time_duration get_default_ordering_window();
 #endif // BOOST_LOG_DOXYGEN_PASS
 
 private:
