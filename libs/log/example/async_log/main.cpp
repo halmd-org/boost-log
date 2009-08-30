@@ -21,6 +21,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <functional>
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
@@ -84,7 +85,7 @@ int main(int argc, char* argv[])
         shared_ptr< sink_t > sink(new sink_t(
             boost::make_shared< backend_t >(),
             // We'll apply record ordering to ensure that records from different threads go sequentially in the file
-            keywords::order = logging::attribute_value_ordering< char, unsigned int >("Line #")));
+            keywords::order = logging::make_attr_ordering("Line #", std::less< unsigned int >())));
 
         sink->locked_backend()->add_stream(strm);
 

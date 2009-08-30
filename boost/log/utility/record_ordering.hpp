@@ -23,8 +23,11 @@
 #define BOOST_LOG_UTILITY_RECORD_ORDERING_HPP_INCLUDED_
 
 #include <boost/optional.hpp>
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/functional.hpp>
+#include <boost/log/detail/function_traits.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute.hpp>
 
@@ -142,6 +145,72 @@ public:
             return !right_value;
     }
 };
+
+/*!
+ * The function constructs a log record ordering predicate
+ */
+template< typename ValueT, typename CharT, typename FunT >
+inline attribute_value_ordering< CharT, ValueT, FunT >
+make_attr_ordering(const CharT* name, FunT const& fun)
+{
+    typedef attribute_value_ordering< CharT, ValueT, FunT > ordering_t;
+    return ordering_t(name, fun);
+}
+
+/*!
+ * The function constructs a log record ordering predicate
+ */
+template< typename ValueT, typename CharT, typename FunT >
+inline attribute_value_ordering< CharT, ValueT, FunT >
+make_attr_ordering(std::basic_string< CharT > const& name, FunT const& fun)
+{
+    typedef attribute_value_ordering< CharT, ValueT, FunT > ordering_t;
+    return ordering_t(name, fun);
+}
+
+#if !defined(BOOST_LOG_NO_FUNCTION_TRAITS)
+
+namespace aux {
+
+    //! An ordering predicate constructor that uses SFINAE to disable invalid instantiations
+    template<
+        typename CharT,
+        typename FunT,
+        typename ArityCheckT = typename enable_if_c< aux::arity_of< FunT >::value == 2 >::type,
+        typename Arg1T = typename aux::first_argument_type_of< FunT >::type,
+        typename Arg2T = typename aux::second_argument_type_of< FunT >::type,
+        typename ArgsCheckT = typename enable_if< is_same< Arg1T, Arg2T > >::type
+    >
+    struct make_attr_ordering_type
+    {
+        typedef attribute_value_ordering< CharT, Arg1T, FunT > type;
+    };
+
+} // namespace aux
+
+/*!
+ * The function constructs a log record ordering predicate
+ */
+template< typename CharT, typename FunT >
+inline typename aux::make_attr_ordering_type< CharT, FunT >::type
+make_attr_ordering(const CharT* name, FunT const& fun)
+{
+    typedef typename aux::make_attr_ordering_type< CharT, FunT >::type ordering_t;
+    return ordering_t(name, fun);
+}
+
+/*!
+ * The function constructs a log record ordering predicate
+ */
+template< typename CharT, typename FunT >
+inline typename aux::make_attr_ordering_type< CharT, FunT >::type
+make_attr_ordering(std::basic_string< CharT > const& name, FunT const& fun)
+{
+    typedef typename aux::make_attr_ordering_type< CharT, FunT >::type ordering_t;
+    return ordering_t(name, fun);
+}
+
+#endif // BOOST_LOG_NO_FUNCTION_TRAITS
 
 } // namespace log
 
