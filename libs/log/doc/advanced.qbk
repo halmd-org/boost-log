@@ -337,6 +337,12 @@ The frontend is implemented in the `asynchronous_sink` class template. Like sync
 
 [endsect]
 
+[section:ordering_async Ordering asynchronous sink frontend]
+
+TODO
+
+[endsect]
+
 [endsect]
 
 
@@ -369,6 +375,12 @@ The backend provides another feature that may come useful when debugging your ap
         boost::shared_ptr< sinks::synchronous_sink< sinks::text_ostream_backend > > sink(new sinks::synchronous_sink< sinks::text_ostream_backend >(backend));
         core->add_sink(sink);
     }
+
+[endsect]
+
+[section:text_file Text file backend]
+
+TODO
 
 [endsect]
 
@@ -827,9 +839,9 @@ The `attr` placeholder has an advanced support for string-typed attribute values
 
     sink->set_filter(flt::attr< std::string >("Domain").ends_with(".ru")); // selects only records that are related to Russian web domains
 
-* `matches(T const& regex)` allows to set up a filter based on __boost_regex__ regular expressions matching mechanism. The filter returns `true` if the attribute value matches the `regex` expression.
+* `matches(T const& regex)` allows to set up a filter based on __boost_regex__ or __boost_xpressive__ regular expressions matching mechanism (note that you also have to include the appropriate header from the `boost/log/support` folder). The filter returns `true` if the attribute value matches the `regex` expression.
 
-    sink->set_filter(flt::attr< std::string >("Domain").matches("www\\..*\\.ru"));
+    sink->set_filter(flt::attr< std::string >("Domain").matches(boost::regex("www\\..*\\.ru")));
 
 [endsect]
 
@@ -1021,6 +1033,66 @@ With all these attributes we shouldn't forget the log message itself, should we?
     backend->set_formatter(fmt::stream << fmt::message());
 
 Please note, that for wide character logging there is a similar `wmessage` placeholder.
+
+[endsect]
+
+[section:decorators Character decorators]
+
+There are times when one would want to additionally post-process the composed string before passing it to the sink backend. For example, in order to store log into an XML file the formatted log record should be checked for special characters that have special meaning in XML documents. This is where decorators step in.
+
+[heading XML character decorator]
+
+    #include <boost/log/formatters/xml_decorator.hpp>
+
+This decorator replaces XML special characters (`&`, `<`, `>` and `'`) with the corresponding tokens (`&apos;`, `&lt;`, `&gt;` and `&apos;`, correspondingly). The usage is as follows:
+
+    xml_backend->set_formatter
+    (
+        // Apply the decoration to the whole formatted record
+        fmt::xml_dec
+        [
+            fmt::stream << fmt::date_time("TimeStamp") << " " << fmt::message()
+        ]
+    );
+
+Since character decorators are yet another kind of formatters, it's fine to use them in other contexts where formatters are appropriate. For example, this is also a valid example:
+
+    xml_backend->set_formatter
+    (
+        fmt::format("<message>%1%: %2%</message>")
+            % fmt::attr< unsigned int >("Line #")
+            % fmt::xml_dec[ fmt::message() ]; // Only decorate the message text
+    );
+
+There is an example of the library set up for logging into an XML file, see `libs/log/example/xml_file`.
+
+[heading CSV character decorator]
+
+    #include <boost/log/formatters/csv_decorator.hpp>
+
+This decorator allows to ensure that the resulting string conforms to the [@http://en.wikipedia.org/wiki/Comma-separated_values CSV] format requirements. In particular, it duplicates the quote characters in the formatted string.
+
+    csv_backend->set_formatter
+    (
+        fmt::stream
+            << fmt::attr< unsigned int >("Line #") << ","
+            << fmt::csv_dec[ fmt::attr< std::string >("Tag") ] << ","
+            << fmt::csv_dec[ fmt::message() ]
+    );
+
+[heading C-style character decorators]
+
+    #include <boost/log/formatters/c_decorator.hpp>
+
+The file defines two character decorators: `c_dec` and `c_ascii_dec`. The first replaces the following characters with their escaped counerparts: `\` (backslash, 0x5c), `\a` (bell character, 0x07), `\b` (backspace, 0x08), `\f` (formfeed, 0x0c), `\n` (newline, 0x0a), `\r` (carriage return, 0x0d), `\t` (horizontal tabulation, 0x09), `\v` (vertical tabulation, 0x0b), `'` (apostroph, 0x27), `""` (quote, 0x22), `?` (question mark, 0x3f). The `c_ascii_dec` decorator does the same but also replace all other non-printable and non-ASCII characters with escaped hexadecimal character codes in C notation (e.g. "\x8c"). The usage is similar to other character decorators:
+
+    backend->set_formatter
+    (
+        fmt::stream
+            << fmt::attr< unsigned int >("Line #") << ": ["
+            << fmt::c_dec[ fmt::attr< std::string >("Tag") ] << "] "
+            << fmt::c_ascii_dec[ fmt::message() ]
+    );
 
 [endsect]
 
