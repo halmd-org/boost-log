@@ -1044,7 +1044,7 @@ There are times when one would want to additionally post-process the composed st
 
     #include <boost/log/formatters/xml_decorator.hpp>
 
-This decorator replaces XML special characters (`&`, `<`, `>` and `'`) with the corresponding tokens (`&apos;`, `&lt;`, `&gt;` and `&apos;`, correspondingly). The usage is as follows:
+This decorator replaces XML special characters (&, <, > and \') with the corresponding tokens (`&apos;`, `&lt;`, `&gt;` and `&apos;`, correspondingly). The usage is as follows:
 
     xml_backend->set_formatter
     (
@@ -1084,7 +1084,7 @@ This decorator allows to ensure that the resulting string conforms to the [@http
 
     #include <boost/log/formatters/c_decorator.hpp>
 
-The file defines two character decorators: `c_dec` and `c_ascii_dec`. The first replaces the following characters with their escaped counerparts: `\` (backslash, 0x5c), `\a` (bell character, 0x07), `\b` (backspace, 0x08), `\f` (formfeed, 0x0c), `\n` (newline, 0x0a), `\r` (carriage return, 0x0d), `\t` (horizontal tabulation, 0x09), `\v` (vertical tabulation, 0x0b), `'` (apostroph, 0x27), `""` (quote, 0x22), `?` (question mark, 0x3f). The `c_ascii_dec` decorator does the same but also replace all other non-printable and non-ASCII characters with escaped hexadecimal character codes in C notation (e.g. "\x8c"). The usage is similar to other character decorators:
+The file defines two character decorators: `c_dec` and `c_ascii_dec`. The first replaces the following characters with their escaped counerparts: \\ (backslash, 0x5c), \\a (bell character, 0x07), \\b (backspace, 0x08), \\f (formfeed, 0x0c), \\n (newline, 0x0a), \\r (carriage return, 0x0d), \\t (horizontal tabulation, 0x09), \\v (vertical tabulation, 0x0b), \' (apostroph, 0x27), \" (quote, 0x22), ? (question mark, 0x3f). The `c_ascii_dec` decorator does the same but also replaces all other non-printable and non-ASCII characters with escaped hexadecimal character codes in C notation (e.g. "\\x8c"). The usage is similar to other character decorators:
 
     backend->set_formatter
     (

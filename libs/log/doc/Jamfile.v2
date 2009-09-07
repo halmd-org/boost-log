@@ -12,6 +12,7 @@ local document_files =
         # Document all these files...
         [ glob
             ../../../boost/log/*.hpp
+            ../../../boost/log/core/*.hpp
             ../../../boost/log/attributes/*.hpp
             ../../../boost/log/filters/*.hpp
             ../../../boost/log/formatters/*.hpp
@@ -20,6 +21,7 @@ local document_files =
             ../../../boost/log/utility/*.hpp
             ../../../boost/log/utility/init/*.hpp
             ../../../boost/log/utility/type_dispatch/*.hpp
+            ../../../boost/log/support/*.hpp
         ]
     :
         # ...except these
@@ -51,13 +53,13 @@ doxygen autodoc
         <doxygen:param>SOURCE_BROWSER=YES
         <doxygen:param>VERBATIM_HEADERS=NO
         <doxygen:param>"PREDEFINED=BOOST_LOG_DOXYGEN_PASS \\
-                       "BOOST_LOG_NO_VTABLE=" \\
-                       "BOOST_STATIC_ASSERT(x)=" \\
-                       "BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(x)=" \\
-                       "BOOST_LOG_UNIQUE_IDENTIFIER_NAME(x)=anonymous" \\
-                       "BOOST_LOG_USE_NATIVE_SYSLOG=1" \\
-                       "BOOST_PARAMETER_KEYWORD(x,y)=keyword y;" \\
-                       "BOOST_LOG_EXPORT=""
+                        BOOST_LOG_NO_VTABLE= \\
+                        BOOST_STATIC_ASSERT(x)= \\
+                        BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(x)= \\
+                        BOOST_LOG_UNIQUE_IDENTIFIER_NAME(x)=anonymous \\
+                        BOOST_LOG_USE_NATIVE_SYSLOG=1 \\
+                        BOOST_PARAMETER_KEYWORD(x,y)=\"keyword y;\" \\
+                        BOOST_LOG_EXPORT="
         <xsl:param>"boost.doxygen.reftitle=Boost.Log Reference"
         <xsl:param>"boost.doxygen.detailns=aux"
     ;
