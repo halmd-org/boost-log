@@ -11,7 +11,7 @@
  * \file   if.hpp
  * \author Andrey Semashev
  * \date   12.01.2008
- * 
+ *
  * The header contains implementation of a conditional formatter.
  */
 
@@ -48,7 +48,7 @@ public:
     //! Log record type
     typedef typename base_type::record_type record_type;
 
-private:    
+private:
     FilterT m_Filter;
     ThenT m_Then;
     ElseT m_Else;
@@ -56,7 +56,7 @@ private:
 public:
     /*!
      * Constructor
-     * 
+     *
      * \param flt The condition filter
      * \param th The formatter that gets invoked if \a flt returns \c true
      * \param el The formatter that gets invoked if \a flt returns \c false
@@ -66,7 +66,7 @@ public:
     /*!
      * Formatting operator. Applies the filter to the log record. If the filter returns \c true
      * passes the received arguments to the aggregated then-formatter. Otherwise calls else-formatter.
-     * 
+     *
      * \param strm A reference to the stream, where the final text of the logging record is composed
      * \param record A logging record
      */
@@ -135,7 +135,7 @@ public:
 public:
     /*!
      * Constructor
-     * 
+     *
      * \param flt The condition filter
      * \param fmt The formatter that gets invoked if \a flt returns \c true
      */
@@ -144,9 +144,9 @@ public:
     /*!
      * Formatting operator. Applies the filter to the log record. If the filter returns \c true
      * passes the received arguments to the aggregated formatter. Otherwise does nothing.
-     * 
+     *
      * \param strm A reference to the stream, where the final text of the logging record is composed
-     * \param values A logging record
+     * \param record A logging record
      */
     void operator() (ostream_type& strm, record_type const& record) const
     {
@@ -188,7 +188,7 @@ inline aux::fmt_if_gen< FilterT > if_(FilterT const& flt)
 /*!
  * The function returns a conditional formatter generator object. The generator provides <tt>operator[]</tt> that can be used
  * to construct the actual formatter.
- * 
+ *
  * \param flt A Boost.Log filter that represents condition of the formatter
  */
 template< typename FilterT >

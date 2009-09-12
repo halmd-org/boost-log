@@ -11,7 +11,7 @@
  * \file   chain.hpp
  * \author Andrey Semashev
  * \date   22.04.2007
- * 
+ *
  * The header contains implementation of formatter chaining mechanism.
  */
 
@@ -35,13 +35,13 @@ namespace formatters {
 
 /*!
  * \brief A formatter compound that encapsulates two other formatters
- * 
+ *
  * The formatting lambda expressions are decomposed by compiler into
  * a sequence of binary operators. This formatter does nothing but to
  * connect two other formatters that participate in such an expression.
  * When invoked, the formatter simply calls its first (or left-hand)
  * aggregated formatter and then calls its second (right-hand) formatter.
- * 
+ *
  * Chaining formatters can be composed into trees which allows to construct
  * arbitrary-sized formatting lambda expressions.
  */
@@ -71,7 +71,7 @@ private:
 public:
     /*!
      * Constructor
-     * 
+     *
      * \param left Left-hand formatter
      * \param right Right-hand formatter
      */
@@ -80,10 +80,9 @@ public:
 
     /*!
      * Formatting operator. Passes control to the left and right formatters.
-     * 
+     *
      * \param strm A reference to the stream, where the final text of the logging record is composed
-     * \param attrs A set of attribute values that are associated with the logging record
-     * \param msg The logging record message
+     * \param record The logging record
      */
     void operator() (ostream_type& strm, record_type const& record) const
     {

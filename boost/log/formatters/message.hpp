@@ -11,7 +11,7 @@
  * \file   message.hpp
  * \author Andrey Semashev
  * \date   22.04.2007
- * 
+ *
  * The header contains implementation of a message placeholder in formatters.
  */
 
@@ -33,7 +33,7 @@ namespace formatters {
 
 /*!
  * \brief Message formatter class
- * 
+ *
  * The formatter simply puts the log record message to the resulting stream
  */
 template< typename CharT >
@@ -52,10 +52,10 @@ public:
 
 public:
     /*!
-     * Formatting operator. Puts the log record message \a msg to the \a strm stream.
-     * 
+     * Formatting operator. Puts message text from the log record \a record to the \a strm stream.
+     *
      * \param strm A reference to the stream, where the final text of the logging record is composed
-     * \param attrs A logging record
+     * \param record A logging record
      */
     void operator() (ostream_type& strm, record_type const& record) const
     {

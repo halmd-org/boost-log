@@ -11,7 +11,7 @@
  * \file
  * \author Andrey Semashev
  * \date   26.11.2007
- * 
+ *
  * The header contains implementation of a named scope formatter.
  */
 
@@ -49,7 +49,7 @@ enum scope_iteration_direction
 
 /*!
  * \brief Named scope attribute formatter
- * 
+ *
  * The formatter iterates through the list of scopes and puts each one into the resulting stream.
  * The formatter supports customizing the iteration direction, depth and delimiter between the scopes.
  */
@@ -109,7 +109,7 @@ private:
 public:
     /*!
      * Constructor
-     * 
+     *
      * \param name Attribute name
      * \param delimiter Scope delimiter string
      * \param max_scopes Maximum scope iteration depth
@@ -130,11 +130,12 @@ public:
     }
 
     /*!
-     * Formatting operator. Acquires the scope list attribute with the specified on construction name from
-     * \a attrs and puts its contents into the \a strm stream.
-     * 
+     * Formatting operator. Acquires the scope list attribute value with the name
+     * specified on the formatter construction from \a record and puts its contents
+     * into the \a strm stream.
+     *
      * \param strm A reference to the stream, where the final text of the logging record is composed
-     * \param attrs A logging record
+     * \param record A logging record
      */
     void operator() (ostream_type& strm, record_type const& record) const
     {
@@ -355,7 +356,7 @@ inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const
 
 /*!
  * Formatter generator. Construct the named scope formatter with the specified formatting parameters.
- * 
+ *
  * \param name Attribute name
  * \param args An optional set of named parameters. Supported parameters:
  *             \li \c delimiter - a string that is used to delimit the formatted scope names. Default: "->" or "<-", depending on the iteration direction.

@@ -8,7 +8,7 @@
  * at http://www.boost.org/libs/log/doc/log.html.
  */
 /*!
- * \file   core.hpp
+ * \file   log/core.hpp
  * \author Andrey Semashev
  * \date   19.04.2007
  *

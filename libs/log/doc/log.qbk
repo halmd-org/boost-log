@@ -59,9 +59,9 @@ This library aims to make logging significantly easier for the application devel
 
 The documentation is oriented to both newbies and experienced library users. However, users are expected to be familiar with the commonly used Boost components, such as `shared_ptr`, `make_shared` (see __boost_smart_ptr__), and `function` (__boost_function__). Some parts of the documentation will refer to other Boost libraries, as needed.
 
-If this is your first experience with the library, it is recommended to read the [link log.design Design overview] section first in order to have the first glance on the library capabilities and architecture. The [link log.installation Installation] and [link tutorial.tutorial Tutorial] sections will help to get started experimenting with the library. The tutorial gives the overview of the library features with sample code snippets. Some tutorial steps are presented in two forms: simple and advanced. The simple form typically describes the most common and easy way to do the task and it is being recommended to be read by newbies. The advanced form usually gives an expanded way to do the same thing but with ability to do some extra customization and in-depth explanation. This form may come handy for more experienced users and should generally be read if your needs are not satisfied with the easy way.
+If this is your first experience with the library, it is recommended to read the [link log.design Design overview] section first in order to have the first glance on the library capabilities and architecture. The [link log.installation Installation] and [link log.tutorial Tutorial] sections will help to get started experimenting with the library. The tutorial gives the overview of the library features with sample code snippets. Some tutorial steps are presented in two forms: simple and advanced. The simple form typically describes the most common and easy way to do the task and it is being recommended to be read by newbies. The advanced form usually gives an expanded way to do the same thing but with ability to do some extra customization and in-depth explanation. This form may come handy for more experienced users and should generally be read if your needs are not satisfied with the easy way.
 
-Besides the tutorial there is an [link advanced.advanced Detailed features description] chapter. This part gives description of other tools provided by the library that were not covered by the tutorial. This chapter is better to be read on per-case basis.
+Besides the tutorial there is an [link log.detailed Detailed features description] chapter. This part gives description of other tools provided by the library that were not covered by the tutorial. This chapter is better to be read on per-case basis.
 
 Last, but not least, there is a reference which gives the formal description of library components.
 
@@ -164,13 +164,27 @@ When the set of attribute values is composed, the logging core decides if this l
 
 If a log record passes filtering for at least one sink, the record is considered to be consumable. This is the point when log message formatting takes place. The formatted message, along with the composed attribute values view, is passed to the sinks that accepted the record. As you may have noticed on the figure above, sinks consist of two parts: the frontend and the backend. This division is made in order to extract the common functionality of sinks, such as filtering and thread synchronization, into separate entities (frontends). Sink frontends are provided by the library, most likely users won't have to re-implement them. Backends, on the opposite, are one of the most probable places of the library extension. It is sink backends that do the actual processing of log records. There may be a sink that formats the attribute values and the log message and stores it into a file; there may be a sink that sends log records over the network to the remote processing center; there may be the aforementioned sink that puts record messages into tool-tip balloons - you name it. The most commonly used sink backends are already provided by the library.
 
-Along with the described above primary facilities, the library provides a wide variety of auxiliary tools, such as attributes, support for formatters and filters, represented as lambda expressions, and even basic helpers for the library initialization. You will find their description in the [link advanced.advanced Detailed features description] section. However, for newbies it is recommended to start discovering the library from the [link tutorial.tutorial Tutorial] section.
+Along with the described above primary facilities, the library provides a wide variety of auxiliary tools, such as attributes, support for formatters and filters, represented as lambda expressions, and even basic helpers for the library initialization. You will find their description in the [link log.detailed Detailed features description] section. However, for newbies it is recommended to start discovering the library from the [link log.tutorial Tutorial] section.
 
 [endsect]
 
-[include:tutorial tutorial.qbk]
-[include:advanced advanced.qbk]
-[include:extension extension.qbk]
+[include:log tutorial.qbk]
+
+[section:detailed Detailed features description]
+
+This section contains a more detailed description of library components and features. Some of them are presented in the [link log.tutorial Tutorial] section, so it is recommended to read it first to get the basic understanding of the library.
+
+[include:log sources.qbk]
+[include:log sink_frontends.qbk]
+[include:log sink_backends.qbk]
+[include:log filters.qbk]
+[include:log formatters.qbk]
+[include:log attributes.qbk]
+[include:log utilities.qbk]
+
+[endsect]
+
+[include:log extension.qbk]
 
 [section:rationale Rationale]
 
@@ -263,7 +277,7 @@ There are two possible ways to cope with the problem:
 * Enforce strict serialization of log record being made throughout the application. This solution implies a severe performance impact in multithreaded application because log records that otherwise could be processed concurrently will have to go serial. Since this controverses one of the [link log.moti main library goals], it was rejected.
 * Attempt to maintain log record ordering on the sink level. This solution is more or less viable. On the downside, it would introduce log record buffering, which in turn would compromise logs reliability. In case of application crash all buffered records would be lost.
 
-The latter solution was implemented as a special sink frontend described [link advanced.advanced.sink_frontends.ordering_async here].
+The latter solution was implemented as a special sink frontend described [link log.detailed.sink_frontends.ordering_async here].
 
 [endsect]
 
@@ -280,7 +294,7 @@ One may wonder why the following syntax is not supported:
     BOOST_LOG(logger) << set_attr("MyInt", 10) << set_attr("MyString", "string attribute value")
         << "Some log message";
 
-The answer is quite simple. The streaming expression is executed after the filtering takes place and only if the filter passed the log record. At this point the set of attributes that are attached to the record is already fixed, so these manipulators cannot attach any more attributes to it. So, all attributes that are to be present with the record must be set up before filtering tares place. The easiest way to do it is to use scoped attributes or tags (see [link advanced.advanced.utilities.scoped_attributes here]).
+The answer is quite simple. The streaming expression is executed after the filtering takes place and only if the filter passed the log record. At this point the set of attributes that are attached to the record is already fixed, so these manipulators cannot attach any more attributes to it. So, all attributes that are to be present with the record must be set up before filtering tares place. The easiest way to do it is to use scoped attributes or tags (see [link log.detailed.utilities.scoped_attributes here]).
 
 [endsect]
 
@@ -296,7 +310,7 @@ would become a lambda-expression, that is only invoked if the filtering is succe
 
 would generate a considerable amount of code (proportionally to the number of streaming operators) to be executed before filtering takes place. Another drawback is that the `packet.size()` is always called, whether or not the record is actually written to log. In order to delay this call, yet more scaffolding is needed, possibly involving __boost_bind__, __boost_lambda__ or __boost_phoenix__. This complication is not acceptable for such a basic use case, like this.
 
-Although lazy streaming is not provided by the library out of the box, nothing prevents to develop it in a separate hierarchy of loggers. See the [link extension.extension.sources Extending the library] section for more information.
+Although lazy streaming is not provided by the library out of the box, nothing prevents to develop it in a separate hierarchy of loggers. See the [link log.extension.sources Extending the library] section for more information.
 
 [endsect]
 

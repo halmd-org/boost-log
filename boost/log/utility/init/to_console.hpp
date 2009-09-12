@@ -174,7 +174,7 @@ inline shared_ptr<
  * \return Pointer to the constructed sink.
  */
 template< typename CharT, typename... ArgsT >
-inline shared_ptr<
+shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL<
         sinks::basic_text_ostream_backend< CharT >
     >
@@ -183,9 +183,11 @@ inline shared_ptr<
 /*!
  * Equivalent to: <tt>init_log_to_console(std::clog);</tt> or <tt>init_log_to_console(std::wclog);</tt>,
  * depending on the \c CharT type.
+ *
+ * \overload
  */
 template< typename CharT, typename... ArgsT >
-inline shared_ptr<
+shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL<
         sinks::basic_text_ostream_backend< CharT >
     >
@@ -197,6 +199,8 @@ inline shared_ptr<
 
 /*!
  * The function constructs sink for the <tt>std::clog</tt> stream and adds it to the core
+ *
+ * \overload
  *
  * \return Pointer to the constructed sink.
  */
