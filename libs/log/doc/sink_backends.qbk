@@ -1,0 +1,368 @@
+[/
+    This document is a part of Boost.Log library documentation.
+
+    (c) 2008 Andrey Semashev
+
+    Use, modification and distribution is subject to the Boost Software License, Version 1.0.
+    (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+/]
+
+[section:sink_backends Sink Backends]
+
+[section:text_ostream Text stream backend]
+
+    #include <boost/log/sinks/text_ostream_backend.hpp>
+
+The text output stream sink backend is the most generic backend provided by the library out of box. The backend is implemented in the `basic_text_ostream_backend` class template (`text_ostream_backend` and `wtext_ostream_backend` convenience typedefs provided for narrow and wide character support). It supports formatting log records into strings and putting into one or several streams. Each attached stream gets the same result of formatting, so if you need to format log records differently for different streams, you will need to create several sinks - each with its own formatter.
+
+The sink backend is compatible with any stream that derives from the `std::basic_ostream` class template. However, the sink can provide additional information about written data if the stream object also publicly derives from `record_writer` interface class. This interface declares methods that are called by the backend before and after each record is put into the stream. These hints can be used by the stream implementation to delimit log records (for example, an XML-writing stream could insert tags and indentation between log records) or perform other actions aligned to log records (for example, rotate the file without cutting a log record in the middle).
+
+The backend provides another feature that may come useful when debugging your application. With `auto_flush` method one can enable the sink to automatically flush buffers of all attached streams after each log record written. This will, of course, degrade logging performance, but in case of application crash there is a good probability that last log records are not lost.
+
+    // The function registers text output sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging::core > core = logging::core::get();
+
+        // Create a backend and attach a couple of streams to it
+        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
+        backend->add_stream(boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
+        backend->add_stream(boost::shared_ptr< std::ostream >(new std::ofstream("test.log")));
+
+        // Enable auto-flushing after each log record written
+        backend->auto_flush(true);
+
+        // Wrap it into the frontend and register in the core. The backend requires synchronization in the frontend.
+        boost::shared_ptr< sinks::synchronous_sink< sinks::text_ostream_backend > > sink(new sinks::synchronous_sink< sinks::text_ostream_backend >(backend));
+        core->add_sink(sink);
+    }
+
+[endsect]
+
+[section:text_file Text file backend]
+
+    #include <boost/log/sinks/text_file_backend.hpp>
+
+TODO
+
+[endsect]
+
+[section:syslog Syslog backend]
+
+    #include <boost/log/sinks/syslog_backend.hpp>
+
+The syslog backend, as it comes from its name, provides support for syslog API that is available on virtually any UNIX or Linux platform. On Windows there is no  known implementation of the syslog API, therefore the backend is not available on this platform.
+
+The backend is implemented in the `basic_syslog_backend` class template, `syslog_backend` and `wsyslog_backend` convenience typedefs are also available. The backend supports formatting log records, and therefore requires thread synchronization in the frontend. The backend also supports severity level translation from the application-specific values to the syslog-defined values. This is achieved with an additional function object, level extractor, that receives a set of attribute values of each log record and returns appropriate syslog level value. This value is used by the backend in the `LOG_MAKEPRI` macro to construct the final priority value of the syslog record. The other argument of the `LOG_MAKEPRI` macro, the facility, is constant for each backend object and can be specified in the backend constructor arguments.
+
+Level extractors can be written by library users to map the application log levels to the syslog levels the best way. However, the library provides two extractors that would fit this need in obvious cases. The `direct_level_mapping` class template provides a way to directly map values of some integral attribute to syslog levels. The `custom_level_mapping` class template adds some flexibility and allows to map arbitrary values of some integral attribute to syslog levels. The `wdirect_level_mapping` and `wcustom_level_mapping` are also available for wide-character logging.
+
+One additional thing should be noted. Syslog API allows to customize the service behavior by specifying additional flags to the `openlog` call. The backend too supports this feature - the options can be passed to the backend constructor. However, since `openlog` is only called once per logging session, the constructor argument is only taken into consideration for the first backend object being created.
+
+Anyway, one example is better than a thousand words.
+
+    // The function registers syslog sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging::core > core = logging::core::get();
+
+        // Create a backend. Specify facility and options in the constructor.
+        boost::shared_ptr< sinks::syslog_backend > backend(new sinks::syslog_backend(
+            sinks::syslog::user, sinks::syslog::console_fallback | sinks::syslog::log_pid));
+
+        // Set the straightforward level translator for the "Severity" attribute of type int
+        backend->set_level_extractor(sinks::syslog::direct_level_mapping< >("Severity"));
+
+        // Wrap it into the frontend and register in the core. The backend requires synchronization in the frontend.
+        boost::shared_ptr< sinks::synchronous_sink< sinks::syslog_backend > > sink(new sinks::synchronous_sink< sinks::syslog_backend >(backend));
+        core->add_sink(sink);
+
+        // Create a new backend. No use to specify options here.
+        backend.reset(new sinks::syslog_backend(sinks::syslog::local0));
+
+        // Create and fill in another level translator for "MyLevel" attribute of type string
+        sinks::syslog::custom_level_mapping< std::string > mapping("MyLevel");
+        mapping["debug"] = sinks::syslog::debug;
+        mapping["normal"] = sinks::syslog::info;
+        mapping["warning"] = sinks::syslog::warning;
+        mapping["failure"] = sinks::syslog::critical;
+        backend->set_level_extractor(mapping);
+
+        // Wrap it into the frontend and register in the core.
+        sink.reset(new sinks::synchronous_sink< sinks::syslog_backend >(backend));
+        core->add_sink(sink);
+    }
+
+Please note that all syslog constants, as well as level extractors, are declared within a nested namespace `syslog`. The library will not accept (and does not declare in the backend interface) native syslog constants, which are macros, actually.
+
+[endsect]
+
+[section:debugger Windows debugger output backend]
+
+    #include <boost/log/sinks/debug_output_backend.hpp>
+
+The Windows OS provides an interesting feature: a process, being run under debugger, is able to emit messages that will be intercepted and displayed in the debugger window. For example, if an application is run under Visual Studio IDE it will be able to write debug messages to the IDE window. This backend provides a simple way of emitting such messages. Additionally, in order to optimize application performance, a special filter is available that checks whether the application is run under debugger. Like many other sink backends, this backend also supports setting a formatter in order to compose message text.
+
+The usage is quite simple and straightforward:
+
+    // The function registers debugger output sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging::core > core = logging::core::get();
+
+        // Create the sink. The backend requires synchronization in the frontend.
+        boost::shared_ptr< sinks::synchronous_sink< sinks::debug_output_backend > > sink(new sinks::synchronous_sink< sinks::debug_output_backend >());
+
+        // Set the special filter to the frontend in order to skip the sink when no debugger is available
+        sink->set_filter(sinks::debug_output_backend::debugger_presence_filter());
+
+        core->add_sink(sink);
+    }
+
+[endsect]
+
+[section:event_log Windows event log backends]
+
+    #include <boost/log/sinks/event_log_backend.hpp>
+
+The Windows OS provides a special API for publishing events related to the application execution. Wide range of applications, including Windows components, use this facility to provide user with all essential information about computer health in a single place - an event log. There can be more than one event logs, however, typically all user-space applications use the common Application log. Records from different applications or their parts can be selected from the log by a record source name. Event logs can be read with a standard utility, an Event Viewer, that comes with Windows installation.
+
+Although it looks very tempting, the API is quite complicated and intrusive, which makes it difficult to support. The application is required to provide a dynamic library with special resources that describe all events the application supports. This library must be registered in the Windows registry, which pins its location on the file system. The Event Viewer uses this registration to find the resources and compose and display messages. The positive feature of this approach is that since event resources can describe events differently for different languages, it allows application to support event internationalization in a quite transparent manner: the application simply provides event identifiers and non-localizable event parameters to the API, and it does the rest of the work.
+
+In order to support both the simplistic approach "it just works" and the more elaborate event composition, including internationalization support, the library provides two sink backends that work with event log API.
+
+[heading Simple event log backend]
+
+The `simple_event_log_backend` backend is intended to encapsulate as much of the event log API as possible, leaving interface and usage model very similar to other sink backends. It contains all needed resources that are needed for the Event Viewer to function properly, and registers the Boost.Log library in the Windows registry in order to populate itself as the container of these resources.
+
+[note The library must be built as a dynamic library in order to use this backend flawlessly. Otherwise event description resources are not linked into the executable, and the Event Viewer is not able to display events properly.]
+
+The only thing user has to do to add Windows event log support to his application is to provide event source and log names (which are optional and can be automatically suggested by the library), setup appropriate filter, formatter and event severity mapping. There is an `event_log` example available in the library directory that shows how to use the backend.
+
+    // Define application-specific severity levels
+    enum severity_levels
+    {
+        normal,
+        warning,
+        error
+    };
+
+    // The function registers the Windows event log backend
+    void foo()
+    {
+        // Create an event log sink
+        boost::shared_ptr< sinks::simple_event_log_backend > backend(
+            new sinks::simple_event_log_backend((
+                keywords::log_name = "My Application", // by default it would have been Application
+                keywords::log_source = "My Source"     // by default it would have been based on the application executable name
+            ))
+        );
+        boost::shared_ptr< sinks::synchronous_sink< sinks::simple_event_log_backend > > sink(
+            new sinks::synchronous_sink< sinks::simple_event_log_backend >(backend));
+
+        // Setup the message formatter
+        backend->set_formatter(
+            fmt::format("%1%: [%2%] - %3%")
+                % fmt::attr< unsigned int >("Line #")
+                % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
+                % fmt::message()
+            );
+
+        // We'll have to map our custom levels to the event log event types
+        sinks::event_log::custom_event_type_mapping< severity_levels > mapping("Severity");
+        mapping[normal] = sinks::event_log::info;
+        mapping[warning] = sinks::event_log::warning;
+        mapping[error] = sinks::event_log::error;
+
+        backend->set_event_type_mapper(mapping);
+
+        // Add the sink to the core
+        logging::core::get()->add_sink(sink);
+    }
+
+Having done that, all logging records that pass to the sink will be formatted the same way they are in the other sinks. The formatted message will be displayed in the Event Viewer as the event description.
+
+[heading Advanced event log backend]
+
+The `event_log_backend` allows a more detailed control over the logging API, but requires considerably more scaffolding during initialization and usage.
+
+First, user has to build his own library with the event resources (the process is described in [@http://msdn.microsoft.com/en-us/library/aa363681(VS.85).aspx MSDN]). As a part of this process one has to create a message file that describes all events. For sake of example, let's assume the following contents were used as the message file:
+
+[pre
+; /* --------------------------------------------------------
+; HEADER SECTION
+; */
+SeverityNames=(Debug=0x0:MY_SEVERITY_DEBUG
+            Info=0x1:MY_SEVERITY_INFO
+            Warning=0x2:MY_SEVERITY_WARNING
+            Error=0x3:MY_SEVERITY_ERROR
+            )
+
+; /* --------------------------------------------------------
+; MESSAGE DEFINITION SECTION
+; */
+
+MessageIdTypedef=WORD
+
+MessageId=0x1
+SymbolicName=MY_CATEGORY_1
+Language=English
+Category 1
+.
+
+MessageId=0x2
+SymbolicName=MY_CATEGORY_2
+Language=English
+Category 2
+.
+
+MessageId=0x3
+SymbolicName=MY_CATEGORY_3
+Language=English
+Category 3
+.
+
+MessageIdTypedef=DWORD
+
+MessageId=0x100
+Severity=Warning
+Facility=Application
+SymbolicName=LOW_DISK_SPACE_MSG
+Language=English
+The drive %1 has low free disk space. At least %2 Mb of free space is recommended.
+.
+
+MessageId=0x101
+Severity=Error
+Facility=Application
+SymbolicName=DEVICE_INACCESSIBLE_MSG
+Language=English
+The drive %1 is not accessible.
+.
+
+MessageId=0x102
+Severity=Info
+Facility=Application
+SymbolicName=SUCCEEDED_MSG
+Language=English
+Operation finished successfully in %1 seconds.
+.
+]
+
+After compiling the resource library, the path to this library must be provided to the sink backend constructor, among other parameters used with the simple backend. The path may contain placeholders that will be expanded with the appropriate environment variables.
+
+    // Create an event log sink
+    boost::shared_ptr< sinks::event_log_backend > backend(
+        new sinks::event_log_backend((
+            keywords::message_file = "%SystemDir%\\my_events.dll",
+            keywords::log_name = "My Application",
+            keywords::log_source = "My Source"
+        ))
+    );
+
+Like the simple backend, the `event_log_backend` will register itself in the Windows registry, which will enable the Event Viewer to display the emitted events.
+
+Next, user will have to provide mapping between the application logging attributes and event identifiers. These identifiers were provided in the message compiler output as a result of compiling the message file. One can use `event_composer` and one of the event ID mappings, like in the following example:
+
+    // Create an event composer. It is initialized with the event identifier mapping.
+    sinks::event_log::event_composer composer(sinks::event_log::direct_event_id_mapping< int >("EventID"));
+
+    // For each event described in the message file, set up the insertion string formatters
+    composer[LOW_DISK_SPACE_MSG]
+        % fmt::attr< std::string >("Drive")      // the first placeholder in the message will be replaced with contents of the "Drive" attribute
+        % fmt::attr< boost::uintmax_t >("Size"); // the second placeholder in the message will be replaced with contents of the "Size" attribute
+
+    composer[DEVICE_INACCESSIBLE_MSG]
+        % fmt::attr< std::string >("Drive");
+
+    composer[SUCCEEDED_MSG]
+        % fmt::attr< unsigned int >("Duration");
+
+    // Then put the composer to the backend
+    backend->set_event_composer(composer);
+
+As you can see, one can use regular [link log.detailed.formatters formatters] to specify which attributes will be inserted instead of placeholders in the final event message. Aside from that, one can specify mappings of attribute values to event types and categories:
+
+    // Define application-specific severity levels
+    enum severity_levels
+    {
+        normal,
+        warning,
+        error
+    };
+
+    // We'll have to map our custom levels to the event log event types
+    sinks::event_log::custom_event_type_mapping< severity_levels > type_mapping("Severity");
+    type_mapping[normal] = sinks::event_log::make_event_type(MY_SEVERITY_INFO);
+    type_mapping[warning] = sinks::event_log::make_event_type(MY_SEVERITY_WARNING);
+    type_mapping[error] = sinks::event_log::make_event_type(MY_SEVERITY_ERROR);
+
+    backend->set_event_type_mapper(type_mapping);
+
+    // Same for event categories. Usually event categories can be restored by the event identifier.
+    sinks::event_log::custom_event_category_mapping< int > cat_mapping("EventID");
+    cat_mapping[LOW_DISK_SPACE_MSG] = sinks::event_log::make_event_category(MY_CATEGORY_1);
+    cat_mapping[DEVICE_INACCESSIBLE_MSG] = sinks::event_log::make_event_category(MY_CATEGORY_2);
+    cat_mapping[SUCCEEDED_MSG] = sinks::event_log::make_event_category(MY_CATEGORY_3);
+
+    backend->set_event_category_mapper(cat_mapping);
+
+[note In Windows NT 6 (Vista, Server 2008) and later it is not needed to specify event type mappings. This information is available in the message definition resources and need not to be duplicated in the API call.]
+
+Now that initialization is done, the sink can be registered into the core.
+
+    // Create the frontend for the sink
+    boost::shared_ptr< sinks::synchronous_sink< sinks::event_log_backend > > sink(
+        new sinks::synchronous_sink< sinks::event_log_backend >(backend));
+
+    // Set up filter to pass only records that have the necessary attribute
+    sink->set_filter(flt::has_attr< int >("EventID"));
+
+    logging::core::get()->add_sink(sink);
+
+In order to emit events it is convenient to create a set of functions that will accept all needed parameters for the corresponding events and announce that the event has occurred.
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER(event_logger, src::severity_logger_mt< severity_levels >)
+
+    // The function raises an event of the disk space depletion
+    void announce_low_disk_space(std::string const& drive, boost::uintmax_t size)
+    {
+        BOOST_LOG_SCOPED_THREAD_TAG("EventID", int, LOW_DISK_SPACE_MSG);
+        BOOST_LOG_SCOPED_THREAD_TAG("Drive", std::string, drive);
+        BOOST_LOG_SCOPED_THREAD_TAG("Size", boost::uintmax_t, size);
+        // Since this record may get accepted by other sinks, this message is not completely useless
+        BOOST_LOG_SEV(event_logger::get(), warning) << "Low disk " << drive
+            << " space, " << size << " Mb is recommended";
+    }
+
+    // The function raises an event of inaccessible disk drive
+    void announce_device_inaccessible(std::string const& drive)
+    {
+        BOOST_LOG_SCOPED_THREAD_TAG("EventID", int, DEVICE_INACCESSIBLE_MSG);
+        BOOST_LOG_SCOPED_THREAD_TAG("Drive", std::string, drive);
+        BOOST_LOG_SEV(event_logger::get(), error) << "Cannot access drive " << drive;
+    }
+
+    // The structure is an activity guard that will emit an event upon the activity completion
+    struct activity_guard
+    {
+        activity_guard()
+        {
+            // Add a stop watch attribute to measure the activity duration
+            boost::shared_ptr< attrs::timer > attr(new attrs::timer());
+            m_it = event_logger::get().add_attribute("Duration", attr);
+        }
+        ~activity_guard()
+        {
+            BOOST_LOG_SCOPED_THREAD_TAG("EventID", int, SUCCEEDED_MSG);
+            BOOST_LOG_SEV(event_logger::get(), normal) << "Activity ended";
+            event_logger::get().remove_attribute(m_it);
+        }
+
+    private:
+        event_logger::logger_type::attribute_set_type::iterator m_it;
+    };
+
+[endsect]
+
+[endsect]

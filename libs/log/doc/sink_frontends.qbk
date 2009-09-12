@@ -1,0 +1,132 @@
+[/
+    This document is a part of Boost.Log library documentation.
+
+    (c) 2008 Andrey Semashev
+
+    Use, modification and distribution is subject to the Boost Software License, Version 1.0.
+    (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+/]
+
+[section:sink_frontends Sink Frontends]
+
+Every sink object that is compatible with the logging library is required to support interface `sink< CharT >`, where `CharT` is the appropriate character type. This interface is used by logging core to perform sink-specific filtering and pass log records to sinks. Technically speaking, one can derive his class from the `sink` template and have his new-found sink, but for sake of code reusing and sink implementation simplicity the library suggests separated concepts of sink frontend and sink backend. Sink frontends derive from the `sink` template and encapsulate the logic of filtering and thread synchronization. Most probably you won't have to write your own frontend once you need to create a new type of sink, because the library provides a number of frontends that cover most use cases. See [link log.detailed.sink_backends Sink Backends] section for more details on interface between frontends and backends.
+
+[section:unlocked Unlocked sink frontend]
+
+    #include <boost/log/sinks/unlocked_frontend.hpp>
+
+The unlocked sink frontend is implemented with the `unlocked_sink` class template. This frontend provides the most basic service for the backend, which is filtering. The `unlocked_sink` performs no thread synchronization when accessing the backend, assuming that either the synchronization is not needed or the synchronization is implemented in the backend. However, filtering is still thread-safe (that is, one can safely change filter in the `unlocked_sink` frontend while other threads are writing logs through this sink). This is the only sink frontend available in a single thread environment. The example of use is as follows:
+
+    // Some sink backend (for simplicity synchronization code omitted)
+    class my_backend :
+        public sinks::basic_sink_backend< char, sinks::backend_synchronization_tag >
+    {
+    public:
+        // The method is called for every log record being put into the sink backend
+        void consume(values_view_type const& attributes, string_type const& message)
+        {
+            std::cout << message << std::endl;
+        }
+    };
+
+    // The function registers my_backend sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging::core > core = logging::core::get();
+
+        // The simplest way, the backend is default-constructed
+        boost::shared_ptr< sink< char > > sink1(new sinks::unlocked_sink< my_backend >);
+        core->add_sink(sink1);
+
+        // One can construct backend separately and pass it to the frontend
+        boost::shared_ptr< my_backend > backend(new my_backend);
+        boost::shared_ptr< sink< char > > sink2(new sinks::unlocked_sink< my_backend >(backend));
+        core->add_sink(sink2);
+
+        // You can manage filtering through the sink interface
+        sink1->set_filter(flt::attr< int >("Severity") >= warning);
+        sink2->set_filter(flt::attr< std::string >("Channel") == "net");
+    }
+
+[endsect]
+
+[section:sync Synchronous sink frontend]
+
+    #include <boost/log/sinks/sync_frontend.hpp>
+
+The synchronous sink frontend is implemented with the `synchronous_sink` class template. It is similar to the `unlocked_sink` but additionally provides thread synchronization with a mutex before passing log records to the backend. All sink backends that support formatting currently require thread synchronization in the frontend.
+
+The synchronous sink also introduce an ability to acquire a pointer to the locked backend. As long as the pointer exists, the backend is guaranteed not to be accessed from other threads, unless the access is done through another frontend or a direct reference to the backend. This feature can be useful if there is a need to perform some updates on the sink backend while other threads may be writing logs. Beware, though, that while the backend is locked any other thread that tries to write a log record to the sink gets blocked until the backend is released.
+
+The usage is similar to the `unlocked_sink`.
+
+    // The function registers text output sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging::core > core = logging::core::get();
+
+        // Create a backend and initialize it with a stream
+        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
+        backend->add_stream(boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
+
+        // Wrap it into the frontend and register in the core
+        boost::shared_ptr< sinks::synchronous_sink< sinks::text_ostream_backend > > sink(new sinks::synchronous_sink< sinks::text_ostream_backend >(backend));
+        core->add_sink(sink);
+
+        // You can manage filtering through the sink interface
+        sink->set_filter(flt::attr< int >("Severity") >= warning);
+
+        // You can also manage backend in a thread-safe manner
+        {
+            sinks::synchronous_sink< sinks::text_ostream_backend >::locked_backend_ptr p = sink.locked_backend();
+            p->add_stream(boost::make_shared< std::ofstream >("test.log"));
+            p->set_formatter(fmt::stream << "Level: " << fmt::attr< int >("Severity") << "Message: " << fmt::message());
+        } // the backend gets released here
+    }
+
+
+[endsect]
+
+[section:async Asynchronous sink frontend]
+
+    #include <boost/log/sinks/async_frontend.hpp>
+
+The frontend is implemented in the `asynchronous_sink` class template. Like synchronous one, asynchronous sink frontend provides a way of synchronizing access to the backend. All log records are passed to the backend in a dedicated thread, which makes it suitable for backends that may block for a considerable amount of time (network and other hardware device-related sinks, for example). The internal thread of the frontend is spawned on the frontend constructor and joined on its destructor (which implies that the frontend destruction may block). Aside from that, the frontend is similar to the `synchronous_sink` class template.
+
+    // The function registers text output sink in the logging library
+    void foo()
+    {
+        boost::shared_ptr< logging::core > core = logging::core::get();
+
+        // Create a backend and initialize it with a stream
+        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
+        backend->add_stream(boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
+
+        // Wrap it into the frontend and register in the core
+        boost::shared_ptr< sinks::asynchronous_sink< sinks::text_ostream_backend > > sink(new sinks::asynchronous_sink< sinks::text_ostream_backend >(backend));
+        core->add_sink(sink);
+
+        // You can manage filtering through the sink interface
+        sink->set_filter(flt::attr< int >("Severity") >= warning);
+
+        // You can also manage backend in a thread-safe manner
+        {
+            sinks::asynchronous_sink< sinks::text_ostream_backend >::locked_backend_ptr p = sink.locked_backend();
+            p->add_stream(boost::make_shared< std::ofstream >("test.log"));
+            p->set_formatter(fmt::stream << "Level: " << fmt::attr< int >("Severity") << "Message: " << fmt::message());
+        } // the backend gets released here
+    }
+
+[important If asynchronous logging is used in multi-module application, one should decide carefully when to unload dynamically loaded modules that write logs. The library has many places where it may end up using resources that are physically reside in the dynamically loaded module. Examples of such resources are virtual tables, string literals and functions. If it appears that either of these resources are used by the library, whereas the module in which they reside gets unloaded, the application will most probably crash. Strictly speaking, this problem persists with any sink type (and is not limited to sinks in the first place), but asynchronous sinks introduce an additional problem. User cannot tell which resources are used by the asynchronous sink because it works in a dedicated thread and use buffered log records. There is no general solution for this issue. Users are advised to either avoid dynamic module unloading during the application work time, or to avoid asynchronous logging. As an additional way to cope with the problem, one may try to shutdown all asynchronous sinks before unloading any modules, and after unloading re-create them. However, avoiding dynamic unloading is the only way to solve the problem completely.]
+
+[endsect]
+
+[section:ordering_async Ordering asynchronous sink frontend]
+
+    #include <boost/log/sinks/ordering_sync_frontend.hpp>
+
+TODO
+
+[endsect]
+
+[endsect]
