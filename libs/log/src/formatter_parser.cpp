@@ -49,10 +49,12 @@
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/throw_exception.hpp>
+#include <boost/log/detail/process_id.hpp>
 #include <boost/log/utility/init/formatter_parser.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include <boost/log/utility/type_dispatch/date_time_types.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/thread/thread.hpp> // thread::id
 #include <boost/thread/locks.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 #endif
@@ -229,8 +231,10 @@ public:
                         typename make_default_attribute_types< char_type >::type
                     >,
                     mpl::back_inserter<
-                        mpl::vector1<
-                            attributes::basic_named_scope_list< char_type >
+                        mpl::vector3<
+                            attributes::basic_named_scope_list< char_type >,
+                            thread::id,
+                            boost::log::aux::process::id
                         >
                     >
                 >::type supported_types;

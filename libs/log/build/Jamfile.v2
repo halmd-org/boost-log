@@ -63,6 +63,7 @@ lib boost_log
         severity_level.cpp
         global_logger_storage.cpp
         named_scope.cpp
+        process_id.cpp
         timer.cpp
         sink_frontends.cpp
         text_ostream_backend.cpp

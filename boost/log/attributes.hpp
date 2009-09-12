@@ -32,5 +32,9 @@
 #include <boost/log/attributes/mutable_constant.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/attributes/timer.hpp>
+#include <boost/log/attributes/current_process_id.hpp>
+#if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/log/attributes/current_thread_id.hpp>
+#endif
 
 #endif // BOOST_LOG_ATTRIBUTES_HPP_INCLUDED_

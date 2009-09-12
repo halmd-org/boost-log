@@ -216,7 +216,7 @@ or
 
     src::severity_logger_mt< >& lg = my_logger::get();
 
-which are equivalent. Further usage of the logger is completely the same as it was a regular logger object of the corresponding type.
+which are equivalent. Further usage of the logger is completely the same as if it was a regular logger object of the corresponding type.
 
 [endsect]
 
