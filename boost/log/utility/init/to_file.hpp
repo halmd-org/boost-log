@@ -24,7 +24,6 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#ifndef BOOST_LOG_DOXYGEN_PASS
 #include <boost/parameter/parameters.hpp> // for is_named_argument
 #include <boost/preprocessor/comparison/greater.hpp>
 #include <boost/preprocessor/punctuation/comma_if.hpp>
@@ -32,7 +31,6 @@
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/enum_shifted_params.hpp>
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
-#endif // BOOST_LOG_DOXYGEN_PASS
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/sink_init_helpers.hpp>
 #include <boost/log/detail/parameter_tools.hpp>

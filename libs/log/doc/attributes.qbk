@@ -150,7 +150,7 @@ One of the "must-have" features of any logging library is the support for attach
 
     void foo()
     {
-        logging::core::get()->register_global_attribute("TimeStamp", boost::make_shared< attrs::local_clock >());
+        logging::core::get()->add_global_attribute("TimeStamp", boost::make_shared< attrs::local_clock >());
 
         // Now every log record ever made will have a time stamp attached
         src::logger_mt& lg = get_my_logger();
@@ -159,7 +159,7 @@ One of the "must-have" features of any logging library is the support for attach
 
 [endsect]
 
-[section:timer Stop watch]
+[section:timer Stop watch (timer)]
 
     #include <boost/log/attributes/timer.hpp>
 
@@ -277,7 +277,35 @@ Another good use case is attaching the scope stack information to an exception. 
         }
     }
 
-Note that we do not inject the `named_scope` attribute into the exception. Since scope stacks are maintained globally, throwing an exception will cause stack unwinding and, as a result, will truncate the global stack. Instead we create a copy of the scope stack at the throw site. This copy will be kept intact even if the global stack instance changes during stack unwinding.
+[note We do not inject the `named_scope` attribute into the exception. Since scope stacks are maintained globally, throwing an exception will cause stack unwinding and, as a result, will truncate the global stack. Instead we create a copy of the scope stack at the throw site. This copy will be kept intact even if the global stack instance changes during stack unwinding.]
+
+[endsect]
+
+[section:process_id Current process identifier]
+
+    #include <boost/log/attributes/current_process_id.hpp>
+
+It is often useful to know the process identifier that produces the log, especially if the log can eventually combine the output of different processes. The `current_process_id` attribute is a constant that formats into the current process identifier. The value type of the attribute can be derermined by the `current_process_id::held_type` typedef.
+
+    void foo()
+    {
+        logging::core::get()->add_global_attribute("ProcessID", boost::make_shared< attrs::current_process_id >());
+    }
+
+[endsect]
+
+[section:thread_id Current thread identifier]
+
+    #include <boost/log/attributes/current_thread_id.hpp>
+
+Multithreaded builds of the library also support the `current_thread_id` attribute which yields the `boost::thread::id` specific to the calling thread upon value acquision. The usage is similar to the process id.
+
+    void foo()
+    {
+        logging::core::get()->add_global_attribute("ThreadID", boost::make_shared< attrs::current_thread_id >());
+    }
+
+[tip You may have noticed that the attribute is registered globally. This will not result in all threads having the same ThreadID in log records as the attribute will always return a thread-specific value. The additional benefit is that you don't have to do a thing in the thread initialization routines to have the thread-specific attribute value in log records.]
 
 [endsect]
 
@@ -289,7 +317,7 @@ This attribute is a simple wrapper around a user-defined function object. Each a
 
     void foo()
     {
-        logging::core::get()->register_global_attribute("MyRandomAttr", attrs::make_functor_attr(&std::rand));
+        logging::core::get()->add_global_attribute("MyRandomAttr", attrs::make_functor_attr(&std::rand));
     }
 
 Auto-generated function objects, like the ones defined in __boost_bind__, __boost_lambda__, or STL, are also supported.

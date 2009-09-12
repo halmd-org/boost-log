@@ -466,6 +466,42 @@ The library also provides an `extract` convenience function that automatically c
 
 [endsect]
 
+[section:record_ordering Log record ordering]
+
+    #include <boost/log/utility/record_ordering.hpp>
+
+There are cases when it is required to order log records between each other. One possible use case is storing records in a container or a priority queue. The library provides two types of record ordering predicates out of box:
+
+[heading Opaque handle ordering]
+
+The `handle_ordering` class allows to apply a quick opaque ordering. The result of this ordering is not stable between different runs of the application, however it provides the best performance. The `handle_ordering` is a template that is specialized with an optional predicate function that will be able to compare `void*` pointers. By default an `std::less` equivalent is used.
+
+    // A set of unique records
+    std::set< logging::record, logging::handle_ordering< > > m_Records;
+
+[heading Attribute value based ordering]
+
+This kind of ordering is implemented with the `attribute_value_ordering` class and is based on the attribute values attached to the record. The predicate will seek for an attribute value with the specified name in both records being ordered and attempt to compare the attribute values.
+
+    // Ordering type definition
+    typedef logging::attribute_value_ordering<
+        char,   // character type that is used by Boost.Log
+        int     // attribute value type
+    > ordering;
+
+    // Records organized into a queue based on the "Severity" attribute value
+    std::priority_queue<
+        logging::record,
+        std::vector< logging::record >,
+        ordering
+    > m_Records(ordering("Severity"));
+
+Like the `handle_ordering`, `attribute_value_ordering` also accepts the third optional template parameter, which should be the predicate capable to compare attribute values (`int`s in the example above). By default, an `std::less` equivalent is used.
+
+You may also use the `make_attr_ordering` generator function to automatically generate the `attribute_value_ordering` instance based on the attribute value name and the ordering function. This might be useful if ordering function has a non-trivial type, like the one __boost_bind__ provides.
+
+[endsect]
+
 
 [section:init Simplified library initialization tools]
 
