@@ -231,11 +231,13 @@ public:
                         typename make_default_attribute_types< char_type >::type
                     >,
                     mpl::back_inserter<
-                        mpl::vector3<
+                        typename mpl::vector<
                             attributes::basic_named_scope_list< char_type >,
+#if !defined(BOOST_LOG_NO_THREADS)
                             thread::id,
-                            boost::log::aux::process::id
-                        >
+#endif
+                            log::aux::process::id
+                        >::type
                     >
                 >::type supported_types;
 
