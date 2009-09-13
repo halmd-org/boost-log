@@ -54,6 +54,7 @@
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
+#include <boost/log/sinks/text_multifile_backend.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/locks.hpp>
@@ -766,7 +767,7 @@ struct basic_text_file_backend< CharT >::implementation
     //! Characters written
     uintmax_t m_CharactersWritten;
     //! The time point when the file was last rotated
-    std::time_t m_LastRotation;
+    posix_time::ptime m_LastRotation;
 
     //! File collector functional object
     shared_ptr< file::collector > m_pFileCollector;
@@ -778,21 +779,16 @@ struct basic_text_file_backend< CharT >::implementation
     //! The maximum temp file size, in characters written to the stream
     uintmax_t m_FileRotationSize;
     //! The maximum interval between file rotations
-    unsigned int m_FileRotationInterval;
+    posix_time::time_duration m_FileRotationInterval;
     //! The flag shows if every written record should be flushed
     bool m_AutoFlush;
 
-    implementation(
-        uintmax_t rotation_size,
-        unsigned int rotation_interval,
-        bool auto_flush
-    ) :
+    implementation(uintmax_t rotation_size, bool auto_flush) :
         m_FileOpenMode(std::ios_base::trunc | std::ios_base::out),
         m_FileCounter(0),
         m_CharactersWritten(0),
-        m_LastRotation(0),
+        m_LastRotation(date_time::not_a_date_time),
         m_FileRotationSize(rotation_size),
-        m_FileRotationInterval(rotation_interval),
         m_AutoFlush(auto_flush)
     {
     }
@@ -828,11 +824,12 @@ void basic_text_file_backend< CharT >::construct(
     path_type const& pattern,
     std::ios_base::openmode mode,
     uintmax_t rotation_size,
-    unsigned int rotation_interval,
+    posix_time::time_duration rotation_interval,
     bool auto_flush)
 {
-    m_pImpl = new implementation(rotation_size, rotation_interval, auto_flush);
+    m_pImpl = new implementation(rotation_size, auto_flush);
     set_file_name_pattern_internal(pattern);
+    set_rotation_interval(rotation_interval);
     set_open_mode(mode);
 }
 
@@ -843,11 +840,14 @@ void basic_text_file_backend< CharT >::set_rotation_size(uintmax_t size)
     m_pImpl->m_FileRotationSize = size;
 }
 
-//! The method sets the maximum number of seconds between file rotations.
+//! The method sets the maximum time interval between file rotations.
 template< typename CharT >
-void basic_text_file_backend< CharT >::set_rotation_interval(unsigned int interval)
+void basic_text_file_backend< CharT >::set_rotation_interval(posix_time::time_duration interval)
 {
-    m_pImpl->m_FileRotationInterval = interval;
+    if (interval.is_special() || interval.total_seconds() == 0)
+        m_pImpl->m_FileRotationInterval = posix_time::time_duration(date_time::pos_infin);
+    else
+        m_pImpl->m_FileRotationInterval = interval;
 }
 
 //! Sets the flag to automatically flush buffers of all attached streams after each log record
@@ -869,7 +869,7 @@ void basic_text_file_backend< CharT >::do_consume(
             m_pImpl->m_File.is_open() &&
             (
                 m_pImpl->m_CharactersWritten + formatted_message.size() >= m_pImpl->m_FileRotationSize ||
-                std::time(NULL) - m_pImpl->m_LastRotation > m_pImpl->m_FileRotationInterval
+                posix_time::second_clock::universal_time() - m_pImpl->m_LastRotation > m_pImpl->m_FileRotationInterval
             )
         ) ||
         !m_pImpl->m_File.good()
@@ -886,12 +886,12 @@ void basic_text_file_backend< CharT >::do_consume(
         m_pImpl->m_File.open(m_pImpl->m_FileName, m_pImpl->m_FileOpenMode);
         if (!m_pImpl->m_File.is_open())
         {
-            boost::throw_exception(filesystem::basic_filesystem_error< path_type >(
+            boost::log::aux::throw_exception(filesystem::basic_filesystem_error< path_type >(
                 "failed to open file for writing",
                 m_pImpl->m_FileName,
                 system::error_code(system::errc::io_error, system::get_generic_category())));
         }
-        m_pImpl->m_LastRotation = std::time(NULL);
+        m_pImpl->m_LastRotation = posix_time::second_clock::universal_time();
 
         if (!m_pImpl->m_OpenHandler.empty())
             m_pImpl->m_OpenHandler(m_pImpl->m_File);
@@ -1069,7 +1069,7 @@ basic_text_multifile_backend< CharT >::~basic_text_multifile_backend()
 
 //! The method sets the file name composer
 template< typename CharT >
-void basic_text_multifile_backend< CharT >::set_file_name_composer(file_name_composer_type const& composer)
+void basic_text_multifile_backend< CharT >::set_file_name_composer_internal(file_name_composer_type const& composer)
 {
     m_pImpl->m_FileNameComposer = composer;
 }

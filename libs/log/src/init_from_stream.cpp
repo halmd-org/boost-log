@@ -38,6 +38,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_assign_actor.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/new_shared.hpp>
 #include <boost/log/detail/code_conversion.hpp>
@@ -338,7 +339,7 @@ private:
             unsigned int interval = (std::numeric_limits< unsigned int >::max)();
             isstream strm(it->second);
             strm >> interval;
-            backend->set_rotation_interval(interval);
+            backend->set_rotation_interval(posix_time::seconds(interval));
         }
 
         // Auto flush

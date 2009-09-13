@@ -33,7 +33,7 @@
 #include <boost/log/formatters.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
+#include <boost/log/sinks/text_multifile_backend.hpp>
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
         shared_ptr< file_sink > sink(new file_sink);
 
         // Set up how the file names will be generated
-        sink->locked_backend()->file_name_composer(
+        sink->locked_backend()->set_file_name_composer(
             fmt::stream << "logs/" << fmt::attr< boost::thread::id >("ThreadID") << ".log");
 
         // Set the log record formatter

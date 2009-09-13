@@ -59,6 +59,7 @@ Class `network_connection` in the code snippet above represents an approach of i
 
 [section:severity_level_logger Loggers with severity level support]
 
+    #include <boost/log/sources/severity_feature.hpp>
     #include <boost/log/sources/severity_logger.hpp>
 
 An ability to distinguish some log records from others based on some kind of level of severity or importance is one of the most frequently requested feature. The class templates `severity_logger` and `severity_logger_mt` (along with their `wseverity_logger` and `wseverity_logger_mt` wide-char counterparts) provide this functionality.
@@ -104,6 +105,7 @@ And, of course, severity loggers also provide the same functionality the [link l
 
 [section:channel_logger Loggers with channel support]
 
+    #include <boost/log/sources/channel_feature.hpp>
     #include <boost/log/sources/channel_logger.hpp>
 
 Sometimes it is important to categorize log records based on some constant piece information, such as module or class name, relation of the logged information to some specific domain of application functionality (e.g. network or file system related messages) or some constant tag that may be used later to filter these records to a specific sink. This feature is fulfilled with loggers `channel_logger`, `channel_logger_mt` and their wide-char counterparts `wchannel_logger`, `wchannel_logger_mt`. These loggers automatically register an attribute named "Channel". This attribute can be set only in the logger constructor with a named argument `channel` and cannot be changed during the logger lifetime. The type of the channel attribute value can be specified as a template argument for the logger, with `std::string` (`std::wstring` in case of wide character loggers) as a default. Aside from that the usage is similar to the [link log.detailed.sources.basic_logger basic loggers]:
@@ -146,6 +148,14 @@ Sometimes it is important to categorize log records based on some constant piece
             BOOST_LOG(m_stat) << "Some data sent";
         }
     };
+
+[endsect]
+
+[section:exception_handling Loggers with exception handling support]
+
+    #include <boost/log/sources/exception_handler_feature.hpp>
+
+TODO
 
 [endsect]
 
