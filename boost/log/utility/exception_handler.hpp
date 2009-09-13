@@ -137,8 +137,14 @@ class exception_handler :
     >::type base_type;
 
 public:
-    //! The exception handler type
+#ifndef BOOST_LOG_DOXYGEN_PASS
     typedef typename base_type::handler_type handler_type;
+#else
+    //! The exception handler type
+    typedef HandlerT handler_type;
+    //! The handler result type
+    typedef void result_type;
+#endif
 
 public:
     /*!
@@ -175,8 +181,14 @@ class nothrow_exception_handler :
     typedef exception_handler< SequenceT, HandlerT > base_type;
 
 public:
-    //! The exception handler type
+#ifndef BOOST_LOG_DOXYGEN_PASS
     typedef typename base_type::handler_type handler_type;
+#else
+    //! The exception handler type
+    typedef HandlerT handler_type;
+    //! The handler result type
+    typedef void result_type;
+#endif
 
 public:
     /*!
@@ -289,6 +301,8 @@ make_exception_handler(HandlerT const& handler);
  * cannot be identified, the handler will call the user-defined functor with no arguments,
  * instead of propagating exception to the caller.
  *
+ * \overload
+ *
  * \param handler User-defined functional object that will receive exceptions.
  * \return A nullary functional object that should be called from within a \c catch statement.
  *
@@ -305,6 +319,8 @@ make_exception_handler(HandlerT const& handler, std::nothrow_t const&);
  * types should be specified as first template parameters explicitly, in the order they would
  * be specified in a corresponding <tt>try/catch</tt> statement.
  *
+ * \overload
+ *
  * \param handler User-defined functional object that will receive exceptions.
  * \return A nullary functional object that should be called from within a \c catch statement.
  */
@@ -319,6 +335,8 @@ make_exception_handler(HandlerT const& handler);
  * instead of propagating exception to the caller. All expected exception types should be
  * specified as first template parameters explicitly, in the order they would be specified in
  * a corresponding <tt>try/catch</tt> statement.
+ *
+ * \overload
  *
  * \param handler User-defined functional object that will receive exceptions.
  * \return A nullary functional object that should be called from within a \c catch statement.

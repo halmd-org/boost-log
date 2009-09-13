@@ -502,6 +502,13 @@ You may also use the `make_attr_ordering` generator function to automatically ge
 
 [endsect]
 
+[section:exception_handlers Exception handlers]
+
+    #include <boost/log/utility/exception_handler.hpp>
+
+TODO
+
+[endsect]
 
 [section:init Simplified library initialization tools]
 
