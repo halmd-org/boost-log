@@ -55,7 +55,7 @@ namespace aux {
         friend id this_process::get_id();
 
         template< typename CharT, typename TraitsT >
-        friend std::basic_ostream< CharT, TraitsT >&
+        friend BOOST_LOG_EXPORT std::basic_ostream< CharT, TraitsT >&
         operator<< (std::basic_ostream< CharT, TraitsT >& strm, process::id const& pid);
 
     private:
