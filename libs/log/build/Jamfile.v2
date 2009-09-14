@@ -27,7 +27,6 @@ project boost/log
         <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
         <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
         <library>/boost/date_time//boost_date_time
-        <library>/boost/regex//boost_regex
         <library>/boost/filesystem//boost_filesystem
         <library>/boost/system//boost_system
         <threading>single:<define>BOOST_LOG_NO_THREADS
@@ -50,15 +49,6 @@ alias platform_log_sources
     : ## unix sources ##
     : ## requirements ##
         <logapi>unix
-    ;
-
-alias setup_log_sources
-    : ## sources ##
-        parser_utils.cpp
-        init_from_stream.cpp
-        filter_parser.cpp
-        formatter_parser.cpp
-    : ## requirements ##
     ;
 
 lib boost_log
@@ -86,8 +76,13 @@ lib boost_log
 
 lib boost_log_setup
     : ## sources ##
-        setup_log_sources
+        parser_utils.cpp
+        init_from_stream.cpp
+        filter_parser.cpp
+        formatter_parser.cpp
     : ## requirements ##
+        <link>shared:<define>BOOST_LOG_SETUP_DLL
         <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1
         <library>boost_log
+        <library>/boost/regex//boost_regex
     ;
