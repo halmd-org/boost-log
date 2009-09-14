@@ -148,13 +148,13 @@ operator<< (std::basic_ostream< CharT, TraitsT >& strm, process::id const& pid)
 }
 
 #if defined(BOOST_LOG_USE_CHAR)
-template
+template BOOST_LOG_EXPORT
 std::basic_ostream< char, std::char_traits< char > >&
 operator<< (std::basic_ostream< char, std::char_traits< char > >& strm, process::id const& pid);
 #endif // defined(BOOST_LOG_USE_CHAR)
 
 #if defined(BOOST_LOG_USE_WCHAR_T)
-template
+template BOOST_LOG_EXPORT
 std::basic_ostream< wchar_t, std::char_traits< wchar_t > >&
 operator<< (std::basic_ostream< wchar_t, std::char_traits< wchar_t > >& strm, process::id const& pid);
 #endif // defined(BOOST_LOG_USE_WCHAR_T)
