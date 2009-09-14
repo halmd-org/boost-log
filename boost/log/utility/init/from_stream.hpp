@@ -28,7 +28,7 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/function/function1.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/setup_prologue.hpp>
 #include <boost/log/sinks/sink.hpp>
 
 #ifdef _MSC_VER

@@ -28,7 +28,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/function/function1.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/setup_prologue.hpp>
 #include <boost/log/detail/new_shared.hpp>
 #include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>

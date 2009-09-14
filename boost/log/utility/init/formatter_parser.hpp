@@ -27,7 +27,7 @@
 #include <map>
 #include <string>
 #include <boost/function/function2.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/setup_prologue.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/formatters/attr.hpp>
 
