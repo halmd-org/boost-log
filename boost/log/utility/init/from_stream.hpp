@@ -57,7 +57,7 @@ namespace BOOST_LOG_NAMESPACE {
  * \param factory Custom sink factory function
  */
 template< typename CharT >
-BOOST_LOG_EXPORT void register_sink_factory(
+BOOST_LOG_SETUP_EXPORT void register_sink_factory(
     const CharT* sink_name,
     function1<
         shared_ptr< sinks::sink< CharT > >,
@@ -96,7 +96,7 @@ inline void register_sink_factory(
  * \b Throws: An <tt>std::exception</tt>-based exception if the read data cannot be interpreted as the library settings
  */
 template< typename CharT >
-BOOST_LOG_EXPORT void init_from_stream(std::basic_istream< CharT >& strm);
+BOOST_LOG_SETUP_EXPORT void init_from_stream(std::basic_istream< CharT >& strm);
 
 } // namespace log
 

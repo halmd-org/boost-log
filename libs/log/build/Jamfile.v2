@@ -52,6 +52,15 @@ alias platform_log_sources
         <logapi>unix
     ;
 
+alias setup_log_sources
+    : ## sources ##
+        parser_utils.cpp
+        init_from_stream.cpp
+        filter_parser.cpp
+        formatter_parser.cpp
+    : ## requirements ##
+    ;
+
 lib boost_log
     : ## sources ##
         attribute_set.cpp
@@ -70,11 +79,15 @@ lib boost_log
         text_file_backend.cpp
         syslog_backend.cpp
         thread_specific.cpp
-        parser_utils.cpp
-        init_from_stream.cpp
-        filter_parser.cpp
-        formatter_parser.cpp
         platform_log_sources
     : ## requirements ##
         <define>BOOST_LOG_BUILDING_THE_LIB=1
+    ;
+
+lib boost_log_setup
+    : ## sources ##
+        setup_log_sources
+    : ## requirements ##
+        <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1
+        <library>boost_log
     ;

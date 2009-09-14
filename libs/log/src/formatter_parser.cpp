@@ -388,7 +388,7 @@ parse_formatter(const CharT* begin, const CharT* end)
 }
 
 #ifdef BOOST_LOG_USE_CHAR
-template BOOST_LOG_EXPORT
+template BOOST_LOG_SETUP_EXPORT
 void register_formatter_factory< char >(
     const char* attr_name,
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
@@ -401,7 +401,7 @@ void register_formatter_factory< char >(
     > const& factory
 #endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
     );
-template BOOST_LOG_EXPORT
+template BOOST_LOG_SETUP_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 formatter_types< char >::formatter_type
 #else
@@ -411,7 +411,7 @@ parse_formatter< char >(const char* begin, const char* end);
 #endif // BOOST_LOG_USE_CHAR
 
 #ifdef BOOST_LOG_USE_WCHAR_T
-template BOOST_LOG_EXPORT
+template BOOST_LOG_SETUP_EXPORT
 void register_formatter_factory< wchar_t >(
     const wchar_t* attr_name,
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
@@ -425,7 +425,7 @@ void register_formatter_factory< wchar_t >(
 #endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
     );
 
-template BOOST_LOG_EXPORT
+template BOOST_LOG_SETUP_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 formatter_types< wchar_t >::formatter_type
 #else

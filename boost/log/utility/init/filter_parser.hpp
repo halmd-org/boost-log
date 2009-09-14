@@ -183,7 +183,8 @@ public:
  * \param factory The filter factory
  */
 template< typename CharT >
-BOOST_LOG_EXPORT void register_filter_factory(const CharT* name, shared_ptr< filter_factory< CharT > > const& factory);
+BOOST_LOG_SETUP_EXPORT void register_filter_factory(
+    const CharT* name, shared_ptr< filter_factory< CharT > > const& factory);
 
 /*!
  * The function registers a filter factory object for the specified attribute name. The factory will be
@@ -241,7 +242,7 @@ inline void register_simple_filter_factory(std::basic_string< CharT, TraitsT, Al
  * \b Throws: An <tt>std::exception</tt>-based exception, if a filter cannot be recognized in the character sequence.
  */
 template< typename CharT >
-BOOST_LOG_EXPORT
+BOOST_LOG_SETUP_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_core< CharT >::filter_type
 #else

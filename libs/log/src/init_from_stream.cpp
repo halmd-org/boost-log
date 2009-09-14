@@ -684,25 +684,25 @@ void init_from_stream(std::basic_istream< CharT >& strm)
 
 
 #ifdef BOOST_LOG_USE_CHAR
-template BOOST_LOG_EXPORT
+template BOOST_LOG_SETUP_EXPORT
 void register_sink_factory< char >(
     const char* sink_name,
     function1<
         shared_ptr< sinks::sink< char > >,
         std::map< std::basic_string< char >, std::basic_string< char > > const&
     > const& factory);
-template BOOST_LOG_EXPORT void init_from_stream< char >(std::basic_istream< char >& strm);
+template BOOST_LOG_SETUP_EXPORT void init_from_stream< char >(std::basic_istream< char >& strm);
 #endif
 
 #ifdef BOOST_LOG_USE_WCHAR_T
-template BOOST_LOG_EXPORT
+template BOOST_LOG_SETUP_EXPORT
 void register_sink_factory< wchar_t >(
     const wchar_t* sink_name,
     function1<
         shared_ptr< sinks::sink< wchar_t > >,
         std::map< std::basic_string< wchar_t >, std::basic_string< wchar_t > > const&
     > const& factory);
-template BOOST_LOG_EXPORT void init_from_stream< wchar_t >(std::basic_istream< wchar_t >& strm);
+template BOOST_LOG_SETUP_EXPORT void init_from_stream< wchar_t >(std::basic_istream< wchar_t >& strm);
 #endif
 
 } // namespace log
