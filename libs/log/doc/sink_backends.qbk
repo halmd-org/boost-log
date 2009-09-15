@@ -15,9 +15,7 @@
 
 The text output stream sink backend is the most generic backend provided by the library out of box. The backend is implemented in the `basic_text_ostream_backend` class template (`text_ostream_backend` and `wtext_ostream_backend` convenience typedefs provided for narrow and wide character support). It supports formatting log records into strings and putting into one or several streams. Each attached stream gets the same result of formatting, so if you need to format log records differently for different streams, you will need to create several sinks - each with its own formatter.
 
-The sink backend is compatible with any stream that derives from the `std::basic_ostream` class template. However, the sink can provide additional information about written data if the stream object also publicly derives from `record_writer` interface class. This interface declares methods that are called by the backend before and after each record is put into the stream. These hints can be used by the stream implementation to delimit log records (for example, an XML-writing stream could insert tags and indentation between log records) or perform other actions aligned to log records (for example, rotate the file without cutting a log record in the middle).
-
-The backend provides another feature that may come useful when debugging your application. With `auto_flush` method one can enable the sink to automatically flush buffers of all attached streams after each log record written. This will, of course, degrade logging performance, but in case of application crash there is a good probability that last log records are not lost.
+The backend also provides a feature that may come useful when debugging your application. With `auto_flush` method one can enable the sink to automatically flush buffers of all attached streams after each log record written. This will, of course, degrade logging performance, but in case of application crash there is a good probability that last log records are not lost.
 
     // The function registers text output sink in the logging library
     void init_logging()
@@ -50,7 +48,9 @@ Although it is possible to write logs into files with the [link log.detailed.sin
 * Placing the rotated files into a special location in the file system
 * Deleting the oldest files in order to free more space on the file system
 
-The first two features are implemented by the sink backend itself. The file name pattern and rotation thresholds may be specified on the `text_file_backend` backend construction.
+[heading File rotation]
+
+The file rotation is implemented by the sink backend itself. The file name pattern and rotation thresholds may be specified on the `text_file_backend` backend construction.
 
     // The function registers file sink in the logging library
     void init_logging()
@@ -70,6 +70,128 @@ The first two features are implemented by the sink backend itself. The file name
         core->add_sink(sink);
     }
 
+[note The file size at rotation can be imprecise. The implementation counts the number of characters written to the file, but the underlying API can introduce additional auxiliary data, which would increase the log file actual size on disk. The most well-known such case is the way Windows and DOS operating systems work with text files with regard to new-line characters. Each new-line character is written as a two byte sequence 0x0D 0x0A instead of a single 0x0A. Other character translations may also be applied.]
+
+[note The log file rotation takes place on an attempt to write a new log record to the file. Thus rotation interval is not a strict threshold, too. The parameter should be interpreted as the maximum time interval between the first and the last written records to the file.]
+
+The file name pattern may contain a number of wildcards, like the one you can see in the example above. Supported placeholders are:
+
+* Current date and time components. The placeholders conform to the ones specified by __boost_date_time__ library.
+* File counter (`%N`) with an optional width specification in the `printf`-like format. The file counter will always be decimal, zero filled to the specified width.
+* A percent sign (`%%`).
+
+A few quick examples:
+
+[table
+    [[Template]                            [Expands to]]
+    [[file\_%N.log]                        [file\_1.log, file\_2.log...]]
+    [[file\_%3N.log]                       [file\_001.log, file\_002.log...]]
+    [[file\_%Y%m%d.log]                    [file\_20080705.log, file\_20080706.log...]]
+    [[file\_%Y-%m-%d\_%H-%M-%S.%N.log]     [file\_2008-07-05\_13-44-23.1.log, file\_2008-07-06\_16-00-10.2.log...]]
+]
+
+[important Although all __boost_date_time__ format specifiers will work, there are restrictions on some of them, if you intend to scan for old log files. This functionality is discussed in the next section.]
+
+The sink backend allows to hook into the file rotation process in order to perform pre- and post-rotation actions. This can be useful to maintain log file validity by writing headers and footers. For example, this is how we could modify the `init_logging` function in order to write logs into XML files:
+
+    void init_logging()
+    {
+        boost::shared_ptr< logging::core > core = logging::core::get();
+
+        boost::shared_ptr< sinks::text_file_backend > backend(new sinks::text_file_backend(
+            keywords::file_name = "file_%5N.xml",
+            keywords::rotation_size = 5 * 1024 * 1024,
+            keywords::rotation_interval = boost::posix_time::hours(1)
+        ));
+
+        // Setup the function that will write file header
+        using boost::lambda::_1;
+        backend->set_open_handler(_1 << "<?xml version=\"1.0\"?>\n<log>\n");
+        // Setup the function that will write file footer
+        backend->set_close_handler(_1 << "</log>\n");
+
+        // Setup formatter that will put attribute values into XML
+        backend->set_formatter(
+            fmt::format("\t<record id=\"%1%\" timestamp=\"%2%\">%3%</record>")
+                % fmt::attr< unsigned int >("Line #")
+                % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
+                % fmt::xml_dec[ fmt::message() ]                // The log message has to be decorated, if it contains special characters
+            );
+
+        typedef sinks::synchronous_sink< sinks::text_file_backend > sink_t;
+        boost::shared_ptr< sink_t > sink(new sink_t(backend));
+
+        core->add_sink(sink);
+    }
+
+You may find a complete example of XML logging in the library distribution. The example is called `xml_file`.
+
+Last, the sink backend also supports the auto-flush feature, like the [link log.detailed.sink_backends.text_ostream text stream backend] does.
+
+[heading Managing rotated files]
+
+After being closed the rotated files can be collected. In order to do so one has to set up a file collector by specifying the target directory where to collect the rotated files and, optionally, size thresholds. For example, we can modify the `init_logging` function to place rotated files into a distinct directory and limit total size of the files:
+
+    void init_logging()
+    {
+        boost::shared_ptr< logging::core > core = logging::core::get();
+
+        boost::shared_ptr< sinks::text_file_backend > backend(new sinks::text_file_backend(
+            keywords::file_name = "file_%5N.log",
+            keywords::rotation_size = 5 * 1024 * 1024,
+            keywords::rotation_interval = boost::posix_time::hours(1)
+        ));
+
+        // Setup the file collector
+        backend->set_file_collector(sinks::file::make_collector(
+            keywords::target = "./logs",                // rotated logs will be moved here
+            keywords::max_size = 100 * 1024 * 1024,     // oldest log files will be removed if the total size of log files reaches 100 MiB...
+            keywords::min_free_space = 50 * 1024 * 1024 // ...or the free space in the target directory comes down to 50 MiB
+        ));
+
+        typedef sinks::synchronous_sink< sinks::text_file_backend > sink_t;
+        boost::shared_ptr< sink_t > sink(new sink_t(backend));
+
+        core->add_sink(sink);
+    }
+
+The `max_size` and `min_free_space` parameters are optional, the corresponding threshold will not be taken into account if the parameter is not specified.
+
+One can create multiple file sink backends that collect files into the same target directory. In this case the most strict thresholds are combined for this target directory. The files from this directory will be erased with no regard to which sink backend wrote it, i.e. in the strict chronological order.
+
+[warning The collector does not resolve log file name clashes between different sink backends, so if the clash occurs the behavior is undefined, in general. Depending on the circumstances, the files may overwrite each other or the operation may fail entirely.]
+
+The file collector provides another useful feature. Assume that you ran your application 5 times and you have 5 log files in the "logs" directory. The file sink backend and file collector provide a `scan_for_files` method that allows to scan the target directory for these files and take them into account. So, if it comes to deleting files, these files will not be forgotten. What's more, if the file name pattern in the backend involves a file counter, scanning for older files allows to update the counter to the most recent value. The usage is trivial:
+
+    void init_logging()
+    {
+        boost::shared_ptr< logging::core > core = logging::core::get();
+
+        boost::shared_ptr< sinks::text_file_backend > backend(new sinks::text_file_backend(
+            keywords::file_name = "file_%5N.log",
+            keywords::rotation_size = 5 * 1024 * 1024,
+            keywords::rotation_interval = boost::posix_time::hours(1)
+        ));
+
+        backend->set_file_collector(sinks::file::make_collector(
+            keywords::target = "./logs",
+            keywords::max_size = 100 * 1024 * 1024,
+            keywords::min_free_space = 50 * 1024 * 1024
+        ));
+
+        // Look for files that may have left from previous runs of the application
+        backend->scan_for_files();
+
+        typedef sinks::synchronous_sink< sinks::text_file_backend > sink_t;
+        boost::shared_ptr< sink_t > sink(new sink_t(backend));
+
+        core->add_sink(sink);
+    }
+
+There are two methods of file scanning: the scan that involves file name matching with the file name pattern (the default) and the scan that assumes that all files in the target directory are log files. The former applies certain restrictions on the placeholders that can be used within the file name pattern, in particular only file counter placeholder and these placeholders of __boost_date_time__ are supported: `%y`, `%Y`, `%m`, `%d`, `%H`, `%M`, `%S`, `%F`. The latter scanning method, in its turn, has its own drawback: it does not allow to update the file counter in the backend. It is also considered to be more dangerous as it may result in unintended file deletion, so be cautious. All-files scanning method can be enabled by passing it as an additional parameter to the `scan_for_files` call:
+
+        // Look for all files in the target directory
+        backend->scan_for_files(sinks::file::scan_all);
 
 [endsect]
 

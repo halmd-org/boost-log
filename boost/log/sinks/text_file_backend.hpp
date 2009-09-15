@@ -369,7 +369,7 @@ public:
      * be considered as log files, or only those files that satisfy the file name pattern.
      * See documentation on <tt>file::collector::scan_for_files</tt> for more information.
      *
-     * \pre File collector and the proper file name patter have already been set.
+     * \pre File collector and the proper file name pattern have already been set.
      *
      * \param method File scanning method
      * \param update_counter If \c true and \a method is \c scan_matching, the method attempts
