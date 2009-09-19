@@ -230,6 +230,8 @@ If using formatters is not appropriate for some reason, you may provide your own
 
     #include <boost/log/sinks/syslog_backend.hpp>
 
+TODO
+
 The syslog backend, as it comes from its name, provides support for syslog API that is available on virtually any UNIX or Linux platform. On Windows there is no  known implementation of the syslog API, therefore the backend is not available on this platform.
 
 The backend is implemented in the `basic_syslog_backend` class template, `syslog_backend` and `wsyslog_backend` convenience typedefs are also available. The backend supports formatting log records, and therefore requires thread synchronization in the frontend. The backend also supports severity level translation from the application-specific values to the syslog-defined values. This is achieved with an additional function object, level extractor, that receives a set of attribute values of each log record and returns appropriate syslog level value. This value is used by the backend in the `LOG_MAKEPRI` macro to construct the final priority value of the syslog record. The other argument of the `LOG_MAKEPRI` macro, the facility, is constant for each backend object and can be specified in the backend constructor arguments.
