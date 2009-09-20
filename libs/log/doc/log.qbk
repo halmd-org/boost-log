@@ -110,7 +110,7 @@ The library supports a number of configuration macros:
     [[`BOOST_LOG_USE_WCHAR_T`]                  [If defined, enables support for wide character logging. Has effect on both the library compilation and user's code compilation. If neither `BOOST_LOG_USE_CHAR` nor `BOOST_LOG_USE_WCHAR_T` is defined, it is assumed the both character types support is enabled. Defining only one of them allows to significantly reduce binary size of the library.]]
     [[`BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER`] [Has effect on Windows platform only, on both the library compilation and user's code compilation stages. If defined, disables support for `QueryPerformanceCounter` API in the `timer` attribute. This will result in a significantly less accurate time readings. The macro is intended to solve possible problems with earlier revisions of AMD Athlon CPU, described [@http://support.microsoft.com/?scid=kb;en-us;895980 here] and [@http://support.microsoft.com/?id=896256 here]. There are also known chipset hardware failures that may prevent this API from functioning properly (see [@http://support.microsoft.com/kb/274323 here]).]]
     [[`BOOST_LOG_USE_NATIVE_SYSLOG`]            [Has effect on the library compilation stage. If for some reason the support for native SysLog API is not detected, define this macro to forcibly enable support for native SysLog.]]
-    [[`BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT`]  [Has effect on the library compilation stage. If defined, all facilities related to settings parsing are not built into the library binary. This can substantially reduce the binary size, as well as remove dependencies on some other Boost libraries, such as __boost_bind__ and __boost_spirit__.]]
+    [[`BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT`]  [Has effect on the library compilation stage. If defined, all facilities related to settings parsing are not built. This can substantially reduce the binary size, as well as remove dependencies on some other Boost libraries, such as __boost_spirit__.]]
     [[`BOOST_LOG_NO_SHORTHAND_NAMES`]           [Has effect on user's code compilation stage. If defined, some deprecated shorthand macro names will not be available.]]
     [[`BOOST_LOG_USE_WINNT6_API`]               [Has effect both on the library and the user's code compilation stages. This macro is Windows-specific. If defined, the library makes use of the Windows NT 6 (Vista, Server 2008) and later APIs to generate more efficient code. This macro will also enable some experimental features of the library. Note, however, that the resulting binary will not run on Windows prior to NT 6. In order to use this feature Platform SDK 6.0 is required.]]
 ]
@@ -315,6 +315,14 @@ Although lazy streaming is not provided by the library out of the box, nothing p
 
 [endsect]
 
+[section:why_not_log4j Why not using hierarchy of loggers, like in log4j? Why not Boost.Log4j? Etc.]
+
+There are enough of [@http://logging.apache.org/log4j/ log4j]-like libraries available for C++ already (see [@http://logging.apache.org/log4cxx/ here], [@http://log4cplus.sourceforge.net/ here] and [@http://log4cpp.sourceforge.net/ here]), so there is no point in implementing yet another one. Instead, this library was aimed to solve more complex tasks, including ones that do not directly fall under the common definition of "logging" term as a debugging tool. Additionally, as Boost.Log was to be a generic library, it had to provide more ways of extending itself, while keeping performance as high as possible. Log4j concept seemed too limiting and inappropriate for these tasks and therefore was rejected.
+
+As for hierarchical loggers, there is no need for this feature in the current library design. One of the main benefits it provides in log4j is determining appenders (sinks, in terms of this library) in which a log record will end up. This library achieves the same result by filtering. The other application of this feature in Boost.Log could be that the loggers in the hierarchy could combine their sets of attributes for each log record, but there was no demand in the real world applications for such a feature.
+
+[endsect]
+
 [endsect]
 
 [xinclude autodoc.xml]
@@ -334,6 +342,7 @@ Points in this section are not necessarily going to be implemented. These are ma
 * Think over a header-only configuration. Perhaps, with a reduced functionality.
 * Improve the settings file parsing. The idea is to open an interface that would allow to set independent parameters during the parsing process. This would allow users to implement their own parsers and load library settings from e.g. Windows registry or XML files.
 * Provide a "bridge" sink backend that would transport log records to a logging core of another character type. The sink could simplify integration of different libraries and application that use logging with different character types, when there's no way to unify character types.
+* Update syslog support to [@http://tools.ietf.org/html/rfc5424 RFC 5424].
 
 [endsect]
 
@@ -341,7 +350,7 @@ Points in this section are not necessarily going to be implemented. These are ma
 
 * Luca Rigini wrote the initial implementation of the NT event log sink and made a lot of suggestions on how to improve the library in regard of writing user-defined sinks.
 * Jean-Daniel Michaud, Michael Lacher and all others who took part in the discussion of the requirements to the library on [@http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Boost.Logging Wiki].
-* John Torjo, Gennadiy Rozental and others for their discussion on the John's logging library on the Boost developers list. It helped a lot to learn the requirements and possible solutions for the library.
-* All authors of the great Boost libraries that were involved in this library (notably, __boost_smart_ptr__, __boost_thread__, __boost_function__, __boost_optional__, __boost_date_time__, __boost_filesystem__, __boost_intrusive__, __boost_iostreams__ and other).
+* John Torjo, Gennadiy Rozental and others for their discussion on John's logging library on the Boost developers list. It helped a lot to learn the requirements and possible solutions for the library.
+* All authors of the great Boost libraries that were involved in this library (notably, __boost_smart_ptr__, __boost_thread__, __boost_function__, __boost_optional__, __boost_date_time__, __boost_filesystem__, __boost_intrusive__ and other).
 
 [endsect]

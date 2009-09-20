@@ -230,36 +230,40 @@ If using formatters is not appropriate for some reason, you may provide your own
 
     #include <boost/log/sinks/syslog_backend.hpp>
 
-TODO
+The syslog backend, as it comes from its name, provides support for syslog API that is available on virtually any UNIX-like platform. On Windows there exist at least [@http://syslog-win32.sourceforge.net one] public implementation of the syslog client API. However, in order to provide maximum flexibibity and better portability the library offers built-in support for the syslog protocol described in [@http://tools.ietf.org/html/rfc3164 RFC 3164]. Thus on Windows only built-in implementation is supported, while on UNIX-like systems both built-in and system-wide implementations are supported.
 
-The syslog backend, as it comes from its name, provides support for syslog API that is available on virtually any UNIX or Linux platform. On Windows there is no  known implementation of the syslog API, therefore the backend is not available on this platform.
+The backend is implemented in the `basic_syslog_backend` class template, `syslog_backend` and `wsyslog_backend` convenience typedefs are also available. The backend supports formatting log records, and therefore requires thread synchronization in the frontend. The backend also supports severity level translation from the application-specific values to the syslog-defined values. This is achieved with an additional function object, level extractor, that receives a set of attribute values of each log record and returns appropriate syslog level value. This value is used by the backend to construct the final priority value of the syslog record. The other component of the syslog priority value, the facility, is constant for each backend object and can be specified in the backend constructor arguments.
 
-The backend is implemented in the `basic_syslog_backend` class template, `syslog_backend` and `wsyslog_backend` convenience typedefs are also available. The backend supports formatting log records, and therefore requires thread synchronization in the frontend. The backend also supports severity level translation from the application-specific values to the syslog-defined values. This is achieved with an additional function object, level extractor, that receives a set of attribute values of each log record and returns appropriate syslog level value. This value is used by the backend in the `LOG_MAKEPRI` macro to construct the final priority value of the syslog record. The other argument of the `LOG_MAKEPRI` macro, the facility, is constant for each backend object and can be specified in the backend constructor arguments.
-
-Level extractors can be written by library users to map the application log levels to the syslog levels the best way. However, the library provides two extractors that would fit this need in obvious cases. The `direct_level_mapping` class template provides a way to directly map values of some integral attribute to syslog levels. The `custom_level_mapping` class template adds some flexibility and allows to map arbitrary values of some integral attribute to syslog levels. The `wdirect_level_mapping` and `wcustom_level_mapping` are also available for wide-character logging.
-
-One additional thing should be noted. Syslog API allows to customize the service behavior by specifying additional flags to the `openlog` call. The backend too supports this feature - the options can be passed to the backend constructor. However, since `openlog` is only called once per logging session, the constructor argument is only taken into consideration for the first backend object being created.
+Level extractors can be written by library users to map the application log levels to the syslog levels the best way. However, the library provides two extractors that would fit this need in obvious cases. The `direct_level_mapping` class template provides a way to directly map values of some integral attribute to syslog levels, without any conversion. The `custom_level_mapping` class template adds some flexibility and allows to map arbitrary values of some integral attribute to syslog levels. The `wdirect_level_mapping` and `wcustom_level_mapping` are also available for wide-character logging.
 
 Anyway, one example is better than a thousand words.
 
-    // The function registers syslog sink in the logging library
+    // The function registers syslog sinks in the logging library
     void init_logging()
     {
         boost::shared_ptr< logging::core > core = logging::core::get();
 
-        // Create a backend. Specify facility and options in the constructor.
+        // Create a backend
         boost::shared_ptr< sinks::syslog_backend > backend(new sinks::syslog_backend(
-            sinks::syslog::user, sinks::syslog::console_fallback | sinks::syslog::log_pid));
+            keywords::facility = sinks::syslog::user,               // set the logging facility
+            keywords::use_impl = sinks::syslog::native              // specify that the native UNIX API should be used
+        ));
 
         // Set the straightforward level translator for the "Severity" attribute of type int
-        backend->set_level_extractor(sinks::syslog::direct_level_mapping< >("Severity"));
+        backend->set_level_extractor(sinks::syslog::direct_level_mapping< int >("Severity"));
 
         // Wrap it into the frontend and register in the core. The backend requires synchronization in the frontend.
-        boost::shared_ptr< sinks::synchronous_sink< sinks::syslog_backend > > sink(new sinks::synchronous_sink< sinks::syslog_backend >(backend));
-        core->add_sink(sink);
+        typedef sinks::synchronous_sink< sinks::syslog_backend > sink_t;
+        core->add_sink(boost::make_shared< sink_t >(backend));
 
-        // Create a new backend. No use to specify options here.
-        backend.reset(new sinks::syslog_backend(sinks::syslog::local0));
+        // Create a new backend
+        backend.reset(new sinks::syslog_backend(
+            keywords::facility = sinks::syslog::local0,             // set the logging facility
+            keywords::use_impl = sinks::syslog::udp_socket_based    // specify that the built-in implementation should be used
+        ));
+
+        // Setup the target address and port to send syslog messages to
+        backend->set_target_address("192.164.1.10", 514);
 
         // Create and fill in another level translator for "MyLevel" attribute of type string
         sinks::syslog::custom_level_mapping< std::string > mapping("MyLevel");
@@ -270,11 +274,12 @@ Anyway, one example is better than a thousand words.
         backend->set_level_extractor(mapping);
 
         // Wrap it into the frontend and register in the core.
-        sink.reset(new sinks::synchronous_sink< sinks::syslog_backend >(backend));
-        core->add_sink(sink);
+        core->add_sink(boost::make_shared< sink_t >(backend));
     }
 
 Please note that all syslog constants, as well as level extractors, are declared within a nested namespace `syslog`. The library will not accept (and does not declare in the backend interface) native syslog constants, which are macros, actually.
+
+Also note that the backend will default to built-it implementation and "user" logging facility, if the corresponding constructor parameters are not specified.
 
 [endsect]
 
@@ -292,7 +297,8 @@ The usage is quite simple and straightforward:
         boost::shared_ptr< logging::core > core = logging::core::get();
 
         // Create the sink. The backend requires synchronization in the frontend.
-        boost::shared_ptr< sinks::synchronous_sink< sinks::debug_output_backend > > sink(new sinks::synchronous_sink< sinks::debug_output_backend >());
+        typedef sinks::synchronous_sink< sinks::debug_output_backend > sink_t;
+        boost::shared_ptr< sink_t > sink(new sink_t());
 
         // Set the special filter to the frontend in order to skip the sink when no debugger is available
         sink->set_filter(sinks::debug_output_backend::debugger_presence_filter());

@@ -324,7 +324,7 @@ public:
      *                   \li \c udp_socket_based - Use the UDP socket-based implementation, conforming to
      *                                             RFC3164 protocol specification. This is the default.
      * \li \c ip_version - Specifies IP protocol version to use, in case if socket-based implementation
-     *                     is used. Can be either v4 (the default one) or v6.
+     *                     is used. Can be either \c v4 (the default one) or \c v6.
      */
 #ifndef BOOST_LOG_DOXYGEN_PASS
     BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(basic_syslog_backend, construct)
