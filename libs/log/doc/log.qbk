@@ -34,6 +34,7 @@
 [def __boost_iostreams__ [@http://www.boost.org/doc/libs/release/libs/iostreams/doc/index.html Boost.IOStreams]]
 [def __boost_mpl__ [@http://www.boost.org/doc/libs/release/libs/mpl/doc/index.html Boost.MPL]]
 [def __boost_exception__ [@http://www.boost.org/doc/libs/release/libs/exception/doc/boost-exception.html Boost.Exception]]
+[def __boost_scope_exit__ [@http://www.boost.org/doc/libs/release/libs/scope_exit/doc/html/index.html Boost.ScopeExit]]
 
 [section Disclaimer]
 
@@ -175,6 +176,7 @@ Along with the described above primary facilities, the library provides a wide v
 
 This section contains a more detailed description of library components and features. Some of them are presented in the [link log.tutorial Tutorial] section, so it is recommended to read it first to get the basic understanding of the library.
 
+[include:log core.qbk]
 [include:log sources.qbk]
 [include:log sink_frontends.qbk]
 [include:log sink_backends.qbk]

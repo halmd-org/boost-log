@@ -504,6 +504,8 @@ It is sometimes convenient to completely suppress all exceptions at a certain li
 
 This part of the library is provided in order to simplify logging initialization and provide basic tools to develop user-specific initialization mechanisms. It is known that setup capabilities and preferences may vary widely from application to application, therefore the library does not attempt to provide a universal solution for this task. The provided tools are mostly intended to serve as a quick drop-in support for logging setup and a set of instruments to implement something more elaborate and more fitting user's needs.
 
+Some of the features described in this section will require the separate library binary, with name based on "boost_log_setup" substring. This binary depends on the main library binary.
+
 [section:convenience Convenience functions]
 
     #include <boost/log/utility/init/to_console.hpp>

@@ -155,7 +155,46 @@ Sometimes it is important to categorize log records based on some constant piece
 
     #include <boost/log/sources/exception_handler_feature.hpp>
 
-TODO
+The library provides a logger feature that enables user to handle and/or suppress exceptions on the logger level. The `exception_handler` feature adds a `set_exception_handler` method to the logger that allows to set a functional object to be called of an exception is thrown from the logging core during filtering or processing log records. One can use [link log.detailed.utilities.exception_handlers library-provided adapters] in order to simplify implementing exception handlers. Usage example is as follows:
+
+    enum severity_levels
+    {
+        normal,
+        warning,
+        error
+    };
+
+    // A logger class that allows to intercept exceptions and supports severity level
+    class my_logger_mt :
+        public src::basic_composite_logger<
+            char,
+            my_logger_mt,
+            src::multi_thread_model,
+            src::features<
+                src::severity< severity_levels >,
+                src::exception_handler
+            >
+        >
+    {
+        BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(my_logger_mt)
+    };
+
+    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, my_logger_mt)
+    {
+        my_logger_mt lg;
+
+        // Setup exception handler: all exceptions, that occur while
+        // logging through this logger, will be suppressed
+        lg.set_exception_handler(logging::make_exception_suppressor());
+
+        return lg;
+    }
+
+    void foo()
+    {
+        // This will not throw
+        BOOST_LOG_SEV(my_logger::get(), normal) << "Hello, world";
+    }
 
 [endsect]
 
