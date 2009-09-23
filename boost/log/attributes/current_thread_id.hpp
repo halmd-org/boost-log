@@ -29,6 +29,7 @@
 #endif
 
 #include <boost/make_shared.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 
@@ -46,7 +47,8 @@ namespace attributes {
  */
 class current_thread_id :
     public attribute,
-    public attribute_value
+    public attribute_value,
+    public enable_shared_from_this< current_thread_id >
 {
 public:
     //! A held attribute value type
@@ -64,6 +66,11 @@ public:
         }
         else
             return false;
+    }
+
+    virtual shared_ptr< attribute_value > get_value()
+    {
+        return this->shared_from_this();
     }
 
     virtual shared_ptr< attribute_value > detach_from_thread()
