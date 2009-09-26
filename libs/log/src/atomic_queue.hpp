@@ -107,7 +107,7 @@ private:
 #endif // !defined(BOOST_LOG_CAS_PTR)
     };
 
-    enum
+    enum constants
     {
         // Padding size to avoid false aliasing
         cache_line_size = 64
