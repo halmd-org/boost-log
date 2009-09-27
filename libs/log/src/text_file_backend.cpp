@@ -79,54 +79,92 @@ namespace {
     template< >
     struct file_char_traits< char >
     {
-        enum
-        {
-            percent = '%',
-            number_placeholder = 'N',
-            day_placeholder = 'd',
-            month_placeholder = 'm',
-            year_placeholder = 'y',
-            full_year_placeholder = 'Y',
-            frac_sec_placeholder = 'f',
-            seconds_placeholder = 'S',
-            minutes_placeholder = 'M',
-            hours_placeholder = 'H',
-            space = ' ',
-            plus = '+',
-            minus = '-',
-            zero = '0',
-            dot = '.',
-            newline = '\n'
-        };
+        typedef char char_type;
+
+        static const char_type percent = '%';
+        static const char_type number_placeholder = 'N';
+        static const char_type day_placeholder = 'd';
+        static const char_type month_placeholder = 'm';
+        static const char_type year_placeholder = 'y';
+        static const char_type full_year_placeholder = 'Y';
+        static const char_type frac_sec_placeholder = 'f';
+        static const char_type seconds_placeholder = 'S';
+        static const char_type minutes_placeholder = 'M';
+        static const char_type hours_placeholder = 'H';
+        static const char_type space = ' ';
+        static const char_type plus = '+';
+        static const char_type minus = '-';
+        static const char_type zero = '0';
+        static const char_type dot = '.';
+        static const char_type newline = '\n';
+
         static bool is_digit(char c) { return (isdigit(c) != 0); }
         static std::string default_file_name_pattern() { return "%5N.log"; }
     };
 
+#ifndef BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
+    const file_char_traits< char >::char_type file_char_traits< char >::percent;
+    const file_char_traits< char >::char_type file_char_traits< char >::number_placeholder;
+    const file_char_traits< char >::char_type file_char_traits< char >::day_placeholder;
+    const file_char_traits< char >::char_type file_char_traits< char >::month_placeholder;
+    const file_char_traits< char >::char_type file_char_traits< char >::year_placeholder;
+    const file_char_traits< char >::char_type file_char_traits< char >::full_year_placeholder;
+    const file_char_traits< char >::char_type file_char_traits< char >::frac_sec_placeholder;
+    const file_char_traits< char >::char_type file_char_traits< char >::seconds_placeholder;
+    const file_char_traits< char >::char_type file_char_traits< char >::minutes_placeholder;
+    const file_char_traits< char >::char_type file_char_traits< char >::hours_placeholder;
+    const file_char_traits< char >::char_type file_char_traits< char >::space;
+    const file_char_traits< char >::char_type file_char_traits< char >::plus;
+    const file_char_traits< char >::char_type file_char_traits< char >::minus;
+    const file_char_traits< char >::char_type file_char_traits< char >::zero;
+    const file_char_traits< char >::char_type file_char_traits< char >::dot;
+    const file_char_traits< char >::char_type file_char_traits< char >::newline;
+#endif // BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
+
     template< >
     struct file_char_traits< wchar_t >
     {
-        enum
-        {
-            percent = L'%',
-            number_placeholder = L'N',
-            day_placeholder = L'd',
-            month_placeholder = L'm',
-            year_placeholder = L'y',
-            full_year_placeholder = L'Y',
-            frac_sec_placeholder = L'f',
-            seconds_placeholder = L'S',
-            minutes_placeholder = L'M',
-            hours_placeholder = L'H',
-            space = L' ',
-            plus = L'+',
-            minus = L'-',
-            zero = L'0',
-            dot = L'.',
-            newline = L'\n'
-        };
+        typedef wchar_t char_type;
+
+        static const char_type percent = L'%';
+        static const char_type number_placeholder = L'N';
+        static const char_type day_placeholder = L'd';
+        static const char_type month_placeholder = L'm';
+        static const char_type year_placeholder = L'y';
+        static const char_type full_year_placeholder = L'Y';
+        static const char_type frac_sec_placeholder = L'f';
+        static const char_type seconds_placeholder = L'S';
+        static const char_type minutes_placeholder = L'M';
+        static const char_type hours_placeholder = L'H';
+        static const char_type space = L' ';
+        static const char_type plus = L'+';
+        static const char_type minus = L'-';
+        static const char_type zero = L'0';
+        static const char_type dot = L'.';
+        static const char_type newline = L'\n';
+
         static bool is_digit(wchar_t c) { return (iswdigit(c) != 0); }
         static std::wstring default_file_name_pattern() { return L"%5N.log"; }
     };
+
+#ifndef BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::percent;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::number_placeholder;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::day_placeholder;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::month_placeholder;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::year_placeholder;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::full_year_placeholder;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::frac_sec_placeholder;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::seconds_placeholder;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::minutes_placeholder;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::hours_placeholder;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::space;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::plus;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::minus;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::zero;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::dot;
+    const file_char_traits< wchar_t >::char_type file_char_traits< wchar_t >::newline;
+#endif // BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE
 
     //! Date and time formatter
     class date_and_time_formatter
@@ -256,17 +294,17 @@ namespace {
         spirit::classic::parse_info< path_string_type::const_iterator > result = spirit::classic::parse(it, end,
         (
             !(
-                spirit::classic::ch_p(static_cast< path_char_type >(traits_t::zero)) |
-                spirit::classic::ch_p(static_cast< path_char_type >(traits_t::plus)) |
-                spirit::classic::ch_p(static_cast< path_char_type >(traits_t::minus)) |
-                spirit::classic::ch_p(static_cast< path_char_type >(traits_t::space))
+                spirit::classic::ch_p(traits_t::zero) |
+                spirit::classic::ch_p(traits_t::plus) |
+                spirit::classic::ch_p(traits_t::minus) |
+                spirit::classic::ch_p(traits_t::space)
             ) >>
             !spirit::classic::uint_p[spirit::classic::assign_a(width)] >>
             !(
-                spirit::classic::ch_p(static_cast< path_char_type >(traits_t::dot)) >>
+                spirit::classic::ch_p(traits_t::dot) >>
                 spirit::classic::uint_p
             ) >>
-            spirit::classic::ch_p(static_cast< path_char_type >(traits_t::number_placeholder))
+            spirit::classic::ch_p(traits_t::number_placeholder)
         ));
 
         if (result.hit)
