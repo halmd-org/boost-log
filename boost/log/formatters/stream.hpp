@@ -65,7 +65,7 @@ public:
         return result_type(fmt);
     }
 
-#ifndef BOOST_LOG_DOXYGEN_PASS
+#if !defined(BOOST_LOG_DOXYGEN_PASS) && !defined(BOOST_LOG_BROKEN_STRING_LITERALS)
 
 #ifdef BOOST_LOG_USE_CHAR
     template< typename T, std::size_t LenV >
@@ -95,7 +95,7 @@ public:
     }
 #endif // BOOST_LOG_USE_WCHAR_T
 
-#endif // BOOST_LOG_DOXYGEN_PASS
+#endif // !defined(BOOST_LOG_DOXYGEN_PASS) && !defined(BOOST_LOG_BROKEN_STRING_LITERALS)
 
     static const stream_placeholder instance;
 };
@@ -146,7 +146,7 @@ inline fmt_chain<
     return result_type(static_cast< LeftFmtT const& >(left), right);
 }
 
-#ifndef BOOST_LOG_DOXYGEN_PASS
+#if !defined(BOOST_LOG_DOXYGEN_PASS) && !defined(BOOST_LOG_BROKEN_STRING_LITERALS)
 
 #ifdef BOOST_LOG_USE_CHAR
 
@@ -202,7 +202,7 @@ inline typename enable_if<
 
 #endif // BOOST_LOG_USE_WCHAR_T
 
-#endif // BOOST_LOG_DOXYGEN_PASS
+#endif // !defined(BOOST_LOG_DOXYGEN_PASS) && !defined(BOOST_LOG_BROKEN_STRING_LITERALS)
 
 } // namespace formatters
 
