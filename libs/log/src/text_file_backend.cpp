@@ -938,7 +938,7 @@ void basic_text_file_backend< CharT >::do_consume(
     }
 
     m_pImpl->m_File.write(formatted_message.data(), static_cast< std::streamsize >(formatted_message.size()));
-    m_pImpl->m_File.put(static_cast< typename target_string_type::value_type >(traits_t::newline));
+    m_pImpl->m_File.put(traits_t::newline);
 
     m_pImpl->m_CharactersWritten += formatted_message.size() + 1;
 
@@ -969,7 +969,7 @@ void basic_text_file_backend< CharT >::set_file_name_pattern_internal(path_type 
 
     do
     {
-        it = std::find(it, end, static_cast< path_char_type >(traits_t::percent));
+        it = std::find(it, end, traits_t::percent);
         if (it == end)
             break;
         path_string_type::const_iterator placeholder_begin = it++;
@@ -1126,7 +1126,7 @@ void basic_text_multifile_backend< CharT >::do_consume(
         if (m_pImpl->m_File.is_open())
         {
             m_pImpl->m_File.write(formatted_message.data(), static_cast< std::streamsize >(formatted_message.size()));
-            m_pImpl->m_File.put(static_cast< typename target_string_type::value_type >(traits_t::newline));
+            m_pImpl->m_File.put(traits_t::newline);
             m_pImpl->m_File.close();
         }
     }
