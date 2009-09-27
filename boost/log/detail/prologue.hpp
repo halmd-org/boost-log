@@ -54,8 +54,8 @@
 #endif // (defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530) && !(defined BOOST_NO_COMPILER_CONFIG)
 
 #if defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 1))
-// GCC 4.0.0 (and probably older) can't cope with some optimizations regarding to string literals
-#define BOOST_LOG_BROKEN_STRING_LITERALS
+    // GCC 4.0.0 (and probably older) can't cope with some optimizations regarding string literals
+#   define BOOST_LOG_BROKEN_STRING_LITERALS
 #endif
 
 // Extended declaration macros. Used to implement compiler-specific optimizations.
