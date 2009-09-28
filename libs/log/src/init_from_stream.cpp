@@ -315,10 +315,9 @@ private:
         shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
 
         // FileName
-        path_type file_name;
         typename params_t::const_iterator it = params.find(constants::file_name_param_name());
         if (it != params.end())
-            file_name = boost::log::aux::to_universal_path(it->second);
+            backend->set_file_name_pattern(it->second);
         else
             boost::log::aux::throw_exception(std::runtime_error("File name is not specified"));
 
