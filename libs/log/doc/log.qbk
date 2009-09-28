@@ -84,15 +84,15 @@ Aside from these namespaces the library also provides `boost::log::experimental`
 
 The library should build and work with a reasonably well-compliant compiler. The library was successfully built and tested on the following platforms:
 
-* Windows XP, Windows Vista. MSVC 8.0, 9.0. MSVC 7.1 should work too, but it was not tested.
+* Windows XP, Windows Vista. MSVC 8.0, 9.0. MSVC 7.1 may work too, but it was not tested.
 * Windows Vista. Intel C++ Compiler 10.1.022.
-* Linux. GCC 4.2, 4.3. However, all GCC 4.x should work well.
+* Linux. GCC 4.2, 4.3. GCC 4.1 may work too, but it was not tested.
 
 The following compilers are not supported and will likely fail to compile the library:
 
 * MSVC 7.0 and older.
 * Borland C++ 5.5.1 (free version). Newer versions might or might not work.
-* GCC 3.3 and older.
+* GCC 4.0 and older.
 
 [endsect]
 
