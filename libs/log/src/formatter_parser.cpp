@@ -199,9 +199,7 @@ public:
         else
         {
             formatters_repository< char_type > const& repo = formatters_repository< char_type >::get();
-#if !defined(BOOST_LOG_NO_THREADS)
-            shared_lock< log::aux::light_rw_mutex > lock(repo.m_Mutex);
-#endif
+            BOOST_LOG_EXPR_IF_MT(shared_lock< log::aux::light_rw_mutex > lock(repo.m_Mutex);)
 
             typename formatter_types< CharT >::factories_map::const_iterator it = repo.m_Map.find(m_AttrName);
             if (it != repo.m_Map.end())
@@ -211,10 +209,8 @@ public:
             }
             else
             {
-#if !defined(BOOST_LOG_NO_THREADS)
                 // No user-defined factory, shall use the most generic formatter we can ever imagine at this point
-                lock.unlock();
-#endif
+                BOOST_LOG_EXPR_IF_MT(lock.unlock();)
 
                 typedef mpl::joint_view<
                     // We have to exclude std::time_t since it's an integral type and will conflict with one of the standard types
@@ -361,9 +357,7 @@ void register_formatter_factory(
     typename formatter_types< CharT >::string_type name(attr_name);
     formatters_repository< CharT >& repo = formatters_repository< CharT >::get();
 
-#if !defined(BOOST_LOG_NO_THREADS)
-    lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);)
     repo.m_Map[name] = factory;
 }
 

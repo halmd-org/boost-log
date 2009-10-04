@@ -425,8 +425,8 @@ In general, you can implement new logging sources the way you like, the library 
 # Whenever a logging source is ready to emit a log record, it should call the `open_record` in the corresponding core. The source-specific attributes should be passed into that call. During that call the core allocates resources for the record being made and performs filtering.
 # If the call to `open_record` returned a valid log record, then the record passed the filtering and is considered to be opened. The record may later be either confirmed by the source by subsequently calling `push_record` or withdrawned by destroying it.
 # If the call to `open_record` returned invalid (empty) log record, it means that the record has not been opened (most likely due to filtering reject). In that case the logging core does not hold any resources associated with the record, and thus the source must not call `push_record` for that particular logging attempt.
-# The source may subsequently open more than one records. Opened log records exist independently from each other.
-# The cores for different character types are completely independent.
+# The source may subsequently open more than one record. Opened log records exist independently from each other.
+# The cores for different character types are completely independent. A log source would typically use one logging core with the appropriate character type.
 
 [endsect]
 

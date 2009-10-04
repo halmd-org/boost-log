@@ -186,7 +186,7 @@ public:
      *
      * \param attrs The set of attributes to be installed.
      */
-    void set_global_attributes(attribute_set_type const& attrs) const;
+    void set_global_attributes(attribute_set_type const& attrs);
 
     /*!
      * The method adds an attribute to the thread-specific attribute set. The attribute will be implicitly added to
@@ -225,7 +225,7 @@ public:
      *
      * \param attrs The set of attributes to be installed.
      */
-    void set_thread_attributes(attribute_set_type const& attrs) const;
+    void set_thread_attributes(attribute_set_type const& attrs);
 
     /*!
      * The method sets exception handler function. The function will be called with no arguments

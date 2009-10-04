@@ -147,6 +147,12 @@
 #   include <boost/thread/detail/platform.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
+#if !defined(BOOST_LOG_NO_THREADS)
+#   define BOOST_LOG_EXPR_IF_MT(expr) expr
+#else
+#   define BOOST_LOG_EXPR_IF_MT(expr)
+#endif // !defined(BOOST_LOG_NO_THREADS)
+
 namespace boost {
 
 // Setup namespace name

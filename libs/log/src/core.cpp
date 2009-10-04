@@ -139,9 +139,7 @@ private:
     //! The method initializes thread-specific data
     void init_thread_data()
     {
-#if !defined(BOOST_LOG_NO_THREADS)
-        scoped_write_lock lock(Mutex);
-#endif
+        BOOST_LOG_EXPR_IF_MT(scoped_write_lock lock(Mutex);)
         if (!pThreadData.get())
         {
             std::auto_ptr< thread_data > p(new thread_data());
@@ -177,9 +175,7 @@ shared_ptr< basic_core< CharT > > basic_core< CharT >::get()
 template< typename CharT >
 bool basic_core< CharT >::set_logging_enabled(bool enabled)
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_write_lock lock(pImpl->Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
     const bool old_value = pImpl->Enabled;
     pImpl->Enabled = enabled;
     return old_value;
@@ -189,9 +185,7 @@ bool basic_core< CharT >::set_logging_enabled(bool enabled)
 template< typename CharT >
 void basic_core< CharT >::add_sink(shared_ptr< sink_type > const& s)
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_write_lock lock(pImpl->Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
     typename implementation::sink_list::iterator it =
         std::find(pImpl->Sinks.begin(), pImpl->Sinks.end(), s);
     if (it == pImpl->Sinks.end())
@@ -202,9 +196,7 @@ void basic_core< CharT >::add_sink(shared_ptr< sink_type > const& s)
 template< typename CharT >
 void basic_core< CharT >::remove_sink(shared_ptr< sink_type > const& s)
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_write_lock lock(pImpl->Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
     typename implementation::sink_list::iterator it =
         std::find(pImpl->Sinks.begin(), pImpl->Sinks.end(), s);
     if (it != pImpl->Sinks.end())
@@ -217,9 +209,7 @@ template< typename CharT >
 std::pair< typename basic_core< CharT >::attribute_set_type::iterator, bool >
 basic_core< CharT >::add_global_attribute(string_type const& name, shared_ptr< attribute > const& attr)
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_write_lock lock(pImpl->Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
     return pImpl->GlobalAttributes.insert(typename attribute_set_type::key_type(name), attr);
 }
 
@@ -227,9 +217,7 @@ basic_core< CharT >::add_global_attribute(string_type const& name, shared_ptr< a
 template< typename CharT >
 void basic_core< CharT >::remove_global_attribute(typename attribute_set_type::iterator it)
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_write_lock lock(pImpl->Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
     pImpl->GlobalAttributes.erase(it);
 }
 
@@ -237,18 +225,14 @@ void basic_core< CharT >::remove_global_attribute(typename attribute_set_type::i
 template< typename CharT >
 typename basic_core< CharT >::attribute_set_type basic_core< CharT >::get_global_attributes() const
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_write_lock lock(pImpl->Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
     return pImpl->GlobalAttributes;
 }
 //! The method replaces the complete set of currently registered global attributes with the provided set
 template< typename CharT >
-void basic_core< CharT >::set_global_attributes(attribute_set_type const& attrs) const
+void basic_core< CharT >::set_global_attributes(attribute_set_type const& attrs)
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_write_lock lock(pImpl->Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
     pImpl->GlobalAttributes = attrs;
 }
 
@@ -279,7 +263,7 @@ typename basic_core< CharT >::attribute_set_type basic_core< CharT >::get_thread
 }
 //! The method replaces the complete set of currently registered thread-specific attributes with the provided set
 template< typename CharT >
-void basic_core< CharT >::set_thread_attributes(attribute_set_type const& attrs) const
+void basic_core< CharT >::set_thread_attributes(attribute_set_type const& attrs)
 {
     typename implementation::thread_data* p = pImpl->get_thread_data();
     p->ThreadAttributes = attrs;
@@ -289,9 +273,7 @@ void basic_core< CharT >::set_thread_attributes(attribute_set_type const& attrs)
 template< typename CharT >
 void basic_core< CharT >::set_filter(filter_type const& filter)
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_write_lock lock(pImpl->Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
     pImpl->Filter = filter;
 }
 
@@ -299,9 +281,7 @@ void basic_core< CharT >::set_filter(filter_type const& filter)
 template< typename CharT >
 void basic_core< CharT >::reset_filter()
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_write_lock lock(pImpl->Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
     pImpl->Filter.clear();
 }
 
@@ -309,9 +289,7 @@ void basic_core< CharT >::reset_filter()
 template< typename CharT >
 void basic_core< CharT >::set_exception_handler(exception_handler_type const& handler)
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_write_lock lock(pImpl->Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
     pImpl->ExceptionHandler = handler;
 }
 
@@ -325,10 +303,9 @@ typename basic_core< CharT >::record_type basic_core< CharT >::open_record(attri
     if (pImpl->Enabled) try
     {
         typename implementation::thread_data* tsd = pImpl->get_thread_data();
-#if !defined(BOOST_LOG_NO_THREADS)
+
         // Lock the core to be safe against any attribute or sink set modifications
-        typename implementation::scoped_read_lock lock(pImpl->Mutex);
-#endif
+        BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock lock(pImpl->Mutex);)
 
         if (pImpl->Enabled && !pImpl->Sinks.empty())
         {
@@ -388,10 +365,8 @@ typename basic_core< CharT >::record_type basic_core< CharT >::open_record(attri
 #endif // !defined(BOOST_LOG_NO_THREADS)
     catch (...)
     {
-#if !defined(BOOST_LOG_NO_THREADS)
         // Lock the core to be safe against any attribute or sink set modifications
-        typename implementation::scoped_read_lock lock(pImpl->Mutex);
-#endif
+        BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock lock(pImpl->Mutex);)
         if (pImpl->ExceptionHandler.empty())
             throw;
 
@@ -427,10 +402,8 @@ void basic_core< CharT >::push_record(record_type const& rec)
 #endif // !defined(BOOST_LOG_NO_THREADS)
     catch (...)
     {
-#if !defined(BOOST_LOG_NO_THREADS)
         // Lock the core to be safe against any attribute or sink set modifications
-        typename implementation::scoped_read_lock lock(pImpl->Mutex);
-#endif
+        BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock lock(pImpl->Mutex);)
         if (pImpl->ExceptionHandler.empty())
             throw;
 

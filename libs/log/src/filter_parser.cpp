@@ -515,9 +515,7 @@ void register_filter_factory(const CharT* attr_name, shared_ptr< filter_factory<
     std::basic_string< CharT > name(attr_name);
     filters_repository< CharT >& repo = filters_repository< CharT >::get();
 
-#if !defined(BOOST_LOG_NO_THREADS)
-    lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);)
     repo.m_Map[name] = factory;
 }
 
@@ -533,10 +531,8 @@ parse_filter(const CharT* begin, const CharT* end)
     typedef CharT char_type;
     typedef typename basic_core< char_type >::filter_type filter_type;
 
-#if !defined(BOOST_LOG_NO_THREADS)
-    filters_repository< CharT >& repo = filters_repository< CharT >::get();
-    log::aux::shared_lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(filters_repository< CharT >& repo = filters_repository< CharT >::get();)
+    BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);)
 
     filter_type filt;
     filter_grammar< char_type > gram(filt);

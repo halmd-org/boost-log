@@ -261,9 +261,7 @@ struct sinks_repository :
         typename params_t::const_iterator dest = params.find(constants::sink_destination_param_name());
         if (dest != params.end())
         {
-#if !defined(BOOST_LOG_NO_THREADS)
-            log::aux::shared_lock_guard< log::aux::light_rw_mutex > _(m_Mutex);
-#endif
+            BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< log::aux::light_rw_mutex > _(m_Mutex);)
             typename sink_factories::const_iterator it = m_Factories.find(dest->second);
             if (it != m_Factories.end())
             {
@@ -641,9 +639,7 @@ void register_sink_factory(
     > const& factory)
 {
     sinks_repository< CharT >& repo = sinks_repository< CharT >::get();
-#if !defined(BOOST_LOG_NO_THREADS)
-    lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);)
     repo.m_Factories[sink_name] = factory;
 }
 

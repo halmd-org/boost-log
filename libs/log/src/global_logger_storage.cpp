@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   global_logger_storage.cpp
  * \author Andrey Semashev
  * \date   21.04.2008
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -60,9 +60,7 @@ shared_ptr< logger_holder_base > global_storage< CharT >::get_or_init(
     repository_t& repo = repository_t::get();
     log::type_info_wrapper wrapped_key = key;
 
-#if !defined(BOOST_LOG_NO_THREADS)
-    lock_guard< mutex > _(repo.m_Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(repo.m_Mutex);)
     typename loggers_map_t::iterator it = repo.m_Loggers.find(wrapped_key);
     if (it != repo.m_Loggers.end())
     {

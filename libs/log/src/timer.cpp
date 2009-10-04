@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   timer.cpp
  * \author Andrey Semashev
  * \date   02.12.2007
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -45,10 +45,9 @@ timer::timer()
 //! The method returns the actual attribute value. It must not return NULL.
 shared_ptr< attribute_value > timer::get_value()
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    lock_guard< mutex > _(m_Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
 
+    // QPC is called after acquiring the lock in order to get more accurate readings
     LARGE_INTEGER li;
     QueryPerformanceCounter(&li);
 
@@ -58,8 +57,11 @@ shared_ptr< attribute_value > timer::get_value()
 
     if (sec_total < static_cast< uint64_t >((std::numeric_limits< long >::max)()))
     {
-        // Seconds downcasting won't truncate the duration, microseconds will always fit into a 32 bit value, which long is on Windows
-        m_Duration += posix_time::seconds(static_cast< long >(sec_total)) + posix_time::microseconds(static_cast< long >(usec));
+        // Seconds downcasting won't truncate the duration,
+        // and microseconds will always fit into a 32 bit value, which long is on Windows
+        m_Duration +=
+            posix_time::seconds(static_cast< long >(sec_total))
+            + posix_time::microseconds(static_cast< long >(usec));
     }
     else
     {

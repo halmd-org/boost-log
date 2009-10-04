@@ -92,9 +92,7 @@ basic_sink_frontend< CharT >::~basic_sink_frontend()
 template< typename CharT >
 void basic_sink_frontend< CharT >::set_filter(filter_type const& filter)
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_write_lock _(m_pImpl->m_Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock _(m_pImpl->m_Mutex);)
     m_pImpl->m_Filter = filter;
 }
 
@@ -102,9 +100,7 @@ void basic_sink_frontend< CharT >::set_filter(filter_type const& filter)
 template< typename CharT >
 void basic_sink_frontend< CharT >::reset_filter()
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_write_lock _(m_pImpl->m_Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock _(m_pImpl->m_Mutex);)
     m_pImpl->m_Filter.clear();
 }
 
@@ -112,9 +108,7 @@ void basic_sink_frontend< CharT >::reset_filter()
 template< typename CharT >
 void basic_sink_frontend< CharT >::set_exception_handler(exception_handler_type const& handler)
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_write_lock _(m_pImpl->m_Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock _(m_pImpl->m_Mutex);)
     m_pImpl->m_ExceptionHandler = handler;
 }
 
@@ -122,9 +116,7 @@ void basic_sink_frontend< CharT >::set_exception_handler(exception_handler_type 
 template< typename CharT >
 bool basic_sink_frontend< CharT >::will_consume(values_view_type const& attributes)
 {
-#if !defined(BOOST_LOG_NO_THREADS)
-    typename implementation::scoped_read_lock _(m_pImpl->m_Mutex);
-#endif
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock _(m_pImpl->m_Mutex);)
     try
     {
         return (m_pImpl->m_Filter.empty() || m_pImpl->m_Filter(attributes));
@@ -204,9 +196,7 @@ void unlocked_frontend< CharT >::consume(record_type const& record)
 #endif // !defined(BOOST_LOG_NO_THREADS)
     catch (...)
     {
-#if !defined(BOOST_LOG_NO_THREADS)
-        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
-#endif
+        BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock _(pImpl->m_Mutex);)
         if (pImpl->m_ExceptionHandler.empty())
             throw;
         pImpl->m_ExceptionHandler();
