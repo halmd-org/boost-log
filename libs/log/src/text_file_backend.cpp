@@ -585,13 +585,11 @@ namespace {
             while (filesystem::exists(info.m_Path) && n < (std::numeric_limits< unsigned int >::max)());
         }
 
-        // Check if an old file should be erased
         filesystem::create_directories(m_StorageDir);
 
-#if !defined(BOOST_LOG_NO_THREADS)
-        lock_guard< mutex > _(m_Mutex);
-#endif // !defined(BOOST_LOG_NO_THREADS)
+        BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
 
+        // Check if an old file should be erased
         uintmax_t free_space = m_MinFreeSpace ? filesystem::space(m_StorageDir).available : static_cast< uintmax_t >(0);
         file_list::iterator it = m_Files.begin(), end = m_Files.end();
         while (it != end &&
@@ -653,9 +651,7 @@ namespace {
 
             if (filesystem::exists(dir) && filesystem::is_directory(dir))
             {
-#if !defined(BOOST_LOG_NO_THREADS)
-                lock_guard< mutex > _(m_Mutex);
-#endif // !defined(BOOST_LOG_NO_THREADS)
+                BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
 
                 if (counter)
                     *counter = 0;
@@ -711,9 +707,7 @@ namespace {
     //! The function updates storage restrictions
     void file_collector::update(uintmax_t max_size, uintmax_t min_free_space)
     {
-#if !defined(BOOST_LOG_NO_THREADS)
-        lock_guard< mutex > _(m_Mutex);
-#endif // !defined(BOOST_LOG_NO_THREADS)
+        BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
 
         m_MaxSize = (std::min)(m_MaxSize, max_size);
         m_MinFreeSpace = (std::max)(m_MinFreeSpace, min_free_space);
@@ -724,9 +718,7 @@ namespace {
     shared_ptr< file::collector > file_collector_repository::get_collector(
         path_type const& target_dir, uintmax_t max_size, uintmax_t min_free_space)
     {
-#if !defined(BOOST_LOG_NO_THREADS)
-        lock_guard< mutex > _(m_Mutex);
-#endif // !defined(BOOST_LOG_NO_THREADS)
+        BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
 
         file_collectors::iterator it = std::find_if(m_Collectors.begin(), m_Collectors.end(),
             boost::bind(&file_collector::is_governed, _1, boost::cref(target_dir)));
@@ -753,9 +745,7 @@ namespace {
     //! Removes the file collector from the list
     void file_collector_repository::remove_collector(file_collector* p)
     {
-#if !defined(BOOST_LOG_NO_THREADS)
-        lock_guard< mutex > _(m_Mutex);
-#endif // !defined(BOOST_LOG_NO_THREADS)
+        BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
         m_Collectors.erase(m_Collectors.iterator_to(*p));
     }
 
