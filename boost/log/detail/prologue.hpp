@@ -21,16 +21,11 @@
 #define BOOST_LOG_DETAIL_PROLOGUE_HPP_INCLUDED_
 
 #include <boost/config.hpp>
+#include <boost/version.hpp>
 
-#if defined(_MSC_VER) && !defined(_STLPORT_VERSION)
-    // MSVC 9.0 mandates packaging of STL classes, which apparently affects alignment and
-    // makes alignment_of< T >::value no longer be a power of 2 for types that derive from STL classes.
-    // This breaks type_with_alignment and everything that relies on it.
-    // This doesn't happen with non-native STLs, such as STLPort. Strangely, this doesn't show with
-    // STL classes themselves or most of the user-defined derived classes.
-    // Not sure if that happens with other MSVC versions.
-    // See: http://svn.boost.org/trac/boost/ticket/1946
-#   define BOOST_LOG_BROKEN_STL_ALIGNMENT
+#if BOOST_VERSION < 103900
+    // Older Boost versions contained bugs that affected the library
+#   error Boost.Log: Boost version 1.39 or later is required
 #endif
 
 #if defined(BOOST_MSVC)
@@ -45,6 +40,16 @@
 #   if _MSC_VER <= 1400
         // Older MSVC versions reject friend declarations for class template instantiations
 #       define BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS
+#   endif
+#   if !defined(_STLPORT_VERSION)
+        // MSVC 9.0 mandates packaging of STL classes, which apparently affects alignment and
+        // makes alignment_of< T >::value no longer be a power of 2 for types that derive from STL classes.
+        // This breaks type_with_alignment and everything that relies on it.
+        // This doesn't happen with non-native STLs, such as STLPort. Strangely, this doesn't show with
+        // STL classes themselves or most of the user-defined derived classes.
+        // Not sure if that happens with other MSVC versions.
+        // See: http://svn.boost.org/trac/boost/ticket/1946
+#       define BOOST_LOG_BROKEN_STL_ALIGNMENT
 #   endif
 #endif
 

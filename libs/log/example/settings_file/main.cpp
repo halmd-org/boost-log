@@ -18,7 +18,7 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #endif // _CRT_SECURE_NO_WARNINGS
 
-// #define BOOST_LOG_DYN_LINK 1
+#define BOOST_ALL_DYN_LINK 1
 
 #include <exception>
 #include <string>

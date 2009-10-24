@@ -67,6 +67,9 @@ struct char_constants< char >
 
     static const char_type* message_text_keyword() { return "_"; }
 
+    static const char_type* true_keyword() { return "true"; }
+    static const char_type* false_keyword() { return "false"; }
+
     static const char_type* default_level_attribute_name() { return "Severity"; }
 
     static const char_type* core_section_name() { return "Core"; }
@@ -159,6 +162,9 @@ struct char_constants< wchar_t >
     static const char_type* matches_keyword() { return L"matches"; }
 
     static const char_type* message_text_keyword() { return L"_"; }
+
+    static const char_type* true_keyword() { return L"true"; }
+    static const char_type* false_keyword() { return L"false"; }
 
     static const char_type* default_level_attribute_name() { return L"Severity"; }
 

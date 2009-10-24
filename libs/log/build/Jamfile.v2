@@ -78,6 +78,7 @@ lib boost_log_setup
     : ## sources ##
         parser_utils.cpp
         init_from_stream.cpp
+        init_from_settings.cpp
         filter_parser.cpp
         formatter_parser.cpp
     : ## requirements ##
