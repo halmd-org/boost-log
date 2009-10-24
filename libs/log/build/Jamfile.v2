@@ -6,6 +6,8 @@
 import lib ;
 import os ;
 import feature ;
+import msvc ;
+import intel ;
 
 local rule default_logapi ( )
 {

@@ -3,6 +3,10 @@
 # accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
+import msvc ;
+import intel ;
+import os ;
+
 project
     : requirements
         <link>shared:<define>BOOST_ALL_DLL
@@ -18,9 +22,11 @@ project
         <library>/boost/system//boost_system
         <threading>single:<define>BOOST_LOG_NO_THREADS
         <threading>multi:<library>/boost/thread//boost_thread
-        <os>NT
     ;
 
-exe event_log
+if [ os.name ] = "NT"
+{
+    exe event_log
     : main.cpp
     ;
+}
