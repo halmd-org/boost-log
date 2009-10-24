@@ -7,10 +7,10 @@ project
     : requirements
         <link>shared:<define>BOOST_ALL_DLL
         <logapi>unix:<define>BOOST_LOG_USE_NATIVE_SYSLOG=1
-        <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
-        <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
-        <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
-        <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+        <toolset>msvc,intel-win:<define>_SCL_SECURE_NO_WARNINGS
+        <toolset>msvc,intel-win:<define>_SCL_SECURE_NO_DEPRECATE
+        <toolset>msvc,intel-win:<define>_CRT_SECURE_NO_WARNINGS
+        <toolset>msvc,intel-win:<define>_CRT_SECURE_NO_DEPRECATE
         <library>/boost/log//boost_log
         <library>/boost/date_time//boost_date_time
         <library>/boost/regex//boost_regex
@@ -18,6 +18,7 @@ project
         <library>/boost/system//boost_system
         <threading>single:<define>BOOST_LOG_NO_THREADS
         <threading>multi:<library>/boost/thread//boost_thread
+        <os>NT
     ;
 
 exe event_log
