@@ -144,8 +144,10 @@ private:
     };
 
     //! Iterator class
+#ifndef BOOST_LOG_NO_MEMBER_TEMPLATE_FRIENDS
     template< bool fConstV > class iter;
     template< bool fConstV > friend class iter;
+#endif
     template< bool fConstV >
     class iter
     {

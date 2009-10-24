@@ -134,10 +134,12 @@ private:
     };
 
     //! A reference to parameters section proxy object
+#ifndef BOOST_LOG_NO_MEMBER_TEMPLATE_FRIENDS
     template< bool IsConstV >
     class section_ref;
     template< bool IsConstV >
     friend class section_ref;
+#endif
     template< bool IsConstV >
     class section_ref
     {

@@ -138,6 +138,7 @@ public:
     typedef TypeSequenceT value_types;
 
 private:
+#ifndef BOOST_LOG_NO_MEMBER_TEMPLATE_FRIENDS
     template< typename ReceiverT >
     struct visitor;
     template< typename ReceiverT >
@@ -147,6 +148,7 @@ private:
     class dispatcher;
     template< typename ReceiverT >
     friend class dispatcher;
+#endif
 
     //! Visitor class definition
     template< typename ReceiverT >
