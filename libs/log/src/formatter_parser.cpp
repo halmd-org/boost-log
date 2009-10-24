@@ -15,8 +15,6 @@
 #ifndef BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
 
 #include <string>
-#include <locale> // Ticket #1788.
-#include <iterator> // Ticket #1788.
 #include <stdexcept>
 
 #undef BOOST_MPL_LIMIT_VECTOR_SIZE
@@ -30,7 +28,6 @@
 #include <boost/bind.hpp>
 #include <boost/version.hpp>
 #include <boost/compatibility/cpp_c_headers/ctime>
-#include <boost/io/ios_state.hpp> // Ticket #1788.
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/copy.hpp>
 #include <boost/mpl/push_back.hpp>
@@ -61,47 +58,6 @@
 #include "parser_utils.hpp"
 
 namespace boost {
-
-#if BOOST_VERSION < 103800
-
-// Workaround for Boost.DateTime bug. Ticket #642.
-// http://svn.boost.org/trac/boost/ticket/642
-namespace date_time {
-using boost::gregorian::operator<<;
-} // namespace date_time
-
-// Workaround for absence of local_time::local_time_period output operator in Boost.DateTime
-// posix_time::operator<< implementation taken as a starting point. Author: Jeff Garland, Bart Garst.
-// Ticket #1788.
-// http://svn.boost.org/trac/boost/ticket/1788
-namespace local_time {
-
-template <class CharT, class TraitsT>
-inline std::basic_ostream<CharT, TraitsT>& operator<<(
-    std::basic_ostream<CharT, TraitsT>& os, const boost::local_time::local_time_period& p)
-{
-    boost::io::ios_flags_saver iflags(os);
-    typedef boost::date_time::time_facet<local_date_time, CharT> facet_t;
-    typedef std::time_put<CharT> std_time_facet;
-    std::ostreambuf_iterator<CharT> oitr(os);
-    if (std::has_facet<facet_t>(os.getloc()))
-    {
-        std::use_facet<facet_t>(os.getloc()).put(oitr, os, os.fill(), p);
-    }
-    else
-    {
-        std::ostreambuf_iterator<CharT> oitr(os);
-        facet_t* f = new facet_t();
-        std::locale l = std::locale(os.getloc(), f);
-        os.imbue(l);
-        f->put(oitr, os, os.fill(), p);
-    }
-    return os;
-}
-
-} // namespace local_time
-
-#endif // BOOST_VERSION < 103800
 
 namespace BOOST_LOG_NAMESPACE {
 
