@@ -12,7 +12,6 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#include <boost/log/detail/new_shared.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 
 namespace boost {

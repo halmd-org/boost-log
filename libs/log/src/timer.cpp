@@ -19,6 +19,7 @@
 #include <windows.h>
 #include <boost/limits.hpp>
 #include <boost/assert.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/log/attributes/timer.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/locks.hpp>
@@ -79,7 +80,7 @@ shared_ptr< attribute_value > timer::get_value()
     }
     m_LastCounter = static_cast< uint64_t >(li.QuadPart);
 
-    return log::aux::new_shared< result_value >(m_Duration);
+    return boost::make_shared< result_value >(m_Duration);
 }
 
 } // namespace attributes

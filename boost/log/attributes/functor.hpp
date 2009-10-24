@@ -23,13 +23,13 @@
 #define BOOST_LOG_ATTRIBUTES_FUNCTOR_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/utility/result_of.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/new_shared.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 
@@ -74,7 +74,7 @@ public:
 
     shared_ptr< attribute_value > get_value()
     {
-        return boost::log::aux::new_shared< functor_result_value >(m_Functor());
+        return boost::make_shared< functor_result_value >(m_Functor());
     }
 };
 
@@ -99,7 +99,7 @@ inline shared_ptr< attribute > make_functor_attr(T const& fun)
     BOOST_STATIC_ASSERT(!is_void< result_type >::value);
 
     typedef functor< result_type, T > functor_t;
-    return boost::log::aux::new_shared< functor_t >(fun);
+    return boost::make_shared< functor_t >(fun);
 }
 
 #endif // BOOST_NO_RESULT_OF
@@ -122,7 +122,7 @@ inline shared_ptr< attribute > make_functor_attr(T const& fun)
     BOOST_STATIC_ASSERT(!is_void< result_type >::value);
 
     typedef functor< result_type, T > functor_t;
-    return boost::log::aux::new_shared< functor_t >(fun);
+    return boost::make_shared< functor_t >(fun);
 }
 
 #endif // BOOST_LOG_DOXYGEN_PASS

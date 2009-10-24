@@ -23,8 +23,8 @@
 #define BOOST_LOG_ATTRIBUTES_COUNTER_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/new_shared.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #ifndef BOOST_LOG_NO_THREADS
@@ -86,7 +86,7 @@ public:
     {
         // TODO: a full featured atomic would do better here
         register long NextValue = --m_Counter;
-        return boost::log::aux::new_shared< counter_value >(m_InitialValue - static_cast< held_type >(NextValue * m_Step));
+        return boost::make_shared< counter_value >(m_InitialValue - static_cast< held_type >(NextValue * m_Step));
     }
 };
 
@@ -126,7 +126,7 @@ public:
     shared_ptr< attribute_value > get_value()
     {
         m_Value += static_cast< held_type >(m_Step);
-        return boost::log::aux::new_shared< counter_value >(m_Value);
+        return boost::make_shared< counter_value >(m_Value);
     }
 };
 

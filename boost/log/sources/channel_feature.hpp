@@ -23,12 +23,12 @@
 #define BOOST_LOG_SOURCES_CHANNEL_FEATURE_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/parameter/binding.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/new_shared.hpp>
 #include <boost/log/keywords/channel.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/sources/threading_models.hpp> // strictest_lock
@@ -159,7 +159,7 @@ private:
     void init_channel_attribute(ArgsT const& args, mpl::false_ const&)
     {
         channel_type channel_name(args[keywords::channel]);
-        m_pChannel = boost::log::aux::new_shared< channel_attribute >(channel_name);
+        m_pChannel = boost::make_shared< channel_attribute >(channel_name);
         base_type::add_attribute_unlocked(
             aux::channel_attribute_name< char_type >::get(),
             m_pChannel);

@@ -26,10 +26,10 @@
 #include <stdexcept>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/log/detail/setup_prologue.hpp>
-#include <boost/log/detail/new_shared.hpp>
 #include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/filters/attr.hpp>
@@ -213,7 +213,7 @@ template< typename AttributeValueT, typename CharT >
 inline void register_simple_filter_factory(const CharT* name)
 {
     shared_ptr< filter_factory< CharT > > factory =
-        boost::log::aux::new_shared< basic_filter_factory< CharT, AttributeValueT > >();
+        boost::make_shared< basic_filter_factory< CharT, AttributeValueT > >();
     register_filter_factory(name, factory);
 }
 

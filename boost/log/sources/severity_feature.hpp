@@ -24,10 +24,10 @@
 
 #include <algorithm> // swap
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
-#include <boost/log/detail/new_shared.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/detail/thread_specific.hpp>
 #include <boost/thread/locks.hpp>
@@ -166,7 +166,7 @@ namespace aux {
         virtual shared_ptr< attribute_value > detach_from_thread()
         {
 #if !defined(BOOST_LOG_NO_THREADS)
-            return boost::log::aux::new_shared<
+            return boost::make_shared<
                 attributes::basic_attribute_value< held_type >
             >(static_cast< held_type >(m_pHolder->get_value()));
 #else
@@ -219,7 +219,7 @@ public:
     basic_severity_logger() :
         base_type(),
         m_DefaultSeverity(static_cast< severity_level >(0)),
-        m_pSeverity(boost::log::aux::new_shared< severity_attribute >()) // make_shared doesn't work in 1.36: http://svn.boost.org/trac/boost/ticket/2126
+        m_pSeverity(boost::make_shared< severity_attribute >())
     {
         base_type::add_attribute_unlocked(
             aux::severity_attribute_name< char_type >::get(),
@@ -245,7 +245,7 @@ public:
     explicit basic_severity_logger(ArgsT const& args) :
         base_type(args),
         m_DefaultSeverity(args[keywords::severity | severity_level()]),
-        m_pSeverity(boost::log::aux::new_shared< severity_attribute >()) // make_shared doesn't work in 1.36: http://svn.boost.org/trac/boost/ticket/2126
+        m_pSeverity(boost::make_shared< severity_attribute >())
     {
         base_type::add_attribute_unlocked(
             aux::severity_attribute_name< char_type >::get(),

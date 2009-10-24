@@ -23,12 +23,12 @@
 #define BOOST_LOG_ATTRIBUTES_TIMER_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #if defined(BOOST_WINDOWS) && !defined(BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER)
 #include <boost/cstdint.hpp>
 #endif
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/new_shared.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/attributes/time_traits.hpp>
@@ -132,7 +132,7 @@ public:
 
     shared_ptr< attribute_value > get_value()
     {
-        return boost::log::aux::new_shared< result_value >(utc_time_traits::get_clock() - m_BaseTimePoint);
+        return boost::make_shared< result_value >(utc_time_traits::get_clock() - m_BaseTimePoint);
     }
 };
 
