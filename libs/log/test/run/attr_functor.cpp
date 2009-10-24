@@ -94,7 +94,7 @@ namespace {
         }
 
     private:
-        mutable unsigned int& m_CallsCount;
+        unsigned int& m_CallsCount;
     };
 
 } // namespace
