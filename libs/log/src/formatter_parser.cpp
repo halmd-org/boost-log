@@ -15,6 +15,7 @@
 #ifndef BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
 
 #include <string>
+#include <sstream>
 #include <stdexcept>
 
 #undef BOOST_MPL_LIMIT_VECTOR_SIZE
@@ -57,6 +58,8 @@
 #endif
 #include "parser_utils.hpp"
 
+namespace bsc = boost::spirit::classic;
+
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
@@ -91,7 +94,7 @@ private:
 //! Formatter parsing grammar
 template< typename CharT >
 struct formatter_grammar :
-    public spirit::classic::grammar< formatter_grammar< CharT > >
+    public bsc::grammar< formatter_grammar< CharT > >
 {
     typedef CharT char_type;
     typedef typename formatter_types< char_type >::string_type string_type;
@@ -235,7 +238,7 @@ template< typename ScannerT >
 struct formatter_grammar< CharT >::definition
 {
     //! Boost.Spirit rule type
-    typedef spirit::classic::rule< ScannerT > rule_type;
+    typedef bsc::rule< ScannerT > rule_type;
 
     //! A parser for an argument value
     rule_type arg_value;
@@ -251,40 +254,42 @@ struct formatter_grammar< CharT >::definition
     {
         reference_wrapper< const formatter_grammar_type > g(gram);
 
-        arg_value = spirit::classic::confix_p(constants::char_quote, *spirit::classic::c_escape_ch_p, constants::char_quote) |
-            *(spirit::classic::print_p - spirit::classic::space_p);
+        arg_value =
+            bsc::confix_p(constants::char_quote, *bsc::c_escape_ch_p, constants::char_quote) |
+            *(bsc::graph_p - constants::char_comma - constants::char_paren_bracket_left - constants::char_paren_bracket_right);
 
-        arg = *spirit::classic::space_p >>
-            (*spirit::classic::alnum_p)[bind(&formatter_grammar_type::on_arg_name, g, _1, _2)] >>
-            *spirit::classic::space_p >>
+        arg =
+            *bsc::space_p >>
+            (bsc::alpha_p >> *bsc::alnum_p)[bind(&formatter_grammar_type::on_arg_name, g, _1, _2)] >>
+            *bsc::space_p >>
             constants::char_equal >>
-            *spirit::classic::space_p >>
+            *bsc::space_p >>
             arg_value[bind(&formatter_grammar_type::on_arg_value, g, _1, _2)] >>
-            *spirit::classic::space_p;
+            *bsc::space_p;
 
-        arg_list = spirit::classic::confix_p(
+        arg_list = bsc::confix_p(
             constants::char_paren_bracket_left,
-            arg[bind(&formatter_grammar_type::push_arg, g, _1, _2)] >>
-                *(spirit::classic::ch_p(constants::char_comma) >> arg[bind(&formatter_grammar_type::push_arg, g, _1, _2)]),
+            arg[bind(&formatter_grammar_type::push_arg, g, _1, _2)] % bsc::ch_p(constants::char_comma),
             constants::char_paren_bracket_right);
 
         expression =
-            (*(spirit::classic::c_escape_ch_p - constants::char_percent))
+            (*(bsc::c_escape_ch_p - constants::char_percent))
                 [bind(&formatter_grammar_type::push_string, g, _1, _2)] >>
             *(
-                spirit::classic::confix_p(
+                bsc::confix_p(
                     constants::char_percent,
                     (
-                        spirit::classic::str_p(constants::message_text_keyword())
+                        bsc::str_p(constants::message_text_keyword())
                             [bind(&formatter_grammar_type::on_attr_name, g, _1, _2)] |
                         (
-                            (*(spirit::classic::print_p - constants::char_paren_bracket_left - constants::char_percent))
+                            (*(bsc::print_p - constants::char_paren_bracket_left - constants::char_percent))
                                 [bind(&formatter_grammar_type::on_attr_name, g, _1, _2)] >>
                             !arg_list
                         )
                     ),
-                    constants::char_percent)[bind(&formatter_grammar_type::push_attr, g, _1, _2)] >>
-                (*(spirit::classic::c_escape_ch_p - constants::char_percent))
+                    constants::char_percent)
+                        [bind(&formatter_grammar_type::push_attr, g, _1, _2)] >>
+                (*(bsc::c_escape_ch_p - constants::char_percent))
                     [bind(&formatter_grammar_type::push_string, g, _1, _2)]
             );
     }
@@ -331,8 +336,14 @@ parse_formatter(const CharT* begin, const CharT* end)
 
     formatter_type fmt;
     formatter_grammar< char_type > gram(fmt);
-    if (!spirit::classic::parse(begin, end, gram).full)
-        boost::log::aux::throw_exception(std::runtime_error("Could not parse the formatter"));
+    bsc::parse_info< const char_type* > result = bsc::parse(begin, end, gram);
+    if (!result.full)
+    {
+        std::ostringstream strm;
+        strm << "Could not parse the formatter, parsing stopped at position "
+            << result.stop - begin;
+        boost::log::aux::throw_exception(std::runtime_error(strm.str()));
+    }
 
     return fmt;
 }

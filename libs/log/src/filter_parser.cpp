@@ -17,6 +17,7 @@
 #include <map>
 #include <stack>
 #include <string>
+#include <sstream>
 #include <stdexcept>
 
 #if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
@@ -55,6 +56,8 @@
 #include <boost/thread/locks.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
 #include "parser_utils.hpp"
+
+namespace bsc = boost::spirit::classic;
 
 namespace boost {
 
@@ -138,12 +141,15 @@ class default_filter_factory :
     static filter_type parse_argument(string_type const& name, string_type const& arg)
     {
         filter_type filter;
-        spirit::classic::rule< spirit::classic::scanner< const char_type* > > r =
-            spirit::classic::strict_real_p[bind(&this_type::BOOST_NESTED_TEMPLATE on_fp_argument< RelationT >, boost::cref(name), _1, boost::ref(filter))] |
-            spirit::classic::int_p[bind(&this_type::BOOST_NESTED_TEMPLATE on_integral_argument< RelationT >, boost::cref(name), _1, boost::ref(filter))] |
-            (+spirit::classic::print_p)[bind(&this_type::BOOST_NESTED_TEMPLATE on_string_argument< RelationT >, boost::cref(name), _1, _2, boost::ref(filter))];
+        const bool full = bsc::parse(arg.c_str(), arg.c_str() + arg.size(),
+            (
+                bsc::strict_real_p[bind(&this_type::BOOST_NESTED_TEMPLATE on_fp_argument< RelationT >, boost::cref(name), _1, boost::ref(filter))] |
+                bsc::int_p[bind(&this_type::BOOST_NESTED_TEMPLATE on_integral_argument< RelationT >, boost::cref(name), _1, boost::ref(filter))] |
+                (+bsc::print_p)[bind(&this_type::BOOST_NESTED_TEMPLATE on_string_argument< RelationT >, boost::cref(name), _1, _2, boost::ref(filter))]
+            )
+        ).full;
 
-        if (!spirit::classic::parse(arg.c_str(), r).full || filter.empty())
+        if (!full || filter.empty())
             boost::log::aux::throw_exception(std::runtime_error("failed to parse relation operand"));
 
         return filter;
@@ -215,7 +221,7 @@ private:
 //! Filter parsing grammar
 template< typename CharT >
 struct filter_grammar :
-    public spirit::classic::grammar< filter_grammar< CharT > >
+    public bsc::grammar< filter_grammar< CharT > >
 {
     typedef CharT char_type;
     typedef std::basic_string< char_type > string_type;
@@ -403,7 +409,7 @@ template< typename ScannerT >
 struct filter_grammar< CharT >::definition
 {
     //! Boost.Spirit rule type
-    typedef spirit::classic::rule< ScannerT > rule_type;
+    typedef bsc::rule< ScannerT > rule_type;
 
     //! A simple mem_fn-like wrapper (a workaround for MSVC 7.1)
     struct handler
@@ -445,31 +451,32 @@ struct filter_grammar< CharT >::definition
             on_oper = &filter_grammar_type::on_operand,
             on_attr = &filter_grammar_type::on_attribute;
 
-        attr_name = (*spirit::classic::space_p) >> (
+        attr_name = bsc::lexeme_d[
             // An attribute name in form %name%
-            spirit::classic::confix_p(constants::char_percent, *(spirit::classic::print_p - constants::char_percent), constants::char_percent)
+            bsc::confix_p(constants::char_percent, *bsc::print_p, constants::char_percent)
                 [bind(on_attr, g, _1, _2)]
-        );
+        ];
 
-        operand = (*spirit::classic::space_p) >> (
+        operand = bsc::lexeme_d[
             // A quoted string with C-style escape sequences support
-            spirit::classic::confix_p(constants::char_quote, *spirit::classic::c_escape_ch_p, constants::char_quote)
+            bsc::confix_p(constants::char_quote, *bsc::c_escape_ch_p, constants::char_quote)
                 [bind(on_string, g, _1, _2)] |
             // A single word, enclosed with white spaces. It cannot contain parenthesis, since is is used by the filter parser.
-            (+(spirit::classic::print_p - spirit::classic::space_p - constants::char_paren_bracket_left - constants::char_paren_bracket_right))
+            (+(bsc::graph_p - bsc::ch_p(constants::char_paren_bracket_left) - constants::char_paren_bracket_right))
                 [bind(on_oper, g, _1, _2)]
-        );
+        ];
 
         // Custom relation is a keyword that may contain either alphanumeric characters or an underscore
-        custom_relation = (+(spirit::classic::alnum_p | spirit::classic::ch_p(constants::char_underline)))
+        custom_relation = bsc::lexeme_d[ +(bsc::alnum_p | bsc::ch_p(constants::char_underline)) ]
             [bind(&filter_grammar_type::set_custom_relation, g, _1, _2)];
 
-        relation = attr_name >> (*spirit::classic::space_p) || (
-            (spirit::classic::str_p(constants::not_equal_keyword()) >> operand)
+        relation = attr_name || // The relation may be as simple as a sole attribute name, in which case the filter checks for the attribute value presence
+        (
+            (bsc::str_p(constants::not_equal_keyword()) >> operand)
                 [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_inequality_relation)] |
-            (spirit::classic::str_p(constants::greater_or_equal_keyword()) >> operand)
+            (bsc::str_p(constants::greater_or_equal_keyword()) >> operand)
                 [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_greater_or_equal_relation)] |
-            (spirit::classic::str_p(constants::less_or_equal_keyword()) >> operand)
+            (bsc::str_p(constants::less_or_equal_keyword()) >> operand)
                 [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_less_or_equal_relation)] |
             (constants::char_equal >> operand)
                 [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_equality_relation)] |
@@ -483,9 +490,10 @@ struct filter_grammar< CharT >::definition
 
         handler on_neg = &filter_grammar_type::on_negation;
 
-        term = (*spirit::classic::space_p) >> (
-            (constants::char_paren_bracket_left >> expression >> (*spirit::classic::space_p) >> constants::char_paren_bracket_right) |
-            ((spirit::classic::str_p(constants::not_keyword()) | constants::char_exclamation) >> term)[bind(on_neg, g, _1, _2)] |
+        term =
+        (
+            (bsc::ch_p(constants::char_paren_bracket_left) >> expression >> constants::char_paren_bracket_right) |
+            ((bsc::str_p(constants::not_keyword()) | constants::char_exclamation) >> term)[bind(on_neg, g, _1, _2)] |
             relation
         );
 
@@ -493,12 +501,15 @@ struct filter_grammar< CharT >::definition
             on_or = &filter_grammar_type::BOOST_NESTED_TEMPLATE on_operation< log::filters::flt_or >,
             on_finished = &filter_grammar_type::on_expression_finished;
 
-        expression = (term >> (*spirit::classic::space_p) >> *(
-            ((spirit::classic::str_p(constants::and_keyword()) | constants::char_and) >> term)
-                [bind(on_and, g, _1, _2)] |
-            ((spirit::classic::str_p(constants::or_keyword()) | constants::char_or) >> term)
-                [bind(on_or, g, _1, _2)]
-            ) >> (*spirit::classic::space_p)
+        expression =
+        (
+            term >>
+            *(
+                ((bsc::str_p(constants::and_keyword()) | constants::char_and) >> term)
+                    [bind(on_and, g, _1, _2)] |
+                ((bsc::str_p(constants::or_keyword()) | constants::char_or) >> term)
+                    [bind(on_or, g, _1, _2)]
+            )
         )[bind(on_finished, g, _1, _2)];
     }
 
@@ -536,8 +547,14 @@ parse_filter(const CharT* begin, const CharT* end)
 
     filter_type filt;
     filter_grammar< char_type > gram(filt);
-    if (!spirit::classic::parse(begin, end, gram).full)
-        boost::log::aux::throw_exception(std::runtime_error("Could not parse the filter"));
+    bsc::parse_info< const char_type* > result = bsc::parse(begin, end, gram, bsc::space_p);
+    if (!result.full)
+    {
+        std::ostringstream strm;
+        strm << "Could not parse the filter, parsing stopped at position "
+            << result.stop - begin;
+        boost::log::aux::throw_exception(std::runtime_error(strm.str()));
+    }
     gram.flush();
 
     return filt;
