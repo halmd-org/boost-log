@@ -30,9 +30,9 @@
 #include <ostream>
 #include <stdexcept>
 #include <boost/scoped_array.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
 #include <boost/log/sinks/event_log_constants.hpp>
-#include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #ifndef BOOST_LOG_NO_THREADS
@@ -152,7 +152,7 @@ namespace {
             module_count /= sizeof(HMODULE);
 
             if (!res)
-                boost::log::aux::throw_exception(std::runtime_error("Could not enumerate process modules"));
+                BOOST_LOG_THROW_DESCR(system_error, "Could not enumerate process modules");
         }
         while (module_count > modules.size());
         modules.resize(module_count, HMODULE(0));
@@ -163,7 +163,7 @@ namespace {
         {
             MODULEINFO info;
             if (!GetModuleInformation(hProcess, modules[i], &info, sizeof(info)))
-                boost::log::aux::throw_exception(std::runtime_error("Could not acquire module information"));
+                BOOST_LOG_THROW_DESCR(system_error, "Could not acquire module information");
 
             if (info.lpBaseOfDll <= p && (static_cast< unsigned char* >(info.lpBaseOfDll) + info.SizeOfImage) > p)
             {
@@ -174,7 +174,7 @@ namespace {
         }
 
         if (!handle)
-            boost::log::aux::throw_exception(std::runtime_error("Could not find self module information"));
+            BOOST_LOG_THROW_DESCR(system_error, "Could not find self module information");
     }
 
     //! Retrieves the full name of the current module (be that dll or exe)
@@ -194,7 +194,7 @@ namespace {
         CharT buf[MAX_PATH];
         DWORD size = get_module_file_name(hSelfModule, buf, sizeof(buf) / sizeof(*buf));
         if (size == 0)
-            boost::log::aux::throw_exception(std::runtime_error("Could not get module file name"));
+            BOOST_LOG_THROW_DESCR(system_error, "Could not get module file name");
 
         return std::basic_string< CharT >(buf, buf + size);
     }
@@ -258,7 +258,7 @@ void basic_simple_event_log_backend< CharT >::construct(
 
     HANDLE hSource = register_event_source(target_unc, source_name.c_str());
     if (!hSource)
-        boost::log::aux::throw_exception(std::runtime_error("Could not register event source"));
+        BOOST_LOG_THROW_DESCR(system_error, "Could not register event source");
 
     p->m_SourceHandle = hSource;
 
@@ -518,7 +518,7 @@ void basic_event_log_backend< CharT >::construct(
 
     HANDLE hSource = register_event_source(target_unc, source_name.c_str());
     if (!hSource)
-        boost::log::aux::throw_exception(std::runtime_error("Could not register event source"));
+        BOOST_LOG_THROW_DESCR(system_error, "Could not register event source");
 
     p->m_SourceHandle = hSource;
 

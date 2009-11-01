@@ -14,6 +14,7 @@
 
 #ifndef BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
 
+#include <new> // std::nothrow
 #include <map>
 #include <stack>
 #include <string>
@@ -39,7 +40,7 @@
 #include <boost/log/filters/has_attr.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/functional.hpp>
-#include <boost/log/detail/throw_exception.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include <boost/log/support/regex.hpp>
@@ -130,10 +131,12 @@ class default_filter_factory :
 //            regex_t rex = regex_t::compile(arg, regex_t::ECMAScript | regex_t::optimize);
 
             basic_regex< char_type > rex(arg);
-            return filter_type(log::filters::attr< string_type >(name).matches(rex));
+            return filter_type(log::filters::attr< string_type >(name, std::nothrow).matches(rex));
         }
         else
-            boost::log::aux::throw_exception(std::runtime_error("the custom attribute relation is not supported"));
+        {
+            BOOST_LOG_THROW_DESCR(parse_error, "The custom attribute relation is not supported");
+        }
     }
 
     //! The function parses the argument value for a binary relation and constructs the corresponding filter
@@ -150,7 +153,7 @@ class default_filter_factory :
         ).full;
 
         if (!full || filter.empty())
-            boost::log::aux::throw_exception(std::runtime_error("failed to parse relation operand"));
+            BOOST_LOG_THROW_DESCR(parse_error, "Failed to parse relation operand");
 
         return filter;
     }
@@ -160,21 +163,21 @@ class default_filter_factory :
     {
         filter = log::filters::attr<
             log::integral_types
-        >(name).satisfies(log::aux::bind2nd(RelationT(), val));
+        >(name, std::nothrow).satisfies(log::aux::bind2nd(RelationT(), val));
     }
     template< typename RelationT >
     static void on_fp_argument(string_type const& name, double val, filter_type& filter)
     {
         filter = log::filters::attr<
             log::floating_point_types
-        >(name).satisfies(log::aux::bind2nd(RelationT(), val));
+        >(name, std::nothrow).satisfies(log::aux::bind2nd(RelationT(), val));
     }
     template< typename RelationT >
     static void on_string_argument(string_type const& name, const char_type* b, const char_type* e, filter_type& filter)
     {
         filter = log::filters::attr<
             string_type
-        >(name).satisfies(log::aux::bind2nd(RelationT(), string_type(b, e)));
+        >(name, std::nothrow).satisfies(log::aux::bind2nd(RelationT(), string_type(b, e)));
     }
 };
 
@@ -263,7 +266,7 @@ struct filter_grammar :
     {
         // An attribute name should have been parsed at this time
         if (!m_AttributeName)
-            boost::log::aux::throw_exception(std::runtime_error("Invalid filter definition: operand is not expected"));
+            BOOST_LOG_THROW_DESCR(parse_error, "Invalid filter definition: operand is not expected");
 
         m_Operand = boost::in_place(begin, end);
     }
@@ -273,7 +276,7 @@ struct filter_grammar :
     {
         // An attribute name should have been parsed at this time
         if (!m_AttributeName)
-            boost::log::aux::throw_exception(std::runtime_error("Invalid filter definition: quoted string operand is not expected"));
+            BOOST_LOG_THROW_DESCR(parse_error, "Invalid filter definition: quoted string operand is not expected");
 
         // Cut off the quotes
         string_type str(++begin, --end);
@@ -304,8 +307,8 @@ struct filter_grammar :
         else
         {
             // This would happen if a filter consists of a single '!'
-            boost::log::aux::throw_exception(std::runtime_error("Filter parsing error:"
-                " a negation operator applied to nothingness"));
+            BOOST_LOG_THROW_DESCR(parse_error, "Filter parsing error:"
+                " a negation operator applied to nothingness");
         }
     }
     //! The comparison relation handler
@@ -324,8 +327,8 @@ struct filter_grammar :
         else
         {
             // This should never happen
-            boost::log::aux::throw_exception(std::logic_error("Filter parser internal error:"
-                " the attribute name or subexpression operand is not set while trying to construct a subexpression"));
+            BOOST_LOG_THROW_DESCR(parse_error, "Filter parser internal error:"
+                " the attribute name or subexpression operand is not set while trying to construct a subexpression");
         }
     }
 
@@ -352,8 +355,8 @@ struct filter_grammar :
         else
         {
             // This should never happen
-            boost::log::aux::throw_exception(std::logic_error("Filter parser internal error:"
-                " the attribute name or subexpression operand is not set while trying to construct a subexpression"));
+            BOOST_LOG_THROW_DESCR(parse_error, "Filter parser internal error:"
+                " the attribute name or subexpression operand is not set while trying to construct a subexpression");
         }
     }
 
@@ -375,8 +378,8 @@ struct filter_grammar :
         }
 
         // This should never happen
-        boost::log::aux::throw_exception(std::logic_error("Filter parser internal error:"
-            " the subexpression is not set while trying to construct a filter"));
+        BOOST_LOG_THROW_DESCR(parse_error, "Filter parser internal error:"
+            " the subexpression is not set while trying to construct a filter");
     }
 
     //! The function is called when a full expression have finished parsing
@@ -553,7 +556,7 @@ parse_filter(const CharT* begin, const CharT* end)
         std::ostringstream strm;
         strm << "Could not parse the filter, parsing stopped at position "
             << result.stop - begin;
-        boost::log::aux::throw_exception(std::runtime_error(strm.str()));
+        BOOST_LOG_THROW_DESCR(parse_error, strm.str());
     }
     gram.flush();
 

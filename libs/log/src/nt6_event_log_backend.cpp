@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   nt6_event_log_backend.cpp
  * \author Andrey Semashev
  * \date   07.11.2008
- * 
+ *
  * \brief  A logging sink backend that uses Windows NT 6 (Vista/2008 Server) API
  *         for signalling application events.
  */
@@ -27,7 +27,7 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/throw_exception.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/sinks/nt6_event_log_backend.hpp>
 #include <boost/log/sinks/nt6_event_log_constants.hpp>
 
@@ -54,7 +54,7 @@ namespace etw {
 namespace {
 
     // {DFEBCCFD-3A63-44dc-B86F-25DA6D521E5C}
-    static const GUID CLSID_DefaultProviderID = 
+    static const GUID CLSID_DefaultProviderID =
         { 0xdfebccfd, 0x3a63, 0x44dc, { 0xb8, 0x6f, 0x25, 0xda, 0x6d, 0x52, 0x1e, 0x5c } };
 
 #ifdef BOOST_LOG_USE_CHAR
@@ -118,7 +118,7 @@ basic_simple_nt6_event_log_backend< CharT >::basic_simple_nt6_event_log_backend(
     m_pImpl(boost::make_shared< implementation >())
 {
     if (EventRegister(&provider_id, NULL, NULL, &m_pImpl->m_ProviderHandle) != ERROR_SUCCESS)
-        boost::throw_exception(std::runtime_error("Could not register event provider"));
+        BOOST_LOG_THROW_DESCR(system_error, "Could not register event provider");
 }
 
 template< typename CharT >

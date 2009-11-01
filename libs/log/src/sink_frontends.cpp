@@ -36,7 +36,7 @@
 #include <boost/thread/condition_variable.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 #include <boost/log/detail/shared_lock_guard.hpp>
-#include <boost/log/detail/throw_exception.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/async_frontend.hpp>
 #include <boost/log/sinks/ordering_async_frontend.hpp>
@@ -442,7 +442,7 @@ public:
         {
             lock_guard< mutex > lock(m_FrontendMutex);
             if (m_FeedingThreadID)
-                boost::log::aux::throw_exception(std::logic_error("Asynchronous sink frontend already runs a thread"));
+                BOOST_LOG_THROW_DESCR(unexpected_call, "Asynchronous sink frontend already runs a thread");
             m_FeedingThreadID = this_thread::get_id();
             cleanup.activate();
             m_Finishing = false;
@@ -500,7 +500,7 @@ public:
         {
             lock_guard< mutex > lock(m_FrontendMutex);
             if (m_FeedingThreadID)
-                boost::log::aux::throw_exception(std::logic_error("Asynchronous sink frontend already runs a thread"));
+                BOOST_LOG_THROW_DESCR(unexpected_call, "Asynchronous sink frontend already runs a thread");
             m_FeedingThreadID = this_thread::get_id();
             cleanup.activate();
         }
@@ -800,7 +800,7 @@ public:
         m_OrderingWindow(ordering_window)
     {
         if (m_Order.empty())
-            boost::log::aux::throw_exception(std::logic_error("Ordering predicate not specified"));
+            BOOST_LOG_THROW_DESCR(setup_error, "Ordering predicate not specified");
     }
 
     //! Destructor
@@ -828,7 +828,7 @@ public:
         {
             lock_guard< mutex > lock(m_FrontendMutex);
             if (m_FeedingThreadID)
-                boost::log::aux::throw_exception(std::logic_error("Asynchronous sink frontend already runs a thread"));
+                BOOST_LOG_THROW_DESCR(unexpected_call, "Asynchronous sink frontend already runs a thread");
             m_FeedingThreadID = this_thread::get_id();
             cleanup.activate();
             m_Finishing = false;
@@ -880,7 +880,7 @@ public:
         {
             lock_guard< mutex > lock(m_FrontendMutex);
             if (m_FeedingThreadID)
-                boost::log::aux::throw_exception(std::logic_error("Asynchronous sink frontend already runs a thread"));
+                BOOST_LOG_THROW_DESCR(unexpected_call, "Asynchronous sink frontend already runs a thread");
             m_FeedingThreadID = this_thread::get_id();
             cleanup.activate();
         }

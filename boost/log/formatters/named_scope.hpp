@@ -8,7 +8,7 @@
  * at http://www.boost.org/libs/log/doc/log.html.
  */
 /*!
- * \file
+ * \file   formatters/named_scope.hpp
  * \author Andrey Semashev
  * \date   26.11.2007
  *
@@ -22,13 +22,18 @@
 #ifndef BOOST_LOG_FORMATTERS_NAMED_SCOPE_HPP_INCLUDED_
 #define BOOST_LOG_FORMATTERS_NAMED_SCOPE_HPP_INCLUDED_
 
+#include <new> // std::nothrow
 #include <string>
 #include <iterator>
 #include <algorithm>
 #include <boost/limits.hpp>
+#include <boost/preprocessor/iteration/iterate.hpp>
+#include <boost/preprocessor/repetition/enum_params.hpp>
+#include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
+#include <boost/log/formatters/exception_policies.hpp>
 #include <boost/log/utility/attribute_value_extractor.hpp>
 #include <boost/log/keywords/delimiter.hpp>
 #include <boost/log/keywords/depth.hpp>
@@ -53,13 +58,13 @@ enum scope_iteration_direction
  * The formatter iterates through the list of scopes and puts each one into the resulting stream.
  * The formatter supports customizing the iteration direction, depth and delimiter between the scopes.
  */
-template< typename CharT >
+template< typename CharT, typename ExceptionPolicyT >
 class fmt_named_scope :
-    public basic_formatter< CharT, fmt_named_scope< CharT > >
+    public basic_formatter< CharT, fmt_named_scope< CharT, ExceptionPolicyT > >
 {
 private:
     //! Base type
-    typedef basic_formatter< CharT, fmt_named_scope< CharT > > base_type;
+    typedef basic_formatter< CharT, fmt_named_scope< CharT, ExceptionPolicyT > > base_type;
 
 public:
     //! Character type
@@ -141,7 +146,8 @@ public:
     {
         // Extract the value and pass on to the implementation
         binder receiver(this, strm);
-        m_Extractor(record.attribute_values(), receiver);
+        if (!m_Extractor(record.attribute_values(), receiver))
+            ExceptionPolicyT::on_attribute_value_not_found(__FILE__, __LINE__);
     }
 
 private:
@@ -208,10 +214,10 @@ namespace aux {
 #endif
 
     //! Auxiliary function to construct formatter from the complete set of arguments
-    template< typename CharT, typename ArgsT >
-    fmt_named_scope< CharT > named_scope(const CharT* name, ArgsT const& args)
+    template< typename ExceptionPolicyT, typename CharT, typename ArgsT >
+    fmt_named_scope< CharT, ExceptionPolicyT > named_scope(const CharT* name, ArgsT const& args)
     {
-        typedef fmt_named_scope< CharT > fmt_named_scope_t;
+        typedef fmt_named_scope< CharT, ExceptionPolicyT > fmt_named_scope_t;
 
         scope_iteration_direction direction = args[keywords::iteration | formatters::forward];
         const CharT* default_delimiter =
@@ -224,10 +230,10 @@ namespace aux {
             direction);
     }
     //! Auxiliary function to construct formatter from the complete set of arguments
-    template< typename CharT, typename ArgsT >
-    fmt_named_scope< CharT > named_scope(std::basic_string< CharT > const& name, ArgsT const& args)
+    template< typename ExceptionPolicyT, typename CharT, typename ArgsT >
+    fmt_named_scope< CharT, ExceptionPolicyT > named_scope(std::basic_string< CharT > const& name, ArgsT const& args)
     {
-        typedef fmt_named_scope< CharT > fmt_named_scope_t;
+        typedef fmt_named_scope< CharT, ExceptionPolicyT > fmt_named_scope_t;
 
         scope_iteration_direction direction = args[keywords::iteration | formatters::forward];
         const CharT* default_delimiter =
@@ -247,108 +253,76 @@ namespace aux {
 #ifdef BOOST_LOG_USE_CHAR
 
 //! Formatter generator
-inline fmt_named_scope< char > named_scope(const char* name)
+inline fmt_named_scope< char, throw_policy > named_scope(const char* name)
 {
-    return fmt_named_scope< char >(name, "->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
+    return fmt_named_scope< char, throw_policy >(
+        name, "->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
 }
 //! Formatter generator
-inline fmt_named_scope< char > named_scope(std::basic_string< char > const& name)
+inline fmt_named_scope< char, throw_policy > named_scope(std::basic_string< char > const& name)
 {
-    return fmt_named_scope< char >(name, "->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
+    return fmt_named_scope< char, throw_policy >(
+        name, "->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
 }
 
 //! Formatter generator
-template< typename T1 >
-inline fmt_named_scope< char > named_scope(const char* name, T1 const& arg1)
+inline fmt_named_scope< char, no_throw_policy > named_scope(const char* name, std::nothrow_t const&)
 {
-    return aux::named_scope(name, arg1);
+    return fmt_named_scope< char, no_throw_policy >(
+        name, "->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
 }
 //! Formatter generator
-template< typename T1 >
-inline fmt_named_scope< char > named_scope(std::basic_string< char > const& name, T1 const& arg1)
+inline fmt_named_scope< char, no_throw_policy > named_scope(std::basic_string< char > const& name, std::nothrow_t const&)
 {
-    return aux::named_scope(name, arg1);
+    return fmt_named_scope< char, no_throw_policy >(
+        name, "->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
 }
 
-//! Formatter generator
-template< typename T1, typename T2 >
-inline fmt_named_scope< char > named_scope(const char* name, T1 const& arg1, T2 const& arg2)
-{
-    return aux::named_scope(name, (arg1, arg2));
-}
-//! Formatter generator
-template< typename T1, typename T2 >
-inline fmt_named_scope< char > named_scope(std::basic_string< char > const& name, T1 const& arg1, T2 const& arg2)
-{
-    return aux::named_scope(name, (arg1, arg2));
-}
+#   define BOOST_LOG_ITERATION_CHAR_TYPE char
 
-//! Formatter generator
-template< typename T1, typename T2, typename T3 >
-inline fmt_named_scope< char > named_scope(const char* name, T1 const& arg1, T2 const& arg2, T3 const& arg3)
-{
-    return aux::named_scope(name, (arg1, arg2, arg3));
-}
-//! Formatter generator
-template< typename T1, typename T2, typename T3 >
-inline fmt_named_scope< char > named_scope(std::basic_string< char > const& name, T1 const& arg1, T2 const& arg2, T3 const& arg3)
-{
-    return aux::named_scope(name, (arg1, arg2, arg3));
-}
+#   define BOOST_PP_FILENAME_1 <boost/log/formatters/named_scope.hpp>
+#   define BOOST_PP_ITERATION_LIMITS (1, 3)
+#   include BOOST_PP_ITERATE()
+
+#   undef BOOST_LOG_ITERATION_CHAR_TYPE
 
 #endif // BOOST_LOG_USE_CHAR
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 
 //! Formatter generator
-inline fmt_named_scope< wchar_t > named_scope(const wchar_t* name)
+inline fmt_named_scope< wchar_t, throw_policy > named_scope(const wchar_t* name)
 {
-    return fmt_named_scope< wchar_t >(name, L"->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
+    return fmt_named_scope< wchar_t, throw_policy >(
+        name, L"->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
 }
 //! Formatter generator
-inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const& name)
+inline fmt_named_scope< wchar_t, throw_policy > named_scope(std::basic_string< wchar_t > const& name)
 {
-    return fmt_named_scope< wchar_t >(name, L"->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
+    return fmt_named_scope< wchar_t, throw_policy >(
+        name, L"->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
 }
 
 //! Formatter generator
-template< typename T1 >
-inline fmt_named_scope< wchar_t > named_scope(const wchar_t* name, T1 const& arg1)
+inline fmt_named_scope< wchar_t, no_throw_policy > named_scope(const wchar_t* name, std::nothrow_t const&)
 {
-    return aux::named_scope(name, arg1);
+    return fmt_named_scope< wchar_t, no_throw_policy >(
+        name, L"->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
 }
 //! Formatter generator
-template< typename T1 >
-inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const& name, T1 const& arg1)
+inline fmt_named_scope< wchar_t, no_throw_policy > named_scope(std::basic_string< wchar_t > const& name, std::nothrow_t const&)
 {
-    return aux::named_scope(name, arg1);
+    return fmt_named_scope< wchar_t, no_throw_policy >(
+        name, L"->", (std::numeric_limits< std::size_t >::max)(), formatters::forward);
 }
 
-//! Formatter generator
-template< typename T1, typename T2 >
-inline fmt_named_scope< wchar_t > named_scope(const wchar_t* name, T1 const& arg1, T2 const& arg2)
-{
-    return aux::named_scope(name, (arg1, arg2));
-}
-//! Formatter generator
-template< typename T1, typename T2 >
-inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const& name, T1 const& arg1, T2 const& arg2)
-{
-    return aux::named_scope(name, (arg1, arg2));
-}
+#   define BOOST_LOG_ITERATION_CHAR_TYPE wchar_t
 
-//! Formatter generator
-template< typename T1, typename T2, typename T3 >
-inline fmt_named_scope< wchar_t > named_scope(const wchar_t* name, T1 const& arg1, T2 const& arg2, T3 const& arg3)
-{
-    return aux::named_scope(name, (arg1, arg2, arg3));
-}
-//! Formatter generator
-template< typename T1, typename T2, typename T3 >
-inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const& name, T1 const& arg1, T2 const& arg2, T3 const& arg3)
-{
-    return aux::named_scope(name, (arg1, arg2, arg3));
-}
+#   define BOOST_PP_FILENAME_1 <boost/log/formatters/named_scope.hpp>
+#   define BOOST_PP_ITERATION_LIMITS (1, 3)
+#   include BOOST_PP_ITERATE()
+
+#   undef BOOST_LOG_ITERATION_CHAR_TYPE
 
 #endif // BOOST_LOG_USE_WCHAR_T
 
@@ -364,7 +338,23 @@ inline fmt_named_scope< wchar_t > named_scope(std::basic_string< wchar_t > const
  *             \li \c depth - iteration depth. Default: unlimited.
  */
 template< typename CharT, typename... ArgsT >
-fmt_named_scope< CharT > named_scope(std::basic_string< CharT > const& name, ArgsT... const& args);
+fmt_named_scope< CharT, throw_policy > named_scope(
+    std::basic_string< CharT > const& name, ArgsT... const& args);
+
+/*!
+ * Formatter generator. Construct the named scope formatter with the specified formatting parameters.
+ * The formatter will not throw if the attribute value is not found in the record being formatted.
+ * Instead, no output will be produced for this attribute value.
+ *
+ * \param name Attribute name
+ * \param args An optional set of named parameters. Supported parameters:
+ *             \li \c delimiter - a string that is used to delimit the formatted scope names. Default: "->" or "<-", depending on the iteration direction.
+ *             \li \c iteration - iteration direction. Default: forward.
+ *             \li \c depth - iteration depth. Default: unlimited.
+ */
+template< typename CharT, typename... ArgsT >
+fmt_named_scope< CharT, no_throw_policy > named_scope(
+    std::basic_string< CharT > const& name, ArgsT... const& args, std::nothrow_t const&);
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
@@ -375,3 +365,49 @@ fmt_named_scope< CharT > named_scope(std::basic_string< CharT > const& name, Arg
 } // namespace boost
 
 #endif // BOOST_LOG_FORMATTERS_NAMED_SCOPE_HPP_INCLUDED_
+
+#ifdef BOOST_PP_IS_ITERATING
+
+//! Formatter generator
+template< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT) >
+inline fmt_named_scope< BOOST_LOG_ITERATION_CHAR_TYPE, throw_policy > named_scope(
+    const BOOST_LOG_ITERATION_CHAR_TYPE* name,
+    BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, const& arg)
+)
+{
+    return aux::named_scope< throw_policy >(name, (BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg)));
+}
+
+//! Formatter generator
+template< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT) >
+inline fmt_named_scope< BOOST_LOG_ITERATION_CHAR_TYPE, throw_policy > named_scope(
+    std::basic_string< BOOST_LOG_ITERATION_CHAR_TYPE > const& name,
+    BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, const& arg)
+)
+{
+    return aux::named_scope< throw_policy >(name, (BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg)));
+}
+
+//! Formatter generator
+template< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT) >
+inline fmt_named_scope< BOOST_LOG_ITERATION_CHAR_TYPE, no_throw_policy > named_scope(
+    const BOOST_LOG_ITERATION_CHAR_TYPE* name,
+    BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, const& arg),
+    std::nothrow_t const&
+)
+{
+    return aux::named_scope< no_throw_policy >(name, (BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg)));
+}
+
+//! Formatter generator
+template< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT) >
+inline fmt_named_scope< BOOST_LOG_ITERATION_CHAR_TYPE, no_throw_policy > named_scope(
+    std::basic_string< BOOST_LOG_ITERATION_CHAR_TYPE > const& name,
+    BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, const& arg),
+    std::nothrow_t const&
+)
+{
+    return aux::named_scope< no_throw_policy >(name, (BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg)));
+}
+
+#endif // BOOST_PP_IS_ITERATING

@@ -61,12 +61,16 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(general_conditions, CharT, char_types)
     BOOST_CHECK(!f(view1));
 
     f = flt::attr< float >(data::attr1()) > 0;
+    BOOST_CHECK_THROW(f(view1), logging::runtime_error);
+    f = flt::attr< float >(data::attr1(), std::nothrow) > 0;
     BOOST_CHECK(!f(view1));
 
     f = flt::attr< int >(data::attr4()) >= 1;
+    BOOST_CHECK_THROW(f(view1), logging::runtime_error);
+    f = flt::attr< int >(data::attr4(), std::nothrow) >= 1;
     BOOST_CHECK(!f(view1));
 
-    f = flt::attr< int >(data::attr4()) < 1;
+    f = flt::attr< int >(data::attr4(), std::nothrow) < 1;
     BOOST_CHECK(!f(view1));
 
     f = flt::attr< logging::numeric_types >(data::attr2()) > 5;
@@ -207,10 +211,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(satisfies_check, CharT, char_types)
     BOOST_CHECK_EQUAL(call_counter, 3U);
 
     f = flt::attr< int >(data::attr2()).satisfies(predicate(call_counter, predicate_result));
+    BOOST_CHECK_THROW(f(view1), logging::runtime_error);
+    f = flt::attr< int >(data::attr2(), std::nothrow).satisfies(predicate(call_counter, predicate_result));
     BOOST_CHECK_EQUAL(f(view1), false);
     BOOST_CHECK_EQUAL(call_counter, 3U);
 
     f = flt::attr< int >(data::attr4()).satisfies(predicate(call_counter, predicate_result));
+    BOOST_CHECK_THROW(f(view1), logging::runtime_error);
+    f = flt::attr< int >(data::attr4(), std::nothrow).satisfies(predicate(call_counter, predicate_result));
     BOOST_CHECK_EQUAL(f(view1), false);
     BOOST_CHECK_EQUAL(call_counter, 3U);
 }
@@ -247,10 +255,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(begins_with_check, CharT, char_types)
     f = flt::attr< std::string >(data::attr3()).begins_with("world!");
     BOOST_CHECK(!f(view1));
 
-    f = flt::attr< std::string >(data::attr2()).begins_with("Hello");
+    f = flt::attr< std::string >(data::attr2(), std::nothrow).begins_with("Hello");
     BOOST_CHECK(!f(view1));
 
-    f = flt::attr< std::string >(data::attr4()).begins_with("Hello");
+    f = flt::attr< std::string >(data::attr4(), std::nothrow).begins_with("Hello");
     BOOST_CHECK(!f(view1));
 }
 
@@ -286,10 +294,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(ends_with_check, CharT, char_types)
     f = flt::attr< std::string >(data::attr3()).ends_with("Hello");
     BOOST_CHECK(!f(view1));
 
-    f = flt::attr< std::string >(data::attr2()).ends_with("world!");
+    f = flt::attr< std::string >(data::attr2(), std::nothrow).ends_with("world!");
     BOOST_CHECK(!f(view1));
 
-    f = flt::attr< std::string >(data::attr4()).ends_with("world!");
+    f = flt::attr< std::string >(data::attr4(), std::nothrow).ends_with("world!");
     BOOST_CHECK(!f(view1));
 }
 
@@ -325,10 +333,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(contains_check, CharT, char_types)
     f = flt::attr< std::string >(data::attr3()).contains("world!");
     BOOST_CHECK(f(view1));
 
-    f = flt::attr< std::string >(data::attr2()).contains("Hello");
+    f = flt::attr< std::string >(data::attr2(), std::nothrow).contains("Hello");
     BOOST_CHECK(!f(view1));
 
-    f = flt::attr< std::string >(data::attr4()).contains("Hello");
+    f = flt::attr< std::string >(data::attr4(), std::nothrow).contains("Hello");
     BOOST_CHECK(!f(view1));
 }
 
@@ -361,10 +369,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(matches_check, CharT, char_types)
     BOOST_CHECK(f(view1));
 
     rex = ".*";
-    f = flt::attr< std::string >(data::attr2()).matches(rex);
+    f = flt::attr< std::string >(data::attr2(), std::nothrow).matches(rex);
     BOOST_CHECK(!f(view1));
 
-    f = flt::attr< std::string >(data::attr4()).matches(rex);
+    f = flt::attr< std::string >(data::attr4(), std::nothrow).matches(rex);
     BOOST_CHECK(!f(view1));
 }
 
@@ -391,12 +399,15 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(composition_check, CharT, char_types)
     values_view view3(set1, set2, set3);
     view3.freeze();
 
-    filter f = flt::attr< int >(data::attr1()) <= 10 || flt::attr< double >(data::attr2()).is_in_range(2.2, 7.7);
+    filter f =
+        flt::attr< int >(data::attr1(), std::nothrow) <= 10 ||
+        flt::attr< double >(data::attr2(), std::nothrow).is_in_range(2.2, 7.7);
     BOOST_CHECK(!f(view1));
     BOOST_CHECK(f(view2));
     BOOST_CHECK(f(view3));
 
-    f = flt::attr< int >(data::attr1()) == 10 && flt::attr< std::string >(data::attr3()).begins_with("Hello");
+    f = flt::attr< int >(data::attr1(), std::nothrow) == 10 &&
+        flt::attr< std::string >(data::attr3(), std::nothrow).begins_with("Hello");
     BOOST_CHECK(!f(view1));
     BOOST_CHECK(!f(view2));
     BOOST_CHECK(f(view3));

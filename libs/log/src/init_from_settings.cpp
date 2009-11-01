@@ -45,11 +45,11 @@
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_assign_actor.hpp>
 #include <boost/log/detail/code_conversion.hpp>
-#include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/universal_path.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/sinks.hpp>
+#include <boost/log/exceptions.hpp>
 #if defined(BOOST_WINDOWS) && defined(BOOST_LOG_USE_WINNT6_API)
 #include <boost/log/sinks/nt6_event_log_backend.hpp>
 #endif // BOOST_WINDOWS && BOOST_LOG_USE_WINNT6_API
@@ -80,18 +80,21 @@ namespace {
     template< typename CharT >
     void BOOST_LOG_NORETURN throw_invalid_type(const CharT* param_name, log::type_info_wrapper const& param_type)
     {
-        std::string name = log::aux::to_narrow(param_name);
-        boost::log::aux::throw_exception(std::invalid_argument(
-            "Invalid parameter \"" + name + "\" type: " + param_type.pretty_name()));
+        std::string descr = "Invalid parameter \""
+                            + log::aux::to_narrow(param_name)
+                            + "\" type: "
+                            + param_type.pretty_name();
+        BOOST_LOG_THROW_DESCR(invalid_type, descr);
     }
 
     //! Throws an exception when a parameter value is not valid
     template< typename CharT >
     void BOOST_LOG_NORETURN throw_invalid_value(const CharT* param_name)
     {
-        std::string name = log::aux::to_narrow(param_name);
-        boost::log::aux::throw_exception(std::invalid_argument(
-            "Invalid parameter \"" + name + "\" value"));
+        std::string descr = "Invalid parameter \""
+                            + log::aux::to_narrow(param_name)
+                            + "\" value";
+        BOOST_LOG_THROW_DESCR(invalid_value, descr);
     }
 
     //! Extracts a filesystem path from any
@@ -302,8 +305,9 @@ namespace {
 
             if (!result.full)
             {
-                boost::log::aux::throw_exception(std::invalid_argument("Could not recognize CLSID from string "
-                    + log::aux::to_narrow(str)));
+                std::string descr = "Could not recognize CLSID from string "
+                                    + log::aux::to_narrow(str);
+                BOOST_LOG_THROW_DESCR(invalid_value, descr);
             }
 
             return g;
@@ -358,12 +362,12 @@ struct sinks_repository :
             }
             else
             {
-                boost::log::aux::throw_exception(std::runtime_error("The sink destination is not supported"));
+                BOOST_LOG_THROW_DESCR(invalid_value, "The sink destination is not supported");
             }
         }
         else
         {
-            boost::log::aux::throw_exception(std::runtime_error("The sink destination is not set"));
+            BOOST_LOG_THROW_DESCR(missing_value, "The sink destination is not set");
         }
     }
 
@@ -406,7 +410,7 @@ private:
                 any_cast_to_path(constants::file_name_param_name(), it->second));
         }
         else
-            boost::log::aux::throw_exception(std::runtime_error("File name is not specified"));
+            BOOST_LOG_THROW_DESCR(missing_value, "File name is not specified");
 
         // File rotation size
         it = params.find(constants::rotation_size_param_name());
@@ -471,8 +475,8 @@ private:
                         backend->scan_for_files(sinks::file::scan_matching);
                     else
                     {
-                        boost::log::aux::throw_exception(std::invalid_argument(
-                            "File scan method \"" + boost::log::aux::to_narrow(value) + "\" is not supported"));
+                        BOOST_LOG_THROW_DESCR(invalid_value,
+                            "File scan method \"" + boost::log::aux::to_narrow(value) + "\" is not supported");
                     }
                 }
                 else
@@ -575,8 +579,8 @@ private:
                     reg_mode = sinks::event_log::forced;
                 else
                 {
-                    boost::log::aux::throw_exception(std::invalid_argument(
-                        "The registration mode \"" + log::aux::to_narrow(value) + "\" is not supported"));
+                    BOOST_LOG_THROW_DESCR(invalid_value,
+                        "The registration mode \"" + log::aux::to_narrow(value) + "\" is not supported");
                 }
             }
             else

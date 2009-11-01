@@ -18,6 +18,7 @@
 #ifndef BOOST_LOG_FORMATTERS_DATE_TIME_HPP_INCLUDED_
 #define BOOST_LOG_FORMATTERS_DATE_TIME_HPP_INCLUDED_
 
+#include <new> // std::nothrow
 #include <string>
 #include <memory>
 #include <locale>
@@ -55,6 +56,7 @@
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
+#include <boost/log/formatters/exception_policies.hpp>
 #include <boost/log/keywords/format.hpp>
 #include <boost/log/keywords/unit_format.hpp>
 #include <boost/log/utility/string_literal.hpp>
@@ -611,18 +613,19 @@ namespace aux {
 template<
     typename CharT,
     typename AttributeValueTypesT,
-    template< typename > class FormatterImplT
+    template< typename > class FormatterImplT,
+    typename ExceptionPolicyT
 >
 class fmt_date_time_facade :
     public basic_formatter<
         CharT,
-        fmt_date_time_facade< CharT, AttributeValueTypesT, FormatterImplT >
+        fmt_date_time_facade< CharT, AttributeValueTypesT, FormatterImplT, ExceptionPolicyT >
     >
 {
     //! Base type
     typedef basic_formatter<
         CharT,
-        fmt_date_time_facade< CharT, AttributeValueTypesT, FormatterImplT >
+        fmt_date_time_facade< CharT, AttributeValueTypesT, FormatterImplT, ExceptionPolicyT >
     > base_type;
 
 public:
@@ -677,7 +680,8 @@ public:
     void operator() (ostream_type& strm, record_type const& record) const
     {
         boost::log::aux::cleanup_guard< formatter_type > _(m_Formatter);
-        m_Extractor(record.attribute_values(), m_Formatter);
+        if (!m_Extractor(record.attribute_values(), m_Formatter))
+            ExceptionPolicyT::on_attribute_value_not_found(__FILE__, __LINE__);
         strm.write(m_Formatter.get().data(), static_cast< std::streamsize >(m_Formatter.get().size()));
     }
 };
@@ -792,7 +796,8 @@ template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
 fmt_date_time_facade<
     CharT,
     AttributeValueTypesT,
-    implementation_defined
+    implementation_defined,
+    throw_policy
 > date(std::basic_string< CharT > const& name, ArgsT... const& args);
 
 /*!
@@ -806,7 +811,8 @@ template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
 fmt_date_time_facade<
     CharT,
     AttributeValueTypesT,
-    implementation_defined
+    implementation_defined,
+    throw_policy
 > time(std::basic_string< CharT > const& name, ArgsT... const& args);
 
 /*!
@@ -820,7 +826,8 @@ template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
 fmt_date_time_facade<
     CharT,
     AttributeValueTypesT,
-    implementation_defined
+    implementation_defined,
+    throw_policy
 > date_time(std::basic_string< CharT > const& name, ArgsT... const& args);
 
 /*!
@@ -834,7 +841,8 @@ template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
 fmt_date_time_facade<
     CharT,
     AttributeValueTypesT,
-    implementation_defined
+    implementation_defined,
+    throw_policy
 > time_duration(std::basic_string< CharT > const& name, ArgsT... const& args);
 
 /*!
@@ -849,8 +857,96 @@ template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
 fmt_date_time_facade<
     CharT,
     AttributeValueTypesT,
-    implementation_defined
+    implementation_defined,
+    throw_policy
 > time_period(std::basic_string< CharT > const& name, ArgsT... const& args);
+
+
+/*!
+ * Formatter generator with the explicitly specified set of supported types in the first template parameter.
+ * The formatter will not throw if the attribute value is not found in the record being formatted.
+ * Instead, no output will be produced for this attribute value.
+ *
+ * \param name Attribute name
+ * \param args Optional named arguments. Supported arguments:
+ *             \li \c format - format string, must be compliant with Boost.DateTime date format string specification. Default: <tt>%%Y-%%b-%%d</tt>
+ */
+template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
+fmt_date_time_facade<
+    CharT,
+    AttributeValueTypesT,
+    implementation_defined,
+    no_throw_policy
+    > date(std::basic_string< CharT > const& name, ArgsT... const& args, std::nothrow_t const&);
+
+/*!
+ * Formatter generator with the explicitly specified set of supported types in the first template parameter.
+ * The formatter will not throw if the attribute value is not found in the record being formatted.
+ * Instead, no output will be produced for this attribute value.
+ *
+ * \param name Attribute name
+ * \param args Optional named arguments. Supported arguments:
+ *             \li \c format - format string, must be compliant with Boost.DateTime time format string specification. Default: <tt>%%H:%%M:%%S.%%f</tt>
+ */
+template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
+fmt_date_time_facade<
+    CharT,
+    AttributeValueTypesT,
+    implementation_defined,
+    no_throw_policy
+> time(std::basic_string< CharT > const& name, ArgsT... const& args, std::nothrow_t const&);
+
+/*!
+ * Formatter generator with the explicitly specified set of supported types in the first template parameter.
+ * The formatter will not throw if the attribute value is not found in the record being formatted.
+ * Instead, no output will be produced for this attribute value.
+ *
+ * \param name Attribute name
+ * \param args Optional named arguments. Supported arguments:
+ *             \li \c format - format string, must be compliant with Boost.DateTime date and time format string specification. Default: <tt>%%Y-%%b-%%d %%H:%%M:%%S.%%f</tt>
+ */
+template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
+fmt_date_time_facade<
+    CharT,
+    AttributeValueTypesT,
+    implementation_defined,
+    no_throw_policy
+> date_time(std::basic_string< CharT > const& name, ArgsT... const& args, std::nothrow_t const&);
+
+/*!
+ * Formatter generator with the explicitly specified set of supported types in the first template parameter.
+ * The formatter will not throw if the attribute value is not found in the record being formatted.
+ * Instead, no output will be produced for this attribute value.
+ *
+ * \param name Attribute name
+ * \param args Optional named arguments. Supported arguments:
+ *             \li \c format - format string, must be compliant with Boost.DateTime time format string specification. Default: <tt>%%-%%H:%%M:%%S.%%f</tt>
+ */
+template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
+fmt_date_time_facade<
+    CharT,
+    AttributeValueTypesT,
+    implementation_defined,
+    no_throw_policy
+> time_duration(std::basic_string< CharT > const& name, ArgsT... const& args, std::nothrow_t const&);
+
+/*!
+ * Formatter generator with the explicitly specified set of supported types in the first template parameter.
+ * The formatter will not throw if the attribute value is not found in the record being formatted.
+ * Instead, no output will be produced for this attribute value.
+ *
+ * \param name Attribute name
+ * \param args Optional named arguments. Supported arguments:
+ *             \li \c unit_format - format string for period boundaries, must be compliant with Boost.DateTime date and time format string specification. Default: <tt>%%Y-%%b-%%d %%H:%%M:%%S.%%f</tt>
+ *             \li \c format - format string for boundaries composition, can contain placeholders <tt>%%begin%</tt>, <tt>%%end%</tt> and <tt>%%last%</tt>. Default: <tt>[%%begin% - %%last%]</tt>
+ */
+template< typename AttributeValueTypesT, typename CharT, typename... ArgsT >
+fmt_date_time_facade<
+    CharT,
+    AttributeValueTypesT,
+    implementation_defined,
+    no_throw_policy
+> time_period(std::basic_string< CharT > const& name, ArgsT... const& args, std::nothrow_t const&);
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
@@ -883,7 +979,8 @@ template< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT) >
 inline fmt_date_time_facade<
     BOOST_LOG_ITERATION_CHAR_TYPE,
     BOOST_LOG_ITERATION_DEFAULT_ATTR_TYPES,
-    BOOST_LOG_ITERATION_FORMATTER_IMPL
+    BOOST_LOG_ITERATION_FORMATTER_IMPL,
+    throw_policy
 > BOOST_LOG_ITERATION_NAME(
     std::basic_string< BOOST_LOG_ITERATION_CHAR_TYPE > const& name BOOST_PP_COMMA_IF(BOOST_PP_ITERATION())
     BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, const& arg)
@@ -892,7 +989,8 @@ inline fmt_date_time_facade<
     return fmt_date_time_facade<
         BOOST_LOG_ITERATION_CHAR_TYPE,
         BOOST_LOG_ITERATION_DEFAULT_ATTR_TYPES,
-        BOOST_LOG_ITERATION_FORMATTER_IMPL
+        BOOST_LOG_ITERATION_FORMATTER_IMPL,
+        throw_policy
     >(
         name
 #if BOOST_PP_ITERATION() > 0
@@ -911,7 +1009,8 @@ template<
 inline fmt_date_time_facade<
     BOOST_LOG_ITERATION_CHAR_TYPE,
     AttributeValueTypesT,
-    BOOST_LOG_ITERATION_FORMATTER_IMPL
+    BOOST_LOG_ITERATION_FORMATTER_IMPL,
+    throw_policy
 > BOOST_LOG_ITERATION_NAME(
     std::basic_string< BOOST_LOG_ITERATION_CHAR_TYPE > const& name BOOST_PP_COMMA_IF(BOOST_PP_ITERATION())
     BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, const& arg)
@@ -920,7 +1019,69 @@ inline fmt_date_time_facade<
     return fmt_date_time_facade<
         BOOST_LOG_ITERATION_CHAR_TYPE,
         AttributeValueTypesT,
-        BOOST_LOG_ITERATION_FORMATTER_IMPL
+        BOOST_LOG_ITERATION_FORMATTER_IMPL,
+        throw_policy
+    >(
+        name
+#if BOOST_PP_ITERATION() > 0
+        , boost::parameter::parameters<
+            BOOST_PP_SEQ_FOR_EACH_I(BOOST_LOG_ITERATION_MAKE_KEYWORD_TYPES, ~, BOOST_LOG_ITERATION_KEYWORDS)
+        >()(BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg))
+#endif
+    );
+}
+
+//! Formatter generator with the default list of supported attribute types
+#if BOOST_PP_ITERATION() > 0
+template< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT) >
+#endif
+inline fmt_date_time_facade<
+    BOOST_LOG_ITERATION_CHAR_TYPE,
+    BOOST_LOG_ITERATION_DEFAULT_ATTR_TYPES,
+    BOOST_LOG_ITERATION_FORMATTER_IMPL,
+    no_throw_policy
+> BOOST_LOG_ITERATION_NAME(
+    std::basic_string< BOOST_LOG_ITERATION_CHAR_TYPE > const& name BOOST_PP_COMMA_IF(BOOST_PP_ITERATION())
+    BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, const& arg),
+    std::nothrow_t const&
+)
+{
+    return fmt_date_time_facade<
+        BOOST_LOG_ITERATION_CHAR_TYPE,
+        BOOST_LOG_ITERATION_DEFAULT_ATTR_TYPES,
+        BOOST_LOG_ITERATION_FORMATTER_IMPL,
+        no_throw_policy
+    >(
+        name
+#if BOOST_PP_ITERATION() > 0
+        , boost::parameter::parameters<
+            BOOST_PP_SEQ_FOR_EACH_I(BOOST_LOG_ITERATION_MAKE_KEYWORD_TYPES, ~, BOOST_LOG_ITERATION_KEYWORDS)
+        >()(BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg))
+#endif
+    );
+}
+
+//! Formatter generator with user-specified list of supported attribute types
+template<
+    typename AttributeValueTypesT BOOST_PP_COMMA_IF(BOOST_PP_ITERATION())
+    BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT)
+>
+inline fmt_date_time_facade<
+    BOOST_LOG_ITERATION_CHAR_TYPE,
+    AttributeValueTypesT,
+    BOOST_LOG_ITERATION_FORMATTER_IMPL,
+    no_throw_policy
+> BOOST_LOG_ITERATION_NAME(
+    std::basic_string< BOOST_LOG_ITERATION_CHAR_TYPE > const& name BOOST_PP_COMMA_IF(BOOST_PP_ITERATION())
+    BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, const& arg),
+    std::nothrow_t const&
+)
+{
+    return fmt_date_time_facade<
+        BOOST_LOG_ITERATION_CHAR_TYPE,
+        AttributeValueTypesT,
+        BOOST_LOG_ITERATION_FORMATTER_IMPL,
+        no_throw_policy
     >(
         name
 #if BOOST_PP_ITERATION() > 0

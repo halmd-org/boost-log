@@ -22,15 +22,15 @@
 #ifndef BOOST_LOG_UTILITY_INIT_FILTER_PARSER_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_INIT_FILTER_PARSER_HPP_INCLUDED_
 
+#include <new> // std::nothrow
 #include <string>
-#include <stdexcept>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/log/detail/setup_prologue.hpp>
-#include <boost/log/detail/throw_exception.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>
@@ -74,38 +74,38 @@ struct filter_factory :
     //! The callback for equality relation filter
     virtual filter_type on_equality_relation(string_type const& name, string_type const& arg)
     {
-        boost::log::aux::throw_exception(std::runtime_error("the equality attribute relation is not supported"));
+        BOOST_LOG_THROW_DESCR(parse_error, "The equality attribute value relation is not supported");
     }
     //! The callback for inequality relation filter
     virtual filter_type on_inequality_relation(string_type const& name, string_type const& arg)
     {
-        boost::log::aux::throw_exception(std::runtime_error("the inequality attribute relation is not supported"));
+        BOOST_LOG_THROW_DESCR(parse_error, "The inequality attribute value relation is not supported");
     }
     //! The callback for less relation filter
     virtual filter_type on_less_relation(string_type const& name, string_type const& arg)
     {
-        boost::log::aux::throw_exception(std::runtime_error("the less attribute relation is not supported"));
+        BOOST_LOG_THROW_DESCR(parse_error, "The less attribute value relation is not supported");
     }
     //! The callback for greater relation filter
     virtual filter_type on_greater_relation(string_type const& name, string_type const& arg)
     {
-        boost::log::aux::throw_exception(std::runtime_error("the greater attribute relation is not supported"));
+        BOOST_LOG_THROW_DESCR(parse_error, "The greater attribute value relation is not supported");
     }
     //! The callback for less or equal relation filter
     virtual filter_type on_less_or_equal_relation(string_type const& name, string_type const& arg)
     {
-        boost::log::aux::throw_exception(std::runtime_error("the less-or-equal attribute relation is not supported"));
+        BOOST_LOG_THROW_DESCR(parse_error, "The less-or-equal attribute value relation is not supported");
     }
     //! The callback for greater or equal relation filter
     virtual filter_type on_greater_or_equal_relation(string_type const& name, string_type const& arg)
     {
-        boost::log::aux::throw_exception(std::runtime_error("the greater-or-equal attribute relation is not supported"));
+        BOOST_LOG_THROW_DESCR(parse_error, "The greater-or-equal attribute value relation is not supported");
     }
 
     //! The callback for custom relation filter
     virtual filter_type on_custom_relation(string_type const& name, string_type const& rel, string_type const& arg)
     {
-        boost::log::aux::throw_exception(std::runtime_error("the custom attribute relation is not supported"));
+        BOOST_LOG_THROW_DESCR(parse_error, "The custom attribute value relation is not supported");
     }
 };
 
@@ -133,38 +133,38 @@ public:
     //! The callback for equality relation filter
     virtual filter_type on_equality_relation(string_type const& name, string_type const& arg)
     {
-        return filter_type(filters::attr< attribute_value_type >(name) == parse_argument(arg));
+        return filter_type(filters::attr< attribute_value_type >(name, std::nothrow) == parse_argument(arg));
     }
     //! The callback for inequality relation filter
     virtual filter_type on_inequality_relation(string_type const& name, string_type const& arg)
     {
-        return filter_type(filters::attr< attribute_value_type >(name) != parse_argument(arg));
+        return filter_type(filters::attr< attribute_value_type >(name, std::nothrow) != parse_argument(arg));
     }
     //! The callback for less relation filter
     virtual filter_type on_less_relation(string_type const& name, string_type const& arg)
     {
-        return filter_type(filters::attr< attribute_value_type >(name) < parse_argument(arg));
+        return filter_type(filters::attr< attribute_value_type >(name, std::nothrow) < parse_argument(arg));
     }
     //! The callback for greater relation filter
     virtual filter_type on_greater_relation(string_type const& name, string_type const& arg)
     {
-        return filter_type(filters::attr< attribute_value_type >(name) > parse_argument(arg));
+        return filter_type(filters::attr< attribute_value_type >(name, std::nothrow) > parse_argument(arg));
     }
     //! The callback for less or equal relation filter
     virtual filter_type on_less_or_equal_relation(string_type const& name, string_type const& arg)
     {
-        return filter_type(filters::attr< attribute_value_type >(name) <= parse_argument(arg));
+        return filter_type(filters::attr< attribute_value_type >(name, std::nothrow) <= parse_argument(arg));
     }
     //! The callback for greater or equal relation filter
     virtual filter_type on_greater_or_equal_relation(string_type const& name, string_type const& arg)
     {
-        return filter_type(filters::attr< attribute_value_type >(name) >= parse_argument(arg));
+        return filter_type(filters::attr< attribute_value_type >(name, std::nothrow) >= parse_argument(arg));
     }
 
     //! The callback for custom relation filter
     virtual filter_type on_custom_relation(string_type const& name, string_type const& rel, string_type const& arg)
     {
-        boost::log::aux::throw_exception(std::runtime_error("the custom attribute relation is not supported"));
+        BOOST_LOG_THROW_DESCR(parse_error, "The custom attribute value relation is not supported");
     }
 
     //! The function parses the argument value for a binary relation

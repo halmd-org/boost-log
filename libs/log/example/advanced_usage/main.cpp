@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   main.cpp
  * \author Andrey Semashev
  * \date   11.11.2007
- * 
+ *
  * \brief  An example of in-depth library usage. See the library tutorial for expanded
  *         comments on this code. It may also be worthwhile reading the Wiki requirements page:
  *         http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Boost.Logging
@@ -141,29 +141,32 @@ int main(int argc, char* argv[])
     // will be written to log and in what way they will look there.
     pSink->locked_backend()->set_formatter(fmt::stream
         << fmt::attr("LineID") // First an attribute "LineID" is written to the log
-        << " [" << fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f") 
-        << "] [" << fmt::attr< severity_level >("Severity") 
-        << "] [" << fmt::time_duration< boost::posix_time::time_duration >("Uptime") 
+        << " [" << fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f")
+        << "] [" << fmt::attr< severity_level >("Severity")
+        << "] [" << fmt::time_duration< boost::posix_time::time_duration >("Uptime")
         << "] [" // then this delimiter separates it from the rest of the line
-        << fmt::attr< std::string >("Tag") // then goes another attribute named "Tag"
-                                           // Note here we explicitly stated that its type
-                                           // should be std::string. We could omit it just
-                                           // like we did it with the "LineNumber", but in this case
-                                           // library would have to detect the actual attribute
-                                           // type in run time which has the following consequences:
-                                           // - On the one hand, the attribute would have been output
-                                           //   even if it has another type (not std::string).
-                                           // - On the other, this detection does not come for free
-                                           //   and will result in performance decrease.
-                                           // 
-                                           // In general it's better you to specify explicitly which
-                                           // type should an attribute have wherever it is possible.
-                                           // You may specify an MPL sequence of types if the attribute
-                                           // may have more than one type. And you will have to specify
-                                           // it anyway if the library is not familiar with it (see
-                                           // boost/log/type_dispatch/standard_types.hpp for the list
-                                           // of the supported out-of-box types).
-        << "] [" // yet another delimiter
+        << fmt::if_(flt::has_attr("Tag"))
+           [
+               fmt::stream << fmt::attr< std::string >("Tag") // then goes another attribute named "Tag"
+                                               // Note here we explicitly stated that its type
+                                               // should be std::string. We could omit it just
+                                               // like we did it with the "LineNumber", but in this case
+                                               // library would have to detect the actual attribute
+                                               // type in run time which has the following consequences:
+                                               // - On the one hand, the attribute would have been output
+                                               //   even if it has another type (not std::string).
+                                               // - On the other, this detection does not come for free
+                                               //   and will result in performance decrease.
+                                               //
+                                               // In general it's better you to specify explicitly which
+                                               // type should an attribute have wherever it is possible.
+                                               // You may specify an MPL sequence of types if the attribute
+                                               // may have more than one type. And you will have to specify
+                                               // it anyway if the library is not familiar with it (see
+                                               // boost/log/type_dispatch/standard_types.hpp for the list
+                                               // of the supported out-of-box types).
+                << "] [" // yet another delimiter
+           ]
         << fmt::named_scope("Scope", keywords::iteration = fmt::reverse) << "] "
         << fmt::message()); // here goes the log record text
 

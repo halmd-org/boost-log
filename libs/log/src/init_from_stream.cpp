@@ -15,7 +15,6 @@
 #ifndef BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
 
 #include <string>
-#include <sstream>
 #include <iostream>
 #include <locale>
 #include <memory>
@@ -38,7 +37,7 @@
 #include <boost/spirit/include/classic_multi_pass.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/code_conversion.hpp>
-#include <boost/log/detail/throw_exception.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/utility/init/from_settings.hpp>
 #include "parser_utils.hpp"
 
@@ -94,9 +93,7 @@ struct settings_file_grammar :
         if (m_SectionName.empty())
         {
             // The section starter is broken
-            std::ostringstream descr;
-            descr << "At line " << m_LineCounter << ". The section header is invalid.";
-            boost::log::aux::throw_exception(std::runtime_error(descr.str()));
+            BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "The section header is invalid.", (m_LineCounter));
         }
     }
 
@@ -107,9 +104,7 @@ struct settings_file_grammar :
         if (m_SectionName.empty())
         {
             // The parameter encountered before any section starter
-            std::ostringstream descr;
-            descr << "At line " << m_LineCounter << ". Parameters are only allowed within sections.";
-            boost::log::aux::throw_exception(std::runtime_error(descr.str()));
+            BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Parameters are only allowed within sections.", (m_LineCounter));
         }
 
         m_ParameterName.assign(begin, end);
@@ -240,9 +235,7 @@ void init_from_stream(std::basic_istream< CharT >& strm)
     bsc::match< > m = gram.parse(scanner);
     if (!m || first != last)
     {
-        std::ostringstream descr;
-        descr << "At line " << gram.m_LineCounter << ". Could not parse settings from stream.";
-        log::aux::throw_exception(std::runtime_error(descr.str()));
+        BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "Could not parse settings from stream.", (gram.m_LineCounter));
     }
 
     // Pass on the parsed settings to the initialization routine

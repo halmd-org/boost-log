@@ -111,10 +111,21 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(default_formatting, CharT, char_types)
         strm2 << my_class(77);
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
     }
-    // Check that not found attribute values are ignored
+    // Check how missing attribute values are handled
     {
         osstream strm1;
-        formatter f = fmt::stream << fmt::attr< int >(data::attr1()) << fmt::attr(data::attr4()) << fmt::attr< double >(data::attr2());
+        formatter f = fmt::stream
+            << fmt::attr< int >(data::attr1())
+            << fmt::attr(data::attr4())
+            << fmt::attr< double >(data::attr2());
+        BOOST_CHECK_THROW(f(strm1, rec), logging::runtime_error);
+    }
+    {
+        osstream strm1;
+        formatter f = fmt::stream
+            << fmt::attr< int >(data::attr1(), std::nothrow)
+            << fmt::attr(data::attr4(), std::nothrow)
+            << fmt::attr< double >(data::attr2(), std::nothrow);
         f(strm1, rec);
         osstream strm2;
         strm2 << 10 << 5.5;

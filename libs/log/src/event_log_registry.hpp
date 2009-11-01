@@ -23,7 +23,7 @@
 #include <boost/optional.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/code_conversion.hpp>
-#include <boost/log/detail/throw_exception.hpp>
+#include <boost/log/exceptions.hpp>
 
 namespace boost {
 
@@ -253,7 +253,7 @@ namespace aux {
             &hkey,
             &disposition);
         if (res != ERROR_SUCCESS)
-            boost::log::aux::throw_exception(std::runtime_error("Could not create registry key for the event log"));
+            BOOST_LOG_THROW_DESCR(system_error, "Could not create registry key for the event log");
 
         auto_hkey_close hkey_guard(hkey);
 
@@ -273,8 +273,8 @@ namespace aux {
                     static_cast< DWORD >((module_name.size() + 1) * sizeof(CharT)));
                 if (res != ERROR_SUCCESS)
                 {
-                    boost::log::aux::throw_exception(std::runtime_error("Could not create registry value "
-                        + log::aux::to_narrow(string_type(registry::get_event_message_file_param_name()))));
+                    BOOST_LOG_THROW_DESCR(system_error, "Could not create registry value "
+                        + log::aux::to_narrow(string_type(registry::get_event_message_file_param_name())));
                 }
             }
 
@@ -291,8 +291,8 @@ namespace aux {
                     static_cast< DWORD >((module_name.size() + 1) * sizeof(CharT)));
                 if (res != ERROR_SUCCESS)
                 {
-                    boost::log::aux::throw_exception(std::runtime_error("Could not create registry value "
-                        + log::aux::to_narrow(string_type(registry::get_category_message_file_param_name()))));
+                    BOOST_LOG_THROW_DESCR(system_error, "Could not create registry value "
+                        + log::aux::to_narrow(string_type(registry::get_category_message_file_param_name())));
                 }
             }
 
@@ -309,8 +309,8 @@ namespace aux {
                     static_cast< DWORD >(sizeof(category_count)));
                 if (res != ERROR_SUCCESS)
                 {
-                    boost::log::aux::throw_exception(std::runtime_error("Could not create registry value "
-                        + log::aux::to_narrow(string_type(registry::get_category_count_param_name()))));
+                    BOOST_LOG_THROW_DESCR(system_error, "Could not create registry value "
+                        + log::aux::to_narrow(string_type(registry::get_category_count_param_name())));
                 }
             }
 
@@ -327,8 +327,8 @@ namespace aux {
                     static_cast< DWORD >(sizeof(event_types)));
                 if (res != ERROR_SUCCESS)
                 {
-                    boost::log::aux::throw_exception(std::runtime_error("Could not create registry value "
-                        + log::aux::to_narrow(string_type(registry::get_types_supported_param_name()))));
+                    BOOST_LOG_THROW_DESCR(system_error, "Could not create registry value "
+                        + log::aux::to_narrow(string_type(registry::get_types_supported_param_name())));
                 }
             }
         }

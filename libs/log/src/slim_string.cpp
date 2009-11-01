@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   slim_string.cpp
  * \author Andrey Semashev
  * \date   19.11.2007
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -15,7 +15,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <functional>
-#include <boost/log/detail/throw_exception.hpp>
+#include <boost/throw_exception.hpp>
 #include <boost/log/utility/slim_string.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/detail/atomic_count.hpp>
@@ -231,7 +231,7 @@ public:
         }
         else
         {
-            boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
+            BOOST_THROW_EXCEPTION(std::out_of_range("basic_slim_string::compare: the position is out of range"));
         }
     }
 
@@ -325,7 +325,7 @@ basic_slim_string< CharT, TraitsT >::basic_slim_string(string_type const& s, siz
     }
     else
     {
-        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::basic_slim_string: the position is out of range"));
+        BOOST_THROW_EXCEPTION(std::out_of_range("basic_slim_string::basic_slim_string: the position is out of range"));
     }
 }
 template< typename CharT, typename TraitsT >
@@ -345,7 +345,7 @@ basic_slim_string< CharT, TraitsT >::basic_slim_string(basic_slim_string const& 
         }
         else
         {
-            boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::basic_slim_string: the position is out of range"));
+            BOOST_THROW_EXCEPTION(std::out_of_range("basic_slim_string::basic_slim_string: the position is out of range"));
         }
     }
 }
@@ -388,7 +388,9 @@ CharT const&
 basic_slim_string< CharT, TraitsT >::at(size_type n) const
 {
     if (n >= m_pImpl->size())
-        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::at: character index is out of range"));
+    {
+        BOOST_THROW_EXCEPTION(std::out_of_range("basic_slim_string::at: character index is out of range"));
+    }
 
     return *(m_pImpl->begin() + n);
 }
@@ -440,7 +442,7 @@ basic_slim_string< CharT, TraitsT >::copy(pointer s, size_type n, size_type pos)
     }
     else
     {
-        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::copy: the position is out of range"));
+        BOOST_THROW_EXCEPTION(std::out_of_range("basic_slim_string::copy: the position is out of range"));
     }
 }
 
@@ -784,7 +786,7 @@ int basic_slim_string< CharT, TraitsT >::compare(
     }
     else
     {
-        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
+        BOOST_THROW_EXCEPTION(std::out_of_range("basic_slim_string::compare: the position is out of range"));
     }
 }
 template< typename CharT, typename TraitsT >
@@ -797,7 +799,7 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, s
     }
     else
     {
-        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
+        BOOST_THROW_EXCEPTION(std::out_of_range("basic_slim_string::compare: the position is out of range"));
     }
 }
 template< typename CharT, typename TraitsT >
@@ -825,7 +827,7 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, c
     }
     else
     {
-        boost::log::aux::throw_exception(std::out_of_range("basic_slim_string::compare: the position is out of range"));
+        BOOST_THROW_EXCEPTION(std::out_of_range("basic_slim_string::compare: the position is out of range"));
     }
 }
 template< typename CharT, typename TraitsT >

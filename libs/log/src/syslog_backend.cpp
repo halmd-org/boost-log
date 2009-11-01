@@ -33,7 +33,7 @@
 #include <boost/log/sinks/syslog_backend.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/snprintf.hpp>
-#include <boost/log/detail/throw_exception.hpp>
+#include <boost/log/exceptions.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
@@ -504,7 +504,7 @@ void basic_syslog_backend< CharT >::construct(
         m_pImpl = new udp_socket_based_impl(facility, asio::ip::udp::v6());
         break;
     default:
-        boost::log::aux::throw_exception(std::invalid_argument("incorrect IP version specified"));
+        BOOST_LOG_THROW_DESCR(setup_error, "Incorrect IP version specified");
     }
 }
 

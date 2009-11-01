@@ -14,6 +14,7 @@
 
 #ifndef BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
 
+#include <new> // std::nothrow
 #include <string>
 #include <sstream>
 #include <stdexcept>
@@ -45,8 +46,8 @@
 #include <boost/log/formatters/wrappers.hpp>
 #include <boost/log/formatters/message.hpp>
 #include <boost/log/attributes/named_scope.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/detail/singleton.hpp>
-#include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/detail/process_id.hpp>
 #include <boost/log/utility/init/formatter_parser.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
@@ -196,7 +197,7 @@ public:
                     >
                 >::type supported_types;
 
-                append_formatter(formatters::attr< supported_types >(m_AttrName));
+                append_formatter(formatters::attr< supported_types >(m_AttrName, std::nothrow));
             }
         }
 
@@ -342,7 +343,7 @@ parse_formatter(const CharT* begin, const CharT* end)
         std::ostringstream strm;
         strm << "Could not parse the formatter, parsing stopped at position "
             << result.stop - begin;
-        boost::log::aux::throw_exception(std::runtime_error(strm.str()));
+        BOOST_LOG_THROW_DESCR(parse_error, strm.str());
     }
 
     return fmt;

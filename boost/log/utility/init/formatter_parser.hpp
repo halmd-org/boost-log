@@ -23,6 +23,7 @@
 #ifndef BOOST_LOG_UTILITY_INIT_FORMATTER_PARSER_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_INIT_FORMATTER_PARSER_HPP_INCLUDED_
 
+#include <new> // std::nothrow
 #include <iosfwd>
 #include <map>
 #include <string>
@@ -96,7 +97,7 @@ namespace aux {
         typename formatter_types< CharT >::formatter_factory_args const&)
     {
         typedef typename formatter_types< CharT >::formatter_type formatter_type;
-        return formatter_type(boost::log::formatters::attr< AttributeValueT >(attr_name));
+        return formatter_type(boost::log::formatters::attr< AttributeValueT >(attr_name, std::nothrow));
     }
 
 } // namespace aux

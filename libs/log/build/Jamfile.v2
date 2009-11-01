@@ -66,6 +66,7 @@ lib boost_log
         named_scope.cpp
         process_id.cpp
         timer.cpp
+        exceptions.cpp
         sink_frontends.cpp
         text_ostream_backend.cpp
         text_file_backend.cpp

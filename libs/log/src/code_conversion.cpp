@@ -12,15 +12,11 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#ifndef _SCL_SECURE_NO_WARNINGS
-#define _SCL_SECURE_NO_WARNINGS
-#endif
-
 #include <locale>
 #include <string>
 #include <stdexcept>
 #include <algorithm>
-#include <boost/log/detail/throw_exception.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 
 namespace boost {
@@ -221,7 +217,7 @@ void converting_ostringstreambuf< CharT, TraitsT >::write(const char_type*& pBas
             return;
 
         default: // std::codecvt_base::error
-            boost::log::aux::throw_exception(std::runtime_error("Could not convert character encoding"));
+            BOOST_LOG_THROW_DESCR(conversion_error, "Could not convert character encoding");
         }
     }
 }

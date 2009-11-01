@@ -29,6 +29,7 @@
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/throw_exception.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/system/error_code.hpp>
@@ -50,8 +51,8 @@
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_assign_actor.hpp>
 #include <boost/log/detail/snprintf.hpp>
-#include <boost/log/detail/throw_exception.hpp>
 #include <boost/log/detail/singleton.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/sinks/text_multifile_backend.hpp>
@@ -409,8 +410,7 @@ namespace {
                         unsigned int width = 0;
                         if (!parse_counter_placeholder(p, p_end, width))
                         {
-                            boost::log::aux::throw_exception(std::logic_error(
-                                "unsupported placeholder used in pattern for file scanning"));
+                            BOOST_LOG_THROW_DESCR(invalid_value, "Unsupported placeholder used in pattern for file scanning");
                         }
 
                         // Find where the file number ends
@@ -914,10 +914,11 @@ void basic_text_file_backend< CharT >::do_consume(
         m_pImpl->m_File.open(m_pImpl->m_FileName, m_pImpl->m_FileOpenMode);
         if (!m_pImpl->m_File.is_open())
         {
-            boost::log::aux::throw_exception(filesystem::basic_filesystem_error< path_type >(
-                "failed to open file for writing",
+            filesystem::basic_filesystem_error< path_type > err(
+                "Failed to open file for writing",
                 m_pImpl->m_FileName,
-                system::error_code(system::errc::io_error, system::get_generic_category())));
+                system::error_code(system::errc::io_error, system::get_generic_category()));
+            BOOST_THROW_EXCEPTION(err);
         }
         m_pImpl->m_LastRotation = posix_time::second_clock::universal_time();
 
@@ -1065,7 +1066,9 @@ uintmax_t basic_text_file_backend< CharT >::scan_for_files(file::scan_method met
         return m_pImpl->m_pFileCollector->scan_for_files(method, m_pImpl->m_FileNamePattern, counter);
     }
     else
-        boost::log::aux::throw_exception(std::logic_error("file collector is not set"));
+    {
+        BOOST_LOG_THROW_DESCR(setup_error, "File collector is not set");
+    }
 }
 
 

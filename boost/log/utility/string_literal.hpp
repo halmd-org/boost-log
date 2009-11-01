@@ -11,7 +11,7 @@
  * \file   string_literal.hpp
  * \author Andrey Semashev
  * \date   24.06.2007
- * 
+ *
  * The header contains implementation of a constant string literal wrapper.
  */
 
@@ -29,11 +29,11 @@
 #include <algorithm>
 #include <functional>
 #include <boost/operators.hpp>
+#include <boost/throw_exception.hpp>
 #include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/throw_exception.hpp>
 
 namespace boost {
 
@@ -41,12 +41,12 @@ namespace BOOST_LOG_NAMESPACE {
 
 /*!
  * \brief String literal wrapper
- * 
+ *
  * The \c basic_string_literal is a thin wrapper around a constant string literal.
  * It provides interface similar to STL strings, but because of read-only nature
  * of string literals, lacks ability to modify string contents. However,
  * \c basic_string_literal objects can be assigned to and cleared.
- * 
+ *
  * The main advantage of this class comparing to other string classes is that
  * it doesn't dynamically allocate memory and therefore is fast, thin and exception safe.
  */
@@ -92,14 +92,14 @@ private:
 public:
     /*!
      * Constructor
-     * 
+     *
      * \post <tt>empty() == true</tt>
      */
     basic_string_literal() { clear(); }
 
     /*!
      * Constructor from a string literal
-     * 
+     *
      * \post <tt>*this == p</tt>
      * \param p A zero-terminated constant sequence of characters
      */
@@ -115,7 +115,7 @@ public:
 
     /*!
      * Copy constructor
-     * 
+     *
      * \post <tt>*this == that</tt>
      * \param that Source literal to copy string from
      */
@@ -123,7 +123,7 @@ public:
 
     /*!
      * Assignment operator
-     * 
+     *
      * \post <tt>*this == that</tt>
      * \param that Source literal to copy string from
      */
@@ -133,7 +133,7 @@ public:
     }
     /*!
      * Assignment from a string literal
-     * 
+     *
      * \post <tt>*this == p</tt>
      * \param p A zero-terminated constant sequence of characters
      */
@@ -153,7 +153,7 @@ public:
 
     /*!
      * Lexicographical comparison (equality)
-     * 
+     *
      * \param that Comparand
      * \return \c true if the comparand string equals to this string, \c false otherwise
      */
@@ -163,7 +163,7 @@ public:
     }
     /*!
      * Lexicographical comparison (equality)
-     * 
+     *
      * \param str Comparand. Must point to a zero-terminated sequence of characters, must not be NULL.
      * \return \c true if the comparand string equals to this string, \c false otherwise
      */
@@ -173,7 +173,7 @@ public:
     }
     /*!
      * Lexicographical comparison (equality)
-     * 
+     *
      * \param that Comparand
      * \return \c true if the comparand string equals to this string, \c false otherwise
      */
@@ -184,7 +184,7 @@ public:
 
     /*!
      * Lexicographical comparison (less ordering)
-     * 
+     *
      * \param that Comparand
      * \return \c true if this string is less than the comparand, \c false otherwise
      */
@@ -194,7 +194,7 @@ public:
     }
     /*!
      * Lexicographical comparison (less ordering)
-     * 
+     *
      * \param str Comparand. Must point to a zero-terminated sequence of characters, must not be NULL.
      * \return \c true if this string is less than the comparand, \c false otherwise
      */
@@ -204,7 +204,7 @@ public:
     }
     /*!
      * Lexicographical comparison (less ordering)
-     * 
+     *
      * \param that Comparand
      * \return \c true if this string is less than the comparand, \c false otherwise
      */
@@ -215,7 +215,7 @@ public:
 
     /*!
      * Lexicographical comparison (greater ordering)
-     * 
+     *
      * \param that Comparand
      * \return \c true if this string is greater than the comparand, \c false otherwise
      */
@@ -225,7 +225,7 @@ public:
     }
     /*!
      * Lexicographical comparison (greater ordering)
-     * 
+     *
      * \param str Comparand. Must point to a zero-terminated sequence of characters, must not be NULL.
      * \return \c true if this string is greater than the comparand, \c false otherwise
      */
@@ -235,7 +235,7 @@ public:
     }
     /*!
      * Lexicographical comparison (greater ordering)
-     * 
+     *
      * \param that Comparand
      * \return \c true if this string is greater than the comparand, \c false otherwise
      */
@@ -246,7 +246,7 @@ public:
 
     /*!
      * Subscript operator
-     * 
+     *
      * \pre <tt>i < size()</tt>
      * \param i Requested character index
      * \return Constant reference to the requested character
@@ -257,7 +257,7 @@ public:
     }
     /*!
      * Checked subscript
-     * 
+     *
      * \param i Requested character index
      * \return Constant reference to the requested character
      *
@@ -268,7 +268,7 @@ public:
         if (i < m_Len)
             return m_pStart[i];
         else
-            boost::log::aux::throw_exception(std::out_of_range("basic_string_literal::at: the index value is out of range"));
+            BOOST_THROW_EXCEPTION(std::out_of_range("basic_string_literal::at: the index value is out of range"));
     }
 
     /*!
@@ -323,7 +323,7 @@ public:
 
     /*!
      * The method clears the literal
-     * 
+     *
      * \post <tt>empty() == true</tt>
      */
     void clear()
@@ -342,7 +342,7 @@ public:
 
     /*!
      * Assignment from another literal
-     * 
+     *
      * \post <tt>*this == that</tt>
      * \param that Source literal to copy string from
      */
@@ -354,7 +354,7 @@ public:
     }
     /*!
      * Assignment from another literal
-     * 
+     *
      * \post <tt>*this == p</tt>
      * \param p A zero-terminated constant sequence of characters
      */
@@ -377,7 +377,7 @@ public:
     /*!
      * The method copies the literal or its portion to an external buffer
      *
-     * \pre <tt>pos <= size()</tt> 
+     * \pre <tt>pos <= size()</tt>
      * \param str Pointer to the external buffer beginning. Must not be NULL.
      *            The buffer must have enough capacity to accommodate the requested number of characters.
      * \param n Maximum number of characters to copy
@@ -395,13 +395,13 @@ public:
             return len;
         }
         else
-            boost::log::aux::throw_exception(std::out_of_range("basic_string_literal::copy: the position is out of range"));
+            BOOST_THROW_EXCEPTION(std::out_of_range("basic_string_literal::copy: the position is out of range"));
     }
 
     /*!
      * Lexicographically compares the argument string to a part of this string
-     * 
-     * \pre <tt>pos <= size()</tt> 
+     *
+     * \pre <tt>pos <= size()</tt>
      * \param pos Starting position within this string to perform comparison to
      * \param n Length of the substring of this string to perform comparison to
      * \param str Comparand. Must point to a sequence of characters, must not be NULL.
@@ -419,12 +419,12 @@ public:
             return compare_internal(m_pStart + pos, compare_size, str, compare_size);
         }
         else
-            boost::log::aux::throw_exception(std::out_of_range("basic_string_literal::compare: the position is out of range"));
+            BOOST_THROW_EXCEPTION(std::out_of_range("basic_string_literal::compare: the position is out of range"));
     }
     /*!
      * Lexicographically compares the argument string to a part of this string
-     * 
-     * \pre <tt>pos <= size()</tt> 
+     *
+     * \pre <tt>pos <= size()</tt>
      * \param pos Starting position within this string to perform comparison to
      * \param n Length of the substring of this string to perform comparison to
      * \param str Comparand. Must point to a zero-terminated sequence of characters, must not be NULL.
@@ -439,8 +439,8 @@ public:
     }
     /*!
      * Lexicographically compares the argument string literal to a part of this string
-     * 
-     * \pre <tt>pos <= size()</tt> 
+     *
+     * \pre <tt>pos <= size()</tt>
      * \param pos Starting position within this string to perform comparison to
      * \param n Length of the substring of this string to perform comparison to
      * \param that Comparand
@@ -455,7 +455,7 @@ public:
     }
     /*!
      * Lexicographically compares the argument string to this string
-     * 
+     *
      * \param str Comparand. Must point to a sequence of characters, must not be NULL.
      * \param len Number of characters in the sequence \a str.
      * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
@@ -467,7 +467,7 @@ public:
     }
     /*!
      * Lexicographically compares the argument string to this string
-     * 
+     *
      * \param str Comparand. Must point to a zero-terminated sequence of characters, must not be NULL.
      * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
      *         a positive value if this string is greater than the comparand.
@@ -478,7 +478,7 @@ public:
     }
     /*!
      * Lexicographically compares the argument string to this string
-     * 
+     *
      * \param that Comparand
      * \return Zero if the comparand equals this string, a negative value if this string is less than the comparand,
      *         a positive value if this string is greater than the comparand.
@@ -544,7 +544,7 @@ inline
 #ifndef BOOST_LOG_DOXYGEN_PASS
 typename enable_if<
     is_same< T, const char >,
-    string_literal 
+    string_literal
 >::type
 #else
 basic_string_literal< T >
@@ -561,7 +561,7 @@ str_literal(T(&p)[LenV])
 template< typename T, std::size_t LenV >
 inline typename enable_if<
     is_same< T, const wchar_t >,
-    wstring_literal 
+    wstring_literal
 >::type
 str_literal(T(&p)[LenV])
 {

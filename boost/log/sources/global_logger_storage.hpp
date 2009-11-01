@@ -11,7 +11,7 @@
  * \file   global_logger_storage.hpp
  * \author Andrey Semashev
  * \date   21.04.2008
- * 
+ *
  * The header contains implementation of facilities to declare global loggers.
  */
 
@@ -32,7 +32,7 @@
 #include <boost/function/function0.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
-#include <boost/log/detail/throw_exception.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 
 #ifdef _MSC_VER
@@ -147,7 +147,7 @@ struct logger_singleton :
                 "\" with the same tag has already been registered at " +
                 holder->m_RegistrationFile + ":" + buf + ".";
 
-            boost::log::aux::throw_exception(std::logic_error(str));
+            BOOST_LOG_THROW_DESCR(odr_violation, str);
         }
     }
 

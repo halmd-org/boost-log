@@ -3,18 +3,18 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   thread_specific.cpp
  * \author Andrey Semashev
  * \date   01.03.2008
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
 #include <string>
 #include <stdexcept>
-#include <boost/log/detail/throw_exception.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/detail/thread_specific.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -39,7 +39,9 @@ thread_specific_base::thread_specific_base()
 {
     m_Key.as_dword = TlsAlloc();
     if (m_Key.as_dword == TLS_OUT_OF_INDEXES)
-        boost::log::aux::throw_exception(std::runtime_error(std::string("TLS capacity depleted")));
+    {
+        BOOST_LOG_THROW_DESCR(system_error, "TLS capacity depleted");
+    }
     set_content(0);
 }
 
@@ -106,7 +108,7 @@ namespace {
             if (pthread_key_create(pkey, 0) != 0)
             {
                 delete pkey;
-                boost::log::aux::throw_exception(std::runtime_error(std::string("TLS capacity depleted")));
+                BOOST_LOG_THROW_DESCR(system_error, "TLS capacity depleted");
             }
             stg.as_pointer = pkey;
         }
@@ -139,7 +141,7 @@ namespace {
         {
             if (pthread_key_create(reinterpret_cast< pthread_key_type* >(&stg.as_pointer), 0) != 0)
             {
-                boost::log::aux::throw_exception(std::runtime_error(std::string("TLS capacity depleted")));
+                BOOST_LOG_THROW_DESCR(system_error, "TLS capacity depleted");
             }
         }
 
@@ -169,7 +171,7 @@ namespace {
         {
             if (pthread_key_create(reinterpret_cast< pthread_key_type* >(&stg.as_dword), 0) != 0)
             {
-                boost::log::aux::throw_exception(std::runtime_error(std::string("TLS capacity depleted")));
+                BOOST_LOG_THROW_DESCR(system_error, "TLS capacity depleted");
             }
         }
 
