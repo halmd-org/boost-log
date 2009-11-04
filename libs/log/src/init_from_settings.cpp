@@ -517,7 +517,7 @@ private:
 
         it = params.find(constants::target_address_param_name());
         if (it != params.end() && !it->second.empty())
-            backend->set_target_address(any_cast_to_address(constants::local_address_param_name(), it->second));
+            backend->set_target_address(any_cast_to_address(constants::target_address_param_name(), it->second));
 
         return init_sink(backend, params);
     }
@@ -561,7 +561,7 @@ private:
                 throw_invalid_type(constants::source_name_param_name(), it->second.type());
         }
 
-        // Determine the force flag
+        // Determine the registration mode
         sinks::event_log::registration_mode reg_mode = sinks::event_log::on_demand;
         it = params.find(constants::registration_param_name());
         if (it != params.end() && !it->second.empty())

@@ -145,6 +145,11 @@ The `attr` placeholder has an advanced support for string-typed attribute values
 
     sink->set_filter(flt::attr< std::string >("Domain").matches(boost::regex("www\\..*\\.ru")));
 
+It is possible that the filter doesn't find the required attribute value in the given log record. By default, the filter will throw an exception in this case. If this behavior is not desired, there are two ways to change it:
+
+# Use the [link log.detailed.filters.has_attr `has_attr`] filter to first verify that the required attribute value is present.
+# Use an additional second `std::nothrow` argument to the `attr` placeholder. In this case the filter will silently return `false` as the result of such unsuccessful filtering.
+
 [endsect]
 
 [endsect]

@@ -30,6 +30,7 @@
 #include <boost/mpl/if.hpp>
 #include <boost/function/function1.hpp>
 #include <boost/log/detail/setup_prologue.hpp>
+#include <boost/log/detail/embedded_string_type.hpp>
 #include <boost/log/sinks/sink.hpp>
 
 #ifdef _MSC_VER
@@ -75,6 +76,8 @@ public:
     typedef std::map< string_type, parameters_type > sections_type;
 
 private:
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
+
     //! A reference to a single parameter proxy object
     template< bool IsConstV >
     class param_ref
@@ -104,7 +107,9 @@ private:
         {
             // This will only compile for non-const references
             any& param = m_Sections[m_SectionName][m_ParamName];
-            param = val;
+            // Wrap C-strings into STL strings, if needed
+            typedef typename boost::log::aux::make_embedded_string_type< T >::type value_t;
+            param = value_t(val);
             return param;
         }
 
@@ -167,6 +172,8 @@ private:
         }
     };
 
+#endif // !defined(BOOST_LOG_DOXYGEN_PASS)
+
 private:
     //! Parameters
     sections_type m_Sections;
@@ -182,8 +189,14 @@ public:
      * with the subsequent subscript operator that designates the parameter name.
      *
      * \param section_name The name of the section in which the parameter resides
+     * \return An unspecified reference type that can be used for parameter name specifying
      */
-    section_ref< false > operator[] (string_type const& section_name)
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
+    section_ref< false >
+#else
+    implementation_defined
+#endif
+    operator[] (string_type const& section_name)
     {
         return section_ref< false >(m_Sections, section_name);
     }
@@ -192,8 +205,14 @@ public:
      * with the subsequent subscript operator that designates the parameter name.
      *
      * \param section_name The name of the section in which the parameter resides
+     * \return An unspecified reference type that can be used for parameter name specifying
      */
-    section_ref< true > operator[] (string_type const& section_name) const
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
+    section_ref< true >
+#else
+    implementation_defined
+#endif
+    operator[] (string_type const& section_name) const
     {
         return section_ref< true >(m_Sections, section_name);
     }
@@ -209,6 +228,8 @@ public:
 
     /*!
      * Checks if the specified section is present in the container.
+     *
+     * \param section_name The name of the section
      */
     bool has_section(string_type const& section_name) const
     {
@@ -216,6 +237,9 @@ public:
     }
     /*!
      * Checks if the specified parameter is present in the container.
+     *
+     * \param section_name The name of the section in which the parameter resides
+     * \param param_name The name of the parameter
      */
     bool has_parameter(string_type const& section_name, string_type const& param_name) const
     {

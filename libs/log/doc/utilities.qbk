@@ -657,11 +657,142 @@ It must be noted, though, that by default the library only supports those attrib
 
 [endsect]
 
-[section:settings Library initialization from a settings file]
+[section:settings Library initialization from a settings container]
+
+    #include <boost/log/utility/init/from_settings.hpp>
+
+The header defines components for library initialization from settings container. The settings container is basically a set of named parameters divided into sections. The container is implemented with the `basic_settings` class template. There are several constraints on how parameters are stored in the container:
+
+* Every parameter must reside in a section. There can be no parameters that do not belong to a section.
+* Parameters must have names unique within the section they belong to. Parameters from different sections may have the same name.
+* Sections cannot nest. Only one layer of sections is permitted.
+* Sections must have names unique throughout the whole container.
+
+So basically, settings container is a two-layer associative container, with two string keys. The parameter values are stored as __boost_any__ values. Each parameter supported by the library must have the according type within the `any` variant value. The supported parameters, their types and meaning is described below.
+
+[tip In the tables below, the `CharT` type denotes the character type that is used with the library.]
+
+[table Section "Core". Logging core settings.
+[[Parameter]             [Type]                                                               [Description]]
+[[Filter]                [`std::basic_string< CharT >` or `basic_core< CharT >::filter_type`]
+    [Global filter to be installed to the core. If specified in string form, it should conform to the rules described [link log.detailed.utilities.init.filter_formatter here]. If not specified, the global filter is not set.]
+]
+[[DisableLogging]        [`bool`]
+    [If `true`, results in calling `set_logging_enabled(false)` on the core. By default, value `false` is assumed.]
+]
+]
+
+Sink settings are divided into separate sections - one section for each sink. The section names should begin with the "Sink:" prefix, while the rest of the section name should denote a user-defined sink name. For example, "Sink:MyFile".
+
+[table Sections with names beginning with "Sink:". Common sink settings.
+[[Parameter]             [Type]                                                               [Description]]
+[[Destination]           [`std::basic_string< CharT >`]
+    [Sink backend type. Mandatory parameter. May have one of these values: [link log.detailed.sink_backends.text_ostream Console], [link log.detailed.sink_backends.text_file TextFile], [link log.detailed.sink_backends.syslog Syslog]. On Windows the following values are additionally supported: [link log.detailed.sink_backends.event_log SimpleEventLog], [link log.detailed.sink_backends.debugger Debugger]. Also, user-defined sink names may also be supported if registered by calling `register_sink_factory`.]
+]
+[[Filter]                [`std::basic_string< CharT >` or `sink< CharT >::filter_type`]
+    [Sink-specific filter. If specified in string form, it should conform to the rules described [link log.detailed.utilities.init.filter_formatter here]. If not specified, the filter is not set.]
+]
+[[Asynchronous]          [`bool`]
+    [If `true`, the [link log.detailed.sink_frontends.async asynchronous sink frontend] will be used. Otherwise the [link log.detailed.sink_frontends.sync synchronous sink frontend] will be used. By default, value `false` is assumed. In single-threaded builds this parameter is not used, as [link log.detailed.sink_frontends.unlocked unlocked sink frontend] is always used.]
+]
+]
+
+Besides the common settings that all sinks support, some sink backends also accept a number of specific parameters. These parameters should be specified in the same section.
+
+[table "Console" sink settings
+[[Parameter]             [Type]                                                               [Description]]
+[[Formatter]             [`std::basic_string< CharT >` or `basic_text_ostream_backend< CharT >::formatter_type`]
+    [Log record formatter to be used by the sink. If specified in string form, it should conform to the rules described [link log.detailed.utilities.init.filter_formatter here]. If not specified, the default formatter is used.]
+]
+[[AutoFlush]             [`bool`]
+    [Enables or disables the auto-flush feature of the backend. If not specified, the default value `false` is assumed.]
+]
+]
+
+[table "TextFile" sink settings
+[[Parameter]             [Type]                                                               [Description]]
+[[FileName]              [`std::basic_string< CharT >` or `filesystem::basic_path< CharT >`]
+    [The file name pattern for the sink backend. This parameter is mandatory.]
+]
+[[Formatter]             [`std::basic_string< CharT >` or `basic_text_file_backend< CharT >::formatter_type`]
+    [Log record formatter to be used by the sink. If specified in string form, it should conform to the rules described [link log.detailed.utilities.init.filter_formatter here]. If not specified, the default formatter is used.]
+]
+[[AutoFlush]             [`bool`]
+    [Enables or disables the auto-flush feature of the backend. If not specified, the default value `false` is assumed.]
+]
+[[RotationSize]          [Any fundamental integer type]
+    [File size, in bytes, upon which file rotation will be performed. If not specified, no size-based rotation will be made.]
+]
+[[RotationInterval]      [Any fundamental integer type]
+    [Time interval, in seconds, upon which file rotation will be performed. If not specified, no time-based rotation will be made.]
+]
+[[Target]                [`std::basic_string< CharT >` or `filesystem::basic_path< CharT >`]
+    [Target directory name, in which the rotated files will be stored. If this parameter is specified, rotated file collection is enabled. Otherwise the feature is not enabled, and all corresponding parameters are ignored.]
+]
+[[MaxSize]               [Any fundamental integer type]
+    [Total size of files in the target directory, in bytes, upon which the oldest file will be deleted. If not specified, no size-based file cleanup will be performed.]
+]
+[[MinFreeSpace]          [Any fundamental integer type]
+    [Minimum free space in the target directory, in bytes, upon which the oldest file will be deleted. If not specified, no space-based file cleanup will be performed.]
+]
+[[ScanForFiles]          [`std::basic_string< CharT >` or `sinks::file::scan_method`]
+    [Mode of scanning for old files in the target directory. If specified in string form, the following values are permitted: "All", "Matching". If not specified, no scanning will be performed.]
+]
+]
+
+[table "Syslog" sink settings
+[[Parameter]             [Type]                                                               [Description]]
+[[LocalAddress]          [`std::basic_string< CharT >` or `asio::ip_address`]
+    [Local address to initiate connection to the syslog server. If not specified, the default local address will be used.]
+]
+[[TargetAddress]         [`std::basic_string< CharT >` or `asio::ip_address`]
+    [Remote address of the syslog server. If not specified, the local address will be used.]
+]
+]
+
+[table "SimpleEventLog" sink settings
+[[Parameter]             [Type]                                                               [Description]]
+[[LogName]               [`std::basic_string< CharT >`]
+    [Log name to write events into. If not specified, the default log name will be used.]
+]
+[[LogSource]             [`std::basic_string< CharT >`]
+    [Log source to write events from. If not specified, the default source will be used.]
+]
+[[Registration]          [`std::basic_string< CharT >` or `sinks::event_log::registration_mode`]
+    [Mode of log source registration in Windows registry. If specified in string form, the following values are supported: "Never", "OnDemand", "Forced". If not specified, on-demand registration will be performed.]
+]
+]
+
+The user is free to fill the settings container from whatever settings source he needs. The usage example is below:
+
+    void init_logging()
+    {
+        logging::settings setts;
+
+        setts["Core"]["Filter"] = "%Severity% >= warning";
+        setts["Core"]["DisableLogging"] = false;
+
+        setts["Sink:Console"]["Destination"] = "Console";
+        setts["Sink:Console"]["Filter"] = "%Severity% >= fatal";
+        setts["Sink:Console"]["AutoFlush"] = true;
+
+        setts["Sink:File"]["Destination"] = "TextFile";
+        setts["Sink:File"]["FileName"] = "MyApp_%3N.log";
+        setts["Sink:File"]["AutoFlush"] = true;
+        setts["Sink:File"]["RotationSize"] = 10 * 1024 * 1024; // 10 MiB
+
+        logging::init_from_settings(setts);
+    }
+
+The settings reader also allows to be extended to support custom sink types. See the [link log.extension.settings Extending the library] section for more information.
+
+[endsect]
+
+[section:settings_file Library initialization from a settings file]
 
     #include <boost/log/utility/init/from_stream.hpp>
 
-Support for configuration files is a frequently requested feature of the library. And despite the fact there is no ultimately convenient and flexible format of the library settings, the library supports this feature. The functionality is implemented with a simple function `init_from_stream`, which accepts an STL input stream and reads the library settings from it.
+Support for configuration files is a frequently requested feature of the library. And despite the fact there is no ultimately convenient and flexible format of the library settings, the library provides preliminary support for this feature. The functionality is implemented with a simple function `init_from_stream`, which accepts an STL input stream and reads the library settings from it. The function then passes on the read settings to the `init_from_settings` function, described [link log.detailed.utilities.init.settings above]. Therefore the parameter names and their meaning is the same as for the `init_from_settings` function.
 
 The settings format is quite simple and widely used. Below is the description of syntax and parameters.
 
@@ -670,21 +801,13 @@ The settings format is quite simple and widely used. Below is the description of
 
 \# Logging core settings section. May be omitted if no parameters specified within it.
 \[Core\]
-
-\# Enables or disables logging completely. May have values 0 or 1. Optional, default value is 0.
-DisableLogging\=0
-
-\# Global filter. Optional, by default no filter is applied.
+DisableLogging\=false
 Filter\="%Severity% > 3"
 
-
-\# Sink settings sections. There may be arbitrary number of such sections. It is essential that the sink section name
-\# begins with the "Sink:" prefix. The rest of the section name is not relevant and is used for convenience and making
-\# section names unique.
+\# Sink settings sections
 \[Sink:MySink1\]
 
-\# Sink destination type. Mandatory, can have one of the following values: Console, TextFile, Syslog, SimpleEventLog, Debugger.
-\# Destinations except for Console and TextFile may not be supported on all platforms.
+\# Sink destination type
 Destination\=Console
 
 \# Sink-specific filter. Optional, by default no filter is applied.
@@ -693,22 +816,11 @@ Filter\="%Target% contains "MySink1""
 \# Formatter string. Optional, by default only log record message text is written.
 Format\="<%TimeStamp%> - %\_%"
 
-\# The flag shows whether the sink should be asynchronous. May have values 0 or 1. Optional, default value is 0.
-\# Not used in single-threaded builds.
-Asynchronous\=0
+\# The flag shows whether the sink should be asynchronous
+Asynchronous\=false
 
-\# Specific for Console and TextFile sinks. Enables automatic stream flush after each log record.
-\# May have values 0 or 1. Optional, default value is 0.
-AutoFlush\=0
-
-\# Specific for TextFile sink. Log file name or name template. Mandatory.
-FileName\="test\_%N%.log"
-
-\# Specific for TextFile sink. Log file rotation size, in bytes. Optional, by default no rotation on size is performed.
-RotationSize\=65536
-
-\# Specific for TextFile sink. Log file rotation interval, in seconds. Optional, by default no rotation on time interval is performed.
-RotationInterval\=3600
+\# Enables automatic stream flush after each log record.
+AutoFlush\=true
 ]
 
 Here's the usage example:
@@ -721,8 +833,6 @@ Here's the usage example:
 
         return 0;
     }
-
-The settings parser also allows to be extended to support custom sink types. See the [link log.extension.settings Extending the library] section for more information.
 
 [endsect]
 

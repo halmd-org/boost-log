@@ -65,6 +65,11 @@ The `attr` formatter also supports an additional argument with a __boost_format_
 
 Please note, though, that the format string should be valid for all attribute value types that are specified as the template argument for the `attr` formatter. If this is not possible, one should consider using [link log.detailed.formatters.conditional conditional formatters] to split types into several groups and specify a valid format string for each group.
 
+It is possible that in run time the attribute value requested by the formatter is not present in the formatted log record. In this case the formatter by default will throw an exception. If this behavior is not desired, one can change it in one of the following ways:
+
+# Use the [link log.detailed.formatters.conditional conditional formatter] with the [link log.detailed.filters.has_attr `has_attr`] filter to first verify that the required attribute value is present and apply formatting then.
+# Use an additional last `std::nothrow` argument to the `attr` placeholder. In this case the formatter will produce no output for the missing attribute value, without throwing the exception.
+
 [endsect]
 
 [section:date_time Date and time formatter]
@@ -113,6 +118,8 @@ Here are some usage examples:
     backend->set_formatter(fmt::stream << fmt::time_period< boost::posix_time::time_period >("Period",
         keywords::format = "[%begin%; %end%)", keywords::unit_format = "%d.%m.%y %H:%M:%S"));
 
+Like the `attr` formatter, all date and time formatters throw exceptions in case if there is no requested attribute value in the log record. The `std::nothrow` argument may be used to suppress exceptions.
+
 [endsect]
 
 [section:named_scope Named scope formatter]
@@ -146,6 +153,8 @@ Here are few usage examples:
     // Puts the scope stack in reverse order, no more than 2 inner scopes: inner scope <- outer scope <- ...
     backend->set_formatter(fmt::stream << fmt::named_scope("Scopes",
         keywords::iteration = fmt::reverse, keywords::depth = 2));
+
+Like the `attr` formatter, named scope formatter throw exception in case if there is no requested attribute value in the log record. The `std::nothrow` argument may be used to suppress exceptions.
 
 [endsect]
 
