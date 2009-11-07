@@ -198,13 +198,13 @@ This section contains a more detailed description of library components and feat
 
 [section:why_str_lit Why string literals as scope names?]
 
-One may wonder why not to allow to use arbitrary strings as named scope names. The answer is simple: for performance and safety reasons. Named scope support functionality has one significant difference from other attribute-related features of the library. The scope stack is maintained even when no logging is done, so if a function `foo` has a `BOOST_LOG_FUNCTION()` statement in its body, it is always a slowdown. Allowing the scope name to be an arbitrary string would make slowdown significantly greater because of the need to dynamically allocate memory and copy the string (not to say there would be a need to previously format it, which also takes its toll).
+One may wonder why not to allow to use arbitrary strings as named scope names. The answer is simple: for performance and safety reasons. Named scope support functionality has one significant difference from other attribute-related features of the library. The scope stack is maintained even when no logging is done, so if a function `foo` has a `BOOST_LOG_FUNCTION()` statement in its body, it is always a slowdown. Allowing the scope name to be an arbitrary string would make the slowdown significantly greater because of the need to allocate memory and copy the string (not to say there would be a need to previously format it, which also takes its toll).
 
-Dynamic memory allocation also introduces exception safety issues: the `BOOST_LOG_FUNCTION()` statement (and alikes) will become a potential source of exception. These issues would complicate user's code if he wants to solve memory allocation problems gracefully.
+Dynamic memory allocation also introduces exception safety issues: the `BOOST_LOG_FUNCTION()` statement (and alikes) would become a potential source of exception. These issues would complicate user's code if he wants to solve memory allocation problems gracefully.
 
 One possible alternative solution would be pooling pre-formatted and pre-allocated scope names somewhere but this would surely degrade performance even more and introduce the problem of detecting when to update or free pooled strings.
 
-Therefore restricting to string literals seemed to be the optimal decision, which minimized dynamic memory usage and provided enough flexibility for common needs.
+Therefore restricting to string literals seemed to be the optimal decision, which reduced dynamic memory usage and provided enough flexibility for common needs.
 
 [endsect]
 
@@ -238,7 +238,7 @@ Initially scoped attributes were able to override other attributes with the same
         return 0;
     }
 
-However, this feature introduced a number of safety problems, including thread safety issues, that might be difficult to locate. For example, it was no longer safe to use logger-wide scoped attributes on the same logger from different threads, because the resulting attribute would be undefined:
+However, this feature introduced a number of safety problems, including thread safety issues, that could be difficult to track down. For example, it was no longer safe to use logger-wide scoped attributes on the same logger from different threads, because the resulting attribute would be undefined:
 
     BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::logger_mt)
 
@@ -272,17 +272,17 @@ However, this feature introduced a number of safety problems, including thread s
         return 0;
     }
 
-There were other issues, like having an attribute set iterator that points to one attribute object, then suddenly without seemingly modifying it it becomes to point to a different attribute object (of, possibly, a different type). Such behavior could lead to tricky failures that would be difficult to investigate. Therefore this feature was eventually dropped, which simplified scoped attributes implementation significantly.
+There were other issues, like having an attribute set iterator that points to one attribute object, then suddenly without seemingly modifying it it becomes pointing to a different attribute object (of, possibly, a different type). Such behavior could lead to tricky failures that would be difficult to investigate. Therefore this feature was eventually dropped, which simplified scoped attributes implementation significantly.
 
 [endsect]
 
 [section:why_weak_record_ordering Why log records are weakly ordered in a multithreaded application?]
 
-Although the library guarantees that log records made in a given thread are always delivered to sinks in the same order as they were made in, the library cannot provide such guarantee for different threads. E.g. it is possible that thread A emits a log record and gets preempted, then thread B emits its log record and manages to deliver it to a sink before being preempted. The resulting log will contain log record from thread B before the record made in thread A. However, attribute values attached to the records will always be actual with regard to the moment of emitting the record and not the moment of passing the record to the sink. This is the reason for a strange, at first glance, situation when, e.g. a log record with an earlier time stamp follows a record with a later time stamp. The problem shows quite rarely, usually when thread contention on logging is very high.
+Although the library guarantees that log records made in a given thread are always delivered to sinks in the same order as they were made in, the library cannot provide such guarantee for different threads. For instance, it is possible that thread A emits a log record and gets preempted, then thread B emits its log record and manages to deliver it to a sink before being preempted. The resulting log will contain log record from thread B before the record made in thread A. However, attribute values attached to the records will always be actual with regard to the moment of emitting the record and not the moment of passing the record to the sink. This is the reason for a strange, at first glance, situation when, a log record with an earlier time stamp follows a record with a later time stamp. The problem shows quite rarely, usually when thread contention on logging is very high.
 
 There are two possible ways to cope with the problem:
 
-* Enforce strict serialization of log record being made throughout the application. This solution implies a severe performance impact in multithreaded application because log records that otherwise could be processed concurrently will have to go serial. Since this controverses one of the [link log.moti main library goals], it was rejected.
+* Enforce strict serialization of log record being made throughout the application. This solution implies a severe performance impact in multithreaded applications because log records that otherwise could be processed concurrently would have to go serial. Since this controverses one of the [link log.moti main library goals], it was rejected.
 * Attempt to maintain log record ordering on the sink level. This solution is more or less viable. On the downside, it would introduce log record buffering, which in turn would compromise logs reliability. In case of application crash all buffered records would be lost.
 
 The latter solution was implemented as a special sink frontend described [link log.detailed.sink_frontends.ordering_async here].
