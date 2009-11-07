@@ -16,7 +16,7 @@
 
 #if defined(BOOST_LOG_USE_CHAR)
 
-#include <limits.h> // PATH_MAX
+#include <stdio.h> // FILENAME_MAX
 #include <ios>
 #include <string>
 #include <boost/shared_ptr.hpp>
@@ -64,11 +64,11 @@ namespace {
     {
 #if !defined(BOOST_FILESYSTEM_NARROW_ONLY)
         const wchar_t ext[] = L".log";
-        wchar_t buf[PATH_MAX];
+        wchar_t buf[FILENAME_MAX];
         std::size_t len = GetModuleFileNameW(NULL, buf, sizeof(buf) / sizeof(*buf));
 #else
         const char ext[] = ".log";
-        char buf[PATH_MAX];
+        char buf[FILENAME_MAX];
         std::size_t len = GetModuleFileNameA(NULL, buf, sizeof(buf) / sizeof(*buf));
 #endif
         if (len > 0)
@@ -90,7 +90,7 @@ namespace {
 #if defined(BOOST_HAS_UNISTD_H)
 
         // Attempt to read the executable name from the proc filesystem
-        char buf[PATH_MAX];
+        char buf[FILENAME_MAX];
         ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf));
         if (len > 0)
         {
