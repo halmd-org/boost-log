@@ -9,7 +9,73 @@
 
 [section:tutorial Tutorial]
 
-In this section we shall walk through the essential steps to get started with the library. After reading it you should be able to initialize the library and add logging to your application. The code of this tutorial is also available in a single example resided in the `libs/log/examples/basic_usage` directory. You may feel free to play around with it, compile and see the result.
+In this section we shall walk through the essential steps to get started with the library. After reading it you should be able to initialize the library and add logging to your application. The code of this tutorial is also available in examples resided in the `libs/log/examples` directory. You may feel free to play around with them, compile and see the result.
+
+[section:trivial Trivial logging]
+
+For ones that don't want to read tons of clever manuals and just need a simple tool for logging, here you go:
+
+    #include <boost/log/trivial.hpp>
+
+    int main(int, char*[])
+    {
+        BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
+        BOOST_LOG_TRIVIAL(debug) << "A debug severity message";
+        BOOST_LOG_TRIVIAL(info) << "An informational severity message";
+        BOOST_LOG_TRIVIAL(warning) << "A warning severity message";
+        BOOST_LOG_TRIVIAL(error) << "An error severity message";
+        BOOST_LOG_TRIVIAL(fatal) << "A fatal severity message";
+    }
+
+The `BOOST_LOG_TRIVIAL` macro accepts a severity level and results in a stream-like object that supports insertion operator. As you can see, this library usage pattern is quite similar to what you would do with `std::cout`. However, the library offers a few advantages:
+
+# The logging result is written to a text file, rather than the console.
+# Besides the record message, each log record in the file contains a line number, a timestamp, thread identifier and severity level.
+# It is safe to write logs from different threads concurrently.
+
+It must be said that the macro, along with other similar macros provided by the library, is not the only interface that the library offers. It is possible to issue log records without using any macros at all.
+
+[endsect]
+
+[section:trivial_filtering Trivial logging with filters]
+
+While severity level can be used for informative purposes, you will normally want to apply filters to write only significant records to the file and ignore the rest. It is easy to do so by setting a global filter in the library core, like this:
+
+    #include <boost/log/core.hpp>
+    #include <boost/log/trivial.hpp>
+    #include <boost/log/filters.hpp>
+
+    void init()
+    {
+        logging::core::get()->set_filter
+        (
+            flt::attr< logging::trivial::severity_level >("Severity") >= logging::trivial::info
+        );
+    }
+
+    int main(int, char*[])
+    {
+        init();
+
+        BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
+        BOOST_LOG_TRIVIAL(debug) << "A debug severity message";
+        BOOST_LOG_TRIVIAL(info) << "An informational severity message";
+        BOOST_LOG_TRIVIAL(warning) << "A warning severity message";
+        BOOST_LOG_TRIVIAL(error) << "An error severity message";
+        BOOST_LOG_TRIVIAL(fatal) << "A fatal severity message";
+    }
+
+Now, if we run this code sample, the first two log records will be ignored, while the rest four will pass on to the file.
+
+[tip Remember that the streaming expression is only executed if the record passed filtering. Don't specify business-critical calls in the streaming expression, as these calls may not get invoked if the record is filtered away.]
+
+A few words must be said about the filter setup expression. Since we're setting up a global filter, we have to acquire the logging core instance. This is what `logging::core::get()` does - it returns a pointer to the core singleton. The `set_filter` method of the logging core sets the global filtring function.
+
+The filter is built as a lambda expression. In our case, this expression consists of a single logical predicate, whose left argument is a placeholder that describes the attribute to be checked, and the right argument is the value to be checked against. The `flt::attr` is a template function that accepts attribute value type as its template parameter, and the attribute name as its first argument. In other words, the filter passes the record if it has attribute value with name "Severity" and type `severity_level`, and the value is not less than `info`. Pretty easy, isn't it?
+
+It is possible to build more complex filters as lambda expressions, combining logical predicates like this with each other, or even define your own function that would act as a filter. More on this is said [link log.detailed.filters here].
+
+[endsect]
 
 [section:sinks Step 1: Picking sinks]
 
