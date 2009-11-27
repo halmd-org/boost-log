@@ -28,6 +28,7 @@ project boost/log
         <toolset>msvc,intel-win:<define>_SCL_SECURE_NO_DEPRECATE
         <toolset>msvc,intel-win:<define>_CRT_SECURE_NO_WARNINGS
         <toolset>msvc,intel-win:<define>_CRT_SECURE_NO_DEPRECATE
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing  # avoids strict aliasing violations in other Boost components
         <library>/boost/date_time//boost_date_time
         <library>/boost/filesystem//boost_filesystem
         <library>/boost/system//boost_system
