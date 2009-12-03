@@ -219,7 +219,7 @@ int main(int argc, char* argv[])
     BOOST_LOG_FUNCTION();
 
     // Let's try out the counter attribute and formatting
-    BOOST_LOG(lg) << "Some log line with a counter\nHello, world!";
+    BOOST_LOG(lg) << "Some log line with a counter";
     BOOST_LOG(lg) << "Another log line with the counter";
 
     // Ok, remember the "Tag" attribute we added in the formatter? It is absent in these
