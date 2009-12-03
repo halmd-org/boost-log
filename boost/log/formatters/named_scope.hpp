@@ -15,10 +15,6 @@
  * The header contains implementation of a named scope formatter.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_FORMATTERS_NAMED_SCOPE_HPP_INCLUDED_
 #define BOOST_LOG_FORMATTERS_NAMED_SCOPE_HPP_INCLUDED_
 

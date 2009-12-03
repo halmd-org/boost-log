@@ -150,10 +150,12 @@ public:
         boost::log::aux::cleanup_guard< string_type > cleanup1(m_Storage);
         boost::log::aux::cleanup_guard< streambuf_type > cleanup2(m_StreamBuf);
 
-        // Perform formatting
-        rdbuf_saver cleanup3(strm, &m_StreamBuf);
-        m_Formatter(strm, record);
-        strm.flush();
+        {
+            // Perform formatting
+            rdbuf_saver cleanup3(strm, &m_StreamBuf);
+            m_Formatter(strm, record);
+            strm.flush();
+        }
 
         // Apply decorations
         typedef typename decorations_list::const_iterator dec_iterator;

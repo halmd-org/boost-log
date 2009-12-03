@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
     pSink->locked_backend()->set_formatter(fmt::stream
         << fmt::attr("LineID") // First an attribute "LineID" is written to the log
         << " [" << fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f")
-        << "] [" << fmt::attr< severity_level >("Severity")
+        << "] [" << fmt::attr< severity_level >("Severity", std::nothrow)
         << "] [" << fmt::time_duration< boost::posix_time::time_duration >("Uptime")
         << "] [" // then this delimiter separates it from the rest of the line
         << fmt::if_(flt::has_attr("Tag"))
@@ -219,7 +219,7 @@ int main(int argc, char* argv[])
     BOOST_LOG_FUNCTION();
 
     // Let's try out the counter attribute and formatting
-    BOOST_LOG(lg) << "Some log line with a counter";
+    BOOST_LOG(lg) << "Some log line with a counter\nHello, world!";
     BOOST_LOG(lg) << "Another log line with the counter";
 
     // Ok, remember the "Tag" attribute we added in the formatter? It is absent in these
@@ -251,8 +251,8 @@ int main(int argc, char* argv[])
     // Now we can set the filter. A filter is essentially a functor that returns
     // boolean value that tells whether to write the record or not.
     pSink->set_filter(
-        flt::attr< severity_level >("Severity") >= warning // Write all records with "warning" severity or higher
-        || flt::attr< std::string >("Tag").begins_with("IMPORTANT")); // ...or specifically tagged
+        flt::attr< severity_level >("Severity", std::nothrow) >= warning // Write all records with "warning" severity or higher
+        || flt::attr< std::string >("Tag", std::nothrow).begins_with("IMPORTANT")); // ...or specifically tagged
 
     // The "attr" placeholder here acts pretty much like the "attr" placeholder in formatters, except
     // that it requires the attribute type (or types in MPL-sequence) to be specified.
