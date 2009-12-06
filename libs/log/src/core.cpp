@@ -16,6 +16,7 @@
 #include <deque>
 #include <vector>
 #include <algorithm>
+#include <boost/weak_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/log/core/core.hpp>
@@ -42,7 +43,7 @@ struct basic_record< CharT >::private_data :
     //! Sink interface type
     typedef sinks::sink< CharT > sink_type;
     //! Sinks container type
-    typedef std::deque< shared_ptr< sink_type > > sink_list;
+    typedef std::deque< weak_ptr< sink_type > > sink_list;
 
     //! A list of sinks that will accept the record
     sink_list m_AcceptingSinks;
@@ -380,19 +381,77 @@ typename basic_core< CharT >::record_type basic_core< CharT >::open_record(attri
 template< typename CharT >
 void basic_core< CharT >::push_record(record_type const& rec)
 {
-    typedef typename record_type::private_data record_private_data;
-    record_private_data* pData = static_cast< record_private_data* >(rec.m_pData.get());
-
-    // We have to move references to the accepting sinks from the record
-    // in order not to introduce cyclic dependencies between the sinks and the record.
-    typename record_private_data::sink_list accepting_sinks;
-    accepting_sinks.swap(pData->m_AcceptingSinks);
-    typename record_private_data::sink_list::iterator
-        it = accepting_sinks.begin(),
-        end = accepting_sinks.end();
-    for (; it != end; ++it) try
+    try
     {
-        (*it)->consume(rec);
+        typedef typename record_type::private_data record_private_data;
+        record_private_data* pData = static_cast< record_private_data* >(rec.m_pData.get());
+
+        typedef std::vector< shared_ptr< sink_type > > accepting_sinks_t;
+        accepting_sinks_t accepting_sinks(pData->m_AcceptingSinks.size());
+        shared_ptr< sink_type >* const begin = &*accepting_sinks.begin();
+        register shared_ptr< sink_type >* end = begin;
+
+        // Lock sinks that are willing to consume the record
+        typename record_private_data::sink_list::iterator
+            weak_it = pData->m_AcceptingSinks.begin(),
+            weak_end = pData->m_AcceptingSinks.end();
+        for (; weak_it != weak_end; ++weak_it)
+        {
+            shared_ptr< sink_type >& last = *end;
+            weak_it->lock().swap(last);
+            if (last)
+                ++end;
+        }
+
+        bool shuffled = (end - begin) <= 1;
+        while (true) try
+        {
+            // First try to distribute load between different sinks
+            register bool all_locked = true;
+            register shared_ptr< sink_type >* it = begin;
+            while (it != end)
+            {
+                if (it->get()->try_consume(rec))
+                {
+                    --end;
+                    end->swap(*it);
+                    all_locked = false;
+                }
+                else
+                    ++it;
+            }
+
+            if (begin != end && all_locked)
+            {
+                // If all sinks are busy then block on any
+                if (!shuffled)
+                {
+                    std::random_shuffle(begin, end);
+                    shuffled = true;
+                }
+
+                begin->get()->consume(rec);
+                --end;
+                end->swap(*begin);
+            }
+            else
+                break;
+        }
+#if !defined(BOOST_LOG_NO_THREADS)
+        catch (thread_interrupted&)
+        {
+            throw;
+        }
+#endif // !defined(BOOST_LOG_NO_THREADS)
+        catch (...)
+        {
+            // Lock the core to be safe against any attribute or sink set modifications
+            BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock lock(pImpl->Mutex);)
+            if (pImpl->ExceptionHandler.empty())
+                throw;
+
+            pImpl->ExceptionHandler();
+        }
     }
 #if !defined(BOOST_LOG_NO_THREADS)
     catch (thread_interrupted&)
