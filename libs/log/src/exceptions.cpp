@@ -45,7 +45,7 @@ missing_value::~missing_value() throw()
 {
 }
 
-void missing_value::throw_(const char* file, unsigned int line)
+void missing_value::throw_(const char* file, std::size_t line)
 {
     boost::throw_exception(boost::enable_error_info(missing_value())
         << boost::throw_file(file)
@@ -53,7 +53,7 @@ void missing_value::throw_(const char* file, unsigned int line)
     );
 }
 
-void missing_value::throw_(const char* file, unsigned int line, std::string const& descr)
+void missing_value::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(missing_value(descr))
         << boost::throw_file(file)
@@ -75,7 +75,7 @@ invalid_type::~invalid_type() throw()
 {
 }
 
-void invalid_type::throw_(const char* file, unsigned int line)
+void invalid_type::throw_(const char* file, std::size_t line)
 {
     boost::throw_exception(boost::enable_error_info(invalid_type())
         << boost::throw_file(file)
@@ -83,7 +83,7 @@ void invalid_type::throw_(const char* file, unsigned int line)
     );
 }
 
-void invalid_type::throw_(const char* file, unsigned int line, std::string const& descr)
+void invalid_type::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(invalid_type(descr))
         << boost::throw_file(file)
@@ -105,7 +105,7 @@ invalid_value::~invalid_value() throw()
 {
 }
 
-void invalid_value::throw_(const char* file, unsigned int line)
+void invalid_value::throw_(const char* file, std::size_t line)
 {
     boost::throw_exception(boost::enable_error_info(invalid_value())
         << boost::throw_file(file)
@@ -113,7 +113,7 @@ void invalid_value::throw_(const char* file, unsigned int line)
     );
 }
 
-void invalid_value::throw_(const char* file, unsigned int line, std::string const& descr)
+void invalid_value::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(invalid_value(descr))
         << boost::throw_file(file)
@@ -135,7 +135,7 @@ parse_error::~parse_error() throw()
 {
 }
 
-void parse_error::throw_(const char* file, unsigned int line)
+void parse_error::throw_(const char* file, std::size_t line)
 {
     boost::throw_exception(boost::enable_error_info(parse_error())
         << boost::throw_file(file)
@@ -143,7 +143,7 @@ void parse_error::throw_(const char* file, unsigned int line)
     );
 }
 
-void parse_error::throw_(const char* file, unsigned int line, std::string const& descr)
+void parse_error::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(parse_error(descr))
         << boost::throw_file(file)
@@ -151,7 +151,7 @@ void parse_error::throw_(const char* file, unsigned int line, std::string const&
     );
 }
 
-void parse_error::throw_(const char* file, unsigned int line, std::string const& descr, unsigned int content_line)
+void parse_error::throw_(const char* file, std::size_t line, std::string const& descr, std::size_t content_line)
 {
     boost::throw_exception(boost::enable_error_info(parse_error(descr))
         << boost::throw_file(file)
@@ -174,7 +174,7 @@ conversion_error::~conversion_error() throw()
 {
 }
 
-void conversion_error::throw_(const char* file, unsigned int line)
+void conversion_error::throw_(const char* file, std::size_t line)
 {
     boost::throw_exception(boost::enable_error_info(conversion_error())
         << boost::throw_file(file)
@@ -182,7 +182,7 @@ void conversion_error::throw_(const char* file, unsigned int line)
     );
 }
 
-void conversion_error::throw_(const char* file, unsigned int line, std::string const& descr)
+void conversion_error::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(conversion_error(descr))
         << boost::throw_file(file)
@@ -204,7 +204,7 @@ system_error::~system_error() throw()
 {
 }
 
-void system_error::throw_(const char* file, unsigned int line)
+void system_error::throw_(const char* file, std::size_t line)
 {
     boost::throw_exception(boost::enable_error_info(system_error())
         << boost::throw_file(file)
@@ -212,7 +212,7 @@ void system_error::throw_(const char* file, unsigned int line)
     );
 }
 
-void system_error::throw_(const char* file, unsigned int line, std::string const& descr)
+void system_error::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(system_error(descr))
         << boost::throw_file(file)
@@ -243,7 +243,7 @@ odr_violation::~odr_violation() throw()
 {
 }
 
-void odr_violation::throw_(const char* file, unsigned int line)
+void odr_violation::throw_(const char* file, std::size_t line)
 {
     boost::throw_exception(boost::enable_error_info(odr_violation())
         << boost::throw_file(file)
@@ -251,7 +251,7 @@ void odr_violation::throw_(const char* file, unsigned int line)
     );
 }
 
-void odr_violation::throw_(const char* file, unsigned int line, std::string const& descr)
+void odr_violation::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(odr_violation(descr))
         << boost::throw_file(file)
@@ -273,7 +273,7 @@ unexpected_call::~unexpected_call() throw()
 {
 }
 
-void unexpected_call::throw_(const char* file, unsigned int line)
+void unexpected_call::throw_(const char* file, std::size_t line)
 {
     boost::throw_exception(boost::enable_error_info(unexpected_call())
         << boost::throw_file(file)
@@ -281,7 +281,7 @@ void unexpected_call::throw_(const char* file, unsigned int line)
     );
 }
 
-void unexpected_call::throw_(const char* file, unsigned int line, std::string const& descr)
+void unexpected_call::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(unexpected_call(descr))
         << boost::throw_file(file)
@@ -303,7 +303,7 @@ setup_error::~setup_error() throw()
 {
 }
 
-void setup_error::throw_(const char* file, unsigned int line)
+void setup_error::throw_(const char* file, std::size_t line)
 {
     boost::throw_exception(boost::enable_error_info(setup_error())
         << boost::throw_file(file)
@@ -311,7 +311,7 @@ void setup_error::throw_(const char* file, unsigned int line)
     );
 }
 
-void setup_error::throw_(const char* file, unsigned int line, std::string const& descr)
+void setup_error::throw_(const char* file, std::size_t line, std::string const& descr)
 {
     boost::throw_exception(boost::enable_error_info(setup_error(descr))
         << boost::throw_file(file)

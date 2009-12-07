@@ -40,7 +40,7 @@
 #include <boost/detail/interlocked.hpp>
 
 #define BOOST_LOG_CAS_PTR(expected, new_value, pointer)\
-    (BOOST_INTERLOCKED_COMPARE_EXCHANGE_POINTER(pointer, new_value, expected) == expected)
+    (BOOST_INTERLOCKED_COMPARE_EXCHANGE_POINTER((void**)(pointer), (void*)(new_value), (void*)(expected)) == (expected))
 
 #endif // !defined(BOOST_LOG_CAS_PTR) && defined(BOOST_WINDOWS)
 

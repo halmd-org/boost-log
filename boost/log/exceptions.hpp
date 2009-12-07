@@ -25,6 +25,7 @@
 #include <string>
 #include <stdexcept>
 #include <boost/preprocessor/seq/enum.hpp>
+#include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/log/detail/prologue.hpp>
 
 #ifdef _MSC_VER
@@ -79,8 +80,8 @@ public:
     ~missing_value() throw();
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line);
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };
 
@@ -105,8 +106,8 @@ public:
     ~invalid_type() throw();
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line);
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };
 
@@ -131,8 +132,8 @@ public:
     ~invalid_value() throw();
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line);
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };
 
@@ -157,9 +158,9 @@ public:
     ~parse_error() throw();
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line);
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line, std::string const& descr);
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line, std::string const& descr, unsigned int content_line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, std::size_t content_line);
 #endif
 };
 
@@ -184,8 +185,8 @@ public:
     ~conversion_error() throw();
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line);
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };
 
@@ -210,8 +211,8 @@ public:
     ~system_error() throw();
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line);
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };
 
@@ -256,8 +257,8 @@ public:
     ~odr_violation() throw();
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line);
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };
 
@@ -282,8 +283,8 @@ public:
     ~unexpected_call() throw();
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line);
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };
 
@@ -308,8 +309,8 @@ public:
     ~setup_error() throw();
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line);
-    static BOOST_LOG_NORETURN void throw_(const char* file, unsigned int line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
 #endif
 };
 

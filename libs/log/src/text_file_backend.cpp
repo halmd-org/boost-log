@@ -48,6 +48,7 @@
 #include <boost/compatibility/cpp_c_headers/ctime>
 #include <boost/compatibility/cpp_c_headers/cstdio>
 #include <boost/compatibility/cpp_c_headers/cstdlib>
+#include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_assign_actor.hpp>
 #include <boost/log/detail/snprintf.hpp>
@@ -328,7 +329,7 @@ namespace {
             static bool scan_digits(
                 path_string_type::const_iterator& it,
                 path_string_type::const_iterator end,
-                unsigned int n)
+                std::ptrdiff_t n)
             {
                 for (; n > 0; --n)
                 {
