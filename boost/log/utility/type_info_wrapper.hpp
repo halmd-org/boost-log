@@ -11,7 +11,7 @@
  * \file   type_info_wrapper.hpp
  * \author Andrey Semashev
  * \date   15.04.2007
- * 
+ *
  * The header contains implementation of a type information wrapper.
  */
 
@@ -22,10 +22,6 @@
 #ifndef BOOST_LOG_UTILITY_TYPE_INFO_WRAPPER_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_TYPE_INFO_WRAPPER_HPP_INCLUDED_
 
-#ifdef __GNUC__
-#include <cxxabi.h>
-#include <memory.h>
-#endif // __GNUC__
 #include <typeinfo>
 #include <string>
 #include <algorithm>
@@ -33,13 +29,22 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/unspecified_bool.hpp>
 
+#if defined(__GNUC__) && !defined(__QNX__)
+#define BOOST_LOG_HAS_CXXABI
+#endif // defined(__GNUC__) && !defined(__QNX__)
+
+#ifdef BOOST_LOG_HAS_CXXABI
+#include <cxxabi.h>
+#include <memory.h>
+#endif // BOOST_LOG_HAS_CXXABI
+
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
 /*!
  * \brief A simple <tt>std::type_info</tt> wrapper that implements value semantic for type information objects
- * 
+ *
  * The type info wrapper is very useful for storing type information objects in containers,
  * as a key or value. It also provides a number of useful features, such as default construction
  * and assignment support, an empty state and extended support for human-friendly type names.
@@ -57,16 +62,16 @@ private:
     //! An inaccessible type to indicate an uninitialized state of the wrapper
     enum uninitialized {};
 
-#ifdef __GNUC__
+#ifdef BOOST_LOG_HAS_CXXABI
     //! A simple scope guard for automatic memory free
     struct auto_free
     {
         explicit auto_free(void* p) : p_(p) {}
         ~auto_free() { free(p_); }
-    private:    
+    private:
         void* p_;
     };
-#endif // __GNUC__
+#endif // BOOST_LOG_HAS_CXXABI
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
@@ -77,20 +82,20 @@ private:
 public:
     /*!
      * Default constructor
-     * 
+     *
      * \post <tt>!*this == true</tt>
      */
     type_info_wrapper() : info(&typeid(uninitialized)) {}
     /*!
      * Copy constructor
-     * 
+     *
      * \post <tt>*this == that</tt>
      * \param that Source type info wrapper to copy from
      */
     type_info_wrapper(type_info_wrapper const& that) : info(that.info) {}
     /*!
      * Conversion constructor
-     * 
+     *
      * \post <tt>*this == that && !!*this</tt>
      * \param that Type info object to be wrapped
      */
@@ -104,7 +109,7 @@ public:
 
     /*!
      * Stored type info getter
-     * 
+     *
      * \pre <tt>!!*this</tt>
      * \return Constant reference to the wrapped type info object
      */
@@ -120,7 +125,7 @@ public:
 
     /*!
      * The method returns the contained type name string in a possibly more readable format than <tt>get().name()</tt>
-     * 
+     *
      * \pre <tt>!!*this</tt>
      * \return Type name string
      */
@@ -128,7 +133,7 @@ public:
     {
         if (*info != typeid(uninitialized))
         {
-#ifdef __GNUC__
+#ifdef BOOST_LOG_HAS_CXXABI
             // GCC returns decorated type name, will need to demangle it using ABI
             int status = 0;
             size_t size = 0;
@@ -162,7 +167,7 @@ public:
 
     /*!
      * Equality comparison
-     * 
+     *
      * \param that Comparand
      * \return If either this object or comparand is in empty state and the other is not, the result is \c false.
      *         If both arguments are empty, the result is \c true. If both arguments are not empty, the result
@@ -174,7 +179,7 @@ public:
     }
     /*!
      * Ordering operator
-     * 
+     *
      * \pre <tt>!!*this && !!that</tt>
      * \param that Comparand
      * \return \c true if this object wraps type info object that is ordered before
