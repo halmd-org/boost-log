@@ -24,10 +24,14 @@ project boost/log
     : requirements
         <link>shared:<define>BOOST_LOG_DLL
         <logapi>unix:<define>BOOST_LOG_USE_NATIVE_SYSLOG=1
-        <toolset>msvc,intel-win:<define>_SCL_SECURE_NO_WARNINGS
-        <toolset>msvc,intel-win:<define>_SCL_SECURE_NO_DEPRECATE
-        <toolset>msvc,intel-win:<define>_CRT_SECURE_NO_WARNINGS
-        <toolset>msvc,intel-win:<define>_CRT_SECURE_NO_DEPRECATE
+        <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
+        <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+        <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
+        <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+        <toolset>intel-win:<define>_SCL_SECURE_NO_WARNINGS
+        <toolset>intel-win:<define>_SCL_SECURE_NO_DEPRECATE
+        <toolset>intel-win:<define>_CRT_SECURE_NO_WARNINGS
+        <toolset>intel-win:<define>_CRT_SECURE_NO_DEPRECATE
         <toolset>gcc:<cxxflags>-fno-strict-aliasing  # avoids strict aliasing violations in other Boost components
         <library>/boost/date_time//boost_date_time
         <library>/boost/filesystem//boost_filesystem
