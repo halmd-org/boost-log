@@ -25,10 +25,10 @@
 
 #include <new>
 #include <string>
+#include <locale>
 #include <ostream>
-#include <boost/aligned_storage.hpp>
-#include <boost/type_traits/alignment_of.hpp>
 #include <boost/utility/addressof.hpp>
+#include <boost/utility/base_from_member.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/native_typeof.hpp>
 #include <boost/log/detail/unspecified_bool.hpp>
@@ -54,10 +54,13 @@ namespace BOOST_LOG_NAMESPACE {
  */
 template< typename CharT, typename TraitsT = std::char_traits< CharT > >
 class basic_record_ostream :
+    private base_from_member< boost::log::aux::basic_ostringstreambuf< CharT, TraitsT > >,
     public std::basic_ostream< CharT, TraitsT >
 {
     //! Self type
     typedef basic_record_ostream< CharT, TraitsT > this_type;
+    //! Base class that contains the stream buffer
+    typedef base_from_member< boost::log::aux::basic_ostringstreambuf< CharT, TraitsT > > ostream_buf_base_type;
 
 public:
     //! Stream type
@@ -70,14 +73,8 @@ public:
     typedef typename record_type::string_type string_type;
 
 private:
-    //! String buffer that is used with the stream
-    typedef boost::log::aux::basic_ostringstreambuf< char_type > ostream_buf;
-
-private:
     //! Log record
     record_type m_Record;
-    //! Stream buffer
-    aligned_storage< sizeof(ostream_buf), alignment_of< ostream_buf >::value > m_Buffer;
 
 public:
     /*!
@@ -86,8 +83,9 @@ public:
      *
      * \post <tt>!*this == true</tt>
      */
-    basic_record_ostream() : ostream_type(NULL)
+    basic_record_ostream() : ostream_type(boost::addressof(ostream_buf_base_type::member))
     {
+        ostream_type::clear(ostream_type::badbit);
     }
 
     /*!
@@ -97,8 +95,11 @@ public:
      * \post <tt>this->handle() == rec</tt>
      * \param rec The record handle being adopted
      */
-    explicit basic_record_ostream(record_handle const& rec) : ostream_type(NULL), m_Record(rec)
+    explicit basic_record_ostream(record_handle const& rec) :
+        ostream_type(boost::addressof(ostream_buf_base_type::member)),
+        m_Record(rec)
     {
+        ostream_type::clear(ostream_type::badbit);
         init_stream();
     }
     /*!
@@ -108,8 +109,11 @@ public:
      * \post <tt>this->handle() == rec</tt>
      * \param rec The record handle being adopted
      */
-    basic_record_ostream(record_type const& rec) : ostream_type(NULL), m_Record(rec)
+    basic_record_ostream(record_type const& rec) :
+        ostream_type(boost::addressof(ostream_buf_base_type::member)),
+        m_Record(rec)
     {
+        ostream_type::clear(ostream_type::badbit);
         init_stream();
     }
 
@@ -169,30 +173,32 @@ private:
     basic_record_ostream(basic_record_ostream const&);
     basic_record_ostream& operator= (basic_record_ostream const&);
 
-    //! Returns the pointer to the stream buffer storage
-    ostream_buf* buffer_storage()
-    {
-        return reinterpret_cast< ostream_buf* >(m_Buffer.address());
-    }
-
     //! The function initializes the stream and the stream buffer
     void init_stream()
     {
         if (!!m_Record)
         {
-            ostream_buf* p = buffer_storage();
-            new (p) ostream_buf(m_Record.message());
-            ostream_type::init(p);
+            ostream_buf_base_type::member.attach(m_Record.message());
+            ostream_type::clear(ostream_type::goodbit);
+            ostream_type::flags(
+                ostream_type::dec |
+                ostream_type::skipws |
+                ostream_type::boolalpha // this differs from the default stream flags but makes logs look better
+            );
+            ostream_type::width(0);
+            ostream_type::precision(6);
+            ostream_type::fill(static_cast< char_type >(' '));
+            ostream_type::imbue(std::locale());
         }
     }
-    //! The function destroys the stream buffer and deinitializes the stream
+    //! The function resets the stream into a detached (default initialized) state
     void detach_from_record()
     {
         if (!!m_Record)
         {
-            ostream_type::flush();
-            ostream_type::init(NULL);
-            buffer_storage()->~ostream_buf();
+            ostream_buf_base_type::member.detach();
+            ostream_type::exceptions(ostream_type::goodbit);
+            ostream_type::clear(ostream_type::badbit);
         }
     }
 };

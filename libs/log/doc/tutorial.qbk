@@ -77,24 +77,50 @@ It is possible to build more complex filters as lambda expressions, combining lo
 
 [endsect]
 
-[section:sinks Step 1: Picking sinks]
+[section:sinks Setting up sinks]
 
-[heading The simple form]
+Sometimes trivial logging doesn't provide enough flexibility. For example, one may want a more sophisticated logic of log processing, not simply storing it into a file. In order to customize this, you have to construct logging sinks and register them into the logging core. This should normally be done only once somewhere in the startup code of your application.
 
-The first thing you'll have to do is to decide where and how you want logs to be stored. In terms of the library you have to construct logging sinks and register them into the logging core. This should be done only once somewhere in the startup code of your application. The library provides support for several different logging sinks, such as STL streams and syslog where available, and a simplified interface to register them like that:
+[heading File logging unleashed]
 
-    logging::init_log_to_file("sample.log");
+For a starting point, here is how you would initialize logginig into a file, similarly to the trivial logging:
 
-That would implicitly do all necessary actions to enable logging to a file named "sample.log". There are a number of other functions that initialize the library for, e.g. logging to console or syslog or even read the configuration from file. These functions can be combined if needed, for example:
+    void init()
+    {
+        logging::init_log_to_file("sample.log");
+        logging::core::get()->set_filter
+        (
+            flt::attr< logging::trivial::severity_level >("Severity") >= logging::trivial::info
+        );
+    }
 
-    logging::init_log_to_file("sample.log");
-    logging::init_log_to_console();
+    // We'll skip the "main" function for now
 
-This call sequence will enable both logging to a text file and to console, effectively registering two sinks to the logging core.
+The added piece is a call to the `init_log_to_file` function. As the naming implies, the function initializes a logging sink that stores log records into a text file. The function can also accept a number of customization options, such as rotation interval and size limits. For instance:
 
-[heading The advanced form]
+    void init()
+    {
+        logging::init_log_to_file
+        (
+            keywords::file_name = "sample_%N.log",                  // file name pattern
+            keywords::rotation_size = 10 * 1024 * 1024,             // rotate files every 10 MiB
+            keywords::rotation_interval = posix_time::minutes(10),  // ...or 10 minutes
+            keywords::format = "[%TimeStamp%]: %_%"                 // log record format
+        );
 
-If you need a more comprehensive control over sinks configuration, you may consider registering them manually. The `init_log_to_file` function call in the section above can be expanded to this:
+        logging::core::get()->set_filter
+        (
+            flt::attr< logging::trivial::severity_level >("Severity") >= logging::trivial::info
+        );
+    }
+
+You may see that the options are passed to the function in the named form. This approach is taken in many places of the library, you'll get used to it. The meaning of the parameters is mostly self-explaining, and is documented in this manual (see [log.detailed.sink_backends.text_file here] for what regards the text file sink).
+
+[note You can register more than one sink. Each sink will process log records independently from others. In particular this means that you may use trivial logging and additionally register one or more sinks as shown above. All sinks will receive log records as you emit them.]
+
+[heading Sinks registration in depth: More sinks]
+
+If you need a more comprehensive control over sinks configuration, or want to use different sinks, you may consider registering them manually. The `init_log_to_file` function call in the section above can be expanded to this:
 
     // Construct the sink
     typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
@@ -107,9 +133,9 @@ If you need a more comprehensive control over sinks configuration, you may consi
     // Register the sink in the logging core
     logging::core::get()->add_sink(pSink);
 
-Ok, the first thing you may have noticed about sinks is that they are composed of two classes: the frontend and the backend. The frontend (which is the `synchronous_sink` class template in the snippet above) is responsible for various common tasks for all sinks, such as thread synchronization model and filtering. The backend (the `text_ostream_backend` class above) implements everything specific to the sink nature, text formatting and writing to a file being in this case. Every log record first gets to the frontend, which decides if it is going to be stored and, if it is, passes the record to the backend. There are a number of both frontends and backends provided by the library out of box that may be used with each other. This approach significantly reduces backends complexity (which is one of the most probable areas of the library extension) and improves code reusability.
+Ok, the first thing you may have noticed about sinks is that they are composed of two classes: the frontend and the backend. The frontend (which is the `synchronous_sink` class template in the snippet above) is responsible for various common tasks for all sinks, such as thread synchronization model and filtering. The backend (the `text_ostream_backend` class above) implements everything specific to the sink nature, text formatting and writing to a file being in this case. There are a number of both frontends and backends provided by the library out of box that may be used with each other.
 
-The `synchronous_sink` class template above indicates that the sink is synchronous, that is, it allows several threads to log simultaneously and will block in case of contention. This means that the backend `text_ostream_backend` need not to worry about multithreading at all. There are two other sink frontends available out of box: `unlocked_sink` and `asynchronous_sink`. The `unlocked_sink` makes no synchronization at all and `asynchronous_sink` performs writing in a separate thread. The simplified functions like `init_log_to_file` and `init_log_to_console` always register a synchronous sink.
+The `synchronous_sink` class template above indicates that the sink is synchronous, that is, it allows several threads to log simultaneously and will block in case of contention. This means that the backend `text_ostream_backend` need not to worry about multithreading at all. There are other sink frontends available, you may read [log.detailed.sink_frontends here] more about them.
 
 The `text_ostream_backend` class implements storing text records into STL-compatible streams. We have used a file stream above but we could have used any type of stream. For example, adding output to console could look as follows:
 
