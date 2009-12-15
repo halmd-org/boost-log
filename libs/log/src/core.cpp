@@ -421,18 +421,21 @@ void basic_core< CharT >::push_record(record_type const& rec)
                     ++it;
             }
 
-            if (begin != end && all_locked)
+            if (begin != end)
             {
-                // If all sinks are busy then block on any
-                if (!shuffled)
+                if (all_locked)
                 {
-                    std::random_shuffle(begin, end);
-                    shuffled = true;
-                }
+                    // If all sinks are busy then block on any
+                    if (!shuffled)
+                    {
+                        std::random_shuffle(begin, end);
+                        shuffled = true;
+                    }
 
-                begin->get()->consume(rec);
-                --end;
-                end->swap(*begin);
+                    begin->get()->consume(rec);
+                    --end;
+                    end->swap(*begin);
+                }
             }
             else
                 break;
