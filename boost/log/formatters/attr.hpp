@@ -25,18 +25,26 @@
 #include <new> // std::nothrow
 #include <string>
 #include <boost/format.hpp>
+#include <boost/parameter/binding.hpp>
+#include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/exception_policies.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include <boost/log/utility/attribute_value_extractor.hpp>
+#include <boost/log/keywords/format.hpp>
 
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
 namespace formatters {
+
+template< typename CharT, typename AttributeValueTypesT, typename ExceptionPolicyT >
+class fmt_attr;
+template< typename CharT, typename AttributeValueTypesT, typename ExceptionPolicyT >
+class fmt_attr_formatted;
 
 namespace aux {
 
@@ -70,6 +78,46 @@ namespace aux {
 
     private:
         FormatT& m_Format;
+    };
+
+    template< typename CharT, typename AttributeValueTypesT, typename ExceptionPolicyT, typename FormatT >
+    struct make_attr_formatter_impl
+    {
+        typedef fmt_attr_formatted< CharT, AttributeValueTypesT, ExceptionPolicyT > type;
+        typedef typename type::string_type string_type;
+
+        template< typename ArgsT >
+        static type construct(string_type const& name, ArgsT const& args)
+        {
+            return type(name, args[keywords::format]);
+        }
+    };
+    template< typename CharT, typename AttributeValueTypesT, typename ExceptionPolicyT >
+    struct make_attr_formatter_impl< CharT, AttributeValueTypesT, ExceptionPolicyT, void >
+    {
+        typedef fmt_attr< CharT, AttributeValueTypesT, ExceptionPolicyT > type;
+        typedef typename type::string_type string_type;
+
+        template< typename ArgsT >
+        static type construct(string_type const& name, ArgsT const& args)
+        {
+            return type(name);
+        }
+    };
+
+    template< typename CharT, typename AttributeValueTypesT, typename ExceptionPolicyT, typename ArgsT >
+    struct make_attr_formatter :
+        public make_attr_formatter_impl<
+            CharT,
+            AttributeValueTypesT,
+            ExceptionPolicyT,
+            typename parameter::binding<
+                ArgsT,
+                keywords::tag::format,
+                void
+            >::type
+        >
+    {
     };
 
 } // namespace aux
@@ -162,7 +210,7 @@ inline fmt_attr<
     char,
     make_default_attribute_types< char >::type,
     no_throw_policy
-    > attr(std::basic_string< char > const& name, std::nothrow_t const&)
+> attr(std::basic_string< char > const& name, std::nothrow_t const&)
 {
     return fmt_attr< char, make_default_attribute_types< char >::type, no_throw_policy >(name);
 }
@@ -329,6 +377,51 @@ inline fmt_attr_formatted<
 
 /*!
  * Formatter generator. By default the formatter will support all standard types.
+ */
+template< typename ArgsT >
+inline typename lazy_enable_if<
+    parameter::aux::is_tagged_argument< ArgsT >,
+    aux::make_attr_formatter<
+        char,
+        make_default_attribute_types< char >::type,
+        throw_policy,
+        ArgsT
+    >
+>::type attr(std::basic_string< char > const& name, ArgsT const& fmt)
+{
+    typedef aux::make_attr_formatter<
+        char,
+        make_default_attribute_types< char >::type,
+        throw_policy,
+        ArgsT
+    > maker;
+    return maker::construct(name, fmt);
+}
+/*!
+ * Formatter generator with ability to specify an exact attribute value type(s)
+ */
+template< typename AttributeValueTypesT, typename ArgsT >
+inline typename lazy_enable_if<
+    parameter::aux::is_tagged_argument< ArgsT >,
+    aux::make_attr_formatter<
+        char,
+        AttributeValueTypesT,
+        throw_policy,
+        ArgsT
+    >
+>::type attr(std::basic_string< char > const& name, ArgsT const& fmt)
+{
+    typedef aux::make_attr_formatter<
+        char,
+        AttributeValueTypesT,
+        throw_policy,
+        ArgsT
+    > maker;
+    return maker::construct(name, fmt);
+}
+
+/*!
+ * Formatter generator. By default the formatter will support all standard types.
  * The formatter will not throw if the attribute value is not found in the record being formatted.
  * Instead, no output will be produced for this attribute value.
  */
@@ -353,6 +446,55 @@ inline fmt_attr_formatted<
 > attr(std::basic_string< char > const& name, std::basic_string< char > const& fmt, std::nothrow_t const&)
 {
     return fmt_attr_formatted< char, AttributeValueTypesT, no_throw_policy >(name, fmt);
+}
+
+/*!
+ * Formatter generator. By default the formatter will support all standard types.
+ * The formatter will not throw if the attribute value is not found in the record being formatted.
+ * Instead, no output will be produced for this attribute value.
+ */
+template< typename ArgsT >
+inline typename lazy_enable_if<
+    parameter::aux::is_tagged_argument< ArgsT >,
+    aux::make_attr_formatter<
+        char,
+        make_default_attribute_types< char >::type,
+        no_throw_policy,
+        ArgsT
+    >
+>::type attr(std::basic_string< char > const& name, ArgsT const& fmt, std::nothrow_t const&)
+{
+    typedef aux::make_attr_formatter<
+        char,
+        make_default_attribute_types< char >::type,
+        no_throw_policy,
+        ArgsT
+    > maker;
+    return maker::construct(name, fmt);
+}
+/*!
+ * Formatter generator with ability to specify an exact attribute value type(s).
+ * The formatter will not throw if the attribute value is not found in the record being formatted.
+ * Instead, no output will be produced for this attribute value.
+ */
+template< typename AttributeValueTypesT, typename ArgsT >
+inline typename lazy_enable_if<
+    parameter::aux::is_tagged_argument< ArgsT >,
+    aux::make_attr_formatter<
+        char,
+        AttributeValueTypesT,
+        no_throw_policy,
+        ArgsT
+    >
+>::type attr(std::basic_string< char > const& name, ArgsT const& fmt, std::nothrow_t const&)
+{
+    typedef aux::make_attr_formatter<
+        char,
+        AttributeValueTypesT,
+        no_throw_policy,
+        ArgsT
+    > maker;
+    return maker::construct(name, fmt);
 }
 
 #endif
@@ -385,6 +527,51 @@ inline fmt_attr_formatted<
 
 /*!
  * Formatter generator. By default the formatter will support all standard types.
+ */
+template< typename ArgsT >
+inline typename lazy_enable_if<
+    parameter::aux::is_tagged_argument< ArgsT >,
+    aux::make_attr_formatter<
+        wchar_t,
+        make_default_attribute_types< wchar_t >::type,
+        throw_policy,
+        ArgsT
+    >
+>::type attr(std::basic_string< wchar_t > const& name, ArgsT const& fmt)
+{
+    typedef aux::make_attr_formatter<
+        wchar_t,
+        make_default_attribute_types< wchar_t >::type,
+        throw_policy,
+        ArgsT
+    > maker;
+    return maker::construct(name, fmt);
+}
+/*!
+ * Formatter generator with ability to specify an exact attribute value type(s)
+ */
+template< typename AttributeValueTypesT, typename ArgsT >
+inline typename lazy_enable_if<
+    parameter::aux::is_tagged_argument< ArgsT >,
+    aux::make_attr_formatter<
+        wchar_t,
+        AttributeValueTypesT,
+        throw_policy,
+        ArgsT
+    >
+>::type attr(std::basic_string< wchar_t > const& name, ArgsT const& fmt)
+{
+    typedef aux::make_attr_formatter<
+        wchar_t,
+        AttributeValueTypesT,
+        throw_policy,
+        ArgsT
+    > maker;
+    return maker::construct(name, fmt);
+}
+
+/*!
+ * Formatter generator. By default the formatter will support all standard types.
  * The formatter will not throw if the attribute value is not found in the record being formatted.
  * Instead, no output will be produced for this attribute value.
  */
@@ -409,6 +596,55 @@ inline fmt_attr_formatted<
 > attr(std::basic_string< wchar_t > const& name, std::basic_string< wchar_t > const& fmt, std::nothrow_t const&)
 {
     return fmt_attr_formatted< wchar_t, AttributeValueTypesT, no_throw_policy >(name, fmt);
+}
+
+/*!
+ * Formatter generator. By default the formatter will support all standard types.
+ * The formatter will not throw if the attribute value is not found in the record being formatted.
+ * Instead, no output will be produced for this attribute value.
+ */
+template< typename ArgsT >
+inline typename lazy_enable_if<
+    parameter::aux::is_tagged_argument< ArgsT >,
+    aux::make_attr_formatter<
+        wchar_t,
+        make_default_attribute_types< wchar_t >::type,
+        no_throw_policy,
+        ArgsT
+    >
+>::type attr(std::basic_string< wchar_t > const& name, ArgsT const& fmt, std::nothrow_t const&)
+{
+    typedef aux::make_attr_formatter<
+        wchar_t,
+        make_default_attribute_types< wchar_t >::type,
+        no_throw_policy,
+        ArgsT
+    > maker;
+    return maker::construct(name, fmt);
+}
+/*!
+ * Formatter generator with ability to specify an exact attribute value type(s).
+ * The formatter will not throw if the attribute value is not found in the record being formatted.
+ * Instead, no output will be produced for this attribute value.
+ */
+template< typename AttributeValueTypesT, typename ArgsT >
+inline typename lazy_enable_if<
+    parameter::aux::is_tagged_argument< ArgsT >,
+    aux::make_attr_formatter<
+        wchar_t,
+        AttributeValueTypesT,
+        no_throw_policy,
+        ArgsT
+    >
+>::type attr(std::basic_string< wchar_t > const& name, ArgsT const& fmt, std::nothrow_t const&)
+{
+    typedef aux::make_attr_formatter<
+        wchar_t,
+        AttributeValueTypesT,
+        no_throw_policy,
+        ArgsT
+    > maker;
+    return maker::construct(name, fmt);
 }
 
 #endif
