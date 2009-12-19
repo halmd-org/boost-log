@@ -18,7 +18,7 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #endif // _CRT_SECURE_NO_WARNINGS
 
-#define BOOST_ALL_DYN_LINK 1
+// #define BOOST_ALL_DYN_LINK 1
 
 #include <exception>
 #include <string>
@@ -29,16 +29,6 @@
 #include <boost/log/common.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/utility/init/from_stream.hpp>
-
-// Auto-link static libs
-#define BOOST_LIB_NAME boost_system
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_filesystem
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_regex
-#include <boost/config/auto_link.hpp>
-#define BOOST_LIB_NAME boost_date_time
-#include <boost/config/auto_link.hpp>
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;

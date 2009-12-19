@@ -87,11 +87,11 @@ int main(int argc, char* argv[])
     logging::init_log_to_file
     (
         "sample.log",
-        keywords::filter = flt::attr< severity_level >("Severity") >= warning,
+        keywords::filter = flt::attr< severity_level >("Severity", std::nothrow) >= warning,
         keywords::format = fmt::format("%1% [%2%] <%3%> %4%")
-            % fmt::date_time("TimeStamp")
-            % fmt::time_duration("Uptime")
-            % fmt::attr< severity_level >("Severity")
+            % fmt::date_time("TimeStamp", std::nothrow)
+            % fmt::time_duration("Uptime", std::nothrow)
+            % fmt::attr< severity_level >("Severity", std::nothrow)
             % fmt::message()
     );
 
