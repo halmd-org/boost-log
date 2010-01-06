@@ -1,7 +1,7 @@
 [library Boost.Log
     [quickbook 1.4]
     [authors [Semashev, Andrey]]
-    [copyright 2007, 2008, 2009 Andrey Semashev]
+    [copyright 2007, 2008, 2009, 2010 Andrey Semashev]
     [license
         Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
