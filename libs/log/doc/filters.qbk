@@ -9,7 +9,7 @@
 
 [section:filters Filters]
 
-As it was pointed out in [link log.tutorial.filters tutorial], filters are implemented as Lambda-like expressions with placeholders for attribute values. This section will describe placeholders that can be used to build more complex expressions.
+As it was pointed out in [link log.tutorial.trivial_filtering tutorial], filters are implemented as Lambda-like expressions with placeholders for attribute values. This section will describe placeholders that can be used to build more complex expressions.
 
 [section:has_attr Attribute presence filter]
 

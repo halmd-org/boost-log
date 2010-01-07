@@ -1,0 +1,47 @@
+[/
+    This document is a part of Boost.Log library documentation.
+
+    (c) 2010 Andrey Semashev
+
+    Use, modification and distribution is subject to the Boost Software License, Version 1.0.
+    (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+/]
+
+[section:changelog Changelog]
+
+[heading Release Candidate 4, TBD]
+
+* Substantial documentation improvement. The tutorial section has been reorganized.
+* Library headers have been reorganized. Some other Boost libraries that were previously included by headers have been made optional. Such dependencies have been extracted into separate headers in the `support` directory. Top level library headers now mostly include nested headers.
+* Keywords have moved into a dedicated `keywords` namespace. There are no longer nested `keywords` namespaces in `sinks`, `attributes`, etc. All keywords have been extracted into separate headers in the `keywords` directory.
+* Removed rotating file stream. As a replacement, a [link log.detailed.sink_backends.text_file new file sink] has been added, which allows to achieve the same results ans adds a few more features.
+* Added a new [link log.detailed.sink_backends.text_multifile multifile] sink backend.
+* Added a new [link log.detailed.sink_frontends.ordering_async ordering asynchronous] sink frontend.
+* The [link log.detailed.sink_backends.syslog syslog] sink backend is now supported on Windows, too. The sink no longer requires native support for POSIX API for syslog, but is able to send syslog packets to a remote server over UDP.
+* Loggers implementation has been improved. Feature composition mechanism has been cleaned up.
+* Added support for scoped logging. There is now a distinct [link log.detailed.core.record log record entity], which is returned by the core as a result of filtring. It is possible to fill in the record message in any way the user wants, not necessarilly with a streaming expression. The record object is now processed by sinks and formatters.
+* Added support for exception control. User can register exception handlers at one of the three layers: for a particular sink, at the core layer, and for a particular logger (given that it has the appropriate feature). Sinks and core will not suppress exceptions by default. Filter and formatters will throw if the requested attribute value is not found.
+* Added a few new formatters, called [link log.detailed.formatters.decorators character decorators]. These can be useful to post-process the formatted output before passing it on to the sink.
+* Added attributes for thread and process identifiers. These identifiers are automatically added after the call to `add_common_attributes`.
+* Helper initialization functions, such as `init_log_to_file` now accept more customization options as named arguments.
+* The library setup support code has beed extracted into a separate binary. Further on, this binary will be made optional to build.
+* Added a new mode of logging, called trivial logging. In this mode the library requires no initialization at all, however it does not offer many ways of customization.
+* A number of bugs fixed.
+* A few optimizations added to improve multithreaded applications performance.
+* Removed some bug workarounds for older Boost releases. The library now requires Boost 1.39 or newer.
+
+[heading Release Candidate 3, 08 Feb 2009]
+
+* Substantial documentation improvement.
+* Added several Windows-specific sinks: Event Log (simplified and advanced), Windows debugger and experimental Event Trace for Windows Vista and later.
+* Loggers now consist of a number of independent features that can be composed the way the user needs. User-defined features can be developed and injected into the mix.
+* Attribute value extractors improved. With the new extract function attribute values can be extracted from the attribute values view by employing lambda functors.
+* Some files and classes were moved or renamed to improve code clarity and shorten names.
+* A number of bugs fixed.
+* Added tests.
+
+[heading Release Candidate 2]
+
+Noone really remembers these dark ages...
+
+[endsect]

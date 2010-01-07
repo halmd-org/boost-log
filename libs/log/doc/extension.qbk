@@ -16,6 +16,7 @@
 As was described in the [link log.design Design overview] section, sinks consist of two parts: frontend and backend. Frontends are provided by the library and usually need not to be re-implemented. Thanks to frontends, implementing backends is much easier than it could be: all filtering and thread synchronization is done there.
 
 In order to develop a sink backend, you have two options where to start:
+
 * If you don't need any formatting, the minimalistic `basic_sink_backend` base class template is your choice. Actually, this class only defines types that are needed for the sink to function.
 * If you need to create a sink with formatting capabilities, you may use the `basic_formatting_sink_backend` class template as a base class for your backend. It extends the `basic_sink_backend` class and implements log record formatting and character code conversion, leaving you to only develop the record storing code.
 
@@ -59,7 +60,7 @@ As an example of the `basic_sink_backend` class usage, let's implement a simple 
         static boost::shared_ptr< FrontendT< stat_collector > > create(const char* file_name);
 
         // The function consumes the log records that come from the frontend
-        void consume(values_view_type const& attributes, string_type const& message);
+        void consume(record_type const& rec);
 
     private:
         // The constructor initializes the internal data
@@ -71,8 +72,6 @@ As an example of the `basic_sink_backend` class usage, let's implement a simple 
             if (!m_CSVFile.is_open())
                 throw std::runtime_error("could not open the CSV file");
         }
-        // Destructor. Stops the file writing thread.
-        ~stat_collector();
 
         // The function runs in a separate thread and calls write_data periodically
         template< template< typename > class FrontendT >
@@ -113,7 +112,7 @@ As you can see, the public interface of the backend is quite simple. In fact, on
         return sink;
     }
 
-Now the `writer_thread` function and destructor can look like this:
+Now the `writer_thread` function can look like this:
 
     // The function runs in a separate thread and writes the collected data to the file
     template< template< typename > class FrontendT >
@@ -134,33 +133,23 @@ Now the `writer_thread` function and destructor can look like this:
         }
     }
 
-    // Destructor. Stops the file writing thread.
-    stat_collector::~stat_collector()
-    {
-        if (m_WriterThread.get())
-        {
-            m_WriterThread->interrupt();
-            m_WriterThread->join();
-        }
-    }
-
-The `consume` function is called every time the logging record passes filtering in the frontend. The record, as it was stated before, contains a set of attribute values (goes as the first argument of the function) and the message string (goes second). The types of these arguments are defined in the `basic_sink_backend` class.
+The `consume` function is called every time the logging record passes filtering in the frontend. The record, as it was stated before, contains a set of attribute values (goes as the first argument of the function) and the message string (goes as the second one). The types of these arguments are defined in the `basic_sink_backend` class.
 
 Since we have no need in the record message, the second argument will not be of interest for us for now.
 
     // The function consumes the log records that come from the frontend
-    void stat_collector::consume(values_view_type const& attributes, string_type const& message)
+    void stat_collector::consume(record_type const& rec)
     {
-        namespace bll = boost::lambda;
+        namespace lambda = boost::lambda;
 
-        if (attributes.count("Connected"))
+        if (rec.attribute_values().count("Connected"))
             ++m_ActiveConnections;
-        else if (attributes.count("Disconnected"))
+        else if (rec.attribute_values().count("Disconnected"))
             --m_ActiveConnections;
         else
         {
-            logging::extract< unsigned int >("Sent", attributes, bll::var(m_SentBytes) += bll::_1);
-            logging::extract< unsigned int >("Received", attributes, bll::var(m_ReceivedBytes) += bll::_1);
+            logging::extract< unsigned int >("Sent", rec.attribute_values(), lambda::var(m_SentBytes) += lambda::_1);
+            logging::extract< unsigned int >("Received", rec.attribute_values(), lambda::var(m_ReceivedBytes) += lambda::_1);
         }
     }
 
@@ -168,7 +157,7 @@ The code above is quite straightforward. We can parse through attribute values l
 
 [heading Formatting sink backend]
 
-As an example of the formatting sink backend, let's implement a sink that will emit events to a Windows event trace. Assume there's another process that will receive these events and display them to the user in a balloon window near the notification area. The definition of such backend would look something like this:
+As an example of a formatting sink backend, let's implement a sink that will emit events to a Windows event trace. Assume there's another process that will monitor these events and display them to the user as a balloon window in the notification area. The definition of such backend would look something like this:
 
     class event_notifier :
         public sinks::basic_formatting_sink_backend<
@@ -193,19 +182,19 @@ As an example of the formatting sink backend, let's implement a sink that will e
         }
 
         // The method puts the formatted message to the event trace
-        virtual void do_consume(values_view_type const& values, target_string_type const& formatted_message);
+        void do_consume(record_type const& rec, target_string_type const& formatted_message);
     };
 
-The `basic_formatting_sink_backend` class template is instantiated on two character types: the one that is used by the rest of logging system and the one that is required by the backend for further usage. Either of these types can be `char` or `wchar_t`. These character types may be the same, in which case the formatting is done without character conversion, pretty much equivalent to streaming attribute values into a regular `std::ostringstream`. In our case the underlying API requires wide strings, so we'll have to do character conversion while formatting. The conversion will be done according to the locale that is set up in the `basic_formatting_sink_backend` base class (see `imbue` and `getloc` functions).
+The `basic_formatting_sink_backend` class template is instantiated on two character types: the one that is used by the rest of logging system and the one that is required by the backend for further usage. Either of these types can be `char` or `wchar_t`. These character types may be the same, in which case the formatting is done without character conversion, pretty much equivalent to streaming attribute values into a regular `std::ostringstream`. In our case the underlying API requires wide strings, so we'll have to do character conversion while formatting. The conversion will be done according to the locale that is set up in the `basic_formatting_sink_backend` base class (see its `imbue` and `getloc` functions).
 
 In order to differentiate the resulting string type from the string types used throughout the rest of logging library, the `basic_formatting_sink_backend` class defines the `target_string_type` type along with the standard `string_type`. In our case, `target_string_type` will contain wide characters, while `string_type` will be narrow.
 
 The threading model of the sink backend can be specified as the third optional parameter of the `basic_formatting_sink_backend` class template. The default threading model is `frontend_synchronization_tag`, which fits us just fine.
 
-The `basic_formatting_sink_backend` base class implements just about everything that is required by the library from the backend. The only thing left is to implement the virtual `do_consume` method that receives the set of attributes and the already formatted message. In our case this method will pass the formatted message to the corresponding API:
+The `basic_formatting_sink_backend` base class implements just about everything that is required by the library from the backend. The only thing left is to implement the virtual `do_consume` method that receives the original log record and the result of formatting. In our case this method will pass the formatted message to the corresponding API:
 
     // The method puts the formatted message to the event log
-    void event_notifier::do_consume(values_view_type const& values, target_string_type const& formatted_message)
+    void event_notifier::do_consume(record_type const& rec, target_string_type const& formatted_message)
     {
         EventWriteString(m_ProviderHandle, WINEVENT_LEVEL_LOG_ALWAYS, 0ULL /* keyword */, formatted_message.c_str());
     }
@@ -408,8 +397,12 @@ To use this logger we can now write the following:
 
     my_logger< severity_level > logger;
 
-    if (logger.open_record((keywords::severity = normal, my_keywords::tag = "[GUI]")))
-        logger.strm() << "The user has confirmed his choice";
+    logging::record rec = logger.open_record((keywords::severity = normal, my_keywords::tag = "[GUI]"));
+    if (rec)
+    {
+        rec.message() = "The user has confirmed his choice";
+        logger.push_record(rec);
+    }
 
 However, I would prefer defining a special macro to reduce verbosity:
 
@@ -444,10 +437,10 @@ While designing an attribute, one has to strive for making it as independent fro
 
 Each attribute value is considered independent from other attribute values or the attribute itself, from the point of view of the library. That said, it is still possible to implement attributes that are also attribute values, and thus optimize performance. This is possible if either of these fulfills:
 
-* The attribute value never changes, so it's possible to store it into the attribute itself. The `constant` attribute is an example.
+* The attribute value never changes, so it's possible to store it in the attribute itself. The `constant` attribute is an example.
 * The attribute stores its value in a global (external with regard to the attribute) storage, that can be accessed from any attribute value. The attribute values must guarantee, though, that their stored values do not change over time.
 
-As a special case for the second point, it is possible to store attribute values (or their parts) in a thread-specific storage. However, in that case user has to implement the `detach_from_thread` method of the attribute value properly. The result of this method - another attribute value - must be independent from the thread is is being called in, but its stored value should be equivalent to the original attribute value. This method will be called by the library when the attribute value passes to thread that is different from the thread where it was created. As of this moment, this will only happen in case of asynchronous logging sink.
+As a special case for the second point, it is possible to store attribute values (or their parts) in a thread-specific storage. However, in that case user has to implement the `detach_from_thread` method of the attribute value properly. The result of this method - another attribute value - must be independent from the thread is is being called in, but its stored value should be equivalent to the original attribute value. This method will be called by the library when the attribute value passes to thread that is different from the thread where it was created. As of this moment, this will only happen in case of asynchronous logging sinks.
 
 But in vast majority of cases attribute values must be self-contained objects with no dependencies on other entities. In fact, this case is so common that the library provides a ready to use attribute value class template `basic_attribute_value`. The template has to be instantiated on the stored value type, and the stored value has to be provided to the attribute value constructor. For example, this is how to implement an attribute that will return system uptime in seconds:
 
@@ -522,17 +515,17 @@ The formatter factory can additionally accept a number of parameters separated w
 
 Now in order to support this parameter we should rewrite our factory like this:
 
-    namespace bll = boost::lambda;
+    namespace lambda = boost::lambda;
 
     // This formatter will use custom format string to format the point coordinates
     void custom_point_formatter(
         types::string_type const& attr_name,
         types::ostream_type& strm,
-        types::values_view_type const& attrs,
+        types::record_type const& rec,
         types::string_type const& format)
     {
         Point point;
-        if (logging::extract< Point >(attr_name, attrs, bll::var(point) = bll::_1))
+        if (logging::extract< Point >(attr_name, rec.attribute_values(), lambda::var(point) = lambda::_1))
         {
             // If the attribute set contains the needed attribute value, format it into the stream
             strm << boost::format(format) % point.m_X % point.m_Y;
@@ -548,7 +541,7 @@ Now in order to support this parameter we should rewrite our factory like this:
         if (it != args.end())
         {
             // The custom format is specified, use the special formatter
-            return types::formatter_type(bll::bind(&custom_point_formatter, attr_name, bll::_1, bll::_2, it->second));
+            return types::formatter_type(lambda::bind(&custom_point_formatter, attr_name, lambda::_1, lambda::_2, it->second));
         }
         else
         {
@@ -707,7 +700,7 @@ The library provides mechanism of extending support for sinks similar to the for
         explicit snmp_backend(std::string const& trap_receiver);
 
         // The function consumes the log records that come from the frontend and emits SNMP traps
-        void consume(values_view_type const& attributes, string_type const& message);
+        void consume(record_type const& rec);
     };
 
     // Factory function for the SNMP sink

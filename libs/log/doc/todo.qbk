@@ -1,0 +1,27 @@
+[/
+    This document is a part of Boost.Log library documentation.
+
+    (c) 2010 Andrey Semashev
+
+    Use, modification and distribution is subject to the Boost Software License, Version 1.0.
+    (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+/]
+
+[section:todo TODO in future releases]
+
+Points in this section are not necessarily going to be implemented. These are mainly some thoughts on further improvements of the library.
+
+* Optimize scoped attributes. The idea is to store both the attribute and the `shared_ptr` counter on the stack. Currently, only the attribute is stored on the stack.
+* Optimize single-threaded configuration. In many places dynamic memory allocation can be removed if multithreading support is disabled.
+* Support C++0x language features, like variadic templates.
+* Optionally support [@http://www.threadingbuildingblocks.org Intel TBB]. In particular, atomic types and thread-safe queue could be useful.
+* Move from __boost_regex__ to __boost_xpressive__ internally. This would remove the dependency in the __boost_regex__ library module. However, __boost_regex__ support should be retained. Update: the internal reliance on __boost_xpressive__ is suspended until [@https://svn.boost.org/trac/boost/ticket/3278 #3278] is fixed.
+* SNMP support. The idea is to implement a sink backend that would emit SNMP traps as a result of processing log records. This needs quite an amount of research and thinking over.
+* Provide a compile-time option to remove all logging from the application (the compiled binary should contain no traces of logging internally). There are two reasons for this request: attempting to achieve maximum performance and concealing internal information, such as function names and internal messages, to prevent reverse engineering in no-logging builds. Effectively, this would require not only all library macros to be redefined to emptiness, but also to provide dummy implementations of many library components. Needs more consideration. Perhaps, suppressing only macros would be sufficient.
+* Provide a macro, like `BOOST_LOG_FUNCTION`, but with ability to automatically log all function arguments.
+* Think over a header-only configuration. Perhaps, with a reduced functionality.
+* Improve the settings file parsing. The idea is to open an interface that would allow to set independent parameters during the parsing process. This would allow users to implement their own parsers and load library settings from e.g. Windows registry or XML files.
+* Provide a "bridge" sink backend that would transport log records to a logging core of another character type. The sink could simplify integration of different libraries and application that use logging with different character types, when there's no way to unify character types.
+* Update syslog support to [@http://tools.ietf.org/html/rfc5424 RFC 5424].
+
+[endsect]
