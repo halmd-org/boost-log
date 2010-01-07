@@ -24,6 +24,7 @@
 * Added a few new formatters, called [link log.detailed.formatters.decorators character decorators]. These can be useful to post-process the formatted output before passing it on to the sink.
 * Added attributes for thread and process identifiers. These identifiers are automatically added after the call to `add_common_attributes`.
 * Helper initialization functions, such as `init_log_to_file` now accept more customization options as named arguments.
+* A new [link log.detailed.utilities.settings initialization interface] has been exposed. One can fill a settings container and use it to initialize the library.
 * The library setup support code has beed extracted into a separate binary. Further on, this binary will be made optional to build.
 * Added a new mode of logging, called trivial logging. In this mode the library requires no initialization at all, however it does not offer many ways of customization.
 * A number of bugs fixed.

@@ -231,7 +231,7 @@ Static type dispatchers are used when the set of types that needs to be supporte
         return 0;
     }
 
-[tip In the example above we implemented a reduced attribute value object. Since in most cases this implementation is always the same, the library provides a ready-to-go attribute value in the [headerref boost/log/attributes/basic_attribute_value.hpp ] file, the `basic_attribute_value` class template.]
+[tip In the example above we implemented a reduced attribute value object. Since in most cases this implementation is always the same, the library provides a ready-to-go attribute value in the [headerref boost/log/attributes/basic_attribute_value.hpp basic_attribute_value.hpp] file, the `basic_attribute_value` class template.]
 
 Static type dispatcher also supports another way of use which allows to avoid code duplication if values of several types have to be processed in a similar manner. In the example above we wanted to print the dispatched value on the console, whatever it is. The same can be achieved with templated metafunction class which is injected into the dispatcher as a visitor.
 
