@@ -9,7 +9,7 @@
 
 [section:changelog Changelog]
 
-[heading Release Candidate 4, TBD]
+[heading Release Candidate 4, 08 Jan 2010]
 
 * Substantial documentation improvement. The tutorial section has been reorganized.
 * Library headers have been reorganized. Some other Boost libraries that were previously included by headers have been made optional. Such dependencies have been extracted into separate headers in the `support` directory. Top level library headers now mostly include nested headers.
