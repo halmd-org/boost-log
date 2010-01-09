@@ -27,9 +27,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/singleton.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
-#include <boost/log/detail/thread_specific.hpp>
 #include <boost/thread/locks.hpp>
 #endif
 #include <boost/log/sources/threading_models.hpp> // strictest_lock
@@ -72,49 +70,10 @@ namespace aux {
     };
 #endif
 
-    //! Severity level storage class
-    class severity_level_holder :
-        public enable_shared_from_this< severity_level_holder >,
-        public boost::log::aux::lazy_singleton< severity_level_holder, shared_ptr< severity_level_holder > >
-    {
-        friend class boost::log::aux::lazy_singleton< severity_level_holder, shared_ptr< severity_level_holder > >;
-        typedef boost::log::aux::lazy_singleton< severity_level_holder, shared_ptr< severity_level_holder > > singleton_base;
-
-    private:
-#if !defined(BOOST_LOG_NO_THREADS)
-        //! The actual severity level value
-        boost::log::aux::thread_specific< int > m_Value;
-#else
-        //! The actual severity level value
-        int m_Value;
-#endif
-
-    public:
-        ~severity_level_holder();
-
-        //! Returns an instance of the holder
-        static BOOST_LOG_EXPORT shared_ptr< severity_level_holder > get();
-
-        //! The method sets the actual level
-        void set_value(int level)
-        {
-            m_Value = level;
-        }
-        //! The method returns the current level
-        int get_value() const
-        {
-#if !defined(BOOST_LOG_NO_THREADS)
-            return m_Value.get();
-#else
-            return m_Value;
-#endif
-        }
-
-    private:
-        severity_level_holder();
-        //! Initializes the singleton instance
-        static void init_instance();
-    };
+    //! The method returns the severity level for the current thread
+    BOOST_LOG_EXPORT int get_severity_level();
+    //! The method sets the severity level for the current thread
+    BOOST_LOG_EXPORT void set_severity_level(int level);
 
     //! Severity level attribute implementation
     template< typename LevelT >
@@ -127,16 +86,7 @@ namespace aux {
         //! Stored level type
         typedef LevelT held_type;
 
-    private:
-        //! Pointer to the level storage
-        shared_ptr< severity_level_holder > m_pHolder;
-
     public:
-        //! Default constructor
-        severity_level() : m_pHolder(severity_level_holder::get())
-        {
-        }
-
         //! The method returns the actual attribute value. It must not return NULL.
         virtual shared_ptr< attribute_value > get_value()
         {
@@ -145,7 +95,7 @@ namespace aux {
         //! The method sets the actual level
         void set_value(held_type level)
         {
-            m_pHolder->set_value(static_cast< int >(level));
+            set_severity_level(static_cast< int >(level));
         }
 
         //! The method dispatches the value to the given object
@@ -155,7 +105,7 @@ namespace aux {
                 dispatcher.get_visitor< held_type >();
             if (visitor)
             {
-                visitor->visit(static_cast< held_type >(m_pHolder->get_value()));
+                visitor->visit(static_cast< held_type >(get_severity_level()));
                 return true;
             }
             else
@@ -168,7 +118,7 @@ namespace aux {
 #if !defined(BOOST_LOG_NO_THREADS)
             return boost::make_shared<
                 attributes::basic_attribute_value< held_type >
-            >(static_cast< held_type >(m_pHolder->get_value()));
+            >(static_cast< held_type >(get_severity_level()));
 #else
             // With multithreading disabled we may safely return this here. This method will not be called anyway.
             return this->shared_from_this();
