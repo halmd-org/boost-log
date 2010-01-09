@@ -160,8 +160,21 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 #   define BOOST_LOG_EXPR_IF_MT(expr) expr
 #else
+#   if !defined(BOOST_LOG_NO_COMPILER_TLS)
+#       define BOOST_LOG_NO_COMPILER_TLS
+#   endif
 #   define BOOST_LOG_EXPR_IF_MT(expr)
 #endif // !defined(BOOST_LOG_NO_THREADS)
+
+#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+#   if defined(__GNUC__) || defined(__SUNPRO_CC)
+#       define BOOST_LOG_TLS __thread
+#   elif defined(BOOST_MSVC)
+#       define BOOST_LOG_TLS __declspec(thread)
+#   else
+#       define BOOST_LOG_NO_COMPILER_TLS
+#   endif
+#endif // !defined(BOOST_LOG_NO_COMPILER_TLS)
 
 namespace boost {
 

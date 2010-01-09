@@ -117,6 +117,7 @@ The library supports a number of configuration macros:
     [[`BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT`]  [Has effect on the library compilation stage. If defined, all facilities related to settings parsing are not built. This can substantially reduce the binary size.]]
     [[`BOOST_LOG_NO_SHORTHAND_NAMES`]           [Has effect on user's code compilation stage. If defined, some deprecated shorthand macro names will not be available.]]
     [[`BOOST_LOG_USE_WINNT6_API`]               [Has effect both on the library and the user's code compilation stages. This macro is Windows-specific. If defined, the library makes use of the Windows NT 6 (Vista, Server 2008) and later APIs to generate more efficient code. This macro will also enable some experimental features of the library. Note, however, that the resulting binary will not run on Windows prior to NT 6. In order to use this feature Platform SDK 6.0 is required.]]
+    [[`BOOST_LOG_NO_COMPILER_TLS`]              [Has effect on the library compilation stage. This macro disables support for compiler intrinsics for thread-local storage. Defining it may solve problems if Boost.Log is used in context of delayed-loaded libraries on Windows, but may lead to some performance drop.]]
 ]
 
 You may define configuration macros in the `bjam` command line, like this:
