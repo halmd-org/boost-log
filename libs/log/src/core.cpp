@@ -101,6 +101,12 @@ public:
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Thread-specific data
     thread_specific_ptr< thread_data > pThreadData;
+
+#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+    //! Cached pointer to the thread-specific data
+    static BOOST_LOG_TLS thread_data* pThreadDataCache;
+#endif
+
 #else
     //! Thread-specific data
     std::auto_ptr< thread_data > pThreadData;
@@ -121,11 +127,19 @@ public:
     //! The method returns the current thread-specific data
     thread_data* get_thread_data()
     {
+#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+        thread_data* p = pThreadDataCache;
+#else
         thread_data* p = pThreadData.get();
+#endif
         if (!p)
         {
             init_thread_data();
+#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+            p = pThreadDataCache;
+#else
             p = pThreadData.get();
+#endif
         }
         return p;
     }
@@ -145,11 +159,21 @@ private:
         {
             std::auto_ptr< thread_data > p(new thread_data());
             pThreadData.reset(p.get());
+#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+            pThreadDataCache = p.release();
+#else
             p.release();
+#endif
         }
     }
 };
 
+#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+//! Cached pointer to the thread-specific data
+template< typename CharT >
+BOOST_LOG_TLS typename basic_core< CharT >::implementation::thread_data*
+basic_core< CharT >::implementation::pThreadDataCache = NULL;
+#endif // !defined(BOOST_LOG_NO_COMPILER_TLS)
 
 //! Logging system constructor
 template< typename CharT >

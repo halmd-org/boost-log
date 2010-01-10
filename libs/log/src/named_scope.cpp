@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   named_scope.cpp
  * \author Andrey Semashev
  * \date   24.06.2007
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -142,6 +142,12 @@ struct basic_named_scope< CharT >::implementation :
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Pointer to the thread-specific scope stack
     thread_specific_ptr< scope_list > pScopes;
+
+#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+    //! Cached pointer to the thread-specific scope stack
+    static BOOST_LOG_TLS scope_list* pScopesCache;
+#endif
+
 #else
     //! Pointer to the scope stack
     std::auto_ptr< scope_list > pScopes;
@@ -150,12 +156,20 @@ struct basic_named_scope< CharT >::implementation :
     //! The method returns current thread scope stack
     scope_list& get_scope_list()
     {
+#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+        register scope_list* p = pScopesCache;
+#else
         register scope_list* p = pScopes.get();
+#endif
         if (!p)
         {
             std::auto_ptr< scope_list > pNew(new scope_list());
             pScopes.reset(pNew.get());
+#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+            pScopesCache = p = pNew.release();
+#else
             p = pNew.release();
+#endif
         }
 
         return *p;
@@ -171,10 +185,20 @@ private:
     implementation() {}
 };
 
+#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+//! Cached pointer to the thread-specific scope stack
+template< typename CharT >
+BOOST_LOG_TLS typename basic_named_scope< CharT >::implementation::scope_list*
+basic_named_scope< CharT >::implementation::pScopesCache = NULL;
+#endif // !defined(BOOST_LOG_NO_COMPILER_TLS)
+
+
 //! Copy constructor
 template< typename CharT >
-basic_named_scope_list< CharT >::basic_named_scope_list(basic_named_scope_list const& that)
-    : allocator_type(static_cast< allocator_type const& >(that)), m_Size(that.size()), m_fNeedToDeallocate(!that.empty())
+basic_named_scope_list< CharT >::basic_named_scope_list(basic_named_scope_list const& that) :
+    allocator_type(static_cast< allocator_type const& >(that)),
+    m_Size(that.size()),
+    m_fNeedToDeallocate(!that.empty())
 {
     if (m_Size > 0)
     {
@@ -213,7 +237,7 @@ void basic_named_scope_list< CharT >::swap(basic_named_scope_list& that)
 {
     using std::swap;
 
-    unsigned int choice = 
+    unsigned int choice =
         static_cast< unsigned int >(this->empty()) | (static_cast< unsigned int >(that.empty()) << 1);
     switch (choice)
     {
@@ -248,8 +272,8 @@ void basic_named_scope_list< CharT >::swap(basic_named_scope_list& that)
 
 //! Constructor
 template< typename CharT >
-basic_named_scope< CharT >::basic_named_scope()
-    : pImpl(implementation::instance)
+basic_named_scope< CharT >::basic_named_scope() :
+    pImpl(implementation::instance)
 {
 }
 
