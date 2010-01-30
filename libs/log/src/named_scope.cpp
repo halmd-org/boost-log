@@ -31,7 +31,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace attributes {
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! Actual implementation of the named scope list
     template< typename CharT >

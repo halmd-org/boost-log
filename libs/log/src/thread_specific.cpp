@@ -78,7 +78,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! A helper template to disable early name binding
     template< typename NonDependentT, typename DependentT >

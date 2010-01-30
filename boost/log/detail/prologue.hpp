@@ -68,6 +68,13 @@
 #   define BOOST_LOG_BROKEN_STRING_LITERALS
 #endif
 
+#if defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 2)
+    // GCC 4.2 has buggy anonymous namespaces support, which interferes with symbol linkage
+#   define BOOST_LOG_ANONYMOUS_NAMESPACE namespace anonymous {} using namespace anonymous; namespace anonymous
+#else
+#   define BOOST_LOG_ANONYMOUS_NAMESPACE namespace
+#endif
+
 // Extended declaration macros. Used to implement compiler-specific optimizations.
 #if defined(_MSC_VER)
 #   define BOOST_LOG_FORCEINLINE __forceinline

@@ -125,7 +125,7 @@ struct basic_syslog_backend< CharT >::implementation
 
 #ifdef BOOST_LOG_USE_NATIVE_SYSLOG
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! Syslog service initializer (implemented as a weak singleton)
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -291,7 +291,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 //  Socket-based implementation
 ////////////////////////////////////////////////////////////////////////////////
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! The shared UDP socket
     struct syslog_udp_socket

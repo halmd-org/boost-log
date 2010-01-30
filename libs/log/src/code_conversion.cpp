@@ -25,7 +25,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! The function performs character conversion with the specified facet
     inline std::codecvt_base::result convert(

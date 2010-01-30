@@ -64,7 +64,7 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 //! The default filter factory that supports creating filters for the standard types (see utility/type_dispatch/standard_types.hpp)
 template< typename CharT >

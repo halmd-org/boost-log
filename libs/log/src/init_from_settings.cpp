@@ -74,7 +74,7 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! Throws an exception when a parameter type is not valid
     template< typename CharT >

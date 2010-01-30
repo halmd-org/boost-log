@@ -47,7 +47,7 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 //! Settings file parsing grammar
 template< typename CharT >

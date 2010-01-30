@@ -58,7 +58,7 @@ namespace event_log {
 
 } // namespace event_log
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 #ifdef BOOST_LOG_USE_CHAR
     //! A simple forwarder to the ReportEvent API

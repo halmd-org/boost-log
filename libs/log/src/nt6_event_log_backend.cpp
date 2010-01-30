@@ -51,7 +51,7 @@ namespace etw {
 
 } // namespace etw
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     // {DFEBCCFD-3A63-44dc-B86F-25DA6D521E5C}
     static const GUID CLSID_DefaultProviderID =

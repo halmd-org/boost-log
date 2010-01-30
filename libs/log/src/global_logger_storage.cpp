@@ -29,7 +29,7 @@ namespace sources {
 
 namespace aux {
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 //! The loggers repository singleton
 template< typename CharT >

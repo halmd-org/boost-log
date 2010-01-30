@@ -323,7 +323,7 @@ template class synchronous_frontend< wchar_t >;
 //  Asynchronous sink frontend implementation
 /////////////////////////////////////////////////////////////////////
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! A simple scope guard that automatically clears processing thread id
     struct thread_id_cleanup

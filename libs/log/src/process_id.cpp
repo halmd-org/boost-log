@@ -61,7 +61,7 @@ namespace aux {
 
 namespace this_process {
 
-    namespace {
+    BOOST_LOG_ANONYMOUS_NAMESPACE {
 
         template< typename T, bool = is_integral< T >::value >
         struct pid_traits

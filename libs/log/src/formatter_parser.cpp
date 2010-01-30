@@ -65,7 +65,7 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 //! The structure contains formatter factories repository
 template< typename CharT >

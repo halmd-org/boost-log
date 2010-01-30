@@ -54,7 +54,7 @@ namespace trivial {
 
 namespace aux {
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     // By default we try to compose the log file name based on the application executable file name
 

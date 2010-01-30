@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   stream_provider.cpp
  * \author Andrey Semashev
  * \date   17.04.2008
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -25,7 +25,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 //! The pool of stream compounds
 template< typename CharT >

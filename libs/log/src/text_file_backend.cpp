@@ -69,7 +69,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     typedef boost::log::aux::universal_path::string_type path_string_type;
     typedef path_string_type::value_type path_char_type;
@@ -448,6 +448,8 @@ namespace {
     }
 
 
+    class file_collector_repository;
+
     //! Type of the hook used for sequencing file collectors
     typedef intrusive::list_base_hook<
         intrusive::link_mode< intrusive::safe_link >
@@ -473,6 +475,9 @@ namespace {
         typedef path_type::string_type path_string_type;
 
     private:
+        //! A reference to the repository this collector belongs to
+        shared_ptr< file_collector_repository > m_pRepository;
+
 #if !defined(BOOST_LOG_NO_THREADS)
         //! Synchronization mutex
         mutex m_Mutex;
@@ -492,7 +497,11 @@ namespace {
 
     public:
         //! Constructor
-        file_collector(path_type const& target_dir, uintmax_t max_size, uintmax_t min_free_space);
+        file_collector(
+            shared_ptr< file_collector_repository > const& repo,
+            path_type const& target_dir,
+            uintmax_t max_size,
+            uintmax_t min_free_space);
 
         //! Destructor
         ~file_collector();
@@ -517,9 +526,18 @@ namespace {
 
     //! The singleton of the list of file collectors
     class file_collector_repository :
-        public log::aux::lazy_singleton< file_collector_repository >
+        public log::aux::lazy_singleton< file_collector_repository, shared_ptr< file_collector_repository > >
     {
     private:
+        //! Base type
+        typedef log::aux::lazy_singleton< file_collector_repository, shared_ptr< file_collector_repository > > base_type;
+
+#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS)
+        friend class log::aux::lazy_singleton< file_collector_repository, shared_ptr< file_collector_repository > >;
+#else
+        friend class base_type;
+#endif
+
         //! Path type
         typedef file_collector::path_type path_type;
         //! The type of the list of collectors
@@ -543,12 +561,23 @@ namespace {
 
         //! Removes the file collector from the list
         void remove_collector(file_collector* p);
+
+    private:
+        //! Initializes the singleton instance
+        static void init_instance()
+        {
+            base_type::get_instance() = boost::make_shared< file_collector_repository >();
+        }
     };
 
     //! Constructor
     file_collector::file_collector(
-        path_type const& target_dir, uintmax_t max_size, uintmax_t min_free_space
+        shared_ptr< file_collector_repository > const& repo,
+        path_type const& target_dir,
+        uintmax_t max_size,
+        uintmax_t min_free_space
     ) :
+        m_pRepository(repo),
         m_MaxSize(max_size),
         m_MinFreeSpace(min_free_space),
         m_StorageDir(filesystem::complete(target_dir)),
@@ -559,7 +588,7 @@ namespace {
     //! Destructor
     file_collector::~file_collector()
     {
-        file_collector_repository::get().remove_collector(this);
+        m_pRepository->remove_collector(this);
     }
 
     //! The function stores the specified file in the storage
@@ -736,7 +765,8 @@ namespace {
 
         if (!p)
         {
-            p = boost::make_shared< file_collector >(target_dir, max_size, min_free_space);
+            p = boost::make_shared< file_collector >(
+                file_collector_repository::get(), target_dir, max_size, min_free_space);
             m_Collectors.push_back(*p);
         }
 
@@ -762,7 +792,7 @@ namespace aux {
         uintmax_t max_size,
         uintmax_t min_free_space)
     {
-        return file_collector_repository::get().get_collector(target_dir, max_size, min_free_space);
+        return file_collector_repository::get()->get_collector(target_dir, max_size, min_free_space);
     }
 
 } // namespace aux

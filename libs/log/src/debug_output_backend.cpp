@@ -22,7 +22,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-namespace {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 #if defined(BOOST_LOG_USE_CHAR)
     inline void output_debug_string(const char* str)

@@ -9,6 +9,11 @@
 
 [section:changelog Changelog]
 
+[heading Trunk]
+
+* Added some optimization for thread local storage. In Windows setups, if you dynamically load Boost.Log binaries during the application run time, this optimization may lead to crashes. In that case, you may disable it by defining `BOOST_LOG_NO_COMPILER_TLS` during the library build process. The macro also affects other platforms.
+* A number of bugs fixed. Added workarounds to compile on GCC 4.2.
+
 [heading Release Candidate 4, 08 Jan 2010]
 
 * Substantial documentation improvement. The tutorial section has been reorganized.
