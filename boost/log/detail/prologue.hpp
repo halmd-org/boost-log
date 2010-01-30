@@ -20,6 +20,7 @@
 #ifndef BOOST_LOG_DETAIL_PROLOGUE_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_PROLOGUE_HPP_INCLUDED_
 
+#include <limits.h> // To bring in libc macros
 #include <boost/config.hpp>
 #include <boost/version.hpp>
 
@@ -73,6 +74,15 @@
 #   define BOOST_LOG_ANONYMOUS_NAMESPACE namespace anonymous {} using namespace anonymous; namespace anonymous
 #else
 #   define BOOST_LOG_ANONYMOUS_NAMESPACE namespace
+#endif
+
+#if !defined(BOOST_LOG_NO_COMPILER_TLS) &&\
+    (\
+        defined(__MACH__) ||\
+        (defined(__GLIBC__) && (__GLIBC__ * 100 + __GLIBC_MINOR__) < 203)\
+    )
+    // On some platforms we already know that builtin compiler TLS support doesn't work
+#   define BOOST_LOG_NO_COMPILER_TLS
 #endif
 
 // Extended declaration macros. Used to implement compiler-specific optimizations.
