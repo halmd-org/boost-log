@@ -46,8 +46,8 @@ namespace aux {
     >::type universal_path;
 #endif
 
-    template< typename PathT >
-    inline universal_path to_universal_path(PathT const& p)
+    template< typename StringT, typename TraitsT >
+    inline universal_path to_universal_path(filesystem::basic_path< StringT, TraitsT > const& p)
     {
         universal_path::string_type s;
         boost::log::aux::code_convert(p.string(), s);
