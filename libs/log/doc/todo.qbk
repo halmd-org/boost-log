@@ -23,5 +23,6 @@ Points in this section are not necessarily going to be implemented. These are ma
 * Improve the settings file parsing. The idea is to open an interface that would allow to set independent parameters during the parsing process. This would allow users to implement their own parsers and load library settings from e.g. Windows registry or XML files.
 * Provide a "bridge" sink backend that would transport log records to a logging core of another character type. The sink could simplify integration of different libraries and application that use logging with different character types, when there's no way to unify character types.
 * Update syslog support to [@http://tools.ietf.org/html/rfc5424 RFC 5424].
+* Improve library configuration options in order to be able to select which particular sinks to compile.
 
 [endsect]
