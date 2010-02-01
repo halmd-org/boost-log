@@ -3,11 +3,11 @@
  *
  * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
+ *
  * \file   main.cpp
  * \author Andrey Semashev
  * \date   26.04.2008
- * 
+ *
  * \brief  An example of initializing the library from a settings file.
  *         See the library tutorial for expanded comments on this code.
  *         It may also be worthwhile reading the Wiki requirements page:
@@ -47,11 +47,11 @@ enum severity_level
 };
 
 //  Global logger declaration
-BOOST_LOG_DECLARE_GLOBAL_LOGGER(test_lg, src::severity_logger_mt< >)
+BOOST_LOG_DECLARE_GLOBAL_LOGGER(test_lg, src::severity_logger< >)
 
 void try_logging()
 {
-    src::severity_logger_mt< >& lg = get_test_lg();
+    src::severity_logger< >& lg = get_test_lg();
     BOOST_LOG_SEV(lg, normal) << "This is a normal severity record";
     BOOST_LOG_SEV(lg, notification) << "This is a notification severity record";
     BOOST_LOG_SEV(lg, warning) << "This is a warning severity record";
