@@ -146,9 +146,9 @@ class default_filter_factory :
         filter_type filter;
         const bool full = bsc::parse(arg.c_str(), arg.c_str() + arg.size(),
             (
-                bsc::strict_real_p[bind(&this_type::BOOST_NESTED_TEMPLATE on_fp_argument< RelationT >, boost::cref(name), _1, boost::ref(filter))] |
-                bsc::int_p[bind(&this_type::BOOST_NESTED_TEMPLATE on_integral_argument< RelationT >, boost::cref(name), _1, boost::ref(filter))] |
-                (+bsc::print_p)[bind(&this_type::BOOST_NESTED_TEMPLATE on_string_argument< RelationT >, boost::cref(name), _1, _2, boost::ref(filter))]
+                bsc::strict_real_p[boost::bind(&this_type::BOOST_NESTED_TEMPLATE on_fp_argument< RelationT >, boost::cref(name), _1, boost::ref(filter))] |
+                bsc::int_p[boost::bind(&this_type::BOOST_NESTED_TEMPLATE on_integral_argument< RelationT >, boost::cref(name), _1, boost::ref(filter))] |
+                (+bsc::print_p)[boost::bind(&this_type::BOOST_NESTED_TEMPLATE on_string_argument< RelationT >, boost::cref(name), _1, _2, boost::ref(filter))]
             )
         ).full;
 
@@ -457,38 +457,38 @@ struct filter_grammar< CharT >::definition
         attr_name = bsc::lexeme_d[
             // An attribute name in form %name%
             bsc::confix_p(constants::char_percent, *bsc::print_p, constants::char_percent)
-                [bind(on_attr, g, _1, _2)]
+                [boost::bind(on_attr, g, _1, _2)]
         ];
 
         operand = bsc::lexeme_d[
             // A quoted string with C-style escape sequences support
             bsc::confix_p(constants::char_quote, *bsc::c_escape_ch_p, constants::char_quote)
-                [bind(on_string, g, _1, _2)] |
+                [boost::bind(on_string, g, _1, _2)] |
             // A single word, enclosed with white spaces. It cannot contain parenthesis, since is is used by the filter parser.
             (+(bsc::graph_p - bsc::ch_p(constants::char_paren_bracket_left) - constants::char_paren_bracket_right))
-                [bind(on_oper, g, _1, _2)]
+                [boost::bind(on_oper, g, _1, _2)]
         ];
 
         // Custom relation is a keyword that may contain either alphanumeric characters or an underscore
         custom_relation = bsc::lexeme_d[ +(bsc::alnum_p | bsc::ch_p(constants::char_underline)) ]
-            [bind(&filter_grammar_type::set_custom_relation, g, _1, _2)];
+            [boost::bind(&filter_grammar_type::set_custom_relation, g, _1, _2)];
 
         relation = attr_name || // The relation may be as simple as a sole attribute name, in which case the filter checks for the attribute value presence
         (
             (bsc::str_p(constants::not_equal_keyword()) >> operand)
-                [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_inequality_relation)] |
+                [boost::bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_inequality_relation)] |
             (bsc::str_p(constants::greater_or_equal_keyword()) >> operand)
-                [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_greater_or_equal_relation)] |
+                [boost::bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_greater_or_equal_relation)] |
             (bsc::str_p(constants::less_or_equal_keyword()) >> operand)
-                [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_less_or_equal_relation)] |
+                [boost::bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_less_or_equal_relation)] |
             (constants::char_equal >> operand)
-                [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_equality_relation)] |
+                [boost::bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_equality_relation)] |
             (constants::char_greater >> operand)
-                [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_greater_relation)] |
+                [boost::bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_greater_relation)] |
             (constants::char_less >> operand)
-                [bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_less_relation)] |
+                [boost::bind(&filter_grammar_type::on_comparison_relation, g, _1, _2, &filter_factory_type::on_less_relation)] |
             (custom_relation >> operand)
-                [bind(&filter_grammar_type::on_custom_relation, g, _1, _2)]
+                [boost::bind(&filter_grammar_type::on_custom_relation, g, _1, _2)]
         );
 
         handler on_neg = &filter_grammar_type::on_negation;
@@ -496,7 +496,7 @@ struct filter_grammar< CharT >::definition
         term =
         (
             (bsc::ch_p(constants::char_paren_bracket_left) >> expression >> constants::char_paren_bracket_right) |
-            ((bsc::str_p(constants::not_keyword()) | constants::char_exclamation) >> term)[bind(on_neg, g, _1, _2)] |
+            ((bsc::str_p(constants::not_keyword()) | constants::char_exclamation) >> term)[boost::bind(on_neg, g, _1, _2)] |
             relation
         );
 
@@ -509,11 +509,11 @@ struct filter_grammar< CharT >::definition
             term >>
             *(
                 ((bsc::str_p(constants::and_keyword()) | constants::char_and) >> term)
-                    [bind(on_and, g, _1, _2)] |
+                    [boost::bind(on_and, g, _1, _2)] |
                 ((bsc::str_p(constants::or_keyword()) | constants::char_or) >> term)
-                    [bind(on_or, g, _1, _2)]
+                    [boost::bind(on_or, g, _1, _2)]
             )
-        )[bind(on_finished, g, _1, _2)];
+        )[boost::bind(on_finished, g, _1, _2)];
     }
 
     //! Accessor for the filter rule

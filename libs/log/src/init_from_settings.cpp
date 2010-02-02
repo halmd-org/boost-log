@@ -745,7 +745,7 @@ void init_from_settings(basic_settings< CharT > const& setts)
         if (it->first.compare(0, sink_prefix.size(), sink_prefix) == 0)
             new_sinks.push_back(sinks_repo.construct_sink_from_settings(it->second));
     }
-    std::for_each(new_sinks.begin(), new_sinks.end(), bind(&core_t::add_sink, core_t::get(), _1));
+    std::for_each(new_sinks.begin(), new_sinks.end(), boost::bind(&core_t::add_sink, core_t::get(), _1));
 }
 
 

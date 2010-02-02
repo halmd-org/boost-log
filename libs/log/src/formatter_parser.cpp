@@ -261,37 +261,37 @@ struct formatter_grammar< CharT >::definition
 
         arg =
             *bsc::space_p >>
-            (bsc::alpha_p >> *bsc::alnum_p)[bind(&formatter_grammar_type::on_arg_name, g, _1, _2)] >>
+            (bsc::alpha_p >> *bsc::alnum_p)[boost::bind(&formatter_grammar_type::on_arg_name, g, _1, _2)] >>
             *bsc::space_p >>
             constants::char_equal >>
             *bsc::space_p >>
-            arg_value[bind(&formatter_grammar_type::on_arg_value, g, _1, _2)] >>
+            arg_value[boost::bind(&formatter_grammar_type::on_arg_value, g, _1, _2)] >>
             *bsc::space_p;
 
         arg_list = bsc::confix_p(
             constants::char_paren_bracket_left,
-            arg[bind(&formatter_grammar_type::push_arg, g, _1, _2)] % bsc::ch_p(constants::char_comma),
+            arg[boost::bind(&formatter_grammar_type::push_arg, g, _1, _2)] % bsc::ch_p(constants::char_comma),
             constants::char_paren_bracket_right);
 
         expression =
             (*(bsc::c_escape_ch_p - constants::char_percent))
-                [bind(&formatter_grammar_type::push_string, g, _1, _2)] >>
+                [boost::bind(&formatter_grammar_type::push_string, g, _1, _2)] >>
             *(
                 bsc::confix_p(
                     constants::char_percent,
                     (
                         bsc::str_p(constants::message_text_keyword())
-                            [bind(&formatter_grammar_type::on_attr_name, g, _1, _2)] |
+                            [boost::bind(&formatter_grammar_type::on_attr_name, g, _1, _2)] |
                         (
                             (*(bsc::print_p - constants::char_paren_bracket_left - constants::char_percent))
-                                [bind(&formatter_grammar_type::on_attr_name, g, _1, _2)] >>
+                                [boost::bind(&formatter_grammar_type::on_attr_name, g, _1, _2)] >>
                             !arg_list
                         )
                     ),
                     constants::char_percent)
-                        [bind(&formatter_grammar_type::push_attr, g, _1, _2)] >>
+                        [boost::bind(&formatter_grammar_type::push_attr, g, _1, _2)] >>
                 (*(bsc::c_escape_ch_p - constants::char_percent))
-                    [bind(&formatter_grammar_type::push_string, g, _1, _2)]
+                    [boost::bind(&formatter_grammar_type::push_string, g, _1, _2)]
             );
     }
 
