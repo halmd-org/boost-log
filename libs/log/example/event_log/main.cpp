@@ -1,13 +1,14 @@
+/*
+ *          Copyright Andrey Semashev 2007 - 2010.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
+ */
 /*!
- * (C) 2007 Andrey Semashev
- *
- * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
  * \file   main.cpp
  * \author Andrey Semashev
  * \date   16.11.2008
- * 
+ *
  * \brief  An example of logging into Windows event log.
  *
  * The example shows the basic usage of the simple Windows NT event log backend.
@@ -16,10 +17,6 @@
  * As a result the written records should appear in the Application log, and
  * should be displayed correctly with the Windows event log viewer.
  */
-
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS 1
-#endif // _CRT_SECURE_NO_WARNINGS
 
 #define BOOST_LOG_DYN_LINK 1
 

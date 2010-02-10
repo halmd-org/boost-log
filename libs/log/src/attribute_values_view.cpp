@@ -1,13 +1,14 @@
+/*
+ *          Copyright Andrey Semashev 2007 - 2010.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
+ */
 /*!
- * (C) 2007 Andrey Semashev
- *
- * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- * 
  * \file   attribute_values_view.cpp
  * \author Andrey Semashev
  * \date   19.04.2007
- * 
+ *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
@@ -223,7 +224,7 @@ basic_attribute_values_view< CharT >::basic_attribute_values_view(
             etrd = thread_attrs.end(),
             glb = global_attrs.begin(),
             eglb = global_attrs.end();
-    
+
         while (true)
         {
             unsigned int cond =

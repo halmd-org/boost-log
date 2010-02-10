@@ -1,17 +1,14 @@
 /*
- * (C) 2007 Andrey Semashev
- *
- * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- *
- * This header is the Boost.Log library implementation, see the library documentation
- * at http://www.boost.org/libs/log/doc/log.html.
+ *          Copyright Andrey Semashev 2007 - 2010.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
  * \file   basic_attribute_value.hpp
  * \author Andrey Semashev
  * \date   24.06.2007
- * 
+ *
  * The header contains an implementation of an attribute value base class.
  */
 
@@ -34,7 +31,7 @@ namespace attributes {
 
 /*!
  * \brief Basic attribute value class
- * 
+ *
  * This class can be used as a boilerplate for simple attribute values. The class implements all needed
  * interfaces of attribute values and allows to store a single value of the type specified as a template parameter.
  * The stored value can be dispatched with type dispatching mechanism.

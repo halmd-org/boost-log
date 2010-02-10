@@ -1,19 +1,16 @@
+/*
+ *          Copyright Andrey Semashev 2007 - 2010.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
+ */
 /*!
- * (C) 2007 Andrey Semashev
- *
- * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- *
  * \file   main.cpp
  * \author Andrey Semashev
  * \date   07.11.2009
  *
  * \brief  An example of trivial logging.
  */
-
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS 1
-#endif // _CRT_SECURE_NO_WARNINGS
 
 // #define BOOST_ALL_DYN_LINK 1
 // #define BOOST_LOG_DYN_LINK 1
@@ -35,7 +32,8 @@ int main(int argc, char* argv[])
     // Filtering may also be applied
     using namespace boost::log;
 
-    core::get()->set_filter(
+    core::get()->set_filter
+    (
         filters::attr< trivial::severity_level >("Severity") >= trivial::info
     );
 

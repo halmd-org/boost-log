@@ -1,17 +1,14 @@
 /*
- * (C) 2007 Andrey Semashev
- *
- * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- *
- * This header is the Boost.Log library implementation, see the library documentation
- * at http://www.boost.org/libs/log/doc/log.html.
+ *          Copyright Andrey Semashev 2007 - 2010.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
  * \file   constant.hpp
  * \author Andrey Semashev
  * \date   15.04.2007
- * 
+ *
  * The header contains implementation of a constant attribute.
  */
 
@@ -36,11 +33,11 @@ namespace attributes {
 
 /*!
  * \brief A class of an attribute that holds a single constant value
- * 
+ *
  * The constant is a simpliest and one of the most frequently types of attributes.
  * It stores a constant value, which it eventually returns as its value each time
  * requested.
- * 
+ *
  * \internal The attribute attempts to optimize memory allocations and implements both
  *           attribute and \c attribute_value interfaces. However, the value can be detached from
  *           the attribute if \c detach_from_thread is called.

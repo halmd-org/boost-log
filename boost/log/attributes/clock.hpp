@@ -1,17 +1,14 @@
 /*
- * (C) 2007 Andrey Semashev
- *
- * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- *
- * This header is the Boost.Log library implementation, see the library documentation
- * at http://www.boost.org/libs/log/doc/log.html.
+ *          Copyright Andrey Semashev 2007 - 2010.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
  * \file   clock.hpp
  * \author Andrey Semashev
  * \date   01.12.2007
- * 
+ *
  * The header contains wall clock attribute implementation and typedefs.
  */
 
@@ -38,11 +35,11 @@ namespace attributes {
 
 /*!
  * \brief A class of an attribute that makes an attribute value of the current date and time
- * 
+ *
  * The attribute generates current time stamp as a value. The type of the attribute value
  * is determined with time traits passed to the class template as a template parameter.
  * The time traits provided by the library use \c boost::posix_time::ptime as the time type.
- * 
+ *
  * Time traits also determine the way time is acquired. There are two types of time traits
  * provided by th library: \c utc_time_traits and \c local_time_traits. The first returns UTC time,
  * the second returns local time.

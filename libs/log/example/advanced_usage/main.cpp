@@ -1,9 +1,10 @@
+/*
+ *          Copyright Andrey Semashev 2007 - 2010.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
+ */
 /*!
- * (C) 2007 Andrey Semashev
- *
- * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- *
  * \file   main.cpp
  * \author Andrey Semashev
  * \date   11.11.2007
@@ -12,10 +13,6 @@
  *         comments on this code. It may also be worthwhile reading the Wiki requirements page:
  *         http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Boost.Logging
  */
-
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS 1
-#endif // _CRT_SECURE_NO_WARNINGS
 
 // #define BOOST_LOG_USE_CHAR
 // #define BOOST_ALL_DYN_LINK 1

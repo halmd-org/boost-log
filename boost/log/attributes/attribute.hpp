@@ -1,17 +1,14 @@
 /*
- * (C) 2007 Andrey Semashev
- *
- * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- *
- * This header is the Boost.Log library implementation, see the library documentation
- * at http://www.boost.org/libs/log/doc/log.html.
+ *          Copyright Andrey Semashev 2007 - 2010.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
  * \file   attribute.hpp
  * \author Andrey Semashev
  * \date   15.04.2007
- * 
+ *
  * The header contains attribute and attribute_value interfaces definition.
  */
 
@@ -35,17 +32,17 @@ namespace BOOST_LOG_NAMESPACE {
 
 /*!
  * \brief A base class for an attribute value
- * 
+ *
  * An attribute value is an object that contains a piece of data that represents an attribute state
  * at the point of the value acquision. All major operations with log records, such as filtering and
  * formatting, involve attribute values contained in a single view. Most likely an attribute value is
  * implemented as a simple holder of some typed value. This holder implements attribute_value interface
  * and provides type dispatching support in order to allow to extract the stored value.
- * 
+ *
  * Normally, attributes and their values shall be designed in order to exclude as much interference as
  * reasonable. Such approach allows to have more than one attribute value simultaneously, which improves
  * scalability and allows to implement generating attributes.
- * 
+ *
  * However, there are cases when this approach does not help to achieve the required level of independency
  * of attribute values and attribute itself from each other at a reasonable performance tradeoff.
  * For example, an attribute or its values may use thread-specific data, which is global and shared
@@ -98,7 +95,7 @@ public:
 
     /*!
      * The method dispatches the value to the given object.
-     * 
+     *
      * \param dispatcher The object that attempts to dispatch the stored value.
      * \return true if \a dispatcher was capable to consume the real attribute value type and false otherwise.
      */
@@ -107,7 +104,7 @@ public:
     /*!
      * The method is called when the attribute value is passed to another thread (e.g.
      * in case of asynchronous logging). The value should ensure it properly owns all thread-specific data.
-     * 
+     *
      * \return An actual pointer to the attribute value. It may either point to this object or another.
      *         In the latter case the returned pointer replaces the pointer used by caller to invoke this
      *         method and is considered to be a functional equivalent to the previous pointer.
@@ -116,7 +113,7 @@ public:
 
     /*!
      * An alternative to type dispatching. This is a simpler way to get the stored value in case if one knows its exact type.
-     * 
+     *
      * \return An optionally specified stored value. The returned value is present if the
      *         requested type matches the stored type, otherwise the returned value is absent.
      */
@@ -144,12 +141,12 @@ public:
 
 /*!
  * \brief A base class for an attribute
- * 
+ *
  * An attribute is basically a wrapper for some logic of values acquision. The sole purpose of
  * an attribute is to return an actual value when requested. A simpliest attribute
  * can always return the same value that it stores internally, but more complex species may
  * perform a considirable amount of work to return a value, and their values may differ.
- * 
+ *
  * A word about thread safety. An attribute should be prepared to be requested a value from
  * multiple threads concurrently.
  */

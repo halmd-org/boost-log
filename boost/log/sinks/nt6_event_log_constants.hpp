@@ -1,17 +1,14 @@
 /*
- * (C) 2008 Andrey Semashev
- *
- * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- *
- * This header is the Boost.Log library implementation, see the library documentation
- * at http://www.boost.org/libs/log/doc/log.html.
+ *          Copyright Andrey Semashev 2007 - 2010.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
  * \file   nt6_event_log_constants.cpp
  * \author Andrey Semashev
  * \date   07.11.2008
- * 
+ *
  * The header contains definition of constants related to Windows NT 6 Event Log API.
  * The constants can be used in other places without the NT 6 backend.
  */

@@ -1,17 +1,14 @@
 /*
- * (C) 2007 Andrey Semashev
- *
- * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- *
- * This header is the Boost.Log library implementation, see the library documentation
- * at http://www.boost.org/libs/log/doc/log.html.
+ *          Copyright Andrey Semashev 2007 - 2010.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
  * \file   attribute_mapping.hpp
  * \author Andrey Semashev
  * \date   07.11.2008
- * 
+ *
  * The header contains facilities that are used in different sinks to map attribute values
  * used throughout the application to values used with the specific native logging API.
  * These tools are mostly needed to map application severity levels on native levels,
@@ -63,7 +60,7 @@ struct basic_mapping :
 
 /*!
  * \brief Straightforward mapping
- * 
+ *
  * This type of mapping assumes that attribute with a particular name always
  * provides values that map directly onto the native values. The mapping
  * simply returns the extracted attribute value converted to the native value.
@@ -119,7 +116,7 @@ private:
 public:
     /*!
      * Constructor
-     * 
+     *
      * \param name Attribute name
      * \param default_value The default native value that is returned if the attribute value is not found
      */
@@ -131,7 +128,7 @@ public:
 
     /*!
      * Extraction operator
-     * 
+     *
      * \param values A set of attribute values attached to a logging record
      * \return An extracted attribute value
      */
@@ -146,7 +143,7 @@ public:
 
 /*!
  * \brief Customizable mapping
- * 
+ *
  * The class allows to setup a custom mapping between an attribute and native values.
  * The mapping should be initialized similarly to the standard \c map container, by using
  * indexing operator and assignment.
@@ -236,7 +233,7 @@ private:
 public:
     /*!
      * Constructor
-     * 
+     *
      * \param name Attribute name
      * \param default_value The default native value that is returned if the conversion cannot be performed
      */
@@ -248,7 +245,7 @@ public:
     /*!
      * Extraction operator. Extracts the attribute value and attempts to map it onto
      * the native value.
-     * 
+     *
      * \param values A set of attribute values attached to a logging record
      * \return A mapped value, if mapping was successfull, or the default value if
      *         mapping did not succeed.
@@ -262,7 +259,7 @@ public:
     }
     /*!
      * Insertion operator
-     * 
+     *
      * \param key Attribute value to be mapped
      * \return An object of unspecified type that allows to insert a new mapping through assignment.
      *         The \a key argument becomes the key attribute value, and the assigned value becomes the

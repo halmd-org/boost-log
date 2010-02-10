@@ -1,17 +1,14 @@
 /*
- * (C) 2007 Andrey Semashev
- *
- * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- *
- * This header is the Boost.Log library implementation, see the library documentation
- * at http://www.boost.org/libs/log/doc/log.html.
+ *          Copyright Andrey Semashev 2007 - 2010.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
  * \file   type_dispatcher.hpp
  * \author Andrey Semashev
  * \date   15.04.2007
- * 
+ *
  * The header contains definition of generic type dispatcher interfaces.
  */
 
@@ -32,7 +29,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 /*!
  * \brief An interface to the concrete type visitor
- * 
+ *
  * This interface is used by type dispatchers to consume the dispatched value.
  */
 template< typename T >
@@ -48,7 +45,7 @@ struct BOOST_LOG_NO_VTABLE type_visitor
 
     /*!
      * The method invokes the visitor-specific logic with the given value
-     * 
+     *
      * \param value The dispatched value
      */
     virtual void visit(T const& value) = 0;
@@ -60,7 +57,7 @@ struct BOOST_LOG_NO_VTABLE type_visitor
 
 /*!
  * \brief A type dispatcher interface
- * 
+ *
  * All type dispatchers support this interface. It is used to acquire the
  * visitor interface for the requested type.
  */
@@ -74,7 +71,7 @@ public:
 
     /*!
      * The method requests a type visitor for a value of type \c T
-     * 
+     *
      * \return The type-specific visitor or NULL, if the type is not supported
      */
     template< typename T >

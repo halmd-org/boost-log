@@ -1,9 +1,10 @@
+/*
+ *          Copyright Andrey Semashev 2007 - 2010.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
+ */
 /*!
- * (C) 2009 Andrey Semashev
- *
- * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- *
  * \file   util_exception_handler.cpp
  * \author Andrey Semashev
  * \date   13.07.2009
@@ -31,7 +32,7 @@ namespace {
 
         std::type_info const*& m_pExceptionType;
 
-	my_handler1(std::type_info const*& p) : m_pExceptionType(p) {}
+    my_handler1(std::type_info const*& p) : m_pExceptionType(p) {}
 
         void operator() (std::exception&) const
         {
@@ -50,7 +51,7 @@ namespace {
 
         std::type_info const*& m_pExceptionType;
 
-	explicit my_handler2(std::type_info const*& p) : m_pExceptionType(p) {}
+    explicit my_handler2(std::type_info const*& p) : m_pExceptionType(p) {}
 
         void operator() (std::exception&) const
         {
@@ -68,7 +69,7 @@ namespace {
 
         std::type_info const*& m_pExceptionType;
 
-	my_handler1_nothrow(std::type_info const*& p) : m_pExceptionType(p) {}
+    my_handler1_nothrow(std::type_info const*& p) : m_pExceptionType(p) {}
 
         void operator() (std::exception&) const
         {
@@ -91,7 +92,7 @@ namespace {
 
         std::type_info const*& m_pExceptionType;
 
-	explicit my_handler2_nothrow(std::type_info const*& p) : m_pExceptionType(p) {}
+    explicit my_handler2_nothrow(std::type_info const*& p) : m_pExceptionType(p) {}
 
         void operator() (std::exception&) const
         {

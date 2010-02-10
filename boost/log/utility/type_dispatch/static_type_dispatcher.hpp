@@ -1,17 +1,14 @@
 /*
- * (C) 2007 Andrey Semashev
- *
- * Use, modification and distribution is subject to the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
- *
- * This header is the Boost.Log library implementation, see the library documentation
- * at http://www.boost.org/libs/log/doc/log.html.
+ *          Copyright Andrey Semashev 2007 - 2010.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
  * \file   static_type_dispatcher.hpp
  * \author Andrey Semashev
  * \date   15.04.2007
- * 
+ *
  * The header contains implementation of a compile-time type dispatcher.
  */
 
@@ -99,21 +96,21 @@ struct dispatching_map_order
 
 /*!
  * \brief A static type dispatcher class
- * 
+ *
  * The type dispatcher can be used to pass objects of arbitrary types from one
  * component to another. With regard to the library, the type dispatcher
  * can be used to extract attribute values.
- * 
+ *
  * Static type dispatchers allow to specify set of supported types at compile
  * time. The class is parametrized with the following template parameters:
- * 
+ *
  * \li \c TypeSequenceT - an MPL type sequence of types that need to be supported
  *     by the dispatcher
  * \li \c VisitorGenT - an MPL unary metafunction class that will be used to
  *     generate concrete visitors. The metafunction will be applied to each
  *     type in the \c TypeSequenceT type sequence.
  * \li \c RootT - the ultimate base class of the dispatcher
- * 
+ *
  * Users can either derive their classes from the dispatcher and override
  * \c visit methods for all the supported types, or specify in the \c VisitorGenT
  * template parameter a custom unary metafunction class that will generate
