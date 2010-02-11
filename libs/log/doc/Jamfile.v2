@@ -41,7 +41,8 @@ local doxygen_params =
                         BOOST_PARAMETER_KEYWORD(x,y)=\"keyword y;\" \\
                         BOOST_LOG_NAMESPACE=log \\
                         BOOST_LOG_EXPORT="
-        <xsl:param>"boost.doxygen.detailns=aux"
+        <xsl:param>boost.doxygen.detailns=aux
+#        <xsl:param>boost.doxygen.detail=implementation_
     ;
 
 
@@ -181,6 +182,7 @@ boostbook standalone
         <xsl:param>boost.root=../../../..
         <xsl:param>boost.libraries=../../../libs/libraries.htm
         <xsl:param>nav.layout=none
+        <xsl:param>boost.image=Boost
         <xsl:param>navig.graphics=1
         <xsl:param>chunk.section.depth=2
         <xsl:param>boost.compact.function=0
