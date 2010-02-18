@@ -1,16 +1,16 @@
+;/*
+; *          Copyright Andrey Semashev 2007 - 2010.
+; * Distributed under the Boost Software License, Version 1.0.
+; *    (See accompanying file LICENSE_1_0.txt or copy at
+; *          http://www.boost.org/LICENSE_1_0.txt)
+; *
+; * This file is the Boost.Log library implementation, see the library documentation
+; * at http://www.boost.org/libs/log/doc/log.html.
+; */
 ;
-;          Copyright Andrey Semashev 2007 - 2010.
-; Distributed under the Boost Software License, Version 1.0.
-;    (See accompanying file LICENSE_1_0.txt or copy at
-;          http://www.boost.org/LICENSE_1_0.txt)
-;
-; This file is the Boost.Log library implementation, see the library documentation
-; at http://www.boost.org/libs/log/doc/log.html.
-;
-;
-; /* --------------------------------------------------------
-; HEADER SECTION
-;*/
+;/* --------------------------------------------------------
+; * HEADER SECTION
+; */
 SeverityNames=(Debug=0x0:BOOST_LOG_SEVERITY_DEBUG
                Info=0x1:BOOST_LOG_SEVERITY_INFO
                Warning=0x2:BOOST_LOG_SEVERITY_WARNING
@@ -20,8 +20,8 @@ SeverityNames=(Debug=0x0:BOOST_LOG_SEVERITY_DEBUG
 ;
 ;
 ;/* ------------------------------------------------------------------
-; MESSAGE DEFINITION SECTION
-;*/
+; * MESSAGE DEFINITION SECTION
+; */
 
 MessageIdTypedef=DWORD
 
