@@ -122,7 +122,7 @@ public:
 template< typename CharT, typename T, bool >
 struct wrap_if_c
 {
-    fmt_wrapper< CharT, T > type;
+    typedef fmt_wrapper< CharT, T > type;
 };
 
 template< typename CharT, typename T >
