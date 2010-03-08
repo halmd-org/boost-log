@@ -64,10 +64,12 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     log::aux::universal_path suggest_file_name()
     {
 #if !defined(BOOST_FILESYSTEM_NARROW_ONLY)
+        typedef std::wstring native_string_type;
         const wchar_t ext[] = L".log";
         wchar_t buf[FILENAME_MAX];
         std::size_t len = GetModuleFileNameW(NULL, buf, sizeof(buf) / sizeof(*buf));
 #else
+        typedef std::string native_string_type;
         const char ext[] = ".log";
         char buf[FILENAME_MAX];
         std::size_t len = GetModuleFileNameA(NULL, buf, sizeof(buf) / sizeof(*buf));
@@ -75,8 +77,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         if (len > 0)
         {
             // Extract the file name from the full path and replace extension with .log
+            native_string_type filename(buf, len);
             return log::aux::universal_path(
-                filesystem::basename(log::aux::to_universal_path(buf)) + ext);
+                filesystem::basename(log::aux::to_universal_path(filename)) + ext);
         }
         else
         {
