@@ -97,6 +97,10 @@ The following compilers/platforms are not supported and will likely fail to comp
 * GCC 4.0 and older.
 * Windows 9x, ME, NT4 and older are not supported.
 
+[heading Notes for MinGW users]
+
+In order to compile the library under MinGW, special preparations are needed. First, make sure you have installed the latest GCC version. The library will most likely fail to compile with GCC 3.x. Second, at some point the library will require a Message Compiler tool (mc.exe), which is not available in MinGW. This tool is available in Windows SDK, which can be downloaded from the Microsoft site freely (for example, [@http://www.microsoft.com/downloads/details.aspx?FamilyID=71deb800-c591-4f97-a900-bea146e4fae1&displaylang=en here]). Also, this tool should be available in Visual Studio 2010 Express edition. During the compilation, mc.exe should be accessible through one of the directories in your PATH environment variable.
+
 [endsect]
 
 [section:installation Installation]
@@ -116,7 +120,7 @@ The library supports a number of configuration macros:
     [[`BOOST_LOG_USE_NATIVE_SYSLOG`]            [Has effect on the library compilation stage. If for some reason the support for native SysLog API is not detected, define this macro to forcibly enable support for native SysLog.]]
     [[`BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT`]  [Has effect on the library compilation stage. If defined, all facilities related to settings parsing are not built. This can substantially reduce the binary size.]]
     [[`BOOST_LOG_NO_SHORTHAND_NAMES`]           [Has effect on user's code compilation stage. If defined, some deprecated shorthand macro names will not be available.]]
-    [[`BOOST_LOG_USE_WINNT6_API`]               [Has effect both on the library and the user's code compilation stages. This macro is Windows-specific. If defined, the library makes use of the Windows NT 6 (Vista, Server 2008) and later APIs to generate more efficient code. This macro will also enable some experimental features of the library. Note, however, that the resulting binary will not run on Windows prior to NT 6. In order to use this feature Platform SDK 6.0 is required.]]
+    [[`BOOST_LOG_USE_WINNT6_API`]               [Has effect both on the library and the user's code compilation stages. This macro is Windows-specific. If defined, the library makes use of the Windows NT 6 (Vista, Server 2008) and later APIs to generate more efficient code. This macro will also enable some experimental features of the library. Note, however, that the resulting binary will not run on Windows prior to NT 6. In order to use this feature Platform SDK 6.0 or later is required.]]
     [[`BOOST_LOG_NO_COMPILER_TLS`]              [Has effect on the library compilation stage. This macro disables support for compiler intrinsics for thread-local storage. Defining it may solve problems if Boost.Log is used in context of delay-loaded libraries on Windows (that is, if Boost.Log is loaded with a `LoadLibrary` or similar API call). However, it may lead to some performance drop.]]
 ]
 
