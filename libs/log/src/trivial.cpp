@@ -74,7 +74,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         char buf[FILENAME_MAX];
         std::size_t len = GetModuleFileNameA(NULL, buf, sizeof(buf) / sizeof(*buf));
 #endif
-        if (len > 0)
+        if (len > 0 && len < (sizeof(buf) / sizeof(*buf)))
         {
             // Extract the file name from the full path and replace extension with .log
             native_string_type filename(buf, len);
