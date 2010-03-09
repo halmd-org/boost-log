@@ -103,6 +103,7 @@ namespace aux {
 
 } // namespace aux
 
+//! \cond
 #define BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL(z, n, types)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit ordering_asynchronous_sink(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
@@ -120,6 +121,7 @@ namespace aux {
                   (BOOST_PP_ENUM_PARAMS(n, arg))[keywords::order],\
                   (BOOST_PP_ENUM_PARAMS(n, arg))[keywords::ordering_window || &base_type::get_default_ordering_window])\
     {}
+//! \endcond
 
 /*!
  * \brief Asynchronous logging sink frontend

@@ -172,7 +172,7 @@ public:
     void remove_global_attribute(typename attribute_set_type::iterator it);
 
     /*!
-     * The method returns copy of the complete set of currently registered global attributes.
+     * The method returns a copy of the complete set of currently registered global attributes.
      */
     attribute_set_type get_global_attributes() const;
     /*!
@@ -211,7 +211,7 @@ public:
     void remove_thread_attribute(typename attribute_set_type::iterator it);
 
     /*!
-     * The method returns copy of the complete set of currently registered thread-specific attributes.
+     * The method returns a copy of the complete set of currently registered thread-specific attributes.
      */
     attribute_set_type get_thread_attributes() const;
     /*!
@@ -232,12 +232,11 @@ public:
      *
      * By default no handler is installed, thus any exception is propagated as usual.
      *
-     * \sa <tt>utility/exception_handler.hpp</tt>
+     * \sa See also: <tt>utility/exception_handler.hpp</tt>
      * \param handler Exception handling function
      *
      * \note The exception handler can be invoked in several threads concurrently.
-     *
-     * \note Thread interruptions are not affected by exception handlers.
+     *       Thread interruptions are not affected by exception handlers.
      */
     void set_exception_handler(exception_handler_type const& handler);
 

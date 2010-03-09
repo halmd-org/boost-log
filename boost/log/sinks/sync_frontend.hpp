@@ -74,10 +74,12 @@ namespace aux {
 
 } // namespace aux
 
+//! \cond
 #define BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL(z, n, data)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit synchronous_sink(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
         base_type(boost::make_shared< sink_backend_type >(BOOST_PP_ENUM_PARAMS(n, arg)), &synchronous_sink::consume_trampoline) {}
+//! \endcond
 
 /*!
  * \brief Synchronous logging sink frontend

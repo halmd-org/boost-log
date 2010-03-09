@@ -84,6 +84,7 @@ namespace aux {
 
 } // namespace aux
 
+//! \cond
 #define BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL(z, n, types)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit asynchronous_sink(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
@@ -91,6 +92,7 @@ namespace aux {
                   &asynchronous_sink::consume_trampoline,\
                   (BOOST_PP_ENUM_PARAMS(n, arg))[keywords::start_thread | true])\
     {}
+//! \endcond
 
 /*!
  * \brief Asynchronous logging sink frontend
