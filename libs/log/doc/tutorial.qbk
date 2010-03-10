@@ -67,7 +67,7 @@ While severity level can be used for informative purposes, you will normally wan
 
 Now, if we run this code sample, the first two log records will be ignored, while the rest four will pass on to the file.
 
-[tip Remember that the streaming expression is only executed if the record passed filtering. Don't specify business-critical calls in the streaming expression, as these calls may not get invoked if the record is filtered away.]
+[important Remember that the streaming expression is only executed if the record passed filtering. Don't specify business-critical calls in the streaming expression, as these calls may not get invoked if the record is filtered away.]
 
 A few words must be said about the filter setup expression. Since we're setting up a global filter, we have to acquire the logging core instance. This is what `logging::core::get()` does - it returns a pointer to the core singleton. The `set_filter` method of the logging core sets the global filtring function.
 
