@@ -184,8 +184,6 @@ Along with the described above primary facilities, the library provides a wide v
 
 [section:detailed Detailed features description]
 
-This section contains a more detailed description of library components and features. Some of them are presented in the [link log.tutorial Tutorial] section, so it is recommended to read it first to get the basic understanding of the library.
-
 [include:log core.qbk]
 [include:log sources.qbk]
 [include:log sink_frontends.qbk]

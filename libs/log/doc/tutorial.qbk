@@ -408,7 +408,7 @@ There are attributes that are most likely to be used in almost any application. 
 
 With this call attributes "LineID", "TimeStamp", "ProcessID" and "ThreadID" are registered globally. The "LineID" attribute is a counter that increments for each record being made, the first record gets identifier 1. The "TimeStamp" attribute always yelds the current time (i.e. the time when the log record is created, not the time it was written to a sink). The last two attributes identify the process and the thread in which every log record is emitted.
 
-[warning In single-threaded builds the "ThreadID" attribute is not registered.]
+[important In single-threaded builds the "ThreadID" attribute is not registered.]
 
 [tip The trivial logging support code calls `add_common_attributes` internally in order to setup attributes available by default. If you use trivial logging, you don't have to call this function yourself.]
 
@@ -441,6 +441,8 @@ The `BOOST_LOG_SEV` macro acts pretty much like `BOOST_LOG` except that it takes
     }
 
 You can see here that the `open_record` can take named arguments. Some logger types provided by the library have support for such additional parameters and this approach can certainly be used by users when writing their own loggers.
+
+[tip If you wonder if it is possible to define formatting rules for your custom severity level type (or any other type for that matter), then yes, it is. The simplest way to do it is to define `operator <<` for your type and then use the `attr` formatter that was described earlier. See [link log.detailed.formatters.attr here] for more details.]
 
 [heading More attributes]
 
