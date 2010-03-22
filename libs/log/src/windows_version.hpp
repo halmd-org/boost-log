@@ -18,7 +18,7 @@
 
 #include <boost/log/detail/prologue.hpp>
 
-#ifdef BOOST_WINDOWS
+#if defined(BOOST_WINDOWS) || defined(__CYGWIN__)
 
 #if defined(BOOST_LOG_USE_WINNT6_API)
 
@@ -34,6 +34,19 @@
 
 #endif // BOOST_LOG_USE_WINNT6_API
 
-#endif // BOOST_WINDOWS
+// This is to make Boost.ASIO happy
+#ifndef __USE_W32_SOCKETS
+#define __USE_W32_SOCKETS
+#endif
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#endif // defined(BOOST_WINDOWS) || defined(__CYGWIN__)
 
 #endif // BOOST_LOG_WINDOWS_VERSION_HPP_INCLUDED_

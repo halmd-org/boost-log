@@ -16,7 +16,6 @@
 #ifndef BOOST_LOG_EVENT_LOG_REGISTRY_HPP_INCLUDED_
 #define BOOST_LOG_EVENT_LOG_REGISTRY_HPP_INCLUDED_
 
-#include <windows.h>
 #include <string>
 #include <sstream>
 #include <stdexcept>
@@ -25,6 +24,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/exceptions.hpp>
+#include <windows.h>
 
 namespace boost {
 

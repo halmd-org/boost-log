@@ -13,9 +13,9 @@
  */
 
 #include "windows_version.hpp"
-#include <windows.h>
 #include <string>
 #include <boost/log/sinks/debug_output_backend.hpp>
+#include <windows.h>
 
 namespace boost {
 

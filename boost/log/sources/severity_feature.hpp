@@ -222,7 +222,7 @@ protected:
     record_type open_record_unlocked(ArgsT const& args)
     {
         m_pSeverity->set_value(args[keywords::severity | m_DefaultSeverity]);
-        return base_type::open_record_unlocked();
+        return base_type::open_record_unlocked(args);
     }
 
     //! Lock requirement for the swap_unlocked method

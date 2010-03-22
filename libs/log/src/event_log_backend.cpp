@@ -16,15 +16,6 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include "windows_version.hpp"
-#include <windows.h>
-#include <psapi.h>
-#include "simple_event_log.h"
-
-#ifdef _MSC_VER
-#pragma comment(lib, "psapi.lib")
-#pragma comment(lib, "advapi32.lib")
-#endif
-
 #include <memory>
 #include <string>
 #include <vector>
@@ -42,6 +33,15 @@
 #include <boost/thread/once.hpp>
 #endif // BOOST_LOG_NO_THREADS
 #include "event_log_registry.hpp"
+#include <windows.h>
+#include <psapi.h>
+#include "simple_event_log.h"
+
+#ifdef _MSC_VER
+#pragma comment(lib, "psapi.lib")
+#pragma comment(lib, "advapi32.lib")
+#endif
+
 
 namespace boost {
 

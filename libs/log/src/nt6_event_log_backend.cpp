@@ -16,14 +16,6 @@
 #if defined(BOOST_LOG_USE_WINNT6_API)
 
 #include "windows_version.hpp"
-#include <windows.h>
-#include <evntprov.h>
-#include <winmeta.h>
-
-#ifdef _MSC_VER
-#pragma comment(lib, "advapi32.lib")
-#endif
-
 #include <stdexcept>
 #include <string>
 #include <boost/shared_ptr.hpp>
@@ -31,6 +23,13 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/sinks/nt6_event_log_backend.hpp>
 #include <boost/log/sinks/nt6_event_log_constants.hpp>
+#include <windows.h>
+#include <evntprov.h>
+#include <winmeta.h>
+
+#ifdef _MSC_VER
+#pragma comment(lib, "advapi32.lib")
+#endif
 
 namespace boost {
 

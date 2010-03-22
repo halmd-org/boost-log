@@ -101,8 +101,11 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             std::string full_name(buf, buf + len);
 
             // Extract the file name from the full path and replace extension with .log
+            // NOTE: Code conversion is required for cygwin
+            log::aux::universal_path::string_type ext;
+            log::aux::code_convert(std::string(".log"), ext);
             return log::aux::universal_path(
-                filesystem::basename(log::aux::to_universal_path(full_name)) + ".log");
+                filesystem::basename(log::aux::to_universal_path(full_name)) + ext);
         }
 
 #endif // defined(BOOST_HAS_UNISTD_H)

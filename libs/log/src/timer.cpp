@@ -17,7 +17,7 @@
 
 #if defined(BOOST_WINDOWS) && !defined(BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER)
 
-#include <windows.h>
+#include "windows_version.hpp"
 #include <boost/limits.hpp>
 #include <boost/assert.hpp>
 #include <boost/make_shared.hpp>
@@ -25,6 +25,7 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/locks.hpp>
 #endif
+#include <windows.h>
 
 namespace boost {
 
