@@ -37,7 +37,9 @@ namespace aux {
     // 1. If no wide paths are supported then it's path
     // 2. If the native API only supports narrow paths, it's path, again.
     // 3. Otherwise, it's wpath.
-#if defined(BOOST_FILESYSTEM_NARROW_ONLY)
+    //
+    // NOTE: Cygwin is considered to have narrow native paths, although it actually supports UTF-8
+#if defined(BOOST_FILESYSTEM_NARROW_ONLY) || defined(__CYGWIN__)
     typedef filesystem::path universal_path;
 #else
     typedef mpl::if_<
