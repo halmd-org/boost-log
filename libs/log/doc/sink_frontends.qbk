@@ -90,8 +90,10 @@ The usage is similar to the `unlocked_sink`.
         boost::shared_ptr< logging::core > core = logging::core::get();
 
         // Create a backend and initialize it with a stream
-        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
-        backend->add_stream(boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
+        boost::shared_ptr< sinks::text_ostream_backend > backend =
+            boost::make_shared< sinks::text_ostream_backend >();
+        backend->add_stream(
+            boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
 
         // Wrap it into the frontend and register in the core
         boost::shared_ptr< sink_t > sink(new sink_t(backend));
@@ -104,7 +106,12 @@ The usage is similar to the `unlocked_sink`.
         {
             sink_t::locked_backend_ptr p = sink.locked_backend();
             p->add_stream(boost::make_shared< std::ofstream >("test.log"));
-            p->set_formatter(fmt::stream << "Level: " << fmt::attr< int >("Severity") << " Message: " << fmt::message());
+            p->set_formatter
+            (
+                fmt::stream
+                    << "Level: " << fmt::attr< int >("Severity")
+                    << " Message: " << fmt::message()
+            );
         } // the backend gets released here
     }
 
@@ -125,8 +132,10 @@ The frontend is implemented in the `asynchronous_sink` class template. Like sync
         boost::shared_ptr< logging::core > core = logging::core::get();
 
         // Create a backend and initialize it with a stream
-        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
-        backend->add_stream(boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
+        boost::shared_ptr< sinks::text_ostream_backend > backend =
+            boost::make_shared< sinks::text_ostream_backend >();
+        backend->add_stream(
+            boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
 
         // Wrap it into the frontend and register in the core
         boost::shared_ptr< sink_t > sink(new sink_t(backend));
@@ -139,7 +148,12 @@ The frontend is implemented in the `asynchronous_sink` class template. Like sync
         {
             sink_t::locked_backend_ptr p = sink.locked_backend();
             p->add_stream(boost::make_shared< std::ofstream >("test.log"));
-            p->set_formatter(fmt::stream << "Level: " << fmt::attr< int >("Severity") << " Message: " << fmt::message());
+            p->set_formatter
+            (
+                fmt::stream
+                    << "Level: " << fmt::attr< int >("Severity")
+                    << " Message: " << fmt::message()
+            );
         } // the backend gets released here
 
         return sink;
@@ -194,9 +208,12 @@ The latency duration and the ordering predicate can be specified on the frontend
 
         // Wrap it into the frontend and register in the core
         boost::shared_ptr< sink_t > sink(new sink_t(
-            backend,                                                                    // pointer to a pre-initialized backend
-            keywords::order = logging::make_attr_ordering< unsigned int >("Line #"),    // specify ordering predicate
-            keywords::ordering_window = boost::posix_time::seconds(1)                   // specify processing latency
+            // pointer to a pre-initialized backend
+            backend,
+            // specify ordering predicate
+            keywords::order = logging::make_attr_ordering< unsigned int >("Line #"),
+            // specify processing latency
+            keywords::ordering_window = boost::posix_time::seconds(1)
         ));
         core->add_sink(sink);
 
@@ -206,7 +223,12 @@ The latency duration and the ordering predicate can be specified on the frontend
         // You can also manage backend in a thread-safe manner
         {
             sink_t::locked_backend_ptr p = sink.locked_backend();
-            p->set_formatter(fmt::stream << "Level: " << fmt::attr< int >("Severity") << " Message: " << fmt::message());
+            p->set_formatter
+            (
+                fmt::stream
+                    << "Level: " << fmt::attr< int >("Severity")
+                    << " Message: " << fmt::message()
+            );
         }
 
         return sink;
@@ -222,7 +244,8 @@ The ordering window is maintained by the frontend even upon stopping the interna
         core->remove_sink(sink);
         sink->stop();
 
-        // Flush all log records that may have left buffered, explicitly specifying zero ordering window
+        // Flush all log records that may have left buffered,
+        // explicitly specifying zero ordering window
         sink->feed_records(boost::posix_time::seconds(0));
 
         sink.reset();

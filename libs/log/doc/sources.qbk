@@ -23,7 +23,8 @@ The simplest logging sources provided by the library are loggers `logger` and it
     public:
         void on_connected(std::string const& remote_addr)
         {
-            // Put the remote address into the logger to automatically attach it to every log record written through the logger
+            // Put the remote address into the logger to automatically attach it
+            // to every log record written through the logger
             m_remote_addr = m_logger.add_attribute("RemoteAddress",
                 boost::make_shared< attr::constant< std::string > >(remote_addr)).first;
 
@@ -41,14 +42,18 @@ The simplest logging sources provided by the library are loggers `logger` and it
         }
         void on_data_received(std::size_t size)
         {
-            // Put the size as an additional attribute so it can be collected and accumulated later if needed
-            // The attribute will be attached to the only log record that is made within the current scope
-            BOOST_LOG_SCOPED_LOGGER_TAG(m_logger, "ReceivedSize", attr::constant< std::size_t >, size);
+            // Put the size as an additional attribute
+            // so it can be collected and accumulated later if needed.
+            // The attribute will be attached to the only log record
+            // that is made within the current scope.
+            BOOST_LOG_SCOPED_LOGGER_TAG(m_logger,
+                "ReceivedSize", attr::constant< std::size_t >, size);
             BOOST_LOG(m_logger) << "Some data received";
         }
         void on_data_sent(std::size_t size)
         {
-            BOOST_LOG_SCOPED_LOGGER_TAG(m_logger, "SentSize", attr::constant< std::size_t >, size);
+            BOOST_LOG_SCOPED_LOGGER_TAG(m_logger,
+                "SentSize", attr::constant< std::size_t >, size);
             BOOST_LOG(m_logger) << "Some data sent";
         }
     };
@@ -89,7 +94,8 @@ The actual values of this attribute and their meaning are entirely user-defined.
         if (lg.open_record(keywords::severity = warning))
             lg.strm() << "A warning level log record";
 
-        // The default severity can be specified in constructor. This time level type is my_levels.
+        // The default severity can be specified in constructor.
+        // This time level type is my_levels.
         src::severity_logger< my_levels > error_lg(keywords::severity = error);
 
         // There are predefined macros that make the usage easier
@@ -117,9 +123,11 @@ Sometimes it is important to categorize log records based on some constant piece
 
     public:
         network_connection() :
-            // We can dump network-related messages through this logger and be able to filter them later
+            // We can dump network-related messages through this logger
+            // and be able to filter them later
             m_net(keywords::channel = "net"),
-            // We also can separate statistic records in a different channel in order to route them to a different sink
+            // We also can separate statistic records in a different channel
+            // in order to route them to a different sink
             m_stat(keywords::channel = "stat")
         {
         }
@@ -136,14 +144,18 @@ Sometimes it is important to categorize log records based on some constant piece
         }
         void on_data_received(std::size_t size)
         {
-            // Put the size as an additional attribute so it can be collected and accumulated later if needed
-            // The attribute will be attached to the only log record that is made within the current scope
-            BOOST_LOG_SCOPED_LOGGER_TAG(m_stat, "ReceivedSize", attr::constant< std::size_t >, size);
+            // Put the size as an additional attribute
+            // so it can be collected and accumulated later if needed.
+            // The attribute will be attached to the only log record
+            // that is made within the current scope.
+            BOOST_LOG_SCOPED_LOGGER_TAG(m_stat,
+                "ReceivedSize", attr::constant< std::size_t >, size);
             BOOST_LOG(m_stat) << "Some data received";
         }
         void on_data_sent(std::size_t size)
         {
-            BOOST_LOG_SCOPED_LOGGER_TAG(m_stat, "SentSize", attr::constant< std::size_t >, size);
+            BOOST_LOG_SCOPED_LOGGER_TAG(m_stat,
+                "SentSize", attr::constant< std::size_t >, size);
             BOOST_LOG(m_stat) << "Some data sent";
         }
     };
@@ -241,7 +253,8 @@ The third macro of this section provides maximum flexibility, allowing the user 
 
     BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, src::severity_logger_mt)
     {
-        // Do something that needs to be done on logger initialization, e.g. add a stop watch attribute
+        // Do something that needs to be done on logger initialization,
+        // e.g. add a stop watch attribute.
         src::severity_logger_mt< > lg;
         lg.add_attribute("StopWatch", boost::make_shared< attrs::timer >());
         // The initializing routine must return the logger instance

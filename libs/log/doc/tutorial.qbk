@@ -219,7 +219,8 @@ Some manipulators may accept additional arguments that customize their behavior.
         pSink->locked_backend()->set_formatter
         (
             fmt::stream
-                << fmt::attr< unsigned int >("LineID", keywords::format = "%08x") // line id will be written in hex, 8-digits, zero-filled
+                   // line id will be written in hex, 8-digits, zero-filled
+                << fmt::attr< unsigned int >("LineID", keywords::format = "%08x")
                 << ": <" << fmt::attr< logging::trivial::severity_level >("Severity")
                 << "> " << fmt::message()
         );
@@ -424,7 +425,8 @@ Some attrubutes are registered automatically on loggers construction. For exampl
         critical
     };
 
-    // The logger implicitly adds a source-specific attribute 'Severity' of type 'severity_level' on construction
+    // The logger implicitly adds a source-specific attribute 'Severity'
+    // of type 'severity_level' on construction
     src::severity_logger< severity_level > slg;
 
     BOOST_LOG_SEV(slg, normal) << "A regular message";
