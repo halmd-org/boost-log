@@ -66,7 +66,8 @@ Usage example follows:
 
     void foo()
     {
-        // This log record will also be marked with the "Tag" attribute, whenever it is called from the A::bar function.
+        // This log record will also be marked with the "Tag" attribute,
+        // whenever it is called from the A::bar function.
         // It will not be marked when called from other places.
         BOOST_LOG(get_my_logger()) << "A log message from foo";
     }
@@ -77,8 +78,10 @@ Usage example follows:
 
         void bar()
         {
-            // Set a thread-wide markup tag. Note the additional parentheses to form a Boost.PP sequence.
-            BOOST_LOG_SCOPED_THREAD_ATTR_CTOR("Tag", attrs::constant< std::string >, ("Called from A::bar"));
+            // Set a thread-wide markup tag.
+            // Note the additional parentheses to form a Boost.PP sequence.
+            BOOST_LOG_SCOPED_THREAD_ATTR_CTOR("Tag",
+                attrs::constant< std::string >, ("Called from A::bar"));
 
             // This log record will be marked
             BOOST_LOG(m_Logger) << "A log message from A::bar";
@@ -94,7 +97,8 @@ Usage example follows:
         // Let's measure our application run time
         BOOST_LOG_SCOPED_LOGGER_ATTR(lg, "RunTime", attrs::timer);
 
-        // Mark application start. The "RunTime" attribute should be nearly 0 at this point.
+        // Mark application start.
+        // The "RunTime" attribute should be nearly 0 at this point.
         BOOST_LOG(lg) << "Application started";
 
         // Note that no other log records are affected by the "RunTime" attribute.
@@ -103,7 +107,8 @@ Usage example follows:
         A a;
         a.bar();
 
-        // Mark application ending. The "RunTime" attribute will show the execution time elapsed.
+        // Mark application ending.
+        // The "RunTime" attribute will show the execution time elapsed.
         BOOST_LOG(lg) << "Application ended";
 
         return 0;
@@ -116,7 +121,8 @@ It is quite often convenient to mark a group of log records with a constant valu
 
 The macros are effectively wrappers around `BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR` and `BOOST_LOG_SCOPED_THREAD_ATTR_CTOR`, respectively. For example, the "Tag" scoped attribute from the example above can be registered like this:
 
-    // Note there is no "attrs::constant" type wrapping and no additional parenthesis around the tag value.
+    // Note there is no "attrs::constant" type wrapping
+    // and no additional parenthesis around the tag value.
     BOOST_LOG_SCOPED_THREAD_TAG("Tag", std::string, "Called from A::bar");
 
 [warning When using scoped attributes, make sure that the scoped attribute is not altered in the attribute set in which it was registered. For example, one should not clear or reinstall the attribute set of the logger if there are logger-specific scoped attributes registered in it. Otherwise the program will likely crash. This issue is especially critical in multithreaded application, when one thread may not know whether there are scoped attributes in the logger or there are not. Future releases may solve this limitation but currently the scoped attribute must remain intact until unregistered on leaving the scope.]
@@ -128,25 +134,34 @@ Any scoped attribute is attached to a generic sentry object of type `scoped_attr
     // Source-specific scoped attribute registration
     template< typename LoggerT >
     [unspecified] add_scoped_logger_attribute(
-        LoggerT& l, typename LoggerT::string_type const& name, shared_ptr< attribute > const& attr);
+        LoggerT& l,
+        typename LoggerT::string_type const& name,
+        shared_ptr< attribute > const& attr);
 
     template< typename LoggerT, typename AttributeT >
     [unspecified] add_scoped_logger_attribute(
-        LoggerT& l, typename LoggerT::string_type const& name, AttributeT& attr);
+        LoggerT& l,
+        typename LoggerT::string_type const& name,
+        AttributeT& attr);
 
     // Thread-specific scoped attribute registration
     template< typename CharT >
-    [unspecified] add_scoped_thread_attribute(std::basic_string< CharT > const& name, shared_ptr< attribute > const& attr);
+    [unspecified] add_scoped_thread_attribute(
+        std::basic_string< CharT > const& name,
+        shared_ptr< attribute > const& attr);
 
     template< typename CharT, typename AttributeT >
-    [unspecified] add_scoped_thread_attribute(std::basic_string< CharT > const& name, AttributeT& attr);
+    [unspecified] add_scoped_thread_attribute(
+        std::basic_string< CharT > const& name,
+        AttributeT& attr);
 
 Please note that the overloads that accept references to the attribute do not control the life time of the attribute. These overloads can be used to temporarily register attributes that reside on stack or are members of a class - in other words, whose life duration is controlled elsewhere.
 
 An object of the `scoped_attribute` type is able to attach results of each of these functions on its construction. For example, `BOOST_LOG_SCOPED_LOGGER_ATTR(lg, "RunTime", attrs::timer)` can roughly be expanded to this:
 
     attrs::timer attr;
-    attrs::scoped_attribute sentry = attrs::add_scoped_logger_attribute(lg, "RunTime", attr);
+    attrs::scoped_attribute sentry =
+        attrs::add_scoped_logger_attribute(lg, "RunTime", attr);
 
 [endsect]
 
@@ -361,7 +376,8 @@ Attribute value extractors serve as a helper tool on top of [link log.detailed.u
 
     void foo(attribute_values_view const& attrs)
     {
-        // Let's assume we want to output value of attribute "MyAttr" that may have any numeric type
+        // Let's assume we want to output the value of the
+        // attribute "MyAttr" that may have any numeric type
         logging::attribute_value_extractor< char, logging::numeric_types > extractor1("MyAttr");
         assert(extractor1(attrs, print_attribute_value()));
 
@@ -573,7 +589,7 @@ Lastly, there is an `add_common_attributes` function that registers two frequent
         // Initialize sinks
         logging::init_log_to_console()->set_filter(flt::attr< int >("Severity") >= 4);
 
-        boost::function< void (std::ostream&, attribute_values_view const&, std::string const&) > formatter =
+        boost::function< void (std::ostream&, logging::record const&) > formatter =
             fmt::stream
                 << fmt::attr< unsigned int >("LineID", "[% 9u] ")
                 << fmt::date_time< boost::posix_time::ptime >("TimeStamp") << " *"
@@ -796,7 +812,8 @@ Support for configuration files is a frequently requested feature of the library
 The settings format is quite simple and widely used. Below is the description of syntax and parameters.
 
 [pre
-\# Comments are allowed. Comment line begins with the '\#' character and spans until the end of the line.
+\# Comments are allowed. Comment line begins with the '\#' character
+\# and spans until the end of the line.
 
 \# Logging core settings section. May be omitted if no parameters specified within it.
 \[Core\]

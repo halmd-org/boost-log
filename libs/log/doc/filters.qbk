@@ -23,17 +23,22 @@ This filter is usually used in conjunction with [link log.detailed.formatters.co
     class my_stat_accumulator :
         public sinks::basic_sink_backend< char, sinks::backend_synchronization_tag >
     {
-        // A map of accumulated statistic values, ordered by the statistic information stream name
-        std::map< std::string, int > m_StatInfo;
+        // A map of accumulated statistic values,
+        // ordered by the statistic information stream name
+        typedef std::map< std::string, int > StatInfo_t;
+        StatInfo_t m_StatInfo;
 
     public:
         // Destructor
         ~my_stat_accumulator()
         {
             // Display the accumulated data
-            for (std::map< std::string, int >::const_iterator it = m_StatInfo.begin(); it != m_StatInfo.end(); ++it)
+            for (StatInfo_t::const_iterator it = m_StatInfo.begin();
+                it != m_StatInfo.end();
+                ++it)
             {
-                std::cout << "Statistic stream: " << it->first << ", accumulated value: " << it->second << "\n";
+                std::cout << "Statistic stream: " << it->first
+                    << ", accumulated value: " << it->second << "\n";
             }
             std::cout.flush();
         }
@@ -45,7 +50,8 @@ This filter is usually used in conjunction with [link log.detailed.formatters.co
             values_view_type::const_iterator itName = attributes.find("StatisticStream");
             if (itName != attributes.end())
             {
-                boost::optional< std::string const& > name = itName->second.get< std::string >();
+                boost::optional< std::string const& > name =
+                    itName->second.get< std::string >();
                 if (name)
                 {
                     // Next, get the statistic value change
@@ -64,25 +70,32 @@ This filter is usually used in conjunction with [link log.detailed.formatters.co
         }
     };
 
-    // The function registers two sinks - one for statistic information, and another one for other records
+    // The function registers two sinks - one for statistic information,
+    // and another one for other records
     void foo()
     {
         boost::shared_ptr< logging::core > core = logging::core::get();
 
         // Create a backend and attach a stream to it
-        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
-        backend->add_stream(boost::shared_ptr< std::ostream >(new std::ofstream("test.log")));
+        boost::shared_ptr< sinks::text_ostream_backend > backend =
+            boost::make_shared< sinks::text_ostream_backend >();
+        backend->add_stream(
+            boost::shared_ptr< std::ostream >(new std::ofstream("test.log")));
 
         // Create a frontend and setup filtering
-        boost::shared_ptr< sinks::synchronous_sink< sinks::text_ostream_backend > > sink(new sinks::synchronous_sink< sinks::text_ostream_backend >(backend));
-        // All records that don't have a "StatisticStream" attribute attached will go to the "test.log" file
+        typedef sinks::synchronous_sink< sinks::text_ostream_backend > LogSink_t;
+        boost::shared_ptr< LogSink_t > sink(new LogSink_t(backend));
+        // All records that don't have a "StatisticStream" attribute attached
+        // will go to the "test.log" file
         sink->set_filter(!flt::has_attr("StatisticStream"));
 
         core->add_sink(sink);
 
         // Create another sink that will receive all statistic data
-        boost::shared_ptr< sinks::synchronous_sink< my_stat_accumulator > > stat_sink(new sinks::synchronous_sink< my_stat_accumulator >);
-        // All records with a "StatisticStream" string attribute attached will go to the my_stat_accumulator sink
+        typedef sinks::synchronous_sink< my_stat_accumulator > StatSink_t;
+        boost::shared_ptr< StatSink_t > stat_sink(new StatSink_t);
+        // All records with a "StatisticStream" string attribute attached
+        // will go to the my_stat_accumulator sink
         sink->set_filter(flt::has_attr< std::string >("StatisticStream"));
 
         core->add_sink(stat_sink);
@@ -119,7 +132,11 @@ Please note that in the example above we extended the library in two ways: we de
 
 Unlike `has_attr`, the `attr` construct is not a complete filter by itself. Instead, it is a placeholder that can take part in a complete filter expressions like this:
 
-    sink->set_filter(flt::attr< int >("Severity") >= 5 && flt::attr< std::string >("Channel") == "net");
+    sink->set_filter
+    (
+        flt::attr< int >("Severity") >= 5 &&
+        flt::attr< std::string >("Channel") == "net"
+    );
 
 The line above registers a composite filter that consists of two elementary subfilters: the first one checks the severity level, and the second checks the channel name. Like `has_attr`, the `attr` placeholder accepts an expected attribute value type or set of types in an MPL-compatible type sequence. However, attribute value type is not optional with `attr`, like it is with `has_attr`.
 
@@ -127,23 +144,37 @@ Besides generating lambda expressions, the `attr` placeholder allows constructin
 
 * `is_in_range(T const& lower, T const& upper)` generates a filter that returns `true` if the attribute value `x` of type `T` satisfies condition `lower <= x < upper`. For example:
 
-    sink->set_filter(flt::attr< int >("Severity").is_in_range(3, 5)); // drops all records that have level below 3 or greater than 4
+    sink->set_filter
+    (
+        // drops all records that have level below 3 or greater than 4
+        flt::attr< int >("Severity").is_in_range(3, 5)
+    );
 
 * `satisfies(FunT const& fun)` allows injection of a user-defined unary predicate `fun` into the filter. The predicate should accept an attribute value as an argument and return a value, convertible to `bool`. The result of the filter will be equivalent to the result of the predicate. For example:
 
     bool check_severity_level(int level);
 
-    sink->set_filter(flt::attr< int >("Severity").satisfies(&check_severity_level));
+    sink->set_filter
+    (
+        flt::attr< int >("Severity").satisfies(&check_severity_level)
+    );
 
 The `attr` placeholder has advanced support for string-typed attribute values (that have type `std::string` or `std::wstring`, that is). For string attribute values there are also available the following member functions:
 
 * `begins_with(T const& s)`, `ends_with(T const& s)` and `contains(T const& s)`. As follows from their names, the functions construct filters that return `true` if an attribute value begins with, ends with or contains the specified substring `s`, respectively. The string comparison is case sensitive.
 
-    sink->set_filter(flt::attr< std::string >("Domain").ends_with(".ru")); // selects only records that are related to Russian web domains
+    sink->set_filter
+    (
+        // selects only records that are related to Russian web domains
+        flt::attr< std::string >("Domain").ends_with(".ru")
+    );
 
 * `matches(T const& regex)` allows to set up a filter based on __boost_regex__ or __boost_xpressive__ regular expressions matching mechanism (note that you also have to include the appropriate header from the `boost/log/support` folder). The filter returns `true` if the attribute value matches the `regex` expression.
 
-    sink->set_filter(flt::attr< std::string >("Domain").matches(boost::regex("www\\..*\\.ru")));
+    sink->set_filter
+    (
+        flt::attr< std::string >("Domain").matches(boost::regex("www\\..*\\.ru"))
+    );
 
 It is possible that the filter doesn't find the required attribute value in the given log record. By default, the filter will throw an exception in this case. If this behavior is not desired, there are two ways to change it:
 

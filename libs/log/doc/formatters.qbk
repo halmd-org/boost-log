@@ -61,7 +61,8 @@ Like filters, formatters also support specifying a set of possible types of the 
 The `attr` formatter also supports an additional argument with a __boost_format__ format string. This feature can be used to specify formatting rules for numbers and/or decorate the formatted attribute somehow. For example:
 
     typedef boost::mpl::vector< short, int, long >::type types;
-    backend->set_formatter(fmt::stream << fmt::attr< types >("MyInteger", "[%08x]")); // will print the "MyInteger" attribute value as 8-digit hex in square brackets
+    // will print the "MyInteger" attribute value as 8-digit hex in square brackets
+    backend->set_formatter(fmt::stream << fmt::attr< types >("MyInteger", "[%08x]"));
 
 Please note, though, that the format string should be valid for all attribute value types that are specified as the template argument for the `attr` formatter. If this is not possible, one should consider using [link log.detailed.formatters.conditional conditional formatters] to split types into several groups and specify a valid format string for each group.
 
@@ -82,26 +83,43 @@ As comes from its name, `date_time` is responsible for formatting time points. T
 
 The date and time format can be customized by the user. The format should be passed as a named argument `format` to the appropriate formatter. This argument should be a format string, containing placeholders described in the __boost_date_time__ documentation. Some usage examples are as follows:
 
-    // Puts a date of any of the supported types into log. The default format is "%Y-%b-%d".
+    // Puts a date of any of the supported types into log.
+    // The default format is "%Y-%b-%d".
     backend->set_formatter(fmt::stream << fmt::date("Date"));
 
-    // Puts a time point of any of the supported types into log. The default format is "%H:%M:%S.%f".
+    // Puts a time point of any of the supported types into log.
+    // The default format is "%H:%M:%S.%f".
     backend->set_formatter(fmt::stream << fmt::time("Time"));
 
-    // Puts a date and time of the specified type into log. The default format is "%Y-%b-%d %H:%M:%S.%f".
+    // Puts a date and time of the specified type into log.
+    // The default format is "%Y-%b-%d %H:%M:%S.%f".
     backend->set_formatter(fmt::stream << fmt::date_time< std::tm >("DateTime"));
 
     // Puts a date and time of one of the specified types into log.
-    typedef boost::mpl::vector< std::time_t, std::tm, boost::posix_time::ptime >::type types;
-    backend->set_formatter(fmt::stream << fmt::date_time< types >("DateTime", keywords::format = "%d.%m.%y %H:%M:%S"));
+    typedef boost::mpl::vector<
+        std::time_t,
+        std::tm,
+        boost::posix_time::ptime
+    >::type types;
+    backend->set_formatter
+    (
+        fmt::stream
+            << fmt::date_time< types >("DateTime", keywords::format = "%d.%m.%y %H:%M:%S")
+    );
 
 The `time_duration` formatter is responsible for formatting time periods that are not bound to a specific time point. It supports types `double` (interpreted as a result of the `difftime` standard function), `boost::posix_time::time_duration` and `boost::gregorian::date_duration`. The formatter also supports the `format` argument. The usage is straightforward:
 
-    // Puts a time duration of any of the supported types into log. The default format is "%-%H:%M:%S.%f".
+    // Puts a time duration of any of the supported types into log.
+    // The default format is "%-%H:%M:%S.%f".
     backend->set_formatter(fmt::stream << fmt::time_duration("Duration"));
 
     // Puts a time duration of the specified type into log.
-    backend->set_formatter(fmt::stream << fmt::time_duration< boost::posix_time::time_duration >("Duration", keywords::format = "%H:%M:%S"));
+    typedef boost::posix_time::time_duration duration_t;
+    backend->set_formatter
+    (
+        fmt::stream
+            << fmt::time_duration< duration_t >("Duration", keywords::format = "%H:%M:%S")
+    );
 
 The `time_period` formatter composes two time points that denote a time period. It supports the following types: `boost::posix_time::time_period`, `boost::local_time::local_time_period` and `boost::gregorian::date_period`. The formatter is a bit more special since it supports two kinds of format strings, the one that describes the date format, and the one that describes the dates composition. The former can be specified with the named argument `unit_format` and the latter - with named argument `format`. The time period composition format string may contain either of the three placeholders:
 
@@ -111,12 +129,20 @@ The `time_period` formatter composes two time points that denote a time period. 
 
 Here are some usage examples:
 
-    // Puts a time period of any of the supported types into log. The default composition format is [%begin% - %last%].
+    // Puts a time period of any of the supported types into log.
+    // The default composition format is [%begin% - %last%].
     backend->set_formatter(fmt::stream << fmt::time_period("Period"));
 
     // Puts a time period of the specified type into log.
-    backend->set_formatter(fmt::stream << fmt::time_period< boost::posix_time::time_period >("Period",
-        keywords::format = "[%begin%; %end%)", keywords::unit_format = "%d.%m.%y %H:%M:%S"));
+    typedef boost::posix_time::time_period period_t;
+    backend->set_formatter
+    (
+        fmt::stream
+            << fmt::time_period< period_t >(
+                "Period",
+                keywords::format = "[%begin%; %end%)",
+                keywords::unit_format = "%d.%m.%y %H:%M:%S")
+    );
 
 Like the `attr` formatter, all date and time formatters throw exceptions when there is no requested attribute value in the log record. The `std::nothrow` argument may be used to suppress exceptions.
 
@@ -139,20 +165,46 @@ The formatter supports customization with the following named arguments:
 
 Here are a few usage examples:
 
-    // Puts the scope stack in reverse order: inner scope <- outer scope
-    backend->set_formatter(fmt::stream << fmt::named_scope("Scopes", keywords::iteration = fmt::reverse));
+    // Puts the scope stack in reverse order:
+    // inner scope <- outer scope
+    backend->set_formatter
+    (
+        fmt::stream
+            << fmt::named_scope("Scopes", keywords::iteration = fmt::reverse)
+    );
 
-    // Puts the scope stack in reverse order with a custom delimiter: inner scope | outer scope
-    backend->set_formatter(fmt::stream << fmt::named_scope("Scopes",
-        keywords::iteration = fmt::reverse, keywords::delimiter = " | "));
+    // Puts the scope stack in reverse order with a custom delimiter:
+    // inner scope | outer scope
+    backend->set_formatter
+    (
+        fmt::stream
+            << fmt::named_scope(
+                "Scopes",
+                keywords::iteration = fmt::reverse,
+                keywords::delimiter = " | ")
+    );
 
-    // Puts the scope stack in forward order, no more than 2 inner scopes: ... -> outer scope -> inner scope
-    backend->set_formatter(fmt::stream << fmt::named_scope("Scopes",
-        keywords::iteration = fmt::forward, keywords::depth = 2));
+    // Puts the scope stack in forward order, no more than 2 inner scopes:
+    // ... -> outer scope -> inner scope
+    backend->set_formatter
+    (
+        fmt::stream
+            << fmt::named_scope(
+                "Scopes",
+                keywords::iteration = fmt::forward,
+                keywords::depth = 2)
+    );
 
-    // Puts the scope stack in reverse order, no more than 2 inner scopes: inner scope <- outer scope <- ...
-    backend->set_formatter(fmt::stream << fmt::named_scope("Scopes",
-        keywords::iteration = fmt::reverse, keywords::depth = 2));
+    // Puts the scope stack in reverse order, no more than 2 inner scopes:
+    // inner scope <- outer scope <- ...
+    backend->set_formatter
+    (
+        fmt::stream
+            << fmt::named_scope(
+                "Scopes",
+                keywords::iteration = fmt::reverse,
+                keywords::depth = 2)
+    );
 
 Like the `attr` formatter, the named scope formatter throws an exception if there is no requested attribute value in the log record. The `std::nothrow` argument may be used to suppress exceptions.
 
@@ -178,16 +230,20 @@ Those familiar with __boost_phoenix__ lambda expressions will find this syntax q
     backend->set_formatter
     (
         fmt::stream
-            << fmt::date_time("TimeStamp") << " "                      // First, put the current time
+            // First, put the current time
+            << fmt::date_time("TimeStamp") << " "
             << fmt::if_ (flt::has_attr< int >("ID"))
                [
-                   fmt::stream << fmt::attr< int >("ID", "[0x%08x]")    // if "ID" is integral then format it as a hex number
+                   // if "ID" is integral then format it as a hex number
+                   fmt::stream << fmt::attr< int >("ID", "[0x%08x]")
                ]
                .else_
                [
-                   fmt::stream << "[" << fmt::attr("ID") << "]"         // otherwise put it as it is
+                   // otherwise put it as it is
+                   fmt::stream << "[" << fmt::attr("ID") << "]"
                ]
-            << " " << fmt::message()                                   // and after that goes the log record text
+            // and after that goes the log record text
+            << " " << fmt::message()
     );
 
 [endsect]

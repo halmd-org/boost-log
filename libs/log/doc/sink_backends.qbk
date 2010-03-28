@@ -23,15 +23,20 @@ The backend also provides a feature that may come useful when debugging your app
         boost::shared_ptr< logging::core > core = logging::core::get();
 
         // Create a backend and attach a couple of streams to it
-        boost::shared_ptr< sinks::text_ostream_backend > backend(new sinks::text_ostream_backend);
-        backend->add_stream(boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
-        backend->add_stream(boost::shared_ptr< std::ostream >(new std::ofstream("test.log")));
+        boost::shared_ptr< sinks::text_ostream_backend > backend =
+            boost::make_shared< sinks::text_ostream_backend >();
+        backend->add_stream(
+            boost::shared_ptr< std::ostream >(&std::clog, logging::empty_deleter()));
+        backend->add_stream(
+            boost::shared_ptr< std::ostream >(new std::ofstream("test.log")));
 
         // Enable auto-flushing after each log record written
         backend->auto_flush(true);
 
-        // Wrap it into the frontend and register in the core. The backend requires synchronization in the frontend.
-        boost::shared_ptr< sinks::synchronous_sink< sinks::text_ostream_backend > > sink(new sinks::synchronous_sink< sinks::text_ostream_backend >(backend));
+        // Wrap it into the frontend and register in the core.
+        // The backend requires synchronization in the frontend.
+        typedef sinks::synchronous_sink< sinks::text_ostream_backend > sink_t;
+        boost::shared_ptr< sink_t > sink(new sink_t(backend));
         core->add_sink(sink);
     }
 
@@ -57,13 +62,18 @@ File rotation is implemented by the sink backend itself. The file name pattern a
     {
         boost::shared_ptr< logging::core > core = logging::core::get();
 
-        boost::shared_ptr< sinks::text_file_backend > backend(new sinks::text_file_backend(
-            keywords::file_name = "file_%5N.log",                       // file name pattern
-            keywords::rotation_size = 5 * 1024 * 1024,                  // rotate the file upon reaching 5 MiB size...
-            keywords::rotation_interval = boost::posix_time::hours(1)   // ...or each hour, whichever comes first
-        ));
+        boost::shared_ptr< sinks::text_file_backend > backend =
+            boost::make_shared< sinks::text_file_backend >(
+                // file name pattern
+                keywords::file_name = "file_%5N.log",
+                // rotate the file upon reaching 5 MiB size...
+                keywords::rotation_size = 5 * 1024 * 1024,
+                // ...or each hour, whichever comes first
+                keywords::rotation_interval = boost::posix_time::hours(1)
+            );
 
-        // Wrap it into the frontend and register in the core. The backend requires synchronization in the frontend.
+        // Wrap it into the frontend and register in the core.
+        // The backend requires synchronization in the frontend.
         typedef sinks::synchronous_sink< sinks::text_file_backend > sink_t;
         boost::shared_ptr< sink_t > sink(new sink_t(backend));
 
@@ -115,7 +125,8 @@ The sink backend allows hooking into the file rotation process in order to perfo
             fmt::format("\t<record id=\"%1%\" timestamp=\"%2%\">%3%</record>")
                 % fmt::attr< unsigned int >("Line #")
                 % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
-                % fmt::xml_dec[ fmt::message() ]                // The log message has to be decorated, if it contains special characters
+                // The log message has to be decorated, if it contains special characters
+                % fmt::xml_dec[ fmt::message() ]
             );
 
         typedef sinks::synchronous_sink< sinks::text_file_backend > sink_t;
@@ -144,9 +155,12 @@ After being closed, the rotated files can be collected. In order to do so one ha
 
         // Set up the file collector
         backend->set_file_collector(sinks::file::make_collector(
-            keywords::target = "./logs",                // rotated logs will be moved here
-            keywords::max_size = 100 * 1024 * 1024,     // oldest log files will be removed if the total size of log files reaches 100 MiB...
-            keywords::min_free_space = 50 * 1024 * 1024 // ...or the free space in the target directory comes down to 50 MiB
+            // rotated logs will be moved here
+            keywords::target = "./logs",
+            // oldest log files will be removed if the total size reaches 100 MiB...
+            keywords::max_size = 100 * 1024 * 1024,
+            // ...or the free space in the target directory comes down to 50 MiB
+            keywords::min_free_space = 50 * 1024 * 1024
         ));
 
         typedef sinks::synchronous_sink< sinks::text_file_backend > sink_t;
@@ -206,12 +220,17 @@ While the text stream and file backends are aimed to store all log records into 
     {
         boost::shared_ptr< logging::core > core = logging::core::get();
 
-        boost::shared_ptr< sinks::text_multifile_backend > backend(new sinks::text_multifile_backend);
+        boost::shared_ptr< sinks::text_multifile_backend > backend =
+            boost::make_shared< sinks::text_multifile_backend >();
 
         // Set up the file naming pattern
-        backend->set_file_name_composer(fmt::stream << "./logs/" << fmt::attr< std::string >("RequestID") << ".log");
+        backend->set_file_name_composer
+        (
+            fmt::stream << "./logs/" << fmt::attr< std::string >("RequestID") << ".log"
+        );
 
-        // Wrap it into the frontend and register in the core. The backend requires synchronization in the frontend.
+        // Wrap it into the frontend and register in the core.
+        // The backend requires synchronization in the frontend.
         typedef sinks::synchronous_sink< sinks::text_multifile_backend > sink_t;
         boost::shared_ptr< sink_t > sink(new sink_t(backend));
 
@@ -245,21 +264,26 @@ Anyway, one example is better than a thousand words.
 
         // Create a backend
         boost::shared_ptr< sinks::syslog_backend > backend(new sinks::syslog_backend(
-            keywords::facility = sinks::syslog::user,               // set the logging facility
-            keywords::use_impl = sinks::syslog::native              // specify that the native UNIX API should be used
+            // set the logging facility
+            keywords::facility = sinks::syslog::user,
+            // specify that the native UNIX API should be used
+            keywords::use_impl = sinks::syslog::native
         ));
 
         // Set the straightforward level translator for the "Severity" attribute of type int
         backend->set_level_extractor(sinks::syslog::direct_level_mapping< int >("Severity"));
 
-        // Wrap it into the frontend and register in the core. The backend requires synchronization in the frontend.
+        // Wrap it into the frontend and register in the core.
+        // The backend requires synchronization in the frontend.
         typedef sinks::synchronous_sink< sinks::syslog_backend > sink_t;
         core->add_sink(boost::make_shared< sink_t >(backend));
 
         // Create a new backend
         backend.reset(new sinks::syslog_backend(
-            keywords::facility = sinks::syslog::local0,             // set the logging facility
-            keywords::use_impl = sinks::syslog::udp_socket_based    // specify that the built-in implementation should be used
+            // set the logging facility
+            keywords::facility = sinks::syslog::local0,
+            // specify that the built-in implementation should be used
+            keywords::use_impl = sinks::syslog::udp_socket_based
         ));
 
         // Setup the target address and port to send syslog messages to
@@ -300,7 +324,8 @@ The usage is quite simple and straightforward:
         typedef sinks::synchronous_sink< sinks::debug_output_backend > sink_t;
         boost::shared_ptr< sink_t > sink(new sink_t());
 
-        // Set the special filter to the frontend in order to skip the sink when no debugger is available
+        // Set the special filter to the frontend
+        // in order to skip the sink when no debugger is available
         sink->set_filter(sinks::debug_output_backend::debugger_presence_filter());
 
         core->add_sink(sink);
@@ -340,20 +365,23 @@ The only thing user has to do to add Windows event log support to his applicatio
         // Create an event log sink
         boost::shared_ptr< sinks::simple_event_log_backend > backend(
             new sinks::simple_event_log_backend((
-                keywords::log_name = "My Application", // by default it would have been Application
-                keywords::log_source = "My Source"     // by default it would have been based on the application executable name
+                // by default it would have been Application
+                keywords::log_name = "My Application",
+                // by default it would have been based on the application executable name
+                keywords::log_source = "My Source"
             ))
         );
         boost::shared_ptr< sinks::synchronous_sink< sinks::simple_event_log_backend > > sink(
             new sinks::synchronous_sink< sinks::simple_event_log_backend >(backend));
 
         // Setup the message formatter
-        backend->set_formatter(
+        backend->set_formatter
+        (
             fmt::format("%1%: [%2%] - %3%")
                 % fmt::attr< unsigned int >("Line #")
                 % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
                 % fmt::message()
-            );
+        );
 
         // We'll have to map our custom levels to the event log event types
         sinks::event_log::custom_event_type_mapping< severity_levels > mapping("Severity");
@@ -452,12 +480,17 @@ Like the simple backend, the `event_log_backend` will register itself in the Win
 Next, the user will have to provide the mapping between the application logging attributes and event identifiers. These identifiers were provided in the message compiler output as a result of compiling the message file. One can use `event_composer` and one of the event ID mappings, like in the following example:
 
     // Create an event composer. It is initialized with the event identifier mapping.
-    sinks::event_log::event_composer composer(sinks::event_log::direct_event_id_mapping< int >("EventID"));
+    sinks::event_log::event_composer composer(
+        sinks::event_log::direct_event_id_mapping< int >("EventID"));
 
     // For each event described in the message file, set up the insertion string formatters
     composer[LOW_DISK_SPACE_MSG]
-        % fmt::attr< std::string >("Drive")      // the first placeholder in the message will be replaced with contents of the "Drive" attribute
-        % fmt::attr< boost::uintmax_t >("Size"); // the second placeholder in the message will be replaced with contents of the "Size" attribute
+        // the first placeholder in the message
+        // will be replaced with contents of the "Drive" attribute
+        % fmt::attr< std::string >("Drive")
+        // the second placeholder in the message
+        // will be replaced with contents of the "Size" attribute
+        % fmt::attr< boost::uintmax_t >("Size");
 
     composer[DEVICE_INACCESSIBLE_MSG]
         % fmt::attr< std::string >("Drive");
@@ -486,7 +519,8 @@ As you can see, one can use regular [link log.detailed.formatters formatters] to
 
     backend->set_event_type_mapper(type_mapping);
 
-    // Same for event categories. Usually event categories can be restored by the event identifier.
+    // Same for event categories.
+    // Usually event categories can be restored by the event identifier.
     sinks::event_log::custom_event_category_mapping< int > cat_mapping("EventID");
     cat_mapping[LOW_DISK_SPACE_MSG] = sinks::event_log::make_event_category(MY_CATEGORY_1);
     cat_mapping[DEVICE_INACCESSIBLE_MSG] = sinks::event_log::make_event_category(MY_CATEGORY_2);
@@ -517,7 +551,8 @@ In order to emit events it is convenient to create a set of functions that will 
         BOOST_LOG_SCOPED_THREAD_TAG("EventID", int, LOW_DISK_SPACE_MSG);
         BOOST_LOG_SCOPED_THREAD_TAG("Drive", std::string, drive);
         BOOST_LOG_SCOPED_THREAD_TAG("Size", boost::uintmax_t, size);
-        // Since this record may get accepted by other sinks, this message is not completely useless
+        // Since this record may get accepted by other sinks,
+        // this message is not completely useless
         BOOST_LOG_SEV(event_logger::get(), warning) << "Low disk " << drive
             << " space, " << size << " Mb is recommended";
     }

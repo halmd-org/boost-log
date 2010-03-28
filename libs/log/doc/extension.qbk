@@ -35,9 +35,12 @@ As an example of the `basic_sink_backend` class usage, let's implement a simple 
     // The backend collects statistical information about network activity of the application
     class stat_collector :
         public sinks::basic_sink_backend<
-            char,                               // Character type. We use narrow-character logging in this example.
-            sinks::frontend_synchronization_tag // We will have to store internal data, so let's require frontend to
-        >                                       // synchronize calls to the backend.
+            // Character type. We use narrow-character logging in this example.
+            char,
+            // We will have to store internal data, so let's require frontend to
+            // synchronize calls to the backend.
+            sinks::frontend_synchronization_tag
+        >
     {
     private:
         // The file to write the collected information to
@@ -86,7 +89,10 @@ As an example of the `basic_sink_backend` class usage, let's implement a simple 
         // The function writes the collected data to the file
         void write_data()
         {
-            m_CSVFile << m_ActiveConnections << ',' << m_SentBytes << ',' << m_ReceivedBytes << std::endl;
+            m_CSVFile << m_ActiveConnections
+                << ',' << m_SentBytes
+                << ',' << m_ReceivedBytes
+                << std::endl;
             reset_accumulators();
         }
     };
@@ -101,7 +107,8 @@ As you can see, the public interface of the backend is quite simple. In fact, on
         boost::shared_ptr< stat_collector > backend(new stat_collector(file_name));
 
         // Wrap it into the specified frontend
-        boost::shared_ptr< FrontendT< stat_collector > > sink(new FrontendT< stat_collector >(backend));
+        typedef FrontendT< stat_collector > sink_t;
+        boost::shared_ptr< sink_t > sink(new sink_t(backend));
 
         // Now we can start the thread that writes the data to the file
         backend->m_WriterThread.reset(new boost::thread(
@@ -116,7 +123,8 @@ Now the `writer_thread` function can look like this:
 
     // The function runs in a separate thread and writes the collected data to the file
     template< template< typename > class FrontendT >
-    void stat_collector::writer_thread(boost::weak_ptr< FrontendT< stat_collector > > const& sink)
+    void stat_collector::writer_thread(
+        boost::weak_ptr< FrontendT< stat_collector > > const& sink)
     {
         while (true)
         {
@@ -148,8 +156,14 @@ Since we have no need for the record message, the second argument will be of no 
             --m_ActiveConnections;
         else
         {
-            logging::extract< unsigned int >("Sent", rec.attribute_values(), lambda::var(m_SentBytes) += lambda::_1);
-            logging::extract< unsigned int >("Received", rec.attribute_values(), lambda::var(m_ReceivedBytes) += lambda::_1);
+            logging::extract< unsigned int >(
+                "Sent",
+                rec.attribute_values(),
+                lambda::var(m_SentBytes) += lambda::_1);
+            logging::extract< unsigned int >(
+                "Received",
+                rec.attribute_values(),
+                lambda::var(m_ReceivedBytes) += lambda::_1);
         }
     }
 
@@ -161,8 +175,11 @@ As an example of a formatting sink backend, let's implement a sink that will emi
 
     class event_notifier :
         public sinks::basic_formatting_sink_backend<
-            char,    // the "source" character type
-            wchar_t  // the "target" character type (optional, by default is the same as the source character type)
+            // the "source" character type
+            char,
+            // the "target" character type
+            // (optional, by default is the same as the source character type)
+            wchar_t
         >
     {
         // A handle for the event provider
@@ -194,9 +211,14 @@ The threading model of the sink backend can be specified as the third optional p
 The `basic_formatting_sink_backend` base class implements just about everything that is required by the library from the backend. The only thing left is to implement the virtual `do_consume` method that receives the original log record and the result of formatting. In our case this method will pass the formatted message to the corresponding API:
 
     // The method puts the formatted message to the event log
-    void event_notifier::do_consume(record_type const& rec, target_string_type const& formatted_message)
+    void event_notifier::do_consume(
+        record_type const& rec, target_string_type const& formatted_message)
     {
-        EventWriteString(m_ProviderHandle, WINEVENT_LEVEL_LOG_ALWAYS, 0ULL /* keyword */, formatted_message.c_str());
+        EventWriteString(
+            m_ProviderHandle,
+            WINEVENT_LEVEL_LOG_ALWAYS,
+            0ULL /* keyword */,
+            formatted_message.c_str());
     }
 
 That's it. The example can be extended to make use of attribute values to fill other parameters, like event level and keywords mask. A more elaborate version of this example can be found in the library examples.
@@ -204,9 +226,15 @@ That's it. The example can be extended to make use of attribute values to fill o
 The resulting sink backend can be used similarly to other formatting sinks, like `text_ostream_backend`:
 
     boost::shared_ptr< event_notifier > backend(new event_notifier(CLSID_MyNotifier));
-    backend->set_formatter(fmt::stream << "[" << fmt::time("TimeStamp") << "] " << fmt::message());
+    backend->set_formatter
+    (
+        fmt::stream
+            << "[" << fmt::time("TimeStamp")
+            << "] " << fmt::message()
+    );
 
-    boost::shared_ptr< sinks::synchronous_sink< event_notifier > > sink(new sinks::synchronous_sink< event_notifier >(backend));
+    typedef sinks::synchronous_sink< event_notifier > sink_t;
+    boost::shared_ptr< sink_t > sink(new sink_t(backend));
     logging::core::get()->add_sink(sink);
 
 [endsect]
@@ -255,7 +283,7 @@ Let's declare our logger feature:
 
     template< typename BaseT >
     class record_tagger_feature :
-        public BaseT  // the feature should derive from other features or the basic_logger class
+        public BaseT // the feature should derive from other features or the basic_logger class
     {
     public:
         // Let's import some types that we will need. These imports should be public,
@@ -289,7 +317,8 @@ Let's declare our logger feature:
         record_type open_record_unlocked(ArgsT const& args);
     };
 
-    // A convenience metafunction to specify the feature in the features list of the final logger later
+    // A convenience metafunction to specify the feature
+    // in the list of features of the final logger later
     struct record_tagger :
         public boost::mpl::quote1< record_tagger_feature >
     {
@@ -525,9 +554,13 @@ Now in order to support this parameter we should rewrite our factory like this:
         types::string_type const& format)
     {
         Point point;
-        if (logging::extract< Point >(attr_name, rec.attribute_values(), lambda::var(point) = lambda::_1))
+        if (logging::extract< Point >(
+            attr_name,
+            rec.attribute_values(),
+            lambda::var(point) = lambda::_1))
         {
-            // If the attribute set contains the needed attribute value, format it into the stream
+            // If the attribute set contains the needed attribute value,
+            // format it into the stream
             strm << boost::format(format) % point.m_X % point.m_Y;
         }
     }
@@ -541,7 +574,12 @@ Now in order to support this parameter we should rewrite our factory like this:
         if (it != args.end())
         {
             // The custom format is specified, use the special formatter
-            return types::formatter_type(lambda::bind(&custom_point_formatter, attr_name, lambda::_1, lambda::_2, it->second));
+            return types::formatter_type(lambda::bind(
+                &custom_point_formatter,
+                attr_name,
+                lambda::_1,
+                lambda::_2,
+                it->second));
         }
         else
         {
@@ -646,7 +684,9 @@ To support it one has to define the `on_custom_relation` method in the filter fa
         Rectangle m_Rect;
 
     public:
-        is_in_rect_filter(string_type const& attr_name, Rectangle const& rect) : m_Name(attr_name), m_Rect(rect)
+        is_in_rect_filter(string_type const& attr_name, Rectangle const& rect) :
+            m_Name(attr_name),
+            m_Rect(rect)
         {
         }
 
@@ -668,7 +708,8 @@ To support it one has to define the `on_custom_relation` method in the filter fa
         public logging::filter_factory< char >
     {
         // The callback for custom relation filter
-        filter_type on_custom_relation(string_type const& name, string_type const& rel, string_type const& arg)
+        filter_type on_custom_relation(
+            string_type const& name, string_type const& rel, string_type const& arg)
         {
             if (rel == "is_in_rect")
             {
@@ -704,18 +745,21 @@ The library provides mechanism of extending support for sinks similar to the for
     };
 
     // Factory function for the SNMP sink
-    boost::shared_ptr< sinks::sink< char > > create_snmp_sink(std::map< std::string, std::string > const& params)
+    boost::shared_ptr< sinks::sink< char > > create_snmp_sink(
+        std::map< std::string, std::string > const& params)
     {
         // Read parameters for the backend and create it
         std::map< std::string, std::string >::const_iterator it = params.find("TrapReceiver");
         if (it == params.end())
             throw std::runtime_error("TrapReceiver parameter not specified for the SNMP backend");
 
-        boost::shared_ptr< snmp_backend > backend = boost::make_shared< snmp_backend >(it->second);
+        boost::shared_ptr< snmp_backend > backend =
+            boost::make_shared< snmp_backend >(it->second);
 
         // Construct and initialize the final sink
-        boost::shared_ptr< sinks::synchronous_sink< snmp_backend > > sink =
-            boost::make_shared< sinks::synchronous_sink< snmp_backend > >(backend);
+        typedef sinks::synchronous_sink< snmp_backend > sink_t;
+        boost::shared_ptr< sink_t > sink =
+            boost::make_shared< sink_t >(backend);
 
         it = params.find("Filter");
         if (it != params.end())
