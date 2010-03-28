@@ -13,11 +13,11 @@
 
     #include <boost/log/utility/string_literal.hpp>
 
-String literals are used in several places throughout the library. However, this component can be successfully used outside of the library in users code. It is header-only and does not require linking with the library binary. String literals can improve performance significantly if there is no need to modify stored strings. What is also important, since string literals do not dynamically allocate memory, it is easier to maintain exception safety when using string literals instead of regular strings.
+String literals are used in several places throughout the library. However, this component can be successfully used outside of the library in users' code. It is header-only and does not require linking with the library binary. String literals can improve performance significantly if there is no need to modify stored strings. What is also important, since string literals do not dynamically allocate memory, it is easier to maintain exception safety when using string literals instead of regular strings.
 
-The functionality is implemented in `basic_string_literal` class template, which is parametrized with character and character traits, similar to `std::basic_string`. There are also two convenience typedefs provided: `string_literal` and `wstring_literal`, for narrow and wide character types, respectively. In order to ease string literal construction in generic code there is also a `str_literal` function template that accepts a string literal and returns a `basic_string_literal` instance for the appropriate character type.
+The functionality is implemented in the `basic_string_literal` class template, which is parametrized with the character and character traits, similar to `std::basic_string`. There are also two convenience typedefs provided: `string_literal` and `wstring_literal`, for narrow and wide character types, respectively. In order to ease string literal construction in generic code there is also a `str_literal` function template that accepts a string literal and returns a `basic_string_literal` instance for the appropriate character type.
 
-String literals support interface similar to STL strings, except for string modification functions. However, it is possible to assign to or clear string literals, as long as only string literals involved. Relational and stream output operators are also supported. A more detailed information is given in the [classref boost::log::basic_string_literal Reference section].
+String literals support interface similar to STL strings, except for string modification functions. However, it is possible to assign to or clear string literals, as long as only string literals involved. Relational and stream output operators are also supported. More detailed information is given in the [classref boost::log::basic_string_literal Reference section].
 
 [endsect]
 
@@ -25,7 +25,7 @@ String literals support interface similar to STL strings, except for string modi
 
     #include <boost/log/utility/type_info_wrapper.hpp>
 
-The language support for run time type information is essential for the library. But partially because of limitations that C++ Standard poses on this feature, partially because of differences of implementation of different compilers, there was a need for a lightweight wrapper around `std::type_info` class to fill the gaps. The table below briefly shows the differences between the `std::type_info` and `type_info_wrapper` classes.
+The language support for run time type information is essential for the library. But partially because of limitations that the C++ Standard imposes on this feature, partially because of differences of implementation of different compilers, there was a need for a lightweight wrapper around the `std::type_info` class to fill the gaps. The table below briefly shows the differences between the `std::type_info` and `type_info_wrapper` classes.
 
 [table Type information classes comparison
     [[Feature]                                  [`std::type_info`]              [`type_info_wrapper`]]
@@ -33,15 +33,14 @@ The language support for run time type information is essential for the library.
     [[Is copy-constructable]                    [No]                            [Yes]]
     [[Is assignable]                            [No]                            [Yes]]
     [[Is swappable]                             [No]                            [Yes]]
-    [[Is singleton]                             [Yes, as defined in C++ Standard. Not every compiler conforms to this requirement, though.] [No]]
     [[Life time duration]                       [Static, until the application terminates] [Dynamic]]
     [[Has an empty state]                       [No]                            [Yes. In empty state the type info wrapper is never equal to other non-empty type info wrappers. It is equal to other empty type info wrappers and can be ordered with them.]]
     [[Supports equality comparison]             [Yes]                           [Yes]]
     [[Supports ordering]                        [Yes, partial ordering with the `before` method.] [Yes, partial ordering with the complete set of comparison operators. The semantics of ordering is similar to the `std::type_info::before` method.]]
-    [[Supports printable representation of type] [Yes, with `name` and `raw_name` functions.] [Yes, with `pretty_name` function. The function does its best to print the type name in a human-readable form.]]
+    [[Supports printable representation of type] [Yes, with the `name` function.] [Yes, with `pretty_name` function. The function does its best to print the type name in a human-readable form. On some platforms it does better than `std::type_info::name`.]]
 ]
 
-Given the distinctions above, using type information objects becomes much easier. For example, ability to copy and order with regular operators allows to use `type_info_wrapper` with containers. Ability to default-construct and assign allows to use type information as a regular objects an not to resort to pointers which may be unsafe.
+Given the distinctions above, using type information objects becomes much easier. For example, the ability to copy and order with regular operators allows using `type_info_wrapper` with containers. The ability to default-construct and assign allows using type information as a regular object and not to resort to pointers which may be unsafe.
 
 [endsect]
 
@@ -59,7 +58,7 @@ Scoped attributes are a powerful mechanism of tagging log records that can be us
 
 The former two register a source-specific attribute in the `logger` logger object. The attribute name and type are given in the `attr_name` and `attr_type` arguments. The BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR additionally accepts a __boost_preprocessor__ sequence of arguments that should be passed to the attribute constructor. The latter pair of macros do exactly the same but the attribute is registered for the current thread in the logging core (which does not require a logger).
 
-[note If it appears that a same-named attribute is already registered in the logger/logging core, the macros won't override the existing attribute and will eventually have no effect. See [link log.rationale.why_weak_scoped_attributes Rationale] for a more detailed explanation of reasons for such behavior.]
+[note If an attribute with the same name is already registered in the logger/logging core, the macros won't override the existing attribute and will eventually have no effect. See [link log.rationale.why_weak_scoped_attributes Rationale] for a more detailed explanation of the reasons for such behavior.]
 
 Usage example follows:
 
@@ -67,7 +66,7 @@ Usage example follows:
 
     void foo()
     {
-        // This log record will too be marked with the "Tag" attribute, whenever it is called from the A::bar function.
+        // This log record will also be marked with the "Tag" attribute, whenever it is called from the A::bar function.
         // It will not be marked when called from other places.
         BOOST_LOG(get_my_logger()) << "A log message from foo";
     }
@@ -78,7 +77,7 @@ Usage example follows:
 
         void bar()
         {
-            // Set a thread-wide markup tag. Note the additional parenthesis to form a Boost.PP sequence.
+            // Set a thread-wide markup tag. Note the additional parentheses to form a Boost.PP sequence.
             BOOST_LOG_SCOPED_THREAD_ATTR_CTOR("Tag", attrs::constant< std::string >, ("Called from A::bar"));
 
             // This log record will be marked
@@ -120,9 +119,9 @@ The macros are effectively wrappers around `BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR` a
     // Note there is no "attrs::constant" type wrapping and no additional parenthesis around the tag value.
     BOOST_LOG_SCOPED_THREAD_TAG("Tag", std::string, "Called from A::bar");
 
-[warning When using scoped attributes, make sure that the scoped attribute is not altered in the attribute set in which it was registered. For example, one should not clear or reinstall attribute set of the logger if there are logger-specific scoped attributes registered in it. Otherwise the program will likely crash. This issue is especially critical in multithreaded application, when one thread may not know whether there are scoped attributes in the logger or there are not. Future releases may solve this limitation but currently the scoped attribute must remain intact until unregistered on leaving the scope.]
+[warning When using scoped attributes, make sure that the scoped attribute is not altered in the attribute set in which it was registered. For example, one should not clear or reinstall the attribute set of the logger if there are logger-specific scoped attributes registered in it. Otherwise the program will likely crash. This issue is especially critical in multithreaded application, when one thread may not know whether there are scoped attributes in the logger or there are not. Future releases may solve this limitation but currently the scoped attribute must remain intact until unregistered on leaving the scope.]
 
-Although the described macros are intended to be the primary interface for the functionality, there is also a C++ interface available. It may be useful if user decides to develop his own macros that cannot be based on the existing ones.
+Although the described macros are intended to be the primary interface for the functionality, there is also a C++ interface available. It may be useful if the user decides to develop his own macros that cannot be based on the existing ones.
 
 Any scoped attribute is attached to a generic sentry object of type `scoped_attribute`. As long as the sentry exists, the attribute is registered. There are several functions that create sentries for source or thread-specific attributes:
 
@@ -144,7 +143,7 @@ Any scoped attribute is attached to a generic sentry object of type `scoped_attr
 
 Please note that the overloads that accept references to the attribute do not control the life time of the attribute. These overloads can be used to temporarily register attributes that reside on stack or are members of a class - in other words, whose life duration is controlled elsewhere.
 
-The object of `scoped_attribute` type is able to attach results of each of these functions on its construction. For example, `BOOST_LOG_SCOPED_LOGGER_ATTR(lg, "RunTime", attrs::timer)` can roughly be expanded to this:
+An object of the `scoped_attribute` type is able to attach results of each of these functions on its construction. For example, `BOOST_LOG_SCOPED_LOGGER_ATTR(lg, "RunTime", attrs::timer)` can roughly be expanded to this:
 
     attrs::timer attr;
     attrs::scoped_attribute sentry = attrs::add_scoped_logger_attribute(lg, "RunTime", attr);
@@ -155,17 +154,17 @@ The object of `scoped_attribute` type is able to attach results of each of these
 
     #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 
-Type dispatchers are used throughout the library in order to work with attribute values. Dispatchers allow to acquire actual typed attribute value using the Visitor concept. The most notable places where the functionality is used are filters and formatters. However, this mechanism is orthogonal to attributes and can be used for other purposes as well. Most of the time users won't need to dig into details of type dispatchers, but this information may be useful for the ones who intend to extend the library and wants to understand what's under the hood.
+Type dispatchers are used throughout the library in order to work with attribute values. Dispatchers allow acquiring the actual typed attribute value using the Visitor concept. The most notable places where the functionality is used are filters and formatters. However, this mechanism is orthogonal to attributes and can be used for other purposes as well. Most of the time users won't need to dig into the details of type dispatchers, but this information may be useful for those who intend to extend the library and wants to understand what's under the hood.
 
-Every type dispatcher supports `type_dispatcher` interface. When an attribute value needs to be extracted, this interface is passed to the attribute value object, which then tries to acquire the concrete visitor for the actual type of the value. All visitors derive from the appropriate instance of the `type_visitor` class template, instantiated on the actual type of the value. If the dispatcher is capable to consume the value of the requested type, it must return the pointer to the appropriate visitor interface. Otherwise it returns `NULL`. When (and if) the corresponding visitor is acquired, the attribute value object only have to pass the contained value to the visitor.
+Every type dispatcher supports the `type_dispatcher` interface. When an attribute value needs to be extracted, this interface is passed to the attribute value object, which then tries to acquire the concrete visitor for the actual type of the value. All visitors derive from the appropriate instance of the `type_visitor` class template, instantiated on the actual type of the value. If the dispatcher is able to consume the value of the requested type, it must return the pointer to the appropriate visitor interface. Otherwise it returns `NULL`. When (and if) the corresponding visitor is acquired, the attribute value object only has to pass the contained value to the visitor.
 
-Gladly, there is no need to write type dispatchers from scratch. The library provides two kinds of type dispatchers that implement `type_dispatcher` and `type_visitor` interfaces and encapsulate the visitor lookup.
+Happily, there is no need to write type dispatchers from scratch. The library provides two kinds of type dispatchers that implement the `type_dispatcher` and `type_visitor` interfaces and encapsulate the visitor lookup.
 
 [heading Static type dispatcher]
 
     #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
-Static type dispatchers are used when the set of types that needs to be supported for extraction is known at compile time. The `static_type_dispatcher` class template is parametrized with an MPL type sequence of types that needs to be supported. The dispatcher inherits from `type_dispatcher` and `type_visitor` instances for all types in the MPL sequence. All you need to do is derive your class from the dispatcher and implement the `visit` methods for all supported types, like this:
+Static type dispatchers are used when the set of types that needs to be supported for extraction is known at compile time. The `static_type_dispatcher` class template is parametrized with an MPL type sequence of types that need to be supported. The dispatcher inherits from `type_dispatcher` and `type_visitor` instances for all types in the MPL sequence. All you need to do is derive your class from the dispatcher and implement the `visit` methods for all supported types, like this:
 
     // A simple attribute value
     template< typename T >
@@ -233,7 +232,7 @@ Static type dispatchers are used when the set of types that needs to be supporte
 
 [tip In the example above we implemented a reduced attribute value object. Since in most cases this implementation is always the same, the library provides a ready-to-go attribute value in the [headerref boost/log/attributes/basic_attribute_value.hpp basic_attribute_value.hpp] file, the `basic_attribute_value` class template.]
 
-Static type dispatcher also supports another way of use which allows to avoid code duplication if values of several types have to be processed in a similar manner. In the example above we wanted to print the dispatched value on the console, whatever it is. The same can be achieved with templated metafunction class which is injected into the dispatcher as a visitor.
+The static type dispatcher also supports another way of use which allows avoidance of code duplication if values of several types have to be processed in a similar manner. In the example above we wanted to print the dispatched value on the console, whatever it is. The same can be achieved with templated metafunction class which is injected into the dispatcher as a visitor.
 
     // The templated visitor will be instantiated on every type supported by the dispatcher
     template< typename T >
@@ -252,7 +251,7 @@ Static type dispatcher also supports another way of use which allows to avoid co
         boost::mpl::quote1< my_visitor >
     > my_dispatcher;
 
-This dispatcher can be used precisely the same way as the previously defined one. Note also that __boost_mpl__ lambda expressions are also supported as visitor generators.
+This dispatcher can be used in precisely the same way as the previously defined one. Note also that __boost_mpl__ lambda expressions are supported as visitor generators.
 
 [tip See also [link log.detailed.utilities.extractors attribute value extractors] for an even simpler solution if all you want is to get an attribute value.]
 
@@ -260,7 +259,7 @@ This dispatcher can be used precisely the same way as the previously defined one
 
     #include <boost/log/utility/type_dispatch/dynamic_type_dispatcher.hpp>
 
-In case if the set of types that have to be supported is not available at compile time, the `dynamic_type_dispatcher` class to help. One can use its `register_type` method to add support for a particular type. User has to pass a function object along with the type, this functor will be called when a visitor for the specified type is invoked. Considering the `my_value` from the code sample for static type dispatcher is intact, the code can be rewritten as follows:
+If the set of types that have to be supported is not available at compile time, the `dynamic_type_dispatcher` class is there to help. One can use its `register_type` method to add support for a particular type. The user has to pass a function object along with the type, this functor will be called when a visitor for the specified type is invoked. Considering the `my_value` from the code sample for static type dispatcher is intact, the code can be rewritten as follows:
 
     // Implement visitation logic for all supported types
     void on_int(int const& value)
@@ -299,7 +298,7 @@ In case if the set of types that have to be supported is not available at compil
         return 0;
     }
 
-Of course, complex function objects, like provided by __boost_bind__, are also supported.
+Of course, complex function objects, like those provided by __boost_bind__, are also supported.
 
 [endsect]
 
@@ -344,7 +343,7 @@ There are also a number of time-related type sequences available:
 
     #include <boost/log/utility/attribute_value_extractor.hpp>
 
-Attribute value extractors serve as a helper tool on top of [link log.detailed.utilities.type_dispatch type dispatchers] in order to simplify extracting attribute values in generic code. The functionality is implemented in the `attribute_value_extractor` class template, parametrized on character type and type or MPL sequence of types that have to be supported for dispatch. The `attribute_value_extractor` instance is a binary functional object that accepts a set of attribute values and another functional object that will receive the extracted attribute value. The name of the attribute to be extracted is given as the constructor argument to the extractor. The key advantage of using extractors instead of raw dispatchers is that the receiving functional object may have a template `operator ()`. Obviously, this allows to reduce the amount of code in case of similar processing of attributes of different types. For example:
+Attribute value extractors serve as a helper tool on top of [link log.detailed.utilities.type_dispatch type dispatchers] in order to simplify extracting attribute values in generic code. The functionality is implemented in the `attribute_value_extractor` class template, parametrized on character type and type or MPL sequence of types that have to be supported for dispatch. The `attribute_value_extractor` instance is a binary function object that accepts a set of attribute values and another function object that will receive the extracted attribute value. The name of the attribute to be extracted is given as the constructor argument to the extractor. The key advantage of using extractors instead of raw dispatchers is that the receiving function object can have a template `operator ()`. Obviously, this allows reducing the amount of code when similar processing is needed for attributes of different types. For example:
 
     // A generic function object that outputs attribute value
     struct print_attribute_value
@@ -371,7 +370,7 @@ Attribute value extractors serve as a helper tool on top of [link log.detailed.u
         assert(!extractor2(attrs, print_attribute_value()));
     }
 
-Note that predefined type sequences provided by the library can be used freely with extractors just as well as with filters and formatters. Also note that specifying a single type of the attribute value instead of type sequence is also perfectly valid.
+Note that the predefined type sequences provided by the library can be used freely with extractors just as well as with filters and formatters. Also note that specifying a single type of the attribute value instead of type sequence is also perfectly valid.
 
 The library also provides an `extract` convenience function that automatically creates extractor object. The `foo` function from the example above can be rewritten like this:
 
@@ -387,11 +386,11 @@ The library also provides an `extract` convenience function that automatically c
 
     #include <boost/log/utility/record_ordering.hpp>
 
-There are cases when it is required to order log records between each other. One possible use case is storing records in a container or a priority queue. The library provides two types of record ordering predicates out of box:
+There are cases when log records need to be ordered. One possible use case is storing records in a container or a priority queue. The library provides two types of record ordering predicates out of the box:
 
 [heading Opaque handle ordering]
 
-The `handle_ordering` class allows to apply a quick opaque ordering. The result of this ordering is not stable between different runs of the application, however it provides the best performance. The `handle_ordering` is a template that is specialized with an optional predicate function that will be able to compare `void*` pointers. By default an `std::less` equivalent is used.
+The `handle_ordering` class allows application of a quick opaque ordering. The result of this ordering is not stable between different runs of the application, however it provides the best performance. The `handle_ordering` is a template that is specialized with an optional predicate function that will be able to compare `void*` pointers. By default a `std::less` equivalent is used.
 
     // A set of unique records
     std::set< logging::record, logging::handle_ordering< > > m_Records;
@@ -413,9 +412,9 @@ This kind of ordering is implemented with the `attribute_value_ordering` class a
         ordering
     > m_Records(ordering("Severity"));
 
-Like the `handle_ordering`, `attribute_value_ordering` also accepts the third optional template parameter, which should be the predicate capable to compare attribute values (`int`s in the example above). By default, an `std::less` equivalent is used.
+Like the `handle_ordering`, `attribute_value_ordering` also accepts the third optional template parameter, which should be the predicate to compare attribute values (`int`s in the example above). By default, a `std::less` equivalent is used.
 
-You may also use the `make_attr_ordering` generator function to automatically generate the `attribute_value_ordering` instance based on the attribute value name and the ordering function. This might be useful if ordering function has a non-trivial type, like the one __boost_bind__ provides.
+You can also use the `make_attr_ordering` generator function to automatically generate the `attribute_value_ordering` instance based on the attribute value name and the ordering function. This might be useful if the ordering function has a non-trivial type, like the ones __boost_bind__ provides.
 
 [endsect]
 
@@ -423,9 +422,9 @@ You may also use the `make_attr_ordering` generator function to automatically ge
 
     #include <boost/log/utility/exception_handler.hpp>
 
-The library provides exception handling hooks in different places. Tools, defined in this header, provide an easy way of implementing functional objects suitable for such hooks.
+The library provides exception handling hooks in different places. Tools, defined in this header, provide an easy way of implementing function objects suitable for such hooks.
 
-An exception handler is a functional object that accepts no arguments. The result value of the exception handler is ignored and thus should generally be `void`. Exception handlers are called from within `catch` sections by the library, therefore in order to reacquire the exception object it has to rethrow it. The header defines an `exception_handler` template functor that does just that and then forwards the exception object to an unary user-defined functional object. The `make_exception_handler` function can be used to simplify the handler construction. All expected exception types should be specified explicitly in the call, in the order they would appear in the `catch` sections (i.e. from most specific ones to the most general ones).
+An exception handler is a function object that accepts no arguments. The result of the exception handler is ignored and thus should generally be `void`. Exception handlers are called from within `catch` sections by the library, therefore in order to reacquire the exception object it has to rethrow it. The header defines an `exception_handler` template functor that does just that and then forwards the exception object to an unary user-defined functional object. The `make_exception_handler` function can be used to simplify the handler construction. All expected exception types should be specified explicitly in the call, in the order they would appear in the `catch` sections (i.e. from most specific ones to the most general ones).
 
     struct my_handler
     {
@@ -454,7 +453,7 @@ An exception handler is a functional object that accepts no arguments. The resul
         >(my_handler()));
     }
 
-As you can see, you may either suppress exception by returning normally from the `operator()` in the user-defined handler functor, or rethrow the exception, in which case it will propagate further. If it appears that the exception handler is invoked for an exception type that cannot be caught by any of the specified types, the exception will be propagated without any processing. In order to catch such situations too, there exists the `nothrow_exception_handler` class. It invokes the user-defined functor with no arguments if it cannot determine the exception type.
+As you can see, you can either suppress the exception by returning normally from `operator()` in the user-defined handler functor, or rethrow the exception, in which case it will propagate further. If it appears that the exception handler is invoked for an exception type that cannot be caught by any of the specified types, the exception will be propagated without any processing. In order to catch such situations, there exists the `nothrow_exception_handler` class. It invokes the user-defined functor with no arguments if it cannot determine the exception type.
 
     struct my_handler
     {
@@ -502,7 +501,7 @@ It is sometimes convenient to completely suppress all exceptions at a certain li
 
 [section:init Simplified library initialization tools]
 
-This part of the library is provided in order to simplify logging initialization and provide basic tools to develop user-specific initialization mechanisms. It is known that setup capabilities and preferences may vary widely from application to application, therefore the library does not attempt to provide a universal solution for this task. The provided tools are mostly intended to serve as a quick drop-in support for logging setup and a set of instruments to implement something more elaborate and more fitting user's needs.
+This part of the library is provided in order to simplify logging initialization and provide basic tools to develop user-specific initialization mechanisms. It is known that setup capabilities and preferences may vary widely from application to application, therefore the library does not attempt to provide a universal solution for this task. The provided tools are mostly intended to serve as a quick drop-in support for logging setup and a set of instruments to implement something more elaborate and more fitting users' needs.
 
 Some of the features described in this section will require the separate library binary, with name based on "boost_log_setup" substring. This binary depends on the main library binary.
 
@@ -512,7 +511,7 @@ Some of the features described in this section will require the separate library
     #include <boost/log/utility/init/to_file.hpp>
     #include <boost/log/utility/init/common_attributes.hpp>
 
-The library provides a number of functions that simplify some common initialization procedures, like sink and commonly used attributes registration. This is not much of a functionality, however, it allows to save a couple of minutes of learning the library for a newcomer.
+The library provides a number of functions that simplify some common initialization procedures, like sink and commonly used attributes registration. This is not much functionality. However, it saves a couple of minutes of learning the library for a newcomer.
 
 Logging to the application console is the simplest way to see the logging library in action. To achieve this, one can initialize the library with a single function call, like this:
 
@@ -532,7 +531,7 @@ Pretty easy, isn't it? There is `winit_log_to_console` function for wide-charact
 
     logging::init_log_to_console(std::cout);
 
-What's important, is that you can further manage the console sink if you save the `shared_ptr` to the sink that this function returns. This allows you to setup things like filter, formatter and auto-flush flag.
+What's important, is that you can further manage the console sink if you save the `shared_ptr` to the sink that this function returns. This allows you to set up things like filter, formatter and auto-flush flag.
 
     int main(int, char*[])
     {
@@ -565,9 +564,9 @@ Similarly to console, one can use a single function call to enable logging to a 
         return 0;
     }
 
-Like with `init_log_to_console`, the `init_log_to_file` function has its wide-character counterpart `winit_log_to_file` and returns the `shared_ptr` to the registered sink. The functions do not conflict and may be combined freely, so it is possible to setup logging to console and a couple of files, including filtering and formatting, in about 10 lines of code.
+Like with `init_log_to_console`, the `init_log_to_file` function has its wide-character counterpart `winit_log_to_file` and returns the `shared_ptr` to the registered sink. The functions do not conflict and may be combined freely, so it is possible to set up logging to the console and a couple of files, including filtering and formatting, in about 10 lines of code.
 
-Lastly, there is a `add_common_attributes` function that registers two most frequently used attributes: "LineID" and "TimeStamp". The former counts log record being made and has attribute value `unsigned int`. The latter, as its name implies, provides current time for each log record, in form of `boost::posix_time::ptime` (see __boost_date_time__). These two attributes are registered globally, so they will remain available in all threads and loggers. This makes the final version of our code sample to look something like this:
+Lastly, there is an `add_common_attributes` function that registers two frequently used attributes: "LineID" and "TimeStamp". The former counts log record being made and has attribute value `unsigned int`. The latter, as its name implies, provides the current time for each log record, in the form of `boost::posix_time::ptime` (see __boost_date_time__). These two attributes are registered globally, so they will remain available in all threads and loggers. This makes the final version of our code sample look something like this:
 
     int main(int, char*[])
     {
@@ -605,9 +604,9 @@ Lastly, there is a `add_common_attributes` function that registers two most freq
     #include <boost/log/utility/init/filter_parser.hpp>
     #include <boost/log/utility/init/formatter_parser.hpp>
 
-Filter and formatter parsers allow to construct filters and formatters from a descriptive string. The function `parse_filter` is responsible for recognizing filters and `parse_formatter` - for recognizing formatters.
+Filter and formatter parsers allow constructing filters and formatters from a descriptive string. The function `parse_filter` is responsible for recognizing filters and `parse_formatter` - for recognizing formatters.
 
-In case of filters the string is formed of a sequence of condition expressions, interconnected with boolean operations. There are two operations supported: conjunction (designated as "&" or "and") and disjunction ("|" or "or"). Each condition itself may be either a single condition or a sub-filter, taken in round brackets. Each condition can be negated with the "!" sign or "not" keyword. The condition, if it's not a sub-filter, usually consists of an attribute name enclosed in percent characters ("%"), a relation keyword and an operand. The relation and operand may be omitted, in which case the condition is assumed to be the requirement of the attribute presence (with any type).
+In the case of filters the string is formed of a sequence of condition expressions, interconnected with boolean operations. There are two operations supported: conjunction (designated as "&" or "and") and disjunction ("|" or "or"). Each condition itself may be either a single condition or a sub-filter, taken in round brackets. Each condition can be negated with the "!" sign or "not" keyword. The condition, if it's not a sub-filter, usually consists of an attribute name enclosed in percent characters ("%"), a relation keyword and an operand. The relation and operand may be omitted, in which case the condition is assumed to be the requirement of the attribute presence (with any type).
 
 [pre
 filter:

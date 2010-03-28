@@ -9,9 +9,9 @@
 
 [section:attributes Attributes]
 
-Every attribute supported by the library must derive from the `attribute` interface. This interface has the only virtual method named `get_value`. This method should return the actual attribute value object, derived from the `attribute_value` interface. Such separation allows to implement attributes that can return different values at different time points (like clock-related attributes, for example) and, on the other hand, allows to use different values of the same attribute independently.
+Every attribute supported by the library must derive from the `attribute` interface. This interface has a single virtual method named `get_value`. This method should return the actual attribute value object, derived from the `attribute_value` interface. Such separation allows implementing attributes that can return different values at different time points (like clock-related attributes, for example) and, on the other hand, allows using different values of the same attribute independently.
 
-The attribute value object is mostly intended to store the actual attribute value and implement type dispatching in order to be able to extract the stored value. One should not confuse the attribute value object type and the stored value type. The former is in most cases not needed by users and is hidden behind the `attribute_value` interface, but the latter is needed to be able to extract the value. For brevity we call the stored attribute value type simply as attribute value type in this documentation.
+The attribute value object is mostly intended to store the actual attribute value and implement type dispatching in order to be able to extract the stored value. One should not confuse the attribute value object type and the stored value type. The former is in most cases not needed by users and is hidden behind the `attribute_value` interface, but the latter is needed to be able to extract the value. For brevity we call the stored attribute value type simply the attribute value type in this documentation.
 
 [section:constant Constants]
 
@@ -42,8 +42,8 @@ That's it, there's nothing much you can do with a constant attribute. Constants 
 
 This kind of attribute is an extension for the [link log.detailed.attributes.constant constant attribute]. In addition to being able to store some value, the `mutable_constant` class template has two distinctions:
 
-* it allows to modify the stored value without re-registering the attribute
-* it allows to synchronize the stores and readings of the stored value
+* it allows modification of the stored value without re-registering the attribute
+* it allows synchronization of the stores and readings of the stored value
 
 In order to change the stored value of the attribute, one must call the `set_value` method:
 
@@ -61,7 +61,7 @@ In order to change the stored value of the attribute, one must call the `set_val
         BOOST_LOG(lg) << "This record has MyInteger == 100";
     }
 
-In multithreaded applications the `set_value` method calls must be serialized with the `get_value` calls (which, generally speaking, happen on every log record being made). By default `mutable_constant` does not serialize calls in any way, assuming that user will do so externally. However, `mutable_constant` template provides three additional template arguments: synchronization primitive type, scoped exclusive lock type and scoped shareable lock type. If synchronization primitive type is specified, the scoped exclusive lock type is a mandatory parameter. In this case, scoped shareable lock type is not specified, the attribute will fall back to the exclusive lock instead of shared locks. For example:
+In multithreaded applications the `set_value` method calls must be serialized with the `get_value` calls (which, generally speaking, happen on every log record being made). By default `mutable_constant` does not serialize calls in any way, assuming that the user will do so externally. However, the `mutable_constant` template provides three additional template arguments: synchronization primitive type, scoped exclusive lock type and scoped shareable lock type. If a synchronization primitive type is specified, the scoped exclusive lock type is a mandatory parameter. If the scoped shareable lock type is not specified, the attribute will fall back to the exclusive lock instead of shared locks. For example:
 
     // This mutable constant will always lock exclusively either for reading or storing the value
     typedef attrs::mutable_constant<
@@ -105,7 +105,7 @@ In multithreaded applications the `set_value` method calls must be serialized wi
         BOOST_LOG(lg) << "This record has MyInteger2 == 300";
     }
 
-Mutable constants are often used as auxiliary attributes inside loggers to store attributes that may change on some events. As opposed to regular constants, which would require re-registering in case of value modification, mutable constants allow to modify the value in-place.
+Mutable constants are often used as auxiliary attributes inside loggers to store attributes that may change on some events. As opposed to regular constants, which would require re-registering in case of value modification, mutable constants allow modifying the value in-place.
 
 [endsect]
 
@@ -113,7 +113,7 @@ Mutable constants are often used as auxiliary attributes inside loggers to store
 
     #include <boost/log/attributes/counter.hpp>
 
-Counters are one of the simplest attributes that generate a new value each time requested. Counters are often used to identify log records or to count some events, e.g. accepted network connections. The class template `counter` provides such functionality. This template is parametrized with the counter value type, which should support arithmetic operations, such as `operator +` and `operator -`. The counter attribute allows to specify initial value and step (which can be negative) on construction.
+Counters are one of the simplest attributes that generate a new value each time requested. Counters are often used to identify log records or to count some events, e.g. accepted network connections. The class template `counter` provides such functionality. This template is parametrized with the counter value type, which should support arithmetic operations, such as `operator +` and `operator -`. The counter attribute allows specification of the initial value and step (which can be negative) on construction.
 
     BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, src::logger_mt)
     {
@@ -136,7 +136,7 @@ Counters are one of the simplest attributes that generate a new value each time 
         BOOST_LOG(lg) << "This record has LineCounter == 2, CountDown == 90";
     }
 
-[note Don't expect that the log records with the `counter` attribute will always have ascending or descending counter values in the resulting log. In multithreaded applications counter values acquired in different threads may come to a sink in either order. See [link log.rationale.why_weak_record_ordering Rationale] for a more detailed explanation on why that can happen. For this reason it is more accurate to say that the `counter` attribute generates an identifier in an ascending or descending order rather than counts log records in either order.]
+[note Don't expect that the log records with the `counter` attribute will always have ascending or descending counter values in the resulting log. In multithreaded applications counter values acquired in different threads may come to a sink in either order. See [link log.rationale.why_weak_record_ordering Rationale] for a more detailed explanation on why that can happen. For this reason it is more accurate to say that the `counter` attribute generates an identifier in an ascending or descending order rather than that it counts log records in either order.]
 
 [endsect]
 
@@ -144,7 +144,7 @@ Counters are one of the simplest attributes that generate a new value each time 
 
     #include <boost/log/attributes/clock.hpp>
 
-One of the "must-have" features of any logging library is the support for attaching a time stamp to every log record. The library provides two attributes for this purpose: `utc_clock` and `local_clock`. The former returns current UTC time and the latter returns current local time. In either case the returned time stamp is acquired with maximum precision for the target platform. The attribute value is `boost::posix_time::ptime` (see __boost_date_time__). The usage is quite straightforward:
+One of the "must-have" features of any logging library is support for attaching a time stamp to every log record. The library provides two attributes for this purpose: `utc_clock` and `local_clock`. The former returns the current UTC time and the latter returns the current local time. In either case the returned time stamp is acquired with the maximum precision for the target platform. The attribute value is `boost::posix_time::ptime` (see __boost_date_time__). The usage is quite straightforward:
 
     BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::logger_mt)
 
@@ -163,7 +163,7 @@ One of the "must-have" features of any logging library is the support for attach
 
     #include <boost/log/attributes/timer.hpp>
 
-The `timer` attribute is very useful when there is a need to estimate duration of some prolonged process. The attribute returns time duration elapsed since the attribute construction. The attribute value type is `boost::posix_time::ptime::time_duration_type` (see __boost_date_time__).
+The `timer` attribute is very useful when there is a need to estimate the duration of some prolonged process. The attribute returns the time elapsed since the attribute construction. The attribute value type is `boost::posix_time::ptime::time_duration_type` (see __boost_date_time__).
 
     // The class represents a single peer-to-peer connection
     class network_connection
@@ -183,9 +183,9 @@ The `timer` attribute is very useful when there is a need to estimate duration o
         }
     };
 
-The attribute provides high resolution of the time estimation and even can be used as a simple in-place performance profiling tool.
+The attribute provides high resolution of the time estimation and can even be used as a simple in-place performance profiling tool.
 
-[tip The `timer` attribute can even be used to profile the code in different modules without recompiling them. The trick is to wrap an expensive call a foreign module with the thread-specific `timer` [link log.detailed.utilities.scoped_attributes scoped attribute], which will markup all log records made from within the module with time readings.]
+[tip The `timer` attribute can even be used to profile the code in different modules without recompiling them. The trick is to wrap an expensive call to a foreign module with the thread-specific `timer` [link log.detailed.utilities.scoped_attributes scoped attribute], which will markup all log records made from within the module with time readings.]
 
 [endsect]
 
@@ -193,19 +193,19 @@ The attribute provides high resolution of the time estimation and even can be us
 
     #include <boost/log/attributes/named_scope.hpp>
 
-The logging library supports maintaining scopes stack tracking during the application execution. This stack may either be written to log or be used for other needs (for example, to save the exact call sequence that led to and exception when throwing one). Each stack element contains following information (see `basic_named_scope_entry` structure template definition):
+The logging library supports maintaining scope stack tracking during the application's execution. This stack may either be written to log or be used for other needs (for example, to save the exact call sequence that led to an exception when throwing one). Each stack element contains the following information (see the `basic_named_scope_entry` structure template definition):
 
-* Scope name. It can be defined by user or generated by compiler, but in any case it [_must be a constant string literal] (see [link log.rationale.why_str_lit Rationale]).
-* Source file name, where the scope begins. It is usually a result of the standard `__FILE__` macro expansion. Like scope name, the file name [_must be a constant string literal].
+* Scope name. It can be defined by the user or generated by the compiler, but in any case it [_must be a constant string literal] (see [link log.rationale.why_str_lit Rationale]).
+* Source file name, where the scope begins. It is usually a result of the standard `__FILE__` macro expansion. Like the scope name, the file name [_must be a constant string literal].
 * Line number in the source file. Usually it is a result of the standard `__LINE__` macro expansion.
 
-The scope stack is implemented through a thread-specific global storage internally. There is a `named_scope` (`wnamed_scope` for wide-character logging) attribute that allows to hook this stack into logging pipeline. This attribute generates value of the nested type `named_scope::scope_stack` which is the instance of the scope stack. The attribute can be registered the following way:
+The scope stack is implemented through thread-specific global storage internally. There is a `named_scope` (`wnamed_scope` for wide-character logging) attribute that allows hooking this stack into the logging pipeline. This attribute generates value of the nested type `named_scope::scope_stack` which is the instance of the scope stack. The attribute can be registered in the following way:
 
     logging::core::get()->add_global_attribute("Scope", boost::make_shared< attrs::named_scope >());
 
-Note it is perfectly valid to register the attribute globally because the scope stack is thread-local anyway. This will also implicitly add scope tracking to all threads of the application, which is often exactly what we need.
+Note that it is perfectly valid to register the attribute globally because the scope stack is thread-local anyway. This will also implicitly add scope tracking to all threads of the application, which is often exactly what we need.
 
-Now we can mark execution scopes with macros `BOOST_LOG_FUNCTION` and `BOOST_LOG_NAMED_SCOPE` (the latter accepts the scope name as an argument). These macros automatically add source position information to each scope entry. An example follows:
+Now we can mark execution scopes with the macros `BOOST_LOG_FUNCTION` and `BOOST_LOG_NAMED_SCOPE` (the latter accepts the scope name as an argument). These macros automatically add source position information to each scope entry. An example follows:
 
     void foo(int n)
     {
@@ -243,9 +243,9 @@ Now we can mark execution scopes with macros `BOOST_LOG_FUNCTION` and `BOOST_LOG
         }
     }
 
-After executing `foo` we will be able to see in log that the `bar` function was called from `foo` and, more precisely, from the case statement that corresponds the value of `n`. This may be very useful when tracking down subtle bugs that show only when `bar` is called from a specific location (e.g. if `bar` is being passed invalid arguments in that particular location).
+After executing `foo` we will be able to see in the log that the `bar` function was called from `foo` and, more precisely, from the case statement that corresponds to the value of `n`. This may be very useful when tracking down subtle bugs that show up only when `bar` is called from a specific location (e.g. if `bar` is being passed invalid arguments in that particular location).
 
-Another good use case is attaching the scope stack information to an exception. With help of __boost_exception__, this is possible:
+Another good use case is attaching the scope stack information to an exception. With the help of __boost_exception__, this is possible:
 
     typedef boost::error_info< struct tag_scopes, attrs::named_scope::scope_stack > scopes_info;
 
@@ -285,7 +285,7 @@ Another good use case is attaching the scope stack information to an exception. 
 
     #include <boost/log/attributes/current_process_id.hpp>
 
-It is often useful to know the process identifier that produces the log, especially if the log can eventually combine the output of different processes. The `current_process_id` attribute is a constant that formats into the current process identifier. The value type of the attribute can be derermined by the `current_process_id::held_type` typedef.
+It is often useful to know the process identifier that produces the log, especially if the log can eventually combine the output of different processes. The `current_process_id` attribute is a constant that formats into the current process identifier. The value type of the attribute can be determined by the `current_process_id::held_type` typedef.
 
     void foo()
     {
@@ -322,7 +322,7 @@ This attribute is a simple wrapper around a user-defined function object. Each a
 
 Auto-generated function objects, like the ones defined in __boost_bind__, __boost_lambda__, or STL, are also supported.
 
-[note Some deficient compilers may not support `result_of` construct properly. This metafunction is used in the `make_functor_attr` function to automatically detect the return type of the function object. In case if `result_of` breaks, one may try to explicitly specify the return type of the function object as a template argument to the `make_functor_attr` function.]
+[note Some deficient compilers may not support `result_of` construct properly. This metafunction is used in the `make_functor_attr` function to automatically detect the return type of the function object. If `result_of` breaks, one can try to explicitly specify the return type of the function object as a template argument to the `make_functor_attr` function.]
 
 [endsect]
 

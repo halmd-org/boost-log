@@ -9,13 +9,13 @@
 
 [section:filters Filters]
 
-As it was pointed out in [link log.tutorial.trivial_filtering tutorial], filters are implemented as Lambda-like expressions with placeholders for attribute values. This section will describe placeholders that can be used to build more complex expressions.
+As it was pointed out in [link log.tutorial.trivial_filtering tutorial], filters are implemented as Lambda-like expressions with placeholders for attribute values. This section will describe the placeholders that can be used to build more complex expressions.
 
 [section:has_attr Attribute presence filter]
 
     #include <boost/log/filters/has_attr.hpp>
 
-The filter `has_attr` checks if an attribute value with specified name and, optionally, type is attached to a log record. If no type specified to the filter, the filter returns `true` if any-typed value with the specified name is found. If an MPL-compatible type sequence in specified as a value type, the filter returns `true` if a value with the specified name and one of the specified types is found.
+The filter `has_attr` checks if an attribute value with the specified name and, optionally, type is attached to a log record. If no type specified to the filter, the filter returns `true` if any value with the specified name is found. If an MPL-compatible type sequence in specified as a value type, the filter returns `true` if a value with the specified name and one of the specified types is found.
 
 This filter is usually used in conjunction with [link log.detailed.formatters.conditional conditional formatters], but it also can be used as a quick filter based on the log record structure. For example, one can use this filter to extract statistic records and route them to a specific sink.
 
@@ -109,7 +109,7 @@ This filter is usually used in conjunction with [link log.detailed.formatters.co
         PUT_STAT(lg, "StreamOne", -5);
     }
 
-Please note that in the example above we extended the library in two ways: we defined a new sink backend `my_stat_accumulator` and a new macro `PUT_STAT`. Also note the technique of extracting attribute value from the view - we need to both check that the needed attribute value is found in the view and that it has the needed type. There is also a mechanism of [link log.detailed.utilities.extractors attribute value extractors] that can simplify this, especially when an attribute can have a number of types.
+Please note that in the example above we extended the library in two ways: we defined a new sink backend `my_stat_accumulator` and a new macro `PUT_STAT`. Also note the technique of extracting the attribute value from the view - we need to both check that the needed attribute value is found in the view and that it has the required type. There is also a mechanism of [link log.detailed.utilities.extractors attribute value extractors] that can simplify this, especially when an attribute can have a number of types.
 
 [endsect]
 
@@ -117,25 +117,25 @@ Please note that in the example above we extended the library in two ways: we de
 
     #include <boost/log/filters/attr.hpp>
 
-Unlike `has_attr`, `attr` construct is not a complete filter by itself. Instead, it is a placeholder that may take part in a complete filter expressions like this:
+Unlike `has_attr`, the `attr` construct is not a complete filter by itself. Instead, it is a placeholder that can take part in a complete filter expressions like this:
 
     sink->set_filter(flt::attr< int >("Severity") >= 5 && flt::attr< std::string >("Channel") == "net");
 
 The line above registers a composite filter that consists of two elementary subfilters: the first one checks the severity level, and the second checks the channel name. Like `has_attr`, the `attr` placeholder accepts an expected attribute value type or set of types in an MPL-compatible type sequence. However, attribute value type is not optional with `attr`, like it is with `has_attr`.
 
-Besides generating lambda expressions, the `attr` placeholder allows to construct filters with its member functions. There are currently two such members that can be used with any type:
+Besides generating lambda expressions, the `attr` placeholder allows constructing filters with its member functions. There are currently two such members that can be used with any type:
 
 * `is_in_range(T const& lower, T const& upper)` generates a filter that returns `true` if the attribute value `x` of type `T` satisfies condition `lower <= x < upper`. For example:
 
     sink->set_filter(flt::attr< int >("Severity").is_in_range(3, 5)); // drops all records that have level below 3 or greater than 4
 
-* `satisfies(FunT const& fun)` allows to inject a user-defined unary predicate `fun` into the filter. The predicate should accept an attribute value as an argument and return a value, convertible to boolean. The result of the filter will be equivalent to the result of the predicate. For example:
+* `satisfies(FunT const& fun)` allows injection of a user-defined unary predicate `fun` into the filter. The predicate should accept an attribute value as an argument and return a value, convertible to `bool`. The result of the filter will be equivalent to the result of the predicate. For example:
 
     bool check_severity_level(int level);
 
     sink->set_filter(flt::attr< int >("Severity").satisfies(&check_severity_level));
 
-The `attr` placeholder has an advanced support for string-typed attribute values (that have type `std::string` or `std::wstring`, that is). For string attribute values there are also available the following member functions:
+The `attr` placeholder has advanced support for string-typed attribute values (that have type `std::string` or `std::wstring`, that is). For string attribute values there are also available the following member functions:
 
 * `begins_with(T const& s)`, `ends_with(T const& s)` and `contains(T const& s)`. As follows from their names, the functions construct filters that return `true` if an attribute value begins with, ends with or contains the specified substring `s`, respectively. The string comparison is case sensitive.
 

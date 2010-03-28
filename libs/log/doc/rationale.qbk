@@ -11,7 +11,7 @@
 
 [section:why_str_lit Why string literals as scope names?]
 
-One may wonder why not to allow to use arbitrary strings as named scope names. The answer is simple: for performance and safety reasons. Named scope support functionality has one significant difference from other attribute-related features of the library. The scope stack is maintained even when no logging is done, so if a function `foo` has a `BOOST_LOG_FUNCTION()` statement in its body, it is always a slowdown. Allowing the scope name to be an arbitrary string would make the slowdown significantly greater because of the need to allocate memory and copy the string (not to say there would be a need to previously format it, which also takes its toll).
+One may wonder why not to allow the use of arbitrary strings as named scope names. The answer is simple: for performance and safety reasons. Named scope support functionality has one significant difference from other attribute-related features of the library. The scope stack is maintained even when no logging is done, so if a function `foo` has a `BOOST_LOG_FUNCTION()` statement in its body, it is always a slowdown. Allowing the scope name to be an arbitrary string would make the slowdown significantly greater because of the need to allocate memory and copy the string (not to mention that there would be a need to previously format it, which also takes its toll).
 
 Dynamic memory allocation also introduces exception safety issues: the `BOOST_LOG_FUNCTION()` statement (and alikes) would become a potential source of exception. These issues would complicate user's code if he wants to solve memory allocation problems gracefully.
 
@@ -85,18 +85,18 @@ However, this feature introduced a number of safety problems, including thread s
         return 0;
     }
 
-There were other issues, like having an attribute set iterator that points to one attribute object, then suddenly without seemingly modifying it it becomes pointing to a different attribute object (of, possibly, a different type). Such behavior could lead to tricky failures that would be difficult to investigate. Therefore this feature was eventually dropped, which simplified scoped attributes implementation significantly.
+There were other issues, like having an attribute set iterator that points to one attribute object, then suddenly without seemingly modifying it it becomes pointing to a different attribute object (of, possibly, a different type). Such behavior could lead to tricky failures that would be difficult to investigate. Therefore this feature was eventually dropped, which simplified the scoped attributes implementation significantly.
 
 [endsect]
 
 [section:why_weak_record_ordering Why log records are weakly ordered in a multithreaded application?]
 
-Although the library guarantees that log records made in a given thread are always delivered to sinks in the same order as they were made in, the library cannot provide such guarantee for different threads. For instance, it is possible that thread A emits a log record and gets preempted, then thread B emits its log record and manages to deliver it to a sink before being preempted. The resulting log will contain log record from thread B before the record made in thread A. However, attribute values attached to the records will always be actual with regard to the moment of emitting the record and not the moment of passing the record to the sink. This is the reason for a strange, at first glance, situation when, a log record with an earlier time stamp follows a record with a later time stamp. The problem shows quite rarely, usually when thread contention on logging is very high.
+Although the library guarantees that log records made in a given thread are always delivered to sinks in the same order as they were made in, the library cannot provide such guarantee for different threads. For instance, it is possible that thread A emits a log record and gets preempted, then thread B emits its log record and manages to deliver it to a sink before being preempted. The resulting log will contain log record from thread B before the record made in thread A. However, attribute values attached to the records will always be actual with regard to the moment of emitting the record and not the moment of passing the record to the sink. This is the reason for a strange, at first glance, situation when, a log record with an earlier time stamp follows a record with a later time stamp. The problem appears quite rarely, usually when thread contention on logging is very high.
 
 There are two possible ways to cope with the problem:
 
 * Enforce strict serialization of log record being made throughout the application. This solution implies a severe performance impact in multithreaded applications because log records that otherwise could be processed concurrently would have to go serial. Since this controverses one of the [link log.moti main library goals], it was rejected.
-* Attempt to maintain log record ordering on the sink level. This solution is more or less viable. On the downside, it would introduce log record buffering, which in turn would compromise logs reliability. In case of application crash all buffered records would be lost.
+* Attempt to maintain log record ordering on the sink level. This solution is more or less viable. On the downside, it would introduce log record buffering, which in turn would compromise logs reliability. In the case of application crash all buffered records would be lost.
 
 The latter solution was implemented as a special sink frontend described [link log.detailed.sink_frontends.ordering_async here].
 
@@ -104,7 +104,7 @@ The latter solution was implemented as a special sink frontend described [link l
 
 [section:why_wide_attribute_names Why wide-character version of the library requires wide attribute names?]
 
-The short answer: for consistency. I mean, if a user chooses to write wide logs, he probably knows that national characters may appear in log messages and attributes. Attribute names may too be put into log and, in fact, may too be composed by the application and therefore may contain national characters. Another reason for this decision is the library interface unification. For instance, in many cases users won't have to remember to write either `attr` or `wattr`, but to always write `attr`, whatever character type they are using. This also helps in generic programming.
+The short answer: for consistency. I mean, if a user chooses to write wide logs, he probably knows that national characters may appear in log messages and attributes. Attribute names may also be put into log and, in fact, may be composed by the application and therefore may contain national characters. Another reason for this decision is the library interface unification. For instance, in many cases users won't have to remember to write either `attr` or `wattr`, but to always write `attr`, whatever character type they are using. This also helps in generic programming.
 
 [endsect]
 
@@ -121,7 +121,7 @@ The answer is quite simple. The streaming expression is executed after the filte
 
 [section:why_not_lazy_streaming Why not using lazy streaming?]
 
-One of the possible library implementations would be using lazy expressions to delay log record formatting. That would allow to use manipulators for attributes set up. In essence, the expression:
+One of the possible library implementations would be using lazy expressions to delay log record formatting. That would allow the use of manipulators for attributes' setup. In essence, the expression:
 
     logger << "Hello, world!";
 
@@ -129,17 +129,17 @@ would become a lambda-expression, that is only invoked if the filtering is succe
 
     logger << "Received packet from " << ip << " of " << packet.size() << " bytes";
 
-would generate a considerable amount of code (proportionally to the number of streaming operators) to be executed before filtering takes place. Another drawback is that the `packet.size()` is always called, whether or not the record is actually written to log. In order to delay this call, yet more scaffolding is needed, possibly involving __boost_bind__, __boost_lambda__ or __boost_phoenix__. This complication is not acceptable for such a basic use case, like this.
+would generate a considerable amount of code (proportional to the number of streaming operators) to be executed before filtering takes place. Another drawback is that the `packet.size()` is always called, whether or not the record is actually written to the log. In order to delay this call, yet more scaffolding is needed, possibly involving __boost_bind__, __boost_lambda__ or __boost_phoenix__. This complication is not acceptable for such a basic use case, like this.
 
-Although lazy streaming is not provided by the library out of the box, nothing prevents to develop it in a separate hierarchy of loggers. See the [link log.extension.sources Extending the library] section for more information.
+Although lazy streaming is not provided by the library out of the box, nothing prevents developing it in a separate hierarchy of loggers. See the [link log.extension.sources Extending the library] section for more information.
 
 [endsect]
 
 [section:why_not_log4j Why not using hierarchy of loggers, like in log4j? Why not Boost.Log4j? Etc.]
 
-There are enough of [@http://logging.apache.org/log4j/ log4j]-like libraries available for C++ already (see [@http://logging.apache.org/log4cxx/ here], [@http://log4cplus.sourceforge.net/ here] and [@http://log4cpp.sourceforge.net/ here]), so there is no point in implementing yet another one. Instead, this library was aimed to solve more complex tasks, including ones that do not directly fall under the common definition of "logging" term as a debugging tool. Additionally, as Boost.Log was to be a generic library, it had to provide more ways of extending itself, while keeping performance as high as possible. Log4j concept seemed too limiting and inappropriate for these tasks and therefore was rejected.
+There are enough [@http://logging.apache.org/log4j/ log4j]-like libraries available for C++ already (see [@http://logging.apache.org/log4cxx/ here], [@http://log4cplus.sourceforge.net/ here] and [@http://log4cpp.sourceforge.net/ here]), so there is no point in implementing yet another one. Instead, this library was aimed to solve more complex tasks, including ones that do not directly fall under the common definition of "logging" term as a debugging tool. Additionally, as Boost.Log was to be a generic library, it had to provide more ways of extending itself, while keeping performance as high as possible. Log4j concept seemed too limiting and inappropriate for these tasks and therefore was rejected.
 
-As for hierarchical loggers, there is no need for this feature in the current library design. One of the main benefits it provides in log4j is determining appenders (sinks, in terms of this library) in which a log record will end up. This library achieves the same result by filtering. The other application of this feature in Boost.Log could be that the loggers in the hierarchy could combine their sets of attributes for each log record, but there was no demand in the real world applications for such a feature.
+As for hierarchical loggers, there is no need for this feature in the current library design. One of the main benefits it provides in log4j is determining the appenders (sinks, in terms of this library) in which a log record will end up. This library achieves the same result by filtering. The other application of this feature in Boost.Log could be that the loggers in the hierarchy could combine their sets of attributes for each log record, but there was no demand in real world applications for such a feature.
 
 [endsect]
 

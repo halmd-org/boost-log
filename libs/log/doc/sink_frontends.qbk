@@ -9,7 +9,7 @@
 
 [section:sink_frontends Sink Frontends]
 
-Every sink object that is compatible with the logging library is required to support interface `sink< CharT >`, where `CharT` is the appropriate character type. This interface is used by logging core to perform sink-specific filtering and pass log records to sinks. Technically speaking, one can derive his class from the `sink` template and have his new-found sink, but for sake of code reusing and sink implementation simplicity the library suggests separated concepts of sink frontend and sink backend. Sink frontends derive from the `sink` template and encapsulate the logic of filtering and thread synchronization. Most probably you won't have to write your own frontend once you need to create a new type of sink, because the library provides a number of frontends that cover most use cases. See [link log.detailed.sink_backends Sink Backends] section for more details on interface between frontends and backends.
+Every sink object that is compatible with the logging library is required to support the interface `sink< CharT >`, where `CharT` is the appropriate character type. This interface is used by the logging core to perform sink-specific filtering and pass log records to sinks. Technically speaking, one can derive his class from the `sink` template and have his new-found sink, but for sake of code reuse and sink implementation simplicity, the library suggests separate concepts of sink frontend and sink backend. Sink frontends derive from the `sink` template and encapsulate the logic of filtering and thread synchronization. You probably won't have to write your own frontend when you need to create a new type of sink, because the library provides a number of frontends that cover most use cases. See the [link log.detailed.sink_backends Sink Backends] section for more details on the interface between frontends and backends.
 
 [section:basic_services Basic sink frontend services]
 
@@ -17,17 +17,17 @@ There are a number of basic functionalities that all sink frontends provide.
 
 [heading Filtering]
 
-All sink frontends support filtering. User may specify a custom filtering functional object or the filter constructed with the [link log.detailed.filters library-provided tools]. The filter can be set with the `set_filter` method or cleared with the `reset_filter` method. The filter is invoked during the call to the `will_consume` method that is issued by the logging core. If the filter is not set, it is assumed that the sink will accept any log record.
+All sink frontends support filtering. The user can specify a custom filtering function object or a filter constructed with the [link log.detailed.filters library-provided tools]. The filter can be set with the `set_filter` method or cleared with the `reset_filter` method. The filter is invoked during the call to the `will_consume` method that is issued by the logging core. If the filter is not set, it is assumed that the sink will accept any log record.
 
 [note Like the logging core, all sink frontends assume it is safe to call filters from multiple threads concurrently. This is fine with the library-provided filters.]
 
 [heading Exception handling]
 
-All sink frontends allow to set up exception handlers in order to customize error processing on a per-sink basis. One can install an exception handling function with the `set_exception_handler` method, this function will be called with no arguments from a `catch` block if an exception occurs during record processing in the backend or during the sink-specific filtering. The exception handler is free to rethrow an exception or to suppress it. In the former case the exception is propagated to the core, where another layer of exception handling may come into action.
+All sink frontends allow setting up exception handlers in order to customize error processing on a per-sink basis. One can install an exception handling function with the `set_exception_handler` method, this function will be called with no arguments from a `catch` block if an exception occurs during record processing in the backend or during the sink-specific filtering. The exception handler is free to rethrow an exception or to suppress it. In the former case the exception is propagated to the core, where another layer of exception handling can come into action.
 
-The library provides a [link log.detailed.utilities.exception_handlers convenient tool] for dispatching exceptions into an unary polymorphic functional object.
+The library provides a [link log.detailed.utilities.exception_handlers convenient tool] for dispatching exceptions into an unary polymorphic function object.
 
-[note An exception handler is not allowed to return a value. This means you are not able to alter filtering result once an exception occurs, and thus filtering will always fail.]
+[note An exception handler is not allowed to return a value. This means you are not able to alter the filtering result once an exception occurs, and thus filtering will always fail.]
 
 [note All sink frontends assume it is safe to call exception handlers from multiple threads concurrently. This is fine with the library-provided exception dispatchers.]
 
@@ -37,7 +37,7 @@ The library provides a [link log.detailed.utilities.exception_handlers convenien
 
     #include <boost/log/sinks/unlocked_frontend.hpp>
 
-The unlocked sink frontend is implemented with the `unlocked_sink` class template. This frontend provides the most basic service for the backend. The `unlocked_sink` performs no thread synchronization when accessing the backend, assuming that either the synchronization is not needed or the synchronization is implemented in the backend. However, setting up a filter is still thread-safe (that is, one can safely change filter in the `unlocked_sink` frontend while other threads are writing logs through this sink). This is the only sink frontend available in a single threaded environment. The example of use is as follows:
+The unlocked sink frontend is implemented with the `unlocked_sink` class template. This frontend provides the most basic service for the backend. The `unlocked_sink` performs no thread synchronization when accessing the backend, assuming that synchronization either is not needed or is implemented in the backend. However, setting up a filter is still thread-safe (that is, one can safely change the filter in the `unlocked_sink` frontend while other threads are writing logs through this sink). This is the only sink frontend available in a single threaded environment. The example of use is as follows:
 
     // Some sink backend (for simplicity synchronization code omitted)
     class my_backend :
@@ -51,7 +51,7 @@ The unlocked sink frontend is implemented with the `unlocked_sink` class templat
         }
     };
 
-    // The function registers my_backend sink in the logging library
+    // This function registers my_backend sink in the logging library
     void init_logging()
     {
         boost::shared_ptr< logging::core > core = logging::core::get();
@@ -78,7 +78,7 @@ The unlocked sink frontend is implemented with the `unlocked_sink` class templat
 
 The synchronous sink frontend is implemented with the `synchronous_sink` class template. It is similar to the `unlocked_sink` but additionally provides thread synchronization with a mutex before passing log records to the backend. All sink backends that support formatting currently require thread synchronization in the frontend.
 
-The synchronous sink also introduce an ability to acquire a pointer to the locked backend. As long as the pointer exists, the backend is guaranteed not to be accessed from other threads, unless the access is done through another frontend or a direct reference to the backend. This feature can be useful if there is a need to perform some updates on the sink backend while other threads may be writing logs. Beware, though, that while the backend is locked any other thread that tries to write a log record to the sink gets blocked until the backend is released.
+The synchronous sink also introduces the ability to acquire a pointer to the locked backend. As long as the pointer exists, the backend is guaranteed not to be accessed from other threads, unless the access is done through another frontend or a direct reference to the backend. This feature can be useful if there is a need to perform some updates on the sink backend while other threads may be writing logs. Beware, though, that while the backend is locked any other thread that tries to write a log record to the sink gets blocked until the backend is released.
 
 The usage is similar to the `unlocked_sink`.
 
@@ -145,9 +145,9 @@ The frontend is implemented in the `asynchronous_sink` class template. Like sync
         return sink;
     }
 
-[important If asynchronous logging is used in a multi-module application, one should decide carefully when to unload dynamically loaded modules that write logs. The library has many places where it may end up using resources that reside in the dynamically loaded module. Examples of such resources are virtual tables, string literals and functions. If it appears that any of these resources are used by the library, whereas the module in which they reside gets unloaded, the application will most probably crash. Strictly speaking, this problem persists with any sink type (and is not limited to sinks in the first place), but asynchronous sinks introduce an additional problem. One cannot tell which resources are used by the asynchronous sink because it works in a dedicated thread and use buffered log records. There is no general solution for this issue. Users are advised to either avoid dynamic module unloading during the application work time, or to avoid asynchronous logging. As an additional way to cope with the problem, one may try to shutdown all asynchronous sinks before unloading any modules, and after unloading re-create them. However, avoiding dynamic unloading is the only way to solve the problem completely.]
+[important If asynchronous logging is used in a multi-module application, one should decide carefully when to unload dynamically loaded modules that write logs. The library has many places where it may end up using resources that reside in the dynamically loaded module. Examples of such resources are virtual tables, string literals and functions. If any of these resources are still used by the library when the module in which they reside gets unloaded, the application will most likely crash. Strictly speaking, this problem exists with any sink type (and is not limited to sinks in the first place), but asynchronous sinks introduce an additional problem. One cannot tell which resources are used by the asynchronous sink because it works in a dedicated thread and uses buffered log records. There is no general solution for this issue. Users are advised to either avoid dynamic module unloading during the application's work time, or to avoid asynchronous logging. As an additional way to cope with the problem, one may try to shutdown all asynchronous sinks before unloading any modules, and after unloading re-create them. However, avoiding dynamic unloading is the only way to solve the problem completely.]
 
-In order to stop the dedicated thread feeding log records to the backend one may call the `stop` method of the frontend. This method will be automatically called on the frontend destructor. The `stop` method, unlike thread interruption, will only terminate feeding loop when a log record that is being fed is processed by the backend (i.e. it will not interrupt the record processing that has already started). However, it may happen that some records are still left in queue after returning from the `stop` method. In order to flush them to the backend an additional call to the `feed_records` method is required. This is useful on the application termination stage.
+In order to stop the dedicated thread feeding log records to the backend one can call the `stop` method of the frontend. This method will be called automatically in the frontend destructor. The `stop` method, unlike thread interruption, will only terminate the feeding loop when a log record that is being fed is processed by the backend (i.e. it will not interrupt the record processing that has already started). However, it may happen that some records are still left in the queue after returning from the `stop` method. In order to flush them to the backend an additional call to the `feed_records` method is required. This is useful in the application termination stage.
 
     void stop_logging(boost::shared_ptr< sink_t >& sink)
     {
@@ -165,10 +165,10 @@ In order to stop the dedicated thread feeding log records to the backend one may
         sink.reset();
     }
 
-Spawning the dedicated thread for log record feeding can be suppressed with the optional boolean `start_thread` named parameter of the frontend. In this case user may select either way of processing records:
+Spawning the dedicated thread for log record feeding can be suppressed with the optional boolean `start_thread` named parameter of the frontend. In this case the user can select either way of processing records:
 
-* Call to the `run` method of the frontend. This call will block in the feeding loop. This loop can be interrupted with the call to `stop`.
-* Periodically call to `feed_records`. This method will process log records that were in the frontend queue when the call was issued and then return.
+* Call the `run` method of the frontend. This call will block in the feeding loop. This loop can be interrupted with the call to `stop`.
+* Periodically call `feed_records`. This method will process all the log records that were in the frontend queue when the call was issued and then return.
 
 [note Users should take care not to mix these two approaches concurrently. Also, none of these methods should be called if the dedicated feeding thread is running (i.e., the `start_thread` was not specified in the construction or had the value of `true`.]
 
@@ -214,7 +214,7 @@ The latency duration and the ordering predicate can be specified on the frontend
 
 In the code sample above the sink frontend will keep log records in the internal queue for up to one second and apply ordering based on the log record counter of type `unsigned int`. The `ordering_window` parameter is optional and will default to some reasonably small system-specific value that will suffice to maintain chronological flow of log records to the backend.
 
-The ordering window is kept maintained by the frontend even upon stopping the internal feeding loop, so that it would be possible to reenter the loop without breaking the record ordering. On the other hand, in order to ensure that all log records are flushed to the backend one has to explicitly specify a zero ordering window when calling to the `feed_records` method.
+The ordering window is maintained by the frontend even upon stopping the internal feeding loop, so that it would be possible to reenter the loop without breaking the record ordering. On the other hand, in order to ensure that all log records are flushed to the backend one has to explicitly specify a zero ordering window when calling the `feed_records` method.
 
     void stop_logging(boost::shared_ptr< sink_t >& sink)
     {

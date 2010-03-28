@@ -13,17 +13,17 @@
 
     #include <boost/log/sinks/basic_sink_backend.hpp>
 
-As was described in the [link log.design Design overview] section, sinks consist of two parts: frontend and backend. Frontends are provided by the library and usually need not to be re-implemented. Thanks to frontends, implementing backends is much easier than it could be: all filtering and thread synchronization is done there.
+As was described in the [link log.design Design overview] section, sinks consist of two parts: frontend and backend. Frontends are provided by the library and usually do not need to be reimplemented. Thanks to frontends, implementing backends is much easier than it could be: all filtering and thread synchronization is done there.
 
 In order to develop a sink backend, you have two options where to start:
 
 * If you don't need any formatting, the minimalistic `basic_sink_backend` base class template is your choice. Actually, this class only defines types that are needed for the sink to function.
-* If you need to create a sink with formatting capabilities, you may use the `basic_formatting_sink_backend` class template as a base class for your backend. It extends the `basic_sink_backend` class and implements log record formatting and character code conversion, leaving you to only develop the record storing code.
+* If you need to create a sink with formatting capabilities, you can use the `basic_formatting_sink_backend` class template as a base class for your backend. It extends the `basic_sink_backend` class and implements log record formatting and character code conversion, leaving you to develop only the record storing code.
 
-Before we move on and see these instruments in action, one thing should be noted. As it was said before, sink frontends take the thread safety burden from the backend. Also, there are [link log.detailed.sink_frontends three kinds of frontends] (not counting the ordering one), each of them provides different guarantees regarding thread safety. The backend has no idea which sink frontend is used with it, yet it may require a certain degree of thread safety from it to function properly. In order to protect itself from misuse the backend declares the threading model it supports to operate with. There are three of them:
+Before we move on and see these instruments in action, one thing should be noted. As was said before, sink frontends take the thread safety burden from the backend. Also, there are [link log.detailed.sink_frontends three kinds of frontends] (not counting the ordering one). Each of them provides different guarantees regarding thread safety. The backend has no idea which sink frontend is used with it, yet it may require a certain degree of thread safety from it to function properly. In order to protect itself from misuse the backend declares the threading model it needs to operate with. There are three of them:
 
 # The `backend_synchronization_tag` means that the backend itself is responsible for thread synchronization (which may imply there is no need for synchronization at all). When a backend declares this threading model, any sink frontend can be used with it.
-# The `frontend_synchronization_tag` means that frontend must serialize calls to the backend from different threads. The `unlocked_sink` frontend cannot fulfill this requirement, so it will not compile if instantiated with such a backend.
+# The `frontend_synchronization_tag` means that the frontend must serialize calls to the backend from different threads. The `unlocked_sink` frontend cannot fulfill this requirement, so it will not compile if instantiated with such a backend.
 # The `single_thread_tag` means that all log records must be passed to the backend in a single thread. Note that other methods can be called in other threads, however, these calls must be serialized. Only `asynchronous_sink` frontend meets this requirement, other frontends will refuse to compile with such a backend.
 
 The threading model tag is used to instantiate the backend base classes. Since `basic_formatting_sink_backend` base class uses internal data to implement log record formatting, it requires the threading model to be either `frontend_synchronization_tag` or `single_thread_tag`. On the other hand, `basic_sink_backend` doesn't have this restriction.
@@ -133,9 +133,9 @@ Now the `writer_thread` function can look like this:
         }
     }
 
-The `consume` function is called every time the logging record passes filtering in the frontend. The record, as it was stated before, contains a set of attribute values (goes as the first argument of the function) and the message string (goes as the second one). The types of these arguments are defined in the `basic_sink_backend` class.
+The `consume` function is called every time a logging record passes filtering in the frontend. The record, as was stated before, contains a set of attribute values (goes as the first argument of the function) and the message string (goes as the second one). The types of these arguments are defined in the `basic_sink_backend` class.
 
-Since we have no need in the record message, the second argument will not be of interest for us for now.
+Since we have no need for the record message, the second argument will be of no interest to us for now.
 
     // The function consumes the log records that come from the frontend
     void stat_collector::consume(record_type const& rec)
@@ -153,7 +153,7 @@ Since we have no need in the record message, the second argument will not be of 
         }
     }
 
-The code above is quite straightforward. We can parse through attribute values like through a regular map, or use extractors with functional objects to acquire individual values. __boost_lambda__ and similar libraries simplify generation of functional objects that will receive the extracted value.
+The code above is quite straightforward. We can parse through attribute values like through a regular map, or use extractors with function objects to acquire individual values. __boost_lambda__ and similar libraries simplify generation of function objects that will receive the extracted value.
 
 [heading Formatting sink backend]
 
@@ -216,7 +216,7 @@ The resulting sink backend can be used similarly to other formatting sinks, like
     #include <boost/log/sources/threading_models.hpp>
     #include <boost/log/sources/basic_logger.hpp>
 
-You can extend the library by developing your own sources and, for that matter, ways of collecting log data. Basically, you have two choices how to start: you can either develop a new logger feature or design a whole new type of source. The first approach is good if all you need is to tweak functionality of the existing loggers. The second approach is reasonable if the whole mechanism of collecting logs by the provided loggers is unsuitable for your needs.
+You can extend the library by developing your own sources and, for that matter, ways of collecting log data. Basically, you have two choices of how to start: you can either develop a new logger feature or design a whole new type of source. The first approach is good if all you need is to tweak the functionality of the existing loggers. The second approach is reasonable if the whole mechanism of collecting logs by the provided loggers is unsuitable for your needs.
 
 [heading Creating a new logger feature]
 
@@ -229,19 +229,19 @@ A logger feature should follow these basic requirements:
 * The feature must be default-constructible and copy-constructible.
 * The feature must be constructible with a single argument of a templated type. The feature may not use this argument itself, but it should pass this argument to the `BaseT` constructor.
 
-These requirements allow to compose a logger from a number of features derived from each other. The root class of the features hierarchy will be the `basic_logger` class template instance. This class implements the most of the basic functionality of loggers, like storing logger-specific attributes and providing interface for log message formatting. The hierarchy composition is done by the `basic_composite_logger` class template, which is instantiated on a sequence of features (don't worry, this will be shown in an example in a few moments). The constructor with a templated argument allows to initialize features with named parameters, using the __boost_parameter__ library.
+These requirements allow composition of a logger from a number of features derived from each other. The root class of the features hierarchy will be the `basic_logger` class template instance. This class implements most of the basic functionality of loggers, like storing logger-specific attributes and providing the interface for log message formatting. The hierarchy composition is done by the `basic_composite_logger` class template, which is instantiated on a sequence of features (don't worry, this will be shown in an example in a few moments). The constructor with a templated argument allows initializing features with named parameters, using the __boost_parameter__ library.
 
 A logging feature may also contain internal data. In that case, to maintain thread safety for the logger, the feature should follow these additional guidelines:
 
-# Usually there is no need to introduce a mutex or another synchronization mechanism in each feature. Moreover, it is advised not to do so, because the same feature can be used in both thread-safe and not thread-safe loggers. Instead, features should use threading model of the logger as a synchronization primitive, similarly as they would use mutex. The threading model is accessible through the `get_threading_model` method, defined in the `basic_logger` class template.
+# Usually there is no need to introduce a mutex or another synchronization mechanism in each feature. Moreover, it is advised not to do so, because the same feature can be used in both thread-safe and not thread-safe loggers. Instead, features should use the threading model of the logger as a synchronization primitive, similar to how they would use a mutex. The threading model is accessible through the `get_threading_model` method, defined in the `basic_logger` class template.
 # If the feature has to override `*_unlocked` methods of the protected interface of the `basic_logger` class template (or the same part of the base feature interface), the following should be considered with regard to such methods:
 
     * The public methods that eventually call these methods are implemented by the `basic_composite_logger` class template. These implementations do the necessary locking and then pass control to the corresponding `_unlocked` method of the base features.
-    * The thread safety requirements for these methods are expressed with lock types. These types are available as typedefs in each feature and the `basic_logger` class template. If the feature exposes a protected function `foo_unlocked`, it will also expose type `foo_lock`, which will express the locking requirements of `foo_unlocked`. The corresponding method `foo` in the `basic_composite_logger` class template will use this typedef in order to lock the threading model before calling to `foo_unlocked`.
+    * The thread safety requirements for these methods are expressed with lock types. These types are available as typedefs in each feature and the `basic_logger` class template. If the feature exposes a protected function `foo_unlocked`, it will also expose type `foo_lock`, which will express the locking requirements of `foo_unlocked`. The corresponding method `foo` in the `basic_composite_logger` class template will use this typedef in order to lock the threading model before calling `foo_unlocked`.
     * Feature constructors don't need locking, and thus there's no need for lock types for them.
 
-# The feature may implement copy constructor. The argument of the constructor is already locked with a shared lock when the constructor is called. Naturally, the feature is expected to forward copy constructor call to the `BaseT` class.
-# The feature need not implement assignment operator. The assignment will be automatically provided by the `basic_composite_logger` class instance. However, the feature may provide `swap_unlocked` method that will swap contents of this feature and the method argument, and call similar method in the `BaseT` class. The automatically generated assignment operator will use this method, along with copy constructor.
+# The feature may implement a copy constructor. The argument of the constructor is already locked with a shared lock when the constructor is called. Naturally, the feature is expected to forward the copy constructor call to the `BaseT` class.
+# The feature need not implement an assignment operator. The assignment will be automatically provided by the `basic_composite_logger` class instance. However, the feature may provide a `swap_unlocked` method that will swap contents of this feature and the method argument, and call similar method in the `BaseT` class. The automatically generated assignment operator will use this method, along with copy constructor.
 
 In order to illustrate all these lengthy recommendations, let's implement a simple logger feature. Suppose we want our logger to be able to tag individual log records. In other words, the logger has to temporarily add an attribute to its set of attributes, emit the logging record, and then automatically remove the attribute. Somewhat similar functionality can be achieved with scoped attributes, although the syntax may complicate wrapping it into a neat macro:
 
@@ -295,9 +295,9 @@ Let's declare our logger feature:
     {
     };
 
-You can see that we use the `strictest_lock` template in order to define lock types that would fulfill the base class thread safety requirements for methods that are to be called from the corresponding methods of `record_tagger_feature`. The `open_record_lock` definition shows that the `open_record_unlocked` implementation for the `record_tagger_feature` feature requires exclusive lock (which `lock_guard` is) for the logger, but it also takes into account locking requirements of the `open_record_unlocked`, `add_attribute_unlocked` and `remove_attribute_unlocked` methods of the base class, because it will have to call them. The generated `open_record` method of the final logger class will make use of this typedef in order to automatically acquire the corresponding lock type before forwaring to the `open_record_unlocked` methods.
+You can see that we use the `strictest_lock` template in order to define lock types that would fulfill the base class thread safety requirements for methods that are to be called from the corresponding methods of `record_tagger_feature`. The `open_record_lock` definition shows that the `open_record_unlocked` implementation for the `record_tagger_feature` feature requires exclusive lock (which `lock_guard` is) for the logger, but it also takes into account locking requirements of the `open_record_unlocked`, `add_attribute_unlocked` and `remove_attribute_unlocked` methods of the base class, because it will have to call them. The generated `open_record` method of the final logger class will make use of this typedef in order to automatically acquire the corresponding lock type before forwarding to the `open_record_unlocked` methods.
 
-Frankly speaking, in this particular example, there was no need in using the `strictest_lock` trait, because all our methods require exclusive locking, which is already the strictest one. However, this template may come handy if you use shared locking.
+Frankly speaking, in this particular example, there was no need to use the `strictest_lock` trait, because all our methods require exclusive locking, which is already the strictest one. However, this template may come in handy if you use shared locking.
 
 The implementation of the public interface becomes quite trivial:
 
@@ -416,8 +416,8 @@ However, I would prefer defining a special macro to reduce verbosity:
 In general, you can implement new logging sources the way you like, the library does not mandate any design requirements on log sources. However, there are some notes regarding the way log sources should interact with logging core.
 
 # Whenever a logging source is ready to emit a log record, it should call the `open_record` in the corresponding core. The source-specific attributes should be passed into that call. During that call the core allocates resources for the record being made and performs filtering.
-# If the call to `open_record` returned a valid log record, then the record passed the filtering and is considered to be opened. The record may later be either confirmed by the source by subsequently calling `push_record` or withdrawned by destroying it.
-# If the call to `open_record` returned invalid (empty) log record, it means that the record has not been opened (most likely due to filtering reject). In that case the logging core does not hold any resources associated with the record, and thus the source must not call `push_record` for that particular logging attempt.
+# If the call to `open_record` returned a valid log record, then the record passed the filtering and is considered to be opened. The record may later be either confirmed by the source by subsequently calling `push_record` or withdrawn by destroying it.
+# If the call to `open_record` returned an invalid (empty) log record, it means that the record has not been opened (most likely due to filtering rejection). In that case the logging core does not hold any resources associated with the record, and thus the source must not call `push_record` for that particular logging attempt.
 # The source may subsequently open more than one record. Opened log records exist independently from each other.
 # The cores for different character types are completely independent. A log source would typically use one logging core with the appropriate character type.
 
@@ -431,18 +431,18 @@ In general, you can implement new logging sources the way you like, the library 
 Developing your own attributes is quite simple. Generally, you need to do the following:
 
 # Define what will be the attribute value. Most likely, it will be a piece of constant data that you want to participate in filtering and formatting. Encapsulate this data into a class that derives from the `attribute_value` interface. This object will have to implement the `dispatch` method that will extract the stored data (or, in other words, the stored value) to a type dispatcher.
-# Define how attribute values are going to be produced. In a corner case the values need not to be produced (like in case of the `constant` attribute provided by the library), but often there is some logic that need to be invoked to acquire the attribute value. This logic has to be concentrated in a class derived from the `attribute` interface, more precisely - in the `get_value` method. You may think of it as an attribute value factory.
+# Define how attribute values are going to be produced. In a corner case the values do not need to be produced (like in the case of the `constant` attribute provided by the library), but often there is some logic that needs to be invoked to acquire the attribute value. This logic has to be concentrated in a class derived from the `attribute` interface, more precisely - in the `get_value` method. You can think of it as an attribute value factory.
 
-While designing an attribute, one has to strive for making it as independent from values it produces, as possible. The attribute can be called from different threads concurrently to produce a value. Once produced, the attribute value can be used several times by the library (maybe even concurrently), it can outlive the attribute object where it was created, and there can simultaneously exist several attribute values produced by the same attribute.
+While designing an attribute, one has to strive to make it as independent from the values it produces, as possible. The attribute can be called from different threads concurrently to produce a value. Once produced, the attribute value can be used several times by the library (maybe even concurrently), it can outlive the attribute object where it was created, and several attribute values produced by the same attribute can exist simultaneously.
 
-Each attribute value is considered independent from other attribute values or the attribute itself, from the point of view of the library. That said, it is still possible to implement attributes that are also attribute values, and thus optimize performance. This is possible if either of these fulfills:
+Each attribute value is considered independent from other attribute values or the attribute itself, from the point of view of the library. That said, it is still possible to implement attributes that are also attribute values, and thus optimize performance. This is possible if it fulfils either of the following:
 
 * The attribute value never changes, so it's possible to store it in the attribute itself. The `constant` attribute is an example.
 * The attribute stores its value in a global (external with regard to the attribute) storage, that can be accessed from any attribute value. The attribute values must guarantee, though, that their stored values do not change over time.
 
-As a special case for the second point, it is possible to store attribute values (or their parts) in a thread-specific storage. However, in that case user has to implement the `detach_from_thread` method of the attribute value properly. The result of this method - another attribute value - must be independent from the thread is is being called in, but its stored value should be equivalent to the original attribute value. This method will be called by the library when the attribute value passes to thread that is different from the thread where it was created. As of this moment, this will only happen in case of asynchronous logging sinks.
+As a special case for the second point, it is possible to store attribute values (or their parts) in thread-specific storage. However, in that case the user has to implement the `detach_from_thread` method of the attribute value properly. The result of this method - another attribute value - must be independent from the thread it is being called in, but its stored value should be equivalent to the original attribute value. This method will be called by the library when the attribute value passes to a thread that is different from the thread where it was created. As of this moment, this will only happen in the case of asynchronous logging sinks.
 
-But in vast majority of cases attribute values must be self-contained objects with no dependencies on other entities. In fact, this case is so common that the library provides a ready to use attribute value class template `basic_attribute_value`. The template has to be instantiated on the stored value type, and the stored value has to be provided to the attribute value constructor. For example, this is how to implement an attribute that will return system uptime in seconds:
+But in the vast majority of cases attribute values must be self-contained objects with no dependencies on other entities. In fact, this case is so common that the library provides a ready to use attribute value class template `basic_attribute_value`. The template has to be instantiated on the stored value type, and the stored value has to be provided to the attribute value constructor. For example, this is how to implement an attribute that will return system uptime in seconds:
 
     class system_uptime :
         public logging::attribute
@@ -477,7 +477,7 @@ If you write your own logging sinks or use your own types in attributes, you may
 
     #include <boost/log/utility/init/formatter_parser.hpp>
 
-In order to add support for user-defined types to the formatter parser, one has to register a formatter factory. The factory is basically a functional object that, upon calling, will construct a formatter for the particular attribute. Factories are registered with the `register_formatter_factory` function, that besides the factory functor accepts the attribute name that will trigger this factory usage. This way the application can expose the knowledge of the particular attribute nature to the library. Here's a quick example:
+In order to add support for user-defined types to the formatter parser, one has to register a formatter factory. The factory is basically a function object that, when called, will construct a formatter for the particular attribute. Factories are registered with the `register_formatter_factory` function, that besides the factory functor accepts the attribute name that will trigger this factory usage. This way the application can expose the knowledge of the particular attribute to the library. Here's a quick example:
 
     // Suppose, this class can be used as an attribute value
     struct Point
@@ -504,12 +504,12 @@ In order to add support for user-defined types to the formatter parser, one has 
         return types::formatter_type(fmt::attr< Point >(attr_name));
     }
 
-    // We can associate the attribute with name "Coordinates" with the type Point
+    // We can associate the attribute with the name "Coordinates" with the type Point
     logging::register_formatter_factory("Coordinates", &point_formatter_factory);
 
 Now, whenever the formatter parser (the `parse_formatter` function) encounters the "Coordinates" attribute in the format string being parsed, the `point_formatter_factory` will be called to construct the appropriate formatter. This formatter, since it is generated in the user's application, will use the custom streaming operator that is defined for the `Point` class.
 
-The formatter factory can additionally accept a number of parameters separated with commas that can be specified in the format string. These parameters are broken into (name, value) pairs and passed as the second argument to the factory. For example, we could allow to customize the way our coordinates are presented in log by accepting an additional parameter in the format string like this:
+The formatter factory can additionally accept a number of parameters separated with commas that can be specified in the format string. These parameters are broken into (name, value) pairs and passed as the second argument to the factory. For example, we could allow customizing the way our coordinates are presented in log by accepting an additional parameter in the format string like this:
 
 [pre %TimeStamp% %Coordinates(format\="{%0.3f; %0.3f}")% %\_%]
 
@@ -560,7 +560,7 @@ to achieve the same effect that the first version of the `point_formatter_factor
 
     #include <boost/log/utility/init/filter_parser.hpp>
 
-You can extend filter parser the similar way you can extend the formatter parser - by registering your types into the library. However, since it takes a considerably more complex syntax to describe filters, filter factories are more than a mere function.
+You can extend filter parser the similar way you can extend the formatter parser - by registering your types into the library. However, since it takes a considerably more complex syntax to describe filters, a filter factory is more than a mere function.
 
 Filter factories should be objects that derive from the `filter_factory` interface. This base class declares a number of virtual functions that will be called in order to create filters, according to the filter expression. If some functions are not overriden by the factory, the corresponding operations are considered to be not supported by the attribute value. For example, we can define the filter factory for the slightly improved `Point` class defined in the previous section the following way:
 
@@ -603,10 +603,10 @@ Filter factories should be objects that derive from the `filter_factory` interfa
         }
     };
 
-    // The factory can be registered the following way
+    // The factory can be registered in the following way
     logging::register_filter_factory("Coordinates", boost::make_shared< point_filter_factory >());
 
-Having done that, whenever the filter parser (the `parse_filter` function) encounters the "Coordinates" attribute mentioned in the filter, it will use the `point_filter_factory` object to construct the appropriate filter. For example, in case of filter
+Having done that, whenever the filter parser (the `parse_filter` function) encounters the "Coordinates" attribute mentioned in the filter, it will use the `point_filter_factory` object to construct the appropriate filter. For example, in the case of the following filter
 
 [pre %Coordinates% \= "(10, 10)"]
 
@@ -616,7 +616,7 @@ the `on_equality_relation` method will be called with `name` argument being "Coo
 
 The constructed filter will use the corresponding comparison operators for the `Point` class. Some relation operations, like ">" or "<=", will not be supported for attributes named "Coordinates", and this is just the way we want it, because the `Point` class does not support them either.
 
-The library allows not only to add support for new types, but also to associate new relations with them. For instance, we can create a new relation "is_in_rect" that will yield positive if the coordinates fit into a rectangle denoted with two points. The filter might look like this:
+The library allows not only adding support for new types, but also associating new relations with them. For instance, we can create a new relation "is_in_rect" that will yield positive if the coordinates fit into a rectangle denoted with two points. The filter might look like this:
 
 [pre %Coordinates% is\_in\_rect "(10, 10) - (20, 20)"]
 
@@ -684,13 +684,13 @@ Like with formatters, if all these bells and whistles are not needed, user can r
 
     logging::register_simple_filter_factory< Point >("Coordinates");
 
-In this case, however, the `Point` class has to support all standard relational operations and have appropriate streaming operators in order to be parsed from a string.
+In this case, however, the `Point` class has to support all the standard relational operations and have appropriate streaming operators in order to be parsed from a string.
 
 [heading Adding support for user-defined sinks]
 
     #include <boost/log/utility/init/from_stream.hpp>
 
-The library provides mechanism of extending support for sinks similar to the formatter and filter parsers. In order to be able to mention user-defined sinks in a settings file, the user has to register a sink factory, which is essentially a functional object that receives a number of named parameters and returns a pointer to the initialized sink. The factory is registered for a specific destination (see the [link log.detailed.utilities.init.settings settings file description]), so whenever a sink with the specified destination is mentioned in the settings file, the factory gets called. For instance, if we have a sink that emits SNMP traps as a result of processing log records, we can register it the following way:
+The library provides mechanism of extending support for sinks similar to the formatter and filter parsers. In order to be able to mention user-defined sinks in a settings file, the user has to register a sink factory, which is essentially a function object that receives a number of named parameters and returns a pointer to the initialized sink. The factory is registered for a specific destination (see the [link log.detailed.utilities.init.settings settings file description]), so whenever a sink with the specified destination is mentioned in the settings file, the factory gets called. For instance, if we have a sink that emits SNMP traps as a result of processing log records, we can register it the following way:
 
     class snmp_backend :
         public sinks::basic_sink_backend< char, sinks::frontend_synchronization_tag >
@@ -737,7 +737,7 @@ Filter\="%Severity% > 3"
 
 [tip Although users are free to name parameters of their sinks the way they like, a good choice would be to follow the naming policy established by the library. That is, it should be obvious that the parameter "Filter" means the same for both the library-provided "TextFile" sink and your custom "SNMP" sink backend.]
 
-[note As the "Destination" parameter is used to determine the sink factory, this parameter is reserved and cannot be used by sink factories for their purpose.]
+[note As the "Destination" parameter is used to determine the sink factory, this parameter is reserved and cannot be used by sink factories for their own purposes.]
 
 [endsect]
 

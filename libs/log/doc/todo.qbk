@@ -23,7 +23,7 @@ Points in this section are not necessarily going to be implemented. These are ma
 * Provide a "bridge" sink backend that would transport log records to a logging core of another character type. The sink could simplify integration of different libraries and application that use logging with different character types, when there's no way to unify character types.
 * Update syslog support to [@http://tools.ietf.org/html/rfc5424 RFC 5424].
 * Improve library configuration options in order to be able to select which particular sinks to compile.
-* Improve configurability of trivial logging, without sacrificing simplicity. At least, provide a way to specify log file name and file rotation parameters.
+* Improve configurability of trivial logging, without sacrificing simplicity. At least, provide a way to specify the log file name and file rotation parameters.
 * Provide some kind of shared formatters. The idea is that several sinks may use the same formatter. If a log record passes filtering to multiple such sinks, the formatting is done just once for all sinks that share the formatter.
 
 [endsect]

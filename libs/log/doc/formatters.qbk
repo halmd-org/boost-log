@@ -9,13 +9,13 @@
 
 [section:formatters Formatters]
 
-As it was noted in the [link log.tutorial.formatters tutorial], the library provides two ways of expressing formatters: with a stream-style syntax or __boost_format__-style expression. Which of the two formats is chosen is determined with the appropriate anchor expression. To use stream-style syntax one should begin formatter definition with a `stream` or `wstream` keyword, like that:
+As was noted in the [link log.tutorial.formatters tutorial], the library provides two ways of expressing formatters: with a stream-style syntax or __boost_format__-style expression. Which of the two formats is chosen is determined by the appropriate anchor expression. To use stream-style syntax one should begin the formatter definition with a `stream` or `wstream` keyword, like that:
 
     #include <boost/log/formatters/stream.hpp>
 
     backend->set_formatter(fmt::stream << expr1 << expr2 << ... << exprN);
 
-Here expressions `expr1` through `exprN` may be either manipulators, described in this section, or other expressions resulting in an object that supports putting into an STL-stream. Note that `boost::ref` is also supported, which allows to inject references into the formatter object.
+Here expressions `expr1` through `exprN` may be either manipulators, described in this section, or other expressions resulting in an object that supports putting into an STL-stream. Note that `boost::ref` is also supported, which allows injecting references into the formatter object.
 
 To use __boost_format__-style syntax one should use `format` construct:
 
@@ -23,7 +23,7 @@ To use __boost_format__-style syntax one should use `format` construct:
 
     backend->set_formatter(fmt::format("format string") % expr1 % expr2 % ... % exprN);
 
-The format string passed to the `format` keyword should contain positional placeholders for the appropriate expressions. In case of wide-character logging the format string should be wide. Expressions `expr1` through `exprN` have the same meaning as in stream-like variant. It should be noted though that using stream-like syntax usually results in a faster formatter than the one is constructed with the `format` keyword.
+The format string passed to the `format` keyword should contain positional placeholders for the appropriate expressions. In the case of wide-character logging the format string should be wide. Expressions `expr1` through `exprN` have the same meaning as in stream-like variant. It should be noted though that using stream-like syntax usually results in a faster formatter than one is constructed with the `format` keyword.
 
 [section:attr Generic attribute formatter]
 
@@ -65,7 +65,7 @@ The `attr` formatter also supports an additional argument with a __boost_format_
 
 Please note, though, that the format string should be valid for all attribute value types that are specified as the template argument for the `attr` formatter. If this is not possible, one should consider using [link log.detailed.formatters.conditional conditional formatters] to split types into several groups and specify a valid format string for each group.
 
-It is possible that in run time the attribute value requested by the formatter is not present in the formatted log record. In this case the formatter by default will throw an exception. If this behavior is not desired, one can change it in one of the following ways:
+It is possible that at run time the attribute value requested by the formatter is not present in the formatted log record. In this case the formatter by default will throw an exception. If this behavior is not desired, one can change it in one of the following ways:
 
 # Use the [link log.detailed.formatters.conditional conditional formatter] with the [link log.detailed.filters.has_attr `has_attr`] filter to first verify that the required attribute value is present and apply formatting then.
 # Use an additional last `std::nothrow` argument to the `attr` placeholder. In this case the formatter will produce no output for the missing attribute value, without throwing the exception.
@@ -78,9 +78,9 @@ It is possible that in run time the attribute value requested by the formatter i
 
 The library provides several formatters dedicated to date and time-related attribute value types. These are `date`, `time`, `date_time`, `time_duration` and `time_period`. The `date` and `time` formatters are mostly included by `date_time`.
 
-As it comes from its name, `date_time` is responsible for formatting time points. The supported attribute value types are: `std::tm`, `std::time_t` and `boost::posix_time::ptime` and `boost::local_time::local_date_time` from __boost_date_time__. Additionally, the `date` formatter also supports `boost::gregorian::date` type. Like with other formatters and filters, you can also explicitly specify the attribute type or set of types that you want to format.
+As comes from its name, `date_time` is responsible for formatting time points. The supported attribute value types are: `std::tm`, `std::time_t`, `boost::posix_time::ptime` and `boost::local_time::local_date_time` from __boost_date_time__. Additionally, the `date` formatter supports the `boost::gregorian::date` type. As with other formatters and filters, you can also explicitly specify the attribute type or set of types that you want to format.
 
-The date and time format can be customized by user. The format should be passed as a named argument `format` to the appropriate formatter. This argument should be a format string, containing placeholders described in __boost_date_time__ documentation. Some usage examples as follows:
+The date and time format can be customized by the user. The format should be passed as a named argument `format` to the appropriate formatter. This argument should be a format string, containing placeholders described in the __boost_date_time__ documentation. Some usage examples are as follows:
 
     // Puts a date of any of the supported types into log. The default format is "%Y-%b-%d".
     backend->set_formatter(fmt::stream << fmt::date("Date"));
@@ -118,7 +118,7 @@ Here are some usage examples:
     backend->set_formatter(fmt::stream << fmt::time_period< boost::posix_time::time_period >("Period",
         keywords::format = "[%begin%; %end%)", keywords::unit_format = "%d.%m.%y %H:%M:%S"));
 
-Like the `attr` formatter, all date and time formatters throw exceptions in case if there is no requested attribute value in the log record. The `std::nothrow` argument may be used to suppress exceptions.
+Like the `attr` formatter, all date and time formatters throw exceptions when there is no requested attribute value in the log record. The `std::nothrow` argument may be used to suppress exceptions.
 
 [endsect]
 
@@ -137,7 +137,7 @@ The formatter supports customization with the following named arguments:
 * `delimiter`. The argument can be used to specify the delimiters between scopes. The default delimiter depends on the `iteration` argument. If `iteration == forward` the default `delimiter` will be "->", otherwise it will be "<-".
 * `depth`. The argument can be used to limit the number of scopes to put to log. The formatter will print `depth` innermost scopes and, if there are more scopes left, append an ellipsis to the written sequence. By default the formatter will write all scope names.
 
-Here are few usage examples:
+Here are a few usage examples:
 
     // Puts the scope stack in reverse order: inner scope <- outer scope
     backend->set_formatter(fmt::stream << fmt::named_scope("Scopes", keywords::iteration = fmt::reverse));
@@ -154,7 +154,7 @@ Here are few usage examples:
     backend->set_formatter(fmt::stream << fmt::named_scope("Scopes",
         keywords::iteration = fmt::reverse, keywords::depth = 2));
 
-Like the `attr` formatter, named scope formatter throw exception in case if there is no requested attribute value in the log record. The `std::nothrow` argument may be used to suppress exceptions.
+Like the `attr` formatter, the named scope formatter throws an exception if there is no requested attribute value in the log record. The `std::nothrow` argument may be used to suppress exceptions.
 
 [endsect]
 
@@ -162,7 +162,7 @@ Like the `attr` formatter, named scope formatter throw exception in case if ther
 
     #include <boost/log/formatters/if.hpp>
 
-There are cases when one would want to check some condition about the log record and format it depending on that condition. One example of such need is formatting an attribute value depending on its runtime type. The general syntax of the conditional formatter is as follows:
+There are cases when one would want to check some condition about the log record and format it depending on that condition. One example of such a need is formatting an attribute value depending on its runtime type. The general syntax of the conditional formatter is as follows:
 
     if_ (filter)
     [
@@ -173,7 +173,7 @@ There are cases when one would want to check some condition about the log record
         false_formatter
     ]
 
-Ones that are familiar with __boost_phoenix__ lambda expressions will find this syntax quite familiar. The `filter` argument is a filter that is applied to the record being formatted. If it returns `true`, the `true_formatter` is executed, otherwise `false_formatter` is executed. The `else_` section with `false_formatter` is optional. If it is omitted and `filter` yields `false`, no formatter is executed. Here is an example:
+Those familiar with __boost_phoenix__ lambda expressions will find this syntax quite familiar. The `filter` argument is a filter that is applied to the record being formatted. If it returns `true`, the `true_formatter` is executed, otherwise `false_formatter` is executed. The `else_` section with `false_formatter` is optional. If it is omitted and `filter` yields `false`, no formatter is executed. Here is an example:
 
     backend->set_formatter
     (
@@ -196,7 +196,7 @@ Ones that are familiar with __boost_phoenix__ lambda expressions will find this 
 
     #include <boost/log/formatters/message.hpp>
 
-With all these attributes we shouldn't forget the log message itself, should we? There is a `message` placeholder that represents text of logging records being formatted. The usage is quite simple:
+With all these attributes we shouldn't forget the log message itself, should we? There is a `message` placeholder that represents the text of logging records being formatted. The usage is quite simple:
 
     // Sets up a formatter that will ignore all attributes and only print log record text
     backend->set_formatter(fmt::stream << fmt::message());
@@ -207,7 +207,7 @@ Please note, that for wide character logging there is a similar `wmessage` place
 
 [section:decorators Character decorators]
 
-There are times when one would want to additionally post-process the composed string before passing it to the sink backend. For example, in order to store log into an XML file the formatted log record should be checked for special characters that have special meaning in XML documents. This is where decorators step in.
+There are times when one would want to additionally post-process the composed string before passing it to the sink backend. For example, in order to store a log into an XML file the formatted log record should be checked for special characters that have a special meaning in XML documents. This is where decorators step in.
 
 [heading XML character decorator]
 
