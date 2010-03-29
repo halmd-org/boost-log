@@ -602,21 +602,30 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
         path_string_type file_name = src_path.filename();
         info.m_Path = m_StorageDir / file_name;
-        if (filesystem::exists(info.m_Path))
-        {
-            // If the file already exists, try to mangle the file name
-            // to ensure there's no conflict. I'll need to make this customizable some day.
-            file_counter_formatter formatter(file_name.size(), 5);
-            unsigned int n = 0;
-            do
-            {
-                path_string_type alt_file_name = formatter(file_name, n++);
-                info.m_Path = m_StorageDir / alt_file_name;
-            }
-            while (filesystem::exists(info.m_Path) && n < (std::numeric_limits< unsigned int >::max)());
-        }
 
-        filesystem::create_directories(m_StorageDir);
+        // Check if the file is already in the target directory
+        path_type src_dir = src_path.has_parent_path() ?
+                            filesystem::system_complete(src_path.parent_path()) :
+                            filesystem::current_path< path_type >();
+        const bool is_in_target_dir = filesystem::equivalent(src_dir, m_StorageDir);
+        if (!is_in_target_dir)
+        {
+            if (filesystem::exists(info.m_Path))
+            {
+                // If the file already exists, try to mangle the file name
+                // to ensure there's no conflict. I'll need to make this customizable some day.
+                file_counter_formatter formatter(file_name.size(), 5);
+                unsigned int n = 0;
+                do
+                {
+                    path_string_type alt_file_name = formatter(file_name, n++);
+                    info.m_Path = m_StorageDir / alt_file_name;
+                }
+                while (filesystem::exists(info.m_Path) && n < (std::numeric_limits< unsigned int >::max)());
+            }
+
+            filesystem::create_directories(m_StorageDir);
+        }
 
         BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
 
@@ -653,8 +662,11 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             }
         }
 
-        // Move/rename the file to the target storage
-        filesystem::rename(src_path, info.m_Path);
+        if (!is_in_target_dir)
+        {
+            // Move/rename the file to the target storage
+            filesystem::rename(src_path, info.m_Path);
+        }
 
         m_Files.push_back(info);
         m_TotalSize += info.m_Size;
