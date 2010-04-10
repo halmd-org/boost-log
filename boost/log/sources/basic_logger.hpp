@@ -118,6 +118,7 @@ public:
      * acquires reference to the logging core.
      */
     basic_logger() :
+        threading_model(),
         m_pCore(core_type::get())
     {
     }
@@ -129,6 +130,7 @@ public:
      * \param that Source logger
      */
     basic_logger(basic_logger const& that) :
+        threading_model(),
         m_pCore(core_type::get()),
         m_Attributes(that.m_Attributes)
     {
@@ -138,7 +140,8 @@ public:
      * construction is equivalent to default construction.
      */
     template< typename ArgsT >
-    explicit basic_logger(ArgsT const& args) :
+    explicit basic_logger(ArgsT const&) :
+        threading_model(),
         m_pCore(core_type::get())
     {
     }
@@ -342,11 +345,11 @@ struct inherit_logger_features
 /*!
  * \brief A composite logger that inherits a number of features
  *
- * The composite logger is a helper class that simplifies feature composition into a final logger.
+ * The composite logger is a helper class that simplifies feature composition into the final logger.
  * The user's logger class is expected to derive from the composite logger class, instantiated with
- * the character type, the user's logger class, threading model and the list of the required features.
+ * the character type, the user's logger class, the threading model and the list of the required features.
  * The former three parameters are passed to the \c basic_logger class template. The feature list
- * must be an MPL type sequence, where each element is an unary MPL metafunction class, that upon
+ * must be a MPL type sequence, where each element is an unary MPL metafunction class, that upon
  * applying on its argument results in a logging feature class that derives from the argument.
  * Every logger feature provided by the library can participate in the feature list.
  */
