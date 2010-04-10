@@ -72,6 +72,34 @@ namespace sinks {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
+    //! A possible Boost.Filesystem extension - renames or moves the file to the target storage
+    inline void move_file(
+        boost::log::aux::universal_path const& from,
+        boost::log::aux::universal_path const& to)
+    {
+#if defined(BOOST_WINDOWS_API)
+        // On Windows MoveFile already does what we need
+        filesystem::rename(from, to);
+#else
+        // On POSIX rename fails if the target points to a different device
+        try
+        {
+            filesystem::rename(from, to);
+        }
+        catch (system::system_error& e)
+        {
+            if (e.code().value() == system::errc::cross_device_link)
+            {
+                // Attempt to manually move the file instead
+                filesystem::copy_file(from, to);
+                filesystem::remove(from);
+            }
+            else
+                throw;
+        }
+#endif
+    }
+
     typedef boost::log::aux::universal_path::string_type path_string_type;
     typedef path_string_type::value_type path_char_type;
 
@@ -665,7 +693,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         if (!is_in_target_dir)
         {
             // Move/rename the file to the target storage
-            filesystem::rename(src_path, info.m_Path);
+            move_file(src_path, info.m_Path);
         }
 
         m_Files.push_back(info);

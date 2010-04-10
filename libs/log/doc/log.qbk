@@ -97,9 +97,9 @@ The following compilers/platforms are not supported and will likely fail to comp
 * GCC 4.0 and older.
 * Windows 9x, ME, NT4 and older are not supported.
 
-[heading Notes for MinGW users]
+[heading Notes for MinGW, Cygwin and Visual Studio Express Edition users]
 
-In order to compile the library under MinGW, special preparations are needed. First, make sure you have installed the latest GCC version. The library will most likely fail to compile with GCC 3.x. Second, at some point the library will require a Message Compiler tool (mc.exe), which is not available in MinGW. This tool is available in Windows SDK, which can be downloaded from the Microsoft site freely (for example, [@http://www.microsoft.com/downloads/details.aspx?FamilyID=71deb800-c591-4f97-a900-bea146e4fae1&displaylang=en here]). Also, this tool should be available in Visual Studio 2010 Express edition. During the compilation, mc.exe should be accessible through one of the directories in your PATH environment variable.
+In order to compile the library under these compilers special preparations are needed. First, in case of MinGW or Cygwin make sure you have installed the latest GCC version. The library will most likely fail to compile with GCC 3.x. Second, at some point the library will require a Message Compiler tool (mc.exe), which is not available in MinGW, Cygwin and MSVC Express Edition. This tool is available in Windows SDK, which can be downloaded from the Microsoft site freely (for example, [@http://www.microsoft.com/downloads/details.aspx?FamilyID=71deb800-c591-4f97-a900-bea146e4fae1&displaylang=en here]). Also, this tool should be available in Visual Studio 2010 Express Edition. During the compilation, `mc.exe` should be accessible through one of the directories in your PATH environment variable.
 
 [endsect]
 
