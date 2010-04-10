@@ -312,13 +312,11 @@ public:
         }
     }
 
-    //! Forwarding output operators
-    template< typename T >
-    record_pump const& operator<< (T const& value) const
+    //! Returns the stream to be used for message text formatting
+    std::basic_ostream< char_type >& stream() const
     {
         BOOST_ASSERT(m_pStreamCompound != 0);
-        m_pStreamCompound->stream << value;
-        return *this;
+        return m_pStreamCompound->stream;
     }
 
 private:
@@ -347,21 +345,21 @@ BOOST_LOG_FORCEINLINE record_pump< LoggerT > make_pump_stream(LoggerT& lg, recor
 
 #define BOOST_LOG_STREAM_INTERNAL(logger, rec_var)\
     for (BOOST_LOG_AUTO(rec_var, (logger).open_record()); !!rec_var; rec_var.reset())\
-        ::boost::log::aux::make_pump_stream((logger), rec_var)
+        ::boost::log::aux::make_pump_stream((logger), rec_var).stream()
 
 #define BOOST_LOG_STREAM_WITH_PARAMS_INTERNAL(logger, rec_var, params_seq)\
     for (BOOST_LOG_AUTO(rec_var, (logger).open_record((BOOST_PP_SEQ_ENUM(params_seq)))); !!rec_var; rec_var.reset())\
-        ::boost::log::aux::make_pump_stream((logger), rec_var)
+        ::boost::log::aux::make_pump_stream((logger), rec_var).stream()
 
 #else // BOOST_LOG_AUTO
 
 #define BOOST_LOG_STREAM_INTERNAL(logger, rec_var)\
     for (::boost::log::record_handle rec_var = (logger).open_record().handle(); !!rec_var; rec_var.reset())\
-        ::boost::log::aux::make_pump_stream((logger), rec_var)
+        ::boost::log::aux::make_pump_stream((logger), rec_var).stream()
 
 #define BOOST_LOG_STREAM_WITH_PARAMS_INTERNAL(logger, rec_var, params_seq)\
     for (::boost::log::record_handle rec_var = (logger).open_record((BOOST_PP_SEQ_ENUM(params_seq))).handle(); !!rec_var; rec_var.reset())\
-        ::boost::log::aux::make_pump_stream((logger), rec_var)
+        ::boost::log::aux::make_pump_stream((logger), rec_var).stream()
 
 #endif // BOOST_LOG_AUTO
 
