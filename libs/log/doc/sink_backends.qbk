@@ -305,6 +305,8 @@ Please note that all syslog constants, as well as level extractors, are declared
 
 Also note that the backend will default to the built-in implementation and "user" logging facility, if the corresponding constructor parameters are not specified.
 
+[tip The `set_target_address` method will also accept DNS names, which it will resolve to the actual IP address. This featue, however, is not available in single threaded builds.]
+
 [endsect]
 
 [section:debugger Windows debugger output backend]

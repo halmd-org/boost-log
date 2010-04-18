@@ -29,9 +29,7 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/udp.hpp>
 #include <boost/asio/ip/address.hpp>
-#if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/asio/ip/host_name.hpp>
-#endif
 #endif
 #include <boost/system/error_code.hpp>
 #include <boost/date_time/c_time.hpp>
