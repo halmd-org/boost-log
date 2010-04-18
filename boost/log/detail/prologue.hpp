@@ -60,6 +60,11 @@
 #   define BOOST_LOG_NO_MEMBER_TEMPLATE_FRIENDS
 #endif
 
+#if defined(__CYGWIN__)
+    // Boost.ASIO is broken on Cygwin
+#   define BOOST_LOG_NO_ASIO
+#endif
+
 #if (defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530) && !(defined BOOST_NO_COMPILER_CONFIG)
     // Sun C++ 5.3 can't handle the safe_bool idiom, so don't use it
 #   define BOOST_LOG_NO_UNSPECIFIED_BOOL

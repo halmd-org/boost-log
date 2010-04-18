@@ -36,6 +36,7 @@
 [def __boost_exception__ [@http://www.boost.org/doc/libs/release/libs/exception/doc/boost-exception.html Boost.Exception]]
 [def __boost_scope_exit__ [@http://www.boost.org/doc/libs/release/libs/scope_exit/doc/html/index.html Boost.ScopeExit]]
 [def __boost_any__ [@http://www.boost.org/doc/libs/release/doc/html/any.html Boost.Any]]
+[def __boost_asio__ [@http://www.boost.org/doc/libs/release/doc/html/boost_asio.html Boost.ASIO]]
 
 [section Disclaimer]
 
@@ -104,6 +105,12 @@ In order to compile the library under these compilers special preparations are n
 Second, at some point the library will require a Message Compiler tool (`mc.exe`), which is not available in MinGW, Cygwin and MSVC Express Edition. You have two options to settle the problem. In case of MinGW and Cygwin you can use the `windmc.exe` tool, which is the analogue of the original `mc.exe`. In order to do that you will have to patch Boost.Build files (in particular, the `tools/build/v2/tools/mc.jam` file) as described in [@https://svn.boost.org/trac/boost/ticket/4111 this] ticket. After that you will be able to specify the `mc-compiler=windmc` option to bjam to build the library.
 
 Another way is to obtain the original `mc.exe`. This tool is available in Windows SDK, which can be downloaded from the Microsoft site freely (for example, [@http://www.microsoft.com/downloads/details.aspx?FamilyID=71deb800-c591-4f97-a900-bea146e4fae1&displaylang=en here]). Also, this tool should be available in Visual Studio 2010 Express Edition. During the compilation, `mc.exe` should be accessible through one of the directories in your PATH environment variable.
+
+[heading Additional notes for Cygwin users]
+
+Cygwin support is rather preliminary. Some functionality is not available. In particular, the socket-based syslog backend is not supported, as it is based on __boost_asio__, which doesn't compile on this platform. However, the native syslog support is still in place.
+
+Furthermore, in order to compile the library the following parameters should be explicitly specified in the bjam command line: `target-os=cygwin logapi=unix`.
 
 [endsect]
 

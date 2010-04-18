@@ -253,7 +253,7 @@ The syslog backend, as comes from its name, provides support for the syslog API 
 
 The backend is implemented in the `basic_syslog_backend` class template, `syslog_backend` and `wsyslog_backend` convenience typedefs are also available. The backend supports formatting log records, and therefore requires thread synchronization in the frontend. The backend also supports severity level translation from the application-specific values to the syslog-defined values. This is achieved with an additional function object, level extractor, that receives a set of attribute values of each log record and returns the appropriate syslog level value. This value is used by the backend to construct the final priority value of the syslog record. The other component of the syslog priority value, the facility, is constant for each backend object and can be specified in the backend constructor arguments.
 
-Level extractors can be written by library users to map the application log levels to the syslog levels in the best way. However, the library provides two extractors that would fit this need in obvious cases. The `direct_level_mapping` class template provides a way to directly map values of some integral attribute to syslog levels, without any conversion. The `custom_level_mapping` class template adds some flexibility and allows to map arbitrary values of some integral attribute to syslog levels. The `wdirect_level_mapping` and `wcustom_level_mapping` are also available for wide-character logging.
+Level extractors can be written by library users to map the application log levels to the syslog levels in the best way. However, the library provides two extractors that would fit this need in obvious cases. The `direct_severity_mapping` class template provides a way to directly map values of some integral attribute to syslog levels, without any conversion. The `custom_severity_mapping` class template adds some flexibility and allows to map arbitrary values of some attribute to syslog levels. The `wdirect_severity_mapping` and `wcustom_severity_mapping` are also available for wide-character logging.
 
 Anyway, one example is better than a thousand words.
 
@@ -271,7 +271,7 @@ Anyway, one example is better than a thousand words.
         ));
 
         // Set the straightforward level translator for the "Severity" attribute of type int
-        backend->set_level_extractor(sinks::syslog::direct_level_mapping< int >("Severity"));
+        backend->set_severity_mapper(sinks::syslog::direct_severity_mapping< int >("Severity"));
 
         // Wrap it into the frontend and register in the core.
         // The backend requires synchronization in the frontend.
@@ -290,12 +290,12 @@ Anyway, one example is better than a thousand words.
         backend->set_target_address("192.164.1.10", 514);
 
         // Create and fill in another level translator for "MyLevel" attribute of type string
-        sinks::syslog::custom_level_mapping< std::string > mapping("MyLevel");
+        sinks::syslog::custom_severity_mapping< std::string > mapping("MyLevel");
         mapping["debug"] = sinks::syslog::debug;
         mapping["normal"] = sinks::syslog::info;
         mapping["warning"] = sinks::syslog::warning;
         mapping["failure"] = sinks::syslog::critical;
-        backend->set_level_extractor(mapping);
+        backend->set_severity_mapper(mapping);
 
         // Wrap it into the frontend and register in the core.
         core->add_sink(boost::make_shared< sink_t >(backend));
