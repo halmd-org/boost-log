@@ -141,9 +141,9 @@ Now the `writer_thread` function can look like this:
         }
     }
 
-The `consume` function is called every time a logging record passes filtering in the frontend. The record, as was stated before, contains a set of attribute values (goes as the first argument of the function) and the message string (goes as the second one). The types of these arguments are defined in the `basic_sink_backend` class.
+The `consume` function is called every time a logging record passes filtering in the frontend. The record, as was stated before, contains a set of attribute values and the message string.
 
-Since we have no need for the record message, the second argument will be of no interest to us for now.
+Since we have no need for the record message, we will ignore it for now.
 
     // The function consumes the log records that come from the frontend
     void stat_collector::consume(record_type const& rec)

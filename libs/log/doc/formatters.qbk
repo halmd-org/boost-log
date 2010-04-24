@@ -9,7 +9,7 @@
 
 [section:formatters Formatters]
 
-As was noted in the [link log.tutorial.formatters tutorial], the library provides two ways of expressing formatters: with a stream-style syntax or __boost_format__-style expression. Which of the two formats is chosen is determined by the appropriate anchor expression. To use stream-style syntax one should begin the formatter definition with a `stream` or `wstream` keyword, like that:
+As was noted in the [link log.tutorial.formatters tutorial], the library provides several ways of expressing formatters, most notable being with a stream-style syntax and __boost_format__-style expression. Which of the two formats is chosen is determined by the appropriate anchor expression. To use stream-style syntax one should begin the formatter definition with a `stream` or `wstream` keyword, like that:
 
     #include <boost/log/formatters/stream.hpp>
 
@@ -24,6 +24,8 @@ To use __boost_format__-style syntax one should use `format` construct:
     backend->set_formatter(fmt::format("format string") % expr1 % expr2 % ... % exprN);
 
 The format string passed to the `format` keyword should contain positional placeholders for the appropriate expressions. In the case of wide-character logging the format string should be wide. Expressions `expr1` through `exprN` have the same meaning as in stream-like variant. It should be noted though that using stream-like syntax usually results in a faster formatter than one is constructed with the `format` keyword.
+
+Another useful way of expressing formatters is by using string templates. This part of the library is described in [link log.detailed.utilities.init.filter_formatter this] section and is mostly intended to support initialization from the application settings.
 
 [section:attr Generic attribute formatter]
 
@@ -285,7 +287,7 @@ Since character decorators are yet another kind of formatters, it's fine to use 
     xml_backend->set_formatter
     (
         fmt::format("<message>%1%: %2%</message>")
-            % fmt::attr< unsigned int >("Line #")
+            % fmt::attr< unsigned int >("LineID")
             % fmt::xml_dec[ fmt::message() ]; // Only decorate the message text
     );
 
@@ -300,7 +302,7 @@ This decorator allows to ensure that the resulting string conforms to the [@http
     csv_backend->set_formatter
     (
         fmt::stream
-            << fmt::attr< unsigned int >("Line #") << ","
+            << fmt::attr< unsigned int >("LineID") << ","
             << fmt::csv_dec[ fmt::attr< std::string >("Tag") ] << ","
             << fmt::csv_dec[ fmt::message() ]
     );
@@ -314,7 +316,7 @@ The file defines two character decorators: `c_dec` and `c_ascii_dec`. The first 
     backend->set_formatter
     (
         fmt::stream
-            << fmt::attr< unsigned int >("Line #") << ": ["
+            << fmt::attr< unsigned int >("LineID") << ": ["
             << fmt::c_dec[ fmt::attr< std::string >("Tag") ] << "] "
             << fmt::c_ascii_dec[ fmt::message() ]
     );

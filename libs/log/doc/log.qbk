@@ -40,7 +40,7 @@
 
 [section Disclaimer]
 
-This library is not an official part of [@http://www.boost.org Boost libraries collection] although it is aimed to be proposed for inclusion at some point.
+This library is not an official part of [@http://www.boost.org Boost libraries collection] although it has passed the review and is provisionally accepted. The review result is available [@http://lists.boost.org/boost-announce/2010/03/0256.php here].
 
 [endsect]
 
@@ -88,7 +88,7 @@ The library should build and work with a reasonably compliant compiler. The libr
 
 * Windows XP, Windows Vista. MSVC 8.0, 9.0. MSVC 7.1 may work too, but it was not tested.
 * Windows Vista. Intel C++ Compiler 10.1.022, 11.1.048.
-* Linux. GCC 4.2, 4.3. GCC 4.1 may work too, but it was not tested.
+* Linux. GCC 4.2 and newer. GCC 4.1 may work too, but it was not tested.
 * Linux. Intel C++ 11.1.056.
 
 The following compilers/platforms are not supported and will likely fail to compile the library:
@@ -141,11 +141,11 @@ You can define configuration macros in the `bjam` command line, like this:
     bjam --with-log variant=release define=BOOST_LOG_USE_CHAR define=BOOST_LOG_USE_WINNT6_API stage
 ]
 
-However, it may be more convenient to define configuration macros in the "boost/config/user.hpp" file in order to automatically define them both for the library and user's projects.
+However, it may be more convenient to define configuration macros in the "boost/config/user.hpp" file in order to automatically define them both for the library and user's projects. If none of the options are specified, the library will try to support the most comprehensive setup, including support for all character types and features available for the platform.
 
 The logging library uses several other Boost libraries that need building too. These are __boost_filesystem__, __boost_system__, __boost_date_time__, __boost_thread__ and __boost_regex__. Refer to their documentation for detailed instructions on the building procedure.
 
-One final thing should be added. The library requires run-time type information (RTTI) to be enabled for both the library compilation and user's code compilation. Normally, this won't need anything from you except to check that RTTI support is not disabled in your project.
+One final thing should be added. The library requires run-time type information (RTTI) to be enabled for both the library compilation and user's code compilation. Normally, this won't need anything from you except to verify that RTTI support is not disabled in your project.
 
 [endsect]
 
@@ -155,8 +155,8 @@ Here are definitions of some terms that will be used widely throughout the docum
 
 [variablelist
     [[Log record][A single bundle of information, collected from the user's application, that is a candidate to be put into the log. In a simple case the log record will be represented as a line of text in the log file after being processed by the logging library.]]
-    [[Attribute][An "attribute" is a piece of information that can be used to specialize a log record. In Boost.Log attributes are represented by function objects with a specific interface, which return the actual attribute value when invoked.]]
-    [[Attribute value][Attribute values are the actual data acquired from attributes. This data is attached to the specific log record and processed by the library. Values may have different types (integers, strings and more complex, including user defined types). Some examples of attribute values: current time stamp, file name, line number, current scope name, etc..]]
+    [[Attribute][An "attribute" is a piece of meta-information that can be used to specialize a log record. In Boost.Log attributes are represented by function objects with a specific interface, which return the actual attribute value when invoked.]]
+    [[Attribute value][Attribute values are the actual data acquired from attributes. This data is attached to the specific log record and processed by the library. Values may have different types (integers, strings and more complex, including user defined types). Some examples of attribute values: current time stamp value, file name, line number, current scope name, etc..]]
     [[Log sink][A target, to which all log records are fed after being collected from the user's application. The sink defines where and how the log records are going to be stored.]]
     [[Log source][An entry point for the user's application to put log records to. In a simple case it is an object (logger) which maintains a set of attributes that will be used to form a log record upon the user's request. However, one can surely create a source that would emit log records on some third-party events (for example, by intercepting another application's console output).]]
     [[Log filter][A predicate that takes a log record and tells whether this record should be passed through or discarded.]]
@@ -228,9 +228,11 @@ Along with the primary facilities described above, the library provides a wide v
 
 [section:acknowledgments Acknowledgments]
 
+* Vladimir Prus managed the library review in Boost and actually reviewed it in the process.
 * Luca Rigini wrote the initial implementation of the NT event log sink and made a lot of suggestions on how to improve the library in regard of writing user-defined sinks.
 * Jean-Daniel Michaud, Michael Lacher and all others who took part in the discussion of the requirements to the library on [@http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Boost.Logging Wiki].
 * John Torjo, Gennadiy Rozental and others for their discussion on John's logging library on the Boost developers list. It helped a lot to learn the requirements and possible solutions for the library.
 * All authors of the great Boost libraries that were involved in this library (notably, __boost_smart_ptr__, __boost_thread__, __boost_function__, __boost_optional__, __boost_date_time__, __boost_filesystem__, __boost_intrusive__ and others).
+* All the reviewers and the users that made suggestions and offered their feedback on the library. Most notably, Steven Watanabe for his in-depth studying the docs and the code, with a lot of fruitful comments on both.
 
 [endsect]

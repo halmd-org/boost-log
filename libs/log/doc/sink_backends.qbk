@@ -123,7 +123,7 @@ The sink backend allows hooking into the file rotation process in order to perfo
         // Setup formatter that will put attribute values into XML
         backend->set_formatter(
             fmt::format("\t<record id=\"%1%\" timestamp=\"%2%\">%3%</record>")
-                % fmt::attr< unsigned int >("Line #")
+                % fmt::attr< unsigned int >("LineID")
                 % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
                 // The log message has to be decorated, if it contains special characters
                 % fmt::xml_dec[ fmt::message() ]
@@ -380,7 +380,7 @@ The only thing user has to do to add Windows event log support to his applicatio
         backend->set_formatter
         (
             fmt::format("%1%: [%2%] - %3%")
-                % fmt::attr< unsigned int >("Line #")
+                % fmt::attr< unsigned int >("LineID")
                 % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
                 % fmt::message()
         );

@@ -9,7 +9,9 @@
 
 [section:changelog Changelog]
 
-[heading Trunk]
+[heading 1.0]
+
+This release mostly fixes bugs in the code and documentation. The next major release (2.0) will contain breaking changes and feature additions. The 1.0 branch will not receive any feature updates.
 
 * Added some optimization for thread local storage. In Windows setups, if you dynamically load Boost.Log binaries during the application run time, this optimization may lead to crashes. In that case, you may disable it by defining `BOOST_LOG_NO_COMPILER_TLS` during the library build process. The macro also affects other platforms, which may be useful if your compiler does not support TLS.
 * Added a few public accessors and convenience constructors to severity and channel loggers.

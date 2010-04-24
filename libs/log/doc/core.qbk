@@ -56,7 +56,7 @@ In order to add or remove global or thread-specific attributes to the core there
 
         // Add a global attribute
         std::pair< logging::core::attribute_set_type::iterator, bool > res =
-            core->add_global_attribute("Line #",
+            core->add_global_attribute("LineID",
                 boost::make_shared< attrs::counter< unsigned int > >());
 
         // ...

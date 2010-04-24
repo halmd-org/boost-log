@@ -114,7 +114,7 @@ The added piece is a call to the `init_log_to_file` function. As the name implie
         );
     }
 
-You can see that the options are passed to the function in the named form. This approach is taken in many places of the library. You'll get used to it. The meaning of the parameters is mostly self-explaining, and is documented in this manual (see [link log.detailed.sink_backends.text_file here] for what regards the text file sink).
+You can see that the options are passed to the function in the named form. This approach is taken in many places of the library. You'll get used to it. The meaning of the parameters is mostly self-explaining, and is documented in this manual (see [link log.detailed.sink_backends.text_file here] for what regards the text file sink). This and other convenience initialization functions are described in [link log.detailed.utilities.init.convenience this] section.
 
 [note You can register more than one sink. Each sink will process log records independently from others. In particular this means that you can use trivial logging and additionally register one or more sinks as shown above. All sinks will receive log records as you emit them.]
 
@@ -143,6 +143,8 @@ Ok, the first thing you may have noticed about sinks is that they are composed o
 The `synchronous_sink` class template above indicates that the sink is synchronous, that is, it allows several threads to log simultaneously and will block in case of contention. This means that the backend `text_ostream_backend` need not worry about multithreading at all. There are other sink frontends available, you can read more about them [link log.detailed.sink_frontends here].
 
 The `text_ostream_backend` class writes formatted log records into STL-compatible streams. We have used a file stream above but we could have used any type of stream. For example, adding output to console could look as follows:
+
+    #include <boost/log/utility/empty_deleter.hpp>
 
     // We have to provide an empty deleter to avoid destroying the global stream object
     boost::shared_ptr< std::ostream > pStream(&std::clog, logging::empty_deleter());
@@ -385,6 +387,8 @@ Here the `open_record` function call determines if the record to be constructed 
 
 Of course, the above syntax can easily be wrapped in a macro and, in fact, users are encouraged to write their own macros instead of using the C++ logger interface directly. The log record above can be written like this:
 
+    #include <boost/log/sources/record_ostream.hpp>
+
     BOOST_LOG(lg) << "Hello, World!";
 
 Looks a bit shorter, doesn't it? The `BOOST_LOG` macro, along with other similar ones, is defined by the library. It automatically provides an STL-like stream in order to format the message with ordinary insertion expressions. Having all that code written, compiled and executed you should be able to see the "Hello, World!" record in the "sample.log" file.
@@ -399,11 +403,11 @@ Each log record can have a number of attributes attached. Attributes can contain
 
 Aside from that, as noted in the [link log.design Design overview] section, there are three possible scopes of attributes: source-specific, thread-specific and global. When a log record is made, attribute values from these three sets are accumulated into a single view and passed to sinks, so where the attribute was registered makes no difference for them. Any attribute can be registered in any scope. When registered, an attribute is given a unique name in order to make it possible to search for it. If it happens that the same named attribute is found in several scopes, the attribute from the most specific scope is taken into consideration in any further processing, including filtering and formatting. Such behavior makes it possible to override global or thread-scoped attributes with the ones registered in your local logger, thus reducing thread interference.
 
-Getting back to our tutorial, "LineID" and "Severity" are attribute names. These attributes are registered by certain parts of the library, such as loggers and trivial logging setup code. Below is the description of attribute registration.
+Getting back to our tutorial, "LineID" and "Severity" are attribute names. These attributes are registered by certain parts of the library, such as loggers and trivial logging setup code. Below is the description of the attribute registration process.
 
 [heading Commonly used attributes]
 
-There are attributes that are likely to be used in almost any application. These are log record counter and a time stamp. They can be added with a single function call:
+There are attributes that are likely to be used in nearly any application. For instance, log record counter and a time stamp. They can be added with a single function call:
 
     logging::add_common_attributes();
 
@@ -412,6 +416,8 @@ With this call attributes "LineID", "TimeStamp", "ProcessID" and "ThreadID" are 
 [important In single-threaded builds the "ThreadID" attribute is not registered.]
 
 [tip The trivial logging support code calls `add_common_attributes` internally in order to set up attributes available by default. If you use trivial logging, you don't have to call this function yourself.]
+
+This function is one of the several convenience functions described [link log.detailed.utilities.init.convenience here].
 
 Some attrubutes are registered automatically on loggers construction. For example, `severity_logger` registers a source-specific attribute "Severity" which can be used to add a level of emphasis for different log records. For example:
 
@@ -432,6 +438,8 @@ Some attrubutes are registered automatically on loggers construction. For exampl
     BOOST_LOG_SEV(slg, normal) << "A regular message";
     BOOST_LOG_SEV(slg, warning) << "Something bad is going on but I can handle it";
     BOOST_LOG_SEV(slg, critical) << "Everything crumbles, shoot me now!";
+
+[tip You can define your own formatting rules for the severity level by defining `operator <<` for this type. See [link log.detailed.formatters.attr this] section for more details.]
 
 The `BOOST_LOG_SEV` macro acts pretty much like `BOOST_LOG` except that it takes an additional argument for the `open_record` method of the logger. The `BOOST_LOG_SEV` macro can be replaced with this equivalent:
 
@@ -461,7 +469,7 @@ Let's see what's under the hood of that `add_common_attributes` function we used
         // other attributes skipped for brevity
     }
 
-Here the `counter` and `local_clock` components are attribute classes, they derive from the common attribute interface `attribute`. The library provides a number of other attribute classes, including the `functor` attribute that calls some functional object on value acquisition. For example, we can in a similar way register a `named_scope` attrubute:
+Here the `counter` and `local_clock` components are attribute classes, they derive from the common attribute interface `attribute`. The library provides a number of other [link log.detailed.attributes attribute classes], including the `functor` attribute that calls some functional object on value acquisition. For example, we can in a similar way register a `named_scope` attrubute:
 
     pCore->add_global_attribute(
         "Scope", boost::make_shared< attrs::named_scope >());

@@ -9,7 +9,9 @@
 
 [section:filters Filters]
 
-As it was pointed out in [link log.tutorial.trivial_filtering tutorial], filters are implemented as Lambda-like expressions with placeholders for attribute values. This section will describe the placeholders that can be used to build more complex expressions.
+As it was pointed out in [link log.tutorial.trivial_filtering tutorial], filters are implemented as Lambda-like expressions with placeholders for attribute values. This section will describe the placeholders that can be used to build more complex Lambda expressions.
+
+There is also a way to specify the filter in the form of a string template. This can be useful for initialization from the application settings. This part of the library is described [link log.detailed.utilities.init.filter_formatter here].
 
 [section:has_attr Attribute presence filter]
 
