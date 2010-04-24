@@ -119,7 +119,7 @@ class wchannel_logger_mt :
         typename features< channel< ChannelT > >::type
     >
 {
-    typedef typename wchannel_logger::logger_base base_type;
+    typedef typename wchannel_logger_mt::logger_base base_type;
 
 public:
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wchannel_logger_mt)
