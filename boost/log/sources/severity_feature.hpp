@@ -199,15 +199,16 @@ public:
             m_pSeverity);
     }
 
-protected:
-    /*!
-     * Severity attribute accessor
-     */
-    shared_ptr< severity_attribute > const& severity() const { return m_pSeverity; }
     /*!
      * Default severity value getter
      */
     severity_level default_severity() const { return m_DefaultSeverity; }
+
+protected:
+    /*!
+     * Severity attribute accessor
+     */
+    shared_ptr< severity_attribute > const& get_severity_attribute() const { return m_pSeverity; }
 
     //! Lock requirement for the open_record_unlocked method
     typedef typename strictest_lock<

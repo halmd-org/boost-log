@@ -27,6 +27,7 @@
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/threading_models.hpp>
 #include <boost/log/sources/severity_feature.hpp>
+#include <boost/log/keywords/severity.hpp>
 
 namespace boost {
 
@@ -48,7 +49,14 @@ class severity_logger :
         typename features< severity< LevelT > >::type
     >
 {
+    typedef typename severity_logger::logger_base base_type;
+
+public:
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_logger)
+
+    explicit severity_logger(LevelT level) : base_type(keywords::severity = level)
+    {
+    }
 };
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -63,7 +71,14 @@ class severity_logger_mt :
         typename features< severity< LevelT > >::type
     >
 {
+    typedef typename severity_logger_mt::logger_base base_type;
+
+public:
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_logger_mt)
+
+    explicit severity_logger_mt(LevelT level) : base_type(keywords::severity = level)
+    {
+    }
 };
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
@@ -82,7 +97,14 @@ class wseverity_logger :
         typename features< severity< LevelT > >::type
     >
 {
+    typedef typename wseverity_logger::logger_base base_type;
+
+public:
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_logger)
+
+    explicit wseverity_logger(LevelT level) : base_type(keywords::severity = level)
+    {
+    }
 };
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -97,7 +119,14 @@ class wseverity_logger_mt :
         typename features< severity< LevelT > >::type
     >
 {
+    typedef typename wseverity_logger_mt::logger_base base_type;
+
+public:
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_logger_mt)
+
+    explicit wseverity_logger_mt(LevelT level) : base_type(keywords::severity = level)
+    {
+    }
 };
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
@@ -134,6 +163,12 @@ public:
      */
     template< typename... ArgsT >
     explicit severity_logger(ArgsT... const& args);
+    /*!
+     * The constructor creates the logger with the specified default severity level
+     *
+     * \param level The default severity level
+     */
+    explicit severity_logger(LevelT level);
     /*!
      * Assignment operator
      */
@@ -173,6 +208,12 @@ public:
     template< typename... ArgsT >
     explicit severity_logger_mt(ArgsT... const& args);
     /*!
+     * The constructor creates the logger with the specified default severity level
+     *
+     * \param level The default severity level
+     */
+    explicit severity_logger_mt(LevelT level);
+    /*!
      * Assignment operator
      */
     severity_logger_mt& operator= (severity_logger_mt const& that)
@@ -211,6 +252,12 @@ public:
     template< typename... ArgsT >
     explicit wseverity_logger(ArgsT... const& args);
     /*!
+     * The constructor creates the logger with the specified default severity level
+     *
+     * \param level The default severity level
+     */
+    explicit wseverity_logger(LevelT level);
+    /*!
      * Assignment operator
      */
     wseverity_logger& operator= (wseverity_logger const& that)
@@ -248,6 +295,12 @@ public:
      */
     template< typename... ArgsT >
     explicit wseverity_logger_mt(ArgsT... const& args);
+    /*!
+     * The constructor creates the logger with the specified default severity level
+     *
+     * \param level The default severity level
+     */
+    explicit wseverity_logger_mt(LevelT level);
     /*!
      * Assignment operator
      */

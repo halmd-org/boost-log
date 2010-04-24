@@ -129,7 +129,27 @@ public:
         >::type());
     }
 
+    /*!
+     * The observer of the channel attribute presence
+     *
+     * \return \c true if the channel attribute is set by the logger, \c false otherwise
+     */
+    bool has_channel() const { return !!m_pChannel; }
+
+    /*!
+     * The observer of the channel name
+     *
+     * \pre <tt>this->has_channel() == true</tt>
+     * \return The channel name that was set by the logger
+     */
+    channel_type const& channel() const { return m_pChannel->get(); }
+
 protected:
+    /*!
+     * Channel attribute accessor
+     */
+    shared_ptr< channel_attribute > const& get_channel_attribute() const { return m_pChannel; }
+
     //! Lock requirement for the swap_unlocked method
     typedef typename strictest_lock<
         typename base_type::swap_lock,
