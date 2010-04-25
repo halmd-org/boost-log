@@ -48,7 +48,7 @@ The backend also provides a feature that may come useful when debugging your app
 
 Although it is possible to write logs into files with the [link log.detailed.sink_backends.text_ostream text stream backend] the library also offers a special sink backend with an extended set of features suitable for file-based logging. The features include:
 
-* Log file rotation based on file size and/or time intervals
+* Log file rotation based on file size and/or time
 * Flexible log file naming
 * Placing the rotated files into a special location in the file system
 * Deleting the oldest files in order to free more space on the file system
@@ -68,8 +68,8 @@ File rotation is implemented by the sink backend itself. The file name pattern a
                 keywords::file_name = "file_%5N.log",
                 // rotate the file upon reaching 5 MiB size...
                 keywords::rotation_size = 5 * 1024 * 1024,
-                // ...or each hour, whichever comes first
-                keywords::rotation_interval = boost::posix_time::hours(1)
+                // ...or at noon, whichever comes first
+                keywords::time_based_rotation = sinks::file::rotation_at_time_point(12, 0, 0)
             );
 
         // Wrap it into the frontend and register in the core.
@@ -82,7 +82,56 @@ File rotation is implemented by the sink backend itself. The file name pattern a
 
 [note The file size at rotation can be imprecise. The implementation counts the number of characters written to the file, but the underlying API can introduce additional auxiliary data, which would increase the log file's actual size on disk. The most well-known such case is the way the Windows and DOS operating systems work with text files with regard to new-line characters. Each new-line character is written as a two byte sequence 0x0D 0x0A instead of a single 0x0A. Other character translations may also be applied.]
 
-[note The log file rotation takes place on an attempt to write a new log record to the file. Thus the rotation interval is not a strict threshold, either. The parameter should be interpreted as the maximum time interval between the first and the last records written to the file.]
+The time-based rotation is not limited by only time points. There are following options available out of the box:
+
+# Time point rotations: `rotation_at_time_point` class. This kind of rotation takes place whenever the specified time point is reached. The following variants are available:
+
+    * Every day rotation, at the specified time. This is what was presented in the code snippet above:
+    ``
+        sinks::file::rotation_at_time_point(12, 0, 0)
+    ``
+
+    * Rotation on the specified day of every week, at the specified time. For instance, this will make file rotation to happen every Tuesday, at midnight:
+    ``
+        sinks::file::rotation_at_time_point(date_time::Tuesday, 0, 0, 0)
+    ``
+    in case of midnight, the time can be omitted:
+    ``
+        sinks::file::rotation_at_time_point(date_time::Tuesday)
+    ``
+
+    * Rotation on the specified day of each month, at the specified time. For example, this is how to rotate files on the 1-st of every month:
+    ``
+        sinks::file::rotation_at_time_point(gregorian::greg_day(1), 0, 0, 0)
+    ``
+    like with weekdays, midnight is implied:
+    ``
+        sinks::file::rotation_at_time_point(gregorian::greg_day(1))
+    ``
+
+# Time interval rotations: `rotation_at_time_interval` class. With this predicate the rotation is not bound to any time points and happens as soon as the specified time interval since the previous rotation elapses. This is how to make rotations every hour:
+``
+    sinks::file::rotation_at_time_interval(posix_time::hours(1))
+``
+
+If none of the above applies, one can specify his own predicate for time-based rotation. The predicate should take no arguments and return `bool` (the `true` value indicates that the rotation should take place). The predicate will be called for every log record being written to the file.
+
+    bool is_it_time_to_rotate();
+
+    void init_logging()
+    {
+        // ...
+
+        boost::shared_ptr< sinks::text_file_backend > backend =
+            boost::make_shared< sinks::text_file_backend >(
+                keywords::file_name = "file_%5N.log",
+                keywords::time_based_rotation = &is_it_time_to_rotate
+            );
+
+        // ...
+    }
+
+[note The log file rotation takes place on an attempt to write a new log record to the file. Thus the time-based rotation is not a strict threshold, either. The rotation will take place as soon as the library detects that the rotation should have happened.]
 
 The file name pattern may contain a number of wildcards, like the one you can see in the example above. Supported placeholders are:
 
@@ -111,7 +160,7 @@ The sink backend allows hooking into the file rotation process in order to perfo
         boost::shared_ptr< sinks::text_file_backend > backend(new sinks::text_file_backend(
             keywords::file_name = "file_%5N.xml",
             keywords::rotation_size = 5 * 1024 * 1024,
-            keywords::rotation_interval = boost::posix_time::hours(1)
+            keywords::time_based_rotation = sinks::file::rotation_at_time_point(12, 0, 0)
         ));
 
         // Set up the function that will write file header
@@ -150,7 +199,7 @@ After being closed, the rotated files can be collected. In order to do so one ha
         boost::shared_ptr< sinks::text_file_backend > backend(new sinks::text_file_backend(
             keywords::file_name = "file_%5N.log",
             keywords::rotation_size = 5 * 1024 * 1024,
-            keywords::rotation_interval = boost::posix_time::hours(1)
+            keywords::time_based_rotation = sinks::file::rotation_at_time_point(12, 0, 0)
         ));
 
         // Set up the file collector
@@ -184,7 +233,7 @@ The file collector provides another useful feature. Assume that you ran your app
         boost::shared_ptr< sinks::text_file_backend > backend(new sinks::text_file_backend(
             keywords::file_name = "file_%5N.log",
             keywords::rotation_size = 5 * 1024 * 1024,
-            keywords::rotation_interval = boost::posix_time::hours(1)
+            keywords::time_based_rotation = sinks::file::rotation_at_time_point(12, 0, 0)
         ));
 
         backend->set_file_collector(sinks::file::make_collector(

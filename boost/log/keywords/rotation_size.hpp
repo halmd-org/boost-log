@@ -28,7 +28,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace keywords {
 
-    //! The keyword allows to pass maximum log file size to the rotating file stream methods
+    //! The keyword allows to pass maximum log file size to the file sink
     BOOST_PARAMETER_KEYWORD(tag, rotation_size)
 
 } // namespace keywords

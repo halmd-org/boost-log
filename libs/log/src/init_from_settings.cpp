@@ -425,8 +425,8 @@ private:
         it = params.find(constants::rotation_interval_param_name());
         if (it != params.end() && !it->second.empty())
         {
-            backend->set_rotation_interval(posix_time::seconds(
-                any_cast_to_int< unsigned int >(constants::rotation_interval_param_name(), it->second)));
+            backend->set_time_based_rotation(sinks::file::rotation_at_time_interval(posix_time::seconds(
+                any_cast_to_int< unsigned int >(constants::rotation_interval_param_name(), it->second))));
         }
 
         // Auto flush

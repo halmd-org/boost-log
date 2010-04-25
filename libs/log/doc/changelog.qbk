@@ -15,6 +15,7 @@ This release mostly fixes bugs in the code and documentation. The next major rel
 
 * Added some optimization for thread local storage. In Windows setups, if you dynamically load Boost.Log binaries during the application run time, this optimization may lead to crashes. In that case, you may disable it by defining `BOOST_LOG_NO_COMPILER_TLS` during the library build process. The macro also affects other platforms, which may be useful if your compiler does not support TLS.
 * Added a few public accessors and convenience constructors to severity and channel loggers.
+* Added ability to rotate log files at the specified time points. The `rotation_interval` keyword is no longer available. The same functionality is achieved with the new `time_based_rotation` keyword and the `rotation_at_time_interval` predicate. See [link log.detailed.sink_backends.text_file here] for more details.
 * Improved support for MinGW and Cygwin.
 * A number of bugs fixed. Added workarounds to compile on GCC 4.2.
 * Lots of corrections in the documentation.

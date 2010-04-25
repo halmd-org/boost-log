@@ -5,19 +5,19 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   keywords/rotation_interval.hpp
+ * \file   keywords/time_based_rotation.hpp
  * \author Andrey Semashev
  * \date   14.03.2009
  *
- * The header contains the \c rotation_interval keyword declaration.
+ * The header contains the \c time_based_rotation keyword declaration.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_KEYWORDS_ROTATION_INTERVAL_HPP_INCLUDED_
-#define BOOST_LOG_KEYWORDS_ROTATION_INTERVAL_HPP_INCLUDED_
+#ifndef BOOST_LOG_KEYWORDS_TIME_BASED_ROTATION_HPP_INCLUDED_
+#define BOOST_LOG_KEYWORDS_TIME_BASED_ROTATION_HPP_INCLUDED_
 
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -28,8 +28,8 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace keywords {
 
-    //! The keyword allows to pass maximum time interval of using the same log file to the rotating file stream methods
-    BOOST_PARAMETER_KEYWORD(tag, rotation_interval)
+    //! The keyword allows to pass time-based file rotation predicate to the file sink backend
+    BOOST_PARAMETER_KEYWORD(tag, time_based_rotation)
 
 } // namespace keywords
 
@@ -37,4 +37,4 @@ namespace keywords {
 
 } // namespace boost
 
-#endif // BOOST_LOG_KEYWORDS_ROTATION_INTERVAL_HPP_INCLUDED_
+#endif // BOOST_LOG_KEYWORDS_TIME_BASED_ROTATION_HPP_INCLUDED_

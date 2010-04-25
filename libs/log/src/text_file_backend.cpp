@@ -43,6 +43,7 @@
 #include <boost/intrusive/list_hook.hpp>
 #include <boost/intrusive/options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/compatibility/cpp_c_headers/ctime>
 #include <boost/compatibility/cpp_c_headers/cctype>
 #include <boost/compatibility/cpp_c_headers/cwctype>
@@ -838,6 +839,97 @@ namespace aux {
 
 } // namespace aux
 
+//! Checks if it's time to rotate the file
+BOOST_LOG_EXPORT bool rotation_at_time_point::operator()() const
+{
+    bool result = false;
+    posix_time::time_duration rotation_time(
+        static_cast< posix_time::time_duration::hour_type >(m_Hour),
+        static_cast< posix_time::time_duration::min_type >(m_Minute),
+        static_cast< posix_time::time_duration::sec_type >(m_Second));
+    posix_time::ptime now = posix_time::second_clock::local_time();
+    if (m_Previous.is_special())
+    {
+        m_Previous = now;
+        return false;
+    }
+
+    switch (m_DayKind)
+    {
+    case not_specified:
+        {
+            // The rotation takes place every day at the specified time
+            posix_time::ptime next(m_Previous.date() + gregorian::days(1), rotation_time);
+            result = (now >= next);
+        }
+        break;
+
+    case weekday:
+        {
+            // The rotation takes place on the specified week day at the specified time
+            gregorian::date previous_date = m_Previous.date(), current_date = now.date();
+            if ((current_date - previous_date) > gregorian::weeks(1))
+            {
+                // More than a week has passed, no matter what time it is now
+                result = true;
+            }
+            else
+            {
+                gregorian::date_duration offset = gregorian::days(m_Day)
+                    - gregorian::days(previous_date.day_of_week().as_number());
+                if (offset <= gregorian::days(0))
+                    offset += gregorian::weeks(1);
+                posix_time::ptime next(previous_date + offset, rotation_time);
+                result = (now >= next);
+            }
+        }
+        break;
+
+    case monthday:
+        {
+            // The rotation takes place on the specified day of month at the specified time
+            gregorian::date previous_date = m_Previous.date();
+            gregorian::date next_date(
+                previous_date.year(),
+                previous_date.month(),
+                static_cast< gregorian::date::day_type >(m_Day));
+            if (previous_date.day() >= static_cast< gregorian::date::day_type >(m_Day))
+                next_date += gregorian::months(1);
+
+            posix_time::ptime next(next_date, rotation_time);
+            result = (now >= next);
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    if (result)
+        m_Previous = now;
+
+    return result;
+}
+
+//! Checks if it's time to rotate the file
+BOOST_LOG_EXPORT bool rotation_at_time_interval::operator()() const
+{
+    bool result = false;
+    posix_time::ptime now = posix_time::second_clock::universal_time();
+    if (m_Previous.is_special())
+    {
+        m_Previous = now;
+        return false;
+    }
+
+    result = (now - m_Previous) >= m_Interval;
+
+    if (result)
+        m_Previous = now;
+
+    return result;
+}
+
 } // namespace file
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -866,8 +958,6 @@ struct basic_text_file_backend< CharT >::implementation
     filesystem::basic_ofstream< CharT > m_File;
     //! Characters written
     uintmax_t m_CharactersWritten;
-    //! The time point when the file was last rotated
-    posix_time::ptime m_LastRotation;
 
     //! File collector functional object
     shared_ptr< file::collector > m_pFileCollector;
@@ -878,8 +968,8 @@ struct basic_text_file_backend< CharT >::implementation
 
     //! The maximum temp file size, in characters written to the stream
     uintmax_t m_FileRotationSize;
-    //! The maximum interval between file rotations
-    posix_time::time_duration m_FileRotationInterval;
+    //! Time-based rotation predicate
+    time_based_rotation_predicate m_TimeBasedRotation;
     //! The flag shows if every written record should be flushed
     bool m_AutoFlush;
 
@@ -887,7 +977,6 @@ struct basic_text_file_backend< CharT >::implementation
         m_FileOpenMode(std::ios_base::trunc | std::ios_base::out),
         m_FileCounter(0),
         m_CharactersWritten(0),
-        m_LastRotation(date_time::not_a_date_time),
         m_FileRotationSize(rotation_size),
         m_AutoFlush(auto_flush)
     {
@@ -924,12 +1013,12 @@ void basic_text_file_backend< CharT >::construct(
     path_type const& pattern,
     std::ios_base::openmode mode,
     uintmax_t rotation_size,
-    posix_time::time_duration rotation_interval,
+    time_based_rotation_predicate const& time_based_rotation,
     bool auto_flush)
 {
     m_pImpl = new implementation(rotation_size, auto_flush);
     set_file_name_pattern_internal(pattern);
-    set_rotation_interval(rotation_interval);
+    set_time_based_rotation(time_based_rotation);
     set_open_mode(mode);
 }
 
@@ -942,12 +1031,9 @@ void basic_text_file_backend< CharT >::set_rotation_size(uintmax_t size)
 
 //! The method sets the maximum time interval between file rotations.
 template< typename CharT >
-void basic_text_file_backend< CharT >::set_rotation_interval(posix_time::time_duration interval)
+void basic_text_file_backend< CharT >::set_time_based_rotation(time_based_rotation_predicate const& predicate)
 {
-    if (interval.is_special() || interval.total_seconds() == 0)
-        m_pImpl->m_FileRotationInterval = posix_time::time_duration(date_time::pos_infin);
-    else
-        m_pImpl->m_FileRotationInterval = interval;
+    m_pImpl->m_TimeBasedRotation = predicate;
 }
 
 //! Sets the flag to automatically flush buffers of all attached streams after each log record
@@ -969,7 +1055,7 @@ void basic_text_file_backend< CharT >::do_consume(
             m_pImpl->m_File.is_open() &&
             (
                 m_pImpl->m_CharactersWritten + formatted_message.size() >= m_pImpl->m_FileRotationSize ||
-                posix_time::second_clock::universal_time() - m_pImpl->m_LastRotation > m_pImpl->m_FileRotationInterval
+                (!m_pImpl->m_TimeBasedRotation.empty() && m_pImpl->m_TimeBasedRotation())
             )
         ) ||
         !m_pImpl->m_File.good()
@@ -992,7 +1078,6 @@ void basic_text_file_backend< CharT >::do_consume(
                 system::error_code(system::errc::io_error, system::get_generic_category()));
             BOOST_THROW_EXCEPTION(err);
         }
-        m_pImpl->m_LastRotation = posix_time::second_clock::universal_time();
 
         if (!m_pImpl->m_OpenHandler.empty())
             m_pImpl->m_OpenHandler(m_pImpl->m_File);

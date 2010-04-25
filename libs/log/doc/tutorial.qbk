@@ -104,7 +104,8 @@ The added piece is a call to the `init_log_to_file` function. As the name implie
         (
             keywords::file_name = "sample_%N.log",                  // file name pattern
             keywords::rotation_size = 10 * 1024 * 1024,             // rotate files every 10 MiB...
-            keywords::rotation_interval = posix_time::minutes(10),  // ...or 10 minutes
+                                                                    // ...or at midnight
+            keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0),
             keywords::format = "[%TimeStamp%]: %_%"                 // log record format
         );
 
@@ -170,7 +171,7 @@ Returning to one of the examples in previous tutorial sections:
         (
             keywords::file_name = "sample_%N.log",
             keywords::rotation_size = 10 * 1024 * 1024,
-            keywords::rotation_interval = posix_time::minutes(10),
+            keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0),
             keywords::format = "[%TimeStamp%]: %_%"
         );
 
