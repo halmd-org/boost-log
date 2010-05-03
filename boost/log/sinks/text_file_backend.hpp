@@ -21,7 +21,6 @@
 
 #include <ios>
 #include <string>
-#include <boost/assert.hpp>
 #include <boost/limits.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
@@ -239,18 +238,7 @@ public:
      * \param minute The rotation minute, should be within 0 and 59
      * \param second The rotation second, should be within 0 and 59
      */
-    explicit rotation_at_time_point(unsigned char hour, unsigned char minute, unsigned char second) :
-        m_DayKind(not_specified),
-        m_Day(0),
-        m_Hour(hour),
-        m_Minute(minute),
-        m_Second(second),
-        m_Previous(date_time::not_a_date_time)
-    {
-        BOOST_ASSERT(hour < 24);
-        BOOST_ASSERT(minute < 60);
-        BOOST_ASSERT(second < 60);
-    }
+    BOOST_LOG_EXPORT explicit rotation_at_time_point(unsigned char hour, unsigned char minute, unsigned char second);
 
     /*!
      * Creates a rotation time point of each specified weekday at the specified time
@@ -260,23 +248,11 @@ public:
      * \param minute The rotation minute, should be within 0 and 59
      * \param second The rotation second, should be within 0 and 59
      */
-    explicit rotation_at_time_point(
+    BOOST_LOG_EXPORT explicit rotation_at_time_point(
         date_time::weekdays wday,
         unsigned char hour = 0,
         unsigned char minute = 0,
-        unsigned char second = 0
-    ) :
-        m_DayKind(weekday),
-        m_Day(wday),
-        m_Hour(hour),
-        m_Minute(minute),
-        m_Second(second),
-        m_Previous(date_time::not_a_date_time)
-    {
-        BOOST_ASSERT(hour < 24);
-        BOOST_ASSERT(minute < 60);
-        BOOST_ASSERT(second < 60);
-    }
+        unsigned char second = 0);
 
     /*!
      * Creates a rotation time point of each specified day of month at the specified time
@@ -286,23 +262,11 @@ public:
      * \param minute The rotation minute, should be within 0 and 59
      * \param second The rotation second, should be within 0 and 59
      */
-    explicit rotation_at_time_point(
+    BOOST_LOG_EXPORT explicit rotation_at_time_point(
         gregorian::greg_day mday,
         unsigned char hour = 0,
         unsigned char minute = 0,
-        unsigned char second = 0
-    ) :
-        m_DayKind(monthday),
-        m_Day(mday.as_number()),
-        m_Hour(hour),
-        m_Minute(minute),
-        m_Second(second),
-        m_Previous(date_time::not_a_date_time)
-    {
-        BOOST_ASSERT(hour < 24);
-        BOOST_ASSERT(minute < 60);
-        BOOST_ASSERT(second < 60);
-    }
+        unsigned char second = 0);
 
     /*!
      * Checks if it's time to rotate the file

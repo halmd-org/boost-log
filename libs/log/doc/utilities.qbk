@@ -739,7 +739,10 @@ Besides the common settings that all sinks support, some sink backends also acce
     [File size, in bytes, upon which file rotation will be performed. If not specified, no size-based rotation will be made.]
 ]
 [[RotationInterval]      [Any fundamental integer type]
-    [Time interval, in seconds, upon which file rotation will be performed. If not specified, no time-based rotation will be made.]
+    [Time interval, in seconds, upon which file rotation will be performed. See also the RotationTimePoint parameter and the note below.]
+]
+[[RotationTimePoint]     [`std::basic_string< CharT >` or `sinks::basic_text_file_backend< CharT >::time_based_rotation_predicate`]
+    [Time point or a predicate that detects at what moment of time to perform log file rotation. See also the RotationInterval parameter and the note below.]
 ]
 [[Target]                [`std::basic_string< CharT >` or `filesystem::basic_path< CharT >`]
     [Target directory name, in which the rotated files will be stored. If this parameter is specified, rotated file collection is enabled. Otherwise the feature is not enabled, and all corresponding parameters are ignored.]
@@ -754,6 +757,18 @@ Besides the common settings that all sinks support, some sink backends also acce
     [Mode of scanning for old files in the target directory. If specified in string form, the following values are permitted: "All", "Matching". If not specified, no scanning will be performed.]
 ]
 ]
+
+The time-based rotation can be set up with one of the two parameters: RotationInterval or RotationTimePoint. Not more than one of these parameters should be specified for a given sink. If none is specified, no time-based rotation will be performed.
+
+The RotationTimePoint can be specified in two forms: a predicate or a string. The predicate form is convenient if the settings container is filled by the user's code. In this case, the predicate should take no arguments and return `bool`, which is `true` when the file rotation should take place. A good example of such predicate is the `rotation_at_time_point` class, which is described in [link log.detailed.sink_backends.text_file this] section.
+
+If the parameter is supplied in the string form, it should have one of the following formats, according to the __boost_date_time_format__ format notation:
+
+* "%H:%M:%S". In this case, file rotation will be performed on a daily basis, at the specified time. For example, "12:00:00".
+* "%a %H:%M:%S" or "%A %H:%M:%S". File rotation takes place every week, on the weekday specified in the long or short form, at the specified time. For example, "Saturday 09:00:00".
+* "%d %H:%M:%S". File rotation takes place every month, on the specified day of month, at the specified time. For example, "01 23:30:00".
+
+In case if the settings are loaded from a [link log.detailed.utilities.init.settings_file settings file], the string form is the only way to set up the file rotation at a certain time point.
 
 [table "Syslog" sink settings
 [[Parameter]             [Type]                                                               [Description]]

@@ -18,6 +18,7 @@
 #include <string>
 #include <locale>
 #include <ostream>
+#include <sstream>
 #include <iterator>
 #include <algorithm>
 #include <stdexcept>
@@ -822,6 +823,29 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         m_Collectors.erase(m_Collectors.iterator_to(*p));
     }
 
+    //! Checks if the time point is valid
+    void check_time_point_validity(unsigned char hour, unsigned char minute, unsigned char second)
+    {
+        if (hour >= 24)
+        {
+            std::ostringstream strm;
+            strm << "Time point hours value is out of range: " << static_cast< unsigned int >(hour);
+            BOOST_THROW_EXCEPTION(std::out_of_range(strm.str()));
+        }
+        if (minute >= 60)
+        {
+            std::ostringstream strm;
+            strm << "Time point minutes value is out of range: " << static_cast< unsigned int >(minute);
+            BOOST_THROW_EXCEPTION(std::out_of_range(strm.str()));
+        }
+        if (second >= 60)
+        {
+            std::ostringstream strm;
+            strm << "Time point seconds value is out of range: " << static_cast< unsigned int >(second);
+            BOOST_THROW_EXCEPTION(std::out_of_range(strm.str()));
+        }
+    }
+
 } // namespace
 
 namespace file {
@@ -838,6 +862,56 @@ namespace aux {
     }
 
 } // namespace aux
+
+//! Creates a rotation time point of every day at the specified time
+BOOST_LOG_EXPORT rotation_at_time_point::rotation_at_time_point(
+    unsigned char hour,
+    unsigned char minute,
+    unsigned char second
+) :
+    m_DayKind(not_specified),
+    m_Day(0),
+    m_Hour(hour),
+    m_Minute(minute),
+    m_Second(second),
+    m_Previous(date_time::not_a_date_time)
+{
+    check_time_point_validity(hour, minute, second);
+}
+
+//! Creates a rotation time point of each specified weekday at the specified time
+BOOST_LOG_EXPORT rotation_at_time_point::rotation_at_time_point(
+    date_time::weekdays wday,
+    unsigned char hour,
+    unsigned char minute,
+    unsigned char second
+) :
+    m_DayKind(weekday),
+    m_Day(wday),
+    m_Hour(hour),
+    m_Minute(minute),
+    m_Second(second),
+    m_Previous(date_time::not_a_date_time)
+{
+    check_time_point_validity(hour, minute, second);
+}
+
+//! Creates a rotation time point of each specified day of month at the specified time
+BOOST_LOG_EXPORT rotation_at_time_point::rotation_at_time_point(
+    gregorian::greg_day mday,
+    unsigned char hour,
+    unsigned char minute,
+    unsigned char second
+) :
+    m_DayKind(monthday),
+    m_Day(mday.as_number()),
+    m_Hour(hour),
+    m_Minute(minute),
+    m_Second(second),
+    m_Previous(date_time::not_a_date_time)
+{
+    check_time_point_validity(hour, minute, second);
+}
 
 //! Checks if it's time to rotate the file
 BOOST_LOG_EXPORT bool rotation_at_time_point::operator()() const

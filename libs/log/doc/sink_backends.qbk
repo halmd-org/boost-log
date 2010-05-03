@@ -80,7 +80,7 @@ File rotation is implemented by the sink backend itself. The file name pattern a
         core->add_sink(sink);
     }
 
-[note The file size at rotation can be imprecise. The implementation counts the number of characters written to the file, but the underlying API can introduce additional auxiliary data, which would increase the log file's actual size on disk. The most well-known such case is the way the Windows and DOS operating systems work with text files with regard to new-line characters. Each new-line character is written as a two byte sequence 0x0D 0x0A instead of a single 0x0A. Other character translations may also be applied.]
+[note The file size at rotation can be imprecise. The implementation counts the number of characters written to the file, but the underlying API can introduce additional auxiliary data, which would increase the log file's actual size on disk. For instance, it is well known that Windows and DOS operating systems have a special treatment with regard to new-line characters. Each new-line character is written as a two byte sequence 0x0D 0x0A instead of a single 0x0A. Other platform-specific character translations are also known.]
 
 The time-based rotation is not limited by only time points. There are following options available out of the box:
 
