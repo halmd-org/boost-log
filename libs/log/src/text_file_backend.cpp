@@ -922,18 +922,23 @@ BOOST_LOG_EXPORT bool rotation_at_time_point::operator()() const
         static_cast< posix_time::time_duration::min_type >(m_Minute),
         static_cast< posix_time::time_duration::sec_type >(m_Second));
     posix_time::ptime now = posix_time::second_clock::local_time();
+
     if (m_Previous.is_special())
     {
         m_Previous = now;
         return false;
     }
 
+    const bool time_of_day_passed = rotation_time.total_seconds() <= m_Previous.time_of_day().total_seconds();
     switch (m_DayKind)
     {
     case not_specified:
         {
             // The rotation takes place every day at the specified time
-            posix_time::ptime next(m_Previous.date() + gregorian::days(1), rotation_time);
+            gregorian::date previous_date = m_Previous.date();
+            if (time_of_day_passed)
+                previous_date += gregorian::days(1);
+            posix_time::ptime next(previous_date, rotation_time);
             result = (now >= next);
         }
         break;
@@ -941,21 +946,16 @@ BOOST_LOG_EXPORT bool rotation_at_time_point::operator()() const
     case weekday:
         {
             // The rotation takes place on the specified week day at the specified time
-            gregorian::date previous_date = m_Previous.date(), current_date = now.date();
-            if ((current_date - previous_date) > gregorian::weeks(1))
+            gregorian::date previous_date = m_Previous.date(), next_date = previous_date;
+            int weekday = m_Day, previous_weekday = static_cast< int >(previous_date.day_of_week().as_number());
+            next_date += gregorian::days(weekday - previous_weekday);
+            if (weekday < previous_weekday || (weekday == previous_weekday && time_of_day_passed))
             {
-                // More than a week has passed, no matter what time it is now
-                result = true;
+                next_date += gregorian::weeks(1);
             }
-            else
-            {
-                gregorian::date_duration offset = gregorian::days(m_Day)
-                    - gregorian::days(previous_date.day_of_week().as_number());
-                if (offset <= gregorian::days(0))
-                    offset += gregorian::weeks(1);
-                posix_time::ptime next(previous_date + offset, rotation_time);
-                result = (now >= next);
-            }
+
+            posix_time::ptime next(next_date, rotation_time);
+            result = (now >= next);
         }
         break;
 
@@ -963,12 +963,13 @@ BOOST_LOG_EXPORT bool rotation_at_time_point::operator()() const
         {
             // The rotation takes place on the specified day of month at the specified time
             gregorian::date previous_date = m_Previous.date();
-            gregorian::date next_date(
-                previous_date.year(),
-                previous_date.month(),
-                static_cast< gregorian::date::day_type >(m_Day));
-            if (previous_date.day() >= static_cast< gregorian::date::day_type >(m_Day))
+            gregorian::date::day_type monthday = static_cast< gregorian::date::day_type >(m_Day),
+                previous_monthday = previous_date.day();
+            gregorian::date next_date(previous_date.year(), previous_date.month(), monthday);
+            if (monthday < previous_monthday || (monthday == previous_monthday && time_of_day_passed))
+            {
                 next_date += gregorian::months(1);
+            }
 
             posix_time::ptime next(next_date, rotation_time);
             result = (now >= next);
