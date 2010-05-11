@@ -624,35 +624,37 @@ Filter and formatter parsers allow constructing filters and formatters from a de
 
 In the case of filters the string is formed of a sequence of condition expressions, interconnected with boolean operations. There are two operations supported: conjunction (designated as "&" or "and") and disjunction ("|" or "or"). Each condition itself may be either a single condition or a sub-filter, taken in round brackets. Each condition can be negated with the "!" sign or "not" keyword. The condition, if it's not a sub-filter, usually consists of an attribute name enclosed in percent characters ("%"), a relation keyword and an operand. The relation and operand may be omitted, in which case the condition is assumed to be the requirement of the attribute presence (with any type).
 
-[pre
-filter:
-    condition { op condition }
+[teletype]
 
-op:
-    &
-    and
-    |
-    or
+    filter:
+        condition { op condition }
 
-condition:
-    !condition
-    not condition
-    (filter)
-    %attribute_name%
-    %attribute_name% relation operand
+    op:
+        &
+        and
+        |
+        or
 
-relation:
-    >
-    <
-    =
-    !=
-    >=
-    <=
-    begins_with
-    ends_with
-    contains
-    matches
-]
+    condition:
+        !condition
+        not condition
+        (filter)
+        %attribute_name%
+        %attribute_name% relation operand
+
+    relation:
+        >
+        <
+        =
+        !=
+        >=
+        <=
+        begins_with
+        ends_with
+        contains
+        matches
+
+[c++]
 
 Below are some examples of filters:
 
@@ -826,33 +828,35 @@ Support for configuration files is a frequently requested feature of the library
 
 The settings format is quite simple and widely used. Below is the description of syntax and parameters.
 
-[pre
-\# Comments are allowed. Comment line begins with the '\#' character
-\# and spans until the end of the line.
+[teletype]
 
-\# Logging core settings section. May be omitted if no parameters specified within it.
-\[Core\]
-DisableLogging\=false
-Filter\="%Severity% > 3"
+    # Comments are allowed. Comment line begins with the '#' character
+    # and spans until the end of the line.
 
-\# Sink settings sections
-\[Sink:MySink1\]
+    # Logging core settings section. May be omitted if no parameters specified within it.
+    [Core]
+    DisableLogging=false
+    Filter="%Severity% > 3"
 
-\# Sink destination type
-Destination\=Console
+    # Sink settings sections
+    [Sink:MySink1]
 
-\# Sink-specific filter. Optional, by default no filter is applied.
-Filter\="%Target% contains "MySink1""
+    # Sink destination type
+    Destination=Console
 
-\# Formatter string. Optional, by default only log record message text is written.
-Format\="<%TimeStamp%> - %\_%"
+    # Sink-specific filter. Optional, by default no filter is applied.
+    Filter="%Target% contains \"MySink1\""
 
-\# The flag shows whether the sink should be asynchronous
-Asynchronous\=false
+    # Formatter string. Optional, by default only log record message text is written.
+    Format="<%TimeStamp%> - %_%"
 
-\# Enables automatic stream flush after each log record.
-AutoFlush\=true
-]
+    # The flag shows whether the sink should be asynchronous
+    Asynchronous=false
+
+    # Enables automatic stream flush after each log record.
+    AutoFlush=true
+
+[c++]
 
 Here's the usage example:
 

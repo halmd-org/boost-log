@@ -9,6 +9,10 @@
 
 [section:changelog Changelog]
 
+[heading 2.0]
+
+* Most code examples from the docs have been extracted into compilable standalone examples, which can be used for testing and experimenting with the library.
+
 [heading 1.0, 09 May 2010]
 
 This release mostly fixes bugs in the code and documentation. The next major release (2.0) will contain breaking changes and feature additions. The 1.0 branch will not receive any feature updates.

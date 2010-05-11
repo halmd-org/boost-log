@@ -15,17 +15,10 @@ In this section we shall walk through the essential steps to get started with th
 
 For those who don't want to read tons of clever manuals and just need a simple tool for logging, here you go:
 
-    #include <boost/log/trivial.hpp>
+[import ../example/doc/tutorial_trivial.cpp]
+[example_tutorial_trivial]
 
-    int main(int, char*[])
-    {
-        BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
-        BOOST_LOG_TRIVIAL(debug) << "A debug severity message";
-        BOOST_LOG_TRIVIAL(info) << "An informational severity message";
-        BOOST_LOG_TRIVIAL(warning) << "A warning severity message";
-        BOOST_LOG_TRIVIAL(error) << "An error severity message";
-        BOOST_LOG_TRIVIAL(fatal) << "A fatal severity message";
-    }
+See the code in [@boost:/libs/log/example/doc/tutorial_trivial.cpp].
 
 The `BOOST_LOG_TRIVIAL` macro accepts a severity level and results in a stream-like object that supports insertion operator. As you can see, this library usage pattern is quite similar to what you would do with `std::cout`. However, the library offers a few advantages:
 
@@ -41,29 +34,10 @@ It must be said that the macro, along with other similar macros provided by the 
 
 While severity levels can be used for informative purposes, you will normally want to apply filters to write only significant records to the file and ignore the rest. It is easy to do so by setting a global filter in the library core, like this:
 
-    #include <boost/log/core.hpp>
-    #include <boost/log/trivial.hpp>
-    #include <boost/log/filters.hpp>
+[import ../example/doc/tutorial_trivial_flt.cpp]
+[example_tutorial_trivial_with_filtering]
 
-    void init()
-    {
-        logging::core::get()->set_filter
-        (
-            flt::attr< logging::trivial::severity_level >("Severity") >= logging::trivial::info
-        );
-    }
-
-    int main(int, char*[])
-    {
-        init();
-
-        BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
-        BOOST_LOG_TRIVIAL(debug) << "A debug severity message";
-        BOOST_LOG_TRIVIAL(info) << "An informational severity message";
-        BOOST_LOG_TRIVIAL(warning) << "A warning severity message";
-        BOOST_LOG_TRIVIAL(error) << "An error severity message";
-        BOOST_LOG_TRIVIAL(fatal) << "A fatal severity message";
-    }
+See the code in [@boost:/libs/log/example/doc/tutorial_trivial_flt.cpp].
 
 Now, if we run this code sample, the first two log records will be ignored, while the remaining four will pass on to the file.
 
@@ -85,35 +59,14 @@ Sometimes trivial logging doesn't provide enough flexibility. For example, one m
 
 As a starting point, here is how you would initialize logginig into a file, similarly to the trivial logging:
 
-    void init()
-    {
-        logging::init_log_to_file("sample.log");
-        logging::core::get()->set_filter
-        (
-            flt::attr< logging::trivial::severity_level >("Severity") >= logging::trivial::info
-        );
-    }
-
-    // We'll skip the "main" function for now
+[import ../example/doc/tutorial_file.cpp]
+[example_tutorial_file_simple]
 
 The added piece is a call to the `init_log_to_file` function. As the name implies, the function initializes a logging sink that stores log records into a text file. The function also accepts a number of customization options, such as the rotation interval and size limits. For instance:
 
-    void init()
-    {
-        logging::init_log_to_file
-        (
-            keywords::file_name = "sample_%N.log",                  // file name pattern
-            keywords::rotation_size = 10 * 1024 * 1024,             // rotate files every 10 MiB...
-                                                                    // ...or at midnight
-            keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0),
-            keywords::format = "[%TimeStamp%]: %_%"                 // log record format
-        );
+[example_tutorial_file_advanced]
 
-        logging::core::get()->set_filter
-        (
-            flt::attr< logging::trivial::severity_level >("Severity") >= logging::trivial::info
-        );
-    }
+See the full code in [@boost:/libs/log/example/doc/tutorial_file.cpp].
 
 You can see that the options are passed to the function in the named form. This approach is taken in many places of the library. You'll get used to it. The meaning of the parameters is mostly self-explaining, and is documented in this manual (see [link log.detailed.sink_backends.text_file here] for what regards the text file sink). This and other convenience initialization functions are described in [link log.detailed.utilities.init.convenience this] section.
 
@@ -121,23 +74,14 @@ You can see that the options are passed to the function in the named form. This 
 
 [heading Sinks in depth: More sinks]
 
-If you don't want to go into details, you can skip this section and continue from the next one. Otherwise, if you need more comprehensive control over sink configuration, or want to use different sinks, you may consider registering them manually.
+If you don't want to go into details, you can skip this section and continue from the next one. Otherwise, if you need more comprehensive control over sink configuration or want to use more sinks than those available through helper functions, you can register sinks manually.
 
-In the simplest form, the call to the `init_log_to_file` function in the section above is equivalent to this:
+In the simplest form, the call to the `init_log_to_file` function in the section above is nearly equivalent to this:
 
-    void init()
-    {
-        // Construct the sink
-        typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-        boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+[import ../example/doc/tutorial_file_manual.cpp]
+[example_tutorial_file_manual]
 
-        // Add a stream to write log to
-        pSink->locked_backend()->add_stream(
-            boost::make_shared< std::ofstream >("sample.log"));
-
-        // Register the sink in the logging core
-        logging::core::get()->add_sink(pSink);
-    }
+See the full code in [@boost:/libs/log/example/doc/tutorial_file_manual.cpp].
 
 Ok, the first thing you may have noticed about sinks is that they are composed of two classes: the frontend and the backend. The frontend (which is the `synchronous_sink` class template in the snippet above) is responsible for various common tasks for all sinks, such as thread synchronization model and filtering. The backend (the `text_ostream_backend` class above) implements everything specific to the sink, such as text formatting and writing to a file in this case. The library provides a number of frontends and backends that can be used with each other out of the box.
 
@@ -165,21 +109,7 @@ The last thing worth noting here is the `locked_backend` member function call to
 
 Returning to one of the examples in previous tutorial sections:
 
-    void init()
-    {
-        logging::init_log_to_file
-        (
-            keywords::file_name = "sample_%N.log",
-            keywords::rotation_size = 10 * 1024 * 1024,
-            keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0),
-            keywords::format = "[%TimeStamp%]: %_%"
-        );
-
-        logging::core::get()->set_filter
-        (
-            flt::attr< logging::trivial::severity_level >("Severity") >= logging::trivial::info
-        );
-    }
+[example_tutorial_file_advanced]
 
 One may wonder how to specify log record formatting rules. In the case of the `init_log_to_file` function, this is what the `format` parameter for. If you prefer to set up sinks manually, most sink backends provide the `set_formatter` member function for this purpose.
 
@@ -189,47 +119,19 @@ The format can be specified in a number of ways, described further.
 
 You can create a formatter with a lambda-style expression like this:
 
-    void init()
-    {
-        logging::init_log_to_file
-        (
-            keywords::file_name = "sample_%N.log",
-            // This makes the sink to write log records that look like this:
-            // 1: <normal> A normal severity message
-            // 2: <error> An error severity message
-            keywords::format =
-            (
-                fmt::stream
-                    << fmt::attr< unsigned int >("LineID")
-                    << ": <" << fmt::attr< logging::trivial::severity_level >("Severity")
-                    << "> " << fmt::message()
-            )
-        );
-    }
+[import ../example/doc/tutorial_fmt_stream.cpp]
+[example_tutorial_formatters_stream]
+
+See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_stream.cpp].
 
 Here the `stream` is a placeholder for the stream to format the record in. Other insertion arguments, such as `attr` and `message`, are manipulators that define what should be stored in the stream. The `message` manipulator is a bit special since, unlike all other manipulators, it writes a preformatted message acquired from the logger, not an attribute value. There are other [link log.detailed.formatters formatter manipulators] that provide advanced support for date, time and other types.
 
-Some manipulators may accept additional arguments that customize their behavior. Most of these arguments are named and can be passed in __boost_parameter__ style. For example, `attr` supports a format specifier in a printf-style string. For a change, let's see how it's done when manually initializing sinks:
+Some manipulators accept additional arguments that customize their behavior. Most of these arguments are named and can be passed in __boost_parameter__ style. For example, `attr` supports a format specifier in a printf-style string. For a change, let's see how it's done when manually initializing sinks:
 
-    void init()
-    {
-        typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-        boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+[import ../example/doc/tutorial_fmt_stream_manual.cpp]
+[example_tutorial_formatters_stream_manual]
 
-        pSink->locked_backend()->add_stream(
-            boost::make_shared< std::ofstream >("sample.log"));
-
-        pSink->locked_backend()->set_formatter
-        (
-            fmt::stream
-                   // line id will be written in hex, 8-digits, zero-filled
-                << fmt::attr< unsigned int >("LineID", keywords::format = "%08x")
-                << ": <" << fmt::attr< logging::trivial::severity_level >("Severity")
-                << "> " << fmt::message()
-        );
-
-        logging::core::get()->add_sink(pSink);
-    }
+See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_stream_manual.cpp].
 
 For the reference of the supported arguments see the reference of the corresponding manipulator. More manipulators are described in the [link log.detailed.formatters Detailed features description] section.
 
@@ -237,27 +139,10 @@ For the reference of the supported arguments see the reference of the correspond
 
 As an alternative, you can define formatters with with a syntax similar to __boost_format__. The same formatter as described above can be written as follows:
 
-    void init()
-    {
-        typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-        boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+[import ../example/doc/tutorial_fmt_format.cpp]
+[example_tutorial_formatters_format]
 
-        pSink->locked_backend()->add_stream(
-            boost::make_shared< std::ofstream >("sample.log"));
-
-        // This makes the sink to write log records that look like this:
-        // 00000001: <normal> A normal severity message
-        // 00000002: <error> An error severity message
-        pSink->locked_backend()->set_formatter
-        (
-            fmt::format("%1%: <%2%> %3%")
-                % fmt::attr< unsigned int >("LineID", keywords::format = "%08x")
-                % fmt::attr< logging::trivial::severity_level >("Severity")
-                % fmt::message()
-        );
-
-        logging::core::get()->add_sink(pSink);
-    }
+See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_format.cpp].
 
 The `format` placeholder accepts the format string with positional specification of all arguments being formatted. Note that only positional format is currently supported. The same format specification can be used with the `init_log_to_file` and similar functions.
 
@@ -265,19 +150,10 @@ The `format` placeholder accepts the format string with positional specification
 
 In some contexts textual templates are accepted as formatters. In this case library initialization support code is invoked in order to parse the template and reconstruct the appropriate formatter. There are a number of caveats to keep in mind when using this approach, but here it will suffice to just briefly describe the template format.
 
-    void init()
-    {
-        logging::init_log_to_file
-        (
-            keywords::file_name = "sample_%N.log",
-            keywords::format = "[%TimeStamp%]: %_%"
-        );
+[import ../example/doc/tutorial_fmt_string.cpp]
+[example_tutorial_formatters_string]
 
-        logging::core::get()->set_filter
-        (
-            flt::attr< logging::trivial::severity_level >("Severity") >= logging::trivial::info
-        );
-    }
+See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_string.cpp].
 
 Here, the `format` parameter accepts such a format template. The template may contain a number of placeholders enclosed with percent signs (`%`). Each placeholder must contain an attribute value name to insert instead of the placeholder. The `%_%` placeholder is special as it will be replaced with the logging record message.
 
@@ -291,39 +167,10 @@ You can add a custom formatter to a sink backend that supports formatting. The f
 
 Here `CharT` is the character type that is used with the library. The formatter will be invoked whenever a log record `rec` passes filtering and is to be stored in log. The formatted record should be composed by insertion into STL-compatible output stream `strm`. Here's an example of a custom formatter function usage:
 
-    void my_formatter(std::ostream& strm, logging::record const& rec)
-    {
-        namespace lambda = boost::lambda;
+[import ../example/doc/tutorial_fmt_custom.cpp]
+[example_tutorial_formatters_custom]
 
-        unsigned int line_id;
-        if (logging::extract< unsigned int >(
-            "LineID", rec.attribute_values(), lambda::var(line_id) = lambda::_1))
-        {
-            strm << line_id << ": ";
-        }
-
-        logging::trivial::severity_level severity;
-        if (logging::extract< logging::trivial::severity_level >(
-            "Severity", rec.attribute_values(), lambda::var(severity) = lambda::_1))
-        {
-            strm << "<" << severity << "> ";
-        }
-
-        strm << rec.message();
-    }
-
-    void init()
-    {
-        typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-        boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
-
-        pSink->locked_backend()->add_stream(
-            boost::make_shared< std::ofstream >("sample.log"));
-
-        pSink->locked_backend()->set_formatter(&my_formatter);
-
-        logging::core::get()->add_sink(pSink);
-    }
+See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_custom.cpp].
 
 [endsect]
 
@@ -377,22 +224,16 @@ In any case, the `lg` will reference to the one and only instance of the logger 
 
 No matter what kind of logger you use (class member or global, thread-safe or not), to write a log record into a logger you could write something like this:
 
-    logging::record rec = lg.open_record();
-    if (rec)
-    {
-        rec.message() = "Hello world!";
-        lg.push_record(rec);
-    }
+[import ../example/doc/tutorial_logging.cpp]
+[example_tutorial_logging_manual_logging]
 
-Here the `open_record` function call determines if the record to be constructed is going to be consumed by at least one sink. Filtering is applied at this stage. If the record is to be consumed, the function returns a valid record object, and one may fill in the record message string. After that the record processing can be completed with the call to `push_record`.
+Here the `open_record` function call determines if the record to be constructed is going to be consumed by at least one sink. Filtering is applied at this stage. If the record is to be consumed, the function returns a valid record object, and one can fill in the record message string. After that the record processing can be completed with the call to `push_record`.
 
 Of course, the above syntax can easily be wrapped in a macro and, in fact, users are encouraged to write their own macros instead of using the C++ logger interface directly. The log record above can be written like this:
 
-    #include <boost/log/sources/record_ostream.hpp>
-
     BOOST_LOG(lg) << "Hello, World!";
 
-Looks a bit shorter, doesn't it? The `BOOST_LOG` macro, along with other similar ones, is defined by the library. It automatically provides an STL-like stream in order to format the message with ordinary insertion expressions. Having all that code written, compiled and executed you should be able to see the "Hello, World!" record in the "sample.log" file.
+Looks a bit shorter, doesn't it? The `BOOST_LOG` macro, along with other similar ones, is defined by the library. It automatically provides an STL-like stream in order to format the message with ordinary insertion expressions. Having all that code written, compiled and executed you should be able to see the "Hello, World!" record in the "sample.log" file. You will find the full code of this section in [@boost:/libs/log/example/doc/tutorial_logging.cpp].
 
 [endsect]
 
@@ -422,34 +263,14 @@ This function is one of the several convenience functions described [link log.de
 
 Some attrubutes are registered automatically on loggers construction. For example, `severity_logger` registers a source-specific attribute "Severity" which can be used to add a level of emphasis for different log records. For example:
 
-    // We define our own severity levels
-    enum severity_level
-    {
-        normal,
-        notification,
-        warning,
-        error,
-        critical
-    };
-
-    // The logger implicitly adds a source-specific attribute 'Severity'
-    // of type 'severity_level' on construction
-    src::severity_logger< severity_level > slg;
-
-    BOOST_LOG_SEV(slg, normal) << "A regular message";
-    BOOST_LOG_SEV(slg, warning) << "Something bad is going on but I can handle it";
-    BOOST_LOG_SEV(slg, critical) << "Everything crumbles, shoot me now!";
+[import ../example/doc/tutorial_attributes.cpp]
+[example_tutorial_attributes_severity]
 
 [tip You can define your own formatting rules for the severity level by defining `operator <<` for this type. See [link log.detailed.formatters.attr this] section for more details.]
 
 The `BOOST_LOG_SEV` macro acts pretty much like `BOOST_LOG` except that it takes an additional argument for the `open_record` method of the logger. The `BOOST_LOG_SEV` macro can be replaced with this equivalent:
 
-    logging::record rec = lg.open_record(keywords::severity = normal);
-    if (rec)
-    {
-        rec.message() = "A regular message";
-        lg.push_record(rec);
-    }
+[example_tutorial_attributes_severity_manual]
 
 You can see here that the `open_record` can take named arguments. Some logger types provided by the library have support for such additional parameters and this approach can certainly be used by users when writing their own loggers.
 
@@ -475,25 +296,23 @@ Here the `counter` and `local_clock` components are attribute classes, they deri
     pCore->add_global_attribute(
         "Scope", boost::make_shared< attrs::named_scope >());
 
-This will give the ability to store scope names in log for every log record the application makes.
+This will give the ability to store scope names in log for every log record the application makes. Here is how it's used:
+
+[example_tutorial_attributes_named_scope]
 
 Logger-specific attributes are no less useful than global ones. Severity levels and channel names are the most obvious candidates to be implemented on the source level. Nothing prevents you from adding more attributes to your loggers, like this:
 
-    lg.add_attribute("Tag", boost::make_shared< attrs::constant< std::string > >("My tag value"));
+[example_tutorial_attributes_tagged_logging]
 
 Now all log records made through this logger will be tagged with the specific attribute. This attribute value may be used later in filtering and formatting.
 
-Another good use of attributes is the ability to mark log records made by different parts of application in order to highlight activity related to a single process. One may even implement a rough profiling tool to detect performance bottlenecks. For example:
+Another good use of attributes is the ability to mark log records made by different parts of application in order to highlight activity related to a single process. One can even implement a rough profiling tool to detect performance bottlenecks. For example:
 
-    void foo()
-    {
-        BOOST_LOG_SCOPED_THREAD_ATTR("Timeline", attrs::timer);
-        bar();
-    }
+[example_tutorial_attributes_timed_logging]
 
-Now every log record made from the `bar` function, or any other function it calls, will contain the "Timeline" attribute with a high precision time duration passed since the attribute was registered. Based on these readings, one may detect which parts of the code require more or less time to execute. The "Timeline" attribute will be unregistered upon leaving the scope of function `foo`.
+Now every log record made from the `logging_function` function, or any other function it calls, will contain the "Timeline" attribute with a high precision time duration passed since the attribute was registered. Based on these readings, one will be able to detect which parts of the code require more or less time to execute. The "Timeline" attribute will be unregistered upon leaving the scope of function `timed_logging`.
 
-See the [link log.detailed.attributes Attributes] section for detailed description of attributes provided by the library.
+See the [link log.detailed.attributes Attributes] section for detailed description of attributes provided by the library. The complete code for this section is available in [@boost:/libs/log/example/doc/tutorial_attributes.cpp].
 
 [endsect]
 
