@@ -15,7 +15,6 @@ In this section we shall walk through the essential steps to get started with th
 
 For those who don't want to read tons of clever manuals and just need a simple tool for logging, here you go:
 
-[import ../example/doc/tutorial_trivial.cpp]
 [example_tutorial_trivial]
 
 See the code in [@boost:/libs/log/example/doc/tutorial_trivial.cpp].
@@ -34,7 +33,6 @@ It must be said that the macro, along with other similar macros provided by the 
 
 While severity levels can be used for informative purposes, you will normally want to apply filters to write only significant records to the file and ignore the rest. It is easy to do so by setting a global filter in the library core, like this:
 
-[import ../example/doc/tutorial_trivial_flt.cpp]
 [example_tutorial_trivial_with_filtering]
 
 See the code in [@boost:/libs/log/example/doc/tutorial_trivial_flt.cpp].
@@ -59,7 +57,6 @@ Sometimes trivial logging doesn't provide enough flexibility. For example, one m
 
 As a starting point, here is how you would initialize logginig into a file, similarly to the trivial logging:
 
-[import ../example/doc/tutorial_file.cpp]
 [example_tutorial_file_simple]
 
 The added piece is a call to the `init_log_to_file` function. As the name implies, the function initializes a logging sink that stores log records into a text file. The function also accepts a number of customization options, such as the rotation interval and size limits. For instance:
@@ -78,7 +75,6 @@ If you don't want to go into details, you can skip this section and continue fro
 
 In the simplest form, the call to the `init_log_to_file` function in the section above is nearly equivalent to this:
 
-[import ../example/doc/tutorial_file_manual.cpp]
 [example_tutorial_file_manual]
 
 See the full code in [@boost:/libs/log/example/doc/tutorial_file_manual.cpp].
@@ -119,7 +115,6 @@ The format can be specified in a number of ways, described further.
 
 You can create a formatter with a lambda-style expression like this:
 
-[import ../example/doc/tutorial_fmt_stream.cpp]
 [example_tutorial_formatters_stream]
 
 See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_stream.cpp].
@@ -128,7 +123,6 @@ Here the `stream` is a placeholder for the stream to format the record in. Other
 
 Some manipulators accept additional arguments that customize their behavior. Most of these arguments are named and can be passed in __boost_parameter__ style. For example, `attr` supports a format specifier in a printf-style string. For a change, let's see how it's done when manually initializing sinks:
 
-[import ../example/doc/tutorial_fmt_stream_manual.cpp]
 [example_tutorial_formatters_stream_manual]
 
 See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_stream_manual.cpp].
@@ -139,7 +133,6 @@ For the reference of the supported arguments see the reference of the correspond
 
 As an alternative, you can define formatters with with a syntax similar to __boost_format__. The same formatter as described above can be written as follows:
 
-[import ../example/doc/tutorial_fmt_format.cpp]
 [example_tutorial_formatters_format]
 
 See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_format.cpp].
@@ -150,7 +143,6 @@ The `format` placeholder accepts the format string with positional specification
 
 In some contexts textual templates are accepted as formatters. In this case library initialization support code is invoked in order to parse the template and reconstruct the appropriate formatter. There are a number of caveats to keep in mind when using this approach, but here it will suffice to just briefly describe the template format.
 
-[import ../example/doc/tutorial_fmt_string.cpp]
 [example_tutorial_formatters_string]
 
 See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_string.cpp].
@@ -167,7 +159,6 @@ You can add a custom formatter to a sink backend that supports formatting. The f
 
 Here `CharT` is the character type that is used with the library. The formatter will be invoked whenever a log record `rec` passes filtering and is to be stored in log. The formatted record should be composed by insertion into STL-compatible output stream `strm`. Here's an example of a custom formatter function usage:
 
-[import ../example/doc/tutorial_fmt_custom.cpp]
 [example_tutorial_formatters_custom]
 
 See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_custom.cpp].
@@ -224,7 +215,6 @@ In any case, the `lg` will reference to the one and only instance of the logger 
 
 No matter what kind of logger you use (class member or global, thread-safe or not), to write a log record into a logger you could write something like this:
 
-[import ../example/doc/tutorial_logging.cpp]
 [example_tutorial_logging_manual_logging]
 
 Here the `open_record` function call determines if the record to be constructed is going to be consumed by at least one sink. Filtering is applied at this stage. If the record is to be consumed, the function returns a valid record object, and one can fill in the record message string. After that the record processing can be completed with the call to `push_record`.
@@ -263,14 +253,13 @@ This function is one of the several convenience functions described [link log.de
 
 Some attrubutes are registered automatically on loggers construction. For example, `severity_logger` registers a source-specific attribute "Severity" which can be used to add a level of emphasis for different log records. For example:
 
-[import ../example/doc/tutorial_attributes.cpp]
-[example_tutorial_attributes_severity]
+[example_sources_severity]
 
 [tip You can define your own formatting rules for the severity level by defining `operator <<` for this type. See [link log.detailed.formatters.attr this] section for more details.]
 
 The `BOOST_LOG_SEV` macro acts pretty much like `BOOST_LOG` except that it takes an additional argument for the `open_record` method of the logger. The `BOOST_LOG_SEV` macro can be replaced with this equivalent:
 
-[example_tutorial_attributes_severity_manual]
+[example_sources_severity_manual]
 
 You can see here that the `open_record` can take named arguments. Some logger types provided by the library have support for such additional parameters and this approach can certainly be used by users when writing their own loggers.
 

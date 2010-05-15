@@ -14,13 +14,10 @@
 #include <boost/log/core.hpp>
 #include <boost/log/filters.hpp>
 #include <boost/log/formatters.hpp>
-#include <boost/log/attributes.hpp>
-#include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
-#include <boost/log/utility/scoped_attribute.hpp>
 #include <boost/log/utility/init/common_attributes.hpp>
 
 namespace logging = boost::log;
@@ -31,6 +28,7 @@ namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
 namespace keywords = boost::log::keywords;
 
+//[ example_sources_severity
 // We define our own severity levels
 enum severity_level
 {
@@ -43,46 +41,40 @@ enum severity_level
 
 void logging_function()
 {
+    // The logger implicitly adds a source-specific attribute 'Severity'
+    // of type 'severity_level' on construction
     src::severity_logger< severity_level > slg;
 
     BOOST_LOG_SEV(slg, normal) << "A regular message";
     BOOST_LOG_SEV(slg, warning) << "Something bad is going on but I can handle it";
     BOOST_LOG_SEV(slg, critical) << "Everything crumbles, shoot me now!";
 }
+//]
 
-//[ example_tutorial_attributes_named_scope
-void named_scope_logging()
+//[ example_sources_default_severity
+void default_severity()
 {
-    BOOST_LOG_NAMED_SCOPE("named_scope_logging");
+    // The default severity can be specified in constructor.
+    src::severity_logger< severity_level > error_lg(keywords::severity = error);
 
-    src::severity_logger< severity_level > slg;
+    BOOST_LOG(error_lg) << "An error level log record (by default)";
 
-    BOOST_LOG_SEV(slg, normal) << "Hello from the function named_scope_logging!";
+    // The explicitly specified level overrides the default
+    BOOST_LOG_SEV(error_lg, warning) << "A warning level log record (overrode the default)";
 }
 //]
 
-//[ example_tutorial_attributes_tagged_logging
-void tagged_logging()
+//[ example_sources_severity_manual
+void manual_logging()
 {
     src::severity_logger< severity_level > slg;
-    slg.add_attribute("Tag",
-        boost::make_shared< attrs::constant< std::string > >("My tag value"));
 
-    BOOST_LOG_SEV(slg, normal) << "Here goes the tagged record";
-}
-//]
-
-//[ example_tutorial_attributes_timed_logging
-void timed_logging()
-{
-    BOOST_LOG_SCOPED_THREAD_ATTR("Timeline", attrs::timer);
-
-    src::severity_logger< severity_level > slg;
-    BOOST_LOG_SEV(slg, normal) << "Starting to time nested functions";
-
-    logging_function();
-
-    BOOST_LOG_SEV(slg, normal) << "Stopping to time nested functions";
+    logging::record rec = slg.open_record(keywords::severity = normal);
+    if (rec)
+    {
+        rec.message() = "A regular message";
+        slg.push_record(rec);
+    }
 }
 //]
 
@@ -117,18 +109,9 @@ void init()
     pSink->locked_backend()->set_formatter
     (
         fmt::stream
-            << fmt::attr< unsigned int >("LineID", keywords::format = "%08x")
+            << fmt::attr< unsigned int >("LineID")
             << ": <" << fmt::attr< severity_level >("Severity")
             << ">\t"
-            << "(" << fmt::named_scope("Scope") << ") "
-            << fmt::if_(flt::has_attr< std::string >("Tag"))
-               [
-                    fmt::stream << "[" << fmt::attr< std::string >("Tag") << "] "
-               ]
-            << fmt::if_(flt::has_attr("Timeline"))
-               [
-                    fmt::stream << "[" << fmt::time_duration("Timeline") << "] "
-               ]
             << fmt::message()
     );
 
@@ -136,18 +119,15 @@ void init()
 
     // Add attributes
     logging::add_common_attributes();
-
-    logging::core::get()->add_global_attribute(
-        "Scope", boost::make_shared< attrs::named_scope >());
 }
 
 int main(int, char*[])
 {
     init();
 
-    named_scope_logging();
-    tagged_logging();
-    timed_logging();
+    logging_function();
+    default_severity();
+    manual_logging();
 
     return 0;
 }

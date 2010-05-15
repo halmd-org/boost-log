@@ -442,66 +442,11 @@ The library provides exception handling hooks in different places. Tools, define
 
 An exception handler is a function object that accepts no arguments. The result of the exception handler is ignored and thus should generally be `void`. Exception handlers are called from within `catch` sections by the library, therefore in order to reacquire the exception object it has to rethrow it. The header defines an `exception_handler` template functor that does just that and then forwards the exception object to an unary user-defined functional object. The `make_exception_handler` function can be used to simplify the handler construction. All expected exception types should be specified explicitly in the call, in the order they would appear in the `catch` sections (i.e. from most specific ones to the most general ones).
 
-    struct my_handler
-    {
-        typedef void result_type;
-
-        void operator() (std::runtime_error const& e) const
-        {
-            std::cout << "std::runtime_error: " << e.what() << std::endl;
-        }
-        void operator() (std::logic_error const& e) const
-        {
-            std::cout << "std::logic_error: " << e.what() << std::endl;
-            throw;
-        }
-    };
-
-    void init_logging()
-    {
-        boost::shared_ptr< logging::core > core = logging::core::get();
-
-        // Setup a global exception handler that will call my_handler::operator()
-        // for the specified exception types
-        core->set_exception_handler(logging::make_exception_handler<
-            std::runtime_error,
-            std::logic_error
-        >(my_handler()));
-    }
+[example_utility_exception_handler]
 
 As you can see, you can either suppress the exception by returning normally from `operator()` in the user-defined handler functor, or rethrow the exception, in which case it will propagate further. If it appears that the exception handler is invoked for an exception type that cannot be caught by any of the specified types, the exception will be propagated without any processing. In order to catch such situations, there exists the `nothrow_exception_handler` class. It invokes the user-defined functor with no arguments if it cannot determine the exception type.
 
-    struct my_handler
-    {
-        typedef void result_type;
-
-        void operator() (std::runtime_error const& e) const
-        {
-            std::cout << "std::runtime_error: " << e.what() << std::endl;
-        }
-        void operator() (std::logic_error const& e) const
-        {
-            std::cout << "std::logic_error: " << e.what() << std::endl;
-            throw;
-        }
-        void operator() () const
-        {
-            std::cout << "unknown exception" << std::endl;
-        }
-    };
-
-    void init_logging()
-    {
-        boost::shared_ptr< logging::core > core = logging::core::get();
-
-        // Setup a global exception handler that will call my_handler::operator()
-        // for the specified exception types. Note the std::nothrow argument that
-        // specifies that all other exceptions should also be passed to the functor.
-        core->set_exception_handler(logging::make_exception_handler<
-            std::runtime_error,
-            std::logic_error
-        >(my_handler(), std::nothrow));
-    }
+[example_utility_exception_handler_nothrow]
 
 It is sometimes convenient to completely suppress all exceptions at a certain library level. The `make_exception_suppressor` function creates an exception handler that simply does nothing upon exception being caught. For example, this way we can disable all exceptions from the logging library:
 

@@ -105,6 +105,31 @@ public:
     //! Threading model type
     typedef ThreadingModelT threading_model;
 
+#if !defined(BOOST_LOG_NO_THREADS)
+    //! Lock requirement for the swap_unlocked method
+    typedef lock_guard< threading_model > swap_lock;
+    //! Lock requirement for the add_attribute_unlocked method
+    typedef lock_guard< threading_model > add_attribute_lock;
+    //! Lock requirement for the remove_attribute_unlocked method
+    typedef lock_guard< threading_model > remove_attribute_lock;
+    //! Lock requirement for the remove_all_attributes_unlocked method
+    typedef lock_guard< threading_model > remove_all_attributes_lock;
+    //! Lock requirement for the get_attributes method
+    typedef boost::log::aux::shared_lock_guard< threading_model > get_attributes_lock;
+    //! Lock requirement for the open_record_unlocked method
+    typedef boost::log::aux::shared_lock_guard< threading_model > open_record_lock;
+    //! Lock requirement for the set_attributes method
+    typedef lock_guard< threading_model > set_attributes_lock;
+#else
+    typedef no_lock swap_lock;
+    typedef no_lock add_attribute_lock;
+    typedef no_lock remove_attribute_lock;
+    typedef no_lock remove_all_attributes_lock;
+    typedef no_lock get_attributes_lock;
+    typedef no_lock open_record_lock;
+    typedef no_lock set_attributes_lock;
+#endif
+
 private:
     //! A pointer to the logging system
     shared_ptr< core_type > m_pCore;
@@ -184,13 +209,6 @@ protected:
         return static_cast< final_type const* >(this);
     }
 
-    //! Lock requirement for the swap_unlocked method
-#if !defined(BOOST_LOG_NO_THREADS)
-    typedef lock_guard< threading_model > swap_lock;
-#else
-    typedef no_lock swap_lock;
-#endif
-
     /*!
      * Unlocked \c swap
      */
@@ -199,13 +217,6 @@ protected:
         get_threading_model().swap(that.get_threading_model());
         m_Attributes.swap(that.m_Attributes);
     }
-
-    //! Lock requirement for the add_attribute_unlocked method
-#if !defined(BOOST_LOG_NO_THREADS)
-    typedef lock_guard< threading_model > add_attribute_lock;
-#else
-    typedef no_lock add_attribute_lock;
-#endif
 
     /*!
      * Unlocked \c add_attribute
@@ -216,13 +227,6 @@ protected:
         return m_Attributes.insert(std::make_pair(name, attr));
     }
 
-    //! Lock requirement for the remove_attribute_unlocked method
-#if !defined(BOOST_LOG_NO_THREADS)
-    typedef lock_guard< threading_model > remove_attribute_lock;
-#else
-    typedef no_lock remove_attribute_lock;
-#endif
-
     /*!
      * Unlocked \c remove_attribute
      */
@@ -231,13 +235,6 @@ protected:
         m_Attributes.erase(it);
     }
 
-    //! Lock requirement for the remove_all_attributes_unlocked method
-#if !defined(BOOST_LOG_NO_THREADS)
-    typedef lock_guard< threading_model > remove_all_attributes_lock;
-#else
-    typedef no_lock remove_all_attributes_lock;
-#endif
-
     /*!
      * Unlocked \c remove_all_attributes
      */
@@ -245,13 +242,6 @@ protected:
     {
         m_Attributes.clear();
     }
-
-    //! Lock requirement for the open_record_unlocked method
-#if !defined(BOOST_LOG_NO_THREADS)
-    typedef boost::log::aux::shared_lock_guard< threading_model > open_record_lock;
-#else
-    typedef no_lock open_record_lock;
-#endif
 
     /*!
      * Unlocked \c open_record
@@ -280,13 +270,6 @@ protected:
         m_pCore->push_record(record);
     }
 
-    //! Lock requirement for the get_attributes method
-#if !defined(BOOST_LOG_NO_THREADS)
-    typedef boost::log::aux::shared_lock_guard< threading_model > get_attributes_lock;
-#else
-    typedef no_lock get_attributes_lock;
-#endif
-
     /*!
      * Unlocked \c get_attributes
      */
@@ -294,13 +277,6 @@ protected:
     {
         return m_Attributes;
     }
-
-    //! Lock requirement for the set_attributes method
-#if !defined(BOOST_LOG_NO_THREADS)
-    typedef lock_guard< threading_model > set_attributes_lock;
-#else
-    typedef no_lock set_attributes_lock;
-#endif
 
     /*!
      * Unlocked \c set_attributes

@@ -15,48 +15,7 @@
 
 The simplest logging sources provided by the library are loggers `logger` and its thread-safe version, `logger_mt` (`wlogger` and `wlogger_mt` for wide-character logging, accordingly). These loggers only provide the ability to store source-specific attributes within themselves and, of course, to form log records. This type of logger should probably be used when there is no need for advanced features like severity level checks. It may well be used as a tool to collect application statistics and register application events, such as notifications and alarms. In such cases the logger is normally used in conjunction with [link log.detailed.utilities.scoped_attributes scoped attributes] to attach the needed data to the notification event. Below is an example of usage:
 
-    class network_connection
-    {
-        src::logger m_logger;
-        src::logger::attribute_set_type::iterator m_remote_addr;
-
-    public:
-        void on_connected(std::string const& remote_addr)
-        {
-            // Put the remote address into the logger to automatically attach it
-            // to every log record written through the logger
-            m_remote_addr = m_logger.add_attribute("RemoteAddress",
-                boost::make_shared< attr::constant< std::string > >(remote_addr)).first;
-
-            // The straightforward way of logging
-            if (m_logger.open_record())                         // check the filters
-                m_logger.strm() << "Connection established";    // format the record
-        }
-        void on_disconnected()
-        {
-            // The simpler way of logging: the above "if" condition is wrapped into a neat macro
-            BOOST_LOG(m_logger) << "Connection shut down";
-
-            // Remove the attribute with the remote address
-            m_logger.remove_attribute(m_remote_addr);
-        }
-        void on_data_received(std::size_t size)
-        {
-            // Put the size as an additional attribute
-            // so it can be collected and accumulated later if needed.
-            // The attribute will be attached to the only log record
-            // that is made within the current scope.
-            BOOST_LOG_SCOPED_LOGGER_TAG(m_logger,
-                "ReceivedSize", attr::constant< std::size_t >, size);
-            BOOST_LOG(m_logger) << "Some data received";
-        }
-        void on_data_sent(std::size_t size)
-        {
-            BOOST_LOG_SCOPED_LOGGER_TAG(m_logger,
-                "SentSize", attr::constant< std::size_t >, size);
-            BOOST_LOG(m_logger) << "Some data sent";
-        }
-    };
+[example_sources_network_connection]
 
 The class `network_connection` in the code snippet above represents an approach to implementing simple logging and statistical information gathering in a network-related application. Each of the presented methods of the class effectively marks a corresponding event that can be tracked and collected on the sinks level. Furthermore, other methods of the class, that are not shown here for simplicity, are able to write logs too. Note that every log record ever made in the connected state of the `network_connection` object will be implicitly marked up with the address of the remote site.
 
@@ -67,43 +26,18 @@ The class `network_connection` in the code snippet above represents an approach 
     #include <boost/log/sources/severity_feature.hpp>
     #include <boost/log/sources/severity_logger.hpp>
 
-The ability to distinguish some log records from others based on some kind of level of severity or importance is one of the most frequently requested features. The class templates `severity_logger` and `severity_logger_mt` (along with their `wseverity_logger` and `wseverity_logger_mt` wide-char counterparts) provide this functionality.
+The ability to distinguish some log records from others based on some kind of level of severity or importance is one of the most frequently requested features. The class templates `severity_logger` and `severity_logger_mt` (along with their `wseverity_logger` and `wseverity_logger_mt` wide-character counterparts) provide this functionality.
 
 The loggers automatically register a special source-specific attribute "Severity", which can be set for every record in a compact and efficient manner, with a named argument `severity` that can be passed to the constructor and/or the `open_record` method. If passed to the logger constructor, the `severity` argument sets the default value of the severity level that will be used if none is provided in the `open_record` arguments. The `severity` argument passed to the `open_record` method sets the level of the particular log record being made. The type of the severity level can be provided as a template argument for the logger class template. The default type is `int`.
 
 The actual values of this attribute and their meaning are entirely user-defined. However, it is recommended to use the level of value equivalent to zero as a base point for other values. This is because the default-constructed logger object sets its default severity level to zero. It is also recommended to define the same levels of severity for the entire application in order to avoid confusion in the written logs later. The following code snippet shows the usage of `severity_logger`.
 
-    // User-defined severity levels
-    enum my_levels
-    {
-        normal,
-        warning,
-        error
-    };
+[example_sources_severity]
+[example_sources_default_severity]
 
-    void foo()
-    {
-        // The default-constructed logger will use default level 0. The level type is int.
-        src::severity_logger< > lg;
+Or, if you prefer logging without macros:
 
-        // The straightforward usage with default severity level (which is 0)
-        if (lg.open_record())
-            lg.strm() << "A default-severity log record";
-
-        // The straightforward usage with a specific level value
-        if (lg.open_record(keywords::severity = warning))
-            lg.strm() << "A warning level log record";
-
-        // The default severity can be specified in constructor.
-        // This time level type is my_levels.
-        src::severity_logger< my_levels > error_lg(keywords::severity = error);
-
-        // There are predefined macros that make the usage easier
-        BOOST_LOG_SEV(lg, warning) << "A warning level log record";
-
-        // Thanks to the default severity level, you can use the basic macros too
-        BOOST_LOG(error_lg) << "An error level log record";
-    }
+[example_sources_severity_manual]
 
 And, of course, severity loggers also provide the same functionality the [link log.detailed.sources.basic_logger basic loggers] do.
 
@@ -116,49 +50,7 @@ And, of course, severity loggers also provide the same functionality the [link l
 
 Sometimes it is important to categorize log records based on some constant piece information, such as the module or class name, the relation of the logged information to some specific domain of application functionality (e.g. network or file system related messages) or some constant tag that may be used later to filter these records to a specific sink. This feature is fulfilled with loggers `channel_logger`, `channel_logger_mt` and their wide-char counterparts `wchannel_logger`, `wchannel_logger_mt`. These loggers automatically register an attribute named "Channel". This attribute can be set only in the logger constructor with a named argument `channel` and cannot be changed during the logger's lifetime. The type of the channel attribute value can be specified as a template argument for the logger, with `std::string` (`std::wstring` in case of wide character loggers) as a default. Aside from that, the usage is similar to the [link log.detailed.sources.basic_logger basic loggers]:
 
-    class network_connection
-    {
-        src::channel_logger< > m_net;
-        src::channel_logger< > m_stat;
-
-    public:
-        network_connection() :
-            // We can dump network-related messages through this logger
-            // and be able to filter them later
-            m_net(keywords::channel = "net"),
-            // We also can separate statistic records in a different channel
-            // in order to route them to a different sink
-            m_stat(keywords::channel = "stat")
-        {
-        }
-
-        void on_connected(std::string const& remote_addr)
-        {
-            // Put message to the "net" channel
-            BOOST_LOG(m_net) << "Connection established";
-        }
-        void on_disconnected()
-        {
-            // Put message to the "net" channel
-            BOOST_LOG(m_net) << "Connection shut down";
-        }
-        void on_data_received(std::size_t size)
-        {
-            // Put the size as an additional attribute
-            // so it can be collected and accumulated later if needed.
-            // The attribute will be attached to the only log record
-            // that is made within the current scope.
-            BOOST_LOG_SCOPED_LOGGER_TAG(m_stat,
-                "ReceivedSize", attr::constant< std::size_t >, size);
-            BOOST_LOG(m_stat) << "Some data received";
-        }
-        void on_data_sent(std::size_t size)
-        {
-            BOOST_LOG_SCOPED_LOGGER_TAG(m_stat,
-                "SentSize", attr::constant< std::size_t >, size);
-            BOOST_LOG(m_stat) << "Some data sent";
-        }
-    };
+[example_sources_network_connection_channels]
 
 [endsect]
 
@@ -168,44 +60,7 @@ Sometimes it is important to categorize log records based on some constant piece
 
 The library provides a logger feature that enables the user to handle and/or suppress exceptions at the logger level. The `exception_handler` feature adds a `set_exception_handler` method to the logger that allows setting a function object to be called if an exception is thrown from the logging core during the filtering or processing of log records. One can use the [link log.detailed.utilities.exception_handlers library-provided adapters] to simplify implementing exception handlers. Usage example is as follows:
 
-    enum severity_levels
-    {
-        normal,
-        warning,
-        error
-    };
-
-    // A logger class that allows to intercept exceptions and supports severity level
-    class my_logger_mt :
-        public src::basic_composite_logger<
-            char,
-            my_logger_mt,
-            src::multi_thread_model,
-            src::features<
-                src::severity< severity_levels >,
-                src::exception_handler
-            >
-        >
-    {
-        BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(my_logger_mt)
-    };
-
-    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, my_logger_mt)
-    {
-        my_logger_mt lg;
-
-        // Set up exception handler: all exceptions that occur while
-        // logging through this logger, will be suppressed
-        lg.set_exception_handler(logging::make_exception_suppressor());
-
-        return lg;
-    }
-
-    void foo()
-    {
-        // This will not throw
-        BOOST_LOG_SEV(my_logger::get(), normal) << "Hello, world";
-    }
+[example_sources_exception_handler]
 
 [endsect]
 
@@ -217,30 +72,7 @@ If you wonder whether you can use a mixed set of several logger features in one 
 
 The usage of the loggers with several features does not conceptually differ from the usage of the single-featured loggers. For instance, here is how a `severity_channel_logger_mt` could be used:
 
-    enum severity_levels
-    {
-        normal,
-        warning,
-        error
-    };
-
-    typedef src::severity_channel_logger_mt<
-        severity_levels,    // the type of the severity level
-        std::string         // the type of the channel name
-    > my_logger_mt;
-
-    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, my_logger_mt)
-    {
-        // Specify the channel name on construction, similarly as with the channel_logger
-        return my_logger_mt(keywords::channel = "my_logger");
-    }
-
-    void foo()
-    {
-        // Do logging with the severity level. The record will have both
-        // the severity level and the channel name attached.
-        BOOST_LOG_SEV(my_logger::get(), normal) << "Hello, world";
-    }
+[example_sources_severity_channel]
 
 [endsect]
 

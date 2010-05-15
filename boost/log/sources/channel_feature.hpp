@@ -95,6 +95,16 @@ public:
     //! Channel attribute type
     typedef attributes::constant< channel_type > channel_attribute;
 
+    //! Lock requirement for the swap_unlocked method
+    typedef typename strictest_lock<
+        typename base_type::swap_lock,
+#ifndef BOOST_LOG_NO_THREADS
+        lock_guard< threading_model >
+#else
+        no_lock
+#endif // !defined(BOOST_LOG_NO_THREADS)
+    >::type swap_lock;
+
 private:
     //! Channel attribute
     shared_ptr< channel_attribute > m_pChannel;
@@ -149,16 +159,6 @@ protected:
      * Channel attribute accessor
      */
     shared_ptr< channel_attribute > const& get_channel_attribute() const { return m_pChannel; }
-
-    //! Lock requirement for the swap_unlocked method
-    typedef typename strictest_lock<
-        typename base_type::swap_lock,
-#ifndef BOOST_LOG_NO_THREADS
-        lock_guard< threading_model >
-#else
-        no_lock
-#endif // !defined(BOOST_LOG_NO_THREADS)
-    >::type swap_lock;
 
     /*!
      * Unlocked swap

@@ -429,11 +429,11 @@ void basic_core< CharT >::push_record(record_type const& rec)
         }
 
         bool shuffled = (end - begin) <= 1;
+        register shared_ptr< sink_type >* it = begin;
         while (true) try
         {
             // First try to distribute load between different sinks
             register bool all_locked = true;
-            register shared_ptr< sink_type >* it = begin;
             while (it != end)
             {
                 if (it->get()->try_consume(rec))
@@ -446,6 +446,7 @@ void basic_core< CharT >::push_record(record_type const& rec)
                     ++it;
             }
 
+            it = begin;
             if (begin != end)
             {
                 if (all_locked)
@@ -457,9 +458,9 @@ void basic_core< CharT >::push_record(record_type const& rec)
                         shuffled = true;
                     }
 
-                    begin->get()->consume(rec);
+                    it->get()->consume(rec);
                     --end;
-                    end->swap(*begin);
+                    end->swap(*it);
                 }
             }
             else
@@ -479,6 +480,10 @@ void basic_core< CharT >::push_record(record_type const& rec)
                 throw;
 
             pImpl->ExceptionHandler();
+
+            // Skip the sink that failed to consume the record
+            --end;
+            end->swap(*it);
         }
     }
 #if !defined(BOOST_LOG_NO_THREADS)
