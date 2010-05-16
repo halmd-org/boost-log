@@ -494,7 +494,7 @@ typedef basic_named_scope< wchar_t > wnamed_scope;              //!< Convenience
  *
  * Not all compilers have support for this macro. The exact form of the scope name may vary from one compiler to another.
  */
-#define BOOST_LOG_WFUNCTION() BOOST_LOG_WFUNCTION_(BOOST_PP_CAT(L, BOOST_CURRENT_FUNCTION))
+#define BOOST_LOG_WFUNCTION() BOOST_LOG_WNAMED_SCOPE(BOOST_PP_CAT(L, BOOST_CURRENT_FUNCTION))
 
 #endif
 
