@@ -56,6 +56,10 @@
 [import ../example/doc/sources_severity.cpp]
 [import ../example/doc/sources_severity_channel.cpp]
 [import ../example/doc/exception_handling.cpp]
+[import ../example/doc/sinks_unlocked.cpp]
+[import ../example/doc/sinks_sync.cpp]
+[import ../example/doc/sinks_async.cpp]
+[import ../example/doc/sinks_ordering_async.cpp]
 
 [section Disclaimer]
 
@@ -83,9 +87,9 @@ The documentation is oriented to both new and experienced library users. However
 
 If this is your first experience with the library, it is recommended to read the [link log.design Design overview] section for a first glance at the library's capabilities and architecture. The [link log.installation Installation] and [link log.tutorial Tutorial] sections will help to get started experimenting with the library. The tutorial gives an overview of the library features with sample code snippets. Some tutorial steps are presented in two forms: simple and advanced. The simple form typically describes the most common and easy way to do the task and it is being recommended to be read by new users. The advanced form usually gives an expanded way to do the same thing but with an in-depth explanation and the ability to do some extra customization. This form may come in handy for more experienced users and should generally be read if the easy way does not satisfy your needs.
 
-Besides the tutorial there is an [link log.detailed Detailed features description] chapter. This part gives descriptions of other tools provided by the library that were not covered by the tutorial. This chapter is best read on a case by case basis.
+Besides the tutorial there is a [link log.detailed Detailed features description] chapter. This part describes other tools provided by the library that were not covered by the tutorial. This chapter is best read on a case by case basis.
 
-Last, but not least, there is a reference which gives the formal descriptions of library components.
+Last, but not least, there is a reference which gives the formal description of library components.
 
 To keep the code snippets in this documentation simple, the following namespace aliases are assumed to be defined:
 
@@ -160,7 +164,7 @@ You can define configuration macros in the `bjam` command line, like this:
     bjam --with-log variant=release define=BOOST_LOG_USE_CHAR define=BOOST_LOG_USE_WINNT6_API stage
 ]
 
-However, it may be more convenient to define configuration macros in the "boost/config/user.hpp" file in order to automatically define them both for the library and user's projects. If none of the options are specified, the library will try to support the most comprehensive setup, including support for all character types and features available for the platform.
+However, it may be more convenient to define configuration macros in the "boost/config/user.hpp" file in order to automatically define them both for the library and user's projects. If none of the options are specified, the library will try to support the most comprehensive setup, including support for all character types and features available for the target platform.
 
 The logging library uses several other Boost libraries that need building too. These are __boost_filesystem__, __boost_system__, __boost_date_time__, __boost_thread__ and __boost_regex__. Refer to their documentation for detailed instructions on the building procedure.
 

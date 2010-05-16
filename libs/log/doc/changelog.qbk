@@ -12,6 +12,8 @@
 [heading 2.0]
 
 * Most code examples from the docs have been extracted into compilable standalone examples, which can be used for testing and experimenting with the library.
+* Fixed a bug: the logging core could enter an infinite loop inside `push_record` if a sink throws and the exception is suppressed by the exception handler set in the core.
+* Fixed compilation problems with `BOOST_LOG_WFUNCTION` and exception handling logger feature.
 
 [heading 1.0, 09 May 2010]
 
