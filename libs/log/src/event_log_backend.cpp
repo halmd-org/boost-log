@@ -52,10 +52,10 @@ namespace sinks {
 namespace event_log {
 
     //  Windows event types
-    BOOST_LOG_EXPORT const event_type_t success = { EVENTLOG_SUCCESS };
-    BOOST_LOG_EXPORT const event_type_t info = { EVENTLOG_INFORMATION_TYPE };
-    BOOST_LOG_EXPORT const event_type_t warning = { EVENTLOG_WARNING_TYPE };
-    BOOST_LOG_EXPORT const event_type_t error = { EVENTLOG_ERROR_TYPE };
+    BOOST_LOG_EXPORT extern const event_type_t success = { EVENTLOG_SUCCESS };
+    BOOST_LOG_EXPORT extern const event_type_t info = { EVENTLOG_INFORMATION_TYPE };
+    BOOST_LOG_EXPORT extern const event_type_t warning = { EVENTLOG_WARNING_TYPE };
+    BOOST_LOG_EXPORT extern const event_type_t error = { EVENTLOG_ERROR_TYPE };
 
 } // namespace event_log
 
@@ -298,7 +298,7 @@ void basic_simple_event_log_backend< CharT >::do_consume(record_type const& reco
     const char_type* message = formatted_message.c_str();
     WORD event_type = EVENTLOG_INFORMATION_TYPE;
     if (!m_pImpl->m_LevelMapper.empty())
-        event_type = m_pImpl->m_LevelMapper(record.attribute_values()).value;
+        event_type = m_pImpl->m_LevelMapper(record).value;
 
     DWORD event_id;
     switch (event_type)
@@ -350,10 +350,7 @@ namespace event_log {
         //! Default constructor
         insertion_composer() {}
         //! Composition operator
-        void operator() (
-            values_view_type const& attributes,
-            string_type const& message,
-            insertion_list& insertions) const
+        void operator() (record_type const& rec, insertion_list& insertions) const
         {
             std::size_t size = m_Formatters.size();
             insertions.resize(size);
@@ -361,7 +358,7 @@ namespace event_log {
             {
                 log::aux::basic_ostringstreambuf< char_type > buf(insertions[i]);
                 stream_type strm(&buf);
-                m_Formatters[i](strm, attributes, message);
+                m_Formatters[i](strm, rec);
                 strm.flush();
             }
         }
@@ -423,14 +420,13 @@ namespace event_log {
     //! Event composition operator
     template< typename CharT >
     event_id_t basic_event_composer< CharT >::operator() (
-        values_view_type const& attributes,
-        string_type const& message,
+        record_type const& rec,
         insertion_list& insertions) const
     {
-        event_id_t id = m_EventIDMapper(attributes);
+        event_id_t id = m_EventIDMapper(rec);
         typename event_map::const_iterator it = m_EventMap.find(id);
         if (it != m_EventMap.end())
-            it->second(attributes, message, insertions);
+            it->second(rec, insertions);
         return id;
     }
 
@@ -533,10 +529,9 @@ void basic_event_log_backend< CharT >::consume(record_type const& record)
     if (!m_pImpl->m_EventComposer.empty())
     {
         log::aux::cleanup_guard< insertion_list > _(m_pImpl->m_Insertions);
-        values_view_type const& values = record.attribute_values();
 
         // Get event ID and construct insertions
-        DWORD event_id = m_pImpl->m_EventComposer(values, record.message(), m_pImpl->m_Insertions).value;
+        DWORD event_id = m_pImpl->m_EventComposer(record, m_pImpl->m_Insertions).value;
         WORD string_count = static_cast< WORD >(m_pImpl->m_Insertions.size());
         scoped_array< const char_type* > strings(new const char_type*[string_count]);
         for (WORD i = 0; i < string_count; ++i)
@@ -545,11 +540,11 @@ void basic_event_log_backend< CharT >::consume(record_type const& record)
         // Get event type
         WORD event_type = EVENTLOG_INFORMATION_TYPE;
         if (!m_pImpl->m_LevelMapper.empty())
-            event_type = m_pImpl->m_LevelMapper(values).value;
+            event_type = m_pImpl->m_LevelMapper(record).value;
 
         WORD event_category = 0;
         if (!m_pImpl->m_CategoryMapper.empty())
-            event_category = m_pImpl->m_CategoryMapper(values).value;
+            event_category = m_pImpl->m_CategoryMapper(record).value;
 
         report_event(
             m_pImpl->m_SourceHandle,       // Event log handle.

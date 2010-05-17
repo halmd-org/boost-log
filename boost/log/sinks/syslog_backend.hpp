@@ -302,7 +302,7 @@ public:
     //! Syslog severity level mapper type
     typedef boost::function1<
         syslog::level_t,
-        values_view_type const&
+        record_type const&
     > severity_mapper_type;
 
 private:

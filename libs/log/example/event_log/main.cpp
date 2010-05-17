@@ -26,16 +26,23 @@
 
 #include <boost/log/common.hpp>
 #include <boost/log/attributes.hpp>
+#include <boost/log/filters.hpp>
 #include <boost/log/formatters.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
 
+#if !defined(WIN32_LEAN_AND_MEAN)
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#include <windows.h>
 #include "event_log_messages.h"
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
 namespace sinks = boost::log::sinks;
+namespace flt = boost::log::filters;
 namespace fmt = boost::log::formatters;
 namespace keywords = boost::log::keywords;
 
@@ -147,7 +154,7 @@ struct activity_guard
     {
         // Add a stop watch attribute to measure the activity duration
         boost::shared_ptr< attrs::timer > attr(new attrs::timer());
-        m_it = event_logger::get().add_attribute("Duration", attr);
+        m_it = event_logger::get().add_attribute("Duration", attr).first;
     }
     ~activity_guard()
     {

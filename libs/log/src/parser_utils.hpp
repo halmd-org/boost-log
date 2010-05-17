@@ -108,7 +108,6 @@ struct char_constants< char >
     static const char_type* text_file_destination() { return "TextFile"; }
     static const char_type* console_destination() { return "Console"; }
     static const char_type* syslog_destination() { return "Syslog"; }
-    static const char_type* simple_nt6_event_log_destination() { return "SimpleNT6EventLog"; }
     static const char_type* simple_event_log_destination() { return "SimpleEventLog"; }
     static const char_type* debugger_destination() { return "Debugger"; }
 
@@ -220,7 +219,6 @@ struct char_constants< wchar_t >
     static const char_type* text_file_destination() { return L"TextFile"; }
     static const char_type* console_destination() { return L"Console"; }
     static const char_type* syslog_destination() { return L"Syslog"; }
-    static const char_type* simple_nt6_event_log_destination() { return L"SimpleNT6EventLog"; }
     static const char_type* simple_event_log_destination() { return L"SimpleEventLog"; }
     static const char_type* debugger_destination() { return L"Debugger"; }
 

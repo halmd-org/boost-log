@@ -26,6 +26,7 @@
 #include <string>
 #include <functional>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/utility/attribute_value_extractor.hpp>
 
@@ -54,6 +55,8 @@ struct basic_mapping :
     typedef std::basic_string< char_type > string_type;
     //! Attribute values view type
     typedef basic_attribute_values_view< char_type > values_view_type;
+    //! Log record type
+    typedef basic_record< char_type > record_type;
     //! Mapped value type
     typedef MappedT mapped_type;
 };
@@ -81,6 +84,8 @@ public:
     typedef typename base_type::string_type string_type;
     //! Attribute values view type
     typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
     //! Mapped value type
     typedef typename base_type::mapped_type mapped_type;
 
@@ -129,14 +134,14 @@ public:
     /*!
      * Extraction operator
      *
-     * \param values A set of attribute values attached to a logging record
+     * \param rec A log record to extract value from
      * \return An extracted attribute value
      */
-    mapped_type operator() (values_view_type const& values) const
+    mapped_type operator() (record_type const& rec) const
     {
         mapped_type res = m_DefaultValue;
         receiver rcv(res);
-        m_Extractor(values, rcv);
+        m_Extractor(rec.attribute_values(), rcv);
         return res;
     }
 };
@@ -168,6 +173,8 @@ public:
     typedef typename base_type::string_type string_type;
     //! Attribute values view type
     typedef typename base_type::values_view_type values_view_type;
+    //! Log record type
+    typedef typename base_type::record_type record_type;
     //! Mapped value type
     typedef typename base_type::mapped_type mapped_type;
 
@@ -246,15 +253,15 @@ public:
      * Extraction operator. Extracts the attribute value and attempts to map it onto
      * the native value.
      *
-     * \param values A set of attribute values attached to a logging record
+     * \param rec A log record to extract value from
      * \return A mapped value, if mapping was successfull, or the default value if
      *         mapping did not succeed.
      */
-    mapped_type operator() (values_view_type const& values) const
+    mapped_type operator() (record_type const& rec) const
     {
         mapped_type res = m_DefaultValue;
         receiver rcv(m_Mapping, res);
-        m_Extractor(values, rcv);
+        m_Extractor(rec.attribute_values(), rcv);
         return res;
     }
     /*!

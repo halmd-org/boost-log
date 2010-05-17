@@ -50,7 +50,6 @@ alias platform_log_sources
     : ## winnt sources ##
         simple_event_log.mc
         event_log_backend.cpp
-        nt6_event_log_backend.cpp
         debug_output_backend.cpp
         psapi
         ws2_32

@@ -9,7 +9,7 @@ import os ;
 
 project
     : requirements
-        <link>shared:<define>BOOST_ALL_DLL
+        <link>shared
         <logapi>unix:<define>BOOST_LOG_USE_NATIVE_SYSLOG=1
         <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
@@ -33,12 +33,12 @@ if [ os.name ] = "NT"
 {
     lib event_log_messages
     : event_log_messages.mc
-    : <link>shared
-      <linkflags>-noentry
+    : <linkflags>-noentry
+#      <name>event_log_messages
     ;
 
     exe event_log
     : main.cpp
-    : <library>event_log_messages
+    : <implicit-dependency>event_log_messages
     ;
 }

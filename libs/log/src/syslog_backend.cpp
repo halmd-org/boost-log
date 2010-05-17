@@ -487,7 +487,7 @@ void basic_syslog_backend< CharT >::do_consume(
     record_type const& record, target_string_type const& formatted_message)
 {
     m_pImpl->send(
-        m_pImpl->m_LevelMapper.empty() ? syslog::info : m_pImpl->m_LevelMapper(record.attribute_values()),
+        m_pImpl->m_LevelMapper.empty() ? syslog::info : m_pImpl->m_LevelMapper(record),
         formatted_message);
 }
 

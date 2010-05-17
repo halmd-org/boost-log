@@ -53,9 +53,6 @@
 #include <boost/log/core.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/exceptions.hpp>
-#if defined(BOOST_WINDOWS) && defined(BOOST_LOG_USE_WINNT6_API)
-#include <boost/log/sinks/nt6_event_log_backend.hpp>
-#endif // BOOST_WINDOWS && BOOST_LOG_USE_WINNT6_API
 #include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/init/from_settings.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
@@ -66,10 +63,6 @@
 #include <boost/log/detail/shared_lock_guard.hpp>
 #endif
 #include "parser_utils.hpp"
-
-#if defined(BOOST_WINDOWS) && defined(BOOST_LOG_USE_WINNT6_API)
-#include <guiddef.h>
-#endif // defined(BOOST_WINDOWS) && defined(BOOST_LOG_USE_WINNT6_API)
 
 namespace bsc = boost::spirit::classic;
 
@@ -256,71 +249,6 @@ inline std::string any_cast_to_address(const CharT* param_name, any const& val)
         throw_invalid_type(param_name, type);
 }
 
-#if defined(BOOST_WINDOWS) && defined(BOOST_LOG_USE_WINNT6_API)
-
-//! The function parses GUIDS from strings in form "{631EF147-9A84-4e33-8ADD-BCE174C4DBD9}"
-template< typename CharT >
-GUID any_cast_to_guid(const CharT* param_name, any const& val)
-{
-    typedef CharT char_type;
-    typedef std::basic_string< char_type > string_type;
-
-    std::type_info const& type = val.type();
-    if (type == typeid(GUID))
-        return any_cast< GUID >(val);
-    else if (type == typeid(string_type))
-    {
-        const char_type
-            open_bracket = static_cast< char_type >('{'),
-            close_bracket = static_cast< char_type >('}'),
-            dash = static_cast< char_type >('-');
-
-        bsc::uint_parser< unsigned char, 16, 2, 2 > octet_p;
-        bsc::uint_parser< unsigned short, 16, 4, 4 > word_p;
-        bsc::uint_parser< unsigned long, 16, 8, 8 > dword_p;
-
-        GUID g;
-        string_type str = any_cast< string_type >(val);
-        bsc::parse_info< const char_type* > result =
-            bsc::parse(
-                str.c_str(),
-                str.c_str() + str.size(),
-                (
-                    bsc::ch_p(open_bracket) >>
-                    dword_p[bsc::assign_a(g.Data1)] >>
-                    bsc::ch_p(dash) >>
-                    word_p[bsc::assign_a(g.Data2)] >>
-                    bsc::ch_p(dash) >>
-                    word_p[bsc::assign_a(g.Data3)] >>
-                    bsc::ch_p(dash) >>
-                    octet_p[bsc::assign_a(g.Data4[0])] >>
-                    octet_p[bsc::assign_a(g.Data4[1])] >>
-                    bsc::ch_p(dash) >>
-                    octet_p[bsc::assign_a(g.Data4[2])] >>
-                    octet_p[bsc::assign_a(g.Data4[3])] >>
-                    octet_p[bsc::assign_a(g.Data4[4])] >>
-                    octet_p[bsc::assign_a(g.Data4[5])] >>
-                    octet_p[bsc::assign_a(g.Data4[6])] >>
-                    octet_p[bsc::assign_a(g.Data4[7])] >>
-                    bsc::ch_p(close_bracket)
-                )
-            );
-
-        if (!result.full)
-        {
-            std::string descr = "Could not recognize CLSID from string "
-                                + log::aux::to_narrow(str);
-            BOOST_LOG_THROW_DESCR(invalid_value, descr);
-        }
-
-        return g;
-    }
-    else
-        throw_invalid_type(param_name, type);
-}
-
-#endif // defined(BOOST_WINDOWS) && defined(BOOST_LOG_USE_WINNT6_API)
-
 //! The function extracts the file rotation time point predicate from the parameter
 template< typename CharT >
 function0< bool > any_cast_to_rotation_time_point(const CharT* param_name, any const& val)
@@ -470,10 +398,6 @@ struct sinks_repository :
             &sinks_repository< char_type >::default_debugger_sink_factory;
         instance.m_Factories[constants::simple_event_log_destination()] =
             &sinks_repository< char_type >::default_simple_event_log_sink_factory;
-#ifdef BOOST_LOG_USE_WINNT6_API
-        instance.m_Factories[constants::simple_nt6_event_log_destination()] =
-            &sinks_repository< char_type >::default_simple_nt6_event_log_sink_factory;
-#endif // BOOST_LOG_USE_WINNT6_API
 #endif // BOOST_WINDOWS
     }
 
@@ -695,30 +619,6 @@ private:
         return init_sink(backend, params);
     }
 
-#ifdef BOOST_LOG_USE_WINNT6_API
-
-    //! The function constructs a sink that writes log records to the Windows NT 6 Event Log
-    static shared_ptr< sinks::sink< char_type > > default_simple_nt6_event_log_sink_factory(params_t const& params)
-    {
-        typedef experimental::sinks::basic_simple_nt6_event_log_backend< char_type > backend_t;
-
-        // Determine the provider GUID
-        GUID provider_id = backend_t::get_default_provider_id();
-        typename params_t::const_iterator it = params.find(constants::provider_id_param_name());
-        if (it != params.end() && !it->second.empty())
-            provider_id = any_cast_to_guid(constants::provider_id_param_name(), it->second);
-
-        // Construct the backend
-        shared_ptr< backend_t > backend(boost::make_shared< backend_t >(boost::cref(provider_id)));
-
-        // For now we use only the default level mapping. Will add support for configuration later.
-        backend->set_severity_mapper(
-            experimental::sinks::etw::basic_direct_severity_mapping< char_type >(constants::default_level_attribute_name()));
-
-        return init_sink(backend, params);
-    }
-
-#endif // BOOST_LOG_USE_WINNT6_API
 #endif // BOOST_WINDOWS
 
     //! The function initializes common parameters of text stream sink and returns the constructed sink

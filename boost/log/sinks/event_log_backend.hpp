@@ -26,7 +26,7 @@
 #include <iosfwd>
 #include <boost/filesystem/path.hpp>
 #include <boost/function/function1.hpp>
-#include <boost/function/function3.hpp>
+#include <boost/function/function2.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/universal_path.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
@@ -39,6 +39,7 @@
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/attribute_mapping.hpp>
 #include <boost/log/sinks/event_log_constants.hpp>
+#include <boost/log/core/record.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -627,16 +628,17 @@ namespace event_log {
         typedef std::basic_ostream< char_type > stream_type;
         //! Attribute values view type
         typedef basic_attribute_values_view< char_type > values_view_type;
+        //! Log record type
+        typedef basic_record< char_type > record_type;
 
         //! Event identifier mapper type
-        typedef function1< event_id_t, values_view_type const& > event_id_mapper_type;
+        typedef function1< event_id_t, record_type const& > event_id_mapper_type;
 
         //! Type of an insertion composer (a formatter)
-        typedef function3<
+        typedef function2<
             void,
             stream_type&,
-            values_view_type const&,
-            string_type const&
+            record_type const&
         > formatter_type;
         //! Type of the composed insertions list
         typedef std::vector< string_type > insertion_list;
@@ -676,6 +678,7 @@ namespace event_log {
             event_map_reference& operator% (FormatterT const& fmt)
             {
                 m_Composer = m_Owner.add_formatter(m_ID, m_Composer, formatter_type(fmt));
+                return *this;
             }
         };
 
@@ -728,17 +731,13 @@ namespace event_log {
         /*!
          * Event composition operator. Extracts an event identifier from the attribute values by calling event ID mapper.
          * Then runs all formatters that were registered for the event with the extracted ID. The results of formatting
-         * are returned in the \c insertions parameter.
+         * are returned in the \a insertions parameter.
          *
-         * \param attributes A set of attribute values of a logging record
-         * \param message Log record message
+         * \param rec Log record
          * \param insertions A sequence of formatted insertion strings
          * \return An event identifier that was extracted from \c attributes
          */
-        event_id_t operator() (
-            values_view_type const& attributes,
-            string_type const& message,
-            insertion_list& insertions) const;
+        event_id_t operator() (record_type const& rec, insertion_list& insertions) const;
 
     private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -804,7 +803,7 @@ public:
     //! Mapper type for the event type
     typedef function1<
         event_log::event_type_t,
-        values_view_type const&
+        record_type const&
     > event_type_mapper_type;
 
 private:
@@ -924,18 +923,17 @@ public:
     //! Mapper type for the event type
     typedef function1<
         event_log::event_type_t,
-        values_view_type const&
+        record_type const&
     > event_type_mapper_type;
     //! Mapper type for the event category
     typedef function1<
         event_log::event_category_t,
-        values_view_type const&
+        record_type const&
     > event_category_mapper_type;
     //! Event composer type
-    typedef function3<
+    typedef function2<
         event_log::event_id_t,
-        values_view_type const&,
-        string_type const&,
+        record_type const&,
         insertion_list&
     > event_composer_type;
 
