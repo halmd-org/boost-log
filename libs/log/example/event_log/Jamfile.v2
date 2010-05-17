@@ -31,7 +31,14 @@ project
 
 if [ os.name ] = "NT"
 {
+    lib event_log_messages
+    : event_log_messages.mc
+    : <link>shared
+      <linkflags>-noentry
+    ;
+
     exe event_log
     : main.cpp
+    : <library>event_log_messages
     ;
 }

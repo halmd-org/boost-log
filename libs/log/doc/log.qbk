@@ -60,6 +60,14 @@
 [import ../example/doc/sinks_sync.cpp]
 [import ../example/doc/sinks_async.cpp]
 [import ../example/doc/sinks_ordering_async.cpp]
+[import ../example/doc/sinks_ostream.cpp]
+[import ../example/doc/sinks_file.cpp]
+[import ../example/doc/sinks_xml_file.cpp]
+[import ../example/doc/sinks_multifile.cpp]
+[import ../example/doc/sinks_syslog.cpp]
+[import ../example/doc/sinks_debugger.cpp]
+[import ../example/doc/sinks_simple_event_log.cpp]
+[import ../example/event_log/main.cpp]
 
 [section Disclaimer]
 

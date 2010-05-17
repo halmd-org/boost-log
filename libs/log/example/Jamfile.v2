@@ -15,5 +15,4 @@ build-project ./rotating_file ;
 build-project ./settings_file ;
 build-project ./syslog ;
 build-project ./trivial ;
-build-project ./xml_file ;
 build-project ./doc ;
