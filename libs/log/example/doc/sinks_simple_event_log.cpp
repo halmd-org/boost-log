@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
         init_logging();
 
         // Add some attributes too
-        shared_ptr< logging::attribute > attr(new attrs::local_clock);
+        boost::shared_ptr< logging::attribute > attr(new attrs::local_clock);
         logging::core::get()->add_global_attribute("TimeStamp", attr);
         attr.reset(new attrs::counter< unsigned int >);
         logging::core::get()->add_global_attribute("LineID", attr);
