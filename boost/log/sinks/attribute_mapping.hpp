@@ -26,6 +26,7 @@
 #include <string>
 #include <functional>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/tagged_integer.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/utility/attribute_value_extractor.hpp>
@@ -61,6 +62,52 @@ struct basic_mapping :
     typedef MappedT mapped_type;
 };
 
+namespace aux {
+
+    //! Attribute value receiver
+    template< typename MappedT >
+    struct direct_mapping_receiver
+    {
+        typedef void result_type;
+        typedef MappedT mapped_type;
+
+        explicit direct_mapping_receiver(mapped_type& extracted) :
+            m_Extracted(extracted)
+        {
+        }
+        template< typename T >
+        void operator() (T const& val) const
+        {
+            m_Extracted = mapped_type(val);
+        }
+
+    private:
+        mapped_type& m_Extracted;
+    };
+    //  Specialization for the tagged integer
+    template< typename IntT, typename TagT >
+    struct direct_mapping_receiver< boost::log::aux::tagged_integer< IntT, TagT > >
+    {
+        typedef void result_type;
+        typedef boost::log::aux::tagged_integer< IntT, TagT > mapped_type;
+
+        explicit direct_mapping_receiver(mapped_type& extracted) :
+            m_Extracted(extracted)
+        {
+        }
+        template< typename T >
+        void operator() (T const& val) const
+        {
+            mapped_type v = { val };
+            m_Extracted = v;
+        }
+
+    private:
+        mapped_type& m_Extracted;
+    };
+
+} // namespace aux
+
 /*!
  * \brief Straightforward mapping
  *
@@ -90,29 +137,6 @@ public:
     typedef typename base_type::mapped_type mapped_type;
 
 private:
-    //! \cond
-
-    //! Attribute value receiver
-    struct receiver
-    {
-        typedef void result_type;
-
-        explicit receiver(mapped_type& extracted) : m_Extracted(extracted) {}
-        template< typename T >
-        void operator() (T const& val) const
-        {
-            // TODO: Make this thing work with non-POD mapped_types
-            mapped_type v = { val };
-            m_Extracted = v;
-        }
-
-    private:
-        mapped_type& m_Extracted;
-    };
-
-    //! \endcond
-
-private:
     //! Attribute value extractor
     attribute_value_extractor< char_type, attribute_value_type > m_Extractor;
     //! Default native value
@@ -140,7 +164,7 @@ public:
     mapped_type operator() (record_type const& rec) const
     {
         mapped_type res = m_DefaultValue;
-        receiver rcv(res);
+        aux::direct_mapping_receiver< mapped_type > rcv(res);
         m_Extractor(rec.attribute_values(), rcv);
         return res;
     }

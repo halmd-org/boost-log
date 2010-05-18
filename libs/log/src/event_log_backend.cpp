@@ -51,11 +51,20 @@ namespace sinks {
 
 namespace event_log {
 
-    //  Windows event types
-    BOOST_LOG_EXPORT extern const event_type_t success = { EVENTLOG_SUCCESS };
-    BOOST_LOG_EXPORT extern const event_type_t info = { EVENTLOG_INFORMATION_TYPE };
-    BOOST_LOG_EXPORT extern const event_type_t warning = { EVENTLOG_WARNING_TYPE };
-    BOOST_LOG_EXPORT extern const event_type_t error = { EVENTLOG_ERROR_TYPE };
+    //! The function constructs log record level from an integer
+    BOOST_LOG_EXPORT event_type make_event_type(unsigned short lev)
+    {
+        switch (lev)
+        {
+        case success: return success;
+        case info: return info;
+        case warning: return warning;
+        case error: return error;
+        default:
+            BOOST_THROW_EXCEPTION(std::out_of_range("Windows NT event type is out of range"));
+            return info; // to get rid of warnings
+        }
+    }
 
 } // namespace event_log
 
@@ -296,34 +305,33 @@ template< typename CharT >
 void basic_simple_event_log_backend< CharT >::do_consume(record_type const& record, target_string_type const& formatted_message)
 {
     const char_type* message = formatted_message.c_str();
-    WORD event_type = EVENTLOG_INFORMATION_TYPE;
+    event_log::event_type evt_type = event_log::info;
     if (!m_pImpl->m_LevelMapper.empty())
-        event_type = m_pImpl->m_LevelMapper(record).value;
+        evt_type = m_pImpl->m_LevelMapper(record);
 
     DWORD event_id;
-    switch (event_type)
+    switch (evt_type)
     {
-    case EVENTLOG_SUCCESS:
+    case event_log::success:
         event_id = BOOST_LOG_MSG_DEBUG; break;
-    case EVENTLOG_WARNING_TYPE:
+    case event_log::warning:
         event_id = BOOST_LOG_MSG_WARNING; break;
-    case EVENTLOG_ERROR_TYPE:
+    case event_log::error:
         event_id = BOOST_LOG_MSG_ERROR; break;
-    case EVENTLOG_INFORMATION_TYPE:
     default:
         event_id = BOOST_LOG_MSG_INFO; break;
     }
 
     report_event(
-        m_pImpl->m_SourceHandle,    // Event log handle.
-        event_type,                 // Event type.
-        0,                          // Event category.
-        event_id,                   // Event identifier.
-        NULL,                       // No user security identifier.
-        1,                          // Number of substitution strings.
-        0,                          // No data.
-        &message,                   // Pointer to strings.
-        NULL);                      // No data.
+        m_pImpl->m_SourceHandle,        // Event log handle.
+        static_cast< WORD >(evt_type),  // Event type.
+        0,                              // Event category.
+        event_id,                       // Event identifier.
+        NULL,                           // No user security identifier.
+        1,                              // Number of substitution strings.
+        0,                              // No data.
+        &message,                       // Pointer to strings.
+        NULL);                          // No data.
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -405,25 +413,25 @@ namespace event_log {
     //! Creates a new entry for a message
     template< typename CharT >
     typename basic_event_composer< CharT >::event_map_reference
-    basic_event_composer< CharT >::operator[] (event_id_t id)
+    basic_event_composer< CharT >::operator[] (event_id id)
     {
         return event_map_reference(id, *this);
     }
     //! Creates a new entry for a message
     template< typename CharT >
     typename basic_event_composer< CharT >::event_map_reference
-    basic_event_composer< CharT >::operator[] (event_id_t::integer_type id)
+    basic_event_composer< CharT >::operator[] (int id)
     {
         return event_map_reference(make_event_id(id), *this);
     }
 
     //! Event composition operator
     template< typename CharT >
-    event_id_t basic_event_composer< CharT >::operator() (
+    event_id basic_event_composer< CharT >::operator() (
         record_type const& rec,
         insertion_list& insertions) const
     {
-        event_id_t id = m_EventIDMapper(rec);
+        event_id id = m_EventIDMapper(rec);
         typename event_map::const_iterator it = m_EventMap.find(id);
         if (it != m_EventMap.end())
             it->second(rec, insertions);
@@ -434,7 +442,7 @@ namespace event_log {
     template< typename CharT >
     typename basic_event_composer< CharT >::insertion_composer*
     basic_event_composer< CharT >::add_formatter(
-        event_id_t id, insertion_composer* composer, formatter_type const& fmt)
+        event_id id, insertion_composer* composer, formatter_type const& fmt)
     {
         if (!composer)
             composer = &m_EventMap[id];
@@ -531,7 +539,7 @@ void basic_event_log_backend< CharT >::consume(record_type const& record)
         log::aux::cleanup_guard< insertion_list > _(m_pImpl->m_Insertions);
 
         // Get event ID and construct insertions
-        DWORD event_id = m_pImpl->m_EventComposer(record, m_pImpl->m_Insertions).value;
+        DWORD id = m_pImpl->m_EventComposer(record, m_pImpl->m_Insertions);
         WORD string_count = static_cast< WORD >(m_pImpl->m_Insertions.size());
         scoped_array< const char_type* > strings(new const char_type*[string_count]);
         for (WORD i = 0; i < string_count; ++i)
@@ -540,17 +548,17 @@ void basic_event_log_backend< CharT >::consume(record_type const& record)
         // Get event type
         WORD event_type = EVENTLOG_INFORMATION_TYPE;
         if (!m_pImpl->m_LevelMapper.empty())
-            event_type = m_pImpl->m_LevelMapper(record).value;
+            event_type = static_cast< WORD >(m_pImpl->m_LevelMapper(record));
 
         WORD event_category = 0;
         if (!m_pImpl->m_CategoryMapper.empty())
-            event_category = m_pImpl->m_CategoryMapper(record).value;
+            event_category = static_cast< WORD >(m_pImpl->m_CategoryMapper(record));
 
         report_event(
             m_pImpl->m_SourceHandle,       // Event log handle.
             event_type,                    // Event type.
             event_category,                // Event category.
-            event_id,                      // Event identifier.
+            id,                            // Event identifier.
             NULL,                          // No user security identifier.
             string_count,                  // Number of substitution strings.
             0,                             // No data.

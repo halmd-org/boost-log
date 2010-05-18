@@ -79,10 +79,10 @@ namespace syslog {
      */
     template< typename CharT, typename AttributeValueT = int >
     class basic_direct_severity_mapping :
-        public basic_direct_mapping< CharT, level_t, AttributeValueT >
+        public basic_direct_mapping< CharT, level, AttributeValueT >
     {
         //! Base type
-        typedef basic_direct_mapping< CharT, level_t, AttributeValueT > base_type;
+        typedef basic_direct_mapping< CharT, level, AttributeValueT > base_type;
 
     public:
         //! String type
@@ -109,10 +109,10 @@ namespace syslog {
      */
     template< typename CharT, typename AttributeValueT = int >
     class basic_custom_severity_mapping :
-        public basic_custom_mapping< CharT, level_t, AttributeValueT >
+        public basic_custom_mapping< CharT, level, AttributeValueT >
     {
         //! Base type
-        typedef basic_custom_mapping< CharT, level_t, AttributeValueT > base_type;
+        typedef basic_custom_mapping< CharT, level, AttributeValueT > base_type;
 
     public:
         //! String type
@@ -301,7 +301,7 @@ public:
 
     //! Syslog severity level mapper type
     typedef boost::function1<
-        syslog::level_t,
+        syslog::level,
         record_type const&
     > severity_mapper_type;
 
@@ -408,7 +408,7 @@ private:
             args[keywords::ip_version | v4]);
     }
     BOOST_LOG_EXPORT void construct(
-        syslog::facility_t facility, syslog::impl_types use_impl, ip_versions ip_version);
+        syslog::facility facility, syslog::impl_types use_impl, ip_versions ip_version);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

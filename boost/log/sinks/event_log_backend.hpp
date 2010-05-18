@@ -74,10 +74,10 @@ namespace event_log {
      */
     template< typename CharT, typename AttributeValueT = int >
     class basic_direct_event_type_mapping :
-        public basic_direct_mapping< CharT, event_type_t, AttributeValueT >
+        public basic_direct_mapping< CharT, event_type, AttributeValueT >
     {
         //! Base type
-        typedef basic_direct_mapping< CharT, event_type_t, AttributeValueT > base_type;
+        typedef basic_direct_mapping< CharT, event_type, AttributeValueT > base_type;
 
     public:
         //! String type
@@ -104,10 +104,10 @@ namespace event_log {
      */
     template< typename CharT, typename AttributeValueT = int >
     class basic_custom_event_type_mapping :
-        public basic_custom_mapping< CharT, event_type_t, AttributeValueT >
+        public basic_custom_mapping< CharT, event_type, AttributeValueT >
     {
         //! Base type
-        typedef basic_custom_mapping< CharT, event_type_t, AttributeValueT > base_type;
+        typedef basic_custom_mapping< CharT, event_type, AttributeValueT > base_type;
 
     public:
         //! String type
@@ -134,10 +134,10 @@ namespace event_log {
      */
     template< typename CharT, typename AttributeValueT = int >
     class basic_direct_event_id_mapping :
-        public basic_direct_mapping< CharT, event_id_t, AttributeValueT >
+        public basic_direct_mapping< CharT, event_id, AttributeValueT >
     {
         //! Base type
-        typedef basic_direct_mapping< CharT, event_id_t, AttributeValueT > base_type;
+        typedef basic_direct_mapping< CharT, event_id, AttributeValueT > base_type;
 
     public:
         //! String type
@@ -164,10 +164,10 @@ namespace event_log {
      */
     template< typename CharT, typename AttributeValueT = int >
     class basic_custom_event_id_mapping :
-        public basic_custom_mapping< CharT, event_id_t, AttributeValueT >
+        public basic_custom_mapping< CharT, event_id, AttributeValueT >
     {
         //! Base type
-        typedef basic_custom_mapping< CharT, event_id_t, AttributeValueT > base_type;
+        typedef basic_custom_mapping< CharT, event_id, AttributeValueT > base_type;
 
     public:
         //! String type
@@ -194,10 +194,10 @@ namespace event_log {
      */
     template< typename CharT, typename AttributeValueT = int >
     class basic_direct_event_category_mapping :
-        public basic_direct_mapping< CharT, event_category_t, AttributeValueT >
+        public basic_direct_mapping< CharT, event_category, AttributeValueT >
     {
         //! Base type
-        typedef basic_direct_mapping< CharT, event_category_t, AttributeValueT > base_type;
+        typedef basic_direct_mapping< CharT, event_category, AttributeValueT > base_type;
 
     public:
         //! String type
@@ -224,10 +224,10 @@ namespace event_log {
      */
     template< typename CharT, typename AttributeValueT = int >
     class basic_custom_event_category_mapping :
-        public basic_custom_mapping< CharT, event_category_t, AttributeValueT >
+        public basic_custom_mapping< CharT, event_category, AttributeValueT >
     {
         //! Base type
-        typedef basic_custom_mapping< CharT, event_category_t, AttributeValueT > base_type;
+        typedef basic_custom_mapping< CharT, event_category, AttributeValueT > base_type;
 
     public:
         //! String type
@@ -632,7 +632,7 @@ namespace event_log {
         typedef basic_record< char_type > record_type;
 
         //! Event identifier mapper type
-        typedef function1< event_id_t, record_type const& > event_id_mapper_type;
+        typedef function1< event_id, record_type const& > event_id_mapper_type;
 
         //! Type of an insertion composer (a formatter)
         typedef function2<
@@ -650,7 +650,7 @@ namespace event_log {
         class insertion_composer;
 
         //! Type of the events map
-        typedef std::map< event_id_t, insertion_composer > event_map;
+        typedef std::map< event_id, insertion_composer > event_map;
 
         //! A smart reference that puts formatters into the composer
         class event_map_reference;
@@ -659,7 +659,7 @@ namespace event_log {
         {
         private:
             //! Event identifier
-            event_id_t m_ID;
+            event_id m_ID;
             //! A reference to the object that created the reference
             basic_event_composer< char_type >& m_Owner;
             //! A hint for the owner to optimize insertion
@@ -667,7 +667,7 @@ namespace event_log {
 
         public:
             //! Initializing constructor
-            explicit event_map_reference(event_id_t id, basic_event_composer< char_type >& owner) :
+            explicit event_map_reference(event_id id, basic_event_composer< char_type >& owner) :
                 m_ID(id),
                 m_Owner(owner),
                 m_Composer(0)
@@ -720,14 +720,14 @@ namespace event_log {
          *
          * \param id Event identifier.
          */
-        event_map_reference operator[] (event_id_t id);
+        event_map_reference operator[] (event_id id);
         /*!
          * Initiates creation of a new event description. The result of the operator can be used to
          * add formatters for insertion strings construction. The returned reference type is implementation detail.
          *
          * \param id Event identifier.
          */
-        event_map_reference operator[] (event_id_t::integer_type id);
+        event_map_reference operator[] (int id);
         /*!
          * Event composition operator. Extracts an event identifier from the attribute values by calling event ID mapper.
          * Then runs all formatters that were registered for the event with the extracted ID. The results of formatting
@@ -737,12 +737,12 @@ namespace event_log {
          * \param insertions A sequence of formatted insertion strings
          * \return An event identifier that was extracted from \c attributes
          */
-        event_id_t operator() (record_type const& rec, insertion_list& insertions) const;
+        event_id operator() (record_type const& rec, insertion_list& insertions) const;
 
     private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
         //! Adds a formatter to the insertion composers list
-        insertion_composer* add_formatter(event_id_t id, insertion_composer* composer, formatter_type const& fmt);
+        insertion_composer* add_formatter(event_id id, insertion_composer* composer, formatter_type const& fmt);
 #endif // BOOST_LOG_DOXYGEN_PASS
     };
 
@@ -802,7 +802,7 @@ public:
 
     //! Mapper type for the event type
     typedef function1<
-        event_log::event_type_t,
+        event_log::event_type,
         record_type const&
     > event_type_mapper_type;
 
@@ -922,17 +922,17 @@ public:
 
     //! Mapper type for the event type
     typedef function1<
-        event_log::event_type_t,
+        event_log::event_type,
         record_type const&
     > event_type_mapper_type;
     //! Mapper type for the event category
     typedef function1<
-        event_log::event_category_t,
+        event_log::event_category,
         record_type const&
     > event_category_mapper_type;
     //! Event composer type
     typedef function2<
-        event_log::event_id_t,
+        event_log::event_id,
         record_type const&,
         insertion_list&
     > event_composer_type;
