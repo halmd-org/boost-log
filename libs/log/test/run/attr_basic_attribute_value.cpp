@@ -36,6 +36,10 @@ namespace {
             boost::mpl::vector< int, double, std::string >
         >
     {
+        typedef logging::static_type_dispatcher<
+            boost::mpl::vector< int, double, std::string >
+        > base_type;
+
         enum type_expected
         {
             none_expected,
@@ -44,7 +48,13 @@ namespace {
             string_expected
         };
 
-        my_dispatcher() : m_Expected(none_expected), m_Int(0), m_Double(0.0) {}
+        my_dispatcher() :
+            base_type(*this),
+            m_Expected(none_expected),
+            m_Int(0),
+            m_Double(0.0)
+        {
+        }
 
         void set_expected()
         {
@@ -67,17 +77,17 @@ namespace {
         }
 
         // Implement visitation logic for all supported types
-        void visit(int const& value)
+        void operator() (int const& value) const
         {
             BOOST_CHECK_EQUAL(m_Expected, int_expected);
             BOOST_CHECK_EQUAL(m_Int, value);
         }
-        void visit(double const& value)
+        void operator() (double const& value) const
         {
             BOOST_CHECK_EQUAL(m_Expected, double_expected);
             BOOST_CHECK_CLOSE(m_Double, value, 0.001);
         }
-        void visit(std::string const& value)
+        void operator() (std::string const& value) const
         {
             BOOST_CHECK_EQUAL(m_Expected, string_expected);
             BOOST_CHECK_EQUAL(m_String, value);

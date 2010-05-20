@@ -19,12 +19,8 @@
 #ifndef BOOST_LOG_ATTRIBUTE_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTE_HPP_INCLUDED_
 
-#include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/type_traits/remove_cv.hpp>
-#include <boost/type_traits/remove_reference.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 
 namespace boost {
 
@@ -54,39 +50,6 @@ namespace BOOST_LOG_NAMESPACE {
  */
 struct BOOST_LOG_NO_VTABLE attribute_value
 {
-private:
-    //! \cond
-
-    //! A simple type dispatcher to support the get method
-    template< typename T >
-    struct extractor :
-        public type_dispatcher,
-        public type_visitor< T >
-    {
-        //! Constructor
-        explicit extractor(optional< T >& res) : res_(res) {}
-        //! Returns itself if the value type matches the requested type
-        void* get_visitor(std::type_info const& type)
-        {
-            BOOST_LOG_ASSUME(this != 0);
-            if (type == typeid(T))
-                return static_cast< type_visitor< T >* >(this);
-            else
-                return 0;
-        }
-        //! Extracts the value
-        void visit(T const& value)
-        {
-            res_ = value;
-        }
-
-    private:
-        //! The reference to the extracted value
-        optional< T >& res_;
-    };
-
-    //! \endcond
-
 public:
     /*!
      * Destructor. Destroys the value.
@@ -110,33 +73,6 @@ public:
      *         method and is considered to be a functional equivalent to the previous pointer.
      */
     virtual shared_ptr< attribute_value > detach_from_thread() = 0;
-
-    /*!
-     * An alternative to type dispatching. This is a simpler way to get the stored value in case if one knows its exact type.
-     *
-     * \return An optionally specified stored value. The returned value is present if the
-     *         requested type matches the stored type, otherwise the returned value is absent.
-     */
-    template< typename T >
-    optional<
-#ifndef BOOST_LOG_DOXYGEN_PASS
-        typename remove_cv<
-            typename remove_reference< T >::type
-        >::type
-#else
-        T
-#endif // BOOST_LOG_DOXYGEN_PASS
-    > get()
-    {
-        typedef typename remove_cv<
-            typename remove_reference< T >::type
-        >::type requested_type;
-
-        optional< requested_type > res;
-        extractor< requested_type > disp(res);
-        this->dispatch(disp);
-        return res;
-    }
 };
 
 /*!

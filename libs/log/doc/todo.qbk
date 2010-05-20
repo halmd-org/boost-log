@@ -25,5 +25,6 @@ Points in this section are not necessarily going to be implemented. These are ma
 * Improve library configuration options in order to be able to select which particular sinks to compile.
 * Improve configurability of trivial logging, without sacrificing simplicity. At least, provide a way to specify the log file name and file rotation parameters.
 * Provide some kind of shared formatters. The idea is that several sinks may use the same formatter. If a log record passes filtering to multiple such sinks, the formatting is done just once for all sinks that share the formatter.
+* Allow to change the locale for the file stream in the text file backend. The locale can alter the character code conversion in wide-character logging.
 
 [endsect]

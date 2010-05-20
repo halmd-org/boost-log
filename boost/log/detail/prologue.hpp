@@ -162,6 +162,11 @@
 
 #endif // !defined(BOOST_LOG_BUILDING_THE_LIB)
 
+#if defined(__GNUC__) && __GNUC__ >= 4 && (defined(linux) || defined(__linux) || defined(__linux__))
+#   define BOOST_LOG_VISIBLE __attribute__((visibility("default")))
+#else
+#   define BOOST_LOG_VISIBLE
+#endif
 
 #if !defined(BOOST_LOG_USE_CHAR) && !defined(BOOST_LOG_USE_WCHAR_T)
     // By default we provide support for both char and wchar_t

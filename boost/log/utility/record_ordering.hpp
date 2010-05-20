@@ -27,6 +27,7 @@
 #include <boost/log/detail/function_traits.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute.hpp>
+#include <boost/log/utility/attribute_value_extractor.hpp>
 
 namespace boost {
 
@@ -120,16 +121,10 @@ public:
      */
     result_type operator() (record_type const& left, record_type const& right) const
     {
-        optional< attribute_value_type > left_value, right_value;
-
-        typedef typename record_type::values_view_type values_view_type;
-        typename values_view_type::const_iterator
-            it_left = left.attribute_values().find(m_Name),
-            it_right = right.attribute_values().find(m_Name);
-        if (it_left != left.attribute_values().end())
-            left_value = it_left->second->get< attribute_value_type >();
-        if (it_right != right.attribute_values().end())
-            right_value = it_right->second->get< attribute_value_type >();
+        optional< attribute_value_type > left_value =
+            boost::log::extract< attribute_value_type >(m_Name, left.attribute_values(), std::nothrow);
+        optional< attribute_value_type > right_value =
+            boost::log::extract< attribute_value_type >(m_Name, right.attribute_values(), std::nothrow);
 
         if (left_value)
         {

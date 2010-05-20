@@ -22,9 +22,13 @@
 
 #include <typeinfo>
 #include <string>
+#include <exception>
+#include <boost/optional/optional_fwd.hpp>
 #include <boost/mpl/is_sequence.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/visible_type.hpp>
+#include <boost/log/detail/functional.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
@@ -56,24 +60,21 @@ private:
     //! A simple type dispatcher to forward the extracted value to the receiver
     template< typename ReceiverT >
     struct dispatcher :
-        public type_dispatcher,
-        public type_visitor< value_type >
+        public type_dispatcher
     {
         //! Constructor
         explicit dispatcher(ReceiverT& receiver) : m_Receiver(receiver) {}
         //! Returns itself if the value type matches the requested type
-        void* get_visitor(std::type_info const& type)
+        type_visitor_base get_visitor(std::type_info const& type)
         {
-            BOOST_LOG_ASSUME(this != 0);
-            if (type == typeid(value_type))
-                return static_cast< type_visitor< value_type >* >(this);
+            if (type == typeid(visible_type< value_type >))
+            {
+                return type_visitor_base(
+                    (void*)boost::addressof(m_Receiver),
+                    &type_visitor_base::trampoline< ReceiverT, value_type >);
+            }
             else
-                return 0;
-        }
-        //! Extracts the value
-        void visit(value_type const& value)
-        {
-            m_Receiver(value);
+                return type_visitor_base();
         }
 
     private:
@@ -101,6 +102,8 @@ public:
     {
         return extract(attrs, receiver);
     }
+    //! Returns attribute value name
+    string_type const& name() const { return m_Name; }
 
 private:
     //! Implementation of the attribute value extraction
@@ -135,53 +138,6 @@ public:
     typedef TypeSequenceT value_types;
 
 private:
-#ifndef BOOST_LOG_NO_MEMBER_TEMPLATE_FRIENDS
-    template< typename ReceiverT >
-    struct visitor;
-    template< typename ReceiverT >
-    friend struct visitor;
-
-    template< typename ReceiverT >
-    class dispatcher;
-    template< typename ReceiverT >
-    friend class dispatcher;
-#endif
-
-    //! Visitor class definition
-    template< typename ReceiverT >
-    struct visitor
-    {
-        template< typename T >
-        struct BOOST_LOG_NO_VTABLE apply :
-            public type_visitor< T >
-        {
-            typedef apply< T > type;
-            typedef typename type_visitor< T >::supported_type supported_type;
-
-            //! Visitation (virtual)
-            void visit(supported_type const& value)
-            {
-                BOOST_LOG_ASSUME(this != NULL);
-                static_cast< dispatcher< ReceiverT >* >(this)->m_Receiver(value);
-            }
-        };
-    };
-
-    //! Type dispatcher class definition
-    template< typename ReceiverT >
-    class dispatcher :
-        public static_type_dispatcher< value_types, visitor< ReceiverT > >
-    {
-    public:
-        ReceiverT& m_Receiver;
-
-        //! Dispatcher constructor
-        explicit dispatcher(ReceiverT& receiver) : m_Receiver(receiver)
-        {
-        }
-    };
-
-private:
     //! Attribute name to extract
     string_type m_Name;
 
@@ -201,6 +157,8 @@ public:
     {
         return extract(attrs, receiver);
     }
+    //! Returns attribute value name
+    string_type const& name() const { return m_Name; }
 
 private:
     //! Implementation of the attribute value extraction
@@ -210,7 +168,7 @@ private:
         typename values_view_type::const_iterator it = attrs.find(m_Name);
         if (it != attrs.end())
         {
-            dispatcher< ReceiverT > disp(receiver);
+            static_type_dispatcher< value_types > disp(receiver);
             return it->second->dispatch(disp);
         }
         return false;
@@ -310,6 +268,44 @@ inline bool extract(std::basic_string< CharT > const& name, basic_attribute_valu
 {
     attribute_value_extractor< CharT, T > extractor(name);
     return extractor(attrs, receiver);
+}
+
+/*!
+ * The function extracts an attribute value from the view. The user has to explicitly specify the
+ * type of the attribute value to be extracted.
+ *
+ * \note This method does not support specifying a set of types of the attribute value.
+ *       User has to specify the concrete type.
+ *
+ * \param name An attribute value name to extract.
+ * \param attrs A set of attribute values in which to look for the specified attribute value.
+ * \return The extracted value, if it is found in the view, or an empty \c optional otherwise.
+ */
+template< typename T, typename CharT >
+inline optional< T > extract(const CharT* name, basic_attribute_values_view< CharT > const& attrs, std::nothrow_t)
+{
+    optional< T > val;
+    boost::log::extract< T >(name, attrs, boost::log::aux::assign_fun< optional< T > >(val));
+    return val;
+}
+
+/*!
+ * The function extracts an attribute value from the view. The user has to explicitly specify the
+ * type of the attribute value to be extracted.
+ *
+ * \note This method does not support specifying a set of types of the attribute value.
+ *       User has to specify the concrete type.
+ *
+ * \param name An attribute value name to extract.
+ * \param attrs A set of attribute values in which to look for the specified attribute value.
+ * \return The extracted value, if it is found in the view, or an empty \c optional otherwise.
+ */
+template< typename T, typename CharT >
+inline optional< T > extract(std::basic_string< CharT > const& name, basic_attribute_values_view< CharT > const& attrs, std::nothrow_t)
+{
+    optional< T > val;
+    boost::log::extract< T >(name, attrs, boost::log::aux::assign_fun< optional< T > >(val));
+    return val;
 }
 
 } // namespace log

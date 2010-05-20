@@ -57,11 +57,11 @@ public:
 
     virtual bool dispatch(type_dispatcher& dispatcher)
     {
-        register type_visitor< held_type >* visitor =
+        register type_visitor< held_type > visitor =
             dispatcher.get_visitor< held_type >();
         if (visitor)
         {
-            visitor->visit(m_Value);
+            visitor(m_Value);
             return true;
         }
         else

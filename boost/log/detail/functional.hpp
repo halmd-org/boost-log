@@ -375,6 +375,26 @@ struct nop
     void operator() (T const&) const {}
 };
 
+//! The function object that assigns its operand to the bound value
+template< typename AssigneeT >
+struct assign_fun
+{
+    typedef void result_type;
+
+    explicit assign_fun(AssigneeT& assignee) : m_Assignee(assignee)
+    {
+    }
+
+    template< typename T >
+    void operator() (T const& val) const
+    {
+        m_Assignee = val;
+    }
+
+private:
+    AssigneeT& m_Assignee;
+};
+
 //! Second argument binder
 template< typename FunT, typename SecondArgT >
 struct binder2nd :

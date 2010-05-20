@@ -95,11 +95,11 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         //! object was capable to consume the real attribute value type and false otherwise.
         bool dispatch(type_dispatcher& dispatcher)
         {
-            register type_visitor< scope_stack >* visitor =
+            register type_visitor< scope_stack > visitor =
                 dispatcher.get_visitor< scope_stack >();
             if (visitor)
             {
-                visitor->visit(*m_pValue);
+                visitor(*m_pValue);
                 return true;
             }
             else

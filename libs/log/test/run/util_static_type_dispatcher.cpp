@@ -36,10 +36,10 @@ namespace {
         // The function passes the contained type into the dispatcher
         bool dispatch(logging::type_dispatcher& dispatcher)
         {
-            logging::type_visitor< T >* visitor = dispatcher.get_visitor< T >();
+            logging::type_visitor< T > visitor = dispatcher.get_visitor< T >();
             if (visitor)
             {
-                visitor->visit(m_Value);
+                visitor(m_Value);
                 return true;
             }
             else
@@ -73,6 +73,10 @@ namespace {
             boost::mpl::vector< int, double, std::string >
         >
     {
+        typedef logging::static_type_dispatcher<
+            boost::mpl::vector< int, double, std::string >
+        > base_type;
+
         enum type_expected
         {
             none_expected,
@@ -81,7 +85,13 @@ namespace {
             string_expected
         };
 
-        my_dispatcher() : m_Expected(none_expected), m_Int(0), m_Double(0.0) {}
+        my_dispatcher() :
+            base_type(*this),
+            m_Expected(none_expected),
+            m_Int(0),
+            m_Double(0.0)
+        {
+        }
 
         void set_expected()
         {
@@ -104,17 +114,17 @@ namespace {
         }
 
         // Implement visitation logic for all supported types
-        void visit(int const& value)
+        void operator() (int const& value) const
         {
             BOOST_CHECK_EQUAL(m_Expected, int_expected);
             BOOST_CHECK_EQUAL(m_Int, value);
         }
-        void visit(double const& value)
+        void operator() (double const& value) const
         {
             BOOST_CHECK_EQUAL(m_Expected, double_expected);
             BOOST_CHECK_CLOSE(m_Double, value, 0.001);
         }
-        void visit(std::string const& value)
+        void operator() (std::string const& value) const
         {
             BOOST_CHECK_EQUAL(m_Expected, string_expected);
             BOOST_CHECK_EQUAL(m_String, value);
@@ -133,58 +143,5 @@ namespace {
 BOOST_AUTO_TEST_CASE(type_dispatch)
 {
     my_dispatcher disp;
-    test_general_functionality(disp);
-}
-
-namespace {
-
-    struct my_dispatcher_root :
-        public logging::type_dispatcher
-    {
-        my_dispatcher_root() : m_ExpectedType(0) {}
-
-        void set_expected()
-        {
-            m_ExpectedType = 0;
-        }
-        template< typename T >
-        void set_expected(T const&)
-        {
-            m_ExpectedType = &typeid(T);
-        }
-
-        std::type_info const* m_ExpectedType;
-    };
-
-    struct my_visitor
-    {
-        template< typename T >
-        struct apply :
-            public logging::type_visitor< T >
-        {
-            typedef apply< T > type;
-
-            void visit(T const& value)
-            {
-                my_dispatcher_root* root = dynamic_cast< my_dispatcher_root* >(this);
-                BOOST_REQUIRE(root != 0);
-                BOOST_REQUIRE(root->m_ExpectedType != 0);
-                BOOST_CHECK(typeid(T) == *root->m_ExpectedType);
-            }
-        };
-    };
-
-    typedef logging::static_type_dispatcher<
-        boost::mpl::vector< int, double, std::string >,
-        my_visitor,
-        my_dispatcher_root
-    > my_generated_dispatcher;
-
-} // namespace
-
-// The test checks that type visitors can be generated and type dispatching still works
-BOOST_AUTO_TEST_CASE(type_visitors_generation)
-{
-    my_generated_dispatcher disp;
     test_general_functionality(disp);
 }

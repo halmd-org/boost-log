@@ -35,10 +35,10 @@ namespace {
         // The function passes the contained type into the dispatcher
         bool dispatch(logging::type_dispatcher& dispatcher)
         {
-            logging::type_visitor< T >* visitor = dispatcher.get_visitor< T >();
+            logging::type_visitor< T > visitor = dispatcher.get_visitor< T >();
             if (visitor)
             {
-                visitor->visit(m_Value);
+                visitor(m_Value);
                 return true;
             }
             else

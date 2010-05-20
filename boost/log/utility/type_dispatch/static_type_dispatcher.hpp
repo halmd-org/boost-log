@@ -23,14 +23,16 @@
 #include <iterator>
 #include <algorithm>
 #include <boost/array.hpp>
+#include <boost/static_assert.hpp>
 #include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/mpl/assert.hpp>
 #include <boost/mpl/size.hpp>
-#include <boost/mpl/inherit_linearly.hpp>
+#include <boost/mpl/for_each.hpp>
 #include <boost/mpl/quote.hpp>
-#include <boost/mpl/lambda.hpp>
 #include <boost/type_traits/is_base_of.hpp>
+#include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/visible_type.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -45,51 +47,48 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-//! A simple metafunction class to inherit visitors in a static dispatcher
-template< typename VisitorGenT >
-struct inherit_visitors
-{
-    template< typename NextBaseT, typename T >
-    struct BOOST_LOG_NO_VTABLE apply :
-        public NextBaseT,
-        public VisitorGenT::BOOST_NESTED_TEMPLATE apply< T >::type
-    {
-        typedef apply< NextBaseT, T > type;
-
-    protected:
-        //! The function is used to initialize dispatching map of supported types
-        void init_visitor(void* pThis, std::pair< type_info_wrapper, std::ptrdiff_t >* pEntry)
-        {
-            typedef T supported_type;
-            pEntry->first = typeid(supported_type);
-            BOOST_LOG_ASSUME(this != NULL);
-            // To honor GCC bugs we have to operate on pointers other than void*
-            pEntry->second = std::distance(
-                reinterpret_cast< char* >(pThis),
-                reinterpret_cast< char* >(static_cast< type_visitor< supported_type >* >(this)));
-            NextBaseT::init_visitor(pThis, ++pEntry);
-        }
-    };
-};
-
-//! The class ends recursion of the visitors inheritance hierarchy
-template< typename BaseT >
-class BOOST_LOG_NO_VTABLE static_type_dispatcher_base :
-    public BaseT
-{
-protected:
-    void init_visitor(void*, std::pair< type_info_wrapper, std::ptrdiff_t >*) {}
-};
-
 //! Ordering predicate for type dispatching map
 struct dispatching_map_order
 {
     typedef bool result_type;
-    typedef std::pair< type_info_wrapper, std::ptrdiff_t > first_argument_type, second_argument_type;
+    typedef std::pair< type_info_wrapper, void* > first_argument_type, second_argument_type;
     bool operator() (first_argument_type const& left, second_argument_type const& right) const
     {
         return (left.first < right.first);
     }
+};
+
+//! Dispatching map filler
+template< typename ReceiverT >
+struct dispatching_map_initializer
+{
+    typedef void result_type;
+
+    explicit dispatching_map_initializer(std::pair< type_info_wrapper, void* >*& p) : m_p(p)
+    {
+    }
+
+    template< typename T >
+    void operator() (visible_type< T >) const
+    {
+        m_p->first = typeid(visible_type< T >);
+
+        typedef void (*trampoline_t)(void*, T const&);
+        BOOST_STATIC_ASSERT(sizeof(trampoline_t) == sizeof(void*));
+        union
+        {
+            void* as_pvoid;
+            trampoline_t as_trampoline;
+        }
+        caster;
+        caster.as_trampoline = &type_visitor_base::trampoline< ReceiverT, T >;
+        m_p->second = caster.as_pvoid;
+
+        ++m_p;
+    }
+
+private:
+    std::pair< type_info_wrapper, void* >*& m_p;
 };
 
 } // namespace aux
@@ -120,38 +119,10 @@ struct dispatching_map_order
  * parameter (the base class, however, must derive from the \c type_dispatcher
  * interface).
  */
-template<
-    typename TypeSequenceT,
-    typename VisitorGenT = mpl::quote1< type_visitor >,
-    typename RootT = type_dispatcher
->
+template< typename TypeSequenceT >
 class static_type_dispatcher :
-    public mpl::inherit_linearly<
-        TypeSequenceT,
-#ifndef BOOST_LOG_DOXYGEN_PASS
-        // Usage of this class instead of mpl::inherit provides substantial improvement in compilation time,
-        // binary size and compiler memory footprint on some compilers (for instance, ICL)
-        aux::inherit_visitors< typename mpl::lambda< VisitorGenT >::type >,
-        aux::static_type_dispatcher_base< RootT >
-#else
-        mpl::inherit< mpl::_1, mpl::apply_wrap1< VisitorGenT, mpl::_2 > >,
-        RootT
-#endif // BOOST_LOG_DOXYGEN_PASS
-    >::type
+    public type_dispatcher
 {
-#ifndef BOOST_LOG_DOXYGEN_PASS
-
-    // The static type dispatcher must eventually derive from the type_dispatcher interface class
-    BOOST_MPL_ASSERT((is_base_of< type_dispatcher, RootT >));
-
-    typedef typename mpl::inherit_linearly<
-        TypeSequenceT,
-        aux::inherit_visitors< typename mpl::lambda< VisitorGenT >::type >,
-        aux::static_type_dispatcher_base< RootT >
-    >::type base_type;
-
-#endif // BOOST_LOG_DOXYGEN_PASS
-
 public:
     //! Type sequence of the supported types
     typedef TypeSequenceT supported_types;
@@ -161,7 +132,7 @@ private:
 
     //! The dispatching map
     typedef array<
-        std::pair< type_info_wrapper, std::ptrdiff_t >,
+        std::pair< type_info_wrapper, void* >,
         mpl::size< supported_types >::value
     > dispatching_map;
 
@@ -185,19 +156,25 @@ private:
     };
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
+private:
+    //! Pointer to the receiver function
+    void* m_pReceiver;
+
 #endif // BOOST_LOG_DOXYGEN_PASS
 
 public:
     /*!
-     * Default constructor. Initializes the dispatcher internals.
+     * Constructor. Initializes the dispatcher internals.
      */
-    static_type_dispatcher()
+    template< typename ReceiverT >
+    explicit static_type_dispatcher(ReceiverT& receiver) :
+        m_pReceiver((void*)boost::addressof(receiver))
     {
 #if !defined(BOOST_LOG_NO_THREADS)
         static once_flag flag = BOOST_ONCE_INIT;
-        boost::call_once(flag, delegate(this, &static_type_dispatcher::init_dispatching_map));
+        boost::call_once(flag, delegate(this, &static_type_dispatcher::init_dispatching_map< ReceiverT >));
 #else
-        static bool initialized = (init_dispatching_map(), true);
+        static bool initialized = (init_dispatching_map< ReceiverT >(), true);
         BOOST_LOG_NO_UNUSED_WARNINGS(initialized);
 #endif
     }
@@ -205,10 +182,12 @@ public:
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
-    using base_type::init_visitor;
+    //  Copying prohibited
+    static_type_dispatcher(static_type_dispatcher const&);
+    static_type_dispatcher& operator= (static_type_dispatcher const&);
 
     //! The get_visitor method implementation
-    void* get_visitor(std::type_info const& type)
+    boost::log::aux::type_visitor_base get_visitor(std::type_info const& type)
     {
         dispatching_map const& disp_map = get_dispatching_map();
         type_info_wrapper wrapper(type);
@@ -218,30 +197,27 @@ private:
             std::lower_bound(
                 begin,
                 end,
-                std::make_pair(wrapper, std::ptrdiff_t(0)),
+                std::make_pair(wrapper, (void*)0),
                 aux::dispatching_map_order()
             );
 
         if (it != end && it->first == wrapper)
-        {
-            // To honor GCC bugs we have to operate on pointers other than void*
-            char* pthis = reinterpret_cast< char* >(this);
-            std::advance(pthis, it->second);
-            return pthis;
-        }
+            return boost::log::aux::type_visitor_base(m_pReceiver, it->second);
         else
-            return NULL;
+            return boost::log::aux::type_visitor_base();
     }
 
     //! The method initializes the dispatching map
+    template< typename ReceiverT >
     void init_dispatching_map()
     {
         dispatching_map& disp_map = get_dispatching_map();
-        typename dispatching_map::value_type* begin = &*disp_map.begin();
-        typename dispatching_map::value_type* end = begin + disp_map.size();
+        typename dispatching_map::value_type* p = &*disp_map.begin();
 
-        base_type::init_visitor(static_cast< void* >(this), begin);
-        std::sort(begin, end, aux::dispatching_map_order());
+        mpl::for_each< supported_types, mpl::quote1< aux::visible_type > >(
+            boost::log::aux::dispatching_map_initializer< ReceiverT >(p));
+
+        std::sort(disp_map.begin(), disp_map.end(), aux::dispatching_map_order());
     }
     //! The method returns the dispatching map instance
     static dispatching_map& get_dispatching_map()
