@@ -26,6 +26,8 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
+struct type_dispatcher;
+
 /*!
  * \brief A base class for an attribute value
  *

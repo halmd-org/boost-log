@@ -29,6 +29,7 @@
 #include <boost/function/function0.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
+#include <boost/log/detail/visible_type.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 
@@ -47,7 +48,7 @@ namespace sources {
 namespace aux {
 
 //! The base class for logger holders
-struct BOOST_LOG_NO_VTABLE logger_holder_base
+struct BOOST_LOG_NO_VTABLE BOOST_LOG_VISIBLE logger_holder_base
 {
     //! The source file name where the logger was registered
     const char* m_RegistrationFile;
@@ -65,7 +66,7 @@ struct BOOST_LOG_NO_VTABLE logger_holder_base
 
 //! The actual logger holder class
 template< typename LoggerT >
-struct logger_holder :
+struct BOOST_LOG_VISIBLE logger_holder :
     public logger_holder_base
 {
     //! The logger instance
@@ -123,7 +124,9 @@ struct logger_singleton :
         typedef global_storage< typename logger_type::char_type > global_storage_t;
         shared_ptr< logger_holder< logger_type > >& instance = base_type::get_instance();
         shared_ptr< logger_holder_base > holder =
-            global_storage_t::get_or_init(typeid(TagT), &logger_singleton::construct_logger);
+            global_storage_t::get_or_init(
+                typeid(boost::log::aux::visible_type< TagT >),
+                &logger_singleton::construct_logger);
         instance = boost::dynamic_pointer_cast< logger_holder< logger_type > >(holder);
         if (!instance)
         {

@@ -30,6 +30,7 @@
 #include <boost/log/sources/threading_models.hpp> // strictest_lock
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 #include <boost/log/keywords/severity.hpp>
 
 #ifdef _MSC_VER

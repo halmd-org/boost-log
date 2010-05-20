@@ -21,6 +21,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/named_scope.hpp>
+#include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 #include <boost/log/detail/singleton.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/tss.hpp>

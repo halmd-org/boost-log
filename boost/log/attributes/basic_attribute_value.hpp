@@ -22,6 +22,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/detail/templated_shared_from_this.hpp>
+#include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 
 namespace boost {
 
