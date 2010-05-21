@@ -45,7 +45,7 @@ namespace aux {
         {
         }
         template< typename ValueT >
-        explicit type_visitor_base(void* receiver = 0, void (*tramp)(void*, ValueT const&) = 0) :
+        explicit type_visitor_base(void* receiver, void (*tramp)(void*, ValueT const&)) :
             m_pReceiver(receiver)
         {
             typedef void (*trampoline_t)(void*, ValueT const&);

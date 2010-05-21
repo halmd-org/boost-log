@@ -22,7 +22,6 @@
 
 #include <typeinfo>
 #include <string>
-#include <exception>
 #include <boost/optional/optional_fwd.hpp>
 #include <boost/mpl/is_sequence.hpp>
 #include <boost/utility/addressof.hpp>
@@ -282,7 +281,7 @@ inline bool extract(std::basic_string< CharT > const& name, basic_attribute_valu
  * \return The extracted value, if it is found in the view, or an empty \c optional otherwise.
  */
 template< typename T, typename CharT >
-inline optional< T > extract(const CharT* name, basic_attribute_values_view< CharT > const& attrs, std::nothrow_t)
+inline optional< T > extract(const CharT* name, basic_attribute_values_view< CharT > const& attrs)
 {
     optional< T > val;
     boost::log::extract< T >(name, attrs, boost::log::aux::assign_fun< optional< T > >(val));
@@ -301,7 +300,7 @@ inline optional< T > extract(const CharT* name, basic_attribute_values_view< Cha
  * \return The extracted value, if it is found in the view, or an empty \c optional otherwise.
  */
 template< typename T, typename CharT >
-inline optional< T > extract(std::basic_string< CharT > const& name, basic_attribute_values_view< CharT > const& attrs, std::nothrow_t)
+inline optional< T > extract(std::basic_string< CharT > const& name, basic_attribute_values_view< CharT > const& attrs)
 {
     optional< T > val;
     boost::log::extract< T >(name, attrs, boost::log::aux::assign_fun< optional< T > >(val));

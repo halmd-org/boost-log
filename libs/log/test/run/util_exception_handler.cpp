@@ -32,7 +32,7 @@ namespace {
 
         std::type_info const*& m_pExceptionType;
 
-    my_handler1(std::type_info const*& p) : m_pExceptionType(p) {}
+        my_handler1(std::type_info const*& p) : m_pExceptionType(p) {}
 
         void operator() (std::exception&) const
         {
@@ -51,7 +51,7 @@ namespace {
 
         std::type_info const*& m_pExceptionType;
 
-    explicit my_handler2(std::type_info const*& p) : m_pExceptionType(p) {}
+        explicit my_handler2(std::type_info const*& p) : m_pExceptionType(p) {}
 
         void operator() (std::exception&) const
         {
@@ -69,7 +69,7 @@ namespace {
 
         std::type_info const*& m_pExceptionType;
 
-    my_handler1_nothrow(std::type_info const*& p) : m_pExceptionType(p) {}
+        my_handler1_nothrow(std::type_info const*& p) : m_pExceptionType(p) {}
 
         void operator() (std::exception&) const
         {
@@ -92,7 +92,7 @@ namespace {
 
         std::type_info const*& m_pExceptionType;
 
-    explicit my_handler2_nothrow(std::type_info const*& p) : m_pExceptionType(p) {}
+        explicit my_handler2_nothrow(std::type_info const*& p) : m_pExceptionType(p) {}
 
         void operator() (std::exception&) const
         {
