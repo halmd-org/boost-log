@@ -113,5 +113,4 @@ lib boost_log_setup
         <link>shared:<define>BOOST_LOG_SETUP_DLL
         <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1
         <library>boost_log
-        <library>/boost/regex//boost_regex
     ;

@@ -11,14 +11,16 @@
 
 [heading 2.0]
 
+* The library is now compatible with Boost 1.42 or newer.
 * Most code examples from the docs have been extracted into compilable standalone examples, which can be used for testing and experimenting with the library.
 * Fixed a bug: the logging core could enter an infinite loop inside `push_record` if a sink throws and the exception is suppressed by the exception handler set in the core.
 * Fixed compilation problems with `BOOST_LOG_WFUNCTION` and exception handling logger feature.
 * Types for integral constants for syslog and event log were renamed to drop the `_t` suffix.
-* Changed the type dispatching implementation to reduce the usage of virtual functions. This reduced the library size by 20-40% on different platforms.
+* Changed the type dispatching implementation to reduce the usage of virtual functions. This reduced the library size by up to 40%.
 * The interface of type dispatchers changed. The dispatcher now returns `type_visitor` instance by value, and the visitor is no longer a base for the actual receiver of the dispatched value. Instead, the visitor now refers to the receiver, if one is capable to consume the value. The `visit` method has been renamed to `operator ()`. The static type dispatcher now requires a reference to the receiver on construction, it doesn't imply that the receiver derives from the dispatcher anymore.
 * The attribute value no longer has the `get` method. Use the `extract` free function as a replacement.
 * Type dispatchers and global logger storage made more friendly to the setups in which hidden visibility is set by default.
+* The library now uses __boost_xpressive__ instead of __boost_regex__ internally, which makes it unnecessary to build the latter in order to use the library. __boost_regex__ is still supported on the user's side.
 
 [heading 1.0, 09 May 2010]
 

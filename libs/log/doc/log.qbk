@@ -174,7 +174,7 @@ You can define configuration macros in the `bjam` command line, like this:
 
 However, it may be more convenient to define configuration macros in the "boost/config/user.hpp" file in order to automatically define them both for the library and user's projects. If none of the options are specified, the library will try to support the most comprehensive setup, including support for all character types and features available for the target platform.
 
-The logging library uses several other Boost libraries that need building too. These are __boost_filesystem__, __boost_system__, __boost_date_time__, __boost_thread__ and __boost_regex__. Refer to their documentation for detailed instructions on the building procedure.
+The logging library uses several other Boost libraries that need building too. These are __boost_filesystem__, __boost_system__, __boost_date_time__ and __boost_thread__. Refer to their documentation for detailed instructions on the building procedure.
 
 One final thing should be added. The library requires run-time type information (RTTI) to be enabled for both the library compilation and user's code compilation. Normally, this won't need anything from you except to verify that RTTI support is not disabled in your project.
 
