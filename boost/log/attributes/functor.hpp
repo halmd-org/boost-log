@@ -69,9 +69,9 @@ public:
      */
     explicit functor(held_type const& fun) : m_Functor(fun) {}
 
-    shared_ptr< attribute_value > get_value()
+    attribute_value get_value()
     {
-        return boost::make_shared< functor_result_value >(m_Functor());
+        return attribute_value(boost::make_shared< functor_result_value >(m_Functor()));
     }
 };
 

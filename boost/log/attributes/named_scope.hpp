@@ -409,7 +409,7 @@ public:
      */
     basic_named_scope();
 
-    shared_ptr< attribute_value > get_value();
+    attribute_value get_value();
 
     /*!
      * The method pushes the scope to the back of the current thread's scope list

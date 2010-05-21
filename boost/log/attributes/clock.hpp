@@ -24,6 +24,7 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
+#include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 
@@ -57,9 +58,9 @@ private:
     typedef basic_attribute_value< time_type > result_value;
 
 public:
-    shared_ptr< attribute_value > get_value()
+    attribute_value get_value()
     {
-        return boost::make_shared< result_value >(TimeTraitsT::get_clock());
+        return attribute_value(boost::make_shared< result_value >(TimeTraitsT::get_clock()));
     }
 };
 

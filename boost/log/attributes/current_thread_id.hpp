@@ -44,7 +44,7 @@ namespace attributes {
  */
 class current_thread_id :
     public attribute,
-    public attribute_value,
+    public attribute_value::implementation,
     public enable_shared_from_this< current_thread_id >
 {
 public:
@@ -65,12 +65,12 @@ public:
             return false;
     }
 
-    virtual shared_ptr< attribute_value > get_value()
+    virtual attribute_value get_value()
     {
-        return this->shared_from_this();
+        return attribute_value(this->shared_from_this());
     }
 
-    virtual shared_ptr< attribute_value > detach_from_thread()
+    virtual shared_ptr< attribute_value::implementation > detach_from_thread()
     {
         typedef basic_attribute_value< held_type > detached_value;
         return boost::make_shared< detached_value >(this_thread::get_id());

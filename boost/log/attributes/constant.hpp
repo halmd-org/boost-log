@@ -60,12 +60,12 @@ public:
      */
     explicit constant(held_type const& value) : base_type(value) {}
 
-    shared_ptr< attribute_value > get_value()
+    attribute_value get_value()
     {
-        return this->BOOST_NESTED_TEMPLATE shared_from_this< base_type >();
+        return attribute_value(this->BOOST_NESTED_TEMPLATE shared_from_this< base_type >());
     }
 
-    shared_ptr< attribute_value > detach_from_thread()
+    shared_ptr< attribute_value::implementation > detach_from_thread()
     {
         // We have to create a copy of the constant because the attribute object
         // can be created on the stack and get destroyed even if there are shared_ptrs that point to it.

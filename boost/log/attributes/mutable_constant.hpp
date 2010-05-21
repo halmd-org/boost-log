@@ -81,10 +81,10 @@ public:
      * The implementation acquires a shared lock of the mutex in order to protect the
      * copying of the stored object into the attribute value.
      */
-    shared_ptr< attribute_value > get_value()
+    attribute_value get_value()
     {
         scoped_read_lock _(m_Mutex);
-        return boost::make_shared< mutable_constant_value >(m_Value);
+        return attribute_value(boost::make_shared< mutable_constant_value >(m_Value));
     }
 
     /*!
@@ -132,9 +132,9 @@ public:
      */
     explicit mutable_constant(held_type const& value) : m_Value(value) {}
 
-    shared_ptr< attribute_value > get_value()
+    attribute_value get_value()
     {
-        return boost::make_shared< mutable_constant_value >(m_Value);
+        return attribute_value(boost::make_shared< mutable_constant_value >(m_Value));
     }
 
     /*!

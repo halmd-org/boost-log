@@ -15,6 +15,7 @@
 
 #include <new>
 #include <boost/assert.hpp>
+#include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/detail/atomic_count.hpp>

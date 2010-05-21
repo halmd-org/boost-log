@@ -20,7 +20,7 @@
 #define BOOST_LOG_ATTRIBUTES_BASIC_ATTRIBUTE_VALUE_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/attributes/attribute.hpp>
+#include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/detail/templated_shared_from_this.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 
@@ -39,7 +39,7 @@ namespace attributes {
  */
 template< typename T >
 class basic_attribute_value :
-    public attribute_value,
+    public attribute_value::implementation,
     public boost::log::aux::templated_shared_from_this
 {
 public:
@@ -69,7 +69,7 @@ public:
             return false;
     }
 
-    virtual shared_ptr< attribute_value > detach_from_thread()
+    virtual shared_ptr< attribute_value::implementation > detach_from_thread()
     {
         return this->shared_from_this< basic_attribute_value< held_type > >();
     }

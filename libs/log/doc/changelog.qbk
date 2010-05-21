@@ -18,9 +18,10 @@
 * Types for integral constants for syslog and event log were renamed to drop the `_t` suffix.
 * Changed the type dispatching implementation to reduce the usage of virtual functions. This reduced the library size by up to 40%.
 * The interface of type dispatchers changed. The dispatcher now returns `type_visitor` instance by value, and the visitor is no longer a base for the actual receiver of the dispatched value. Instead, the visitor now refers to the receiver, if one is capable to consume the value. The `visit` method has been renamed to `operator ()`. The static type dispatcher now requires a reference to the receiver on construction, it doesn't imply that the receiver derives from the dispatcher anymore.
-* The attribute value no longer has the `get` method. Use the `extract` free function as a replacement.
+* The attribute value no longer has the `get` method. Use the `extract` function as a replacement.
 * Type dispatchers and global logger storage made more friendly to the setups in which hidden visibility is set by default.
 * The library now uses __boost_xpressive__ instead of __boost_regex__ internally, which makes it unnecessary to build the latter in order to use the library. __boost_regex__ is still supported on the user's side.
+* Changed the interface and the way of handling attribute values. The value is now a pimpl wrapper around the value holder. The `attribute_value` class in various components of the library is no longer pointed to with `shared_ptr`s but instead is handled by value. This allowed to simplify attribute value handling in simple cases.
 
 [heading 1.0, 09 May 2010]
 

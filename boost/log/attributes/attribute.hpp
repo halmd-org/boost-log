@@ -9,7 +9,7 @@
  * \author Andrey Semashev
  * \date   15.04.2007
  *
- * The header contains attribute and attribute_value interfaces definition.
+ * The header contains attribute interface definition.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
@@ -19,63 +19,13 @@
 #ifndef BOOST_LOG_ATTRIBUTE_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTE_HPP_INCLUDED_
 
-#include <boost/shared_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
 
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-struct type_dispatcher;
-
-/*!
- * \brief A base class for an attribute value
- *
- * An attribute value is an object that contains a piece of data that represents an attribute state
- * at the point of the value acquision. All major operations with log records, such as filtering and
- * formatting, involve attribute values contained in a single view. Most likely an attribute value is
- * implemented as a simple holder of some typed value. This holder implements attribute_value interface
- * and provides type dispatching support in order to allow to extract the stored value.
- *
- * Normally, attributes and their values shall be designed in order to exclude as much interference as
- * reasonable. Such approach allows to have more than one attribute value simultaneously, which improves
- * scalability and allows to implement generating attributes.
- *
- * However, there are cases when this approach does not help to achieve the required level of independency
- * of attribute values and attribute itself from each other at a reasonable performance tradeoff.
- * For example, an attribute or its values may use thread-specific data, which is global and shared
- * between all the instances of the attribute/value. Passing such an attribute value to another thread
- * would be a disaster. To solve this the library defines an additional method for attribute values,
- * namely \c detach_from_thread. This method is called for all attribute values that are passed to
- * another thread. The method is called only once per attribute value, on the first thread change.
- * It is assumed that the value does not depend on any thread-specific data after this call.
- */
-struct BOOST_LOG_NO_VTABLE attribute_value
-{
-public:
-    /*!
-     * Destructor. Destroys the value.
-     */
-    virtual ~attribute_value() {}
-
-    /*!
-     * The method dispatches the value to the given object.
-     *
-     * \param dispatcher The object that attempts to dispatch the stored value.
-     * \return true if \a dispatcher was capable to consume the real attribute value type and false otherwise.
-     */
-    virtual bool dispatch(type_dispatcher& dispatcher) = 0;
-
-    /*!
-     * The method is called when the attribute value is passed to another thread (e.g.
-     * in case of asynchronous logging). The value should ensure it properly owns all thread-specific data.
-     *
-     * \return An actual pointer to the attribute value. It may either point to this object or another.
-     *         In the latter case the returned pointer replaces the pointer used by caller to invoke this
-     *         method and is considered to be a functional equivalent to the previous pointer.
-     */
-    virtual shared_ptr< attribute_value > detach_from_thread() = 0;
-};
+class attribute_value;
 
 /*!
  * \brief A base class for an attribute
@@ -96,10 +46,10 @@ struct BOOST_LOG_NO_VTABLE attribute
     virtual ~attribute() {}
 
     /*!
-     * \return The actual attribute value. It shall not return NULL (exceptions
-     * shall be used to indicate errors).
+     * \return The actual attribute value. It shall not return empty values (exceptions
+     *         shall be used to indicate errors).
      */
-    virtual shared_ptr< attribute_value > get_value() = 0;
+    virtual attribute_value get_value() = 0;
 };
 
 } // namespace log

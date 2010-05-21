@@ -20,6 +20,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/log/attributes/attribute.hpp>
+#include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 #include <boost/log/detail/singleton.hpp>
@@ -75,7 +76,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     //! Named scope attribute value
     template< typename CharT >
     class basic_named_scope_value :
-        public attribute_value,
+        public attribute_value::implementation,
         public enable_shared_from_this< basic_named_scope_value< CharT > >
     {
         //! Character type
@@ -109,7 +110,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
         //! The method is called when the attribute value is passed to another thread (e.g.
         //! in case of asynchronous logging). The value should ensure it properly owns all thread-specific data.
-        shared_ptr< attribute_value > detach_from_thread()
+        shared_ptr< attribute_value::implementation > detach_from_thread()
         {
             if (!m_DetachedValue)
             {
@@ -281,9 +282,10 @@ basic_named_scope< CharT >::basic_named_scope() :
 
 //! The method returns the actual attribute value. It must not return NULL.
 template< typename CharT >
-shared_ptr< attribute_value > basic_named_scope< CharT >::get_value()
+attribute_value basic_named_scope< CharT >::get_value()
 {
-    return boost::make_shared< basic_named_scope_value< char_type > >(&pImpl->get_scope_list());
+    return attribute_value(
+        boost::make_shared< basic_named_scope_value< char_type > >(&pImpl->get_scope_list()));
 }
 
 //! The method pushes the scope to the stack

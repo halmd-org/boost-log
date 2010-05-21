@@ -46,7 +46,7 @@ timer::timer()
 }
 
 //! The method returns the actual attribute value. It must not return NULL.
-shared_ptr< attribute_value > timer::get_value()
+attribute_value timer::get_value()
 {
     BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
 
@@ -82,7 +82,7 @@ shared_ptr< attribute_value > timer::get_value()
     }
     m_LastCounter = static_cast< uint64_t >(li.QuadPart);
 
-    return boost::make_shared< result_value >(m_Duration);
+    return attribute_value(boost::make_shared< result_value >(m_Duration));
 }
 
 } // namespace attributes

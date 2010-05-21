@@ -172,7 +172,7 @@ public:
 #ifndef BOOST_LOG_DOXYGEN_PASS
 private:
     //! Publicly available record data
-    struct public_data :
+    struct BOOST_LOG_VISIBLE public_data :
         public intrusive_ref_counter
     {
         //! Shows if the record has already been detached from thread
@@ -347,8 +347,7 @@ public:
             for (; it != end; ++it)
             {
                 // Yep, a bit hackish. I'll need a better backdoor to do it gracefully.
-                it->second->detach_from_thread().swap(
-                    const_cast< typename values_view_type::mapped_type& >(it->second));
+                const_cast< typename values_view_type::mapped_type& >(it->second).detach_from_thread();
             }
 
             m_pData->m_Detached = true;

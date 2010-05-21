@@ -29,6 +29,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/slim_string.hpp>
 #include <boost/log/attributes/attribute.hpp>
+#include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 
 namespace boost {
@@ -76,7 +77,7 @@ public:
     //! Key type
     typedef basic_slim_string< char_type > key_type;
     //! Mapped attribute type
-    typedef shared_ptr< attribute_value > mapped_type;
+    typedef attribute_value mapped_type;
     //! Corresponding attribute set type
     typedef basic_attribute_set< char_type > attribute_set_type;
 

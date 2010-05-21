@@ -99,7 +99,7 @@ public:
      */
     timer();
 
-    shared_ptr< attribute_value > get_value();
+    attribute_value get_value();
 };
 
 #ifdef _MSC_VER
@@ -129,9 +129,10 @@ public:
      */
     timer() : m_BaseTimePoint(utc_time_traits::get_clock()) {}
 
-    shared_ptr< attribute_value > get_value()
+    attribute_value get_value()
     {
-        return boost::make_shared< result_value >(utc_time_traits::get_clock() - m_BaseTimePoint);
+        return attribute_value(boost::make_shared< result_value >(
+            utc_time_traits::get_clock() - m_BaseTimePoint));
     }
 };
 

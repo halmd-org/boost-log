@@ -77,7 +77,7 @@ namespace aux {
     template< typename LevelT >
     class severity_level :
         public attribute,
-        public attribute_value,
+        public attribute_value::implementation,
         public enable_shared_from_this< severity_level< LevelT > >
     {
     public:
@@ -86,9 +86,9 @@ namespace aux {
 
     public:
         //! The method returns the actual attribute value. It must not return NULL.
-        virtual shared_ptr< attribute_value > get_value()
+        virtual attribute_value get_value()
         {
-            return this->shared_from_this();
+            return attribute_value(this->shared_from_this());
         }
         //! The method sets the actual level
         void set_value(held_type level)
@@ -111,7 +111,7 @@ namespace aux {
         }
 
         //! The method is called when the attribute value is passed to another thread
-        virtual shared_ptr< attribute_value > detach_from_thread()
+        virtual shared_ptr< attribute_value::implementation > detach_from_thread()
         {
 #if !defined(BOOST_LOG_NO_THREADS)
             return boost::make_shared<

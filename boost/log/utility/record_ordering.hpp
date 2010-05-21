@@ -26,8 +26,7 @@
 #include <boost/log/detail/functional.hpp>
 #include <boost/log/detail/function_traits.hpp>
 #include <boost/log/core/record.hpp>
-#include <boost/log/attributes/attribute.hpp>
-#include <boost/log/utility/attribute_value_extractor.hpp>
+#include <boost/log/attributes/attribute_value.hpp>
 
 namespace boost {
 
@@ -122,9 +121,9 @@ public:
     result_type operator() (record_type const& left, record_type const& right) const
     {
         optional< attribute_value_type > left_value =
-            boost::log::extract< attribute_value_type >(m_Name, left.attribute_values(), std::nothrow);
+            left.attribute_values()[m_Name].extract< attribute_value_type >();
         optional< attribute_value_type > right_value =
-            boost::log::extract< attribute_value_type >(m_Name, right.attribute_values(), std::nothrow);
+            right.attribute_values()[m_Name].extract< attribute_value_type >();
 
         if (left_value)
         {

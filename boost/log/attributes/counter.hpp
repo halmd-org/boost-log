@@ -79,11 +79,12 @@ public:
     {
     }
 
-    shared_ptr< attribute_value > get_value()
+    attribute_value get_value()
     {
         // TODO: a full featured atomic would do better here
         register long NextValue = --m_Counter;
-        return boost::make_shared< counter_value >(m_InitialValue - static_cast< held_type >(NextValue * m_Step));
+        return attribute_value(boost::make_shared< counter_value >(
+            m_InitialValue - static_cast< held_type >(NextValue * m_Step)));
     }
 };
 
@@ -120,10 +121,10 @@ public:
     {
     }
 
-    shared_ptr< attribute_value > get_value()
+    attribute_value get_value()
     {
         m_Value += static_cast< held_type >(m_Step);
-        return boost::make_shared< counter_value >(m_Value);
+        return attribute_value(boost::make_shared< counter_value >(m_Value));
     }
 };
 
