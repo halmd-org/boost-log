@@ -18,7 +18,7 @@
 #include <algorithm>
 #include <boost/operators.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/unspecified_bool.hpp>
+#include <boost/log/utility/explicit_operator_bool.hpp>
 
 #if defined(__GNUC__) && !defined(__QNX__)
 #define BOOST_LOG_HAS_CXXABI
@@ -96,7 +96,7 @@ public:
      * \return \c true if the type info wrapper was initialized with a particular type,
      *         \c false if the wrapper was default-constructed and not yet initialized
      */
-    BOOST_LOG_OPERATOR_UNSPECIFIED_BOOL()
+    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
 
     /*!
      * Stored type info getter

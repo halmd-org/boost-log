@@ -23,10 +23,10 @@
 #include <typeinfo>
 #include <string>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/unspecified_bool.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
 namespace boost {
@@ -65,7 +65,7 @@ public:
      *
      * \return \c true if the value was extracted successfully, \c false otherwise.
      */
-    BOOST_LOG_OPERATOR_UNSPECIFIED_BOOL()
+    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
     /*!
      * Checks if the extraction was unsuccessful.
      *

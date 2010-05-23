@@ -24,7 +24,7 @@
 #include <boost/optional/optional_fwd.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/functional.hpp>
-#include <boost/log/detail/unspecified_bool.hpp>
+#include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
 namespace boost {
@@ -111,7 +111,7 @@ public:
     /*!
      * The operator checks if the attribute value is empty
      */
-    BOOST_LOG_OPERATOR_UNSPECIFIED_BOOL()
+    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
     /*!
      * The operator checks if the attribute value is empty
      */

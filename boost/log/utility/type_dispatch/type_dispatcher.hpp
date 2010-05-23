@@ -23,7 +23,7 @@
 #include <boost/static_assert.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/visible_type.hpp>
-#include <boost/log/detail/unspecified_bool.hpp>
+#include <boost/log/utility/explicit_operator_bool.hpp>
 
 namespace boost {
 
@@ -122,7 +122,10 @@ public:
         (caster.as_trampoline)(this->m_pReceiver, value);
     }
 
-    BOOST_LOG_OPERATOR_UNSPECIFIED_BOOL()
+    /*!
+     * The operator checks if the visitor is attached to a receiver
+     */
+    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
 
     /*!
      * The operator checks if the visitor is not attached to a receiver

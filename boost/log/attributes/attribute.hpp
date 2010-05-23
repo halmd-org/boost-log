@@ -25,7 +25,9 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
 class attribute_value;
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 /*!
  * \brief A base class for an attribute

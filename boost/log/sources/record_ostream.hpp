@@ -28,10 +28,10 @@
 #include <boost/utility/base_from_member.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/native_typeof.hpp>
-#include <boost/log/detail/unspecified_bool.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
+#include <boost/log/utility/explicit_operator_bool.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -128,7 +128,7 @@ public:
      * \return \c true, if stream is valid and ready for formatting, \c false, if the stream is not valid. The latter also applies to
      *         the case when the stream is not attached to a log record.
      */
-    BOOST_LOG_OPERATOR_UNSPECIFIED_BOOL()
+    BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
 
     /*!
      * Inverted conversion to an unspecified boolean type

@@ -27,7 +27,6 @@
 #include <boost/function/function1.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/core/record.hpp>
-#include <boost/log/detail/unspecified_bool.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 
 #ifdef _MSC_VER

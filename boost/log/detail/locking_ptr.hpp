@@ -22,7 +22,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/unspecified_bool.hpp>
+#include <boost/log/utility/explicit_operator_bool.hpp>
 
 namespace boost {
 
@@ -118,7 +118,7 @@ namespace aux {
         element_type* get() const { return m_pElement.get(); }
 
         //! Checks for null pointer
-        BOOST_LOG_OPERATOR_UNSPECIFIED_BOOL()
+        BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
         //! Checks for null pointer
         bool operator! () const { return !m_pElement; }
 
