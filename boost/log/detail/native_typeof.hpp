@@ -20,10 +20,9 @@
 #ifndef BOOST_LOG_DETAIL_NATIVE_TYPEOF_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_NATIVE_TYPEOF_HPP_INCLUDED_
 
-#include <boost/version.hpp>
 #include <boost/log/detail/prologue.hpp>
 
-#if (BOOST_VERSION / 100 >= 1039 && !defined(BOOST_NO_DECLTYPE)) || defined(BOOST_HAS_DECLTYPE) // the latter macro is deprecated
+#if !defined(BOOST_NO_DECLTYPE)
 
 namespace boost {
 
@@ -53,7 +52,7 @@ T get_root_type(T const&);
 #endif
 
 
-#if BOOST_VERSION / 100 >= 1039 && !defined(BOOST_NO_AUTO_DECLARATIONS)
+#if !defined(BOOST_NO_AUTO_DECLARATIONS)
 #define BOOST_LOG_AUTO(var, expr) auto var = (expr)
 #endif
 

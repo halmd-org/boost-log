@@ -25,9 +25,9 @@
 #include <boost/config.hpp>
 #include <boost/version.hpp>
 
-#if BOOST_VERSION < 103900
+#if BOOST_VERSION < 104200
     // Older Boost versions contained bugs that affected the library
-#   error Boost.Log: Boost version 1.39 or later is required
+#   error Boost.Log: Boost version 1.42 or later is required
 #endif
 
 #if defined(BOOST_MSVC)
@@ -142,12 +142,29 @@
 //
 // Automatically link to the correct build variant where possible.
 //
-#   if !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_LOG_NO_LIB)
-#       define BOOST_LIB_NAME boost_log
-#       if defined(BOOST_LOG_DLL)
-#           define BOOST_DYN_LINK
+#   if !defined(BOOST_ALL_NO_LIB)
+#       if !defined(BOOST_LOG_NO_LIB)
+#          define BOOST_LIB_NAME boost_log
+#          if defined(BOOST_LOG_DLL)
+#              define BOOST_DYN_LINK
+#          endif
+#          include <boost/config/auto_link.hpp>
 #       endif
-#       include <boost/config/auto_link.hpp>
+#       // In static-library builds compilers ignore auto-link comments from Boost.Log binary to
+        // other Boost libraries. We explicitly add comments here for other libraries.
+        // In dynamic-library builds this is not needed.
+#       if !defined(BOOST_LOG_DLL)
+#           include <boost/system/config.hpp>
+#           include <boost/filesystem/config.hpp>
+#           if !defined(BOOST_DATE_TIME_NO_LIB) && !defined(BOOST_DATE_TIME_SOURCE)
+#               define BOOST_LIB_NAME boost_date_time
+#               if defined(BOOST_ALL_DYN_LINK) || defined(BOOST_DATE_TIME_DYN_LINK)
+#                   define BOOST_DYN_LINK
+#               endif
+#               include <boost/config/auto_link.hpp>
+#           endif
+            // Boost.Thread's config is included below, if needed
+#       endif
 #   endif  // auto-linking disabled
 
 #else // !defined(BOOST_LOG_BUILDING_THE_LIB)
@@ -182,7 +199,9 @@
 #endif // !defined(BOOST_LOG_DOXYGEN_PASS)
 
 #if !defined(BOOST_LOG_NO_THREADS)
-#   include <boost/thread/detail/platform.hpp>
+    // We need this header to (i) enable auto-linking with Boost.Thread and
+    // (ii) to bring in configuration macros of Boost.Thread.
+#   include <boost/thread/detail/config.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
 #if !defined(BOOST_LOG_NO_THREADS)
