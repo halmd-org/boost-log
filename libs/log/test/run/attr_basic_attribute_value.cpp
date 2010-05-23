@@ -18,12 +18,14 @@
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
+#include <boost/log/detail/functional.hpp>
 
 namespace logging = boost::log;
 namespace attrs = logging::attributes;
@@ -106,29 +108,47 @@ namespace {
 BOOST_AUTO_TEST_CASE(type_dispatching)
 {
     my_dispatcher disp;
-    boost::shared_ptr< logging::attribute_value > p1(new attrs::basic_attribute_value< int >(10));
-    boost::shared_ptr< logging::attribute_value > p2(new attrs::basic_attribute_value< double >(5.5));
-    boost::shared_ptr< logging::attribute_value > p3(new attrs::basic_attribute_value< std::string >("Hello, world!"));
-    boost::shared_ptr< logging::attribute_value > p4(new attrs::basic_attribute_value< float >(static_cast< float >(-7.2)));
+    logging::attribute_value p1(boost::make_shared< attrs::basic_attribute_value< int > >(10));
+    logging::attribute_value p2(boost::make_shared< attrs::basic_attribute_value< double > >(5.5));
+    logging::attribute_value p3(boost::make_shared< attrs::basic_attribute_value< std::string > >("Hello, world!"));
+    logging::attribute_value p4(boost::make_shared< attrs::basic_attribute_value< float > >(static_cast< float >(-7.2)));
 
     disp.set_expected(10);
-    BOOST_CHECK(p1->dispatch(disp));
-    BOOST_CHECK(p1->dispatch(disp)); // check that the contained value doesn't change over time or upon dispatching
+    BOOST_CHECK(p1.dispatch(disp));
+    BOOST_CHECK(p1.dispatch(disp)); // check that the contained value doesn't change over time or upon dispatching
 
     disp.set_expected(5.5);
-    BOOST_CHECK(p2->dispatch(disp));
+    BOOST_CHECK(p2.dispatch(disp));
 
     disp.set_expected("Hello, world!");
-    BOOST_CHECK(p3->dispatch(disp));
+    BOOST_CHECK(p3.dispatch(disp));
 
     disp.set_expected();
-    BOOST_CHECK(!p4->dispatch(disp));
+    BOOST_CHECK(!p4.dispatch(disp));
+}
+
+// The test verifies that value extracition works
+BOOST_AUTO_TEST_CASE(value_extraction)
+{
+    logging::attribute_value p1(boost::make_shared< attrs::basic_attribute_value< int > >(10));
+    logging::attribute_value p2(boost::make_shared< attrs::basic_attribute_value< double > >(5.5));
+
+    boost::optional< int > val1 = p1.extract< int >();
+    BOOST_CHECK(!!val1);
+    BOOST_CHECK_EQUAL(val1.get(), 10);
+
+    boost::optional< double > val2 = p1.extract< double >();
+    BOOST_CHECK(!val2);
+
+    BOOST_CHECK(p2.extract< double >(logging::aux::assign_fun< boost::optional< double > >(val2)));
+    BOOST_CHECK(!!val2);
+    BOOST_CHECK_CLOSE(val2.get(), 5.5, 0.001);
 }
 
 // The test verifies that the detach_from_thread returns a valid pointer
 BOOST_AUTO_TEST_CASE(detaching_from_thread)
 {
-    boost::shared_ptr< logging::attribute_value > p1(new attrs::basic_attribute_value< int >(10));
-    boost::shared_ptr< logging::attribute_value > p2 = p1->detach_from_thread();
+    boost::shared_ptr< logging::attribute_value::implementation > p1(new attrs::basic_attribute_value< int >(10));
+    boost::shared_ptr< logging::attribute_value::implementation > p2 = p1->detach_from_thread();
     BOOST_CHECK(!!p2);
 }

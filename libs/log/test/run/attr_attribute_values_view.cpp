@@ -55,10 +55,10 @@ namespace {
 
     //! The function extracts attribute value
     template< typename T >
-    inline bool get_attr_value(logging::attribute_value& val, T& res)
+    inline bool get_attr_value(logging::attribute_value const& val, T& res)
     {
         receiver< T > r(res);
-        logging::static_type_dispatcher< mpl::vector1< T > > disp(r);
+        logging::static_type_dispatcher< T > disp(r);
         return val.dispatch(disp);
     }
 
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     BOOST_CHECK(it != view1.end());
     BOOST_CHECK(it->first == data::attr1());
     int val1 = 0;
-    BOOST_CHECK(get_attr_value(*it->second, val1));
+    BOOST_CHECK(get_attr_value(it->second, val1));
     BOOST_CHECK_EQUAL(val1, 10);
 
     string s1 = data::attr2();
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     BOOST_CHECK(it != view1.end());
     BOOST_CHECK(it->first == data::attr2());
     double val2 = 0;
-    BOOST_CHECK(get_attr_value(*it->second, val2));
+    BOOST_CHECK(get_attr_value(it->second, val2));
     BOOST_CHECK_CLOSE(val2, 5.5, 0.001);
 
     slim_string ss1 = data::attr3();
@@ -189,32 +189,32 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     BOOST_CHECK(it != view1.end());
     BOOST_CHECK(it->first == data::attr3());
     std::string val3;
-    BOOST_CHECK(get_attr_value(*it->second, val3));
+    BOOST_CHECK(get_attr_value(it->second, val3));
     BOOST_CHECK_EQUAL(val3, "Hello, world!");
 
     // make an additional check that the result is absent if the value type does not match the requested type
-    BOOST_CHECK(!get_attr_value(*it->second, val2));
+    BOOST_CHECK(!get_attr_value(it->second, val2));
 
     it = view1.find(data::attr4());
     BOOST_CHECK(it == view1.end());
 
     // Subscript operator
-    boost::shared_ptr< logging::attribute_value > p = view1[data::attr1()];
+    logging::attribute_value p = view1[data::attr1()];
     BOOST_CHECK_EQUAL(view1.size(), 3UL);
     BOOST_CHECK(!!p);
-    BOOST_CHECK(get_attr_value(*p, val1));
+    BOOST_CHECK(get_attr_value(p, val1));
     BOOST_CHECK_EQUAL(val1, 10);
 
     p = view1[s1];
     BOOST_CHECK_EQUAL(view1.size(), 3UL);
     BOOST_CHECK(!!p);
-    BOOST_CHECK(get_attr_value(*p, val2));
+    BOOST_CHECK(get_attr_value(p, val2));
     BOOST_CHECK_CLOSE(val2, 5.5, 0.001);
 
     p = view1[ss1];
     BOOST_CHECK_EQUAL(view1.size(), 3UL);
     BOOST_CHECK(!!p);
-    BOOST_CHECK(get_attr_value(*p, val3));
+    BOOST_CHECK(get_attr_value(p, val3));
     BOOST_CHECK_EQUAL(val3, "Hello, world!");
 
     p = view1[data::attr4()];

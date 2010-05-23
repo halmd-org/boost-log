@@ -124,17 +124,17 @@ BOOST_AUTO_TEST_CASE(calling)
         attrs::make_functor_attr< std::string >(attr_value_generator(call_count));
 #endif
 
-    boost::shared_ptr< logging::attribute_value > p1(attr1->get_value());
-    boost::shared_ptr< logging::attribute_value > p2(attr2->get_value());
+    logging::attribute_value p1(attr1->get_value());
+    logging::attribute_value p2(attr2->get_value());
     BOOST_CHECK_EQUAL(call_count, 1);
-    boost::shared_ptr< logging::attribute_value > p3(attr2->get_value());
+    logging::attribute_value p3(attr2->get_value());
     BOOST_CHECK_EQUAL(call_count, 2);
 
     disp.set_expected(10);
-    BOOST_CHECK(p1->dispatch(disp));
-    BOOST_CHECK(p1->dispatch(disp)); // check that the contained value doesn't change over time or upon dispatching
+    BOOST_CHECK(p1.dispatch(disp));
+    BOOST_CHECK(p1.dispatch(disp)); // check that the contained value doesn't change over time or upon dispatching
 
     disp.set_expected("Hello, world!");
-    BOOST_CHECK(p2->dispatch(disp));
-    BOOST_CHECK(p3->dispatch(disp));
+    BOOST_CHECK(p2.dispatch(disp));
+    BOOST_CHECK(p3.dispatch(disp));
 }

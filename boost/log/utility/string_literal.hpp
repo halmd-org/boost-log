@@ -262,10 +262,9 @@ public:
      */
     const_reference at(size_type i) const
     {
-        if (i < m_Len)
-            return m_pStart[i];
-        else
+        if (i >= m_Len)
             BOOST_THROW_EXCEPTION(std::out_of_range("basic_string_literal::at: the index value is out of range"));
+        return m_pStart[i];
     }
 
     /*!
@@ -385,14 +384,12 @@ public:
      */
     size_type copy(value_type* str, size_type n, size_type pos = 0) const
     {
-        if (pos <= size())
-        {
-            const size_type len = (std::min)(n, size() - pos);
-            traits_type::copy(str, m_pStart + pos, len);
-            return len;
-        }
-        else
+        if (pos > size())
             BOOST_THROW_EXCEPTION(std::out_of_range("basic_string_literal::copy: the position is out of range"));
+
+        const size_type len = (std::min)(n, size() - pos);
+        traits_type::copy(str, m_pStart + pos, len);
+        return len;
     }
 
     /*!
@@ -410,13 +407,11 @@ public:
      */
     int compare(size_type pos, size_type n, const_pointer str, size_type len) const
     {
-        if (pos <= size())
-        {
-            const size_type compare_size = (std::min)((std::min)(n, len), size() - pos);
-            return compare_internal(m_pStart + pos, compare_size, str, compare_size);
-        }
-        else
+        if (pos > size())
             BOOST_THROW_EXCEPTION(std::out_of_range("basic_string_literal::compare: the position is out of range"));
+
+        const size_type compare_size = (std::min)((std::min)(n, len), size() - pos);
+        return compare_internal(m_pStart + pos, compare_size, str, compare_size);
     }
     /*!
      * Lexicographically compares the argument string to a part of this string
