@@ -54,7 +54,7 @@ struct loggers_repository :
 template< typename CharT >
 shared_ptr< logger_holder_base > global_storage< CharT >::get_or_init(
     std::type_info const& key,
-    function0< shared_ptr< logger_holder_base > > const& initializer)
+    initializer_t initializer)
 {
     typedef loggers_repository< CharT > repository_t;
     typedef typename repository_t::loggers_map_t loggers_map_t;

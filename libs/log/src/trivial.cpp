@@ -151,6 +151,45 @@ BOOST_LOG_EXPORT void init()
 
 } // namespace aux
 
+template< typename CharT, typename TraitsT >
+std::basic_ostream< CharT, TraitsT >& operator<< (
+    std::basic_ostream< CharT, TraitsT >& strm, severity_level lvl)
+{
+    switch (lvl)
+    {
+    case trace:
+        strm << "trace"; break;
+    case debug:
+        strm << "debug"; break;
+    case info:
+        strm << "info"; break;
+    case warning:
+        strm << "warning"; break;
+    case error:
+        strm << "error"; break;
+    case fatal:
+        strm << "fatal"; break;
+    default:
+        strm << static_cast< int >(lvl); break;
+    }
+
+    return strm;
+}
+
+//! Explicitly instantiate the operator
+#ifdef BOOST_LOG_USE_CHAR
+template BOOST_LOG_EXPORT std::basic_ostream< char, std::char_traits< char > >&
+    operator<< < char, std::char_traits< char > >(
+        std::basic_ostream< char, std::char_traits< char > >& strm,
+        severity_level lvl);
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
+template BOOST_LOG_EXPORT std::basic_ostream< wchar_t, std::char_traits< wchar_t > >&
+    operator<< < wchar_t, std::char_traits< wchar_t > >(
+        std::basic_ostream< wchar_t, std::char_traits< wchar_t > >& strm,
+        severity_level lvl);
+#endif
+
 } // namespace trivial
 
 } // namespace log

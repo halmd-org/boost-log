@@ -26,7 +26,6 @@
 #include <boost/make_shared.hpp>
 #include <boost/compatibility/cpp_c_headers/cstdio>
 #include <boost/preprocessor/seq/enum.hpp>
-#include <boost/function/function0.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/visible_type.hpp>
@@ -84,10 +83,12 @@ struct BOOST_LOG_VISIBLE logger_holder :
 template< typename CharT >
 struct global_storage
 {
+    typedef shared_ptr< logger_holder_base >(*initializer_t)();
+
     //! Finds or creates the logger and returns its holder
     BOOST_LOG_EXPORT static shared_ptr< logger_holder_base > get_or_init(
         std::type_info const& key,
-        function0< shared_ptr< logger_holder_base > > const& initializer);
+        initializer_t initializer);
 
 private:
     //  Non-constructible, non-copyable, non-assignable

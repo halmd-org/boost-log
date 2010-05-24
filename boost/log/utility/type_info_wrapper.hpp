@@ -15,8 +15,6 @@
 
 #include <typeinfo>
 #include <string>
-#include <algorithm>
-#include <boost/operators.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 
@@ -41,17 +39,12 @@ namespace BOOST_LOG_NAMESPACE {
  * and assignment support, an empty state and extended support for human-friendly type names.
  */
 class type_info_wrapper
-    //! \cond
-    : public partially_ordered< type_info_wrapper,
-        equality_comparable< type_info_wrapper >
-    >
-    //! \endcond
 {
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
     //! An inaccessible type to indicate an uninitialized state of the wrapper
-    enum uninitialized {};
+    enum BOOST_LOG_VISIBLE uninitialized {};
 
 #ifdef BOOST_LOG_HAS_CXXABI
     //! A simple scope guard for automatic memory free
@@ -111,7 +104,9 @@ public:
      */
     void swap(type_info_wrapper& that)
     {
-        std::swap(info, that.info);
+        register std::type_info const* temp = info;
+        info = that.info;
+        that.info = temp;
     }
 
     /*!
@@ -188,6 +183,30 @@ public:
 #endif
 
 };
+
+//! Inequality operator
+inline bool operator!= (type_info_wrapper const& left, type_info_wrapper const& right)
+{
+    return !left.operator==(right);
+}
+
+//! Ordering operator
+inline bool operator<= (type_info_wrapper const& left, type_info_wrapper const& right)
+{
+    return (left.operator==(right) || left.operator<(right));
+}
+
+//! Ordering operator
+inline bool operator> (type_info_wrapper const& left, type_info_wrapper const& right)
+{
+    return !(left.operator==(right) || left.operator<(right));
+}
+
+//! Ordering operator
+inline bool operator>= (type_info_wrapper const& left, type_info_wrapper const& right)
+{
+    return !left.operator<(right);
+}
 
 //! Free swap for type info wrapper
 inline void swap(type_info_wrapper& left, type_info_wrapper& right)

@@ -63,29 +63,8 @@ enum severity_level
 };
 
 template< typename CharT, typename TraitsT >
-inline std::basic_ostream< CharT, TraitsT >& operator<< (
-    std::basic_ostream< CharT, TraitsT >& strm, severity_level lvl)
-{
-    switch (lvl)
-    {
-    case trace:
-        strm << "trace"; break;
-    case debug:
-        strm << "debug"; break;
-    case info:
-        strm << "info"; break;
-    case warning:
-        strm << "warning"; break;
-    case error:
-        strm << "error"; break;
-    case fatal:
-        strm << "fatal"; break;
-    default:
-        strm << static_cast< int >(lvl); break;
-    }
-
-    return strm;
-}
+BOOST_LOG_EXPORT std::basic_ostream< CharT, TraitsT >& operator<< (
+    std::basic_ostream< CharT, TraitsT >& strm, severity_level lvl);
 
 //! Trivial logger type
 #if !defined(BOOST_LOG_NO_THREADS)
