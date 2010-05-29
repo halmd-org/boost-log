@@ -108,6 +108,7 @@ lib boost_log_setup
         init_from_settings.cpp
         filter_parser.cpp
         formatter_parser.cpp
+        default_filter_factory.cpp
         platform_log_setup_sources
     : ## requirements ##
         <link>shared:<define>BOOST_LOG_SETUP_DLL

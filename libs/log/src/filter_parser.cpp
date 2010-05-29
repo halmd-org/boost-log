@@ -15,7 +15,6 @@
 
 #ifndef BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
 
-#include <new> // std::nothrow
 #include <map>
 #include <stack>
 #include <string>
@@ -26,7 +25,6 @@
 #define BOOST_SPIRIT_THREADSAFE
 #endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
 
-#include <boost/ref.hpp>
 #include <boost/bind.hpp>
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
@@ -36,22 +34,17 @@
 #include <boost/spirit/include/classic_confix.hpp>
 #include <boost/spirit/include/classic_escape_char.hpp>
 #include <boost/log/core/core.hpp>
-#include <boost/log/filters/basic_filters.hpp>
-#include <boost/log/filters/attr.hpp>
-#include <boost/log/filters/has_attr.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/functional.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
-#include <boost/log/utility/type_dispatch/standard_types.hpp>
-#include <boost/log/support/xpressive.hpp>
-#include <boost/xpressive/xpressive_dynamic.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/detail/shared_lock_guard.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 #include <boost/thread/locks.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
 #include "parser_utils.hpp"
+#include "default_filter_factory.hpp"
 
 namespace bsc = boost::spirit::classic;
 
@@ -60,116 +53,6 @@ namespace boost {
 namespace BOOST_LOG_NAMESPACE {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
-
-//! The default filter factory that supports creating filters for the standard types (see utility/type_dispatch/standard_types.hpp)
-template< typename CharT >
-class default_filter_factory :
-    public filter_factory< CharT >
-{
-    //! Base type
-    typedef filter_factory< CharT > base_type;
-    //! Self type
-    typedef default_filter_factory< CharT > this_type;
-
-    //  Type imports
-    typedef typename base_type::char_type char_type;
-    typedef typename base_type::string_type string_type;
-    typedef typename base_type::filter_type filter_type;
-
-    //! The callback for equality relation filter
-    virtual filter_type on_equality_relation(string_type const& name, string_type const& arg)
-    {
-        return parse_argument< log::aux::equal_to >(name, arg);
-    }
-    //! The callback for inequality relation filter
-    virtual filter_type on_inequality_relation(string_type const& name, string_type const& arg)
-    {
-        return parse_argument< log::aux::not_equal_to >(name, arg);
-    }
-    //! The callback for less relation filter
-    virtual filter_type on_less_relation(string_type const& name, string_type const& arg)
-    {
-        return parse_argument< log::aux::less >(name, arg);
-    }
-    //! The callback for greater relation filter
-    virtual filter_type on_greater_relation(string_type const& name, string_type const& arg)
-    {
-        return parse_argument< log::aux::greater >(name, arg);
-    }
-    //! The callback for less or equal relation filter
-    virtual filter_type on_less_or_equal_relation(string_type const& name, string_type const& arg)
-    {
-        return parse_argument< log::aux::less_equal >(name, arg);
-    }
-    //! The callback for greater or equal relation filter
-    virtual filter_type on_greater_or_equal_relation(string_type const& name, string_type const& arg)
-    {
-        return parse_argument< log::aux::greater_equal >(name, arg);
-    }
-
-    //! The callback for custom relation filter
-    virtual filter_type on_custom_relation(string_type const& name, string_type const& rel, string_type const& arg)
-    {
-        typedef log::aux::char_constants< char_type > constants;
-        if (rel == constants::begins_with_keyword())
-            return filter_type(log::filters::attr< string_type >(name).begins_with(arg));
-        else if (rel == constants::ends_with_keyword())
-            return filter_type(log::filters::attr< string_type >(name).ends_with(arg));
-        else if (rel == constants::contains_keyword())
-            return filter_type(log::filters::attr< string_type >(name).contains(arg));
-        else if (rel == constants::matches_keyword())
-        {
-            typedef xpressive::basic_regex< typename string_type::const_iterator > regex_t;
-            regex_t rex = regex_t::compile(arg, regex_t::ECMAScript | regex_t::optimize);
-            return filter_type(log::filters::attr< string_type >(name, std::nothrow).matches(rex));
-        }
-        else
-        {
-            BOOST_LOG_THROW_DESCR(parse_error, "The custom attribute relation is not supported");
-        }
-    }
-
-    //! The function parses the argument value for a binary relation and constructs the corresponding filter
-    template< typename RelationT >
-    static filter_type parse_argument(string_type const& name, string_type const& arg)
-    {
-        filter_type filter;
-        const bool full = bsc::parse(arg.c_str(), arg.c_str() + arg.size(),
-            (
-                bsc::strict_real_p[boost::bind(&this_type::BOOST_NESTED_TEMPLATE on_fp_argument< RelationT >, boost::cref(name), _1, boost::ref(filter))] |
-                bsc::int_p[boost::bind(&this_type::BOOST_NESTED_TEMPLATE on_integral_argument< RelationT >, boost::cref(name), _1, boost::ref(filter))] |
-                (+bsc::print_p)[boost::bind(&this_type::BOOST_NESTED_TEMPLATE on_string_argument< RelationT >, boost::cref(name), _1, _2, boost::ref(filter))]
-            )
-        ).full;
-
-        if (!full || filter.empty())
-            BOOST_LOG_THROW_DESCR(parse_error, "Failed to parse relation operand");
-
-        return filter;
-    }
-
-    template< typename RelationT >
-    static void on_integral_argument(string_type const& name, long val, filter_type& filter)
-    {
-        filter = log::filters::attr<
-            log::integral_types
-        >(name, std::nothrow).satisfies(log::aux::bind2nd(RelationT(), val));
-    }
-    template< typename RelationT >
-    static void on_fp_argument(string_type const& name, double val, filter_type& filter)
-    {
-        filter = log::filters::attr<
-            log::floating_point_types
-        >(name, std::nothrow).satisfies(log::aux::bind2nd(RelationT(), val));
-    }
-    template< typename RelationT >
-    static void on_string_argument(string_type const& name, const char_type* b, const char_type* e, filter_type& filter)
-    {
-        filter = log::filters::attr<
-            string_type
-        >(name, std::nothrow).satisfies(log::aux::bind2nd(RelationT(), string_type(b, e)));
-    }
-};
 
 //! Filter factories repository
 template< typename CharT >
@@ -195,7 +78,7 @@ struct filters_repository :
     //! The map of filter factories
     factories_map m_Map;
     //! Default factory
-    mutable default_filter_factory< char_type > m_DefaultFactory;
+    mutable aux::default_filter_factory< char_type > m_DefaultFactory;
 
     //! The method returns the filter factory for the specified attribute name
     filter_factory_type& get_factory(string_type const& name) const
