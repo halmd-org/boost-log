@@ -887,7 +887,7 @@ BOOST_LOG_EXPORT rotation_at_time_point::rotation_at_time_point(
     unsigned char second
 ) :
     m_DayKind(weekday),
-    m_Day(wday),
+    m_Day(static_cast< unsigned char >(wday)),
     m_Hour(hour),
     m_Minute(minute),
     m_Second(second),
@@ -904,7 +904,7 @@ BOOST_LOG_EXPORT rotation_at_time_point::rotation_at_time_point(
     unsigned char second
 ) :
     m_DayKind(monthday),
-    m_Day(mday.as_number()),
+    m_Day(static_cast< unsigned char >(mday.as_number())),
     m_Hour(hour),
     m_Minute(minute),
     m_Second(second),
