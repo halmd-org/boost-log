@@ -113,6 +113,8 @@ Aside from these namespaces the library also provides `boost::log::experimental`
 
 [endsect]
 
+[section:installation Installation and compatibility]
+
 [section:supported_compilers Supported compilers and platforms]
 
 The library should build and work with a reasonably compliant compiler. The library was successfully built and tested on the following platforms:
@@ -145,7 +147,7 @@ Furthermore, in order to compile the library the following parameters should be 
 
 [endsect]
 
-[section:installation Installation]
+[section:config Configuring and building the library]
 
 The library has a separately compiled part which should be built as described in the [@http://www.boost.org/doc/libs/release/more/getting_started/ Getting Started guide]. One thing should be noted, though. If your application consists of more than one module (e.g. an exe and one or several dll's) that use Boost.Log, the library _must_ be built as a shared object. If you have a single executable, you may build the library as a static library.
 
@@ -163,7 +165,7 @@ The library supports a number of configuration macros:
     [[`BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT`]  [Affects only the compilation of the library. If defined, none of the facilities related to the parsers for settings will be built. This can substantially reduce the binary size.]]
     [[`BOOST_LOG_NO_SHORTHAND_NAMES`]           [Affects only the compilation of users' code. If defined, some deprecated shorthand macro names will not be available.]]
     [[`BOOST_LOG_USE_WINNT6_API`]               [Affects the compilation of both the library and users' code. This macro is Windows-specific. If defined, the library makes use of the Windows NT 6 (Vista, Server 2008) and later APIs to generate more efficient code. This macro will also enable some experimental features of the library. Note, however, that the resulting binary will not run on Windows prior to NT 6. In order to use this feature Platform SDK 6.0 or later is required.]]
-    [[`BOOST_LOG_NO_COMPILER_TLS`]              [Affects only the compilation of the library. This macro disables support for compiler intrinsics for thread-local storage. Defining it may solve problems if Boost.Log is used in context of delay-loaded libraries on Windows prior to Vista (that is, if Boost.Log is loaded with a `LoadLibrary` or similar API call). Other operating systems can have similar problems in context of explicitly dynamically loaded Boost.Log binary. Defining the macro may lead to some performance drop.]]
+    [[`BOOST_LOG_USE_COMPILER_TLS`]             [Affects only the compilation of the library. This macro enables support for compiler intrinsics for thread-local storage. Defining it may improve performance of Boost.Log if certain usage limitations are acceptable. See below for more comments.]]
 ]
 
 You can define configuration macros in the `bjam` command line, like this:
@@ -177,6 +179,20 @@ However, it may be more convenient to define configuration macros in the "boost/
 The logging library uses several other Boost libraries that need building too. These are __boost_filesystem__, __boost_system__, __boost_date_time__ and __boost_thread__. Refer to their documentation for detailed instructions on the building procedure.
 
 One final thing should be added. The library requires run-time type information (RTTI) to be enabled for both the library compilation and user's code compilation. Normally, this won't need anything from you except to verify that RTTI support is not disabled in your project.
+
+[heading Notes about compiler-supplied intrinsics for TLS]
+
+Many widely used compilers support builtin intrinsics for managing thread-local storage, which is used in several parts of the library. This feature is also included in the C++0x standard. Generally, these intrinsics allow for a much more efficient access to the storage than any surrogate implementation, be that __boost_thread__ or even native operating system API. However, this feature has several caveats:
+
+* Some operating systems don't support the use of these intrinsics in case if the TLS is defined in a shared library that is dynamically loaded during the application run time. These systems include Linux and Windows prior to Vista. Windows Vista and later do not have this issue.
+* The TLS may not be reliably accessed from global constructors and destructors. At least MSVC 8.0 on Windows is known to have this problem.
+
+The library provides the `BOOST_LOG_USE_COMPILER_TLS` configuration macro that allows to enable the use of this feature, which will improve the library performance at the cost of these limitations:
+
+* The application executable must be linked with the Boost.Log library. It should not be loaded dynamically during run time.
+* The application doesn't use logging in global constructors or destructors.
+
+[endsect]
 
 [endsect]
 
@@ -194,6 +210,7 @@ Here are definitions of some terms that will be used widely throughout the docum
     [[Log formatter][A function object that generates the final textual output from a log record. Some sinks, like the binary logging sink, may not need it, although almost any text-based sink would use a formatter to compose its output.]]
     [[Logging core][The global entity that maintains connections between sources and sinks and applies filters to records. It is mainly used when the logging library is initialized.]]
     [[i18n][Internationalization. The ability to manipulate wide characters.]]
+    [[TLS][Thread-local storage. The concept of having a variable that has independent values for each thread that attempts to access it.]]
 ]
 
 [endsect]

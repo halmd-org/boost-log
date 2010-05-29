@@ -16,7 +16,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sources/severity_feature.hpp>
 
-#if !defined(BOOST_LOG_NO_THREADS) && defined(BOOST_LOG_NO_COMPILER_TLS)
+#if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_USE_COMPILER_TLS)
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/thread_specific.hpp>
 #endif
@@ -33,7 +33,7 @@ namespace aux {
 
 static int g_Severity = 0;
 
-#elif !defined(BOOST_LOG_NO_COMPILER_TLS)
+#elif defined(BOOST_LOG_USE_COMPILER_TLS)
 
 static BOOST_LOG_TLS int g_Severity = 0;
 
@@ -48,7 +48,7 @@ class severity_level_holder :
 #endif
 
 
-#if !defined(BOOST_LOG_NO_THREADS) && defined(BOOST_LOG_NO_COMPILER_TLS)
+#if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_USE_COMPILER_TLS)
 
 //! The method returns the severity level for the current thread
 BOOST_LOG_EXPORT int get_severity_level()
@@ -62,7 +62,7 @@ BOOST_LOG_EXPORT void set_severity_level(int level)
     severity_level_holder::get().set(level);
 }
 
-#else // !defined(BOOST_LOG_NO_THREADS) && defined(BOOST_LOG_NO_COMPILER_TLS)
+#else // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_USE_COMPILER_TLS)
 
 //! The method returns the severity level for the current thread
 BOOST_LOG_EXPORT int get_severity_level()
@@ -76,7 +76,7 @@ BOOST_LOG_EXPORT void set_severity_level(int level)
     g_Severity = level;
 }
 
-#endif // !defined(BOOST_LOG_NO_THREADS) && defined(BOOST_LOG_NO_COMPILER_TLS)
+#endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_USE_COMPILER_TLS)
 
 } // namespace aux
 

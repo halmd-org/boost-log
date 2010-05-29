@@ -12,6 +12,7 @@
 [heading 2.0]
 
 * The library is now compatible with Boost 1.42 or newer.
+* The `BOOST_LOG_NO_COMPILER_TLS` configuration macro has been replaced with `BOOST_LOG_USE_COMPILER_TLS` with the opposite meaning. The support for compiler intrinsics for TLS is now disabled by default.
 * Most code examples from the docs have been extracted into compilable standalone examples, which can be used for testing and experimenting with the library.
 * Fixed a bug: the logging core could enter an infinite loop inside `push_record` if a sink throws and the exception is suppressed by the exception handler set in the core.
 * Fixed compilation problems with `BOOST_LOG_WFUNCTION` and exception handling logger feature.

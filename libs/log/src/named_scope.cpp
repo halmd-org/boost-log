@@ -146,7 +146,7 @@ struct basic_named_scope< CharT >::implementation :
     //! Pointer to the thread-specific scope stack
     thread_specific_ptr< scope_list > pScopes;
 
-#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+#if defined(BOOST_LOG_USE_COMPILER_TLS)
     //! Cached pointer to the thread-specific scope stack
     static BOOST_LOG_TLS scope_list* pScopesCache;
 #endif
@@ -159,7 +159,7 @@ struct basic_named_scope< CharT >::implementation :
     //! The method returns current thread scope stack
     scope_list& get_scope_list()
     {
-#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+#if defined(BOOST_LOG_USE_COMPILER_TLS)
         register scope_list* p = pScopesCache;
 #else
         register scope_list* p = pScopes.get();
@@ -168,7 +168,7 @@ struct basic_named_scope< CharT >::implementation :
         {
             std::auto_ptr< scope_list > pNew(new scope_list());
             pScopes.reset(pNew.get());
-#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+#if defined(BOOST_LOG_USE_COMPILER_TLS)
             pScopesCache = p = pNew.release();
 #else
             p = pNew.release();
@@ -188,12 +188,12 @@ private:
     implementation() {}
 };
 
-#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+#if defined(BOOST_LOG_USE_COMPILER_TLS)
 //! Cached pointer to the thread-specific scope stack
 template< typename CharT >
 BOOST_LOG_TLS typename basic_named_scope< CharT >::implementation::scope_list*
 basic_named_scope< CharT >::implementation::pScopesCache = NULL;
-#endif // !defined(BOOST_LOG_NO_COMPILER_TLS)
+#endif // defined(BOOST_LOG_USE_COMPILER_TLS)
 
 
 //! Copy constructor

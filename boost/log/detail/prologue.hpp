@@ -82,15 +82,6 @@
 #   define BOOST_LOG_ANONYMOUS_NAMESPACE namespace
 #endif
 
-#if !defined(BOOST_LOG_NO_COMPILER_TLS) &&\
-    (\
-        defined(__MACH__) ||\
-        (defined(__GLIBC__) && (__GLIBC__ * 100 + __GLIBC_MINOR__) < 203)\
-    )
-    // On some platforms we already know that builtin compiler TLS support doesn't work
-#   define BOOST_LOG_NO_COMPILER_TLS
-#endif
-
 // Extended declaration macros. Used to implement compiler-specific optimizations.
 #if defined(_MSC_VER)
 #   define BOOST_LOG_FORCEINLINE __forceinline
@@ -207,21 +198,19 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 #   define BOOST_LOG_EXPR_IF_MT(expr) expr
 #else
-#   if !defined(BOOST_LOG_NO_COMPILER_TLS)
-#       define BOOST_LOG_NO_COMPILER_TLS
-#   endif
+#   undef BOOST_LOG_USE_COMPILER_TLS
 #   define BOOST_LOG_EXPR_IF_MT(expr)
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
-#if !defined(BOOST_LOG_NO_COMPILER_TLS)
+#if defined(BOOST_LOG_USE_COMPILER_TLS)
 #   if defined(__GNUC__) || defined(__SUNPRO_CC)
 #       define BOOST_LOG_TLS __thread
 #   elif defined(BOOST_MSVC)
 #       define BOOST_LOG_TLS __declspec(thread)
 #   else
-#       define BOOST_LOG_NO_COMPILER_TLS
+#       undef BOOST_LOG_USE_COMPILER_TLS
 #   endif
-#endif // !defined(BOOST_LOG_NO_COMPILER_TLS)
+#endif // defined(BOOST_LOG_USE_COMPILER_TLS)
 
 namespace boost {
 
