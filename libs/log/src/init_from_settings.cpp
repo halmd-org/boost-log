@@ -58,9 +58,8 @@
 #include <boost/log/utility/init/filter_parser.hpp>
 #include <boost/log/utility/init/formatter_parser.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
-#include <boost/thread/locks.hpp>
+#include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
-#include <boost/log/detail/shared_lock_guard.hpp>
 #endif
 #include "parser_utils.hpp"
 

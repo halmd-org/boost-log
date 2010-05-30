@@ -39,9 +39,8 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
-#include <boost/log/detail/shared_lock_guard.hpp>
+#include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
-#include <boost/thread/locks.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
 #include "parser_utils.hpp"
 #include "default_filter_factory.hpp"
@@ -402,7 +401,7 @@ void register_filter_factory(const CharT* attr_name, shared_ptr< filter_factory<
     std::basic_string< CharT > name(attr_name);
     filters_repository< CharT >& repo = filters_repository< CharT >::get();
 
-    BOOST_LOG_EXPR_IF_MT(lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);)
+    BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);)
     repo.m_Map[name] = factory;
 }
 

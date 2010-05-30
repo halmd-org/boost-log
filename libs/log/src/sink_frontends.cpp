@@ -30,13 +30,13 @@
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/trivial_value_traits.hpp>
 #include <boost/utility/in_place_factory.hpp>
-#include <boost/thread/thread.hpp>
 #include <boost/thread/locks.hpp>
+#include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/exceptions.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
-#include <boost/log/detail/shared_lock_guard.hpp>
+#include <boost/log/detail/locks.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/async_frontend.hpp>
@@ -63,7 +63,7 @@ struct basic_sink_frontend< CharT >::implementation
     //! Read lock type
     typedef boost::log::aux::shared_lock_guard< mutex_type > scoped_read_lock;
     //! Write lock type
-    typedef lock_guard< mutex_type > scoped_write_lock;
+    typedef boost::log::aux::exclusive_lock_guard< mutex_type > scoped_write_lock;
 
     //! Synchronization mutex
     mutex_type m_Mutex;
@@ -267,7 +267,7 @@ void synchronous_frontend< CharT >::consume(record_type const& record)
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
     {
-        lock_guard< mutex > _(pImpl->m_BackendMutex);
+        log::aux::exclusive_lock_guard< mutex > _(pImpl->m_BackendMutex);
         (pImpl->m_Consume)(pImpl->m_pBackend.get(), record);
     }
     catch (thread_interrupted&)
@@ -340,7 +340,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         {
             if (m_Active)
             {
-                lock_guard< mutex > _(m_Mutex);
+                log::aux::exclusive_lock_guard< mutex > _(m_Mutex);
                 m_ThreadID = none;
                 if (m_pCond)
                     m_pCond->notify_all();
@@ -441,7 +441,7 @@ public:
     {
         thread_id_cleanup cleanup(m_FeedingThreadID, m_FrontendMutex, &m_FinishingCondition);
         {
-            lock_guard< mutex > lock(m_FrontendMutex);
+            log::aux::exclusive_lock_guard< mutex > lock(m_FrontendMutex);
             if (m_FeedingThreadID)
                 BOOST_LOG_THROW_DESCR(unexpected_call, "Asynchronous sink frontend already runs a thread");
             m_FeedingThreadID = this_thread::get_id();
@@ -499,7 +499,7 @@ public:
     {
         thread_id_cleanup cleanup(m_FeedingThreadID, m_FrontendMutex);
         {
-            lock_guard< mutex > lock(m_FrontendMutex);
+            log::aux::exclusive_lock_guard< mutex > lock(m_FrontendMutex);
             if (m_FeedingThreadID)
                 BOOST_LOG_THROW_DESCR(unexpected_call, "Asynchronous sink frontend already runs a thread");
             m_FeedingThreadID = this_thread::get_id();
@@ -549,7 +549,7 @@ private:
             record_type rec;
             rec.swap(records.front().m_Value);
             records.pop_front_and_dispose(checked_deleter< node >());
-            lock_guard< mutex > _(m_BackendMutex);
+            log::aux::exclusive_lock_guard< mutex > _(m_BackendMutex);
             m_Consume(m_pBackend.get(), rec);
         }
         catch (thread_interrupted&)
@@ -827,7 +827,7 @@ public:
     {
         thread_id_cleanup cleanup(m_FeedingThreadID, m_FrontendMutex, &m_FinishingCondition);
         {
-            lock_guard< mutex > lock(m_FrontendMutex);
+            log::aux::exclusive_lock_guard< mutex > lock(m_FrontendMutex);
             if (m_FeedingThreadID)
                 BOOST_LOG_THROW_DESCR(unexpected_call, "Asynchronous sink frontend already runs a thread");
             m_FeedingThreadID = this_thread::get_id();
@@ -879,7 +879,7 @@ public:
     {
         thread_id_cleanup cleanup(m_FeedingThreadID, m_FrontendMutex);
         {
-            lock_guard< mutex > lock(m_FrontendMutex);
+            log::aux::exclusive_lock_guard< mutex > lock(m_FrontendMutex);
             if (m_FeedingThreadID)
                 BOOST_LOG_THROW_DESCR(unexpected_call, "Asynchronous sink frontend already runs a thread");
             m_FeedingThreadID = this_thread::get_id();
@@ -927,7 +927,7 @@ private:
             record_type rec;
             rec.swap(m_OrderedRecords.front().m_Value.m_Record);
             m_OrderedRecords.pop_front_and_dispose(checked_deleter< node >());
-            lock_guard< mutex > _(m_BackendMutex);
+            log::aux::exclusive_lock_guard< mutex > _(m_BackendMutex);
             m_Consume(m_pBackend.get(), rec);
         }
         catch (thread_interrupted&)

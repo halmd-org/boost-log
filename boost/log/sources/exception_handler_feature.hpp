@@ -23,9 +23,10 @@
 #include <boost/function/function0.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/locks.hpp>
 #include <boost/log/sources/threading_models.hpp>
+#include <boost/log/utility/strictest_lock.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
-#include <boost/thread/locks.hpp>
 #include <boost/thread/exceptions.hpp>
 #endif
 
@@ -61,23 +62,26 @@ public:
     //! Exception handler function type
     typedef function0< void > exception_handler_type;
 
+#if defined(BOOST_LOG_DOXYGEN_PASS)
     //! Lock requirement for the open_record_unlocked method
     typedef typename strictest_lock<
         typename base_type::open_record_lock,
-        no_lock
+        no_lock< threading_model >
     >::type open_record_lock;
     //! Lock requirement for the push_record_unlocked method
     typedef typename strictest_lock<
         typename base_type::push_record_lock,
-        no_lock
+        no_lock< threading_model >
     >::type push_record_lock;
+#endif // defined(BOOST_LOG_DOXYGEN_PASS)
+
     //! Lock requirement for the swap_unlocked method
     typedef typename strictest_lock<
         typename base_type::swap_lock,
 #ifndef BOOST_LOG_NO_THREADS
-        lock_guard< threading_model >
+        boost::log::aux::exclusive_lock_guard< threading_model >
 #else
-        no_lock
+        no_lock< threading_model >
 #endif // !defined(BOOST_LOG_NO_THREADS)
     >::type swap_lock;
 
@@ -128,7 +132,7 @@ public:
     void set_exception_handler(HandlerT const& handler)
     {
 #ifndef BOOST_LOG_NO_THREADS
-        lock_guard< threading_model > _(this->get_threading_model());
+        boost::log::aux::exclusive_lock_guard< threading_model > _(this->get_threading_model());
 #endif
         m_ExceptionHandler = handler;
     }
@@ -201,9 +205,9 @@ private:
         // If other features do require locking, the thread model is
         // already locked by now, and we don't do locking at all.
         typedef typename mpl::if_<
-            is_same< no_lock, typename final_type::push_record_lock >,
+            is_same< no_lock< threading_model >, typename final_type::push_record_lock >,
             boost::log::aux::shared_lock_guard< threading_model >,
-            no_lock
+            no_lock< threading_model >
         >::type lock_type;
         lock_type _(base_type::get_threading_model());
 #endif // !defined(BOOST_LOG_NO_THREADS)

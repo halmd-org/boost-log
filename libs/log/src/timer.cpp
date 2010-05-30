@@ -22,9 +22,7 @@
 #include <boost/assert.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/log/attributes/timer.hpp>
-#if !defined(BOOST_LOG_NO_THREADS)
-#include <boost/thread/locks.hpp>
-#endif
+#include <boost/log/detail/locks.hpp>
 #include <windows.h>
 
 namespace boost {
@@ -48,7 +46,7 @@ timer::timer()
 //! The method returns the actual attribute value. It must not return NULL.
 attribute_value timer::get_value()
 {
-    BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
+    BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< mutex > _(m_Mutex);)
 
     // QPC is called after acquiring the lock in order to get more accurate readings
     LARGE_INTEGER li;

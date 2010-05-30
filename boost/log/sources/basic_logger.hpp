@@ -43,7 +43,6 @@
 #include <boost/log/sources/features.hpp>
 #include <boost/log/sources/threading_models.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
-#include <boost/log/detail/multiple_lock.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
@@ -107,28 +106,31 @@ public:
 
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Lock requirement for the swap_unlocked method
-    typedef lock_guard< threading_model > swap_lock;
+    typedef boost::log::aux::exclusive_lock_guard< threading_model > swap_lock;
     //! Lock requirement for the add_attribute_unlocked method
-    typedef lock_guard< threading_model > add_attribute_lock;
+    typedef boost::log::aux::exclusive_lock_guard< threading_model > add_attribute_lock;
     //! Lock requirement for the remove_attribute_unlocked method
-    typedef lock_guard< threading_model > remove_attribute_lock;
+    typedef boost::log::aux::exclusive_lock_guard< threading_model > remove_attribute_lock;
     //! Lock requirement for the remove_all_attributes_unlocked method
-    typedef lock_guard< threading_model > remove_all_attributes_lock;
+    typedef boost::log::aux::exclusive_lock_guard< threading_model > remove_all_attributes_lock;
     //! Lock requirement for the get_attributes method
     typedef boost::log::aux::shared_lock_guard< threading_model > get_attributes_lock;
     //! Lock requirement for the open_record_unlocked method
     typedef boost::log::aux::shared_lock_guard< threading_model > open_record_lock;
     //! Lock requirement for the set_attributes method
-    typedef lock_guard< threading_model > set_attributes_lock;
+    typedef boost::log::aux::exclusive_lock_guard< threading_model > set_attributes_lock;
 #else
-    typedef no_lock swap_lock;
-    typedef no_lock add_attribute_lock;
-    typedef no_lock remove_attribute_lock;
-    typedef no_lock remove_all_attributes_lock;
-    typedef no_lock get_attributes_lock;
-    typedef no_lock open_record_lock;
-    typedef no_lock set_attributes_lock;
+    typedef no_lock< threading_model > swap_lock;
+    typedef no_lock< threading_model > add_attribute_lock;
+    typedef no_lock< threading_model > remove_attribute_lock;
+    typedef no_lock< threading_model > remove_all_attributes_lock;
+    typedef no_lock< threading_model > get_attributes_lock;
+    typedef no_lock< threading_model > open_record_lock;
+    typedef no_lock< threading_model > set_attributes_lock;
 #endif
+
+    //! Lock requirement for the push_record_unlocked method
+    typedef no_lock< threading_model > push_record_lock;
 
 private:
     //! A pointer to the logging system
@@ -258,9 +260,6 @@ protected:
     {
         return m_pCore->open_record(m_Attributes);
     }
-
-    //! Lock requirement for the push_record_unlocked method
-    typedef no_lock push_record_lock;
 
     /*!
      * Unlocked \c push_record
@@ -393,7 +392,7 @@ public:
         {
             // We'll have to explicitly create the copy in order to make sure it's unlocked when we attempt to lock *this
             FinalT tmp(that);
-            lock_guard< threading_model > _(base_type::get_threading_model());
+            boost::log::aux::exclusive_lock_guard< threading_model > _(base_type::get_threading_model());
             base_type::swap_unlocked(tmp);
         }
         return static_cast< FinalT& >(*this);

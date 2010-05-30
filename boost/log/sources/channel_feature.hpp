@@ -19,19 +19,16 @@
 #ifndef BOOST_LOG_SOURCES_CHANNEL_FEATURE_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_CHANNEL_FEATURE_HPP_INCLUDED_
 
+#include <boost/none.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/mpl/bool.hpp>
 #include <boost/mpl/if.hpp>
-#include <boost/parameter/binding.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/locks.hpp>
 #include <boost/log/keywords/channel.hpp>
 #include <boost/log/attributes/constant.hpp>
-#include <boost/log/sources/threading_models.hpp> // strictest_lock
-#if !defined(BOOST_LOG_NO_THREADS)
-#include <boost/thread/locks.hpp>
-#endif // !defined(BOOST_LOG_NO_THREADS)
+#include <boost/log/utility/strictest_lock.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -99,9 +96,9 @@ public:
     typedef typename strictest_lock<
         typename base_type::swap_lock,
 #ifndef BOOST_LOG_NO_THREADS
-        lock_guard< threading_model >
+        boost::log::aux::exclusive_lock_guard< threading_model >
 #else
-        no_lock
+        no_lock< threading_model >
 #endif // !defined(BOOST_LOG_NO_THREADS)
     >::type swap_lock;
 
@@ -134,9 +131,7 @@ public:
     explicit basic_channel_logger(ArgsT const& args) :
         base_type(args)
     {
-        init_channel_attribute(args, typename is_void<
-            typename parameter::binding< ArgsT, keywords::tag::channel, void >::type
-        >::type());
+        init_channel_attribute(args[keywords::channel | none]);
     }
 
     /*!
@@ -172,10 +167,8 @@ protected:
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! Initializes the channel attribute
-    template< typename ArgsT >
-    void init_channel_attribute(ArgsT const& args, mpl::false_ const&)
+    void init_channel_attribute(channel_type const& channel_name)
     {
-        channel_type channel_name(args[keywords::channel]);
         m_pChannel = boost::make_shared< channel_attribute >(channel_name);
         base_type::add_attribute_unlocked(
             aux::channel_attribute_name< char_type >::get(),
@@ -183,7 +176,7 @@ private:
     }
     //! Initializes the channel attribute (dummy, if no channel is specified)
     template< typename ArgsT >
-    void init_channel_attribute(ArgsT const& args, mpl::true_ const&)
+    void init_channel_attribute(none_t const&)
     {
     }
 #endif // BOOST_LOG_DOXYGEN_PASS

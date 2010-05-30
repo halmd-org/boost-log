@@ -19,17 +19,14 @@
 #ifndef BOOST_LOG_SOURCES_SEVERITY_FEATURE_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_SEVERITY_FEATURE_HPP_INCLUDED_
 
-#include <algorithm> // swap
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/log/detail/prologue.hpp>
-#if !defined(BOOST_LOG_NO_THREADS)
-#include <boost/thread/locks.hpp>
-#endif
-#include <boost/log/sources/threading_models.hpp> // strictest_lock
+#include <boost/log/detail/locks.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/utility/strictest_lock.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 #include <boost/log/keywords/severity.hpp>
 
@@ -153,18 +150,21 @@ public:
     //! Severity attribute type
     typedef aux::severity_level< severity_level > severity_attribute;
 
+#if defined(BOOST_LOG_DOXYGEN_PASS)
     //! Lock requirement for the open_record_unlocked method
     typedef typename strictest_lock<
         typename base_type::open_record_lock,
-        no_lock
+        no_lock< threading_model >
     >::type open_record_lock;
+#endif // defined(BOOST_LOG_DOXYGEN_PASS)
+
     //! Lock requirement for the swap_unlocked method
     typedef typename strictest_lock<
         typename base_type::swap_lock,
 #ifndef BOOST_LOG_NO_THREADS
-        lock_guard< threading_model >
+        boost::log::aux::exclusive_lock_guard< threading_model >
 #else
-        no_lock
+        no_lock< threading_model >
 #endif // !defined(BOOST_LOG_NO_THREADS)
     >::type swap_lock;
 
@@ -240,8 +240,9 @@ protected:
     void swap_unlocked(basic_severity_logger& that)
     {
         base_type::swap_unlocked(static_cast< base_type& >(that));
-        using std::swap;
-        swap(m_DefaultSeverity, that.m_DefaultSeverity);
+        severity_level t = m_DefaultSeverity;
+        m_DefaultSeverity = that.m_DefaultSeverity;
+        that.m_DefaultSeverity = t;
         m_pSeverity.swap(that.m_pSeverity);
     }
 };

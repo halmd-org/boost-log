@@ -55,7 +55,7 @@
 #include <boost/log/utility/type_dispatch/date_time_types.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/thread.hpp> // thread::id
-#include <boost/thread/locks.hpp>
+#include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 #endif
 #include "parser_utils.hpp"
@@ -320,7 +320,7 @@ void register_formatter_factory(
     typename formatter_types< CharT >::string_type name(attr_name);
     formatters_repository< CharT >& repo = formatters_repository< CharT >::get();
 
-    BOOST_LOG_EXPR_IF_MT(lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);)
+    BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);)
     repo.m_Map[name] = factory;
 }
 
