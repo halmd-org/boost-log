@@ -110,6 +110,8 @@ public:
         m_p1(&m1),
         m_p2(&m2)
     {
+        // Yes, it's not conforming, but it works
+        // and it doesn't require to #include <functional>
         if (static_cast< void* >(m_p1) < static_cast< void* >(m_p2))
         {
             m_p1->lock();
