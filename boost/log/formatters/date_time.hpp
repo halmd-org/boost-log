@@ -35,8 +35,8 @@
 #include <boost/date_time/time_facet.hpp>
 #include <boost/date_time/date_facet.hpp>
 #include <boost/date_time/compiler_config.hpp>
-#include <boost/date_time/gregorian/conversion.hpp> // work around the problem of to_tm overload resolution in Boost.DateTime facets
-#include <boost/date_time/local_time/conversion.hpp> // work around the problem of to_tm overload resolution in Boost.DateTime facets
+#include <boost/date_time/gregorian/conversion.hpp>
+#include <boost/date_time/local_time/conversion.hpp>
 #include <boost/date_time/posix_time/conversion.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/parameter/parameters.hpp>
@@ -651,8 +651,8 @@ public:
      *
      * \param name Attribute name
      */
-    explicit fmt_date_time_facade(string_type const& name)
-        : m_Extractor(name)
+    explicit fmt_date_time_facade(string_type const& name) :
+        m_Extractor(name)
     {
     }
     /*!
@@ -662,8 +662,9 @@ public:
      * \param args A set of named arguments that describe the format
      */
     template< typename ArgsT >
-    fmt_date_time_facade(string_type const& name, ArgsT const& args)
-        : m_Extractor(name), m_Formatter(args)
+    fmt_date_time_facade(string_type const& name, ArgsT const& args) :
+        m_Extractor(name),
+        m_Formatter(args)
     {
     }
 
