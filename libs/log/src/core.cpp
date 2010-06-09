@@ -250,7 +250,7 @@ void basic_core< CharT >::remove_global_attribute(typename attribute_set_type::i
 template< typename CharT >
 typename basic_core< CharT >::attribute_set_type basic_core< CharT >::get_global_attributes() const
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock lock(pImpl->Mutex);)
     return pImpl->GlobalAttributes;
 }
 //! The method replaces the complete set of currently registered global attributes with the provided set
