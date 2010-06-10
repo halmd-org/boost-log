@@ -142,7 +142,8 @@ public:
     {
 #if !defined(BOOST_LOG_NO_THREADS)
         static once_flag flag = BOOST_ONCE_INIT;
-        boost::call_once(flag, delegate(this, &type_sequence_dispatcher::init_dispatching_map< ReceiverT >));
+        boost::call_once(flag, delegate(this,
+            &type_sequence_dispatcher::BOOST_NESTED_TEMPLATE init_dispatching_map< ReceiverT >));
 #else
         static bool initialized = (init_dispatching_map< ReceiverT >(), true);
         BOOST_LOG_NO_UNUSED_WARNINGS(initialized);
