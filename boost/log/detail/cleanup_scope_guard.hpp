@@ -36,6 +36,11 @@ struct cleanup_guard
     ~cleanup_guard() { m_Obj.clear(); }
 
 private:
+    // Copying prohibited
+    cleanup_guard(cleanup_guard const&);
+    cleanup_guard& operator= (cleanup_guard const&);
+
+private:
     T& m_Obj;
 };
 

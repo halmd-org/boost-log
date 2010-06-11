@@ -16,7 +16,7 @@ namespace src = boost::log::sources;
 namespace fmt = boost::log::formatters;
 namespace keywords = boost::log::keywords;
 
-BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::logger_mt)
+BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(my_logger, src::logger_mt)
 
 void logging_function1()
 {

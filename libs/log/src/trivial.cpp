@@ -33,6 +33,7 @@
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/utility/init/common_attributes.hpp>
 #include <boost/log/detail/universal_path.hpp>
+#include <boost/log/sources/global_logger_storage.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/sinks/sync_frontend.hpp>
@@ -52,8 +53,6 @@ namespace boost {
 namespace BOOST_LOG_NAMESPACE {
 
 namespace trivial {
-
-namespace aux {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
@@ -118,7 +117,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 } // namespace
 
 //! Initialization routine
-BOOST_LOG_EXPORT void init()
+BOOST_LOG_EXPORT logger::logger_type logger::construct_logger()
 {
     log::add_common_attributes< char >();
 
@@ -147,10 +146,17 @@ BOOST_LOG_EXPORT void init()
     );
 
     log::core::get()->add_sink(sink);
+
+    return logger_type(keywords::severity = info);
 }
 
-} // namespace aux
+//! Returns a reference to the trivial logger instance
+BOOST_LOG_EXPORT logger::logger_type& logger::get()
+{
+    return log::sources::aux::logger_singleton< logger >::get();
+}
 
+//! Streaming operator for severity level
 template< typename CharT, typename TraitsT >
 std::basic_ostream< CharT, TraitsT >& operator<< (
     std::basic_ostream< CharT, TraitsT >& strm, severity_level lvl)
@@ -176,7 +182,7 @@ std::basic_ostream< CharT, TraitsT >& operator<< (
     return strm;
 }
 
-//! Explicitly instantiate the operator
+//  Explicitly instantiate the operator
 #ifdef BOOST_LOG_USE_CHAR
 template BOOST_LOG_EXPORT std::basic_ostream< char, std::char_traits< char > >&
     operator<< < char, std::char_traits< char > >(

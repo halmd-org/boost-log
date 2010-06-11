@@ -125,7 +125,7 @@ void init_logging()
 }
 
 //[ example_sinks_event_log_facilities
-BOOST_LOG_DECLARE_GLOBAL_LOGGER(event_logger, src::severity_logger_mt< severity_level >)
+BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(event_logger, src::severity_logger_mt< severity_level >)
 
 // The function raises an event of the disk space depletion
 void announce_low_disk_space(std::string const& drive, boost::uintmax_t size)

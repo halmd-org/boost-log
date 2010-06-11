@@ -21,16 +21,12 @@
 
 #include <typeinfo>
 #include <stdexcept>
-#include <boost/limits.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/compatibility/cpp_c_headers/cstdio>
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/visible_type.hpp>
-#include <boost/log/exceptions.hpp>
-#include <boost/log/utility/type_info_wrapper.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -97,6 +93,12 @@ private:
     global_storage& operator= (global_storage const&);
 };
 
+//! Throws the \c odr_violation exception
+BOOST_LOG_EXPORT BOOST_LOG_NORETURN void throw_odr_violation(
+    std::type_info const& tag_type,
+    std::type_info const& logger_type,
+    logger_holder_base const& registered);
+
 //! The class implements a logger singleton
 template< typename TagT >
 struct logger_singleton :
@@ -135,20 +137,8 @@ struct logger_singleton :
             // different tag types that have equal type_infos. In real life it can
             // happen if the same-named tag is defined differently in two or more
             // dlls. This check is intended to detect such ODR violations. However, there
-            // is no protection against different definitions of logger type itself.
-            char buf[std::numeric_limits< unsigned int >::digits10 + 3];
-            std::sprintf(buf, "%u", holder->m_RegistrationLine);
-            std::string str =
-                std::string("Could not initialize global logger with tag \"") +
-                type_info_wrapper(typeid(TagT)).pretty_name() +
-                "\" and type \"" +
-                type_info_wrapper(typeid(logger_type)).pretty_name() +
-                "\". A logger of type \"" +
-                type_info_wrapper(holder->logger_type()).pretty_name() +
-                "\" with the same tag has already been registered at " +
-                holder->m_RegistrationFile + ":" + buf + ".";
-
-            BOOST_LOG_THROW_DESCR(odr_violation, str);
+            // is no protection against different definitions of the logger type itself.
+            throw_odr_violation(typeid(TagT), typeid(logger_type), *holder);
         }
     }
 
@@ -165,8 +155,8 @@ private:
 
 } // namespace aux
 
-//! The macro declares a global logger with a custom initialization
-#define BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(tag_name, logger)\
+//! The macro forward-declares a global logger with a custom initialization
+#define BOOST_LOG_GLOBAL_LOGGER(tag_name, logger)\
     struct tag_name\
     {\
         typedef logger logger_type;\
@@ -177,25 +167,43 @@ private:
         {\
             return ::boost::log::sources::aux::logger_singleton< tag_name >::get();\
         }\
-    };\
-    inline tag_name::logger_type& BOOST_JOIN(get_, tag_name)()\
+    };
+
+//! The macro defines a global logger initialization routine
+#define BOOST_LOG_GLOBAL_LOGGER_INIT(tag_name, logger)\
+    tag_name::logger_type tag_name::construct_logger()
+
+//! The macro defines a global logger initializer that will default-construct the logger
+#define BOOST_LOG_GLOBAL_LOGGER_DEFAULT(tag_name, logger)\
+    BOOST_LOG_GLOBAL_LOGGER_INIT\
     {\
-        return tag_name::get();\
-    }\
-    inline tag_name::logger_type tag_name::construct_logger()
+        return logger_type();\
+    }
+
+//! The macro defines a global logger initializer that will construct the logger with the specified constructor arguments
+#define BOOST_LOG_GLOBAL_LOGGER_CTOR_ARGS(tag_name, logger, args)\
+    BOOST_LOG_GLOBAL_LOGGER_INIT\
+    {\
+        return logger_type(BOOST_PP_SEQ_ENUM(args));\
+    }
+
+//! The macro declares a global logger with a custom initialization
+#define BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT(tag_name, logger)\
+    BOOST_LOG_GLOBAL_LOGGER(tag_name, logger)\
+    inline BOOST_LOG_GLOBAL_LOGGER_INIT(tag_name, logger)
 
 //! The macro declares a global logger that will be default-constructed
-#define BOOST_LOG_DECLARE_GLOBAL_LOGGER(tag_name, logger)\
-    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(tag_name, logger)\
+#define BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(tag_name, logger)\
+    BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT(tag_name, logger)\
     {\
-        return logger();\
+        return logger_type();\
     }
 
 //! The macro declares a global logger that will be constructed with the specified arguments
-#define BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS(tag_name, logger, args)\
-    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(tag_name, logger)\
+#define BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(tag_name, logger, args)\
+    BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT(tag_name, logger)\
     {\
-        return logger(BOOST_PP_SEQ_ENUM(args));\
+        return logger_type(BOOST_PP_SEQ_ENUM(args));\
     }
 
 } // namespace sources

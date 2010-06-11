@@ -48,7 +48,7 @@ enum
 };
 
 // Global logger declaration
-BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::logger_mt)
+BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(my_logger, src::logger_mt)
 
 // This function is executed in a separate thread
 void thread_foo()

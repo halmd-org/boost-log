@@ -173,43 +173,27 @@ Now that we have defined where and how the log is to be stored, it's time to go 
 
     src::logger lg;
 
-Note that unlike sinks, sources need not be registered anywhere, since they interact directly with logging core. Also note that there are two versions of loggers provided by the library: the thread-safe ones and the non-thread-safe ones. For the non-thread-safe loggers it is safe for different threads to write logs through different instances of loggers and thus there should be a separate logger for each thread that writes logs. The thread-safe counterparts may be accessed from different threads concurrently, but this would involve locking and may slow things down in case of intense logging. The thread-safe logger types have the `_mt` suffix in their name.
+Note that unlike sinks, sources need not be registered anywhere, since they interact directly with the logging core. Also note that there are two versions of loggers provided by the library: the thread-safe ones and the non-thread-safe ones. For the non-thread-safe loggers it is safe for different threads to write logs through different instances of loggers and thus there should be a separate logger for each thread that writes logs. The thread-safe counterparts may be accessed from different threads concurrently, but this would involve locking and may slow things down in case of intense logging. The thread-safe logger types have the `_mt` suffix in their name.
 
 Regardless of the thread safety, all loggers provided by the library are default and copy-constructible and support swapping, so there should be no problem in making a logger a member of your class. As you will see later, such approach can give you additional benefits.
 
-The library provides a number of loggers with different features, such as severity and channel support. These features may be combined with each other in order to construct more complex loggers. See [link log.detailed.sources here] for more datails.
+The library provides a number of loggers with different features, such as severity and channel support. These features can be combined with each other in order to construct more complex loggers. See [link log.detailed.sources here] for more datails.
 
 [heading Global logger objects]
 
 In case you cannot put a logger into your class (suppose you don't have one), the library provides a way of declaring global loggers like this:
 
-    BOOST_LOG_DECLARE_GLOBAL_LOGGER(my_logger, src::logger_mt)
+    BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(my_logger, src::logger_mt)
 
-Here `my_logger` is a user-defined tag name that will be used later to retrieve the logger instance and `logger_mt` is the logger type. Any logger type provided by the library or defined by the user can be used in such declaration. However, since the logger will have a single instance, you will normally want to use thread-safe loggers in a multithreaded application as global ones.
+Here `my_logger` is a user-defined tag name that will be used later to retrieve the logger instance and `logger_mt` is the logger type. Any logger type provided by the library or defined by the user can participate in such declaration. However, since the logger will have a single instance, you will normally want to use thread-safe loggers in a multithreaded application as global ones.
 
-In case you want to pass some arguments to the logger on construction, you can use the following macro:
-
-    BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS(my_logger, src::logger_mt, (arg1)(arg2)(arg3))
-
-or even write the initialization code yourself:
-
-    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, src::logger_mt)
-    {
-        // do something on logger initialization and return logger instance
-        return src::logger_mt();
-    }
-
-You can have such declaration in either a header or a compiled cpp unit. You can even have it in different modules of your application, however, the declaration should be exactly the same in all places, including the definition of the logger type (`logger_mt` in this case) and all symbol bindings within the logger initialization body.
+[tip There are other macros for more sophisticated cases available. The detailed description is in [link log.detailed.sources.global_storage this] section.]
 
 Later on you can acquire the logger like this:
 
-    src::logger_mt& lg = get_my_logger();
-
-or like this:
-
     src::logger_mt& lg = my_logger::get();
 
-In any case, the `lg` will reference to the one and only instance of the logger throughout the application, even if the application consists of multiple modules.
+The `lg` will refer to the one and only instance of the logger throughout the application, even if the application consists of multiple modules. The `get` function itself is thread-safe, so there is no need in additional synchronization around it.
 
 [heading Writing logs]
 

@@ -14,6 +14,11 @@
  */
 
 #include <map>
+#include <string>
+#include <boost/limits.hpp>
+#include <boost/spirit/include/karma_uint.hpp>
+#include <boost/spirit/include/karma_generate.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
@@ -38,7 +43,7 @@ struct loggers_repository :
     public log::aux::lazy_singleton< loggers_repository< CharT > >
 {
     //! Repository map type
-    typedef std::map< log::type_info_wrapper, shared_ptr< logger_holder_base > > loggers_map_t;
+    typedef std::map< type_info_wrapper, shared_ptr< logger_holder_base > > loggers_map_t;
 
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization primitive
@@ -59,7 +64,7 @@ shared_ptr< logger_holder_base > global_storage< CharT >::get_or_init(
     typedef loggers_repository< CharT > repository_t;
     typedef typename repository_t::loggers_map_t loggers_map_t;
     repository_t& repo = repository_t::get();
-    log::type_info_wrapper wrapped_key = key;
+    type_info_wrapper wrapped_key = key;
 
     BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< mutex > _(repo.m_Mutex);)
     typename loggers_map_t::iterator it = repo.m_Loggers.find(wrapped_key);
@@ -75,6 +80,31 @@ shared_ptr< logger_holder_base > global_storage< CharT >::get_or_init(
         repo.m_Loggers[wrapped_key] = inst;
         return inst;
     }
+}
+
+//! Throws the \c odr_violation exception
+BOOST_LOG_EXPORT BOOST_LOG_NORETURN void throw_odr_violation(
+    std::type_info const& tag_type,
+    std::type_info const& logger_type,
+    logger_holder_base const& registered)
+{
+    // Use Boost.Spirit.Karma to avoid locale issues
+    namespace karma = boost::spirit::karma;
+
+    char buf[std::numeric_limits< unsigned int >::digits10 + 3];
+    char* p = buf;
+    karma::generate(p, karma::uint_, registered.m_RegistrationLine);
+    std::string str =
+        std::string("Could not initialize global logger with tag \"") +
+        type_info_wrapper(tag_type).pretty_name() +
+        "\" and type \"" +
+        type_info_wrapper(logger_type).pretty_name() +
+        "\". A logger of type \"" +
+        type_info_wrapper(registered.logger_type()).pretty_name() +
+        "\" with the same tag has already been registered at " +
+        registered.m_RegistrationFile + ":" + buf + ".";
+
+    BOOST_LOG_THROW_DESCR(odr_violation, str);
 }
 
 //! Explicitly instantiate global_storage implementation

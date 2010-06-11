@@ -50,7 +50,7 @@ enum
     THREAD_COUNT = 2
 };
 
-BOOST_LOG_DECLARE_GLOBAL_LOGGER(test_lg, src::logger_mt)
+BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(test_lg, src::logger_mt)
 
 //! This function is executed in multiple threads
 void thread_fun(boost::barrier& bar)
@@ -64,7 +64,7 @@ void thread_fun(boost::barrier& bar)
     // Now, do some logging
     for (unsigned int i = 0; i < LOG_RECORDS_TO_WRITE; ++i)
     {
-        BOOST_LOG(get_test_lg()) << "Log record " << i;
+        BOOST_LOG(test_lg::get()) << "Log record " << i;
     }
 }
 
