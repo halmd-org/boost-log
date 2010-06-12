@@ -13,6 +13,7 @@ build-project ./multiple_files ;
 build-project ./multiple_threads ;
 build-project ./rotating_file ;
 build-project ./settings_file ;
+build-project ./settings_file_formatter_factory ;
 build-project ./syslog ;
 build-project ./trivial ;
 build-project ./doc ;
