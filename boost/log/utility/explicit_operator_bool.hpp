@@ -34,7 +34,7 @@
  */
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
     public:\
-        explicit operator bool () const
+        explicit operator bool () const\
         {\
             return !this->operator! ();\
         }
