@@ -281,48 +281,7 @@ In order to illustrate all these lengthy recommendations, let's implement a simp
 
 Let's declare our logger feature:
 
-    template< typename BaseT >
-    class record_tagger_feature :
-        public BaseT // the feature should derive from other features or the basic_logger class
-    {
-    public:
-        // Let's import some types that we will need. These imports should be public,
-        // in order to allow other features that may derive from record_tagger to do the same.
-        typedef typename BaseT::string_type string_type;
-        typedef typename BaseT::attribute_set_type attribute_set_type;
-        typedef typename BaseT::threading_model threading_model;
-        typedef typename BaseT::record_type record_type;
-
-    public:
-        // Default constructor. Initializes m_Tag to an invalid value.
-        record_tagger_feature();
-        // Copy constructor. Initializes m_Tag to a value, equivalent to that.m_Tag.
-        record_tagger_feature(record_tagger_feature const& that);
-        // Forwarding constructor with named parameters
-        template< typename ArgsT >
-        record_tagger_feature(ArgsT const& args);
-
-        // The method will require locking, so we have to define locking requirements for it.
-        // We use the strictest_lock trait in order to choose the most restricting lock type.
-        typedef typename src::strictest_lock<
-            boost::lock_guard< threading_model >,
-            typename BaseT::open_record_lock,
-            typename BaseT::add_attribute_lock,
-            typename BaseT::remove_attribute_lock
-        >::type open_record_lock;
-
-    protected:
-        // Lock-less implementation of operations
-        template< typename ArgsT >
-        record_type open_record_unlocked(ArgsT const& args);
-    };
-
-    // A convenience metafunction to specify the feature
-    // in the list of features of the final logger later
-    struct record_tagger :
-        public boost::mpl::quote1< record_tagger_feature >
-    {
-    };
+[example_extension_record_tagger_declaration]
 
 You can see that we use the `strictest_lock` template in order to define lock types that would fulfill the base class thread safety requirements for methods that are to be called from the corresponding methods of `record_tagger_feature`. The `open_record_lock` definition shows that the `open_record_unlocked` implementation for the `record_tagger_feature` feature requires exclusive lock (which `lock_guard` is) for the logger, but it also takes into account locking requirements of the `open_record_unlocked`, `add_attribute_unlocked` and `remove_attribute_unlocked` methods of the base class, because it will have to call them. The generated `open_record` method of the final logger class will make use of this typedef in order to automatically acquire the corresponding lock type before forwarding to the `open_record_unlocked` methods.
 
@@ -330,117 +289,41 @@ Frankly speaking, in this particular example, there was no need to use the `stri
 
 The implementation of the public interface becomes quite trivial:
 
-    template< typename BaseT >
-    record_tagger_feature< BaseT >::record_tagger_feature()
-    {
-    }
-
-    template< typename BaseT >
-    record_tagger_feature< BaseT >::record_tagger_feature(record_tagger_feature const& that) :
-        BaseT(static_cast< BaseT const& >(that))
-    {
-    }
-
-    template< typename BaseT >
-    template< typename ArgsT >
-    record_tagger_feature< BaseT >::record_tagger_feature(ArgsT const& args) : BaseT(args)
-    {
-    }
+[example_extension_record_tagger_structors]
 
 Now, since all locking is extracted into the public interface, we have the most of our feature logic to be implemented in the protected part of the interface. In order to set up tag value in the logger, we will have to introduce a new __boost_parameter__ keyword. Following recommendations from that library documentation, it's better to introduce the keyword in a special namespace:
 
-    namespace my_keywords {
-
-        BOOST_PARAMETER_KEYWORD(tag_ns, tag)
-
-    }
+[example_extension_record_tagger_keyword]
 
 Opening a new record can now look something like this:
 
-    template< typename BaseT >
-    template< typename ArgsT >
-    record_type record_tagger_feature< BaseT >::open_record_unlocked(ArgsT const& args)
-    {
-        // Extract the named argument from the parameters pack
-        string_type tag_value = args[my_keywords::tag | string_type()];
-
-        attribute_set_type& attrs = BaseT::attributes();
-        typename attribute_set_type::iterator tag = attrs.end();
-        if (!tag_value.empty())
-        {
-            // Add the tag as a new attribute
-            boost::shared_ptr< logging::attribute > attr(
-                new logging::constant< string_type >(tag_value));
-            std::pair<
-                typename attribute_set_type::iterator,
-                bool
-            > res = BaseT::add_attribute_unlocked("Tag", attr);
-            if (res.second)
-                tag = res.first;
-        }
-
-        // In any case, after opening a record remove the tag from the attributes
-        BOOST_SCOPE_EXIT((&tag)(&attrs))
-        {
-            if (tag != attrs.end())
-                attrs.erase(tag);
-        }
-        BOOST_SCOPE_EXIT_END
-
-        // Forward the call to the base feature
-        return BaseT::open_record_unlocked(args);
-    }
+[example_extension_record_tagger_open_record]
 
 Here we add a new attribute with the tag value, if one is specified in call to `open_record`. When a log record is opened, all attribute values are acquired and locked after the record, so we remove the tag from the attribute set with the __boost_scope_exit__ block.
 
 Ok, we got our feature, and it's time to inject it into a logger. Assume we want to combine it with the standard severity level logging. No problems:
 
-    template< typename LevelT = int >
-    class my_logger :
-        public src::basic_composite_logger<
-            char,                       // character type for the logger
-            my_logger,                  // final logger type
-            src::single_thread_model,   // the logger does not perform thread synchronization
-                                        // use multi_thread_model to declare a thread-safe logger
-            src::features<              // the list of features we want to combine
-                src::severity< LevelT >,
-                record_tagger
-            >
-        >
-    {
-        // The following line will automatically generate forwarding constructors that
-        // will call to the corresponding constructors of the base class
-        BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(my_logger)
-    };
+[example_extension_record_tagger_my_logger]
 
 As you can see, creating a logger is a quite simple procedure. The `BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE` macro you see here is for mere convenience purpose: it unfolds into a default constructor, copy constructor and a number of constructors to support named arguments. For non-template loggers there is a similar `BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS` macro.
 
 To use this logger we can now write the following:
 
-    enum severity_level
-    {
-        normal,
-        warning,
-        error
-    };
+Assuming we have defined severity levels like this:
 
-    my_logger< severity_level > logger;
+[example_extension_record_tagger_severity]
 
-    logging::record rec = logger.open_record((keywords::severity = normal, my_keywords::tag = "[GUI]"));
-    if (rec)
-    {
-        rec.message() = "The user has confirmed his choice";
-        logger.push_record(rec);
-    }
+we can now use our logger as follows:
 
-However, I would prefer defining a special macro to reduce verbosity:
+[example_extension_record_tagger_manual_logging]
 
-    #define LOG_WITH_TAG(lg, sev, tg) \
-        BOOST_LOG_WITH_PARAMS((lg), (keywords::severity = (sev))(my_keywords::tag = (tg)))
+All this verbosity is usually not required. One can define a special macro to make the code more concise:
 
-    LOG_WITH_TAG(logger, normal, "[GUI]") << "The user has confirmed his choice";
+[example_extension_record_tagger_macro_logging]
 
-[heading Guidelines for the complete logging source designers]
+The complete code sample from this section is available in [@boost:/libs/log/example/doc/extension_record_tagger.cpp].
+
+[heading Guidelines for designers of standalone logging sources]
 
 In general, you can implement new logging sources the way you like, the library does not mandate any design requirements on log sources. However, there are some notes regarding the way log sources should interact with logging core.
 

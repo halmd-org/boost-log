@@ -68,6 +68,7 @@
 [import ../example/doc/sinks_debugger.cpp]
 [import ../example/doc/sinks_simple_event_log.cpp]
 [import ../example/event_log/main.cpp]
+[import ../example/doc/extension_record_tagger.cpp]
 
 [section Disclaimer]
 
