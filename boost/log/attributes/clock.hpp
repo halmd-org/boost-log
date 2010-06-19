@@ -24,7 +24,7 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
-#include <boost/log/attributes/attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_def.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 

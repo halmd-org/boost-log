@@ -29,7 +29,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/slim_string.hpp>
 #include <boost/log/attributes/attribute.hpp>
-#include <boost/log/attributes/attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_def.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 
 namespace boost {

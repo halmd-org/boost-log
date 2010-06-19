@@ -20,7 +20,7 @@
 #define BOOST_LOG_ATTRIBUTES_BASIC_ATTRIBUTE_VALUE_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/attributes/attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_def.hpp>
 #include <boost/log/detail/templated_shared_from_this.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 
