@@ -51,6 +51,7 @@ alias platform_log_sources
         simple_event_log.mc
         event_log_backend.cpp
         debug_output_backend.cpp
+        light_rw_mutex.cpp
         psapi
         ws2_32
     : ## requirements ##

@@ -165,15 +165,30 @@ namespace aux {
 
 #else
 
-#include <boost/thread/shared_mutex.hpp>
-
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-    typedef shared_mutex light_rw_mutex;
+    //! A light read/write mutex
+    class light_rw_mutex
+    {
+        struct { void* p; } m_Mutex;
+
+    public:
+        BOOST_LOG_EXPORT light_rw_mutex();
+        BOOST_LOG_EXPORT ~light_rw_mutex();
+        BOOST_LOG_EXPORT void lock_shared();
+        BOOST_LOG_EXPORT void unlock_shared();
+        BOOST_LOG_EXPORT void lock();
+        BOOST_LOG_EXPORT void unlock();
+
+    private:
+        // Noncopyable
+        light_rw_mutex(light_rw_mutex const&);
+        light_rw_mutex& operator= (light_rw_mutex const&);
+    };
 
 } // namespace aux
 
