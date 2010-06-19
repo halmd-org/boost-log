@@ -9,7 +9,8 @@
  * \author Andrey Semashev
  * \date   21.05.2010
  *
- * The header contains methods of the \c attribute_value class.
+ * The header contains methods of the \c attribute_value class. Use this header
+ * to introduce the complete \c attribute_value implementation into your code.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
