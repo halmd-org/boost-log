@@ -25,8 +25,8 @@
 #include <boost/any.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/mpl/if.hpp>
-#include <boost/function/function1.hpp>
 #include <boost/log/detail/setup_prologue.hpp>
+#include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/embedded_string_type.hpp>
 #include <boost/log/sinks/sink.hpp>
 
@@ -282,7 +282,7 @@ BOOST_LOG_SETUP_EXPORT void init_from_settings(basic_settings< CharT > const& se
 template< typename CharT >
 BOOST_LOG_SETUP_EXPORT void register_sink_factory(
     const CharT* sink_name,
-    function1<
+    boost::log::aux::light_function1<
         shared_ptr< sinks::sink< CharT > >,
         std::map< std::basic_string< CharT >, any > const&
     > const& factory);
@@ -302,7 +302,7 @@ BOOST_LOG_SETUP_EXPORT void register_sink_factory(
 template< typename CharT, typename TraitsT, typename AllocatorT >
 inline void register_sink_factory(
     std::basic_string< CharT, TraitsT, AllocatorT > const& sink_name,
-    function1<
+    boost::log::aux::light_function1<
         shared_ptr< sinks::sink< CharT > >,
         std::map< std::basic_string< CharT >, any > const&
     > const& factory)

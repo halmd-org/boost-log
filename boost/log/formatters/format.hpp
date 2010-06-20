@@ -23,8 +23,8 @@
 #include <ostream>
 #include <boost/format.hpp>
 #include <boost/io/ios_state.hpp>
-#include <boost/function/function2.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/light_function.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/chain.hpp>
 #include <boost/log/formatters/wrappers.hpp>
@@ -73,7 +73,7 @@ private:
         typename ostream_type::traits_type
     > rdbuf_saver;
     //! Formatter function object type
-    typedef function2< void, ostream_type&, record_type const& > formatter_type;
+    typedef boost::log::aux::light_function2< void, ostream_type&, record_type const& > formatter_type;
     //! Sequence of formatters
     typedef std::vector< formatter_type > formatters;
     //! Stream buffer type

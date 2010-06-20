@@ -20,9 +20,9 @@
 #define BOOST_LOG_SOURCES_EXCEPTION_HANDLER_FEATURE_HPP_INCLUDED_
 
 #include <boost/mpl/if.hpp>
-#include <boost/function/function0.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/sources/threading_models.hpp>
 #include <boost/log/utility/strictest_lock.hpp>
@@ -60,7 +60,7 @@ public:
     //! Final logger type
     typedef typename base_type::final_type final_type;
     //! Exception handler function type
-    typedef function0< void > exception_handler_type;
+    typedef boost::log::aux::light_function0< void > exception_handler_type;
 
 #if defined(BOOST_LOG_DOXYGEN_PASS)
     //! Lock requirement for the open_record_unlocked method

@@ -21,9 +21,9 @@
 
 #include <string>
 #include <boost/shared_ptr.hpp>
-#include <boost/function/function1.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/asio_fwd.hpp>
+#include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/syslog_constants.hpp>
@@ -300,7 +300,7 @@ public:
     typedef typename base_type::record_type record_type;
 
     //! Syslog severity level mapper type
-    typedef boost::function1<
+    typedef boost::log::aux::light_function1<
         syslog::level,
         record_type const&
     > severity_mapper_type;

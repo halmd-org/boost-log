@@ -174,7 +174,7 @@ struct filter_grammar :
         make_has_attr();
         if (!m_Subexpressions.empty())
         {
-            m_Subexpressions.top() = !log::filters::wrap(m_Subexpressions.top());
+            m_Subexpressions.top() = !log::filters::wrap< char_type >(m_Subexpressions.top());
         }
         else
         {
@@ -410,7 +410,7 @@ template< typename CharT >
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_core< CharT >::filter_type
 #else
-function1< bool, basic_attribute_values_view< CharT > const& >
+boost::log::aux::light_function1< bool, basic_attribute_values_view< CharT > const& >
 #endif
 parse_filter(const CharT* begin, const CharT* end)
 {
@@ -444,7 +444,7 @@ template BOOST_LOG_SETUP_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 basic_core< char >::filter_type
 #else
-function1< bool, basic_attribute_values_view< char > const& >
+boost::log::aux::light_function1< bool, basic_attribute_values_view< char > const& >
 #endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 parse_filter< char >(const char* begin, const char* end);
 
@@ -459,7 +459,7 @@ template BOOST_LOG_SETUP_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 basic_core< wchar_t >::filter_type
 #else
-function1< bool, basic_attribute_values_view< wchar_t > const& >
+boost::log::aux::light_function1< bool, basic_attribute_values_view< wchar_t > const& >
 #endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 parse_filter< wchar_t >(const wchar_t* begin, const wchar_t* end);
 

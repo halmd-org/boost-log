@@ -40,6 +40,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
+#include <boost/function.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/date_time/date_defs.hpp>
 #include <boost/mpl/if.hpp>
@@ -183,7 +184,7 @@ inline bool any_cast_to_bool(const CharT* param_name, any const& val)
 
 //! Extracts a filter from any
 template< typename CharT >
-inline function1<
+inline boost::log::aux::light_function1<
     bool,
     basic_attribute_values_view< CharT > const&
 > any_cast_to_filter(const CharT* param_name, any const& val)
@@ -192,6 +193,7 @@ inline function1<
     typedef basic_attribute_values_view< CharT > values_view_type;
     typedef function1< bool, values_view_type const& > filter_type1;
     typedef function< bool (values_view_type const&) > filter_type2;
+    typedef boost::log::aux::light_function1< bool, values_view_type const& > filter_type3;
 
     std::type_info const& type = val.type();
     if (type == typeid(string_type))
@@ -200,13 +202,15 @@ inline function1<
         return any_cast< filter_type1 >(val);
     else if (type == typeid(filter_type2))
         return any_cast< filter_type2 >(val);
+    else if (type == typeid(filter_type3))
+        return any_cast< filter_type3 >(val);
     else
         throw_invalid_type(param_name, type);
 }
 
 //! Extracts a formatter from any
 template< typename CharT >
-inline function2<
+inline boost::log::aux::light_function2<
     void,
     std::basic_ostream< CharT >&,
     basic_record< CharT > const&
@@ -217,6 +221,7 @@ inline function2<
     typedef basic_record< CharT > record_type;
     typedef function2< void, stream_type&, record_type const& > formatter_type1;
     typedef function< void (stream_type&, record_type const&) > formatter_type2;
+    typedef boost::log::aux::light_function2< void, stream_type&, record_type const& > formatter_type3;
 
     std::type_info const& type = val.type();
     if (type == typeid(string_type))
@@ -225,6 +230,8 @@ inline function2<
         return any_cast< formatter_type1 >(val);
     else if (type == typeid(formatter_type2))
         return any_cast< formatter_type2 >(val);
+    else if (type == typeid(formatter_type3))
+        return any_cast< formatter_type3 >(val);
     else
         throw_invalid_type(param_name, type);
 }
@@ -250,13 +257,14 @@ inline std::string any_cast_to_address(const CharT* param_name, any const& val)
 
 //! The function extracts the file rotation time point predicate from the parameter
 template< typename CharT >
-function0< bool > any_cast_to_rotation_time_point(const CharT* param_name, any const& val)
+boost::log::aux::light_function0< bool > any_cast_to_rotation_time_point(const CharT* param_name, any const& val)
 {
     typedef CharT char_type;
     typedef boost::log::aux::char_constants< char_type > constants;
     typedef std::basic_string< char_type > string_type;
     typedef function0< bool > predicate_type1;
     typedef function< bool () > predicate_type2;
+    typedef boost::log::aux::light_function0< bool > predicate_type3;
 
     std::type_info const& type = val.type();
     if (type == typeid(sinks::file::rotation_at_time_point))
@@ -265,6 +273,8 @@ function0< bool > any_cast_to_rotation_time_point(const CharT* param_name, any c
         return any_cast< predicate_type1 >(val);
     else if (type == typeid(predicate_type2))
         return any_cast< predicate_type2 >(val);
+    else if (type == typeid(predicate_type3))
+        return any_cast< predicate_type3 >(val);
     else if (type == typeid(string_type))
     {
         // We'll have to parse it from the string
@@ -348,7 +358,10 @@ struct sinks_repository :
     typedef std::basic_string< char_type > string_type;
     typedef boost::log::aux::char_constants< char_type > constants;
     typedef std::map< string_type, any > params_t;
-    typedef function1< shared_ptr< sinks::sink< char_type > >, params_t const& > sink_factory;
+    typedef boost::log::aux::light_function1<
+        shared_ptr< sinks::sink< char_type > >,
+        params_t const&
+    > sink_factory;
     typedef std::map< string_type, sink_factory > sink_factories;
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -747,7 +760,7 @@ void init_from_settings(basic_settings< CharT > const& setts)
 template< typename CharT >
 void register_sink_factory(
     const CharT* sink_name,
-    function1<
+    boost::log::aux::light_function1<
         shared_ptr< sinks::sink< CharT > >,
         std::map< std::basic_string< CharT >, any > const&
     > const& factory)
@@ -761,7 +774,7 @@ void register_sink_factory(
 template BOOST_LOG_SETUP_EXPORT
 void register_sink_factory< char >(
     const char* sink_name,
-    function1<
+    boost::log::aux::light_function1<
         shared_ptr< sinks::sink< char > >,
         std::map< std::basic_string< char >, any > const&
     > const& factory);
@@ -772,7 +785,7 @@ template BOOST_LOG_SETUP_EXPORT void init_from_settings< char >(basic_settings< 
 template BOOST_LOG_SETUP_EXPORT
 void register_sink_factory< wchar_t >(
     const wchar_t* sink_name,
-    function1<
+    boost::log::aux::light_function1<
         shared_ptr< sinks::sink< wchar_t > >,
         std::map< std::basic_string< wchar_t >, any > const&
     > const& factory);

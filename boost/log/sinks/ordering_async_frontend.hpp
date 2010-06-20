@@ -22,11 +22,11 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/mpl/assert.hpp>
-#include <boost/function/function2.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/locking_ptr.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
+#include <boost/log/detail/light_function.hpp>
 #include <boost/log/sinks/basic_sink_frontend.hpp>
 #include <boost/log/sinks/threading_models.hpp>
 #include <boost/log/keywords/start_thread.hpp>
@@ -62,7 +62,11 @@ namespace aux {
 
     public:
         typedef typename base_type::record_type record_type;
-        typedef function2< bool, record_type const&, record_type const& > order_type;
+        typedef boost::log::aux::light_function2<
+            bool,
+            record_type const&,
+            record_type const&
+        > order_type;
 
     protected:
         typedef void (*consume_trampoline_t)(void*, record_type const&);

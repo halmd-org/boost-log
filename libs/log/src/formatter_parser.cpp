@@ -309,8 +309,8 @@ void register_formatter_factory(
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
     typename formatter_types< CharT >::formatter_factory const& factory
 #else
-    function2<
-        function2< void, std::basic_ostream< CharT >&, basic_record< CharT > const& >,
+    boost::log::aux::light_function2<
+        boost::log::aux::light_function2< void, std::basic_ostream< CharT >&, basic_record< CharT > const& >,
         std::basic_string< CharT > const&,
         std::map< std::basic_string< CharT >, std::basic_string< CharT > > const&
     > const& factory
@@ -329,7 +329,7 @@ template< typename CharT >
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename formatter_types< CharT >::formatter_type
 #else
-function2< void, std::basic_ostream< CharT >&, basic_record< CharT > const& >
+boost::log::aux::light_function2< void, std::basic_ostream< CharT >&, basic_record< CharT > const& >
 #endif
 parse_formatter(const CharT* begin, const CharT* end)
 {
@@ -357,8 +357,8 @@ void register_formatter_factory< char >(
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
     formatter_types< char >::formatter_factory const& factory
 #else
-    function2<
-        function2< void, std::basic_ostream< char >&, basic_record< char > const& >,
+    boost::log::aux::light_function2<
+        boost::log::aux::light_function2< void, std::basic_ostream< char >&, basic_record< char > const& >,
         std::basic_string< char > const&,
         std::map< std::basic_string< char >, std::basic_string< char > > const&
     > const& factory
@@ -368,7 +368,7 @@ template BOOST_LOG_SETUP_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 formatter_types< char >::formatter_type
 #else
-function2< void, std::basic_ostream< char >&, basic_record< char > const& >
+boost::log::aux::light_function2< void, std::basic_ostream< char >&, basic_record< char > const& >
 #endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 parse_formatter< char >(const char* begin, const char* end);
 #endif // BOOST_LOG_USE_CHAR
@@ -380,8 +380,8 @@ void register_formatter_factory< wchar_t >(
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
     formatter_types< wchar_t >::formatter_factory const& factory
 #else
-    function2<
-        function2< void, std::basic_ostream< wchar_t >&, basic_record< wchar_t > const& >,
+    boost::log::aux::light_function2<
+        boost::log::aux::light_function2< void, std::basic_ostream< wchar_t >&, basic_record< wchar_t > const& >,
         std::basic_string< wchar_t > const&,
         std::map< std::basic_string< wchar_t >, std::basic_string< wchar_t > > const&
     > const& factory
@@ -392,7 +392,7 @@ template BOOST_LOG_SETUP_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 formatter_types< wchar_t >::formatter_type
 #else
-function2< void, std::basic_ostream< wchar_t >&, basic_record< wchar_t > const& >
+boost::log::aux::light_function2< void, std::basic_ostream< wchar_t >&, basic_record< wchar_t > const& >
 #endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 parse_formatter< wchar_t >(const wchar_t* begin, const wchar_t* end);
 #endif // BOOST_LOG_USE_WCHAR_T

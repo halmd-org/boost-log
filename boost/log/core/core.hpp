@@ -23,9 +23,8 @@
 #include <utility>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/function/function0.hpp>
-#include <boost/function/function1.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/light_function.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 
@@ -76,9 +75,9 @@ public:
     //! Sink interface type
     typedef sinks::sink< char_type > sink_type;
     //! Filter function type
-    typedef function1< bool, values_view_type const& > filter_type;
+    typedef boost::log::aux::light_function1< bool, values_view_type const& > filter_type;
     //! Exception handler function type
-    typedef function0< void > exception_handler_type;
+    typedef boost::log::aux::light_function0< void > exception_handler_type;
 
 private:
     //! Implementation type

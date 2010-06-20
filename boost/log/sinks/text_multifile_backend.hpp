@@ -26,8 +26,8 @@
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/function/function1.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/universal_path.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/code_conversion.hpp>
@@ -177,7 +177,7 @@ public:
     typedef boost::log::aux::universal_path path_type;
 
     //! File name composer functor type
-    typedef function1< path_type, record_type const& > file_name_composer_type;
+    typedef boost::log::aux::light_function1< path_type, record_type const& > file_name_composer_type;
 
 private:
     //! \cond

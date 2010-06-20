@@ -25,8 +25,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/function/function1.hpp>
 #include <boost/log/detail/setup_prologue.hpp>
+#include <boost/log/detail/light_function.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/filters/attr.hpp>
@@ -57,7 +57,7 @@ struct filter_factory :
     //! Attribute values view type
     typedef basic_attribute_values_view< char_type > values_view_type;
     //! Filter function type
-    typedef function1< bool, values_view_type const& > filter_type;
+    typedef boost::log::aux::light_function1< bool, values_view_type const& > filter_type;
 
     //! Virtual destructor
     virtual ~filter_factory() {}
@@ -243,7 +243,7 @@ BOOST_LOG_SETUP_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_core< CharT >::filter_type
 #else
-function1< bool, basic_attribute_values_view< CharT > const& >
+boost::log::aux::light_function1< bool, basic_attribute_values_view< CharT > const& >
 #endif
 parse_filter(const CharT* begin, const CharT* end);
 

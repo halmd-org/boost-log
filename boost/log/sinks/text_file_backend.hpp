@@ -25,8 +25,6 @@
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/function/function0.hpp>
-#include <boost/function/function1.hpp>
 #include <boost/date_time/date_defs.hpp>
 #include <boost/date_time/special_defs.hpp>
 #include <boost/date_time/gregorian/greg_day.hpp>
@@ -40,6 +38,7 @@
 #include <boost/log/keywords/rotation_size.hpp>
 #include <boost/log/keywords/time_based_rotation.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/universal_path.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
@@ -338,12 +337,12 @@ public:
     typedef boost::log::aux::universal_path path_type;
 
     //! File open handler
-    typedef function1< void, stream_type& > open_handler_type;
+    typedef boost::log::aux::light_function1< void, stream_type& > open_handler_type;
     //! File close handler
-    typedef function1< void, stream_type& > close_handler_type;
+    typedef boost::log::aux::light_function1< void, stream_type& > close_handler_type;
 
     //! Predicate that defines the time-based condition for file rotation
-    typedef function0< bool > time_based_rotation_predicate;
+    typedef boost::log::aux::light_function0< bool > time_based_rotation_predicate;
 
 private:
     //! \cond

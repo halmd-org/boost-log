@@ -25,9 +25,8 @@
 #include <string>
 #include <iosfwd>
 #include <boost/filesystem/path.hpp>
-#include <boost/function/function1.hpp>
-#include <boost/function/function2.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/universal_path.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
@@ -632,10 +631,10 @@ namespace event_log {
         typedef basic_record< char_type > record_type;
 
         //! Event identifier mapper type
-        typedef function1< event_id, record_type const& > event_id_mapper_type;
+        typedef boost::log::aux::light_function1< event_id, record_type const& > event_id_mapper_type;
 
         //! Type of an insertion composer (a formatter)
-        typedef function2<
+        typedef boost::log::aux::light_function2<
             void,
             stream_type&,
             record_type const&
@@ -801,7 +800,7 @@ public:
     typedef typename base_type::record_type record_type;
 
     //! Mapper type for the event type
-    typedef function1<
+    typedef boost::log::aux::light_function1<
         event_log::event_type,
         record_type const&
     > event_type_mapper_type;
@@ -921,17 +920,17 @@ public:
     typedef std::vector< string_type > insertion_list;
 
     //! Mapper type for the event type
-    typedef function1<
+    typedef boost::log::aux::light_function1<
         event_log::event_type,
         record_type const&
     > event_type_mapper_type;
     //! Mapper type for the event category
-    typedef function1<
+    typedef boost::log::aux::light_function1<
         event_log::event_category,
         record_type const&
     > event_category_mapper_type;
     //! Event composer type
-    typedef function2<
+    typedef boost::log::aux::light_function2<
         event_log::event_id,
         record_type const&,
         insertion_list&

@@ -56,6 +56,7 @@
 #include <boost/spirit/include/classic_assign_actor.hpp>
 #include <boost/log/detail/snprintf.hpp>
 #include <boost/log/detail/singleton.hpp>
+#include <boost/log/detail/light_function.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
@@ -1022,7 +1023,7 @@ struct basic_text_file_backend< CharT >::implementation
     //! Directory to store files in
     path_type m_StorageDir;
     //! File name generator (according to m_FileNamePattern)
-    function1< path_string_type, unsigned int > m_FileNameGenerator;
+    log::aux::light_function1< path_string_type, unsigned int > m_FileNameGenerator;
 
     //! Stored files counter
     unsigned int m_FileCounter;
@@ -1231,7 +1232,7 @@ void basic_text_file_backend< CharT >::set_file_name_pattern_internal(path_type 
         break;
     case 2: // Only date/time placeholders in the pattern
         m_pImpl->m_FileNameGenerator =
-                boost::bind(date_and_time_formatter(), name_pattern, _1);
+            boost::bind(date_and_time_formatter(), name_pattern, _1);
         break;
     case 3: // Counter and date/time placeholder in the pattern
         m_pImpl->m_FileNameGenerator = boost::bind(date_and_time_formatter(),
