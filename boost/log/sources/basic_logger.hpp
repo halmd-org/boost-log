@@ -26,8 +26,6 @@
 #include <ostream>
 #include <boost/assert.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/mpl/lambda.hpp>
-#include <boost/mpl/reverse_fold.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
 #include <boost/preprocessor/facilities/identity.hpp>
@@ -301,22 +299,6 @@ inline void swap(
     static_cast< FinalT& >(left).swap(static_cast< FinalT& >(right));
 }
 
-namespace aux {
-
-/*!
- * \brief A helper metafunction that is used to inherit all logger features into the final logger
- */
-struct inherit_logger_features
-{
-    template< typename PrevT, typename T >
-    struct apply
-    {
-        typedef typename mpl::lambda< T >::type::BOOST_NESTED_TEMPLATE apply< PrevT >::type type;
-    };
-};
-
-} // namespace aux
-
 /*!
  * \brief A composite logger that inherits a number of features
  *
@@ -330,17 +312,15 @@ struct inherit_logger_features
  */
 template< typename CharT, typename FinalT, typename ThreadingModelT, typename FeaturesT >
 class basic_composite_logger :
-    public mpl::reverse_fold<
-        FeaturesT,
+    public boost::log::sources::aux::inherit_features<
         basic_logger< CharT, FinalT, ThreadingModelT >,
-        aux::inherit_logger_features
+        FeaturesT
     >::type
 {
     //! Base type (the hierarchy of features)
-    typedef typename mpl::reverse_fold<
-        FeaturesT,
+    typedef typename boost::log::sources::aux::inherit_features<
         basic_logger< CharT, FinalT, ThreadingModelT >,
-        aux::inherit_logger_features
+        FeaturesT
     >::type base_type;
 
 protected:
@@ -509,16 +489,14 @@ public:
 //! An optimized composite logger version with no multithreading support
 template< typename CharT, typename FinalT, typename FeaturesT >
 class basic_composite_logger< CharT, FinalT, single_thread_model, FeaturesT > :
-    public mpl::reverse_fold<
-        FeaturesT,
+    public boost::log::sources::aux::inherit_features<
         basic_logger< CharT, FinalT, single_thread_model >,
-        aux::inherit_logger_features
+        FeaturesT
     >::type
 {
-    typedef typename mpl::reverse_fold<
-        FeaturesT,
+    typedef typename boost::log::sources::aux::inherit_features<
         basic_logger< CharT, FinalT, single_thread_model >,
-        aux::inherit_logger_features
+        FeaturesT
     >::type base_type;
 
 protected:
