@@ -13,7 +13,7 @@
 #include <boost/log/filters.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
-#include <boost/log/sources/basic_logger.hpp>
+#include <boost/log/sources/logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 
 namespace logging = boost::log;

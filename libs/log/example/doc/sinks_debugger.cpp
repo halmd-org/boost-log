@@ -9,7 +9,7 @@
 #include <boost/log/core.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/debug_output_backend.hpp>
-#include <boost/log/sources/basic_logger.hpp>
+#include <boost/log/sources/logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 
 #if defined(BOOST_WINDOWS)

@@ -46,7 +46,7 @@ class severity_logger :
         char,
         severity_logger< LevelT >,
         single_thread_model,
-        typename features< severity< LevelT > >::type
+        features< severity< LevelT > >
     >
 {
     typedef typename severity_logger::logger_base base_type;
@@ -68,7 +68,7 @@ class severity_logger_mt :
         char,
         severity_logger_mt< LevelT >,
         multi_thread_model< boost::log::aux::light_rw_mutex >,
-        typename features< severity< LevelT > >::type
+        features< severity< LevelT > >
     >
 {
     typedef typename severity_logger_mt::logger_base base_type;
@@ -94,7 +94,7 @@ class wseverity_logger :
         wchar_t,
         wseverity_logger< LevelT >,
         single_thread_model,
-        typename features< severity< LevelT > >::type
+        features< severity< LevelT > >
     >
 {
     typedef typename wseverity_logger::logger_base base_type;
@@ -116,7 +116,7 @@ class wseverity_logger_mt :
         wchar_t,
         wseverity_logger_mt< LevelT >,
         multi_thread_model< boost::log::aux::light_rw_mutex >,
-        typename features< severity< LevelT > >::type
+        features< severity< LevelT > >
     >
 {
     typedef typename wseverity_logger_mt::logger_base base_type;

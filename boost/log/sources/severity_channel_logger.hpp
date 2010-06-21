@@ -53,10 +53,10 @@ class severity_channel_logger :
         char,
         severity_channel_logger< LevelT, ChannelT >,
         single_thread_model,
-        typename features<
+        features<
             severity< LevelT >,
             channel< ChannelT >
-        >::type
+        >
     >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_channel_logger)
@@ -71,10 +71,10 @@ class severity_channel_logger_mt :
         char,
         severity_channel_logger_mt< LevelT, ChannelT >,
         multi_thread_model< boost::log::aux::light_rw_mutex >,
-        typename features<
+        features<
             severity< LevelT >,
             channel< ChannelT >
-        >::type
+        >
     >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_channel_logger_mt)
@@ -93,10 +93,10 @@ class wseverity_channel_logger :
         wchar_t,
         wseverity_channel_logger< LevelT, ChannelT >,
         single_thread_model,
-        typename features<
+        features<
             severity< LevelT >,
             channel< ChannelT >
-        >::type
+        >
     >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_channel_logger)
@@ -111,10 +111,10 @@ class wseverity_channel_logger_mt :
         wchar_t,
         wseverity_channel_logger_mt< LevelT, ChannelT >,
         multi_thread_model< boost::log::aux::light_rw_mutex >,
-        typename features<
+        features<
             severity< LevelT >,
             channel< ChannelT >
-        >::type
+        >
     >
 {
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_channel_logger_mt)

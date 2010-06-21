@@ -17,6 +17,7 @@
 #include <boost/log/formatters.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/sinks.hpp>
+#include <boost/log/sources/logger.hpp>
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;

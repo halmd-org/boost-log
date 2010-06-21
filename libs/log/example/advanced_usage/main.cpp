@@ -27,6 +27,7 @@
 #include <boost/log/formatters.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/sinks.hpp>
+#include <boost/log/sources/logger.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/scoped_attribute.hpp>
 

@@ -46,7 +46,7 @@ class channel_logger :
         char,
         channel_logger< ChannelT >,
         single_thread_model,
-        typename features< channel< ChannelT > >::type
+        features< channel< ChannelT > >
     >
 {
     typedef typename channel_logger::logger_base base_type;
@@ -68,7 +68,7 @@ class channel_logger_mt :
         char,
         channel_logger_mt< ChannelT >,
         multi_thread_model< boost::log::aux::light_rw_mutex >,
-        typename features< channel< ChannelT > >::type
+        features< channel< ChannelT > >
     >
 {
     typedef typename channel_logger_mt::logger_base base_type;
@@ -94,7 +94,7 @@ class wchannel_logger :
         wchar_t,
         wchannel_logger< ChannelT >,
         single_thread_model,
-        typename features< channel< ChannelT > >::type
+        features< channel< ChannelT > >
     >
 {
     typedef typename wchannel_logger::logger_base base_type;
@@ -116,7 +116,7 @@ class wchannel_logger_mt :
         wchar_t,
         wchannel_logger< ChannelT >,
         multi_thread_model< boost::log::aux::light_rw_mutex >,
-        typename features< channel< ChannelT > >::type
+        features< channel< ChannelT > >
     >
 {
     typedef typename wchannel_logger_mt::logger_base base_type;

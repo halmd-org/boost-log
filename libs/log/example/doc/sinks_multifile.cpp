@@ -14,7 +14,7 @@
 #include <boost/log/formatters.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_multifile_backend.hpp>
-#include <boost/log/sources/basic_logger.hpp>
+#include <boost/log/sources/logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/utility/scoped_attribute.hpp>
 

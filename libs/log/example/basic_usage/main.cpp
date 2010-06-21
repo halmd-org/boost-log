@@ -32,6 +32,8 @@
 
 #include <boost/log/attributes/timer.hpp>
 
+#include <boost/log/sources/logger.hpp>
+
 namespace logging = boost::log;
 namespace fmt = boost::log::formatters;
 namespace flt = boost::log::filters;

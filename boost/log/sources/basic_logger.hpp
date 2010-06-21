@@ -591,65 +591,6 @@ public:
 #define BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(class_type)\
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_IMPL(class_type, BOOST_PP_IDENTITY(typename))
 
-
-#ifdef BOOST_LOG_USE_CHAR
-
-/*!
- * \brief Narrow-char logger. Functionally equivalent to \c basic_logger.
- *
- * See \c basic_logger class template for a more detailed description.
- */
-class logger :
-    public basic_composite_logger< char, logger, single_thread_model, features< >::type >
-{
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(logger)
-};
-
-#if !defined(BOOST_LOG_NO_THREADS)
-
-/*!
- * \brief Narrow-char thread-safe logger. Functionally equivalent to \c basic_logger.
- *
- * See \c basic_logger class template for a more detailed description.
- */
-class logger_mt :
-    public basic_composite_logger< char, logger_mt, multi_thread_model< boost::log::aux::light_rw_mutex >, features< >::type >
-{
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(logger_mt)
-};
-
-#endif // !defined(BOOST_LOG_NO_THREADS)
-#endif // BOOST_LOG_USE_CHAR
-
-#ifdef BOOST_LOG_USE_WCHAR_T
-
-/*!
- * \brief Wide-char logger. Functionally equivalent to \c basic_logger.
- *
- * See \c basic_logger class template for a more detailed description.
- */
-class wlogger :
-    public basic_composite_logger< wchar_t, wlogger, single_thread_model, features< >::type >
-{
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(wlogger)
-};
-
-#if !defined(BOOST_LOG_NO_THREADS)
-
-/*!
- * \brief Wide-char thread-safe logger. Functionally equivalent to \c basic_logger.
- *
- * See \c basic_logger class template for a more detailed description.
- */
-class wlogger_mt :
-    public basic_composite_logger< wchar_t, wlogger_mt, multi_thread_model< boost::log::aux::light_rw_mutex >, features< >::type >
-{
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(wlogger_mt)
-};
-
-#endif // !defined(BOOST_LOG_NO_THREADS)
-#endif // BOOST_LOG_USE_WCHAR_T
-
 } // namespace sources
 
 } // namespace log
@@ -674,7 +615,7 @@ class wlogger_mt :
             char_type,\
             type_name,\
             threading,\
-            ::boost::log::sources::features< BOOST_PP_SEQ_ENUM(base_seq) >::type\
+            ::boost::log::sources::features< BOOST_PP_SEQ_ENUM(base_seq) >\
         >\
     {\
         BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(type_name)\
