@@ -15,7 +15,7 @@
  * The code creates a sink that will send syslog messages to local port 514.
  */
 
-#define BOOST_LOG_DYN_LINK 1
+// #define BOOST_LOG_DYN_LINK 1
 
 #include <stdexcept>
 #include <string>
