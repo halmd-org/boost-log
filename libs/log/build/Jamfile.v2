@@ -71,7 +71,7 @@ lib boost_log
         slim_string.cpp
         code_conversion.cpp
         core.cpp
-        stream_provider.cpp
+        record_ostream.cpp
         severity_level.cpp
         global_logger_storage.cpp
         named_scope.cpp

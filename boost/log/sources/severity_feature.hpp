@@ -96,7 +96,7 @@ namespace aux {
         //! The method dispatches the value to the given object
         virtual bool dispatch(type_dispatcher& dispatcher)
         {
-            register type_visitor< held_type > visitor =
+            type_visitor< held_type > visitor =
                 dispatcher.get_visitor< held_type >();
             if (visitor)
             {
