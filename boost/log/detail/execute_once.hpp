@@ -57,7 +57,7 @@ private:
 
 private:
     execute_once_flag& m_Flag;
-    bool m_fCounted;
+    mutable bool m_fCounted;
 
 public:
     explicit execute_once_sentry(execute_once_flag& f) :
@@ -82,7 +82,7 @@ private:
     execute_once_sentry(execute_once_sentry const&);
     execute_once_sentry& operator= (execute_once_sentry const&);
 
-    BOOST_LOG_EXPORT bool executed_once();
+    BOOST_LOG_EXPORT bool executed_once() const;
     BOOST_LOG_EXPORT void finalize_once();
 };
 
@@ -134,7 +134,7 @@ private:
     execute_once_sentry(execute_once_sentry const&);
     execute_once_sentry& operator= (execute_once_sentry const&);
 
-    BOOST_LOG_EXPORT bool executed_once();
+    BOOST_LOG_EXPORT bool executed_once() const;
     BOOST_LOG_EXPORT void finalize_once();
 };
 

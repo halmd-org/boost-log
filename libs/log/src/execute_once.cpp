@@ -31,7 +31,7 @@ namespace aux {
 
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
 
-BOOST_LOG_EXPORT bool execute_once_sentry::executed_once()
+BOOST_LOG_EXPORT bool execute_once_sentry::executed_once() const
 {
     long status;
     void* event_handle = 0;
@@ -132,7 +132,7 @@ BOOST_LOG_EXPORT execute_once_sentry::execute_once_sentry(execute_once_flag& f) 
 {
 }
 
-BOOST_LOG_EXPORT bool execute_once_sentry::executed_once()
+BOOST_LOG_EXPORT bool execute_once_sentry::executed_once() const
 {
     BOOST_VERIFY(!pthread_mutex_lock(&detail::once_epoch_mutex));
 
