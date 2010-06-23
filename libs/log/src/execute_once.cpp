@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   check_execute_once.cpp
+ * \file   execute_once.cpp
  * \author Andrey Semashev
  * \date   23.06.2010
  *
@@ -15,7 +15,7 @@
  * The code in this file is based on the \c call_once function implementation in Boost.Thread.
  */
 
-#include <boost/log/detail/check_execute_once.hpp>
+#include <boost/log/detail/execute_once.hpp>
 
 #ifndef BOOST_LOG_NO_THREADS
 
@@ -31,7 +31,7 @@ namespace aux {
 
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
 
-BOOST_LOG_EXPORT void check_execute_once::slow_constructor()
+BOOST_LOG_EXPORT bool execute_once_sentry::executed_once()
 {
     long status;
     void* event_handle = 0;
@@ -52,7 +52,7 @@ BOOST_LOG_EXPORT void check_execute_once::slow_constructor()
             }
 
             // Invoke the initializer block
-            break;
+            return false;
         }
 
         if (!m_fCounted)
@@ -63,7 +63,7 @@ BOOST_LOG_EXPORT void check_execute_once::slow_constructor()
             if (status == function_complete_flag_value)
             {
                 // The initializer block has already been executed
-                break;
+                return true;
             }
             event_handle = boost::detail::interlocked_read_acquire(&m_Flag.event_handle);
             if (!event_handle)
@@ -75,9 +75,11 @@ BOOST_LOG_EXPORT void check_execute_once::slow_constructor()
         BOOST_VERIFY(!boost::detail::win32::WaitForSingleObject(
             event_handle, boost::detail::win32::infinite));
     }
+
+    return true;
 }
 
-BOOST_LOG_EXPORT void check_execute_once::slow_destructor()
+BOOST_LOG_EXPORT void execute_once_sentry::finalize_once()
 {
     void* event_handle = boost::detail::interlocked_read_acquire(&m_Flag.event_handle);
     bool keep_event = false;
@@ -124,7 +126,13 @@ BOOST_LOG_EXPORT void check_execute_once::slow_destructor()
 boost::uintmax_t const uninitialized_flag = BOOST_ONCE_INITIAL_FLAG_VALUE;
 boost::uintmax_t const being_initialized = uninitialized_flag + 1;
 
-BOOST_LOG_EXPORT void check_execute_once::slow_constructor()
+BOOST_LOG_EXPORT execute_once_sentry::execute_once_sentry(execute_once_flag& f) :
+    m_Flag(f),
+    m_ThisThreadEpoch(detail::get_once_per_thread_epoch())
+{
+}
+
+BOOST_LOG_EXPORT bool execute_once_sentry::executed_once()
 {
     BOOST_VERIFY(!pthread_mutex_lock(&detail::once_epoch_mutex));
 
@@ -136,7 +144,7 @@ BOOST_LOG_EXPORT void check_execute_once::slow_constructor()
             BOOST_VERIFY(!pthread_mutex_unlock(&detail::once_epoch_mutex));
 
             // Invoke the initializer block
-            break;
+            return false;
         }
         else
         {
@@ -146,9 +154,11 @@ BOOST_LOG_EXPORT void check_execute_once::slow_constructor()
             }
         }
     }
+
+    return true;
 }
 
-BOOST_LOG_EXPORT void check_execute_once::slow_destructor()
+BOOST_LOG_EXPORT void execute_once_sentry::finalize_once()
 {
     BOOST_VERIFY(!pthread_mutex_lock(&detail::once_epoch_mutex));
 
