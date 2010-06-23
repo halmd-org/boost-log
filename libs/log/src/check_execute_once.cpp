@@ -105,7 +105,7 @@ BOOST_LOG_EXPORT void check_execute_once::slow_destructor()
         boost::detail::win32::SetEvent(event_handle);
     }
 
-    if (m_fCounted && BOOST_INTERLOCKED_DECREMENT(&m_Flag.count)) == 0 && !keep_event)
+    if (m_fCounted && (BOOST_INTERLOCKED_DECREMENT(&m_Flag.count) == 0) && !keep_event)
     {
         if (!event_handle)
         {
