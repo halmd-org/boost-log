@@ -37,7 +37,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-    //! A base class for all scoped attribute classes
+    //! A base class for all scoped attribute guards
     class attribute_scope_guard
     {
     };
