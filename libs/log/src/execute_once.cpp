@@ -19,7 +19,6 @@
 
 #ifndef BOOST_LOG_NO_THREADS
 
-#include <exception>
 #include <boost/assert.hpp>
 #include <boost/thread/once.hpp>
 
@@ -31,7 +30,7 @@ namespace aux {
 
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
 
-BOOST_LOG_EXPORT bool execute_once_sentry::executed_once() const
+BOOST_LOG_EXPORT bool execute_once_sentry::enter_once_block() const
 {
     long status;
     void* event_handle = 0;
@@ -79,26 +78,16 @@ BOOST_LOG_EXPORT bool execute_once_sentry::executed_once() const
     return true;
 }
 
-BOOST_LOG_EXPORT void execute_once_sentry::finalize_once()
+BOOST_LOG_EXPORT void execute_once_sentry::commit()
 {
     void* event_handle = boost::detail::interlocked_read_acquire(&m_Flag.event_handle);
-    bool keep_event = false;
 
-    if (!std::uncaught_exception())
-    {
-        // The initializer executed successfully
-        BOOST_INTERLOCKED_EXCHANGE(&m_Flag.status, function_complete_flag_value);
+    // The initializer executed successfully
+    BOOST_INTERLOCKED_EXCHANGE(&m_Flag.status, function_complete_flag_value);
 
-        if (!event_handle && boost::detail::interlocked_read_acquire(&m_Flag.count) > 0)
-        {
-            event_handle = boost::detail::allocate_event_handle(m_Flag.event_handle);
-        }
-    }
-    else
+    if (!event_handle && boost::detail::interlocked_read_acquire(&m_Flag.count) > 0)
     {
-        // The initializer failed, marking the flag as if it hasn't run at all
-        BOOST_INTERLOCKED_EXCHANGE(&m_Flag.status, 0);
-        keep_event = true;
+        event_handle = boost::detail::allocate_event_handle(m_Flag.event_handle);
     }
 
     // Launch other threads that may have been blocked
@@ -107,7 +96,7 @@ BOOST_LOG_EXPORT void execute_once_sentry::finalize_once()
         boost::detail::win32::SetEvent(event_handle);
     }
 
-    if (m_fCounted && (BOOST_INTERLOCKED_DECREMENT(&m_Flag.count) == 0) && !keep_event)
+    if (m_fCounted && (BOOST_INTERLOCKED_DECREMENT(&m_Flag.count) == 0))
     {
         if (!event_handle)
         {
@@ -121,6 +110,21 @@ BOOST_LOG_EXPORT void execute_once_sentry::finalize_once()
     }
 }
 
+BOOST_LOG_EXPORT void execute_once_sentry::rollback()
+{
+    // The initializer failed, marking the flag as if it hasn't run at all
+    BOOST_INTERLOCKED_EXCHANGE(&m_Flag.status, 0);
+
+    // Launch other threads that may have been blocked
+    void* event_handle = boost::detail::interlocked_read_acquire(&m_Flag.event_handle);
+    if (event_handle)
+    {
+        boost::detail::win32::SetEvent(event_handle);
+    }
+
+    BOOST_INTERLOCKED_DECREMENT(&m_Flag.count);
+}
+
 #elif defined(BOOST_THREAD_PLATFORM_PTHREAD)
 
 boost::uintmax_t const uninitialized_flag = BOOST_ONCE_INITIAL_FLAG_VALUE;
@@ -132,7 +136,7 @@ BOOST_LOG_EXPORT execute_once_sentry::execute_once_sentry(execute_once_flag& f) 
 {
 }
 
-BOOST_LOG_EXPORT bool execute_once_sentry::executed_once() const
+BOOST_LOG_EXPORT bool execute_once_sentry::enter_once_block() const
 {
     BOOST_VERIFY(!pthread_mutex_lock(&detail::once_epoch_mutex));
 
@@ -158,21 +162,24 @@ BOOST_LOG_EXPORT bool execute_once_sentry::executed_once() const
     return true;
 }
 
-BOOST_LOG_EXPORT void execute_once_sentry::finalize_once()
+BOOST_LOG_EXPORT void execute_once_sentry::commit()
 {
     BOOST_VERIFY(!pthread_mutex_lock(&detail::once_epoch_mutex));
 
-    if (!std::uncaught_exception())
-    {
-        // The initializer executed successfully
-        m_Flag.epoch = --detail::once_global_epoch;
-        m_ThisThreadEpoch = detail::once_global_epoch;
-    }
-    else
-    {
-        // The initializer failed, marking the flag as if it hasn't run at all
-        m_Flag.epoch = uninitialized_flag;
-    }
+    // The initializer executed successfully
+    m_Flag.epoch = --detail::once_global_epoch;
+    m_ThisThreadEpoch = detail::once_global_epoch;
+
+    BOOST_VERIFY(!pthread_mutex_unlock(&detail::once_epoch_mutex));
+    BOOST_VERIFY(!pthread_cond_broadcast(&detail::once_epoch_cv));
+}
+
+BOOST_LOG_EXPORT void execute_once_sentry::rollback()
+{
+    BOOST_VERIFY(!pthread_mutex_lock(&detail::once_epoch_mutex));
+
+    // The initializer failed, marking the flag as if it hasn't run at all
+    m_Flag.epoch = uninitialized_flag;
 
     BOOST_VERIFY(!pthread_mutex_unlock(&detail::once_epoch_mutex));
     BOOST_VERIFY(!pthread_cond_broadcast(&detail::once_epoch_cv));

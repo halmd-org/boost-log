@@ -60,7 +60,7 @@ private:
     mutable bool m_fCounted;
 
 public:
-    explicit execute_once_sentry(execute_once_flag& f) :
+    execute_once_sentry(execute_once_flag& f) :
         m_Flag(f),
         m_fCounted(false)
     {
@@ -69,21 +69,23 @@ public:
     ~execute_once_sentry()
     {
         if (m_Flag.status != function_complete_flag_value)
-            finalize_once();
+            rollback();
     }
 
     bool executed() const
     {
-        return (m_Flag.status == function_complete_flag_value || executed_once());
+        return (m_Flag.status == function_complete_flag_value || enter_once_block());
     }
+
+    BOOST_LOG_EXPORT void commit();
 
 private:
     //  Non-copyable, non-assignable
     execute_once_sentry(execute_once_sentry const&);
     execute_once_sentry& operator= (execute_once_sentry const&);
 
-    BOOST_LOG_EXPORT bool executed_once() const;
-    BOOST_LOG_EXPORT void finalize_once();
+    BOOST_LOG_EXPORT bool enter_once_block() const;
+    BOOST_LOG_EXPORT void rollback();
 };
 
 } // namespace aux
@@ -116,26 +118,28 @@ private:
     boost::uintmax_t& m_ThisThreadEpoch;
 
 public:
-    BOOST_LOG_EXPORT explicit execute_once_sentry(execute_once_flag& f);
+    BOOST_LOG_EXPORT execute_once_sentry(execute_once_flag& f);
 
     ~execute_once_sentry()
     {
         if (m_Flag.epoch < m_ThisThreadEpoch)
-            finalize_once();
+            rollback();
     }
 
     bool executed() const
     {
-        return (m_Flag.epoch >= m_ThisThreadEpoch || executed_once());
+        return (m_Flag.epoch >= m_ThisThreadEpoch || enter_once_block());
     }
+
+    BOOST_LOG_EXPORT void commit();
 
 private:
     //  Non-copyable, non-assignable
     execute_once_sentry(execute_once_sentry const&);
     execute_once_sentry& operator= (execute_once_sentry const&);
 
-    BOOST_LOG_EXPORT bool executed_once() const;
-    BOOST_LOG_EXPORT void finalize_once();
+    BOOST_LOG_EXPORT bool enter_once_block() const;
+    BOOST_LOG_EXPORT void rollback();
 };
 
 } // namespace aux
@@ -149,9 +153,8 @@ private:
 #endif
 
 #define BOOST_LOG_EXECUTE_ONCE_FLAG_INTERNAL(flag_var, sentry_var)\
-    for (boost::log::aux::execute_once_sentry const& sentry_var =\
-            boost::log::aux::execute_once_sentry((flag_var));\
-        !sentry_var.executed();)
+    for (boost::log::aux::execute_once_sentry sentry_var = (flag_var);\
+        !sentry_var.executed(); sentry_var.commit())
 
 /*!
  * \def BOOST_LOG_EXECUTE_ONCE_FLAG(flag_var)
