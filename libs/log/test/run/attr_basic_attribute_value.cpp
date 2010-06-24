@@ -23,6 +23,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/attribute.hpp>
+#include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 #include <boost/log/detail/functional.hpp>
