@@ -16,9 +16,8 @@
 #include <map>
 #include <string>
 #include <boost/limits.hpp>
-#include <boost/spirit/include/karma_uint.hpp>
-#include <boost/spirit/include/karma_generate.hpp>
 #include <boost/log/exceptions.hpp>
+#include <boost/log/detail/snprintf.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
@@ -88,12 +87,8 @@ BOOST_LOG_EXPORT BOOST_LOG_NORETURN void throw_odr_violation(
     std::type_info const& logger_type,
     logger_holder_base const& registered)
 {
-    // Use Boost.Spirit.Karma to avoid locale issues
-    namespace karma = boost::spirit::karma;
-
     char buf[std::numeric_limits< unsigned int >::digits10 + 3];
-    char* p = buf;
-    karma::generate(p, karma::uint_, registered.m_RegistrationLine);
+    log::aux::snprintf(buf, sizeof(buf), "%u", registered.m_RegistrationLine);
     std::string str =
         std::string("Could not initialize global logger with tag \"") +
         type_info_wrapper(tag_type).pretty_name() +
