@@ -31,6 +31,7 @@
 [def __boost_lambda__ [@http://www.boost.org/doc/libs/release/doc/html/lambda.html Boost.Lambda]]
 [def __boost_phoenix__ [@http://www.boost.org/doc/libs/release/libs/spirit/doc/phoenix.html Boost.Phoenix]]
 [def __boost_spirit__ [@http://www.boost.org/doc/libs/release/libs/spirit/classic/index.html Boost.Spirit]]
+[def __boost_spirit2__ [@http://www.boost.org/doc/libs/release/libs/spirit/doc/html/index.html Boost.Spirit2]]
 [def __boost_optional__ [@http://www.boost.org/doc/libs/release/libs/optional/index.html Boost.Optional]]
 [def __boost_intrusive__ [@http://www.boost.org/doc/libs/release/doc/html/intrusive.html Boost.Intrusive]]
 [def __boost_iostreams__ [@http://www.boost.org/doc/libs/release/libs/iostreams/doc/index.html Boost.IOStreams]]

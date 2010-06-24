@@ -26,5 +26,6 @@ Points in this section are not necessarily going to be implemented. These are ma
 * Provide some kind of shared formatters. The idea is that several sinks may use the same formatter. If a log record passes filtering to multiple such sinks, the formatting is done just once for all sinks that share the formatter.
 * Allow to change the locale for the file stream in the text file backend. The locale can alter the character code conversion in wide-character logging.
 * Provide headers with forward declarations of the library components.
+* Move to __boost_spirit2__ internally, after the issues with STLPort are fixed ([@https://svn.boost.org/trac/boost/ticket/4372 #4372], [@https://svn.boost.org/trac/boost/ticket/1610 #1610]).
 
 [endsect]
