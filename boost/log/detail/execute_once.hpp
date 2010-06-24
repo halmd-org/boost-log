@@ -60,7 +60,7 @@ private:
     mutable bool m_fCounted;
 
 public:
-    execute_once_sentry(execute_once_flag& f) :
+    explicit execute_once_sentry(execute_once_flag& f) :
         m_Flag(f),
         m_fCounted(false)
     {
@@ -118,7 +118,7 @@ private:
     boost::uintmax_t& m_ThisThreadEpoch;
 
 public:
-    BOOST_LOG_EXPORT execute_once_sentry(execute_once_flag& f);
+    BOOST_LOG_EXPORT explicit execute_once_sentry(execute_once_flag& f);
 
     ~execute_once_sentry()
     {
@@ -153,7 +153,7 @@ private:
 #endif
 
 #define BOOST_LOG_EXECUTE_ONCE_FLAG_INTERNAL(flag_var, sentry_var)\
-    for (boost::log::aux::execute_once_sentry sentry_var = (flag_var);\
+    for (boost::log::aux::execute_once_sentry sentry_var((flag_var));\
         !sentry_var.executed(); sentry_var.commit())
 
 /*!
