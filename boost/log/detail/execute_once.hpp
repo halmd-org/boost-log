@@ -23,84 +23,16 @@
 #define BOOST_LOG_DETAIL_EXECUTE_ONCE_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/utility/unique_identifier_name.hpp>
 
 #ifndef BOOST_LOG_NO_THREADS
 
-#include <boost/log/utility/unique_identifier_name.hpp>
-
-#if defined(BOOST_THREAD_PLATFORM_WIN32)
-
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-struct execute_once_flag
-{
-    // Flag status values from Boost.Thread
-    enum
-    {
-        uninitialized = 0,
-        being_initialized = 0x7f0725e3,
-        initialized = 0xc15730e2
-    };
-
-    void* event_handle;
-    long status;
-    long count;
-};
-
-#define BOOST_LOG_ONCE_INIT { 0, boost::log::aux::execute_once_flag::uninitialized, 0 }
-
-class execute_once_sentry
-{
-private:
-    execute_once_flag& m_Flag;
-    mutable bool m_fCounted;
-
-public:
-    explicit execute_once_sentry(execute_once_flag& f) :
-        m_Flag(f),
-        m_fCounted(false)
-    {
-    }
-
-    ~execute_once_sentry()
-    {
-        if (m_Flag.status != execute_once_flag::initialized)
-            rollback();
-    }
-
-    bool executed() const
-    {
-        return (m_Flag.status == execute_once_flag::initialized || enter_once_block());
-    }
-
-    BOOST_LOG_EXPORT void commit();
-
-private:
-    //  Non-copyable, non-assignable
-    execute_once_sentry(execute_once_sentry const&);
-    execute_once_sentry& operator= (execute_once_sentry const&);
-
-    BOOST_LOG_EXPORT bool enter_once_block() const;
-    BOOST_LOG_EXPORT void rollback();
-};
-
-} // namespace aux
-
-} // namespace log
-
-} // namespace boost
-
-#elif defined(BOOST_THREAD_PLATFORM_PTHREAD)
-
-namespace boost {
-
-namespace BOOST_LOG_NAMESPACE {
-
-namespace aux {
 
 struct execute_once_flag
 {
@@ -152,10 +84,6 @@ private:
 } // namespace log
 
 } // namespace boost
-
-#else
-#error Boost.Log: unsupported threading API
-#endif
 
 #else // BOOST_LOG_NO_THREADS
 

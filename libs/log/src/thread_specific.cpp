@@ -224,7 +224,7 @@ void thread_specific_base::set_content(void* value) const
 } // namespace boost
 
 #else
-#error "An unsupported threading platform encountered"
+#error Boost.Log: unsupported threading API
 #endif
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
