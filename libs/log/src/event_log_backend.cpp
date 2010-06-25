@@ -23,7 +23,7 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
 #include <boost/log/sinks/event_log_constants.hpp>
-#include <boost/log/detail/execute_once.hpp>
+#include <boost/log/utility/once_block.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include "event_log_registry.hpp"
@@ -187,7 +187,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     {
         static HMODULE hSelfModule = 0;
 
-        BOOST_LOG_EXECUTE_ONCE()
+        BOOST_LOG_ONCE_BLOCK()
         {
             init_self_module_handle(hSelfModule);
         }

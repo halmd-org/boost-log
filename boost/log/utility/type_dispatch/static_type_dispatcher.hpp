@@ -34,7 +34,7 @@
 #include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/visible_type.hpp>
-#include <boost/log/detail/execute_once.hpp>
+#include <boost/log/utility/once_block.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 
@@ -116,7 +116,7 @@ public:
     explicit type_sequence_dispatcher(ReceiverT& receiver) :
         m_pReceiver((void*)boost::addressof(receiver))
     {
-        BOOST_LOG_EXECUTE_ONCE()
+        BOOST_LOG_ONCE_BLOCK()
         {
             dispatching_map& disp_map = get_dispatching_map();
             typename dispatching_map::value_type* p = &*disp_map.begin();

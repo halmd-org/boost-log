@@ -83,7 +83,7 @@ lib boost_log
         text_file_backend.cpp
         syslog_backend.cpp
         thread_specific.cpp
-        execute_once.cpp
+        once_block.cpp
         trivial.cpp
         platform_log_sources
     : ## requirements ##

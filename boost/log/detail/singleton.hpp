@@ -22,7 +22,7 @@
 
 #include <boost/noncopyable.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/execute_once.hpp>
+#include <boost/log/utility/once_block.hpp>
 
 namespace boost {
 
@@ -38,7 +38,7 @@ public:
     //! Returns the singleton instance
     static StorageT& get()
     {
-        BOOST_LOG_EXECUTE_ONCE()
+        BOOST_LOG_ONCE_BLOCK()
         {
             DerivedT::init_instance();
         }

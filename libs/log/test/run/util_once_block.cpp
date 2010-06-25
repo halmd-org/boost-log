@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   detail_execute_once.cpp
+ * \file   util_once_block.cpp
  * \author Andrey Semashev
  * \date   24.06.2010
  *
@@ -14,9 +14,9 @@
  * The test was adopted from test_once.cpp test of Boost.Thread.
  */
 
-#define BOOST_TEST_MODULE detail_execute_once
+#define BOOST_TEST_MODULE util_once_block
 
-#include <boost/log/detail/execute_once.hpp>
+#include <boost/log/utility/once_block.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS)
 
@@ -36,7 +36,7 @@ enum config
 boost::mutex m;
 typedef boost::lock_guard< boost::mutex > scoped_lock;
 
-logging::aux::execute_once_flag flag = BOOST_LOG_ONCE_INIT;
+logging::once_block_flag flag = BOOST_LOG_ONCE_BLOCK_INIT;
 int var_to_init_once_flag = 0;
 
 void initialize_variable()
@@ -47,12 +47,12 @@ void initialize_variable()
 }
 
 
-void execute_once_flag_thread()
+void once_block_flag_thread()
 {
     int my_once_value = 0;
     for (unsigned i = 0; i < LOOP_COUNT; ++i)
     {
-        BOOST_LOG_EXECUTE_ONCE_FLAG(flag)
+        BOOST_LOG_ONCE_BLOCK_FLAG(flag)
         {
             initialize_variable();
         }
@@ -67,8 +67,8 @@ void execute_once_flag_thread()
     BOOST_CHECK_EQUAL(my_once_value, 1);
 }
 
-// The test checks if the BOOST_LOG_EXECUTE_ONCE_FLAG macro works
-BOOST_AUTO_TEST_CASE(execute_once_flag)
+// The test checks if the BOOST_LOG_ONCE_BLOCK_FLAG macro works
+BOOST_AUTO_TEST_CASE(once_block_flag)
 {
     boost::thread_group group;
 
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(execute_once_flag)
     {
         for (unsigned i = 0; i < THREAD_COUNT; ++i)
         {
-            group.create_thread(&execute_once_flag_thread);
+            group.create_thread(&once_block_flag_thread);
         }
         group.join_all();
     }
@@ -92,12 +92,12 @@ BOOST_AUTO_TEST_CASE(execute_once_flag)
 
 int var_to_init_once = 0;
 
-void execute_once_thread()
+void once_block_thread()
 {
     int my_once_value = 0;
     for (unsigned i = 0; i < LOOP_COUNT; ++i)
     {
-        BOOST_LOG_EXECUTE_ONCE()
+        BOOST_LOG_ONCE_BLOCK()
         {
             scoped_lock lock(m);
             ++var_to_init_once;
@@ -114,8 +114,8 @@ void execute_once_thread()
     BOOST_CHECK_EQUAL(my_once_value, 1);
 }
 
-// The test checks if the BOOST_LOG_EXECUTE_ONCE macro works
-BOOST_AUTO_TEST_CASE(execute_once)
+// The test checks if the BOOST_LOG_ONCE_BLOCK macro works
+BOOST_AUTO_TEST_CASE(once_block)
 {
     boost::thread_group group;
 
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(execute_once)
     {
         for (unsigned i = 0; i < THREAD_COUNT; ++i)
         {
-            group.create_thread(&execute_once_thread);
+            group.create_thread(&once_block_thread);
         }
         group.join_all();
     }
@@ -145,11 +145,11 @@ struct my_exception
 unsigned pass_counter = 0;
 unsigned exception_counter = 0;
 
-void execute_once_with_exception_thread()
+void once_block_with_exception_thread()
 {
     try
     {
-        BOOST_LOG_EXECUTE_ONCE()
+        BOOST_LOG_ONCE_BLOCK()
         {
             scoped_lock lock(m);
             ++pass_counter;
@@ -166,8 +166,8 @@ void execute_once_with_exception_thread()
     }
 }
 
-// The test verifies that the execute_once flag is not set if an exception is thrown from the once-block
-BOOST_AUTO_TEST_CASE(execute_once_retried_on_exception)
+// The test verifies that the once_block flag is not set if an exception is thrown from the once-block
+BOOST_AUTO_TEST_CASE(once_block_retried_on_exception)
 {
     boost::thread_group group;
 
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(execute_once_retried_on_exception)
     {
         for (unsigned i = 0; i < THREAD_COUNT; ++i)
         {
-            group.create_thread(&execute_once_with_exception_thread);
+            group.create_thread(&once_block_with_exception_thread);
         }
         group.join_all();
     }

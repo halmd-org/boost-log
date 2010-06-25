@@ -20,7 +20,7 @@
 #include <new>
 #include <boost/assert.hpp>
 #include <boost/thread/shared_mutex.hpp>
-#include <boost/log/detail/execute_once.hpp>
+#include <boost/log/utility/once_block.hpp>
 
 #include "windows_version.hpp"
 #include <windows.h>
@@ -152,7 +152,7 @@ void init_light_rw_mutex_impl()
 
 BOOST_LOG_EXPORT light_rw_mutex::light_rw_mutex()
 {
-    BOOST_LOG_EXECUTE_ONCE()
+    BOOST_LOG_ONCE_BLOCK()
     {
         init_light_rw_mutex_impl();
     }

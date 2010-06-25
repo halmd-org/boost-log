@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   execute_once.cpp
+ * \file   once_block.cpp
  * \author Andrey Semashev
  * \date   23.06.2010
  *
@@ -15,7 +15,7 @@
  * The code in this file is based on the \c call_once function implementation in Boost.Thread.
  */
 
-#include <boost/log/detail/execute_once.hpp>
+#include <boost/log/utility/once_block.hpp>
 
 #ifndef BOOST_LOG_NO_THREADS
 
@@ -36,61 +36,61 @@ namespace aux {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
-    SRWLOCK g_ExecuteOnceMutex = SRWLOCK_INIT;
-    CONDITION_VARIABLE g_ExecuteOnceCond = CONDITION_VARIABLE_INIT;
+    SRWLOCK g_OnceBlockMutex = SRWLOCK_INIT;
+    CONDITION_VARIABLE g_OnceBlockCond = CONDITION_VARIABLE_INIT;
 
 } // namespace
 
-BOOST_LOG_EXPORT bool execute_once_sentry::enter_once_block() const
+BOOST_LOG_EXPORT bool once_block_sentry::enter_once_block() const
 {
-    AcquireSRWLockExclusive(&g_ExecuteOnceMutex);
+    AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
-    execute_once_flag volatile& flag = m_Flag;
-    while (flag.status != execute_once_flag::initialized)
+    once_block_flag volatile& flag = m_Flag;
+    while (flag.status != once_block_flag::initialized)
     {
-        if (flag.status == execute_once_flag::uninitialized)
+        if (flag.status == once_block_flag::uninitialized)
         {
-            flag.status = execute_once_flag::being_initialized;
-            ReleaseSRWLockExclusive(&g_ExecuteOnceMutex);
+            flag.status = once_block_flag::being_initialized;
+            ReleaseSRWLockExclusive(&g_OnceBlockMutex);
 
             // Invoke the initializer block
             return false;
         }
         else
         {
-            while (flag.status == execute_once_flag::being_initialized)
+            while (flag.status == once_block_flag::being_initialized)
             {
                 BOOST_VERIFY(SleepConditionVariableSRW(
-                    &g_ExecuteOnceCond, &g_ExecuteOnceMutex, INFINITE, 0));
+                    &g_OnceBlockCond, &g_OnceBlockMutex, INFINITE, 0));
             }
         }
     }
 
-    ReleaseSRWLockExclusive(&g_ExecuteOnceMutex);
+    ReleaseSRWLockExclusive(&g_OnceBlockMutex);
 
     return true;
 }
 
-BOOST_LOG_EXPORT void execute_once_sentry::commit()
+BOOST_LOG_EXPORT void once_block_sentry::commit()
 {
-    AcquireSRWLockExclusive(&g_ExecuteOnceMutex);
+    AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
     // The initializer executed successfully
-    m_Flag.status = execute_once_flag::initialized;
+    m_Flag.status = once_block_flag::initialized;
 
-    ReleaseSRWLockExclusive(&g_ExecuteOnceMutex);
-    WakeAllConditionVariable(&g_ExecuteOnceCond);
+    ReleaseSRWLockExclusive(&g_OnceBlockMutex);
+    WakeAllConditionVariable(&g_OnceBlockCond);
 }
 
-BOOST_LOG_EXPORT void execute_once_sentry::rollback()
+BOOST_LOG_EXPORT void once_block_sentry::rollback()
 {
-    AcquireSRWLockExclusive(&g_ExecuteOnceMutex);
+    AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
     // The initializer failed, marking the flag as if it hasn't run at all
-    m_Flag.status = execute_once_flag::uninitialized;
+    m_Flag.status = once_block_flag::uninitialized;
 
-    ReleaseSRWLockExclusive(&g_ExecuteOnceMutex);
-    WakeAllConditionVariable(&g_ExecuteOnceCond);
+    ReleaseSRWLockExclusive(&g_OnceBlockMutex);
+    WakeAllConditionVariable(&g_OnceBlockCond);
 }
 
 } // namespace aux
@@ -115,16 +115,16 @@ namespace aux {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
-    struct BOOST_LOG_NO_VTABLE execute_once_impl_base
+    struct BOOST_LOG_NO_VTABLE once_block_impl_base
     {
-        virtual ~execute_once_impl_base() {}
-        virtual bool enter_once_block(execute_once_flag volatile& flag) = 0;
-        virtual void commit(execute_once_flag& flag) = 0;
-        virtual void rollback(execute_once_flag& flag) = 0;
+        virtual ~once_block_impl_base() {}
+        virtual bool enter_once_block(once_block_flag volatile& flag) = 0;
+        virtual void commit(once_block_flag& flag) = 0;
+        virtual void rollback(once_block_flag& flag) = 0;
     };
 
-    class execute_once_impl_nt6 :
-        public execute_once_impl_base
+    class once_block_impl_nt6 :
+        public once_block_impl_base
     {
     public:
         struct SRWLOCK { void* p; };
@@ -147,7 +147,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         WakeAllConditionVariable_t m_pWakeAllConditionVariable;
 
     public:
-        execute_once_impl_nt6(
+        once_block_impl_nt6(
             InitializeSRWLock_t pInitializeSRWLock,
             AcquireSRWLockExclusive_t pAcquireSRWLockExclusive,
             ReleaseSRWLockExclusive_t pReleaseSRWLockExclusive,
@@ -164,15 +164,15 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             pInitializeConditionVariable(&m_Cond);
         }
 
-        bool enter_once_block(execute_once_flag volatile& flag)
+        bool enter_once_block(once_block_flag volatile& flag)
         {
             m_pAcquireSRWLockExclusive(&m_Mutex);
 
-            while (flag.status != execute_once_flag::initialized)
+            while (flag.status != once_block_flag::initialized)
             {
-                if (flag.status == execute_once_flag::uninitialized)
+                if (flag.status == once_block_flag::uninitialized)
                 {
-                    flag.status = execute_once_flag::being_initialized;
+                    flag.status = once_block_flag::being_initialized;
                     m_pReleaseSRWLockExclusive(&m_Mutex);
 
                     // Invoke the initializer block
@@ -180,7 +180,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 }
                 else
                 {
-                    while (flag.status == execute_once_flag::being_initialized)
+                    while (flag.status == once_block_flag::being_initialized)
                     {
                         BOOST_VERIFY(m_pSleepConditionVariableSRW(
                             &m_Cond, &m_Mutex, INFINITE, 0));
@@ -193,53 +193,53 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             return true;
         }
 
-        void commit(execute_once_flag& flag)
+        void commit(once_block_flag& flag)
         {
             m_pAcquireSRWLockExclusive(&m_Mutex);
 
             // The initializer executed successfully
-            flag.status = execute_once_flag::initialized;
+            flag.status = once_block_flag::initialized;
 
             m_pReleaseSRWLockExclusive(&m_Mutex);
             m_pWakeAllConditionVariable(&m_Cond);
         }
 
-        void rollback(execute_once_flag& flag)
+        void rollback(once_block_flag& flag)
         {
             m_pAcquireSRWLockExclusive(&m_Mutex);
 
             // The initializer failed, marking the flag as if it hasn't run at all
-            flag.status = execute_once_flag::uninitialized;
+            flag.status = once_block_flag::uninitialized;
 
             m_pReleaseSRWLockExclusive(&m_Mutex);
             m_pWakeAllConditionVariable(&m_Cond);
         }
     };
 
-    class execute_once_impl_nt5 :
-        public execute_once_impl_base
+    class once_block_impl_nt5 :
+        public once_block_impl_base
     {
     private:
         mutex m_Mutex;
         condition_variable m_Cond;
 
     public:
-        bool enter_once_block(execute_once_flag volatile& flag)
+        bool enter_once_block(once_block_flag volatile& flag)
         {
             unique_lock< mutex > lock(m_Mutex);
 
-            while (flag.status != execute_once_flag::initialized)
+            while (flag.status != once_block_flag::initialized)
             {
-                if (flag.status == execute_once_flag::uninitialized)
+                if (flag.status == once_block_flag::uninitialized)
                 {
-                    flag.status = execute_once_flag::being_initialized;
+                    flag.status = once_block_flag::being_initialized;
 
                     // Invoke the initializer block
                     return false;
                 }
                 else
                 {
-                    while (flag.status == execute_once_flag::being_initialized)
+                    while (flag.status == once_block_flag::being_initialized)
                     {
                         m_Cond.wait(lock);
                     }
@@ -249,55 +249,55 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             return true;
         }
 
-        void commit(execute_once_flag& flag)
+        void commit(once_block_flag& flag)
         {
             {
                 lock_guard< mutex > _(m_Mutex);
-                flag.status = execute_once_flag::initialized;
+                flag.status = once_block_flag::initialized;
             }
             m_Cond.notify_all();
         }
 
-        void rollback(execute_once_flag& flag)
+        void rollback(once_block_flag& flag)
         {
             {
                 lock_guard< mutex > _(m_Mutex);
-                flag.status = execute_once_flag::uninitialized;
+                flag.status = once_block_flag::uninitialized;
             }
             m_Cond.notify_all();
         }
     };
 
-    execute_once_impl_base* create_execute_once_impl()
+    once_block_impl_base* create_once_block_impl()
     {
         HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
         if (hKernel32)
         {
-            execute_once_impl_nt6::InitializeSRWLock_t pInitializeSRWLock =
-                (execute_once_impl_nt6::InitializeSRWLock_t)GetProcAddress(hKernel32, "InitializeSRWLock");
+            once_block_impl_nt6::InitializeSRWLock_t pInitializeSRWLock =
+                (once_block_impl_nt6::InitializeSRWLock_t)GetProcAddress(hKernel32, "InitializeSRWLock");
             if (pInitializeSRWLock)
             {
-                execute_once_impl_nt6::AcquireSRWLockExclusive_t pAcquireSRWLockExclusive =
-                    (execute_once_impl_nt6::AcquireSRWLockExclusive_t)GetProcAddress(hKernel32, "AcquireSRWLockExclusive");
+                once_block_impl_nt6::AcquireSRWLockExclusive_t pAcquireSRWLockExclusive =
+                    (once_block_impl_nt6::AcquireSRWLockExclusive_t)GetProcAddress(hKernel32, "AcquireSRWLockExclusive");
                 if (pAcquireSRWLockExclusive)
                 {
-                    execute_once_impl_nt6::ReleaseSRWLockExclusive_t pReleaseSRWLockExclusive =
-                        (execute_once_impl_nt6::ReleaseSRWLockExclusive_t)GetProcAddress(hKernel32, "ReleaseSRWLockExclusive");
+                    once_block_impl_nt6::ReleaseSRWLockExclusive_t pReleaseSRWLockExclusive =
+                        (once_block_impl_nt6::ReleaseSRWLockExclusive_t)GetProcAddress(hKernel32, "ReleaseSRWLockExclusive");
                     if (pReleaseSRWLockExclusive)
                     {
-                        execute_once_impl_nt6::InitializeConditionVariable_t pInitializeConditionVariable =
-                            (execute_once_impl_nt6::InitializeConditionVariable_t)GetProcAddress(hKernel32, "InitializeConditionVariable");
+                        once_block_impl_nt6::InitializeConditionVariable_t pInitializeConditionVariable =
+                            (once_block_impl_nt6::InitializeConditionVariable_t)GetProcAddress(hKernel32, "InitializeConditionVariable");
                         if (pInitializeConditionVariable)
                         {
-                            execute_once_impl_nt6::SleepConditionVariableSRW_t pSleepConditionVariableSRW =
-                                (execute_once_impl_nt6::SleepConditionVariableSRW_t)GetProcAddress(hKernel32, "SleepConditionVariableSRW");
+                            once_block_impl_nt6::SleepConditionVariableSRW_t pSleepConditionVariableSRW =
+                                (once_block_impl_nt6::SleepConditionVariableSRW_t)GetProcAddress(hKernel32, "SleepConditionVariableSRW");
                             if (pSleepConditionVariableSRW)
                             {
-                                execute_once_impl_nt6::WakeAllConditionVariable_t pWakeAllConditionVariable =
-                                    (execute_once_impl_nt6::WakeAllConditionVariable_t)GetProcAddress(hKernel32, "WakeAllConditionVariable");
+                                once_block_impl_nt6::WakeAllConditionVariable_t pWakeAllConditionVariable =
+                                    (once_block_impl_nt6::WakeAllConditionVariable_t)GetProcAddress(hKernel32, "WakeAllConditionVariable");
                                 if (pWakeAllConditionVariable)
                                 {
-                                    return new execute_once_impl_nt6(
+                                    return new once_block_impl_nt6(
                                         pInitializeSRWLock,
                                         pAcquireSRWLockExclusive,
                                         pReleaseSRWLockExclusive,
@@ -312,33 +312,33 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             }
         }
 
-        return new execute_once_impl_nt5();
+        return new once_block_impl_nt5();
     }
 
-    execute_once_impl_base* g_pExecuteOnceImpl = NULL;
+    once_block_impl_base* g_pOnceBlockImpl = NULL;
 
-    void destroy_execute_once_impl()
+    void destroy_once_block_impl()
     {
-        execute_once_impl_base* impl = (execute_once_impl_base*)
-            BOOST_INTERLOCKED_EXCHANGE_POINTER((void**)&g_pExecuteOnceImpl, NULL);
+        once_block_impl_base* impl = (once_block_impl_base*)
+            BOOST_INTERLOCKED_EXCHANGE_POINTER((void**)&g_pOnceBlockImpl, NULL);
         delete impl;
     }
 
-    execute_once_impl_base* get_execute_once_impl()
+    once_block_impl_base* get_once_block_impl()
     {
-        execute_once_impl_base* impl = g_pExecuteOnceImpl;
+        once_block_impl_base* impl = g_pOnceBlockImpl;
         if (!impl)
         {
-            execute_once_impl_base* new_impl = create_execute_once_impl();
-            impl = (execute_once_impl_base*)
-                BOOST_INTERLOCKED_COMPARE_EXCHANGE_POINTER((void**)&g_pExecuteOnceImpl, (void*)new_impl, NULL);
+            once_block_impl_base* new_impl = create_once_block_impl();
+            impl = (once_block_impl_base*)
+                BOOST_INTERLOCKED_COMPARE_EXCHANGE_POINTER((void**)&g_pOnceBlockImpl, (void*)new_impl, NULL);
             if (impl)
             {
                 delete new_impl;
             }
             else
             {
-                std::atexit(&destroy_execute_once_impl);
+                std::atexit(&destroy_once_block_impl);
                 return new_impl;
             }
         }
@@ -348,19 +348,19 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 } // namespace
 
-BOOST_LOG_EXPORT bool execute_once_sentry::enter_once_block() const
+BOOST_LOG_EXPORT bool once_block_sentry::enter_once_block() const
 {
-    return get_execute_once_impl()->enter_once_block(m_Flag);
+    return get_once_block_impl()->enter_once_block(m_Flag);
 }
 
-BOOST_LOG_EXPORT void execute_once_sentry::commit()
+BOOST_LOG_EXPORT void once_block_sentry::commit()
 {
-    get_execute_once_impl()->commit(m_Flag);
+    get_once_block_impl()->commit(m_Flag);
 }
 
-BOOST_LOG_EXPORT void execute_once_sentry::rollback()
+BOOST_LOG_EXPORT void once_block_sentry::rollback()
 {
-    get_execute_once_impl()->rollback(m_Flag);
+    get_once_block_impl()->rollback(m_Flag);
 }
 
 } // namespace aux
@@ -383,60 +383,60 @@ namespace aux {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
-static pthread_mutex_t g_ExecuteOnceMutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t g_ExecuteOnceCond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t g_OnceBlockMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t g_OnceBlockCond = PTHREAD_COND_INITIALIZER;
 
 } // namespace
 
-BOOST_LOG_EXPORT bool execute_once_sentry::enter_once_block() const
+BOOST_LOG_EXPORT bool once_block_sentry::enter_once_block() const
 {
-    BOOST_VERIFY(!pthread_mutex_lock(&g_ExecuteOnceMutex));
+    BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
-    execute_once_flag volatile& flag = m_Flag;
-    while (flag.status != execute_once_flag::initialized)
+    once_block_flag volatile& flag = m_Flag;
+    while (flag.status != once_block_flag::initialized)
     {
-        if (flag.status == execute_once_flag::uninitialized)
+        if (flag.status == once_block_flag::uninitialized)
         {
-            flag.status = execute_once_flag::being_initialized;
-            BOOST_VERIFY(!pthread_mutex_unlock(&g_ExecuteOnceMutex));
+            flag.status = once_block_flag::being_initialized;
+            BOOST_VERIFY(!pthread_mutex_unlock(&g_OnceBlockMutex));
 
             // Invoke the initializer block
             return false;
         }
         else
         {
-            while (flag.status == execute_once_flag::being_initialized)
+            while (flag.status == once_block_flag::being_initialized)
             {
-                BOOST_VERIFY(!pthread_cond_wait(&g_ExecuteOnceCond, &g_ExecuteOnceMutex));
+                BOOST_VERIFY(!pthread_cond_wait(&g_OnceBlockCond, &g_OnceBlockMutex));
             }
         }
     }
 
-    BOOST_VERIFY(!pthread_mutex_unlock(&g_ExecuteOnceMutex));
+    BOOST_VERIFY(!pthread_mutex_unlock(&g_OnceBlockMutex));
 
     return true;
 }
 
-BOOST_LOG_EXPORT void execute_once_sentry::commit()
+BOOST_LOG_EXPORT void once_block_sentry::commit()
 {
-    BOOST_VERIFY(!pthread_mutex_lock(&g_ExecuteOnceMutex));
+    BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
     // The initializer executed successfully
-    m_Flag.status = execute_once_flag::initialized;
+    m_Flag.status = once_block_flag::initialized;
 
-    BOOST_VERIFY(!pthread_mutex_unlock(&g_ExecuteOnceMutex));
-    BOOST_VERIFY(!pthread_cond_broadcast(&g_ExecuteOnceCond));
+    BOOST_VERIFY(!pthread_mutex_unlock(&g_OnceBlockMutex));
+    BOOST_VERIFY(!pthread_cond_broadcast(&g_OnceBlockCond));
 }
 
-BOOST_LOG_EXPORT void execute_once_sentry::rollback()
+BOOST_LOG_EXPORT void once_block_sentry::rollback()
 {
-    BOOST_VERIFY(!pthread_mutex_lock(&g_ExecuteOnceMutex));
+    BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
     // The initializer failed, marking the flag as if it hasn't run at all
-    m_Flag.status = execute_once_flag::uninitialized;
+    m_Flag.status = once_block_flag::uninitialized;
 
-    BOOST_VERIFY(!pthread_mutex_unlock(&g_ExecuteOnceMutex));
-    BOOST_VERIFY(!pthread_cond_broadcast(&g_ExecuteOnceCond));
+    BOOST_VERIFY(!pthread_mutex_unlock(&g_OnceBlockMutex));
+    BOOST_VERIFY(!pthread_cond_broadcast(&g_OnceBlockCond));
 }
 
 } // namespace aux
