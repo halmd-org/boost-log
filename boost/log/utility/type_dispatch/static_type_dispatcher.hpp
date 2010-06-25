@@ -34,13 +34,9 @@
 #include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/visible_type.hpp>
+#include <boost/log/detail/execute_once.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
-#if !defined(BOOST_LOG_NO_THREADS)
-#include <boost/thread/once.hpp>
-#else
-#include <boost/log/utility/no_unused_warnings.hpp>
-#endif
 
 namespace boost {
 
@@ -108,26 +104,6 @@ private:
         mpl::size< supported_types >::value
     > dispatching_map;
 
-#if !defined(BOOST_LOG_NO_THREADS)
-    //! Function delegate to implement one-time initialization
-    struct delegate
-    {
-        typedef void result_type;
-        explicit delegate(type_sequence_dispatcher* pThis, void (type_sequence_dispatcher::*pFun)())
-            : m_pThis(pThis), m_pFun(pFun)
-        {
-        }
-        result_type operator()() const
-        {
-            (m_pThis->*m_pFun)();
-        }
-
-    private:
-        type_sequence_dispatcher* m_pThis;
-        void (type_sequence_dispatcher::*m_pFun)();
-    };
-#endif // !defined(BOOST_LOG_NO_THREADS)
-
 private:
     //! Pointer to the receiver function
     void* m_pReceiver;
@@ -140,14 +116,16 @@ public:
     explicit type_sequence_dispatcher(ReceiverT& receiver) :
         m_pReceiver((void*)boost::addressof(receiver))
     {
-#if !defined(BOOST_LOG_NO_THREADS)
-        static once_flag flag = BOOST_ONCE_INIT;
-        boost::call_once(flag, delegate(this,
-            &type_sequence_dispatcher::BOOST_NESTED_TEMPLATE init_dispatching_map< ReceiverT >));
-#else
-        static bool initialized = (init_dispatching_map< ReceiverT >(), true);
-        BOOST_LOG_NO_UNUSED_WARNINGS(initialized);
-#endif
+        BOOST_LOG_EXECUTE_ONCE()
+        {
+            dispatching_map& disp_map = get_dispatching_map();
+            typename dispatching_map::value_type* p = &*disp_map.begin();
+
+            mpl::for_each< supported_types, mpl::quote1< visible_type > >(
+                dispatching_map_initializer< ReceiverT >(p));
+
+            std::sort(disp_map.begin(), disp_map.end(), dispatching_map_order());
+        }
     }
 
 private:
@@ -172,18 +150,6 @@ private:
             return type_visitor_base();
     }
 
-    //! The method initializes the dispatching map
-    template< typename ReceiverT >
-    void init_dispatching_map()
-    {
-        dispatching_map& disp_map = get_dispatching_map();
-        typename dispatching_map::value_type* p = &*disp_map.begin();
-
-        mpl::for_each< supported_types, mpl::quote1< visible_type > >(
-            dispatching_map_initializer< ReceiverT >(p));
-
-        std::sort(disp_map.begin(), disp_map.end(), dispatching_map_order());
-    }
     //! The method returns the dispatching map instance
     static dispatching_map& get_dispatching_map()
     {

@@ -13,8 +13,6 @@
  *         for signalling application events.
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 #include "windows_version.hpp"
 #include <memory>
 #include <string>
@@ -25,13 +23,9 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
 #include <boost/log/sinks/event_log_constants.hpp>
+#include <boost/log/detail/execute_once.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
-#ifndef BOOST_LOG_NO_THREADS
-#include <boost/ref.hpp>
-#include <boost/bind.hpp>
-#include <boost/thread/once.hpp>
-#endif // BOOST_LOG_NO_THREADS
 #include "event_log_registry.hpp"
 #include <windows.h>
 #include <psapi.h>
@@ -192,13 +186,11 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     std::basic_string< CharT > get_current_module_name()
     {
         static HMODULE hSelfModule = 0;
-#ifndef BOOST_LOG_NO_THREADS
-        static once_flag flag = BOOST_ONCE_INIT;
-        boost::call_once(flag, boost::bind(&init_self_module_handle, boost::ref(hSelfModule)));
-#else
-        if (!hSelfModule)
+
+        BOOST_LOG_EXECUTE_ONCE()
+        {
             init_self_module_handle(hSelfModule);
-#endif // BOOST_LOG_NO_THREADS
+        }
 
         // Get the module file name
         CharT buf[MAX_PATH];

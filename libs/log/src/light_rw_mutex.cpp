@@ -19,8 +19,8 @@
 
 #include <new>
 #include <boost/assert.hpp>
-#include <boost/thread/once.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include <boost/log/detail/execute_once.hpp>
 
 #include "windows_version.hpp"
 #include <windows.h>
@@ -152,8 +152,10 @@ void init_light_rw_mutex_impl()
 
 BOOST_LOG_EXPORT light_rw_mutex::light_rw_mutex()
 {
-    static once_flag flag = BOOST_ONCE_INIT;
-    boost::call_once(flag, &init_light_rw_mutex_impl);
+    BOOST_LOG_EXECUTE_ONCE()
+    {
+        init_light_rw_mutex_impl();
+    }
     g_pInitializeLWRWMutex((mutex_impl*)&m_Mutex);
 }
 

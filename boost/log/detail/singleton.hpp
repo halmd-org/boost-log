@@ -22,11 +22,7 @@
 
 #include <boost/noncopyable.hpp>
 #include <boost/log/detail/prologue.hpp>
-#if !defined(BOOST_LOG_NO_THREADS)
-#include <boost/thread/once.hpp>
-#else
-#include <boost/log/utility/no_unused_warnings.hpp>
-#endif
+#include <boost/log/detail/execute_once.hpp>
 
 namespace boost {
 
@@ -42,13 +38,10 @@ public:
     //! Returns the singleton instance
     static StorageT& get()
     {
-#if !defined(BOOST_LOG_NO_THREADS)
-        static once_flag flag = BOOST_ONCE_INIT;
-        boost::call_once(flag, &DerivedT::init_instance);
-#else
-        static const bool initialized = (DerivedT::init_instance(), true);
-        BOOST_LOG_NO_UNUSED_WARNINGS(initialized);
-#endif
+        BOOST_LOG_EXECUTE_ONCE()
+        {
+            DerivedT::init_instance();
+        }
         return get_instance();
     }
 
