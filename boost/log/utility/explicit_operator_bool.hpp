@@ -33,39 +33,47 @@
  * in terms of which the conversion operator will be implemented.
  */
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
-    public:\
-        explicit operator bool () const\
-        {\
-            return !this->operator! ();\
-        }
+    explicit operator bool () const\
+    {\
+        return !this->operator! ();\
+    }
 
 #elif !defined(BOOST_LOG_NO_UNSPECIFIED_BOOL)
 
+namespace boost {
+
+namespace BOOST_LOG_NAMESPACE {
+
+namespace aux {
+
+    struct unspecified_bool_helper
+    {
+        static void true_value(unspecified_bool_helper) {}
+    };
+    typedef void (*unspecified_bool)(unspecified_bool_helper);
+
+} // namespace aux
+
+} // namespace log
+
+} // namespace boost
+
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
-    private:\
-        struct dummy\
-        {\
-            int data1;\
-            int data2;\
-        };\
-        typedef int (dummy::*unspecified_bool);\
-    public:\
-        operator unspecified_bool () const\
-        {\
-            if (!this->operator!())\
-                return &dummy::data2;\
-            else\
-                return 0;\
-        }
+    operator boost::log::aux::unspecified_bool () const\
+    {\
+        if (!this->operator!())\
+            return &boost::log::aux::unspecified_bool_helper::true_value;\
+        else\
+            return 0;\
+    }
 
 #else
 
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
-    public:\
-        operator bool () const\
-        {\
-            return !this->operator! ();\
-        }
+    operator bool () const\
+    {\
+        return !this->operator! ();\
+    }
 
 #endif
 
