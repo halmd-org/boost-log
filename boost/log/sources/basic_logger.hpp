@@ -40,9 +40,6 @@
 #include <boost/log/core/record.hpp>
 #include <boost/log/sources/features.hpp>
 #include <boost/log/sources/threading_models.hpp>
-#if !defined(BOOST_LOG_NO_THREADS)
-#include <boost/log/detail/light_rw_mutex.hpp>
-#endif // !defined(BOOST_LOG_NO_THREADS)
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -448,8 +445,14 @@ public:
      */
     record_type open_record()
     {
-        typename base_type::open_record_lock _(base_type::get_threading_model());
-        return base_type::open_record_unlocked(boost::log::aux::empty_arg_list());
+        // Perform a quick check first
+        if (this->core()->get_logging_enabled())
+        {
+            typename base_type::open_record_lock _(base_type::get_threading_model());
+            return base_type::open_record_unlocked(boost::log::aux::empty_arg_list());
+        }
+        else
+            return record_type();
     }
     /*!
      * The method opens a new log record in the logging core.
@@ -460,8 +463,14 @@ public:
     template< typename ArgsT >
     record_type open_record(ArgsT const& args)
     {
-        typename base_type::open_record_lock _(base_type::get_threading_model());
-        return base_type::open_record_unlocked(args);
+        // Perform a quick check first
+        if (this->core()->get_logging_enabled())
+        {
+            typename base_type::open_record_lock _(base_type::get_threading_model());
+            return base_type::open_record_unlocked(args);
+        }
+        else
+            return record_type();
     }
     /*!
      * The method pushes the constructed message to the logging core
@@ -550,12 +559,20 @@ public:
     }
     record_type open_record()
     {
-        return base_type::open_record_unlocked(boost::log::aux::empty_arg_list());
+        // Perform a quick check first
+        if (this->core()->get_logging_enabled())
+            return base_type::open_record_unlocked(boost::log::aux::empty_arg_list());
+        else
+            return record_type();
     }
     template< typename ArgsT >
     record_type open_record(ArgsT const& args)
     {
-        return base_type::open_record_unlocked(args);
+        // Perform a quick check first
+        if (this->core()->get_logging_enabled())
+            return base_type::open_record_unlocked(args);
+        else
+            return record_type();
     }
     void push_record(record_type const& record)
     {
@@ -647,7 +664,8 @@ public:
  *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
  */
 #define BOOST_LOG_DECLARE_LOGGER_MT(type_name, base_seq)\
-    BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq, ::boost::log::sources::multi_thread_model< ::boost::shared_mutex >)
+    BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, char, base_seq,\
+        ::boost::log::sources::multi_thread_model< ::boost::shared_mutex >)
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
 #endif // BOOST_LOG_USE_CHAR
@@ -676,7 +694,8 @@ public:
  *  \param base_seq A Boost.Preprocessor sequence of type identifiers of the base classes templates
  */
 #define BOOST_LOG_DECLARE_WLOGGER_MT(type_name, base_seq)\
-    BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq, ::boost::log::sources::multi_thread_model< ::boost::shared_mutex >)
+    BOOST_LOG_DECLARE_LOGGER_TYPE(type_name, wchar_t, base_seq,\
+        ::boost::log::sources::multi_thread_model< ::boost::shared_mutex >)
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
 #endif // BOOST_LOG_USE_WCHAR_T

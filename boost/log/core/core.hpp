@@ -121,6 +121,10 @@ public:
      * \return The previous value of enabled/disabled logging flag
      */
     bool set_logging_enabled(bool enabled = true);
+    /*!
+     * The method allows to detect if logging is enabled. See the comment for \c set_logging_enabled
+     */
+    bool get_logging_enabled() const;
 
     /*!
      * The method sets the global logging filter. The filter is applied to every log record that is processed.

@@ -206,6 +206,15 @@ bool basic_core< CharT >::set_logging_enabled(bool enabled)
     return old_value;
 }
 
+//! The method allows to detect if logging is enabled
+template< typename CharT >
+bool basic_core< CharT >::get_logging_enabled() const
+{
+    // Should have a read barrier here, but for performance reasons it is omitted.
+    // The function should be used as a quick check and doesn't need to be reliable.
+    return pImpl->Enabled;
+}
+
 //! The method adds a new sink
 template< typename CharT >
 void basic_core< CharT >::add_sink(shared_ptr< sink_type > const& s)
