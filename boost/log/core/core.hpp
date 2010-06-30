@@ -30,7 +30,7 @@
 
 #ifdef _MSC_VER
 #pragma warning(push)
- // non dll-interface class 'A' used as base for dll-interface class 'B'
+// non dll-interface class 'A' used as base for dll-interface class 'B'
 #pragma warning(disable: 4275)
 #endif // _MSC_VER
 

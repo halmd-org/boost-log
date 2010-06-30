@@ -28,7 +28,6 @@
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
-#include <boost/log/utility/slim_string.hpp>
 #include <boost/log/utility/attribute_value_extractor.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 #include "char_definitions.hpp"
@@ -154,7 +153,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     typedef logging::basic_attribute_values_view< CharT > values_view;
     typedef test_data< CharT > data;
     typedef std::basic_string< CharT > string;
-    typedef logging::basic_slim_string< CharT > slim_string;
 
     boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
     boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
@@ -184,8 +182,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     BOOST_CHECK(get_attr_value(it->second, val2));
     BOOST_CHECK_CLOSE(val2, 5.5, 0.001);
 
-    slim_string ss1 = data::attr3();
-    it = view1.find(ss1);
+    it = view1.find(data::attr3());
     BOOST_CHECK(it != view1.end());
     BOOST_CHECK(it->first == data::attr3());
     std::string val3;

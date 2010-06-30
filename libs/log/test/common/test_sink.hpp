@@ -18,7 +18,6 @@
 #include <map>
 #include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/log/sinks/sink.hpp>
-#include <boost/log/utility/slim_string.hpp>
 
 //! A sink implementation for testing purpose
 template< typename CharT >
@@ -34,8 +33,8 @@ public:
     typedef typename base_type::values_view_type values_view_type;
     typedef typename base_type::record_type record_type;
     typedef typename base_type::filter_type filter_type;
-    typedef boost::log::basic_slim_string< char_type > slim_string_type;
-    typedef std::map< slim_string_type, std::size_t > attr_counters_map;
+    typedef typename values_view_type::key_type key_type;
+    typedef std::map< key_type, std::size_t > attr_counters_map;
 
 public:
     filter_type m_Filter;

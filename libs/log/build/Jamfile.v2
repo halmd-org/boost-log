@@ -66,6 +66,7 @@ alias platform_log_sources
 
 lib boost_log
     : ## sources ##
+        attribute_name.cpp
         attribute_set.cpp
         attribute_values_view.cpp
         slim_string.cpp

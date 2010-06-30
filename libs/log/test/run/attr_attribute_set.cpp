@@ -22,7 +22,6 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/utility/slim_string.hpp>
 #include "char_definitions.hpp"
 
 namespace logging = boost::log;
@@ -76,7 +75,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     typedef logging::basic_attribute_set< CharT > attr_set;
     typedef test_data< CharT > data;
     typedef std::basic_string< CharT > string;
-    typedef logging::basic_slim_string< CharT > slim_string;
 
     boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
     boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
@@ -95,8 +93,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     BOOST_CHECK(it != set1.end());
     BOOST_CHECK_EQUAL(it->second, attr2);
 
-    slim_string ss1 = data::attr1();
-    it = set1.find(ss1);
+    it = set1.find(data::attr1());
     BOOST_CHECK(it != set1.end());
     BOOST_CHECK_EQUAL(it->second, attr1);
 
@@ -133,7 +130,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     typedef logging::basic_attribute_set< CharT > attr_set;
     typedef test_data< CharT > data;
     typedef std::basic_string< CharT > string;
-    typedef logging::basic_slim_string< CharT > slim_string;
 
     boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
     boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
@@ -168,12 +164,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
     // Mass insertion
-    std::vector< std::pair< slim_string, boost::shared_ptr< logging::attribute > > > elems;
-    elems.push_back(std::make_pair(slim_string(data::attr2()), attr2));
-    elems.push_back(std::make_pair(slim_string(data::attr1()), attr1));
-    elems.push_back(std::make_pair(slim_string(data::attr3()), attr3));
+    typedef typename attr_set::key_type key_type;
+    std::vector< std::pair< key_type, boost::shared_ptr< logging::attribute > > > elems;
+    elems.push_back(std::make_pair(key_type(data::attr2()), attr2));
+    elems.push_back(std::make_pair(key_type(data::attr1()), attr1));
+    elems.push_back(std::make_pair(key_type(data::attr3()), attr3));
     // ... with element duplication
-    elems.push_back(std::make_pair(slim_string(data::attr1()), attr3));
+    elems.push_back(std::make_pair(key_type(data::attr1()), attr3));
 
     attr_set set2;
     set2.insert(elems.begin(), elems.end());
@@ -230,7 +227,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     BOOST_CHECK_EQUAL(set4.size(), 2UL);
     BOOST_CHECK_EQUAL(p2, attr2);
 
-    boost::shared_ptr< logging::attribute >& p3 = (set4[slim_string(data::attr3())] = attr3);
+    boost::shared_ptr< logging::attribute >& p3 = (set4[key_type(data::attr3())] = attr3);
     BOOST_CHECK_EQUAL(set4.size(), 3UL);
     BOOST_CHECK_EQUAL(p3, attr3);
 
@@ -246,7 +243,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(erasure, CharT, char_types)
     typedef logging::basic_attribute_set< CharT > attr_set;
     typedef test_data< CharT > data;
     typedef std::basic_string< CharT > string;
-    typedef logging::basic_slim_string< CharT > slim_string;
 
     boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
     boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));

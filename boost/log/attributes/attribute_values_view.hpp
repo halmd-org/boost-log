@@ -22,13 +22,13 @@
 #define BOOST_LOG_ATTRIBUTE_VALUES_VIEW_HPP_INCLUDED_
 
 #include <memory>
+#include <string>
+#include <utility>
 #include <iterator>
-#include <algorithm>
 #include <boost/shared_ptr.hpp>
-#include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/utility/slim_string.hpp>
 #include <boost/log/attributes/attribute.hpp>
+#include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_value_def.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 
@@ -75,7 +75,7 @@ public:
     //! String type
     typedef std::basic_string< char_type > string_type;
     //! Key type
-    typedef basic_slim_string< char_type > key_type;
+    typedef basic_attribute_name< char_type > key_type;
     //! Mapped attribute type
     typedef attribute_value mapped_type;
     //! Corresponding attribute set type
@@ -104,16 +104,28 @@ private:
     typedef std::allocator< char > internal_allocator_type;
     struct implementation;
 
-    //! Contained node type
-    struct node
+    //! A base class for the container nodes
+    struct node_base
+    {
+        node_base* m_pPrev;
+        node_base* m_pNext;
+
+        node_base();
+
+    private:
+        node_base(node_base const&);
+        node_base& operator= (node_base const&);
+    };
+
+    //! Container elements
+    struct node;
+    friend struct node;
+    struct node :
+        public node_base
     {
         value_type m_Value;
-        attribute* m_pAttribute;
 
-        node(key_type const& key, attribute* attr)
-            : m_Value(key, mapped_type()), m_pAttribute(attr)
-        {
-        }
+        node(key_type const& key, mapped_type const& data);
     };
 
 public:
@@ -131,59 +143,58 @@ public:
 
     public:
         //  Constructors
-        const_iterator() : m_pNode(NULL) {}
-        explicit const_iterator(node* pNode) : m_pNode(pNode) {}
+        const_iterator() : m_pNode(NULL), m_pContainer(NULL) {}
+        explicit const_iterator(node_base* n, basic_attribute_values_view* cont) :
+            m_pNode(n),
+            m_pContainer(cont)
+        {
+        }
 
         //  Comparison
-        bool operator== (const_iterator const& that) const { return (m_pNode == that.m_pNode); }
-        bool operator!= (const_iterator const& that) const { return (m_pNode != that.m_pNode); }
+        bool operator== (const_iterator const& that) const
+        {
+            return (m_pNode == that.m_pNode);
+        }
+        bool operator!= (const_iterator const& that) const
+        {
+            return (m_pNode != that.m_pNode);
+        }
 
         //  Modification
         const_iterator& operator++ ()
         {
-            ++m_pNode;
+            m_pContainer->freeze();
+            m_pNode = m_pNode->m_pNext;
             return *this;
         }
         const_iterator& operator-- ()
         {
-            --m_pNode;
+            m_pContainer->freeze();
+            m_pNode = m_pNode->m_pPrev;
             return *this;
         }
         const_iterator operator++ (int)
         {
             const_iterator tmp(*this);
-            ++m_pNode;
+            m_pContainer->freeze();
+            m_pNode = m_pNode->m_pNext;
             return tmp;
         }
         const_iterator operator-- (int)
         {
             const_iterator tmp(*this);
-            --m_pNode;
+            m_pContainer->freeze();
+            m_pNode = m_pNode->m_pPrev;
             return tmp;
         }
 
         //  Dereferencing
-        pointer operator-> () const
-        {
-            freeze_element();
-            return boost::addressof(m_pNode->m_Value);
-        }
-        reference operator* () const
-        {
-            freeze_element();
-            return m_pNode->m_Value;
-        }
-
-        //! The method ensures that the pointed element has acquired the attribute value
-        void freeze_element() const
-        {
-            if (!m_pNode->m_Value.second)
-                m_pNode->m_Value.second = m_pNode->m_pAttribute->get_value();
-        }
+        pointer operator-> () const { return &(static_cast< node* >(m_pNode)->m_Value); }
+        reference operator* () const { return static_cast< node* >(m_pNode)->m_Value; }
 
     private:
-        //! The pointed element of the container
-        node* m_pNode;
+        node_base* m_pNode;
+        basic_attribute_values_view* m_pContainer;
     };
 
 #else
@@ -231,7 +242,7 @@ public:
      * \pre The original view is frozen.
      * \post The resulting view is frozen, <tt>std::equal(begin(), end(), that.begin()) == true</tt>
      */
-    BOOST_LOG_EXPORT basic_attribute_values_view& operator= (basic_attribute_values_view const& that);
+    BOOST_LOG_EXPORT basic_attribute_values_view& operator= (basic_attribute_values_view that);
 
     /*!
      * Swaps two views
@@ -240,7 +251,9 @@ public:
      */
     void swap(basic_attribute_values_view& that)
     {
-        std::swap(m_pImpl, that.m_pImpl);
+        register implementation* p = m_pImpl;
+        m_pImpl = that.m_pImpl;
+        that.m_pImpl = p;
     }
 
     /*!
@@ -259,7 +272,7 @@ public:
     /*!
      * \return true if there are no elements in the container, false otherwise.
      */
-    bool empty() const { return (size() == 0); }
+    bool empty() const { return (this->size() == 0); }
 
     /*!
      * The method finds the attribute value by name.
@@ -267,31 +280,7 @@ public:
      * \param key Attribute name.
      * \return Iterator to the found element or \c end() if the attribute with such name is not found.
      */
-    const_iterator find(key_type const& key) const
-    {
-        return find_impl(key.data(), key.size());
-    }
-    /*!
-     * The method finds the attribute value by name.
-     *
-     * \param key Attribute name.
-     * \return Iterator to the found element or \c end() if the attribute with such name is not found.
-     */
-    const_iterator find(string_type const& key) const
-    {
-        return find_impl(key.data(), key.size());
-    }
-    /*!
-     * The method finds the attribute value by name.
-     *
-     * \param key Attribute name. Must not be NULL, must point to a zero-terminated string.
-     * \return Iterator to the found element or \c end() if the attribute with such name is not found.
-     */
-    const_iterator find(const char_type* key) const
-    {
-        typedef std::char_traits< char_type > traits_type;
-        return find_impl(key, traits_type::length(key));
-    }
+    BOOST_LOG_EXPORT const_iterator find(key_type key) const;
 
     /*!
      * Alternative lookup syntax.
@@ -299,35 +288,7 @@ public:
      * \param key Attribute name.
      * \return A pointer to the attribute value if it is found with \a key, default-constructed mapped value otherwise.
      */
-    mapped_type operator[] (key_type const& key) const
-    {
-        const_iterator it = this->find(key);
-        if (it != this->end())
-            return it->second;
-        else
-            return mapped_type();
-    }
-    /*!
-     * Alternative lookup syntax.
-     *
-     * \param key Attribute name.
-     * \return A pointer to the attribute value if it is found with \a key, default-constructed mapped value otherwise.
-     */
-    mapped_type operator[] (string_type const& key) const
-    {
-        const_iterator it = this->find(key);
-        if (it != this->end())
-            return it->second;
-        else
-            return mapped_type();
-    }
-    /*!
-     * Alternative lookup syntax.
-     *
-     * \param key Attribute name. Must not be NULL, must point to a zero-terminated string.
-     * \return A pointer to the attribute value if it is found with \a key, default-constructed mapped value otherwise.
-     */
-    mapped_type operator[] (const char_type* key) const
+    mapped_type operator[] (key_type key) const
     {
         const_iterator it = this->find(key);
         if (it != this->end())
@@ -343,23 +304,7 @@ public:
      * \param key Attribute name.
      * \return The number of times the attribute value is found in the container.
      */
-    size_type count(key_type const& key) const { return size_type(find(key) != end()); }
-    /*!
-     * The method counts the number of the attribute value occurrences in the view. Since there can be only one
-     * attribute value with a particular key, the method always return 0 or 1.
-     *
-     * \param key Attribute name.
-     * \return The number of times the attribute value is found in the container.
-     */
-    size_type count(string_type const& key) const { return size_type(find(key) != end()); }
-    /*!
-     * The method counts the number of the attribute value occurrences in the view. Since there can be only one
-     * attribute value with a particular key, the method always return 0 or 1.
-     *
-     * \param key Attribute name. Must not be NULL, must point to a zero-terminated string.
-     * \return The number of times the attribute value is found in the container.
-     */
-    size_type count(const char_type* key) const { return size_type(find(key) != end()); }
+    size_type count(key_type key) const { return size_type(this->find(key) != this->end()); }
 
     /*!
      * The method acquires values of all adopted attributes.
@@ -367,14 +312,6 @@ public:
      * \post The view is frozen
      */
     BOOST_LOG_EXPORT void freeze();
-
-private:
-    //! \cond
-
-    //! Internal lookup implementation
-    BOOST_LOG_EXPORT const_iterator find_impl(const char_type* key, size_type len) const;
-
-    //! \endcond
 };
 
 /*!

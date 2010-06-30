@@ -27,7 +27,6 @@
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/filters/has_attr.hpp>
 #include <boost/log/sinks/sink.hpp>
-#include <boost/log/utility/slim_string.hpp>
 #include <boost/log/core/record.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/thread/thread.hpp>
