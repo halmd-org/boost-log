@@ -358,6 +358,12 @@ private:
     }
 };
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// 'this' : used in base member initializer list
+#pragma warning(disable: 4355)
+#endif
+
 //! The constructor adopts three attribute sets to the view
 template< typename CharT >
 basic_attribute_values_view< CharT >::basic_attribute_values_view(
@@ -369,6 +375,10 @@ basic_attribute_values_view< CharT >::basic_attribute_values_view(
         static_cast< internal_allocator_type& >(*this), source_attrs, thread_attrs, global_attrs))
 {
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 //! Copy constructor
 template< typename CharT >

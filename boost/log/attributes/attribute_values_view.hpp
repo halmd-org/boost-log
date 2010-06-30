@@ -42,19 +42,19 @@ namespace BOOST_LOG_NAMESPACE {
  * Attribute values view is a read-only associative container with attribute name as a key and
  * a pointer to attribute value object as a mapped type. This is a collection of elements with unique
  * keys, that is, there can be only one attribute value with a given name in a view. With respect to
- * read-only capabilities, attribute values view is close to \c std::map.
+ * read-only capabilities, attribute values view is close to \c std::unordered_map.
  *
- * An instance of attribute values view can be constructed from three attribute sets and attempts to
+ * An instance of attribute values view can be constructed from three attribute sets. The constructor attempts to
  * accommodate values all attributes from the sets. The situation when a same-named attribute is found
- * in more than one attribute is possible. This problem is solved on construction of the view: the three
+ * in more than one attribute set is possible. This problem is solved on construction of the view: the three
  * attribute sets have different priorities when it comes to solving conflicts.
  *
  * From the library perspective the three source attribute sets are global, thread-specific and source-specific
  * attributes, with the latter having the highest priority. This feature allows to override attributes of wider scopes
  * with the more specific ones.
  *
- * After the view construction it cannot be modified. However, for sake of performance, the attribute values
- * are not immediately acquired on the view construction. Instead, on-demand acquision is performed either on
+ * After the view is constructed it cannot be modified. However, for sake of performance, the attribute values
+ * are not immediately acquired at construction. Instead, on-demand acquisition is performed either on
  * iterator dereferencing or on call to the \c freeze method. Once acquired, the attribute value stays within the view
  * until its destruction. This nuance does not affect other view properties, such as size or lookup ability.
  * The logging core automatically freezes the view at the right point, so users should not be bothered.
@@ -212,8 +212,10 @@ private:
 
 public:
     /*!
-     * The constructor adopts three attribute sets into the view. The \a source_attrs attributes have the greatest preference
-     * when a same-named attribute is found in several sets, \a global_attrs has the least. The constructed view is not frozen.
+     * The constructor adopts three attribute sets into the view.
+     * The \a source_attrs attributes have the greatest preference when a same-named
+     * attribute is found in several sets, \a global_attrs has the least.
+     * The constructed view is not frozen.
      *
      * \param source_attrs A set of source-specific attributes.
      * \param thread_attrs A set of thread-specific attributes.
@@ -323,8 +325,12 @@ inline void swap(basic_attribute_values_view< CharT >& left, basic_attribute_val
     left.swap(right);
 }
 
+#ifdef BOOST_LOG_USE_CHAR
 typedef basic_attribute_values_view< char > attribute_values_view;      //!< Convenience typedef for narrow-character logging
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 typedef basic_attribute_values_view< wchar_t > wattribute_values_view;  //!< Convenience typedef for wide-character logging
+#endif
 
 } // namespace log
 

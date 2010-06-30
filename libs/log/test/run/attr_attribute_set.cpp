@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     BOOST_CHECK_EQUAL(p, attr2);
     BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
-    p = set1[ss1];
+    p = set1[data::attr1()];
     BOOST_CHECK_EQUAL(p, attr1);
     BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     // Counting elements
     BOOST_CHECK_EQUAL(set1.count(data::attr1()), 1UL);
     BOOST_CHECK_EQUAL(set1.count(s1), 1UL);
-    BOOST_CHECK_EQUAL(set1.count(ss1), 1UL);
+    BOOST_CHECK_EQUAL(set1.count(data::attr1()), 1UL);
     BOOST_CHECK_EQUAL(set1.count(data::attr3()), 0UL);
 }
 

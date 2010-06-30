@@ -41,10 +41,10 @@ class basic_attribute_values_view;
  *
  * An attribute set is an associative container with attribute name as a key and
  * pointer to the attribute as a mapped value. The container allows storing only one element for each distinct
- * key value. In most regards attribute set container provides interface similar to \c std::map. However, there are
- * differences in \c operator[] semantics and a number of optimizations with regard to iteration. Besides,
- * attribute names are stored as a read-only <tt>slim_string</tt>'s instead of \c std::string, which is also saves memory
- * and CPU time.
+ * key value. In most regards attribute set container provides interface similar to \c std::unordered_map.
+ * However, there are differences in \c operator[] semantics and a number of optimizations with regard to iteration.
+ * Besides, attribute names are stored as a read-only <tt>attribute_name</tt>'s instead of \c std::string,
+ * which saves memory and CPU time.
  */
 template< typename CharT >
 class basic_attribute_set
@@ -468,8 +468,12 @@ inline void swap(basic_attribute_set< CharT >& left, basic_attribute_set< CharT 
     left.swap(right);
 }
 
+#ifdef BOOST_LOG_USE_CHAR
 typedef basic_attribute_set< char > attribute_set;      //!< Convenience typedef for narrow-character logging
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 typedef basic_attribute_set< wchar_t > wattribute_set;  //!< Convenience typedef for wide-character logging
+#endif
 
 } // namespace log
 

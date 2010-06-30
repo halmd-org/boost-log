@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     BOOST_CHECK(get_attr_value(p, val2));
     BOOST_CHECK_CLOSE(val2, 5.5, 0.001);
 
-    p = view1[ss1];
+    p = view1[data::attr3()];
     BOOST_CHECK_EQUAL(view1.size(), 3UL);
     BOOST_CHECK(!!p);
     BOOST_CHECK(get_attr_value(p, val3));
@@ -221,6 +221,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     // Counting elements
     BOOST_CHECK_EQUAL(view1.count(data::attr1()), 1UL);
     BOOST_CHECK_EQUAL(view1.count(s1), 1UL);
-    BOOST_CHECK_EQUAL(view1.count(ss1), 1UL);
+    BOOST_CHECK_EQUAL(view1.count(data::attr3()), 1UL);
     BOOST_CHECK_EQUAL(view1.count(data::attr4()), 0UL);
 }

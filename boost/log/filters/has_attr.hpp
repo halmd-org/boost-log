@@ -74,7 +74,7 @@ public:
      */
     bool operator() (values_view_type const& values) const
     {
-        return m_Extractor(values, boost::log::aux::nop());
+        return (m_Extractor(values, boost::log::aux::nop()) == value_extracted);
     }
 };
 
