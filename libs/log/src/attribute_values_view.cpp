@@ -14,12 +14,7 @@
  */
 
 #include <new>
-#include <boost/compatibility/cpp_c_headers/cstring> // memset
-#include <boost/assert.hpp>
-#include <boost/limits.hpp>
-#include <boost/static_assert.hpp>
-#include <boost/type_traits/is_unsigned.hpp>
-#include <boost/type_traits/alignment_of.hpp>
+#include <boost/array.hpp>
 #include <boost/intrusive/options.hpp>
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/link_mode.hpp>
@@ -29,6 +24,12 @@
 #include <boost/log/attributes/attribute_values_view.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/detail/atomic_count.hpp>
+#endif
+#include "alignment_gap_between.hpp"
+
+#ifndef BOOST_LOG_HASH_TABLE_SIZE_LOG
+// Hash table size will be 2 ^ this value
+#define BOOST_LOG_HASH_TABLE_SIZE_LOG 5
 #endif
 
 namespace boost {
@@ -80,8 +81,22 @@ private:
     typedef intrusive::list<
         node,
         intrusive::value_traits< value_traits >,
-        intrusive::constant_time_size< true >
+        intrusive::constant_time_size< false >
     > node_list;
+
+    //! A hash table bucket
+    struct bucket
+    {
+        //! Points to the first element in the bucket
+        node* first;
+        //! Points to the last element in the bucket (not the one after the last!)
+        node* last;
+
+        bucket() : first(NULL), last(NULL) {}
+    };
+
+    //! A list of buckets
+    typedef array< bucket, 1U << BOOST_LOG_HASH_TABLE_SIZE_LOG > buckets;
 
     //! Element disposer
     struct disposer
@@ -93,18 +108,6 @@ private:
         }
     };
 
-    //! Node status values - exact values are important
-    enum node_status
-    {
-        uninitialized = 0,
-        absent = 1,
-        present = 3
-    };
-
-    // Algorithms with node statuses require this
-    BOOST_STATIC_ASSERT(std::numeric_limits< unsigned char >::digits == 8);
-    BOOST_STATIC_ASSERT(is_unsigned< id_type >::value);
-
 private:
     //! Reference count
 #ifndef BOOST_LOG_NO_THREADS
@@ -112,15 +115,6 @@ private:
 #else
     unsigned int m_RefCount;
 #endif
-    //! The container with elements
-    node_list m_Nodes;
-    //! The base identifier value for attribute names
-    id_type m_BaseID;
-    //! The max identifier value in the view
-    id_type m_MaxID;
-    //! The pointer to the beginning of the storage of the elements
-    node* m_pStorage;
-
     //! Pointer to the source-specific attributes
     const attribute_set_type* m_pSourceAttributes;
     //! Pointer to the thread-specific attributes
@@ -128,23 +122,34 @@ private:
     //! Pointer to the global attributes
     const attribute_set_type* m_pGlobalAttributes;
 
+    //! The container with elements
+    node_list m_Nodes;
+    //! The pointer to the beginning of the storage of the elements
+    node* m_pStorage;
+    //! The pointer to the end of the allocated elements within the storage
+    node* m_pEnd;
+    //! The pointer to the end of storage
+    node* m_pEOS;
+
+    //! Hash table buckets
+    buckets m_Buckets;
+
 private:
     //! Constructor
     implementation(
-        id_type base_id,
-        id_type max_id,
         node* storage,
+        node* eos,
         attribute_set_type const& source_attrs,
         attribute_set_type const& thread_attrs,
         attribute_set_type const& global_attrs
     ) :
         m_RefCount(1),
-        m_BaseID(base_id),
-        m_MaxID(max_id),
-        m_pStorage(storage),
         m_pSourceAttributes(&source_attrs),
         m_pThreadAttributes(&thread_attrs),
-        m_pGlobalAttributes(&global_attrs)
+        m_pGlobalAttributes(&global_attrs),
+        m_pStorage(storage),
+        m_pEnd(storage),
+        m_pEOS(eos)
     {
     }
 
@@ -162,56 +167,21 @@ public:
         attribute_set_type const& thread_attrs,
         attribute_set_type const& global_attrs)
     {
-        // Calculate the range of attribute name identifiers
-        id_type base_id = (std::numeric_limits< id_type >::max)(), max_id = 0;
-        if (!source_attrs.empty())
-        {
-            id_type id = source_attrs.begin()->first.id();
-            if (id < base_id)
-                base_id = id;
-            id = (--(source_attrs.end()))->first.id();
-            if (id > max_id)
-                max_id = id;
-        }
-        if (!thread_attrs.empty())
-        {
-            id_type id = thread_attrs.begin()->first.id();
-            if (id < base_id)
-                base_id = id;
-            id = (--(thread_attrs.end()))->first.id();
-            if (id > max_id)
-                max_id = id;
-        }
-        if (!global_attrs.empty())
-        {
-            id_type id = global_attrs.begin()->first.id();
-            if (id < base_id)
-                base_id = id;
-            id = (--(global_attrs.end()))->first.id();
-            if (id > max_id)
-                max_id = id;
-        }
-
-        const std::size_t element_count = max_id - base_id + 1;
+        // Calculate the maximum size of the view
+        const size_type element_count = source_attrs.size() + thread_attrs.size() + global_attrs.size();
 
         // Calculate the buffer size
-        const std::size_t statuses_size = ((element_count + 3) >> 2); // the table of node statuses
-        const std::size_t size1 = sizeof(implementation) + statuses_size;
-        const std::size_t storage_offset = size1 +
-            alignment_of< node >::value - (size1 % alignment_of< node >::value); // alignment for nodes
+        const size_type buffer_size = sizeof(implementation) +
+            aux::alignment_gap_between< implementation, node >::value +
+            element_count * sizeof(node);
 
-        implementation* p = reinterpret_cast< implementation* >(
-            alloc.allocate(storage_offset + element_count * sizeof(node)));
+        implementation* p = reinterpret_cast< implementation* >(alloc.allocate(buffer_size));
         new (p) implementation(
-            base_id,
-            max_id,
-            reinterpret_cast< node* >(reinterpret_cast< char* >(p) + storage_offset),
+            reinterpret_cast< node* >(reinterpret_cast< char* >(p + 1) + aux::alignment_gap_between< implementation, node >::value),
+            reinterpret_cast< node* >(reinterpret_cast< char* >(p) + buffer_size),
             source_attrs,
             thread_attrs,
             global_attrs);
-
-        // Set all node statuses to uninitialized
-        std::memset(p + 1, 0, statuses_size);
 
         return p;
     }
@@ -219,19 +189,9 @@ public:
     //! Destroys the object and releases the memory
     static void destroy(internal_allocator_type& alloc, implementation* p)
     {
-        const std::size_t element_count = p->m_MaxID - p->m_BaseID + 1;
-
+        const size_type buffer_size = reinterpret_cast< char* >(p->m_pEOS) - reinterpret_cast< char* >(p);
         p->~implementation();
-
-        // Calculate the buffer size
-        const std::size_t statuses_size = ((element_count + 3) >> 2); // the table of node statuses
-        const std::size_t size1 = sizeof(implementation) + statuses_size;
-        const std::size_t storage_offset = size1 +
-            alignment_of< node >::value - (size1 % alignment_of< node >::value); // alignment for nodes
-
-        alloc.deallocate(
-            reinterpret_cast< typename internal_allocator_type::pointer >(p),
-            storage_offset + element_count * sizeof(node));
+        alloc.deallocate(reinterpret_cast< typename internal_allocator_type::pointer >(p), buffer_size);
     }
 
     //! Increases reference count for the container
@@ -258,18 +218,29 @@ public:
     }
 
     //! Returns the number of elements in the container
-    size_type size() const
+    size_type size()
     {
-        const_cast< implementation* >(this)->freeze();
-        return m_Nodes.size();
+        freeze();
+        return (m_pEnd - m_pStorage);
     }
 
     //! Looks for the element with an equivalent key
-    node_base* find(key_type key) const
+    node_base* find(key_type key)
     {
-        id_type index = key.id() - m_BaseID;
-        if (index <= m_MaxID && const_cast< implementation* >(this)->freeze_node(key) == present)
-            return m_pStorage + index;
+        // First try to find an acquired element
+        bucket& b = get_bucket(key.id());
+        register node* p = b.first;
+        if (p)
+        {
+            // The bucket is not empty, search among the elements
+            p = find_in_bucket(key, b);
+            if (p->m_Value.first == key)
+                return p;
+        }
+
+        // Element not found, try to acquire the value from attribute sets, if not frozen yet
+        if (m_pSourceAttributes)
+            return freeze_node(key, b, p);
         else
             return m_Nodes.end().pointed_node();
     }
@@ -279,81 +250,106 @@ public:
     {
         if (m_pSourceAttributes)
         {
-            // Set all "frozen" flags so that all values that have not been acquired yet appear as absent
-            unsigned char* p = reinterpret_cast< unsigned char* >(this + 1);
-            // m_MaxID - m_BaseID + 1 = element count in storage; + 3 is added to ceil the result
-            unsigned char* e = p + ((m_MaxID - m_BaseID + 1 + 3) >> 2);
-            for (; p != e; ++p)
-                *p |= 85; // 01010101b
-
-            freeze_from(m_pSourceAttributes);
-            freeze_from(m_pThreadAttributes);
-            freeze_from(m_pGlobalAttributes);
+            freeze_nodes_from(m_pSourceAttributes);
+            freeze_nodes_from(m_pThreadAttributes);
+            freeze_nodes_from(m_pGlobalAttributes);
             m_pSourceAttributes = m_pThreadAttributes = m_pGlobalAttributes = NULL;
         }
     }
 
 private:
-    //! The function returns the node status
-    node_status get_status(id_type id) const
+    //! The function returns a bucket for the specified element
+    bucket& get_bucket(id_type id)
     {
-        const unsigned char* const p = reinterpret_cast< const unsigned char* >(this + 1) + (id >> 2);
-        return (node_status)(((*p) >> ((id << 1) & 7)) & 3);
+        return m_Buckets[id & (buckets::static_size - 1)];
     }
-    //! The function sets the node status
-    void set_status(id_type id, node_status status)
+
+    //! Attempts to find an element with the specified key in the bucket
+    node* find_in_bucket(key_type key, bucket const& b)
     {
-        unsigned char* const p = reinterpret_cast< unsigned char* >(this + 1) + (id >> 2);
-        *p |= static_cast< unsigned char >(status) << ((id << 1) & 7);
+        typedef typename node_list::node_traits node_traits;
+        typedef typename node_list::value_traits value_traits;
+
+        // All elements within the bucket are sorted to speedup the search.
+        register node* p = b.first;
+        while (p != b.last && p->m_Value.first.id() < key.id())
+        {
+            p = value_traits::to_value_ptr(node_traits::get_next(p));
+        }
+
+        return p;
     }
 
     //! Acquires the attribute value from the attribute sets
-    node_status freeze_node(key_type key)
+    node_base* freeze_node(key_type key, bucket& b, node* where)
     {
-        node_status status = get_status(key.id());
-        if (status == uninitialized)
+        typename attribute_set_type::const_iterator it = m_pSourceAttributes->find(key);
+        if (it == m_pSourceAttributes->end())
         {
-            node* p = m_pStorage + key.id() - m_BaseID;
-            typename attribute_set_type::const_iterator it = m_pSourceAttributes->find(key);
-            if (it == m_pSourceAttributes->end())
+            it = m_pThreadAttributes->find(key);
+            if (it == m_pThreadAttributes->end())
             {
-                it = m_pThreadAttributes->find(key);
-                if (it == m_pThreadAttributes->end())
+                it = m_pGlobalAttributes->find(key);
+                if (it == m_pGlobalAttributes->end())
                 {
-                    it = m_pGlobalAttributes->find(key);
-                    if (it == m_pGlobalAttributes->end())
-                    {
-                        // The attribute is not found
-                        set_status(key.id(), absent);
-                        return absent;
-                    }
+                    // The attribute is not found
+                    return m_Nodes.end().pointed_node();
                 }
             }
-
-            new (p) node(key, it->second->get_value());
-            m_Nodes.push_back(*p);
-            set_status(key.id(), present);
-            return present;
         }
 
-        return status;
+        // The attribute is found, acquiring the value
+        return insert_node(key, b, where, it->second->get_value());
+    }
+
+    //! The function inserts a node into the container
+    node* insert_node(key_type key, bucket& b, node* where, mapped_type const& data)
+    {
+        node* const p = m_pEnd++;
+        new (p) node(key, data);
+
+        if (b.first == NULL)
+        {
+            // The bucket is empty
+            b.first = b.last = p;
+            m_Nodes.push_back(*p);
+        }
+        else if (where == b.last && key.id() > where->m_Value.first.id())
+        {
+            // The new element should become the last element of the bucket
+            typename node_list::iterator it = m_Nodes.iterator_to(*where);
+            ++it;
+            m_Nodes.insert(it, *p);
+            b.last = p;
+        }
+        else
+        {
+            // The new element should be within the bucket
+            typename node_list::iterator it = m_Nodes.iterator_to(*where);
+            m_Nodes.insert(it, *p);
+        }
+
+        return p;
     }
 
     //! Acquires attribute values from the set of attributes
-    void freeze_from(const attribute_set_type* attrs)
+    void freeze_nodes_from(const attribute_set_type* attrs)
     {
         typename attribute_set_type::const_iterator
             it = attrs->begin(), end = attrs->end();
         for (; it != end; ++it)
         {
-            register id_type id = it->first.id();
-            if (get_status(id) != present)
+            key_type key = it->first;
+            bucket& b = get_bucket(key.id());
+            register node* p = b.first;
+            if (p)
             {
-                node* p = m_pStorage + id - m_BaseID;
-                new (p) node(it->first, it->second->get_value());
-                m_Nodes.push_back(*p);
-                set_status(id, present);
+                p = find_in_bucket(key, b);
+                if (p->m_Value.first == key)
+                    continue; // the element is already frozen
             }
+
+            insert_node(key, b, p, it->second->get_value());
         }
     }
 };
