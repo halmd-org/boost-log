@@ -106,7 +106,7 @@ public:
         void operator() (node* p) const
         {
             p->m_pPrev = p->m_pNext = NULL;
-            const_cast< key_type& >(p->m_Value.first) = id_type();
+            const_cast< key_type& >(p->m_Value.first) = key_type();
             p->m_Value.second.reset();
         }
     };

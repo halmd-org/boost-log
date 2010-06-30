@@ -10,7 +10,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date$]
+    [last-revision $Date: 2010-06-24 16:33:45 +0400 (Чт, 24 июн 2010) $]
 ]
 
 [c++]
