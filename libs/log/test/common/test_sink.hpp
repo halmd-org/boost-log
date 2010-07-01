@@ -34,7 +34,18 @@ public:
     typedef typename base_type::record_type record_type;
     typedef typename base_type::filter_type filter_type;
     typedef typename values_view_type::key_type key_type;
-    typedef std::map< key_type, std::size_t > attr_counters_map;
+
+    struct key_type_order
+    {
+        typedef bool result_type;
+
+        result_type operator() (key_type const& left, key_type const& right) const
+        {
+            return left.id() < right.id();
+        }
+    };
+
+    typedef std::map< key_type, std::size_t, key_type_order > attr_counters_map;
 
 public:
     filter_type m_Filter;

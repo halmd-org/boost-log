@@ -176,17 +176,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     set2.insert(elems.begin(), elems.end());
     BOOST_CHECK(!set2.empty());
     BOOST_REQUIRE_EQUAL(set2.size(), 3UL);
-    typename attr_set::const_iterator it = set2.begin();
-    BOOST_CHECK(it->first == data::attr1());
-    BOOST_CHECK_EQUAL(it->second, attr1);
-    ++it;
-    BOOST_CHECK(it->first == data::attr2());
-    BOOST_CHECK_EQUAL(it->second, attr2);
-    ++it;
-    BOOST_CHECK(it->first == data::attr3());
-    BOOST_CHECK_EQUAL(it->second, attr3);
-    ++it;
-    BOOST_CHECK(it == set2.end());
+    typedef typename attr_set::mapped_type mapped_type;
+    BOOST_CHECK_EQUAL(static_cast< mapped_type >(set2[data::attr1()]), attr1);
+    BOOST_CHECK_EQUAL(static_cast< mapped_type >(set2[data::attr2()]), attr2);
+    BOOST_CHECK_EQUAL(static_cast< mapped_type >(set2[data::attr3()]), attr3);
 
     // The same, but with insertion results collection
     std::vector< std::pair< typename attr_set::iterator, bool > > results;
@@ -196,20 +189,21 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     BOOST_REQUIRE_EQUAL(results.size(), elems.size());
     BOOST_CHECK(!set3.empty());
     BOOST_REQUIRE_EQUAL(set3.size(), 3UL);
-    it = set3.begin();
+    typename attr_set::iterator it = set3.find(data::attr1());
+    BOOST_REQUIRE(it != set3.end());
     BOOST_CHECK(it->first == data::attr1());
     BOOST_CHECK_EQUAL(it->second, attr1);
     BOOST_CHECK(it == results[1].first);
-    ++it;
+    it = set3.find(data::attr2());
+    BOOST_REQUIRE(it != set3.end());
     BOOST_CHECK(it->first == data::attr2());
     BOOST_CHECK_EQUAL(it->second, attr2);
     BOOST_CHECK(it == results[0].first);
-    ++it;
+    it = set3.find(data::attr3());
+    BOOST_REQUIRE(it != set3.end());
     BOOST_CHECK(it->first == data::attr3());
     BOOST_CHECK_EQUAL(it->second, attr3);
     BOOST_CHECK(it == results[2].first);
-    ++it;
-    BOOST_CHECK(it == set3.end());
 
     BOOST_CHECK(results[0].second);
     BOOST_CHECK(results[1].second);
