@@ -281,9 +281,8 @@ void basic_attribute_set< CharT >::erase(iterator begin, iterator end)
     while (begin != end)
     {
         m_pImpl->m_Nodes.erase_and_dispose(
-            m_pImpl->m_Nodes.iterator_to(*static_cast< node* >(begin.base())),
+            m_pImpl->m_Nodes.iterator_to(*static_cast< node* >((begin++).base())),
             typename implementation::node_disposer());
-        ++begin;
     }
 }
 
