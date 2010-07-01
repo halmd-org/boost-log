@@ -13,6 +13,14 @@ Every attribute supported by the library must derive from the `attribute` interf
 
 The attribute value object is mostly intended to store the actual attribute value and implement type dispatching in order to be able to extract the stored value. One should not confuse the attribute value object type and the stored value type. The former is in most cases not needed by users and is hidden behind the `attribute_value` interface, but the latter is needed to be able to extract the value. For brevity we call the stored attribute value type simply the attribute value type in this documentation.
 
+[section:attribute_name Attribute names]
+
+    #include <boost/log/attributes/attribute_name.hpp>
+
+TODO
+
+[endsect]
+
 [section:constant Constants]
 
     #include <boost/log/attributes/constant.hpp>
