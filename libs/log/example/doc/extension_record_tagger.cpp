@@ -51,7 +51,7 @@ class record_tagger_feature :
 public:
     // Let's import some types that we will need. These imports should be public,
     // in order to allow other features that may derive from record_tagger to do the same.
-    typedef typename BaseT::string_type string_type;
+    typedef typename BaseT::char_type char_type;
     typedef typename BaseT::attribute_set_type attribute_set_type;
     typedef typename BaseT::threading_model threading_model;
     typedef typename BaseT::record_type record_type;
@@ -114,6 +114,7 @@ typename record_tagger_feature< BaseT >::record_type
 record_tagger_feature< BaseT >::open_record_unlocked(ArgsT const& args)
 {
     // Extract the named argument from the parameters pack
+    typedef std::basic_string< char_type > string_type;
     string_type tag_value = args[my_keywords::tag | string_type()];
 
     attribute_set_type& attrs = BaseT::attributes();

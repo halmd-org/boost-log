@@ -241,10 +241,10 @@ void basic_core< CharT >::remove_sink(shared_ptr< sink_type > const& s)
 //! The method adds an attribute to the global attribute set
 template< typename CharT >
 std::pair< typename basic_core< CharT >::attribute_set_type::iterator, bool >
-basic_core< CharT >::add_global_attribute(string_type const& name, shared_ptr< attribute > const& attr)
+basic_core< CharT >::add_global_attribute(attribute_name_type const& name, shared_ptr< attribute > const& attr)
 {
     BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
-    return pImpl->GlobalAttributes.insert(typename attribute_set_type::key_type(name), attr);
+    return pImpl->GlobalAttributes.insert(name, attr);
 }
 
 //! The method removes an attribute from the global attribute set
@@ -273,10 +273,10 @@ void basic_core< CharT >::set_global_attributes(attribute_set_type const& attrs)
 //! The method adds an attribute to the thread-specific attribute set
 template< typename CharT >
 std::pair< typename basic_core< CharT >::attribute_set_type::iterator, bool >
-basic_core< CharT >::add_thread_attribute(string_type const& name, shared_ptr< attribute > const& attr)
+basic_core< CharT >::add_thread_attribute(attribute_name_type const& name, shared_ptr< attribute > const& attr)
 {
     typename implementation::thread_data* p = pImpl->get_thread_data();
-    return p->ThreadAttributes.insert(typename attribute_set_type::key_type(name), attr);
+    return p->ThreadAttributes.insert(name, attr);
 }
 
 //! The method removes an attribute from the thread-specific attribute set
