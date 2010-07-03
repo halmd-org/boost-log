@@ -244,9 +244,24 @@ inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
+template< typename CharT >
+inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
+    const CharT* name, shared_ptr< attribute > const& attr)
+{
+    return aux::scoped_thread_attribute< CharT >(name, attr);
+}
+
 template< typename CharT, typename AttributeT >
 inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
     basic_attribute_name< CharT > const& name, AttributeT& attr)
+{
+    return aux::scoped_thread_attribute< CharT >(
+        name, shared_ptr< attribute >(boost::addressof(attr), empty_deleter()));
+}
+
+template< typename CharT, typename AttributeT >
+inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
+    const CharT* name, AttributeT& attr)
 {
     return aux::scoped_thread_attribute< CharT >(
         name, shared_ptr< attribute >(boost::addressof(attr), empty_deleter()));

@@ -69,7 +69,6 @@ lib boost_log
         attribute_name.cpp
         attribute_set.cpp
         attribute_values_view.cpp
-        slim_string.cpp
         code_conversion.cpp
         core.cpp
         record_ostream.cpp
