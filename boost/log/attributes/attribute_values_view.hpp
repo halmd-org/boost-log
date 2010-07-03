@@ -101,6 +101,13 @@ public:
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
 private:
+    struct move_source
+    {
+        basic_attribute_values_view& that;
+
+        explicit move_source(basic_attribute_values_view& t) : that(t) {}
+    };
+
     typedef std::allocator< char > internal_allocator_type;
     struct implementation;
 
@@ -125,7 +132,7 @@ private:
     {
         value_type m_Value;
 
-        node(key_type const& key, mapped_type const& data);
+        node(key_type const& key, mapped_type& data);
     };
 
 public:
@@ -211,6 +218,14 @@ private:
     implementation* m_pImpl;
 
 public:
+    /*!
+     * Move constructor
+     */
+    basic_attribute_values_view(move_source source) : m_pImpl(source.that.m_pImpl)
+    {
+        source.that.m_pImpl = NULL;
+    }
+
     /*!
      * The constructor adopts three attribute sets into the view.
      * The \a source_attrs attributes have the greatest preference when a same-named
@@ -314,6 +329,11 @@ public:
      * \post The view is frozen
      */
     BOOST_LOG_EXPORT void freeze();
+
+    friend move_source move(basic_attribute_values_view& that)
+    {
+        return move_source(that);
+    }
 };
 
 /*!

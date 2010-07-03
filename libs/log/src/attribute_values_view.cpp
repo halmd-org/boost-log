@@ -22,14 +22,11 @@
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
-#ifndef BOOST_LOG_NO_THREADS
-#include <boost/detail/atomic_count.hpp>
-#endif
 #include "alignment_gap_between.hpp"
 
 #ifndef BOOST_LOG_HASH_TABLE_SIZE_LOG
 // Hash table size will be 2 ^ this value
-#define BOOST_LOG_HASH_TABLE_SIZE_LOG 5
+#define BOOST_LOG_HASH_TABLE_SIZE_LOG 4
 #endif
 
 namespace boost {
@@ -37,17 +34,18 @@ namespace boost {
 namespace BOOST_LOG_NAMESPACE {
 
 template< typename CharT >
-inline basic_attribute_values_view< CharT >::node_base::node_base() :
+BOOST_LOG_FORCEINLINE basic_attribute_values_view< CharT >::node_base::node_base() :
     m_pPrev(NULL),
     m_pNext(NULL)
 {
 }
 
 template< typename CharT >
-inline basic_attribute_values_view< CharT >::node::node(key_type const& key, mapped_type const& data) :
+BOOST_LOG_FORCEINLINE basic_attribute_values_view< CharT >::node::node(key_type const& key, mapped_type& data) :
     node_base(),
-    m_Value(key, data)
+    m_Value(key, mapped_type())
 {
+    m_Value.second.swap(data);
 }
 
 //! Container implementation
@@ -109,12 +107,6 @@ private:
     };
 
 private:
-    //! Reference count
-#ifndef BOOST_LOG_NO_THREADS
-    boost::detail::atomic_count m_RefCount;
-#else
-    unsigned int m_RefCount;
-#endif
     //! Pointer to the source-specific attributes
     const attribute_set_type* m_pSourceAttributes;
     //! Pointer to the thread-specific attributes
@@ -139,14 +131,13 @@ private:
     implementation(
         node* storage,
         node* eos,
-        attribute_set_type const& source_attrs,
-        attribute_set_type const& thread_attrs,
-        attribute_set_type const& global_attrs
+        attribute_set_type const* source_attrs,
+        attribute_set_type const* thread_attrs,
+        attribute_set_type const* global_attrs
     ) :
-        m_RefCount(1),
-        m_pSourceAttributes(&source_attrs),
-        m_pThreadAttributes(&thread_attrs),
-        m_pGlobalAttributes(&global_attrs),
+        m_pSourceAttributes(source_attrs),
+        m_pThreadAttributes(thread_attrs),
+        m_pGlobalAttributes(global_attrs),
         m_pStorage(storage),
         m_pEnd(storage),
         m_pEOS(eos)
@@ -159,6 +150,26 @@ private:
         m_Nodes.clear_and_dispose(disposer());
     }
 
+    //! The function allocates memory and creates the object
+    static implementation* create(
+        internal_allocator_type& alloc,
+        size_type element_count,
+        attribute_set_type const* source_attrs,
+        attribute_set_type const* thread_attrs,
+        attribute_set_type const* global_attrs)
+    {
+        // Calculate the buffer size
+        const size_type header_size = sizeof(implementation) +
+            aux::alignment_gap_between< implementation, node >::value;
+        const size_type buffer_size = header_size + element_count * sizeof(node);
+
+        implementation* p = reinterpret_cast< implementation* >(alloc.allocate(buffer_size));
+        node* const storage = reinterpret_cast< node* >(reinterpret_cast< char* >(p) + header_size);
+        new (p) implementation(storage, storage + element_count, source_attrs, thread_attrs, global_attrs);
+
+        return p;
+    }
+
 public:
     //! The function allocates memory and creates the object
     static implementation* create(
@@ -167,21 +178,36 @@ public:
         attribute_set_type const& thread_attrs,
         attribute_set_type const& global_attrs)
     {
-        // Calculate the maximum size of the view
-        const size_type element_count = source_attrs.size() + thread_attrs.size() + global_attrs.size();
+        return create(
+            alloc,
+            source_attrs.size() + thread_attrs.size() + global_attrs.size(),
+            &source_attrs,
+            &thread_attrs,
+            &global_attrs);
+    }
 
-        // Calculate the buffer size
-        const size_type buffer_size = sizeof(implementation) +
-            aux::alignment_gap_between< implementation, node >::value +
-            element_count * sizeof(node);
+    //! Creates a copy of the object
+    static implementation* copy(internal_allocator_type& alloc, implementation* that)
+    {
+        // Create new object
+        implementation* p = create(alloc, that->size(), NULL, NULL, NULL);
 
-        implementation* p = reinterpret_cast< implementation* >(alloc.allocate(buffer_size));
-        new (p) implementation(
-            reinterpret_cast< node* >(reinterpret_cast< char* >(p + 1) + aux::alignment_gap_between< implementation, node >::value),
-            reinterpret_cast< node* >(reinterpret_cast< char* >(p) + buffer_size),
-            source_attrs,
-            thread_attrs,
-            global_attrs);
+        // Copy all elements
+        typename node_list::iterator it = that->m_Nodes.begin(), end = that->m_Nodes.end();
+        for (; it != end; ++it)
+        {
+            node* n = p->m_pEnd++;
+            mapped_type data = it->m_Value.second;
+            new (n) node(it->m_Value.first, data);
+            p->m_Nodes.push_back(*n);
+
+            // Since nodes within buckets are ordered, we can simply append the node to the end of the bucket
+            bucket& b = p->get_bucket(n->m_Value.first.id());
+            if (b.first == NULL)
+                b.first = b.last = n;
+            else
+                b.last = n;
+        }
 
         return p;
     }
@@ -192,17 +218,6 @@ public:
         const size_type buffer_size = reinterpret_cast< char* >(p->m_pEOS) - reinterpret_cast< char* >(p);
         p->~implementation();
         alloc.deallocate(reinterpret_cast< typename internal_allocator_type::pointer >(p), buffer_size);
-    }
-
-    //! Increases reference count for the container
-    void add_ref()
-    {
-        ++m_RefCount;
-    }
-    //! Decreases reference count for the container
-    unsigned int release()
-    {
-        return --m_RefCount;
     }
 
     //! Returns the pointer to the first element
@@ -303,7 +318,7 @@ private:
     }
 
     //! The function inserts a node into the container
-    node* insert_node(key_type key, bucket& b, node* where, mapped_type const& data)
+    node* insert_node(key_type key, bucket& b, node* where, mapped_type data)
     {
         node* const p = m_pEnd++;
         new (p) node(key, data);
@@ -372,24 +387,26 @@ basic_attribute_values_view< CharT >::basic_attribute_values_view(
 {
 }
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 //! Copy constructor
 template< typename CharT >
 basic_attribute_values_view< CharT >::basic_attribute_values_view(basic_attribute_values_view const& that) :
-    internal_allocator_type(static_cast< internal_allocator_type const& >(that)),
-    m_pImpl(that.m_pImpl)
+    internal_allocator_type(static_cast< internal_allocator_type const& >(that))
 {
-    m_pImpl->add_ref();
+    if (that.m_pImpl)
+        m_pImpl = implementation::copy(static_cast< internal_allocator_type& >(*this), that.m_pImpl);
+    else
+        m_pImpl = NULL;
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 //! Destructor
 template< typename CharT >
 basic_attribute_values_view< CharT >::~basic_attribute_values_view()
 {
-    if (m_pImpl->release() == 0)
+    if (m_pImpl)
         implementation::destroy(static_cast< internal_allocator_type& >(*this), m_pImpl);
 }
 

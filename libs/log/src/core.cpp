@@ -48,7 +48,8 @@ struct basic_record< CharT >::private_data :
     //! A list of sinks that will accept the record
     sink_list m_AcceptingSinks;
 
-    explicit private_data(values_view_type const& values) : public_data(values)
+    template< typename SourceT >
+    explicit private_data(SourceT const& values) : public_data(values)
     {
     }
 };
@@ -177,8 +178,8 @@ basic_core< CharT >::implementation::pThreadDataCache = NULL;
 
 //! Logging system constructor
 template< typename CharT >
-basic_core< CharT >::basic_core()
-    : pImpl(new implementation())
+basic_core< CharT >::basic_core() :
+    pImpl(new implementation())
 {
 }
 
@@ -344,9 +345,10 @@ typename basic_core< CharT >::record_type basic_core< CharT >::open_record(attri
         if (pImpl->Enabled && !pImpl->Sinks.empty())
         {
             // Compose a view of attribute values (unfrozen, yet)
-            values_view_type attr_values(source_attributes, tsd->ThreadAttributes, pImpl->GlobalAttributes);
+            values_view_type temp_attr_values(source_attributes, tsd->ThreadAttributes, pImpl->GlobalAttributes);
+            register values_view_type* attr_values = &temp_attr_values;
 
-            if (pImpl->Filter.empty() || pImpl->Filter(attr_values))
+            if (pImpl->Filter.empty() || pImpl->Filter(*attr_values))
             {
                 // The global filter passed, trying the sinks
                 typedef typename record_type::private_data record_private_data;
@@ -356,13 +358,14 @@ typename basic_core< CharT >::record_type basic_core< CharT >::open_record(attri
                 {
                     try
                     {
-                        if (it->get()->will_consume(attr_values))
+                        if (it->get()->will_consume(*attr_values))
                         {
                             // If at least one sink accepts the record, it's time to create it
                             if (!pData)
                             {
-                                attr_values.freeze();
-                                rec.m_pData = pData = new record_private_data(attr_values);
+                                temp_attr_values.freeze();
+                                rec.m_pData = pData = new record_private_data(move(temp_attr_values));
+                                attr_values = &pData->m_AttributeValues;
                             }
                             pData->m_AcceptingSinks.push_back(*it);
                         }
