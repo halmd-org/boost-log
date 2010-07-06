@@ -147,7 +147,7 @@ The static type dispatcher also supports another way of use which allows avoidan
 
 This dispatcher can be used in precisely the same way as the previously defined one. Note also that __boost_mpl__ lambda expressions are supported as visitor generators.
 
-[tip See also [link log.detailed.utilities.extractors attribute value extractors] for an even simpler solution if all you want is to get an attribute value.]
+[tip See also [link log.detailed.attributes.related_components.extractors attribute value extractors] for an even simpler solution if all you want is to get an attribute value.]
 
 [heading Dynamic type dispatcher]
 
@@ -230,50 +230,6 @@ There are also a number of time-related type sequences available:
     [[`boost_time_period_types`]                [All time period types defined in __boost_date_time__]]
     [[`time_period_types`]                      [Currently equivalent to `boost_time_period_types`]]
 ]
-
-[endsect]
-
-[section:extractors Attribute value extractors]
-
-    #include <boost/log/utility/attribute_value_extractor.hpp>
-
-Attribute value extractors serve as a helper tool on top of [link log.detailed.utilities.type_dispatch type dispatchers] in order to simplify extracting attribute values in generic code. The functionality is implemented in the `attribute_value_extractor` class template, parametrized on character type and type or MPL sequence of types that have to be supported for dispatch. The `attribute_value_extractor` instance is a binary function object that accepts a set of attribute values and another function object that will receive the extracted attribute value. The name of the attribute to be extracted is given as the constructor argument to the extractor. The key advantage of using extractors instead of raw dispatchers is that the receiving function object can have a template `operator ()`. Obviously, this allows reducing the amount of code when similar processing is needed for attributes of different types. For example:
-
-    // A generic function object that outputs attribute value
-    struct print_attribute_value
-    {
-        typedef void result_type;
-
-        // This operator will be instantiated for all possible types of the attribute value
-        template< typename T >
-        void operator() (T const& value) const
-        {
-            std::cout << "Received " << logging::type_info_wrapper(typeid(T)).pretty_name()
-                << " attribute value: " << value << std::endl;
-        }
-    };
-
-    void foo(attribute_values_view const& attrs)
-    {
-        // Let's assume we want to output the value of the
-        // attribute "MyAttr" that may have any numeric type
-        logging::attribute_value_extractor< char, logging::numeric_types > extractor1("MyAttr");
-        assert(extractor1(attrs, print_attribute_value()));
-
-        // The extractor returns false if it is unable to extract the value
-        logging::attribute_value_extractor< char, std::complex< double > > extractor2("MyAttr");
-        assert(!extractor2(attrs, print_attribute_value()));
-    }
-
-Note that the predefined type sequences provided by the library can be used freely with extractors just as well as with filters and formatters. Also note that specifying a single type of the attribute value instead of type sequence is also perfectly valid.
-
-The library also provides an `extract` convenience function that automatically creates extractor object. The `foo` function from the example above can be rewritten like this:
-
-    void foo(attribute_values_view const& attrs)
-    {
-        assert(extract< logging::numeric_types >("MyAttr", attrs, print_attribute_value()));
-        assert(!extract< std::complex< double > >("MyAttr", attrs, print_attribute_value()));
-    }
 
 [endsect]
 

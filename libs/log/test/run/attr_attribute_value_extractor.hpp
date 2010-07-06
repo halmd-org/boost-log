@@ -5,21 +5,21 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   util_attribute_value_extractor.cpp
+ * \file   attr_attribute_value_extractor.cpp
  * \author Andrey Semashev
  * \date   21.01.2009
  *
  * \brief  This header contains tests for the attribute value extraction helpers.
  */
 
-#define BOOST_TEST_MODULE util_attribute_value_extractor
+#define BOOST_TEST_MODULE attr_attribute_value_extractor
 
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
-#include <boost/log/utility/attribute_value_extractor.hpp>
+#include <boost/log/attributes/attribute_value_extractor.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>

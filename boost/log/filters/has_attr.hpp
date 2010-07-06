@@ -19,11 +19,10 @@
 #ifndef BOOST_LOG_FILTERS_HAS_ATTR_HPP_INCLUDED_
 #define BOOST_LOG_FILTERS_HAS_ATTR_HPP_INCLUDED_
 
-#include <string>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/functional.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/utility/attribute_value_extractor.hpp>
+#include <boost/log/attributes/attribute_value_extractor.hpp>
 #include <boost/log/filters/basic_filters.hpp>
 
 namespace boost {

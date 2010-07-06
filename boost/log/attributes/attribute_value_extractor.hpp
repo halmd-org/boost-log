@@ -17,18 +17,15 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_UTILITY_ATTRIBUTE_VALUE_EXTRACTOR_HPP_INCLUDED_
-#define BOOST_LOG_UTILITY_ATTRIBUTE_VALUE_EXTRACTOR_HPP_INCLUDED_
+#ifndef BOOST_LOG_ATTRIBUTES_ATTRIBUTE_VALUE_EXTRACTOR_HPP_INCLUDED_
+#define BOOST_LOG_ATTRIBUTES_ATTRIBUTE_VALUE_EXTRACTOR_HPP_INCLUDED_
 
-#include <typeinfo>
-#include <string>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/attribute_value_def.hpp>
+#include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
-#include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
 namespace boost {
 
@@ -118,8 +115,6 @@ public:
      */
     explicit attribute_value_extractor(attribute_name_type const& name) : m_Name(name) {}
 
-#ifdef BOOST_LOG_DOXYGEN_PASS
-
     /*!
      * Extraction operator. Looks for an attribute value with the name specified on construction
      * and tries to acquire the stored value of one of the supported types. If extraction succeeds,
@@ -130,62 +125,21 @@ public:
      * \return \c true if extraction succeeded, \c false otherwise
      */
     template< typename ReceiverT >
-    result_type operator() (values_view_type const& attrs, ReceiverT& receiver) const;
-
-#else // BOOST_LOG_DOXYGEN_PASS
-
-    //! Extraction operator
-    template< typename ReceiverT >
-    result_type operator() (values_view_type const& attrs, ReceiverT& receiver) const
-    {
-        return extract(attrs, receiver);
-    }
-    //! Extraction operator
-    template< typename ReceiverT >
-    result_type operator() (values_view_type const& attrs, ReceiverT const& receiver) const
-    {
-        return extract(attrs, receiver);
-    }
-    //! Returns attribute value name
-    attribute_name_type const& name() const { return m_Name; }
-
-private:
-    //! Implementation of the attribute value extraction
-    template< typename ReceiverT >
-    result_type extract(values_view_type const& attrs, ReceiverT& receiver) const
+    result_type operator() (values_view_type const& attrs, ReceiverT receiver) const
     {
         typename values_view_type::const_iterator it = attrs.find(m_Name);
         if (it != attrs.end())
         {
-            static_type_dispatcher< value_types > disp(receiver);
-            if (it->second.dispatch(disp))
+            if (it->second.extract(receiver))
                 return result_type(value_extracted);
             else
                 return result_type(value_has_invalid_type);
         }
         return result_type(value_not_found);
     }
-
-#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
-/*!
- * The function extracts an attribute value from the view. The user has to explicitly specify the
- * type or set of possible types of the attribute value to be extracted.
- *
- * \pre <tt>name != NULL</tt>, \c name points to a zero-terminated string
- * \param name An attribute value name to extract.
- * \param attrs A set of attribute values in which to look for the specified attribute value.
- * \param receiver A receiving functional object to pass the extracted value to.
- * \return \c true if extraction succeeded, \c false otherwise
- */
-template< typename T, typename CharT, typename ReceiverT >
-inline extraction_result extract(
-    const CharT* name, basic_attribute_values_view< CharT > const& attrs, ReceiverT receiver)
-{
-    attribute_value_extractor< CharT, T > extractor(name);
-    return extractor(attrs, receiver);
-}
+#ifdef BOOST_LOG_DOXYGEN_PASS
 
 /*!
  * The function extracts an attribute value from the view. The user has to explicitly specify the
@@ -197,32 +151,39 @@ inline extraction_result extract(
  * \return \c true if extraction succeeded, \c false otherwise
  */
 template< typename T, typename CharT, typename ReceiverT >
+extraction_result extract(
+    basic_attribute_name< CharT > const& name, basic_attribute_values_view< CharT > const& attrs, ReceiverT receiver);
+
+#else // BOOST_LOG_DOXYGEN_PASS
+
+#ifdef BOOST_LOG_USE_CHAR
+
+template< typename T, typename ReceiverT >
 inline extraction_result extract(
-    std::basic_string< CharT > const& name, basic_attribute_values_view< CharT > const& attrs, ReceiverT receiver)
+    basic_attribute_name< char > const& name, basic_attribute_values_view< char > const& attrs, ReceiverT receiver)
 {
-    attribute_value_extractor< CharT, T > extractor(name);
+    attribute_value_extractor< char, T > extractor(name);
     return extractor(attrs, receiver);
 }
 
-/*!
- * The function extracts an attribute value from the view. The user has to explicitly specify the
- * type or set of possible types of the attribute value to be extracted.
- *
- * \param name An attribute value name to extract.
- * \param attrs A set of attribute values in which to look for the specified attribute value.
- * \param receiver A receiving functional object to pass the extracted value to.
- * \return \c true if extraction succeeded, \c false otherwise
- */
-template< typename T, typename CharT, typename ReceiverT >
+#endif // BOOST_LOG_USE_CHAR
+
+#ifdef BOOST_LOG_USE_WCHAR_T
+
+template< typename T, typename ReceiverT >
 inline extraction_result extract(
-    basic_attribute_name< CharT > const& name, basic_attribute_values_view< CharT > const& attrs, ReceiverT receiver)
+    basic_attribute_name< wchar_t > const& name, basic_attribute_values_view< wchar_t > const& attrs, ReceiverT receiver)
 {
-    attribute_value_extractor< CharT, T > extractor(name);
+    attribute_value_extractor< wchar_t, T > extractor(name);
     return extractor(attrs, receiver);
 }
+
+#endif // BOOST_LOG_USE_WCHAR_T
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_UTILITY_ATTRIBUTE_VALUE_EXTRACTOR_HPP_INCLUDED_
+#endif // BOOST_LOG_ATTRIBUTES_ATTRIBUTE_VALUE_EXTRACTOR_HPP_INCLUDED_

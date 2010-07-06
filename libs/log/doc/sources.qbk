@@ -13,7 +13,7 @@
 
     #include <boost/log/sources/basic_logger.hpp>
 
-The simplest logging sources provided by the library are loggers `logger` and its thread-safe version, `logger_mt` (`wlogger` and `wlogger_mt` for wide-character logging, accordingly). These loggers only provide the ability to store source-specific attributes within themselves and, of course, to form log records. This type of logger should probably be used when there is no need for advanced features like severity level checks. It may well be used as a tool to collect application statistics and register application events, such as notifications and alarms. In such cases the logger is normally used in conjunction with [link log.detailed.utilities.scoped_attributes scoped attributes] to attach the needed data to the notification event. Below is an example of usage:
+The simplest logging sources provided by the library are loggers `logger` and its thread-safe version, `logger_mt` (`wlogger` and `wlogger_mt` for wide-character logging, accordingly). These loggers only provide the ability to store source-specific attributes within themselves and, of course, to form log records. This type of logger should probably be used when there is no need for advanced features like severity level checks. It may well be used as a tool to collect application statistics and register application events, such as notifications and alarms. In such cases the logger is normally used in conjunction with [link log.detailed.attributes.related_components.scoped_attributes scoped attributes] to attach the needed data to the notification event. Below is an example of usage:
 
 [example_sources_network_connection]
 

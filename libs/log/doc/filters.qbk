@@ -124,7 +124,7 @@ This filter is usually used in conjunction with [link log.detailed.formatters.co
         PUT_STAT(lg, "StreamOne", -5);
     }
 
-Please note that in the example above we extended the library in two ways: we defined a new sink backend `my_stat_accumulator` and a new macro `PUT_STAT`. Also note the technique of extracting the attribute value from the view - we need to both check that the needed attribute value is found in the view and that it has the required type. There is also a mechanism of [link log.detailed.utilities.extractors attribute value extractors] that can simplify this, especially when an attribute can have a number of types.
+Please note that in the example above we extended the library in two ways: we defined a new sink backend `my_stat_accumulator` and a new macro `PUT_STAT`. Also note the technique of extracting the attribute value from the view - we need to both check that the needed attribute value is found in the view and that it has the required type. There is also a mechanism of [link log.detailed.attributes.related_components.extractors attribute value extractors] that can simplify this, especially when an attribute can have a number of types.
 
 [endsect]
 

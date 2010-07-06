@@ -29,7 +29,7 @@
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
-#include <boost/log/utility/attribute_value_extractor.hpp>
+#include <boost/log/attributes/attribute_value_extractor.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)

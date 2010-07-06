@@ -13,15 +13,6 @@ Every attribute supported by the library must derive from the `attribute` interf
 
 The attribute value object is mostly intended to store the actual attribute value and implement type dispatching in order to be able to extract the stored value. One should not confuse the attribute value object type and the stored value type. The former is in most cases not needed by users and is hidden behind the `attribute_value` interface, but the latter is needed to be able to extract the value. For brevity we call the stored attribute value type simply the attribute value type in this documentation.
 
-[section:attribute_name Attribute names]
-
-    #include <boost/log/attributes/attribute_name.hpp>
-
-TODO
-
-[endsect]
-
-
 [section:constant Constants]
 
     #include <boost/log/attributes/constant.hpp>
@@ -199,7 +190,7 @@ The `timer` attribute is very useful when there is a need to estimate the durati
 
 The attribute provides high resolution of the time estimation and can even be used as a simple in-place performance profiling tool.
 
-[tip The `timer` attribute can even be used to profile the code in different modules without recompiling them. The trick is to wrap an expensive call to a foreign module with the thread-specific `timer` [link log.detailed.utilities.scoped_attributes scoped attribute], which will markup all log records made from within the module with time readings.]
+[tip The `timer` attribute can even be used to profile the code in different modules without recompiling them. The trick is to wrap an expensive call to a foreign module with the thread-specific `timer` [link log.detailed.attributes.related_components.scoped_attributes scoped attribute], which will markup all log records made from within the module with time readings.]
 
 [endsect]
 
@@ -349,6 +340,16 @@ Auto-generated function objects, like the ones defined in __boost_bind__, __boos
 
 [endsect]
 
+[section:related_components Other attribute-related components]
+
+[section:attribute_name Attribute names]
+
+    #include <boost/log/attributes/attribute_name.hpp>
+
+TODO
+
+[endsect]
+
 [section:scoped_attributes Scoped attributes]
 
     #include <boost/log/attributes/scoped_attribute.hpp>
@@ -467,6 +468,52 @@ An object of the `scoped_attribute` type is able to attach results of each of th
     attrs::timer attr;
     attrs::scoped_attribute sentry =
         attrs::add_scoped_logger_attribute(lg, "RunTime", attr);
+
+[endsect]
+
+[section:extractors Attribute value extractors]
+
+    #include <boost/log/attributes/attribute_value_extractor.hpp>
+
+Attribute value extractors serve as a helper tool on top of [link log.detailed.utilities.type_dispatch type dispatchers] in order to simplify extracting attribute values in generic code. The functionality is implemented in the `attribute_value_extractor` class template, parametrized on character type and type or MPL sequence of types that have to be supported for dispatch. The `attribute_value_extractor` instance is a binary function object that accepts a set of attribute values and another function object that will receive the extracted attribute value. The name of the attribute to be extracted is given as the constructor argument to the extractor. The key advantage of using extractors instead of raw dispatchers is that the receiving function object can have a template `operator ()`. Obviously, this allows reducing the amount of code when similar processing is needed for attributes of different types. For example:
+
+    // A generic function object that outputs attribute value
+    struct print_attribute_value
+    {
+        typedef void result_type;
+
+        // This operator will be instantiated for all possible types of the attribute value
+        template< typename T >
+        void operator() (T const& value) const
+        {
+            std::cout << "Received " << logging::type_info_wrapper(typeid(T)).pretty_name()
+                << " attribute value: " << value << std::endl;
+        }
+    };
+
+    void foo(attribute_values_view const& attrs)
+    {
+        // Let's assume we want to output the value of the
+        // attribute "MyAttr" that may have any numeric type
+        logging::attribute_value_extractor< char, logging::numeric_types > extractor1("MyAttr");
+        assert(extractor1(attrs, print_attribute_value()));
+
+        // The extractor returns false if it is unable to extract the value
+        logging::attribute_value_extractor< char, std::complex< double > > extractor2("MyAttr");
+        assert(!extractor2(attrs, print_attribute_value()));
+    }
+
+Note that the predefined type sequences provided by the library can be used freely with extractors just as well as with filters and formatters. Also note that specifying a single type of the attribute value instead of type sequence is also perfectly valid.
+
+The library also provides an `extract` convenience function that automatically creates extractor object. The `foo` function from the example above can be rewritten like this:
+
+    void foo(attribute_values_view const& attrs)
+    {
+        assert(extract< logging::numeric_types >("MyAttr", attrs, print_attribute_value()));
+        assert(!extract< std::complex< double > >("MyAttr", attrs, print_attribute_value()));
+    }
+
+[endsect]
 
 [endsect]
 

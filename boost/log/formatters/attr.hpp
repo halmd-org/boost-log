@@ -29,8 +29,8 @@
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/exception_policies.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
+#include <boost/log/attributes/attribute_value_extractor.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
-#include <boost/log/utility/attribute_value_extractor.hpp>
 #include <boost/log/keywords/format.hpp>
 
 namespace boost {

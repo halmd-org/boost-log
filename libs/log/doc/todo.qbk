@@ -11,7 +11,6 @@
 
 Points in this section are not necessarily going to be implemented. These are mainly some thoughts on further improvements of the library.
 
-* Optimize scoped attributes. The idea is to store both the attribute and the `shared_ptr` counter on the stack. Currently, only the attribute is stored on the stack.
 * Optimize single-threaded configuration. In many places dynamic memory allocation can be removed if multithreading support is disabled.
 * Support C++0x language features, like variadic templates.
 * Optionally support [@http://www.threadingbuildingblocks.org Intel TBB]. In particular, atomic types and thread-safe queue could be useful.
@@ -27,7 +26,6 @@ Points in this section are not necessarily going to be implemented. These are ma
 * Allow to change the locale for the file stream in the text file backend. The locale can alter the character code conversion in wide-character logging.
 * Provide headers with forward declarations of the library components.
 * Move to __boost_spirit2__ internally, after the issues with STLPort are fixed ([@https://svn.boost.org/trac/boost/ticket/4372 #4372]).
-* Change the attribute name nature to something more lightweight than strings, such as ints. The interface should still accept strings but the library should perform translation to ints behind the scene. This could speedup the attribute values view composition and value lookup at later stages.
 * Unify placeholders for filters and formatters and provide better compatibility with `bind`.
 * Provide a way to register attributes. The registration should associate the attribute, its value type and its name so that it it would simplify composition of filters and formatters.
 * Make it possible to update library configuration after loading settings from a file. Probably, this will require a new configuration entity that will be able to detect and apply changes between settings.

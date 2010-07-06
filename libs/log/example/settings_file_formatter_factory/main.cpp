@@ -26,7 +26,7 @@
 #include <boost/log/common.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/core/record.hpp>
-#include <boost/log/utility/attribute_value_extractor.hpp>
+#include <boost/log/attributes/attribute_value_extractor.hpp>
 #include <boost/log/utility/init/from_stream.hpp>
 #include <boost/log/utility/init/common_attributes.hpp>
 #include <boost/log/utility/init/formatter_parser.hpp>

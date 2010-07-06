@@ -28,7 +28,7 @@
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
-#include <boost/log/utility/attribute_value_extractor.hpp>
+#include <boost/log/attributes/attribute_value_extractor.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 #include "char_definitions.hpp"
 

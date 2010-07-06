@@ -69,7 +69,7 @@ In order to add or remove global or thread-specific attributes to the core there
 
 It is possible to acquire a copy of the whole attribute set (global or thread-specific) or install it into the core. Methods `get_global_attributes`, `set_global_attributes`, `get_thread_attributes` and `set_thread_attributes` serve this purpose.
 
-[warning After installing a whole attribute set into the core, all iterators that were previously returned by the corresponding `add_*` methods are invalidated. In particular, it affects [link log.detailed.utilities.scoped_attributes scoped attributes], so the user must be careful when to switch attribute sets.]
+[warning After installing a whole attribute set into the core, all iterators that were previously returned by the corresponding `add_*` methods are invalidated. In particular, it affects [link log.detailed.attributes.related_components.scoped_attributes scoped attributes], so the user must be careful when to switch attribute sets.]
 
 [heading Global filtering]
 
