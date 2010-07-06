@@ -13,7 +13,7 @@
 #include <boost/log/sinks/syslog_backend.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/utility/scoped_attribute.hpp>
+#include <boost/log/attributes/scoped_attribute.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;

@@ -20,7 +20,7 @@
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
-#include <boost/log/utility/scoped_attribute.hpp>
+#include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/utility/init/common_attributes.hpp>
 
 namespace logging = boost::log;

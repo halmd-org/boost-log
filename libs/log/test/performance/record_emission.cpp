@@ -36,7 +36,7 @@
 
 #include <boost/log/filters/attr.hpp>
 
-#include <boost/log/utility/scoped_attribute.hpp>
+#include <boost/log/attributes/scoped_attribute.hpp>
 
 enum config
 {
