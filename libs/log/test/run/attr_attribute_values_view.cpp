@@ -28,7 +28,7 @@
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
-#include <boost/log/attributes/attribute_value_extractor.hpp>
+#include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 #include "char_definitions.hpp"
 
@@ -130,18 +130,18 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
         BOOST_CHECK_EQUAL(view1.size(), 4UL);
 
         int n = 0;
-        BOOST_CHECK(logging::extract< int >(data::attr1(), view1, receiver< int >(n)));
+        BOOST_CHECK(logging::visit< int >(data::attr1(), view1, receiver< int >(n)));
         BOOST_CHECK_EQUAL(n, 10);
 
-        BOOST_CHECK(logging::extract< int >(data::attr2(), view1, receiver< int >(n)));
+        BOOST_CHECK(logging::visit< int >(data::attr2(), view1, receiver< int >(n)));
         BOOST_CHECK_EQUAL(n, 20);
 
         float f = static_cast< float >(0.0);
-        BOOST_CHECK(logging::extract< float >(data::attr3(), view1, receiver< float >(f)));
+        BOOST_CHECK(logging::visit< float >(data::attr3(), view1, receiver< float >(f)));
         BOOST_CHECK_CLOSE(f, static_cast< float >(-7.2), static_cast< float >(0.001));
 
         unsigned int m = 0;
-        BOOST_CHECK(logging::extract< unsigned int >(data::attr4(), view1, receiver< unsigned int >(m)));
+        BOOST_CHECK(logging::visit< unsigned int >(data::attr4(), view1, receiver< unsigned int >(m)));
         BOOST_CHECK_EQUAL(m, 5U);
     }
 }

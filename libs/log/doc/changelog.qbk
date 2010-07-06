@@ -29,7 +29,7 @@
 * Attribute sets and attribute values views no longer maintain order of elements. Although it wasn't stated explicitly, the containers used to be ordered associative containers. Now the order of elements is unspecified. The implementation has been reworked to speed up insertion/removal of attributes, as well as attribute lookup and values view construction. The drawback is that memory footprint may get increased in some cases.
 * Attribute sets now use small memory pools to speed up element insertion/removal.
 * The `slim_string` utility has been removed. There is no replacement.
-* The headers `scoped_attribute.hpp` and `attribute_value_extractor.hpp` header moved from `utility` to the `attributes` directory.
+* The header `scoped_attribute.hpp` moved from `utility` to the `attributes` directory. The header `attribute_value_extractor.hpp` in `utility` has been replaced with headers `value_extraction.hpp` and `value_visitation.hpp` in the `attributes` directory. The two new headers define the revised API of attribute value extraction and visitation, respectively. See [link log.detailed.attributes.related_components.extractors here] for more details.
 * Made a lot of improvements to speedup code compilation.
 
 [heading 1.0, 09 May 2010]

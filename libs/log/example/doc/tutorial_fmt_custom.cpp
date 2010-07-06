@@ -9,7 +9,7 @@
 #include <fstream>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/lambda/lambda.hpp>
+#include <boost/optional.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
@@ -17,7 +17,7 @@
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/utility/init/common_attributes.hpp>
-#include <boost/log/attributes/attribute_value_extractor.hpp>
+#include <boost/log/attributes/value_extraction.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
@@ -26,19 +26,13 @@ namespace sinks = boost::log::sinks;
 //[ example_tutorial_formatters_custom
 void my_formatter(std::ostream& strm, logging::record const& rec)
 {
-    namespace lambda = boost::lambda;
-
     // Get the LineID attribute value and put it into the stream
-    logging::extract< unsigned int >(
-        "LineID",
-        rec.attribute_values(),
-        lambda::var(strm) << lambda::_1 << ": ");
+    strm << logging::extract< unsigned int >("LineID", rec).get() << ": ";
 
     // The same for the severity level
-    logging::extract< logging::trivial::severity_level >(
-        "Severity",
-        rec.attribute_values(),
-        lambda::var(strm) << "<" << lambda::_1 << "> ");
+    strm << "<"
+        << logging::extract< logging::trivial::severity_level >("Severity", rec).get()
+        << "> ";
 
     // Finally, put the record message to the stream
     strm << rec.message();

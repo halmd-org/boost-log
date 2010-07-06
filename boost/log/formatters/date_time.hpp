@@ -50,12 +50,13 @@
 #include <boost/preprocessor/seq/size.hpp>
 #include <boost/preprocessor/seq/for_each_i.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/functional.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/formatters/basic_formatters.hpp>
 #include <boost/log/formatters/exception_policies.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/attribute_value_extractor.hpp>
+#include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/keywords/format.hpp>
 #include <boost/log/keywords/unit_format.hpp>
 #include <boost/log/utility/string_literal.hpp>
@@ -641,8 +642,8 @@ private:
     typedef FormatterImplT< char_type > formatter_type;
 
 private:
-    //! Attribute value extractor
-    attribute_value_extractor< char_type, AttributeValueTypesT > m_Extractor;
+    //! Visitor invoker for the attribute value
+    value_visitor_invoker< char_type, AttributeValueTypesT > m_Invoker;
     //! Pointer to the formatter implementation
     mutable formatter_type m_Formatter;
 
@@ -653,7 +654,7 @@ public:
      * \param name Attribute name
      */
     explicit fmt_date_time_facade(attribute_name_type const& name) :
-        m_Extractor(name)
+        m_Invoker(name)
     {
     }
     /*!
@@ -664,7 +665,7 @@ public:
      */
     template< typename ArgsT >
     fmt_date_time_facade(attribute_name_type const& name, ArgsT const& args) :
-        m_Extractor(name),
+        m_Invoker(name),
         m_Formatter(args)
     {
     }
@@ -679,7 +680,7 @@ public:
     void operator() (ostream_type& strm, record_type const& record) const
     {
         boost::log::aux::cleanup_guard< formatter_type > _(m_Formatter);
-        if (!m_Extractor(record.attribute_values(), m_Formatter))
+        if (!m_Invoker(record.attribute_values(), boost::log::aux::fun_ref(m_Formatter)))
             ExceptionPolicyT::on_attribute_value_not_found(__FILE__, __LINE__);
         strm.write(m_Formatter.get().data(), static_cast< std::streamsize >(m_Formatter.get().size()));
     }

@@ -26,7 +26,7 @@
 #include <boost/log/common.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/core/record.hpp>
-#include <boost/log/attributes/attribute_value_extractor.hpp>
+#include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/utility/init/from_stream.hpp>
 #include <boost/log/utility/init/common_attributes.hpp>
 #include <boost/log/utility/init/formatter_parser.hpp>
@@ -61,7 +61,7 @@ struct scope_list_formatter
     void operator()(std::ostream& strm, logging::record const& rec) const
     {
         // We need to acquire the attribute value from the log record
-        logging::extract<scope_stack>
+        logging::visit< scope_stack >
         (
             name_,
             rec.attribute_values(),

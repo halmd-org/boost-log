@@ -5,21 +5,21 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   attr_attribute_value_extractor.cpp
+ * \file   attr_value_visitation.cpp
  * \author Andrey Semashev
  * \date   21.01.2009
  *
  * \brief  This header contains tests for the attribute value extraction helpers.
  */
 
-#define BOOST_TEST_MODULE attr_attribute_value_extractor
+#define BOOST_TEST_MODULE attr_value_visitation
 
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
-#include <boost/log/attributes/attribute_value_extractor.hpp>
+#include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
@@ -97,8 +97,8 @@ namespace {
 
 } // namespace
 
-// The test checks extractors specialized a single attribute value type
-BOOST_AUTO_TEST_CASE_TEMPLATE(extractors_single_type, CharT, char_types)
+// The test checks invokers specialized on a single attribute value type
+BOOST_AUTO_TEST_CASE_TEMPLATE(single_type, CharT, char_types)
 {
     typedef logging::basic_attribute_set< CharT > attr_set;
     typedef logging::basic_attribute_values_view< CharT > values_view;
@@ -117,22 +117,22 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(extractors_single_type, CharT, char_types)
 
     my_receiver recv;
 
-    logging::attribute_value_extractor< CharT, int > extractor1(data::attr1());
-    logging::attribute_value_extractor< CharT, double > extractor2(data::attr2());
-    logging::attribute_value_extractor< CharT, std::string > extractor3(data::attr3());
-    logging::attribute_value_extractor< CharT, char > extractor4(data::attr1());
-    logging::attribute_value_extractor< CharT, int > extractor5(data::attr2());
+    logging::value_visitor_invoker< CharT, int > invoker1(data::attr1());
+    logging::value_visitor_invoker< CharT, double > invoker2(data::attr2());
+    logging::value_visitor_invoker< CharT, std::string > invoker3(data::attr3());
+    logging::value_visitor_invoker< CharT, char > invoker4(data::attr1());
+    logging::value_visitor_invoker< CharT, int > invoker5(data::attr2());
 
     // These two extractors will find their values in the view
     recv.set_expected(10);
-    BOOST_CHECK(extractor1(view1, recv));
+    BOOST_CHECK(invoker1(view1, recv));
 
     recv.set_expected(5.5);
-    BOOST_CHECK(extractor2(view1, recv));
+    BOOST_CHECK(invoker2(view1, recv));
 
     // This one will not
     recv.set_expected();
-    BOOST_CHECK(!extractor3(view1, recv));
+    BOOST_CHECK(!invoker3(view1, recv));
 
     // But it will find it in this view
     set1[data::attr3()] = attr3;
@@ -141,19 +141,19 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(extractors_single_type, CharT, char_types)
     view2.freeze();
 
     recv.set_expected("Hello, world!");
-    BOOST_CHECK(extractor3(view2, recv));
+    BOOST_CHECK(invoker3(view2, recv));
 
     // This one will find the sought attribute value, but it will have an incorrect type
     recv.set_expected();
-    BOOST_CHECK(!extractor4(view1, recv));
+    BOOST_CHECK(!invoker4(view1, recv));
 
     // This one is the same, but there is a value of the requested type in the view
-    BOOST_CHECK(!extractor5(view1, recv));
+    BOOST_CHECK(!invoker5(view1, recv));
 }
 
 
-// The test checks extractors specialized with type lists
-BOOST_AUTO_TEST_CASE_TEMPLATE(extractors_multiple_types, CharT, char_types)
+// The test checks invokers specialized with type lists
+BOOST_AUTO_TEST_CASE_TEMPLATE(multiple_types, CharT, char_types)
 {
     typedef logging::basic_attribute_set< CharT > attr_set;
     typedef logging::basic_attribute_values_view< CharT > values_view;
@@ -173,20 +173,20 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(extractors_multiple_types, CharT, char_types)
 
     my_receiver recv;
 
-    logging::attribute_value_extractor< CharT, types > extractor1(data::attr1());
-    logging::attribute_value_extractor< CharT, types > extractor2(data::attr2());
-    logging::attribute_value_extractor< CharT, types > extractor3(data::attr3());
+    logging::value_visitor_invoker< CharT, types > invoker1(data::attr1());
+    logging::value_visitor_invoker< CharT, types > invoker2(data::attr2());
+    logging::value_visitor_invoker< CharT, types > invoker3(data::attr3());
 
     // These two extractors will find their values in the view
     recv.set_expected(10);
-    BOOST_CHECK(extractor1(view1, recv));
+    BOOST_CHECK(invoker1(view1, recv));
 
     recv.set_expected(5.5);
-    BOOST_CHECK(extractor2(view1, recv));
+    BOOST_CHECK(invoker2(view1, recv));
 
     // This one will not
     recv.set_expected();
-    BOOST_CHECK(!extractor3(view1, recv));
+    BOOST_CHECK(!invoker3(view1, recv));
 
     // But it will find it in this view
     set1[data::attr3()] = attr3;
@@ -195,11 +195,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(extractors_multiple_types, CharT, char_types)
     view2.freeze();
 
     recv.set_expected("Hello, world!");
-    BOOST_CHECK(extractor3(view2, recv));
+    BOOST_CHECK(invoker3(view2, recv));
 }
 
-// The test verifies the extract function
-BOOST_AUTO_TEST_CASE_TEMPLATE(extract_function, CharT, char_types)
+// The test verifies the visit function
+BOOST_AUTO_TEST_CASE_TEMPLATE(visit_function, CharT, char_types)
 {
     typedef logging::basic_attribute_set< CharT > attr_set;
     typedef logging::basic_attribute_values_view< CharT > values_view;
@@ -221,15 +221,15 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(extract_function, CharT, char_types)
 
     // These two extractors will find their values in the view
     recv.set_expected(10);
-    BOOST_CHECK(logging::extract< types >(data::attr1(), view1, recv));
+    BOOST_CHECK(logging::visit< types >(data::attr1(), view1, recv));
 
     recv.set_expected(5.5);
-    BOOST_CHECK(logging::extract< double >(data::attr2(), view1, recv));
+    BOOST_CHECK(logging::visit< double >(data::attr2(), view1, recv));
 
     // These will not
     recv.set_expected();
-    BOOST_CHECK(!logging::extract< types >(data::attr3(), view1, recv));
-    BOOST_CHECK(!logging::extract< char >(data::attr1(), view1, recv));
+    BOOST_CHECK(!logging::visit< types >(data::attr3(), view1, recv));
+    BOOST_CHECK(!logging::visit< char >(data::attr1(), view1, recv));
 
     // But it will find it in this view
     set1[data::attr3()] = attr3;
@@ -238,5 +238,5 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(extract_function, CharT, char_types)
     view2.freeze();
 
     recv.set_expected("Hello, world!");
-    BOOST_CHECK(logging::extract< std::string >(data::attr3(), view2, recv));
+    BOOST_CHECK(logging::visit< std::string >(data::attr3(), view2, recv));
 }

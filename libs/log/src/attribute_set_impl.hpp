@@ -77,6 +77,12 @@ public:
     {
     }
 
+    pool_allocator(pool_allocator const& that) :
+        base_type(static_cast< base_type const& >(that)),
+        m_PooledCount(0)
+    {
+    }
+
     template< typename U >
     pool_allocator(pool_allocator< U > const& that) :
         base_type(static_cast< typename pool_allocator< U >::base_type const& >(that)),
@@ -90,6 +96,20 @@ public:
         {
             base_type::deallocate(m_Pool[i], 1);
         }
+    }
+
+    pool_allocator& operator= (pool_allocator const& that)
+    {
+        base_type::operator= (static_cast< base_type const& >(that));
+        return *this;
+    }
+
+    template< typename U >
+    pool_allocator& operator= (pool_allocator< U > const& that)
+    {
+        base_type::operator= (
+            static_cast< typename pool_allocator< U >::base_type const& >(that));
+        return *this;
     }
 
     pointer allocate(size_type n, const void* hint = NULL)

@@ -36,10 +36,10 @@ namespace {
         // The function passes the contained type into the dispatcher
         bool dispatch(logging::type_dispatcher& dispatcher)
         {
-            logging::type_visitor< T > visitor = dispatcher.get_visitor< T >();
-            if (visitor)
+            logging::type_dispatcher::callback< T > callback = dispatcher.get_callback< T >();
+            if (callback)
             {
-                visitor(m_Value);
+                callback(m_Value);
                 return true;
             }
             else

@@ -46,10 +46,10 @@ struct attribute_value::result_of_extract
     typedef optional< extracted_type > type;
 };
 
-template< typename T, typename ReceiverT >
-inline bool attribute_value::extract(ReceiverT receiver) const
+template< typename T, typename VisitorT >
+inline bool attribute_value::visit(VisitorT visitor) const
 {
-    static_type_dispatcher< T > disp(receiver);
+    static_type_dispatcher< T > disp(visitor);
     return this->dispatch(disp);
 }
 
@@ -58,7 +58,7 @@ inline typename attribute_value::result_of_extract< T >::type attribute_value::e
 {
     typedef typename result_of_extract< T >::type result_type;
     result_type res;
-    this->BOOST_NESTED_TEMPLATE extract< T >(boost::log::aux::assign_fun< result_type >(res));
+    this->BOOST_NESTED_TEMPLATE visit< T >(boost::log::aux::assign_fun< result_type >(res));
     return res;
 }
 

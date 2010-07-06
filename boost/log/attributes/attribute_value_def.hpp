@@ -165,19 +165,20 @@ public:
     typename result_of_extract< T >::type extract() const;
 
     /*!
-     * The method attempts to extract the stored value, assuming the value has the specified type.
+     * The method attempts to extract the stored value, assuming the value has the specified type,
+     * and pass it to the \a visitor function object.
      * One can specify either a single type or a MPL type sequence, in which case the stored value
      * is checked against every type in the sequence.
      *
-     * \param receiver A function object that will be invoked on the extracted attribute value.
-     *                 The receiver should be capable to be called with a single argument of
-     *                 any type of the specified types in \c T.
+     * \param visitor A function object that will be invoked on the extracted attribute value.
+     *                The visitor should be capable to be called with a single argument of
+     *                any type of the specified types in \c T.
      *
-     * \return \c true, if the stored value has the requested type and had been passed to the \c receiver.
+     * \return \c true, if the stored value has the requested type and had been passed to the \a visitor.
      *         Otherwise the method returns \c false.
      */
-    template< typename T, typename ReceiverT >
-    bool extract(ReceiverT receiver) const;
+    template< typename T, typename VisitorT >
+    bool visit(VisitorT visitor) const;
 
     /*!
      * The method swaps two attribute values

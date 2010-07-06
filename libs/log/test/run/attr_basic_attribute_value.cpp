@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(value_extraction)
     boost::optional< double > val2 = p1.extract< double >();
     BOOST_CHECK(!val2);
 
-    BOOST_CHECK(p2.extract< double >(logging::aux::assign_fun< boost::optional< double > >(val2)));
+    BOOST_CHECK(p2.visit< double >(logging::aux::assign_fun< boost::optional< double > >(val2)));
     BOOST_CHECK(!!val2);
     BOOST_CHECK_CLOSE(val2.get(), 5.5, 0.001);
 }
