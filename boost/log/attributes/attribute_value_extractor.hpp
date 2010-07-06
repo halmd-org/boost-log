@@ -130,7 +130,7 @@ public:
         typename values_view_type::const_iterator it = attrs.find(m_Name);
         if (it != attrs.end())
         {
-            if (it->second.extract(receiver))
+            if (it->second.BOOST_NESTED_TEMPLATE extract< value_types >(receiver))
                 return result_type(value_extracted);
             else
                 return result_type(value_has_invalid_type);
