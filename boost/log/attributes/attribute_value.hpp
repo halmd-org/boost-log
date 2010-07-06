@@ -37,11 +37,11 @@ namespace BOOST_LOG_NAMESPACE {
 template< typename T >
 struct attribute_value::result_of_extract
 {
-    typedef mpl::eval_if<
+    typedef typename mpl::eval_if<
         mpl::is_sequence< T >,
         make_variant_over< T >,
         mpl::identity< T >
-    > extracted_type;
+    >::type extracted_type;
 
     typedef optional< extracted_type > type;
 };
