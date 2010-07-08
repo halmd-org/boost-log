@@ -115,7 +115,7 @@ One may wonder why the following syntax is not supported:
     BOOST_LOG(logger) << set_attr("MyInt", 10) << set_attr("MyString", "string attribute value")
         << "Some log message";
 
-The answer is quite simple. The streaming expression is executed after the filtering takes place and only if the filter passed the log record. At this point the set of attributes that are attached to the record is already fixed, so these manipulators cannot attach any more attributes to it. So, all attributes that are to be present with the record must be set up before filtering takes place. The easiest way to do it is to use scoped attributes or tags (see [link log.detailed.utilities.scoped_attributes here]).
+The answer is quite simple. The streaming expression is executed after the filtering takes place and only if the filter passed the log record. At this point the set of attributes that are attached to the record is already fixed, so these manipulators cannot attach any more attributes to it. So, all attributes that are to be present with the record must be set up before filtering takes place. The easiest way to do it is to use scoped attributes or tags (see [link log.detailed.attributes.related_components.scoped_attributes here]).
 
 [endsect]
 

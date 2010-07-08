@@ -15,6 +15,7 @@
 
 [c++]
 
+[/ Links to external resources /]
 [def __boost_smart_ptr__ [@http://www.boost.org/doc/libs/release/libs/smart_ptr/smart_ptr.htm Boost.SmartPtr]]
 [def __boost_function__ [@http://www.boost.org/doc/libs/release/doc/html/function.html Boost.Function]]
 [def __boost_filesystem__ [@http://www.boost.org/doc/libs/release/libs/filesystem/doc/index.htm Boost.Filesystem]]
@@ -41,6 +42,18 @@
 [def __boost_any__ [@http://www.boost.org/doc/libs/release/doc/html/any.html Boost.Any]]
 [def __boost_asio__ [@http://www.boost.org/doc/libs/release/doc/html/boost_asio.html Boost.ASIO]]
 
+[/ Auto-generated macros that refer to Reference sections /]
+[include top_level_reference.qbk]
+[include core_reference.qbk]
+[include attributes_reference.qbk]
+[include filters_reference.qbk]
+[include formatters_reference.qbk]
+[include sources_reference.qbk]
+[include sinks_reference.qbk]
+[include utility_reference.qbk]
+[include support_reference.qbk]
+
+[/ Code samples /]
 [import ../example/doc/tutorial_trivial.cpp]
 [import ../example/doc/tutorial_trivial_flt.cpp]
 [import ../example/doc/tutorial_file.cpp]
@@ -283,6 +296,6 @@ Along with the primary facilities described above, the library provides a wide v
 * Jean-Daniel Michaud, Michael Lacher and all others who took part in the discussion of the requirements to the library on [@http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Boost.Logging Wiki].
 * John Torjo, Gennadiy Rozental and others for their discussion on John's logging library on the Boost developers list. It helped a lot to learn the requirements and possible solutions for the library.
 * All authors of the great Boost libraries that were involved in this library (notably, __boost_smart_ptr__, __boost_thread__, __boost_function__, __boost_optional__, __boost_date_time__, __boost_filesystem__, __boost_intrusive__ and others).
-* All the reviewers and the users that made suggestions and offered their feedback on the library. Most notably, Steven Watanabe for his in-depth studying the docs and the code, with a lot of fruitful comments on both.
+* All the reviewers and the users who made suggestions and offered their feedback on the library. Most notably, Steven Watanabe for his in-depth studying the docs and the code, with a lot of fruitful comments on both.
 
 [endsect]

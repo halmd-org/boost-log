@@ -350,7 +350,7 @@ TODO
 
 [endsect]
 
-[section:attribute_name Attribute set]
+[section:attribute_set Attribute set]
 
     #include <boost/log/attributes/attribute_set.hpp>
 
@@ -358,7 +358,7 @@ TODO
 
 [endsect]
 
-[section:attribute_name Attribute values view]
+[section:attribute_values_view Attribute values view]
 
     #include <boost/log/attributes/attribute_values_view.hpp>
 
