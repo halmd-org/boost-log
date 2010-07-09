@@ -11,7 +11,7 @@
 
 [section:record Logging records]
 
-    #include <[boost_log_core_record_hpp]>
+    #include <``[boost_log_core_record_hpp]``>
 
 All the information that the logging library processes is packed into a single object of type `record` (or `wrecord`, in the case of wide character logging), which is a typedef of the [class_log_basic_record] class template. Namely, log records provide access to attribute values and log message strings.
 
@@ -25,7 +25,7 @@ The library also provides an opaque [class_log_record_handle] type. This type is
 
 [section:core Logging core]
 
-    #include <[boost_log_core_core_hpp]>
+    #include <``[boost_log_core_core_hpp]``>
 
 The logging core is a central hub that provides the following facilities:
 

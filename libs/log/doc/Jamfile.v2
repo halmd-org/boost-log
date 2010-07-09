@@ -107,12 +107,13 @@ local support_includes =
 
 
 # This rule generates *.qbk files with macros with references to files, classes, etc. from the doxygen resulting *.xml files.
-rule gen-references ( targets * : sources * : properties * )
+rule gen-references ( target : source : properties * )
 {
-    local source-path = [ path.make [ on $(sources) return $(LOCATE) ] ] ;
-    STYLESHEET on $(targets) = [ path.native [ path.join $(source-path) gen_references.xsl ] ] ;
-    local target-name = $(sources:B) ;
-    TARGET on $(targets) = [ path.native [ path.join $(source-path) $(target-name:S=.qbk) ] ] ;
+    DEPENDS target : source ;
+    local source-path = [ path.make [ on $(source) return $(LOCATE) ] ] ;
+    STYLESHEET on $(target) = [ path.native [ path.join $(source-path) gen_references.xsl ] ] ;
+    local target-name = $(source:B) ;
+    TARGET on $(target) = [ path.native [ path.join $(source-path) $(target-name:S=.qbk) ] ] ;
 }
 actions gen-references
 {
@@ -129,7 +130,7 @@ doxygen top_level_reference
         <xsl:param>"boost.doxygen.reftitle=Top level headers"
     ;
 
-notfile top_level_reference.qbk : @gen-references : top_level_reference.xml ;
+notfile top_level_refs : @gen-references : top_level_reference.xml ;
 
 doxygen core_reference
     :
@@ -139,7 +140,7 @@ doxygen core_reference
         <xsl:param>"boost.doxygen.reftitle=Core components"
     ;
 
-notfile core_reference.qbk : @gen-references : core_reference.xml ;
+notfile core_refs : @gen-references : core_reference.xml ;
 
 doxygen attributes_reference
     :
@@ -149,7 +150,7 @@ doxygen attributes_reference
         <xsl:param>"boost.doxygen.reftitle=Attributes"
     ;
 
-notfile attributes_reference.qbk : @gen-references : attributes_reference.xml ;
+notfile attributes_refs : @gen-references : attributes_reference.xml ;
 
 doxygen filters_reference
     :
@@ -159,7 +160,7 @@ doxygen filters_reference
         <xsl:param>"boost.doxygen.reftitle=Filters"
     ;
 
-notfile filters_reference.qbk : @gen-references : filters_reference.xml ;
+notfile filters_refs : @gen-references : filters_reference.xml ;
 
 doxygen formatters_reference
     :
@@ -169,7 +170,7 @@ doxygen formatters_reference
         <xsl:param>"boost.doxygen.reftitle=Formatters"
     ;
 
-notfile formatters_reference.qbk : @gen-references : formatters_reference.xml ;
+notfile formatters_refs : @gen-references : formatters_reference.xml ;
 
 doxygen sources_reference
     :
@@ -179,7 +180,7 @@ doxygen sources_reference
         <xsl:param>"boost.doxygen.reftitle=Logging sources"
     ;
 
-notfile sources_reference.qbk : @gen-references : sources_reference.xml ;
+notfile sources_refs : @gen-references : sources_reference.xml ;
 
 doxygen sinks_reference
     :
@@ -189,7 +190,7 @@ doxygen sinks_reference
         <xsl:param>"boost.doxygen.reftitle=Sinks"
     ;
 
-notfile sinks_reference.qbk : @gen-references : sinks_reference.xml ;
+notfile sinks_refs : @gen-references : sinks_reference.xml ;
 
 doxygen utility_reference
     :
@@ -199,7 +200,7 @@ doxygen utility_reference
         <xsl:param>"boost.doxygen.reftitle=Utilities"
     ;
 
-notfile utility_reference.qbk : @gen-references : utility_reference.xml ;
+notfile utility_refs : @gen-references : utility_reference.xml ;
 
 doxygen support_reference
     :
@@ -209,17 +210,27 @@ doxygen support_reference
         <xsl:param>"boost.doxygen.reftitle=Other libraries support layer"
     ;
 
-notfile support_reference.qbk : @gen-references : support_reference.xml ;
+notfile support_refs : @gen-references : support_reference.xml ;
 
 
-xml log
+xml log_doc
     :
         log.qbk
+    :
+        <dependency>top_level_refs
+        <dependency>core_refs
+        <dependency>attributes_refs
+        <dependency>filters_refs
+        <dependency>formatters_refs
+        <dependency>sources_refs
+        <dependency>sinks_refs
+        <dependency>utility_refs
+        <dependency>support_refs
     ;
 
-boostbook standalone
+boostbook log
     :
-        log
+        log_doc
     :
         <xsl:param>boost.root=../../../..
         <xsl:param>boost.libraries=../../../libs/libraries.htm
@@ -228,15 +239,6 @@ boostbook standalone
         <xsl:param>navig.graphics=1
         <xsl:param>chunk.section.depth=2
         <xsl:param>boost.compact.function=0
-        <dependency>top_level_reference
-        <dependency>core_reference
-        <dependency>attributes_reference
-        <dependency>filters_reference
-        <dependency>formatters_reference
-        <dependency>sources_reference
-        <dependency>sinks_reference
-        <dependency>utility_reference
-        <dependency>support_reference
     ;
 
-install html : ../../../doc/html/boostbook.css ;
+# install html : ../../../doc/html/boostbook.css ;
