@@ -33,6 +33,25 @@ void init()
 }
 //]
 
+// We need this due to this bug: https://svn.boost.org/trac/boost/ticket/4416
+//[ example_tutorial_file_advanced_no_callouts
+void init()
+{
+    logging::init_log_to_file
+    (
+        keywords::file_name = "sample_%N.log",
+        keywords::rotation_size = 10 * 1024 * 1024,
+        keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0),
+        keywords::format = "[%TimeStamp%]: %_%"
+    );
+
+    logging::core::get()->set_filter
+    (
+        flt::attr< logging::trivial::severity_level >("Severity") >= logging::trivial::info
+    );
+}
+//]
+
 #else
 
 //[ example_tutorial_file_advanced

@@ -105,7 +105,7 @@ The last thing worth noting here is the `locked_backend` member function call to
 
 Returning to one of the examples in previous tutorial sections:
 
-[example_tutorial_file_advanced]
+[example_tutorial_file_advanced_no_callouts]
 
 One may wonder how to specify log record formatting rules. In the case of the `init_log_to_file` function, this is what the `format` parameter for. If you prefer to set up sinks manually, most sink backends provide the `set_formatter` member function for this purpose.
 
@@ -127,7 +127,7 @@ Some manipulators accept additional arguments that customize their behavior. Mos
 
 See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_stream_manual.cpp].
 
-For the reference of the supported arguments see the reference of the corresponding manipulator. More manipulators are described in the [link log.detailed.formatters Detailed features description] section.
+The list of the supported arguments can be seen in the reference of the corresponding manipulator. More manipulators are described in the [link log.detailed.formatters Detailed features description] section.
 
 [heading Boost.Format-style formatters]
 
