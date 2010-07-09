@@ -11,9 +11,9 @@
 
 [section:basic_logger Basic loggers]
 
-    #include <boost/log/sources/basic_logger.hpp>
+    #include <``[boost_log_sources_basic_logger_hpp]``>
 
-The simplest logging sources provided by the library are loggers `logger` and its thread-safe version, `logger_mt` (`wlogger` and `wlogger_mt` for wide-character logging, accordingly). These loggers only provide the ability to store source-specific attributes within themselves and, of course, to form log records. This type of logger should probably be used when there is no need for advanced features like severity level checks. It may well be used as a tool to collect application statistics and register application events, such as notifications and alarms. In such cases the logger is normally used in conjunction with [link log.detailed.attributes.related_components.scoped_attributes scoped attributes] to attach the needed data to the notification event. Below is an example of usage:
+The simplest logging sources provided by the library are loggers [class_sources_logger] and its thread-safe version, [class_sources_logger_mt] ([class_sources_wlogger] and [class_sources_wlogger_mt] for wide-character logging, accordingly). These loggers only provide the ability to store source-specific attributes within themselves and, of course, to form log records. This type of logger should probably be used when there is no need for advanced features like severity level checks. It may well be used as a tool to collect application statistics and register application events, such as notifications and alarms. In such cases the logger is normally used in conjunction with [link log.detailed.attributes.related_components.scoped_attributes scoped attributes] to attach the needed data to the notification event. Below is an example of usage:
 
 [example_sources_network_connection]
 
@@ -23,10 +23,10 @@ The class `network_connection` in the code snippet above represents an approach 
 
 [section:severity_level_logger Loggers with severity level support]
 
-    #include <boost/log/sources/severity_feature.hpp>
-    #include <boost/log/sources/severity_logger.hpp>
+    #include <``[boost_log_sources_severity_feature_hpp]``>
+    #include <``[boost_log_sources_severity_logger_hpp]``>
 
-The ability to distinguish some log records from others based on some kind of level of severity or importance is one of the most frequently requested features. The class templates `severity_logger` and `severity_logger_mt` (along with their `wseverity_logger` and `wseverity_logger_mt` wide-character counterparts) provide this functionality.
+The ability to distinguish some log records from others based on some kind of level of severity or importance is one of the most frequently requested features. The class templates [class_sources_severity_logger] and [class_sources_severity_logger_mt] (along with their [class_sources_wseverity_logger] and [class_sources_wseverity_logger_mt] wide-character counterparts) provide this functionality.
 
 The loggers automatically register a special source-specific attribute "Severity", which can be set for every record in a compact and efficient manner, with a named argument `severity` that can be passed to the constructor and/or the `open_record` method. If passed to the logger constructor, the `severity` argument sets the default value of the severity level that will be used if none is provided in the `open_record` arguments. The `severity` argument passed to the `open_record` method sets the level of the particular log record being made. The type of the severity level can be provided as a template argument for the logger class template. The default type is `int`.
 
@@ -45,10 +45,10 @@ And, of course, severity loggers also provide the same functionality the [link l
 
 [section:channel_logger Loggers with channel support]
 
-    #include <boost/log/sources/channel_feature.hpp>
-    #include <boost/log/sources/channel_logger.hpp>
+    #include <``[boost_log_sources_channel_feature_hpp]``>
+    #include <``[boost_log_sources_channel_logger_hpp]``>
 
-Sometimes it is important to categorize log records based on some constant piece information, such as the module or class name, the relation of the logged information to some specific domain of application functionality (e.g. network or file system related messages) or some constant tag that may be used later to filter these records to a specific sink. This feature is fulfilled with loggers `channel_logger`, `channel_logger_mt` and their wide-char counterparts `wchannel_logger`, `wchannel_logger_mt`. These loggers automatically register an attribute named "Channel". This attribute can be set only in the logger constructor with a named argument `channel` and cannot be changed during the logger's lifetime. The type of the channel attribute value can be specified as a template argument for the logger, with `std::string` (`std::wstring` in case of wide character loggers) as a default. Aside from that, the usage is similar to the [link log.detailed.sources.basic_logger basic loggers]:
+Sometimes it is important to categorize log records based on some constant piece information, such as the module or class name, the relation of the logged information to some specific domain of application functionality (e.g. network or file system related messages) or some constant tag that may be used later to filter these records to a specific sink. This feature is fulfilled with loggers [class_sources_channel_logger], [class_sources_channel_logger_mt] and their wide-char counterparts [class_sources_wchannel_logger], [class_sources_wchannel_logger_mt]. These loggers automatically register an attribute named "Channel". This attribute can be set only in the logger constructor with a named argument `channel` and cannot be changed during the logger's lifetime. The type of the channel attribute value can be specified as a template argument for the logger, with `std::string` (`std::wstring` in case of wide character loggers) as a default. Aside from that, the usage is similar to the [link log.detailed.sources.basic_logger basic loggers]:
 
 [example_sources_network_connection_channels]
 
@@ -56,9 +56,9 @@ Sometimes it is important to categorize log records based on some constant piece
 
 [section:exception_handling Loggers with exception handling support]
 
-    #include <boost/log/sources/exception_handler_feature.hpp>
+    #include <``[boost_log_sources_exception_handler_feature_hpp]``>
 
-The library provides a logger feature that enables the user to handle and/or suppress exceptions at the logger level. The `exception_handler` feature adds a `set_exception_handler` method to the logger that allows setting a function object to be called if an exception is thrown from the logging core during the filtering or processing of log records. One can use the [link log.detailed.utilities.exception_handlers library-provided adapters] to simplify implementing exception handlers. Usage example is as follows:
+The library provides a logger feature that enables the user to handle and/or suppress exceptions at the logger level. The [class_sources_exception_handler] feature adds a `set_exception_handler` method to the logger that allows setting a function object to be called if an exception is thrown from the logging core during the filtering or processing of log records. One can use the [link log.detailed.utilities.exception_handlers library-provided adapters] to simplify implementing exception handlers. Usage example is as follows:
 
 [example_sources_exception_handler]
 
@@ -66,11 +66,11 @@ The library provides a logger feature that enables the user to handle and/or sup
 
 [section:mixed_loggers Loggers with mixed features]
 
-    #include <boost/log/sources/severity_channel_logger.hpp>
+    #include <``[boost_log_sources_severity_channel_logger_hpp]``>
 
-If you wonder whether you can use a mixed set of several logger features in one logger, then yes, you certainly can. The library provides `severity_channel_logger` and `severity_channel_logger_mt` (with their wide-char analogues `wseverity_channel_logger` and `wseverity_channel_logger_mt`) which combine features of the described loggers with [link log.detailed.sources.severity_level_logger severity level] and [link log.detailed.sources.channel_logger channels] support. The composite loggers are templates, too, which allows you to specify severity level and channel types. You can also design your own logger features and combine them with the ones provided by the library, as described in the [link log.extension.sources Extending the library] section.
+If you wonder whether you can use a mixed set of several logger features in one logger, then yes, you certainly can. The library provides [class_sources_severity_channel_logger] and [class_sources_severity_channel_logger_mt] (with their wide-char analogues [class_sources_wseverity_channel_logger] and [class_sources_wseverity_channel_logger_mt]) which combine features of the described loggers with [link log.detailed.sources.severity_level_logger severity level] and [link log.detailed.sources.channel_logger channels] support. The composite loggers are templates, too, which allows you to specify severity level and channel types. You can also design your own logger features and combine them with the ones provided by the library, as described in the [link log.extension.sources Extending the library] section.
 
-The usage of the loggers with several features does not conceptually differ from the usage of the single-featured loggers. For instance, here is how a `severity_channel_logger_mt` could be used:
+The usage of the loggers with several features does not conceptually differ from the usage of the single-featured loggers. For instance, here is how a [class_sources_severity_channel_logger_mt] could be used:
 
 [example_sources_severity_channel]
 
@@ -78,7 +78,7 @@ The usage of the loggers with several features does not conceptually differ from
 
 [section:global_storage Global storage for loggers]
 
-    #include <boost/log/sources/global_logger_storage.hpp>
+    #include <``[boost_log_sources_global_logger_storage_hpp]``>
 
 Sometimes it is inconvenient to have a logger object to be able to write logs. This issue is often present in functional-style code with no obvious places where a logger could be stored. Another domain where the problem persists is generic libraries would benefit from logging. In such cases it would be more convenient to have one or several global loggers in order to easily access them in every place when needed. In this regard `std::cout` is a good example of such a logger.
 

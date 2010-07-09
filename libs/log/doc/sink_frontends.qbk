@@ -11,7 +11,7 @@
 
 Sink frontends are the part of sinks provided by the library, that encloses the common functionality shared between all sinks. This includes support for filtering, exception handling and thread synchronization. Every sink frontend receives log records from the logging core and then passes them along to the sink backend associated with the it. The frontend does not define how to process records but rather in what way the core should interact with the backend. It is the backend that defines the processing rules of the log records. You probably won't have to write your own frontend when you need to create a new type of sink, because the library provides a number of frontends that cover most use cases.
 
-Sink frontends derive from the `sink` class template, which is used by the logging core to supply log records. Technically speaking, one can derive his class from the `sink` template and have his new-found sink, but using sink frontends saves from quite an amount of routine work. As every sink frontend is associated with a backend, the corresponding backend will also be constructed by the frontend upon its construction (unless the user provides the backend instance himself), making the sink complete. Therefore, when the frontend is constructed it can be registered in the logging core to begin processing records. See the [link log.detailed.sink_backends Sink Backends] section for more details on interactions between frontends and backends.
+Sink frontends derive from the [class_sinks_sink] class template, which is used by the logging core to supply log records. Technically speaking, one can derive his class from the [class_sinks_sink] template and have his new-found sink, but using sink frontends saves from quite an amount of routine work. As every sink frontend is associated with a backend, the corresponding backend will also be constructed by the frontend upon its construction (unless the user provides the backend instance himself), making the sink complete. Therefore, when the frontend is constructed it can be registered in the logging core to begin processing records. See the [link log.detailed.sink_backends Sink Backends] section for more details on interactions between frontends and backends.
 
 Below is a more detailed overview of the services provided by sink frontends.
 
@@ -39,9 +39,9 @@ The library provides a [link log.detailed.utilities.exception_handlers convenien
 
 [section:unlocked Unlocked sink frontend]
 
-    #include <boost/log/sinks/unlocked_frontend.hpp>
+    #include <``[boost_log_sinks_unlocked_frontend.hpp]``>
 
-The unlocked sink frontend is implemented with the `unlocked_sink` class template. This frontend provides the most basic service for the backend. The `unlocked_sink` performs no thread synchronization when accessing the backend, assuming that synchronization either is not needed or is implemented by the backend. Nevertheless, setting up a filter is still thread-safe (that is, one can safely change the filter in the `unlocked_sink` frontend while other threads are writing logs through this sink). This is the only sink frontend available in a single threaded environment. The example of use is as follows:
+The unlocked sink frontend is implemented with the [class_sinks_unlocked_sink] class template. This frontend provides the most basic service for the backend. The [class_sinks_unlocked_sink] frontend performs no thread synchronization when accessing the backend, assuming that synchronization either is not needed or is implemented by the backend. Nevertheless, setting up a filter is still thread-safe (that is, one can safely change the filter in the [class_sinks_unlocked_sink] frontend while other threads are writing logs through this sink). This is the only sink frontend available in a single threaded environment. The example of use is as follows:
 
 [example_sinks_unlocked]
 
@@ -51,13 +51,13 @@ All sink backends provided by the library require thread synchronization on the 
 
 [section:sync Synchronous sink frontend]
 
-    #include <boost/log/sinks/sync_frontend.hpp>
+    #include <``[boost_log_sinks_sync_frontend_hpp]``>
 
-The synchronous sink frontend is implemented with the `synchronous_sink` class template. It is similar to the `unlocked_sink` but additionally provides thread synchronization with a mutex before passing log records to the backend. All sink backends that support formatting currently require thread synchronization in the frontend.
+The synchronous sink frontend is implemented with the [class_sinks_synchronous_sink] class template. It is similar to the [class_sinks_unlocked_sink] but additionally provides thread synchronization with a mutex before passing log records to the backend. All sink backends that support formatting currently require thread synchronization in the frontend.
 
 The synchronous sink also introduces the ability to acquire a pointer to the locked backend. As long as the pointer exists, the backend is guaranteed not to be accessed from other threads, unless the access is done through another frontend or a direct reference to the backend. This feature can be useful if there is a need to perform some updates on the sink backend while other threads may be writing logs. Beware, though, that while the backend is locked any other thread that tries to write a log record to the sink gets blocked until the backend is released.
 
-The usage is similar to the `unlocked_sink`.
+The usage is similar to the [class_sinks_unlocked_sink].
 
 [example_sinks_sync]
 
@@ -65,9 +65,9 @@ The usage is similar to the `unlocked_sink`.
 
 [section:async Asynchronous sink frontend]
 
-    #include <boost/log/sinks/async_frontend.hpp>
+    #include <``[boost_log_sinks_async_frontend_hpp]``>
 
-The frontend is implemented in the `asynchronous_sink` class template. Like synchronous one, asynchronous sink frontend provides a way of synchronizing access to the backend. All log records are passed to the backend in a dedicated thread, which makes it suitable for backends that may block for a considerable amount of time (network and other hardware device-related sinks, for example). The internal thread of the frontend is spawned on the frontend constructor and joined on its destructor (which implies that the frontend destruction may block). Aside from that, the frontend is similar to the `synchronous_sink` class template.
+The frontend is implemented in the [class_sinks_asynchronous_sink] class template. Like synchronous one, asynchronous sink frontend provides a way of synchronizing access to the backend. All log records are passed to the backend in a dedicated thread, which makes it suitable for backends that may block for a considerable amount of time (network and other hardware device-related sinks, for example). The internal thread of the frontend is spawned on the frontend constructor and joined on its destructor (which implies that the frontend destruction may block). Aside from that, the frontend is similar to the [class_sinks_synchronous_sink] class template.
 
 [example_sinks_async_init]
 
@@ -90,7 +90,7 @@ Spawning the dedicated thread for log record feeding can be suppressed with the 
 
 [section:ordering_async Ordering asynchronous sink frontend]
 
-    #include <boost/log/sinks/ordering_sync_frontend.hpp>
+    #include <``[boost_log_sinks_ordering_sync_frontend_hpp]``>
 
 This is an extension for the asynchronous sink described [link log.detailed.sink_frontends.async above]. The behavior of this frontend is similar except that it allows to order log records before passing them through to the backend. In order to do so, the frontend introduces a small latency to the record processing. This frontend can be useful to alleviate the [link log.rationale.why_weak_record_ordering weak record ordering] issue present in multithreaded applications.
 

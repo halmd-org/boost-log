@@ -41,9 +41,9 @@ Now, if we run this code sample, the first two log records will be ignored, whil
 
 [important Remember that the streaming expression is only executed if the record passed filtering. Don't specify business-critical calls in the streaming expression, as these calls may not get invoked if the record is filtered away.]
 
-A few words must be said about the filter setup expression. Since we're setting up a global filter, we have to acquire the logging core instance. This is what `logging::core::get()` does - it returns a pointer to the core singleton. The `set_filter` method of the logging core sets the global filtering function.
+A few words must be said about the filter setup expression. Since we're setting up a global filter, we have to acquire the [link log.detailed.core.core logging core] instance. This is what `logging::core::get()` does - it returns a pointer to the core singleton. The `set_filter` method of the logging core sets the global filtering function.
 
-The filter is built as a lambda expression. In our case, this expression consists of a single logical predicate, whose left argument is a placeholder that describes the attribute to be checked, and the right argument is the value to be checked against. The `flt::attr` is a template function that accepts attribute value type as its template parameter, and the attribute name as its first argument. In other words, the filter passes the record if it has attribute value with name "Severity" and type `severity_level`, and the value is not less than `info`. Pretty easy, isn't it?
+The filter is built as a lambda expression. In our case, this expression consists of a single logical predicate, whose left argument is a placeholder that describes the attribute to be checked, and the right argument is the value to be checked against. The [link log.detailed.filters.attr `flt::attr`] is a template function that accepts attribute value type as its template parameter, and the attribute name as its first argument. In other words, the filter passes the record if it has attribute value with name "Severity" and type `severity_level`, and the value is not less than `info`. Pretty easy, isn't it?
 
 It is possible to build more complex filters as lambda expressions, combining logical predicates like this with each other, or even define your own function that would act as a filter. More on this is said [link log.detailed.filters here].
 
@@ -59,7 +59,7 @@ As a starting point, here is how you would initialize logginig into a file, simi
 
 [example_tutorial_file_simple]
 
-The added piece is a call to the `init_log_to_file` function. As the name implies, the function initializes a logging sink that stores log records into a text file. The function also accepts a number of customization options, such as the rotation interval and size limits. For instance:
+The added piece is a call to the [link log.detailed.utility.init.convenience `init_log_to_file`] function. As the name implies, the function initializes a logging sink that stores log records into a text file. The function also accepts a number of customization options, such as the rotation interval and size limits. For instance:
 
 [example_tutorial_file_advanced]
 
@@ -79,13 +79,13 @@ In the simplest form, the call to the `init_log_to_file` function in the section
 
 See the full code in [@boost:/libs/log/example/doc/tutorial_file_manual.cpp].
 
-Ok, the first thing you may have noticed about sinks is that they are composed of two classes: the frontend and the backend. The frontend (which is the `synchronous_sink` class template in the snippet above) is responsible for various common tasks for all sinks, such as thread synchronization model and filtering. The backend (the `text_ostream_backend` class above) implements everything specific to the sink, such as text formatting and writing to a file in this case. The library provides a number of frontends and backends that can be used with each other out of the box.
+Ok, the first thing you may have noticed about sinks is that they are composed of two classes: the frontend and the backend. The frontend (which is the [link log.detailed.sink_frontends.sync `synchronous_sink`] class template in the snippet above) is responsible for various common tasks for all sinks, such as thread synchronization model and filtering. The backend (the [link log.detailed.sink_backends.text_ostream `text_ostream_backend`] class above) implements everything specific to the sink, such as text formatting and writing to a file in this case. The library provides a number of frontends and backends that can be used with each other out of the box.
 
 The `synchronous_sink` class template above indicates that the sink is synchronous, that is, it allows several threads to log simultaneously and will block in case of contention. This means that the backend `text_ostream_backend` need not worry about multithreading at all. There are other sink frontends available, you can read more about them [link log.detailed.sink_frontends here].
 
 The `text_ostream_backend` class writes formatted log records into STL-compatible streams. We have used a file stream above but we could have used any type of stream. For example, adding output to console could look as follows:
 
-    #include <boost/log/utility/empty_deleter.hpp>
+    #include <``[boost_log_utility_empty_deleter_hpp]``>
 
     // We have to provide an empty deleter to avoid destroying the global stream object
     boost::shared_ptr< std::ostream > pStream(&std::clog, logging::empty_deleter());
@@ -97,7 +97,7 @@ The `text_ostream_backend` supports adding several streams. In that case its out
 
 The library provides a number of [link log.detailed.sink_backends backends] that provide different log processing logic. For instance, by specifying a [link log.detailed.sink_backends.syslog syslog] backend you can send log records over the network to the syslog server, or by setting up a [link log.detailed.sink_backends.event_log Windows NT event log] backend you can monitor your application run time by the standard Windows tools.
 
-The last thing worth noting here is the `locked_backend` member function call to access the sink backend. It is used to get thread-safe access to the backend and is provided by all sink frontends. This function returns a smart-pointer to the backend and as long as it exists the backend is locked (which means even if another thread tries to log and the log record is passed to the sink, it will not be logged until you release the backend). The only exception is the `unlocked_sink` frontend which does not synchronize at all and simply returns an unlocked pointer to the backend.
+The last thing worth noting here is the `locked_backend` member function call to access the sink backend. It is used to get thread-safe access to the backend and is provided by all sink frontends. This function returns a smart-pointer to the backend and as long as it exists the backend is locked (which means even if another thread tries to log and the log record is passed to the sink, it will not be logged until you release the backend). The only exception is the [link log.detailed.sink_frontends.unlocked `unlocked_sink`] frontend which does not synchronize at all and simply returns an unlocked pointer to the backend.
 
 [endsect]
 
@@ -119,7 +119,7 @@ You can create a formatter with a lambda-style expression like this:
 
 See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_stream.cpp].
 
-Here the `stream` is a placeholder for the stream to format the record in. Other insertion arguments, such as `attr` and `message`, are manipulators that define what should be stored in the stream. The `message` manipulator is a bit special since, unlike all other manipulators, it writes a preformatted message acquired from the logger, not an attribute value. There are other [link log.detailed.formatters formatter manipulators] that provide advanced support for date, time and other types.
+Here the `stream` is a placeholder for the stream to format the record in. Other insertion arguments, such as [link log.detailed.formatters.attr `attr`] and [link log.detailed.formatters.message `message`], are manipulators that define what should be stored in the stream. The `message` manipulator is a bit special since, unlike all other manipulators, it writes a preformatted message acquired from the logger, not an attribute value. There are other [link log.detailed.formatters formatter manipulators] that provide advanced support for date, time and other types.
 
 Some manipulators accept additional arguments that customize their behavior. Most of these arguments are named and can be passed in __boost_parameter__ style. For example, `attr` supports a format specifier in a printf-style string. For a change, let's see how it's done when manually initializing sinks:
 
@@ -235,7 +235,7 @@ With this call attributes "LineID", "TimeStamp", "ProcessID" and "ThreadID" are 
 
 This function is one of the several convenience functions described [link log.detailed.utilities.init.convenience here].
 
-Some attrubutes are registered automatically on loggers construction. For example, `severity_logger` registers a source-specific attribute "Severity" which can be used to add a level of emphasis for different log records. For example:
+Some attrubutes are registered automatically on loggers construction. For example, [link log.detailed.sources.severity_level_logger `severity_logger`] registers a source-specific attribute "Severity" which can be used to add a level of emphasis for different log records. For example:
 
 [example_sources_severity]
 
@@ -251,7 +251,7 @@ You can see here that the `open_record` can take named arguments. Some logger ty
 
 [heading More attributes]
 
-Let's see what's under the hood of that `add_common_attributes` function we used in the simple form section. It might look something like this:
+Let's see what's under the hood of that [link log.detailed.utilities.init.convenience `add_common_attributes`] function we used in the simple form section. It might look something like this:
 
     void add_common_attributes()
     {
@@ -264,7 +264,7 @@ Let's see what's under the hood of that `add_common_attributes` function we used
         // other attributes skipped for brevity
     }
 
-Here the `counter` and `local_clock` components are attribute classes, they derive from the common attribute interface `attribute`. The library provides a number of other [link log.detailed.attributes attribute classes], including the `functor` attribute that calls some functional object on value acquisition. For example, we can in a similar way register a `named_scope` attrubute:
+Here the [link log.detailed.attributes.counter `counter`] and [link log.detailed.attributes.clock `local_clock`] components are attribute classes, they derive from the common attribute interface [class_log_attribute]. The library provides a number of other [link log.detailed.attributes attribute classes], including the `functor` attribute that calls some functional object on value acquisition. For example, we can in a similar way register a [link log.detailed.attributes.named_scope `named_scope`] attrubute:
 
     pCore->add_global_attribute(
         "Scope", boost::make_shared< attrs::named_scope >());

@@ -15,7 +15,7 @@ There is also a way to specify the filter in the form of a string template. This
 
 [section:has_attr Attribute presence filter]
 
-    #include <boost/log/filters/has_attr.hpp>
+    #include <``[boost_log_filters_has_attr_hpp]``>
 
 The filter `has_attr` checks if an attribute value with the specified name and, optionally, type is attached to a log record. If no type specified to the filter, the filter returns `true` if any value with the specified name is found. If an MPL-compatible type sequence in specified as a value type, the filter returns `true` if a value with the specified name and one of the specified types is found.
 
@@ -130,7 +130,7 @@ Please note that in the example above we extended the library in two ways: we de
 
 [section:attr Generic attribute placeholder]
 
-    #include <boost/log/filters/attr.hpp>
+    #include <``[boost_log_filters_attr_hpp]``>
 
 Unlike `has_attr`, the `attr` construct is not a complete filter by itself. Instead, it is a placeholder that can take part in a complete filter expressions like this:
 
@@ -140,7 +140,7 @@ Unlike `has_attr`, the `attr` construct is not a complete filter by itself. Inst
         flt::attr< std::string >("Channel") == "net"
     );
 
-The line above registers a composite filter that consists of two elementary subfilters: the first one checks the severity level, and the second checks the channel name. Like `has_attr`, the `attr` placeholder accepts an expected attribute value type or set of types in an MPL-compatible type sequence. However, attribute value type is not optional with `attr`, like it is with `has_attr`.
+The line above registers a composite filter that consists of two elementary subfilters: the first one checks the severity level, and the second checks the channel name. Like `has_attr`, the `attr` placeholder accepts an expected attribute value type or set of types in a MPL-compatible type sequence. However, attribute value type is not optional with `attr`, like it is with `has_attr`.
 
 Besides generating lambda expressions, the `attr` placeholder allows constructing filters with its member functions. There are currently two such members that can be used with any type:
 

@@ -11,7 +11,7 @@
 
 As was noted in the [link log.tutorial.formatters tutorial], the library provides several ways of expressing formatters, most notable being with a stream-style syntax and __boost_format__-style expression. Which of the two formats is chosen is determined by the appropriate anchor expression. To use stream-style syntax one should begin the formatter definition with a `stream` or `wstream` keyword, like that:
 
-    #include <boost/log/formatters/stream.hpp>
+    #include <``[boost_log_formatters_stream_hpp]``>
 
     backend->set_formatter(fmt::stream << expr1 << expr2 << ... << exprN);
 
@@ -19,7 +19,7 @@ Here expressions `expr1` through `exprN` may be either manipulators, described i
 
 To use __boost_format__-style syntax one should use `format` construct:
 
-    #include <boost/log/formatters/format.hpp>
+    #include <``[boost_log_formatters_format_hpp]``>
 
     backend->set_formatter(fmt::format("format string") % expr1 % expr2 % ... % exprN);
 
@@ -29,7 +29,7 @@ Another useful way of expressing formatters is by using string templates. This p
 
 [section:attr Generic attribute formatter]
 
-    #include <boost/log/formatters/attr.hpp>
+    #include <``[boost_log_formatters_attr_hpp]``>
 
 The `attr` formatter is the most generic and simple way to format an attribute value. In the simplest form it is equivalent to putting the specified attribute value into an STL stream with an `operator <<` associated with the attribute value type. For example:
 
@@ -77,7 +77,7 @@ It is possible that at run time the attribute value requested by the formatter i
 
 [section:date_time Date and time formatter]
 
-    #include <boost/log/formatters/date_time.hpp>
+    #include <``[boost_log_formatters_date_time_hpp]``>
 
 The library provides several formatters dedicated to date and time-related attribute value types. These are `date`, `time`, `date_time`, `time_duration` and `time_period`. The `date` and `time` formatters are mostly included by `date_time`.
 
@@ -152,7 +152,7 @@ Like the `attr` formatter, all date and time formatters throw exceptions when th
 
 [section:named_scope Named scope formatter]
 
-    #include <boost/log/formatters/named_scope.hpp>
+    #include <``[boost_log_formatters_named_scope_hpp]``>
 
 The formatter `named_scope` is intended to add support for flexible formatting of the [link log.detailed.attributes.named_scope named scope] attribute. The basic usage is quite straightforward and its result is similar to what [link log.detailed.formatters.attr `attr`] provides:
 
@@ -214,7 +214,7 @@ Like the `attr` formatter, the named scope formatter throws an exception if ther
 
 [section:conditional Conditional formatters]
 
-    #include <boost/log/formatters/if.hpp>
+    #include <``[boost_log_formatters_if_hpp]``>
 
 There are cases when one would want to check some condition about the log record and format it depending on that condition. One example of such a need is formatting an attribute value depending on its runtime type. The general syntax of the conditional formatter is as follows:
 
@@ -252,7 +252,7 @@ Those familiar with __boost_phoenix__ lambda expressions will find this syntax q
 
 [section:message Message placeholder]
 
-    #include <boost/log/formatters/message.hpp>
+    #include <``[boost_log_formatters_message_hpp]``>
 
 With all these attributes we shouldn't forget the log message itself, should we? There is a `message` placeholder that represents the text of logging records being formatted. The usage is quite simple:
 
@@ -269,7 +269,7 @@ There are times when one would want to additionally post-process the composed st
 
 [heading XML character decorator]
 
-    #include <boost/log/formatters/xml_decorator.hpp>
+    #include <``[boost_log_formatters_xml_decorator_hpp]``>
 
 This decorator replaces XML special characters (&, <, > and \') with the corresponding tokens (`&apos;`, `&lt;`, `&gt;` and `&apos;`, correspondingly). The usage is as follows:
 
@@ -295,7 +295,7 @@ There is an example of the library set up for logging into an XML file, see `lib
 
 [heading CSV character decorator]
 
-    #include <boost/log/formatters/csv_decorator.hpp>
+    #include <``[boost_log_formatters_csv_decorator_hpp]``>
 
 This decorator allows to ensure that the resulting string conforms to the [@http://en.wikipedia.org/wiki/Comma-separated_values CSV] format requirements. In particular, it duplicates the quote characters in the formatted string.
 
@@ -309,7 +309,7 @@ This decorator allows to ensure that the resulting string conforms to the [@http
 
 [heading C-style character decorators]
 
-    #include <boost/log/formatters/c_decorator.hpp>
+    #include <``[boost_log_formatters_c_decorator_hpp]``>
 
 The file defines two character decorators: `c_dec` and `c_ascii_dec`. The first replaces the following characters with their escaped counerparts: \\ (backslash, 0x5c), \\a (bell character, 0x07), \\b (backspace, 0x08), \\f (formfeed, 0x0c), \\n (newline, 0x0a), \\r (carriage return, 0x0d), \\t (horizontal tabulation, 0x09), \\v (vertical tabulation, 0x0b), \' (apostroph, 0x27), \" (quote, 0x22), ? (question mark, 0x3f). The `c_ascii_dec` decorator does the same but also replaces all other non-printable and non-ASCII characters with escaped hexadecimal character codes in C notation (e.g. "\\x8c"). The usage is similar to other character decorators:
 

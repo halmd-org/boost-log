@@ -29,5 +29,6 @@ Points in this section are not necessarily going to be implemented. These are ma
 * Unify placeholders for filters and formatters and provide better compatibility with `bind`.
 * Provide a way to register attributes. The registration should associate the attribute, its value type and its name so that it it would simplify composition of filters and formatters.
 * Make it possible to update library configuration after loading settings from a file. Probably, this will require a new configuration entity that will be able to detect and apply changes between settings.
+* Develop a statistics gathering framework. The basic idea is to provide a specific log source and a pin. The user can pin his data or explicitly indicate events by invoking the log source. The source would automatically collect the data from the pinned variables. This source should have a better integration with filters to be able which pins should be collected and which should not.
 
 [endsect]

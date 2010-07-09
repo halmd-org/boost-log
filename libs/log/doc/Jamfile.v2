@@ -43,6 +43,8 @@ local doxygen_params =
                         BOOST_LOG_USE_NATIVE_SYSLOG=1 \\
                         BOOST_PARAMETER_KEYWORD(x,y)=\"keyword y;\" \\
                         BOOST_LOG_NAMESPACE=log \\
+                        BOOST_LOG_USE_CHAR \\
+                        BOOST_LOG_USE_WCHAR_T \\
                         BOOST_LOG_EXPORT= \\
                         BOOST_LOG_SETUP_EXPORT="
         <xsl:param>boost.doxygen.detailns=aux

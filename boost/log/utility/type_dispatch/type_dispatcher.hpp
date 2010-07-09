@@ -119,8 +119,6 @@ public:
 #else // BOOST_LOG_DOXYGEN_PASS
 
     /*!
-     * \brief An interface to the callback for the concrete type visitor
-     *
      * This interface is used by type dispatchers to consume the dispatched value.
      */
     template< typename T >

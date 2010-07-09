@@ -48,6 +48,8 @@ The core can be used during application initialization and/or termination. Howev
 
 [heading Attribute sets]
 
+TODO: Take into account the dedicated section about attribute sets.
+
 In order to add or remove global or thread-specific attributes to the core there are corresponding methods: `add_global_attribute`, `remove_global_attribute`, `add_thread_attribute` and `remove_thread_attribute`. Attribute sets provide interface similar to `std::map`, so the `add_*` methods accept an attribute name string (key) and a pointer to the attribute (mapped value) and return a pair of iterator and boolean value, like `std::map< ... >::insert` does. The `remove_*` methods accept an iterator to a previously added attribute.
 
     void foo()
