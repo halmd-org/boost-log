@@ -25,7 +25,7 @@ The `BOOST_LOG_TRIVIAL` macro accepts a severity level and results in a stream-l
 # Besides the record message, each log record in the file contains a line number, a timestamp, thread identifier and severity level.
 # It is safe to write logs from different threads concurrently.
 
-It must be said that the macro, along with other similar macros provided by the library, is not the only interface that the library offers. It is possible to issue log records without using any macros at all.
+It must be said that the macro, along with other similar macros provided by the library, is not the only interface the library offers. It is possible to issue log records without using any macros at all.
 
 [endsect]
 

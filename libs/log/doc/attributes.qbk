@@ -334,7 +334,7 @@ This attribute is a simple wrapper around a user-defined function object. Each a
             attrs::make_functor_attr(&std::rand));
     }
 
-Auto-generated function objects, like the ones defined in __boost_bind__, __boost_lambda__, or STL, are also supported.
+Auto-generated function objects, like the ones defined in __boost_bind__ or STL, are also supported.
 
 [note Some deficient compilers may not support `result_of` construct properly. This metafunction is used in the `make_functor_attr` function to automatically detect the return type of the function object. If `result_of` breaks, one can try to explicitly specify the return type of the function object as a template argument to the `make_functor_attr` function.]
 

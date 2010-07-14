@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
             % fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f")
             % fmt::time_duration< boost::posix_time::time_duration >("Uptime")
             % fmt::attr< std::string >("Tag")
-            % fmt::named_scope("Scope", keywords::iteration = fmt::reverse, keywords::scope_depth = 2)
+            % fmt::named_scope("Scope", keywords::iteration = fmt::reverse, keywords::depth = 2)
             % fmt::message());
 */
 
