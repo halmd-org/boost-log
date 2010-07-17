@@ -58,6 +58,10 @@ namespace aux {
 
 } // namespace boost
 
+// These operators are not found through ADL
+template< typename T > void operator<< (T const&, boost::log::aux::unspecified_bool);
+template< typename T > void operator>> (T const&, boost::log::aux::unspecified_bool);
+
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
     operator boost::log::aux::unspecified_bool () const\
     {\
