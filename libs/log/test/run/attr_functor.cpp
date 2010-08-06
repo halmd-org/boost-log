@@ -15,11 +15,9 @@
 #define BOOST_TEST_MODULE attr_functor
 
 #include <string>
-#include <boost/shared_ptr.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/utility/result_of.hpp>
 #include <boost/test/included/unit_test.hpp>
-#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/functor.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
@@ -110,24 +108,24 @@ BOOST_AUTO_TEST_CASE(calling)
     unsigned int call_count = 0;
     my_dispatcher disp;
 
-    boost::shared_ptr< logging::attribute > attr1 =
+    logging::attribute_factory attr1 =
 #ifndef BOOST_NO_RESULT_OF
         attrs::make_functor_attr(&get_attr_value);
 #else
         attrs::make_functor_attr< int >(&get_attr_value);
 #endif
 
-    boost::shared_ptr< logging::attribute > attr2 =
+    logging::attribute_factory attr2 =
 #ifndef BOOST_NO_RESULT_OF
         attrs::make_functor_attr(attr_value_generator(call_count));
 #else
         attrs::make_functor_attr< std::string >(attr_value_generator(call_count));
 #endif
 
-    logging::attribute_value p1(attr1->get_value());
-    logging::attribute_value p2(attr2->get_value());
+    logging::attribute_value p1(attr1.get_value());
+    logging::attribute_value p2(attr2.get_value());
     BOOST_CHECK_EQUAL(call_count, 1);
-    logging::attribute_value p3(attr2->get_value());
+    logging::attribute_value p3(attr2.get_value());
     BOOST_CHECK_EQUAL(call_count, 2);
 
     disp.set_expected(10);

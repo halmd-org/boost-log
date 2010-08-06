@@ -20,11 +20,9 @@
 #include <iterator>
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/config.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/included/unit_test.hpp>
-#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
@@ -70,10 +68,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
     typedef logging::basic_attribute_values_view< CharT > values_view;
     typedef test_data< CharT > data;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
-    boost::shared_ptr< logging::attribute > attr3(new attrs::constant< std::string >("Hello, world!"));
-    boost::shared_ptr< logging::attribute > attr4(new attrs::constant< char >('L'));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
+    attrs::constant< std::string > attr3("Hello, world!");
+    attrs::constant< char > attr4('L');
 
     {
         attr_set set1, set2, set3;
@@ -106,10 +104,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
 
     // Check that the more prioritized attributes replace the less ones
     {
-        boost::shared_ptr< logging::attribute > attr2_2(new attrs::constant< int >(20));
-        boost::shared_ptr< logging::attribute > attr4_2(new attrs::constant< double >(10.3));
-        boost::shared_ptr< logging::attribute > attr3_3(new attrs::constant< float >(static_cast< float >(-7.2)));
-        boost::shared_ptr< logging::attribute > attr4_3(new attrs::constant< unsigned int >(5));
+        attrs::constant< int > attr2_2(20);
+        attrs::constant< double > attr4_2(10.3);
+        attrs::constant< float > attr3_3(static_cast< float >(-7.2));
+        attrs::constant< unsigned int > attr4_3(5);
 
         attr_set set1, set2, set3;
         set3[data::attr1()] = attr1;
@@ -154,9 +152,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     typedef test_data< CharT > data;
     typedef std::basic_string< CharT > string;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
-    boost::shared_ptr< logging::attribute > attr3(new attrs::constant< std::string >("Hello, world!"));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
+    attrs::constant< std::string > attr3("Hello, world!");
 
     attr_set set1, set2, set3;
     set1[data::attr1()] = attr1;

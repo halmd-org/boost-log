@@ -11,27 +11,48 @@
 
 [heading 2.0]
 
+[*General changes:]
+
 * The library is now compatible with Boost 1.42 or newer.
 * The `BOOST_LOG_NO_COMPILER_TLS` configuration macro has been replaced with `BOOST_LOG_USE_COMPILER_TLS` with the opposite meaning. The support for compiler intrinsics for TLS is now disabled by default.
-* Most code examples from the docs have been extracted into compilable standalone examples, which can be used for testing and experimenting with the library.
-* Added a lot of cross-references to the documentation, which should simplify navigation.
-* Fixed a bug: the logging core could enter an infinite loop inside `push_record` if a sink throws and the exception is suppressed by the exception handler set in the core.
-* Fixed compilation problems with `BOOST_LOG_WFUNCTION` and exception handling logger feature.
-* Types for integral constants for syslog and event log were renamed to drop the `_t` suffix.
-* Changed the type dispatching implementation to reduce the usage of virtual functions. This reduced the library size by up to 40%.
-* The interface of type dispatchers changed. The dispatcher now returns `type_visitor` instance by value, and the visitor is no longer a base for the actual receiver of the dispatched value. Instead, the visitor now refers to the receiver, if one is capable to consume the value. The `visit` method has been renamed to `operator ()`. The static type dispatcher now requires a reference to the receiver on construction, it doesn't imply that the receiver derives from the dispatcher anymore.
-* The attribute value no longer has the `get` method. Use the `extract` function as a replacement.
-* Type dispatchers and global logger storage made more friendly to the setups in which hidden visibility is set by default.
 * The library now uses __boost_xpressive__ instead of __boost_regex__ internally, which makes it unnecessary to build the latter in order to use the library. __boost_regex__ is still supported on the user's side.
-* Changed the interface and the way of handling attribute values. The value is now a pimpl wrapper around the value holder. The `attribute_value` class in various components of the library is no longer pointed to with `shared_ptr`s but instead is handled by value. This allowed to simplify attribute value handling in simple cases.
-* Added the macros for separated global logger declaration and definition. Old macros have been renamed to better reflect their effect (`BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT` to `BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT`, `BOOST_LOG_DECLARE_GLOBAL_LOGGER` to `BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT`, `BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS` to `BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS`). Also, the macros no longer define the `get_logger` free function for logger acquisition. Use `logger::get` instead. See [link log.detailed.sources.global_storage here] for more information.
 * Made some internal code to detect Windows NT6 API availability at run time, if not explicitly enabled by the `BOOST_LOG_USE_WINNT6_API` macro. The code compiled without the macro defined will still be able run on NT5, but when run on NT6 it will be more efficient. With the macro defined the resulting code will not run on NT5, but will be a little more efficient on NT6 than without the macro.
+* Made a lot of improvements to speedup code compilation.
+
+[*Attributes:]
+
+* Fixed compilation problems with `BOOST_LOG_WFUNCTION`.
+* Changed the interface and the way of handling attribute values. The value is now a pimpl wrapper around the value holder. The `attribute_value` class in various components of the library is no longer pointed to with `shared_ptr`s but instead is handled by value. This allowed to simplify attribute value handling in simple cases.
+* Similarly to attribute values, the interface of attributes has been reworked in the pimpl fashion. All attributes now derive from the [class_log_attribute_factory] base class, which holds the reference to the implementation. All attributes now have to be created by value rather than wrapped into `shared_ptr` by user, which makes the code more concise.
+* Added support for casting attributes from the base class [class_log_attribute_factory] to the actual attribute. Can be useful in case when the concrete attribute factory provides additional interfaces.
+* The attribute value no longer has the `get` method. Use the `extract` function as a replacement.
 * The key type of attribute sets and attribute values view has been changed. The new key type is called `attribute_name` (`wattribute_name` for wide-character logging). It is convertible from strings, so in most cases users won't need to change the code. See [link log.detailed.attributes.related_components.attribute_name here] for more information.
 * Attribute sets and attribute values views no longer maintain order of elements. Although it wasn't stated explicitly, the containers used to be ordered associative containers. Now the order of elements is unspecified. The implementation has been reworked to speed up insertion/removal of attributes, as well as attribute lookup and values view construction. The drawback is that memory footprint may get increased in some cases.
 * Attribute sets now use small memory pools to speed up element insertion/removal.
-* The `slim_string` utility has been removed. There is no replacement.
 * The header `scoped_attribute.hpp` moved from `utility` to the `attributes` directory. The header `attribute_value_extractor.hpp` in `utility` has been replaced with headers `value_extraction.hpp` and `value_visitation.hpp` in the `attributes` directory. The two new headers define the revised API of attribute value extraction and visitation, respectively. See [link log.detailed.attributes.related_components.extractors here] for more details.
-* Made a lot of improvements to speedup code compilation.
+
+[*Logging sources:]
+
+* Fixed compilation problems with exception handling logger feature.
+* Global logger storage made more friendly to the setups in which hidden visibility is set by default.
+* Added the macros for separated global logger declaration and definition. Old macros have been renamed to better reflect their effect (`BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT` to `BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT`, `BOOST_LOG_DECLARE_GLOBAL_LOGGER` to `BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT`, `BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS` to `BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS`). Also, the macros no longer define the `get_logger` free function for logger acquisition. Use `logger::get` instead. See [link log.detailed.sources.global_storage here] for more information.
+
+[*Logging sinks:]
+
+* Types for integral constants for syslog and event log were renamed to drop the `_t` suffix.
+
+[*Documentation changes:]
+
+* Most code examples from the docs have been extracted into compilable standalone examples, which can be used for testing and experimenting with the library.
+* Added a lot of cross-references to the documentation, which should simplify navigation.
+
+[*Miscellaneous:]
+
+* Fixed a bug: the logging core could enter an infinite loop inside `push_record` if a sink throws and the exception is suppressed by the exception handler set in the core.
+* Changed the type dispatching implementation to reduce the usage of virtual functions. This greatly reduced the library size.
+* Type dispatchers made more friendly to the setups in which hidden visibility is set by default.
+* The interface of type dispatchers changed. The dispatcher now returns `type_visitor` instance by value, and the visitor is no longer a base for the actual receiver of the dispatched value. Instead, the visitor now refers to the receiver, if one is capable to consume the value. The `visit` method has been renamed to `operator ()`. The static type dispatcher now requires a reference to the receiver on construction, it doesn't imply that the receiver derives from the dispatcher anymore.
+* The `slim_string` utility has been removed. There is no replacement.
 
 [heading 1.0, 09 May 2010]
 

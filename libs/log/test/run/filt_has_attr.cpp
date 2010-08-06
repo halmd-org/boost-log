@@ -16,10 +16,8 @@
 
 #include <string>
 #include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/test/included/unit_test.hpp>
-#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
@@ -38,9 +36,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(presence_check, CharT, char_types)
     typedef boost::function< bool (values_view const&) > filter;
     typedef test_data< CharT > data;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
-    boost::shared_ptr< logging::attribute > attr3(new attrs::constant< std::string >("Hello, world!"));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
+    attrs::constant< std::string > attr3("Hello, world!");
 
     attr_set set1, set2, set3;
     set1[data::attr1()] = attr1;
@@ -78,9 +76,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(composition_check, CharT, char_types)
     typedef boost::function< bool (values_view const&) > filter;
     typedef test_data< CharT > data;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
-    boost::shared_ptr< logging::attribute > attr3(new attrs::constant< std::string >("Hello, world!"));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
+    attrs::constant< std::string > attr3("Hello, world!");
 
     attr_set set1, set2, set3;
     values_view view1(set1, set2, set3);

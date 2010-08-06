@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
     // message body itself. By setting up formatter we define which of them
     // will be written to log and in what way they will look there.
     pSink->locked_backend()->set_formatter(fmt::stream
-        << fmt::attr("LineID") // First an attribute "LineID" is written to the log
+        << fmt::attr("RecordID") // First an attribute "RecordID" is written to the log
         << " [" << fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f")
         << "] [" << fmt::attr< severity_level >("Severity", std::nothrow)
         << "] [" << fmt::time_duration< boost::posix_time::time_duration >("Uptime")
@@ -148,8 +148,8 @@ int main(int argc, char* argv[])
                fmt::stream << fmt::attr< std::string >("Tag") // then goes another attribute named "Tag"
                                                // Note here we explicitly stated that its type
                                                // should be std::string. We could omit it just
-                                               // like we did it with the "LineNumber", but in this case
-                                               // library would have to detect the actual attribute
+                                               // like we did it with the "RecordID", but in this case
+                                               // library would have to detect the actual attribute value
                                                // type in run time which has the following consequences:
                                                // - On the one hand, the attribute would have been output
                                                //   even if it has another type (not std::string).
@@ -161,8 +161,8 @@ int main(int argc, char* argv[])
                                                // You may specify an MPL sequence of types if the attribute
                                                // may have more than one type. And you will have to specify
                                                // it anyway if the library is not familiar with it (see
-                                               // boost/log/type_dispatch/standard_types.hpp for the list
-                                               // of the supported out-of-box types).
+                                               // boost/log/utility/type_dispatch/standard_types.hpp for the list
+                                               // of the supported out-of-the-box types).
                 << "] [" // yet another delimiter
            ]
         << fmt::named_scope("Scope", keywords::iteration = fmt::reverse) << "] "
@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
     // There is an alternative way of specifying formatters
     pSink->locked_backend()->set_formatter(
         fmt::format("%1% @ %2% [%3%] >%4%< Scope: %5%: %6%")
-            % fmt::attr("LineID")
+            % fmt::attr("RecordID")
             % fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f")
             % fmt::time_duration< boost::posix_time::time_duration >("Uptime")
             % fmt::attr< std::string >("Tag")
@@ -186,18 +186,18 @@ int main(int argc, char* argv[])
     // you may create another sink for that purpose.
 
     // Now we're going to set up the attributes.
-    // Remember that "LineID" attribute in the formatter? There is a counter
+    // Remember that "RecordID" attribute in the formatter? There is a counter
     // attribute in the library that increments or decrements the value each time
     // it is output. Let's create it with a starting value 1.
-    shared_ptr< logging::attribute > pCounter(new attrs::counter< unsigned int >(1));
+    attrs::counter< unsigned int > RecordID(1);
 
     // Since we intend to count all logging records ever made by the application,
     // this attribute should clearly be global.
-    logging::core::get()->add_global_attribute("LineID", pCounter);
+    logging::core::get()->add_global_attribute("RecordID", RecordID);
 
     // And similarly add a time stamp
-    shared_ptr< logging::attribute > pTimeStamp(new attrs::local_clock());
-    logging::core::get()->add_global_attribute("TimeStamp", pTimeStamp);
+    attrs::local_clock TimeStamp;
+    logging::core::get()->add_global_attribute("TimeStamp", TimeStamp);
 
     // And an up time stopwatch
     BOOST_LOG_SCOPED_THREAD_ATTR("Uptime", attrs::timer);
@@ -210,8 +210,8 @@ int main(int argc, char* argv[])
     // sinks' perspective.
 
     // Let's also track the execution scope from which the records are made
-    boost::shared_ptr< logging::attribute > pNamedScope(new attrs::named_scope());
-    logging::core::get()->add_thread_attribute("Scope", pNamedScope);
+    attrs::named_scope Scope;
+    logging::core::get()->add_thread_attribute("Scope", Scope);
 
     // We can mark the current execution scope now - it's the 'main' function
     BOOST_LOG_FUNCTION();

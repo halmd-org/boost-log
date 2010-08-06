@@ -15,7 +15,6 @@
 #define BOOST_TEST_MODULE attr_value_visitation
 
 #include <string>
-#include <boost/shared_ptr.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/floating_point_comparison.hpp>
@@ -104,9 +103,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(single_type, CharT, char_types)
     typedef logging::basic_attribute_values_view< CharT > values_view;
     typedef test_data< CharT > data;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
-    boost::shared_ptr< logging::attribute > attr3(new attrs::constant< std::string >("Hello, world!"));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
+    attrs::constant< std::string > attr3("Hello, world!");
 
     attr_set set1, set2, set3;
     set1[data::attr1()] = attr1;
@@ -160,9 +159,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(multiple_types, CharT, char_types)
     typedef test_data< CharT > data;
     typedef mpl::vector< int, double, std::string, char >::type types;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
-    boost::shared_ptr< logging::attribute > attr3(new attrs::constant< std::string >("Hello, world!"));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
+    attrs::constant< std::string > attr3("Hello, world!");
 
     attr_set set1, set2, set3;
     set1[data::attr1()] = attr1;
@@ -206,9 +205,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(visit_function, CharT, char_types)
     typedef test_data< CharT > data;
     typedef mpl::vector< int, double, std::string, char >::type types;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
-    boost::shared_ptr< logging::attribute > attr3(new attrs::constant< std::string >("Hello, world!"));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
+    attrs::constant< std::string > attr3("Hello, world!");
 
     attr_set set1, set2, set3;
     set1[data::attr1()] = attr1;

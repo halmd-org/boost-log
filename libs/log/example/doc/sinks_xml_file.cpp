@@ -55,7 +55,7 @@ void init_logging()
     sink->locked_backend()->set_formatter
     (
         fmt::format("\t<record id=\"%1%\" timestamp=\"%2%\">%3%</record>")
-            % fmt::attr< unsigned int >("LineID")
+            % fmt::attr< unsigned int >("RecordID")
             % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
             % fmt::xml_dec[ fmt::message() ]            /*< the log message has to be decorated, if it contains special characters >*/
     );
@@ -96,7 +96,7 @@ void init_logging()
     sink->locked_backend()->set_formatter
     (
         fmt::format("\t<record id=\"%1%\" timestamp=\"%2%\">%3%</record>")
-            % fmt::attr< unsigned int >("LineID")
+            % fmt::attr< unsigned int >("RecordID")
             % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
             % fmt::xml_dec[ fmt::message() ]
     );
@@ -128,10 +128,8 @@ int main(int argc, char* argv[])
         init_logging();
 
         // And also add some attributes
-        boost::shared_ptr< logging::attribute > attr(new attrs::local_clock());
-        logging::core::get()->add_global_attribute("TimeStamp", attr);
-        attr.reset(new attrs::counter< unsigned int >());
-        logging::core::get()->add_global_attribute("LineID", attr);
+        logging::core::get()->add_global_attribute("TimeStamp", attrs::local_clock());
+        logging::core::get()->add_global_attribute("RecordID", attrs::counter< unsigned int >());
 
         // Do some logging
         src::logger lg;

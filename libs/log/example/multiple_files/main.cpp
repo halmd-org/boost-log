@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
         // Set the log record formatter
         sink->locked_backend()->set_formatter(
             fmt::format("%1%: [%2%] - %3%")
-                % fmt::attr< unsigned int >("Line #")
+                % fmt::attr< unsigned int >("RecordID")
                 % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
                 % fmt::message()
             );
@@ -85,10 +85,8 @@ int main(int argc, char* argv[])
         logging::core::get()->add_sink(sink);
 
         // Add some attributes too
-        shared_ptr< logging::attribute > attr(new attrs::local_clock);
-        logging::core::get()->add_global_attribute("TimeStamp", attr);
-        attr.reset(new attrs::counter< unsigned int >);
-        logging::core::get()->add_global_attribute("Line #", attr);
+        logging::core::get()->add_global_attribute("TimeStamp", attrs::local_clock());
+        logging::core::get()->add_global_attribute("RecordID", attrs::counter< unsigned int >());
 
         // Create threads and make some logs
         boost::thread_group threads;

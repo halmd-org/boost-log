@@ -19,8 +19,6 @@
 // #define BOOST_LOG_DYN_LINK 1
 
 #include <iostream>
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
 
 #include <boost/log/common.hpp>
 #include <boost/log/formatters.hpp>
@@ -108,7 +106,7 @@ int main(int argc, char* argv[])
     src::severity_logger< severity_level > slg;
 
     // Let's pretend we also want to profile our code, so add a special timer attribute.
-    slg.add_attribute("Uptime", boost::make_shared< attrs::timer >());
+    slg.add_attribute("Uptime", attrs::timer());
 
     BOOST_LOG_SEV(slg, normal) << "A normal severity message, will not pass to the file";
     BOOST_LOG_SEV(slg, warning) << "A warning severity message, will pass to the file";

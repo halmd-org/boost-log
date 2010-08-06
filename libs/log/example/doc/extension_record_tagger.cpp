@@ -122,12 +122,11 @@ record_tagger_feature< BaseT >::open_record_unlocked(ArgsT const& args)
     if (!tag_value.empty())
     {
         // Add the tag as a new attribute
-        boost::shared_ptr< logging::attribute > attr(
-            new attrs::constant< string_type >(tag_value));
         std::pair<
             typename attribute_set_type::iterator,
             bool
-        > res = BaseT::add_attribute_unlocked("Tag", attr);
+        > res = BaseT::add_attribute_unlocked("Tag",
+            attrs::constant< string_type >(tag_value));
         if (res.second)
             tag = res.first;
     }

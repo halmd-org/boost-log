@@ -50,8 +50,7 @@ public:
     void on_connected(std::string const& remote_addr)
     {
         // Add the remote address to both channels
-        boost::shared_ptr< attrs::constant< std::string > > addr =
-            boost::make_shared< attrs::constant< std::string > >(remote_addr);
+        attrs::constant< std::string > addr(remote_addr);
         m_net_remote_addr = m_net.add_attribute("RemoteAddress", addr).first;
         m_stat_remote_addr = m_stat.add_attribute("RemoteAddress", addr).first;
 

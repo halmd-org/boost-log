@@ -16,11 +16,10 @@
 
 #include <sstream>
 #include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/test/included/unit_test.hpp>
-#include <boost/log/attributes/attribute.hpp>
+#include <boost/log/attributes/attribute_factory.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/utility/string_literal.hpp>
@@ -78,7 +77,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
     typedef attrs::basic_named_scope_entry< CharT > scope;
     typedef scope_test_data< CharT > scope_data;
 
-    boost::shared_ptr< logging::attribute > attr(new named_scope());
+    named_scope attr;
 
     // First scope
     const unsigned int line1 = __LINE__;
@@ -87,7 +86,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
     BOOST_CHECK(!named_scope::get_scopes().empty());
     BOOST_CHECK_EQUAL(named_scope::get_scopes().size(), 1UL);
 
-    logging::attribute_value val = attr->get_value();
+    logging::attribute_value val = attr.get_value();
     BOOST_REQUIRE(!!val);
 
     boost::optional< scopes > sc = val.extract< scopes >();
@@ -108,7 +107,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
     BOOST_CHECK(!named_scope::get_scopes().empty());
     BOOST_CHECK_EQUAL(named_scope::get_scopes().size(), 2UL);
 
-    val = attr->get_value();
+    val = attr.get_value();
     BOOST_REQUIRE(!!val);
 
     sc = val.extract< scopes >();
@@ -135,7 +134,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
     BOOST_CHECK(!named_scope::get_scopes().empty());
     BOOST_CHECK_EQUAL(named_scope::get_scopes().size(), 1UL);
 
-    val = attr->get_value();
+    val = attr.get_value();
     BOOST_REQUIRE(!!val);
 
     sc = val.extract< scopes >();
@@ -158,14 +157,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(detaching_from_thread, CharT, char_types)
     typedef attrs::basic_named_scope_entry< CharT > scope;
     typedef scope_test_data< CharT > scope_data;
 
-    boost::shared_ptr< logging::attribute > attr(new named_scope());
+    named_scope attr;
 
     sentry scope1(scope_data::scope1(), scope_data::file(), __LINE__);
-    logging::attribute_value val1 = attr->get_value();
+    logging::attribute_value val1 = attr.get_value();
     val1.detach_from_thread();
 
     sentry scope2(scope_data::scope2(), scope_data::file(), __LINE__);
-    logging::attribute_value val2 = attr->get_value();
+    logging::attribute_value val2 = attr.get_value();
     val2.detach_from_thread();
 
     boost::optional< scopes > sc1 = val1.extract< scopes >(), sc2 = val2.extract< scopes >();

@@ -83,13 +83,13 @@ int main(int argc, char* argv[])
         shared_ptr< sink_t > sink(new sink_t(
             boost::make_shared< backend_t >(),
             // We'll apply record ordering to ensure that records from different threads go sequentially in the file
-            keywords::order = logging::make_attr_ordering("Line #", std::less< unsigned int >())));
+            keywords::order = logging::make_attr_ordering("RecordID", std::less< unsigned int >())));
 
         sink->locked_backend()->add_stream(strm);
 
         sink->locked_backend()->set_formatter(
             fmt::format("%1%: [%2%] [%3%] - %4%")
-                % fmt::attr< unsigned int >("Line #")
+                % fmt::attr< unsigned int >("RecordID")
                 % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
                 % fmt::attr< boost::thread::id >("ThreadID")
                 % fmt::message()
@@ -99,10 +99,8 @@ int main(int argc, char* argv[])
         logging::core::get()->add_sink(sink);
 
         // Add some attributes too
-        shared_ptr< logging::attribute > attr(new attrs::local_clock);
-        logging::core::get()->add_global_attribute("TimeStamp", attr);
-        attr.reset(new attrs::counter< unsigned int >);
-        logging::core::get()->add_global_attribute("Line #", attr);
+        logging::core::get()->add_global_attribute("TimeStamp", attrs::local_clock());
+        logging::core::get()->add_global_attribute("RecordID", attrs::counter< unsigned int >());
 
         // Create logging threads
         boost::barrier bar(THREAD_COUNT);

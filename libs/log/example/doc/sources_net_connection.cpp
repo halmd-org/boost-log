@@ -40,7 +40,7 @@ public:
         // Put the remote address into the logger to automatically attach it
         // to every log record written through the logger
         m_remote_addr = m_logger.add_attribute("RemoteAddress",
-            boost::make_shared< attrs::constant< std::string > >(remote_addr)).first;
+            attrs::constant< std::string >(remote_addr)).first;
 
         // The straightforward way of logging
         if (logging::record rec = m_logger.open_record())

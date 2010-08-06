@@ -22,10 +22,8 @@
 #include <sstream>
 #include <algorithm>
 #include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/date_time.hpp>
 #include <boost/test/included/unit_test.hpp>
-#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/formatters/date_time.hpp>
@@ -90,7 +88,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(date_time, CharT, char_types)
     typedef boost::date_time::time_facet< ptime, CharT > facet;
 
     ptime t1(gdate(2009, 2, 7), ptime::time_duration_type(14, 40, 15));
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< ptime >(t1));
+    attrs::constant< ptime > attr1(t1);
 
     attr_set set1;
     set1[data::attr1()] = attr1;
@@ -132,7 +130,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(date, CharT, char_types)
     typedef boost::date_time::date_facet< gdate, CharT > facet;
 
     gdate d1(2009, 2, 7);
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< gdate >(d1));
+    attrs::constant< gdate > attr1(d1);
 
     attr_set set1;
     set1[data::attr1()] = attr1;
@@ -174,7 +172,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(time_duration, CharT, char_types)
     typedef boost::date_time::time_facet< ptime, CharT > facet;
 
     ptime::time_duration_type t1(14, 40, 15);
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< ptime::time_duration_type >(t1));
+    attrs::constant< ptime::time_duration_type > attr1(t1);
 
     attr_set set1;
     set1[data::attr1()] = attr1;
@@ -217,7 +215,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(time_period, CharT, char_types)
 
     ptime t1(gdate(2009, 2, 7), ptime::time_duration_type(14, 40, 15));
     period p1(t1, ptime::time_duration_type(2, 3, 44));
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< period >(p1));
+    attrs::constant< period > attr1(p1);
 
     attr_set set1;
     set1[data::attr1()] = attr1;

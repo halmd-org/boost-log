@@ -18,11 +18,11 @@
 #include <string>
 #include <utility>
 #include <iterator>
-#include <boost/shared_ptr.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include "char_definitions.hpp"
+#include "attr_comparison.hpp"
 
 namespace logging = boost::log;
 namespace attrs = logging::attributes;
@@ -33,9 +33,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
     typedef logging::basic_attribute_set< CharT > attr_set;
     typedef test_data< CharT > data;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
-    boost::shared_ptr< logging::attribute > attr3(new attrs::constant< std::string >("Hello, world!"));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
+    attrs::constant< std::string > attr3("Hello, world!");
 
     attr_set set1;
     BOOST_CHECK(set1.empty());
@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     typedef test_data< CharT > data;
     typedef std::basic_string< CharT > string;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
 
     attr_set set1;
     set1[data::attr1()] = attr1;
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     BOOST_CHECK(it == set1.end());
 
     // Subscript operator
-    boost::shared_ptr< logging::attribute > p = set1[data::attr1()];
+    logging::attribute_factory p = set1[data::attr1()];
     BOOST_CHECK_EQUAL(p, attr1);
     BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
@@ -131,9 +131,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     typedef test_data< CharT > data;
     typedef std::basic_string< CharT > string;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
-    boost::shared_ptr< logging::attribute > attr3(new attrs::constant< std::string >("Hello, world!"));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
+    attrs::constant< std::string > attr3("Hello, world!");
 
     attr_set set1;
 
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
 
     // Mass insertion
     typedef typename attr_set::key_type key_type;
-    std::vector< std::pair< key_type, boost::shared_ptr< logging::attribute > > > elems;
+    std::vector< std::pair< key_type, logging::attribute_factory > > elems;
     elems.push_back(std::make_pair(key_type(data::attr2()), attr2));
     elems.push_back(std::make_pair(key_type(data::attr1()), attr1));
     elems.push_back(std::make_pair(key_type(data::attr3()), attr3));
@@ -213,20 +213,20 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     // Subscript operator
     attr_set set4;
 
-    boost::shared_ptr< logging::attribute >& p1 = (set4[data::attr1()] = attr1);
+    logging::attribute_factory& p1 = (set4[data::attr1()] = attr1);
     BOOST_CHECK_EQUAL(set4.size(), 1UL);
     BOOST_CHECK_EQUAL(p1, attr1);
 
-    boost::shared_ptr< logging::attribute >& p2 = (set4[string(data::attr2())] = attr2);
+    logging::attribute_factory& p2 = (set4[string(data::attr2())] = attr2);
     BOOST_CHECK_EQUAL(set4.size(), 2UL);
     BOOST_CHECK_EQUAL(p2, attr2);
 
-    boost::shared_ptr< logging::attribute >& p3 = (set4[key_type(data::attr3())] = attr3);
+    logging::attribute_factory& p3 = (set4[key_type(data::attr3())] = attr3);
     BOOST_CHECK_EQUAL(set4.size(), 3UL);
     BOOST_CHECK_EQUAL(p3, attr3);
 
     // subscript operator can replace existing elements
-    boost::shared_ptr< logging::attribute >& p4 = (set4[data::attr3()] = attr1);
+    logging::attribute_factory& p4 = (set4[data::attr3()] = attr1);
     BOOST_CHECK_EQUAL(set4.size(), 3UL);
     BOOST_CHECK_EQUAL(p4, attr1);
 }
@@ -238,9 +238,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(erasure, CharT, char_types)
     typedef test_data< CharT > data;
     typedef std::basic_string< CharT > string;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
-    boost::shared_ptr< logging::attribute > attr3(new attrs::constant< std::string >("Hello, world!"));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
+    attrs::constant< std::string > attr3("Hello, world!");
 
     attr_set set1;
     set1[data::attr1()] = attr1;

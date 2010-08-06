@@ -65,8 +65,7 @@ void named_scope_logging()
 void tagged_logging()
 {
     src::severity_logger< severity_level > slg;
-    slg.add_attribute("Tag",
-        boost::make_shared< attrs::constant< std::string > >("My tag value"));
+    slg.add_attribute("Tag", attrs::constant< std::string >("My tag value"));
 
     BOOST_LOG_SEV(slg, normal) << "Here goes the tagged record";
 }
@@ -136,9 +135,7 @@ void init()
 
     // Add attributes
     logging::add_common_attributes();
-
-    logging::core::get()->add_global_attribute(
-        "Scope", boost::make_shared< attrs::named_scope >());
+    logging::core::get()->add_global_attribute("Scope", attrs::named_scope());
 }
 
 int main(int, char*[])

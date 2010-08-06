@@ -153,8 +153,7 @@ struct activity_guard
     activity_guard()
     {
         // Add a stop watch attribute to measure the activity duration
-        boost::shared_ptr< attrs::timer > attr(new attrs::timer());
-        m_it = event_logger::get().add_attribute("Duration", attr).first;
+        m_it = event_logger::get().add_attribute("Duration", attrs::timer()).first;
     }
     ~activity_guard()
     {

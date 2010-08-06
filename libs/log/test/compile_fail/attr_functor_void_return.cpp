@@ -15,9 +15,8 @@
 
 #define BOOST_TEST_MODULE attr_functor_void_return
 
-#include <boost/shared_ptr.hpp>
 #include <boost/utility/result_of.hpp>
-#include <boost/log/attributes/attribute.hpp>
+#include <boost/log/attributes/attribute_factory.hpp>
 #include <boost/log/attributes/functor.hpp>
 
 namespace logging = boost::log;
@@ -32,7 +31,7 @@ namespace {
 
 int main(int, char*[])
 {
-    boost::shared_ptr< logging::attribute > attr1 =
+    logging::attribute_factory attr1 =
 #ifndef BOOST_NO_RESULT_OF
         attrs::make_functor_attr(&get_attr_value);
 #else

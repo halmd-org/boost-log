@@ -12,8 +12,8 @@
  * \brief  This header contains common type definitions for character type dependent tests.
  */
 
-#ifndef BOOST_LOG_TESTS_CHAR_DEFINITIONSS_HPP_INCLUDED_
-#define BOOST_LOG_TESTS_CHAR_DEFINITIONSS_HPP_INCLUDED_
+#ifndef BOOST_LOG_TESTS_CHAR_DEFINITIONS_HPP_INCLUDED_
+#define BOOST_LOG_TESTS_CHAR_DEFINITIONS_HPP_INCLUDED_
 
 #include <string>
 #include <iostream>
@@ -113,4 +113,4 @@ inline bool equal_strings(std::wstring const& left, std::wstring const& right)
 
 #endif // BOOST_LOG_USE_WCHAR_T
 
-#endif // BOOST_LOG_TESTS_CHAR_DEFINITIONSS_HPP_INCLUDED_
+#endif // BOOST_LOG_TESTS_CHAR_DEFINITIONS_HPP_INCLUDED_

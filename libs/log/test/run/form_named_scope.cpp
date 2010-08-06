@@ -17,10 +17,8 @@
 #include <string>
 #include <sstream>
 #include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/test/included/unit_test.hpp>
-#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/named_scope.hpp>
@@ -82,7 +80,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     typedef boost::function< void (osstream&, record const&) > formatter;
     typedef named_scope_test_data< CharT > data;
 
-    boost::shared_ptr< logging::attribute > attr(new named_scope());
+    named_scope attr;
 
     // First scope
     const unsigned int line1 = __LINE__;

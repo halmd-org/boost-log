@@ -21,7 +21,6 @@
 #include <stdexcept>
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/common.hpp>
 #include <boost/log/attributes.hpp>
@@ -34,8 +33,6 @@
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
-
-using boost::shared_ptr;
 
 enum severity_level
 {
@@ -52,7 +49,7 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(test_lg, src::severity_logger< >)
 struct scope_list_formatter
 {
     typedef void result_type;
-    typedef attrs::basic_named_scope<char>::scope_stack scope_stack;
+    typedef attrs::basic_named_scope< char >::value_type scope_stack;
 
     explicit scope_list_formatter(std::string const& name) :
         name_(name)
@@ -111,8 +108,7 @@ void init_logging()
     // Add some attributes
     logging::add_common_attributes();
 
-    shared_ptr< logging::attribute > attr_scope(new attrs::named_scope);
-    logging::core::get()->add_global_attribute("MyScopes", attr_scope);
+    logging::core::get()->add_global_attribute("MyScopes", attrs::named_scope());
 }
 
 //! The function tests logging

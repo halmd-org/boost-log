@@ -21,7 +21,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/core/core.hpp>
-#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
@@ -48,8 +47,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(filtering, CharT, char_types)
     typedef std::basic_string< CharT > string;
     typedef test_data< CharT > data;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
 
     attr_set set1;
     set1[data::attr1()] = attr1;
@@ -166,7 +165,7 @@ namespace {
         typedef typename core::record_type record_type;
         typedef std::basic_string< CharT > string;
         typedef logging::basic_attribute_set< CharT > attr_set;
-        boost::shared_ptr< logging::attribute > attr4(new attrs::constant< short >(255));
+        attrs::constant< short > attr4(255);
 
         boost::shared_ptr< core > pCore = core::get();
         pCore->add_thread_attribute(data::attr4(), attr4);
@@ -190,9 +189,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(attributes, CharT, char_types)
     typedef std::basic_string< CharT > string;
     typedef test_data< CharT > data;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
-    boost::shared_ptr< logging::attribute > attr3(new attrs::constant< std::string >("Hello, world!"));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
+    attrs::constant< std::string > attr3("Hello, world!");
 
     attr_set set1;
     set1[data::attr1()] = attr1;

@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 
         sink->locked_backend()->set_formatter(
             fmt::format("syslog.exe: %1%: %2%")
-                % fmt::attr< unsigned int >("Line #")
+                % fmt::attr< unsigned int >("RecordID")
                 % fmt::message()
             );
 
@@ -75,8 +75,7 @@ int main(int argc, char* argv[])
         logging::core::get()->add_sink(sink);
 
         // Add some attributes too
-        shared_ptr< logging::attribute > attr(new attrs::counter< unsigned int >);
-        logging::core::get()->add_global_attribute("Line #", attr);
+        logging::core::get()->add_global_attribute("RecordID", attrs::counter< unsigned int >());
 
         // Do some logging
         src::severity_logger< severity_levels > lg(keywords::severity = normal);

@@ -18,9 +18,7 @@
 #include <ostream>
 #include <sstream>
 #include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/test/included/unit_test.hpp>
-#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/formatters/if.hpp>
@@ -46,8 +44,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(conditional_formatting, CharT, char_types)
     typedef boost::function< void (osstream&, record const&) > formatter;
     typedef test_data< CharT > data;
 
-    boost::shared_ptr< logging::attribute > attr1(new attrs::constant< int >(10));
-    boost::shared_ptr< logging::attribute > attr2(new attrs::constant< double >(5.5));
+    attrs::constant< int > attr1(10);
+    attrs::constant< double > attr2(5.5);
 
     attr_set set1;
     set1[data::attr1()] = attr1;
