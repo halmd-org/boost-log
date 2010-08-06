@@ -22,6 +22,7 @@
 #include <boost/intrusive_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/locks.hpp>
+#include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/attribute_factory.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/utility/strictest_lock.hpp>
@@ -79,7 +80,7 @@ namespace aux {
 
     protected:
         //! Factory implementation
-        class impl :
+        class BOOST_LOG_VISIBLE impl :
             public attribute_factory::impl,
             public attribute_value::impl
         {
@@ -121,6 +122,11 @@ namespace aux {
     public:
         //! Default constructor
         severity_level() : attribute_factory(new impl())
+        {
+        }
+        //! Constructor for casting support
+        explicit severity_level(cast_source const& source) :
+            attribute_factory(source.as< impl >())
         {
         }
         //! The method sets the actual level
