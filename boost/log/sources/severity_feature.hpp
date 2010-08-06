@@ -125,7 +125,7 @@ namespace aux {
         {
         }
         //! Constructor for casting support
-        explicit severity_level(cast_source const& source) :
+        explicit severity_level(attributes::cast_source const& source) :
             attribute_factory(source.as< impl >())
         {
         }
