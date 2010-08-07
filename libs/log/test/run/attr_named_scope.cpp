@@ -19,7 +19,7 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/test/included/unit_test.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/utility/string_literal.hpp>

@@ -108,14 +108,14 @@ BOOST_AUTO_TEST_CASE(calling)
     unsigned int call_count = 0;
     my_dispatcher disp;
 
-    logging::attribute_factory attr1 =
+    logging::attribute attr1 =
 #ifndef BOOST_NO_RESULT_OF
         attrs::make_functor_attr(&get_attr_value);
 #else
         attrs::make_functor_attr< int >(&get_attr_value);
 #endif
 
-    logging::attribute_factory attr2 =
+    logging::attribute attr2 =
 #ifndef BOOST_NO_RESULT_OF
         attrs::make_functor_attr(attr_value_generator(call_count));
 #else

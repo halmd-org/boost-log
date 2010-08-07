@@ -16,7 +16,7 @@
 #define BOOST_TEST_MODULE attr_functor_void_return
 
 #include <boost/utility/result_of.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/functor.hpp>
 
 namespace logging = boost::log;
@@ -31,7 +31,7 @@ namespace {
 
 int main(int, char*[])
 {
-    logging::attribute_factory attr1 =
+    logging::attribute attr1 =
 #ifndef BOOST_NO_RESULT_OF
         attrs::make_functor_attr(&get_attr_value);
 #else

@@ -36,7 +36,7 @@ namespace attributes {
 
 //! Factory implementation
 class BOOST_LOG_VISIBLE timer::impl :
-    public attribute_factory::impl
+    public attribute::impl
 {
 private:
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -112,12 +112,12 @@ public:
 };
 
 //! Constructor
-timer::timer() : attribute_factory(new impl())
+timer::timer() : attribute(new impl())
 {
 }
 
 //! Constructor for casting support
-timer::timer(cast_source const& source) : attribute_factory(source.as< impl >())
+timer::timer(cast_source const& source) : attribute(source.as< impl >())
 {
 }
 
@@ -137,7 +137,7 @@ namespace attributes {
 
 //! Factory implementation
 class BOOST_LOG_VISIBLE timer::impl :
-    public attribute_factory::impl
+    public attribute::impl
 {
 public:
     //! Time type
@@ -161,12 +161,12 @@ public:
 };
 
 //! Constructor
-timer::timer() : attribute_factory(new impl())
+timer::timer() : attribute(new impl())
 {
 }
 
 //! Constructor for casting support
-timer::timer(cast_source const& source) : attribute_factory(source.as< impl >())
+timer::timer(cast_source const& source) : attribute(source.as< impl >())
 {
 }
 

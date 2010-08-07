@@ -20,7 +20,7 @@
 #define BOOST_LOG_ATTRIBUTES_CLOCK_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_value_def.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
@@ -45,7 +45,7 @@ namespace attributes {
  */
 template< typename TimeTraitsT >
 class basic_clock :
-    public attribute_factory
+    public attribute
 {
 public:
     //! Generated value type
@@ -54,7 +54,7 @@ public:
 protected:
     //! Attribute factory implementation
     struct BOOST_LOG_VISIBLE impl :
-        public attribute_factory::impl
+        public attribute::impl
     {
         attribute_value get_value()
         {
@@ -67,13 +67,13 @@ public:
     /*!
      * Default constructor
      */
-    basic_clock() : attribute_factory(new impl())
+    basic_clock() : attribute(new impl())
     {
     }
     /*!
      * Constructor for casting support
      */
-    explicit basic_clock(cast_source const& source) : attribute_factory(source.as< impl >())
+    explicit basic_clock(cast_source const& source) : attribute(source.as< impl >())
     {
     }
 };

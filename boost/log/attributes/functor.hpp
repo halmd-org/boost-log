@@ -25,7 +25,7 @@
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 
@@ -46,7 +46,7 @@ namespace attributes {
  */
 template< typename R >
 class functor :
-    public attribute_factory
+    public attribute
 {
     //  The result type of the function object must not be void
     BOOST_STATIC_ASSERT(!is_void< R >::value);
@@ -58,7 +58,7 @@ public:
 protected:
     //! Base class for factory implementation
     class BOOST_LOG_NO_VTABLE BOOST_LOG_VISIBLE impl :
-        public attribute_factory::impl
+        public attribute::impl
     {
     };
 
@@ -93,14 +93,14 @@ public:
      * Initializing constructor
      */
     template< typename T >
-    explicit functor(T const& fun) : attribute_factory(new impl_template< T >(fun))
+    explicit functor(T const& fun) : attribute(new impl_template< T >(fun))
     {
     }
     /*!
      * Constructor for casting support
      */
     explicit functor(cast_source const& source) :
-        attribute_factory(source.as< impl >())
+        attribute(source.as< impl >())
     {
     }
 };

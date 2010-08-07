@@ -22,7 +22,7 @@
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #ifndef BOOST_LOG_NO_THREADS
@@ -45,7 +45,7 @@ namespace attributes {
  */
 template< typename T >
 class counter :
-    public attribute_factory
+    public attribute
 {
     //  For now only integral types up to long are supported
     BOOST_STATIC_ASSERT(is_integral< T >::value);
@@ -58,7 +58,7 @@ public:
 protected:
     //! Base class for factory implementation
     class BOOST_LOG_NO_VTABLE BOOST_LOG_VISIBLE impl :
-        public attribute_factory::impl
+        public attribute::impl
     {
     };
 
@@ -81,7 +81,7 @@ public:
      */
     explicit counter(value_type initial = (value_type)0, long step = 1) :
 #ifndef BOOST_LOG_NO_THREADS
-        attribute_factory()
+        attribute()
     {
         if (step == 1)
             this->set_impl(new impl_inc(initial));
@@ -91,7 +91,7 @@ public:
             this->set_impl(new impl_generic(initial, step));
     }
 #else
-        attribute_factory(new impl_generic(initial, step))
+        attribute(new impl_generic(initial, step))
     {
     }
 #endif
@@ -99,7 +99,7 @@ public:
      * Constructor for casting support
      */
     explicit counter(cast_source const& source) :
-        attribute_factory(source.as< impl >())
+        attribute(source.as< impl >())
     {
     }
 };

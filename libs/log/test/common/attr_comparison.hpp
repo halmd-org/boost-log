@@ -16,12 +16,12 @@
 #define BOOST_LOG_TESTS_ATTR_COMPARISON_HPP_INCLUDED_
 
 #include <ostream>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 
 class attribute_factory_helper :
-    public boost::log::attribute_factory
+    public boost::log::attribute
 {
-    typedef boost::log::attribute_factory base_type;
+    typedef boost::log::attribute base_type;
 
 public:
     attribute_factory_helper(base_type const& that) : base_type(that)
@@ -38,16 +38,16 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-inline bool operator== (attribute_factory const& left, attribute_factory const& right)
+inline bool operator== (attribute const& left, attribute const& right)
 {
     return attribute_factory_helper(left).get_impl() == attribute_factory_helper(right).get_impl();
 }
-inline bool operator!= (attribute_factory const& left, attribute_factory const& right)
+inline bool operator!= (attribute const& left, attribute const& right)
 {
     return attribute_factory_helper(left).get_impl() != attribute_factory_helper(right).get_impl();
 }
 
-inline std::ostream& operator<< (std::ostream& strm, attribute_factory const& val)
+inline std::ostream& operator<< (std::ostream& strm, attribute const& val)
 {
     strm << attribute_factory_helper(val).get_impl();
     return strm;

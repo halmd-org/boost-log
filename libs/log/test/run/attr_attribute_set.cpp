@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     BOOST_CHECK(it == set1.end());
 
     // Subscript operator
-    logging::attribute_factory p = set1[data::attr1()];
+    logging::attribute p = set1[data::attr1()];
     BOOST_CHECK_EQUAL(p, attr1);
     BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
 
     // Mass insertion
     typedef typename attr_set::key_type key_type;
-    std::vector< std::pair< key_type, logging::attribute_factory > > elems;
+    std::vector< std::pair< key_type, logging::attribute > > elems;
     elems.push_back(std::make_pair(key_type(data::attr2()), attr2));
     elems.push_back(std::make_pair(key_type(data::attr1()), attr1));
     elems.push_back(std::make_pair(key_type(data::attr3()), attr3));
@@ -213,20 +213,20 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     // Subscript operator
     attr_set set4;
 
-    logging::attribute_factory& p1 = (set4[data::attr1()] = attr1);
+    logging::attribute& p1 = (set4[data::attr1()] = attr1);
     BOOST_CHECK_EQUAL(set4.size(), 1UL);
     BOOST_CHECK_EQUAL(p1, attr1);
 
-    logging::attribute_factory& p2 = (set4[string(data::attr2())] = attr2);
+    logging::attribute& p2 = (set4[string(data::attr2())] = attr2);
     BOOST_CHECK_EQUAL(set4.size(), 2UL);
     BOOST_CHECK_EQUAL(p2, attr2);
 
-    logging::attribute_factory& p3 = (set4[key_type(data::attr3())] = attr3);
+    logging::attribute& p3 = (set4[key_type(data::attr3())] = attr3);
     BOOST_CHECK_EQUAL(set4.size(), 3UL);
     BOOST_CHECK_EQUAL(p3, attr3);
 
     // subscript operator can replace existing elements
-    logging::attribute_factory& p4 = (set4[data::attr3()] = attr1);
+    logging::attribute& p4 = (set4[data::attr3()] = attr1);
     BOOST_CHECK_EQUAL(set4.size(), 3UL);
     BOOST_CHECK_EQUAL(p4, attr1);
 }

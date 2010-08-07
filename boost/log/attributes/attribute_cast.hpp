@@ -20,7 +20,7 @@
 #define BOOST_LOG_ATTRIBUTES_ATTRIBUTE_CAST_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 
 namespace boost {
 
@@ -34,13 +34,13 @@ namespace attributes {
 class cast_source
 {
 private:
-    attribute_factory::impl* m_pImpl;
+    attribute::impl* m_pImpl;
 
 public:
     /*!
      * Initializing constructor. Creates a source that refers to the specified factory implementation.
      */
-    explicit cast_source(attribute_factory::impl* p) : m_pImpl(p)
+    explicit cast_source(attribute::impl* p) : m_pImpl(p)
     {
     }
 
@@ -59,7 +59,7 @@ public:
  * The function casts one attribute factory to another
  */
 template< typename T >
-inline T attribute_cast(attribute_factory const& attr)
+inline T attribute_cast(attribute const& attr)
 {
     return T(attributes::cast_source(attr.get_impl()));
 }

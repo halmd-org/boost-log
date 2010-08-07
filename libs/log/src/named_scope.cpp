@@ -19,7 +19,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
@@ -126,7 +126,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 //! Named scope attribute implementation
 template< typename CharT >
 struct BOOST_LOG_VISIBLE basic_named_scope< CharT >::impl :
-    public attribute_factory::impl,
+    public attribute::impl,
     public log::aux::singleton<
         impl,
         intrusive_ptr< impl >
@@ -281,14 +281,14 @@ void basic_named_scope_list< CharT >::swap(basic_named_scope_list& that)
 //! Constructor
 template< typename CharT >
 basic_named_scope< CharT >::basic_named_scope() :
-    attribute_factory(impl::instance)
+    attribute(impl::instance)
 {
 }
 
 //! Constructor for casting support
 template< typename CharT >
 basic_named_scope< CharT >::basic_named_scope(cast_source const& source) :
-    attribute_factory(source.as< impl >())
+    attribute(source.as< impl >())
 {
 }
 

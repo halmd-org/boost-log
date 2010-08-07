@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   attribute_factory.hpp
+ * \file   attribute.hpp
  * \author Andrey Semashev
  * \date   15.04.2007
  *
@@ -16,8 +16,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_ATTRIBUTES_ATTRIBUTE_FACTORY_HPP_INCLUDED_
-#define BOOST_LOG_ATTRIBUTES_ATTRIBUTE_FACTORY_HPP_INCLUDED_
+#ifndef BOOST_LOG_ATTRIBUTES_ATTRIBUTE_HPP_INCLUDED_
+#define BOOST_LOG_ATTRIBUTES_ATTRIBUTE_HPP_INCLUDED_
 
 #include <boost/intrusive_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -38,10 +38,10 @@ namespace BOOST_LOG_NAMESPACE {
  * perform a considirable amount of work to return a value, and the returned values may differ
  * each time requested.
  *
- * A word about thread safety. An attribute factory should be prepared to be requested a value from
+ * A word about thread safety. An attribute should be prepared to be requested a value from
  * multiple threads concurrently.
  */
-class attribute_factory
+class attribute
 {
 public:
     /*!
@@ -68,14 +68,14 @@ public:
      * Default constructor. Creates an empty attribute factory, which is not usable until
      * \c set_impl is called.
      */
-    attribute_factory() {}
+    attribute() {}
 
     /*!
      * Initializing constructor
      *
      * \param p Pointer to the implementation. Must not be \c NULL.
      */
-    explicit attribute_factory(intrusive_ptr< impl > p) { m_pImpl.swap(p); }
+    explicit attribute(intrusive_ptr< impl > p) { m_pImpl.swap(p); }
 
     /*!
      * Verifies that the factory is not in empty state
@@ -96,7 +96,7 @@ public:
     /*!
      * The method swaps two factories (i.e. their implementations).
      */
-    void swap(attribute_factory& that) { m_pImpl.swap(that.m_pImpl); }
+    void swap(attribute& that) { m_pImpl.swap(that.m_pImpl); }
 
 protected:
     /*!
@@ -111,13 +111,13 @@ protected:
     void set_impl(intrusive_ptr< impl > p) { m_pImpl.swap(p); }
 
     template< typename T >
-    friend T attribute_cast(attribute_factory const&);
+    friend T attribute_cast(attribute const&);
 };
 
 /*!
  * The function swaps two attribute value factories
  */
-inline void swap(attribute_factory& left, attribute_factory& right)
+inline void swap(attribute& left, attribute& right)
 {
     left.swap(right);
 }
@@ -126,4 +126,4 @@ inline void swap(attribute_factory& left, attribute_factory& right)
 
 } // namespace boost
 
-#endif // BOOST_LOG_ATTRIBUTES_ATTRIBUTE_FACTORY_HPP_INCLUDED_
+#endif // BOOST_LOG_ATTRIBUTES_ATTRIBUTE_HPP_INCLUDED_

@@ -24,7 +24,7 @@
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 

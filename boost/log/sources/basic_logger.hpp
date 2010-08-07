@@ -36,7 +36,7 @@
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/core/core.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/sources/features.hpp>
@@ -220,7 +220,7 @@ protected:
      * Unlocked \c add_attribute
      */
     std::pair< typename attribute_set_type::iterator, bool > add_attribute_unlocked(
-        attribute_name_type const& name, attribute_factory const& attr)
+        attribute_name_type const& name, attribute const& attr)
     {
         return m_Attributes.insert(name, attr);
     }
@@ -387,7 +387,7 @@ public:
      *         addition.
      */
     std::pair< typename attribute_set_type::iterator, bool > add_attribute(
-        attribute_name_type const& name, attribute_factory const& attr)
+        attribute_name_type const& name, attribute const& attr)
     {
         typename base_type::add_attribute_lock _(base_type::get_threading_model());
         return base_type::add_attribute_unlocked(name, attr);
@@ -538,7 +538,7 @@ public:
     }
 
     std::pair< typename attribute_set_type::iterator, bool > add_attribute(
-        attribute_name_type const& name, attribute_factory const& attr)
+        attribute_name_type const& name, attribute const& attr)
     {
         return base_type::add_attribute_unlocked(name, attr);
     }

@@ -27,7 +27,7 @@
 
 #include <boost/intrusive_ptr.hpp>
 #include <boost/thread/thread.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 
@@ -44,7 +44,7 @@ namespace attributes {
  *       thread identifier, no matter which thread emits the log record.
  */
 class current_thread_id :
-    public attribute_factory
+    public attribute
 {
 public:
     //! A held attribute value type
@@ -53,7 +53,7 @@ public:
 protected:
     //! Factory implementation
     class BOOST_LOG_VISIBLE impl :
-        public attribute_factory::impl,
+        public attribute::impl,
         public attribute_value::impl
     {
     public:
@@ -87,14 +87,14 @@ public:
     /*!
      * Default constructor
      */
-    current_thread_id() : attribute_factory(new impl())
+    current_thread_id() : attribute(new impl())
     {
     }
     /*!
      * Constructor for casting support
      */
     explicit current_thread_id(cast_source const& source) :
-        attribute_factory(source.as< impl >())
+        attribute(source.as< impl >())
     {
     }
 };

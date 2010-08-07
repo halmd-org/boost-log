@@ -27,7 +27,7 @@
 #include <iterator>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_value_def.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 

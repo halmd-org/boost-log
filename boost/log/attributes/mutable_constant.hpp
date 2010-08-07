@@ -26,7 +26,7 @@
 #include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/locks.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 
@@ -72,7 +72,7 @@ template<
 #endif
 >
 class mutable_constant :
-    public attribute_factory
+    public attribute
 {
 public:
     //! The attribute value type
@@ -81,7 +81,7 @@ public:
 protected:
     //! Factory implementation
     class BOOST_LOG_VISIBLE impl :
-        public attribute_factory::impl
+        public attribute::impl
     {
     private:
         //! Mutex type
@@ -130,13 +130,13 @@ public:
     /*!
      * Constructor with the stored value initialization
      */
-    explicit mutable_constant(value_type const& value) : attribute_factory(new impl(value))
+    explicit mutable_constant(value_type const& value) : attribute(new impl(value))
     {
     }
     /*!
      * Constructor for casting support
      */
-    explicit mutable_constant(cast_source const& source) : attribute_factory(source.as< impl >())
+    explicit mutable_constant(cast_source const& source) : attribute(source.as< impl >())
     {
     }
 
@@ -164,7 +164,7 @@ protected:
      */
     impl* get_impl() const
     {
-        return static_cast< impl* >(attribute_factory::get_impl());
+        return static_cast< impl* >(attribute::get_impl());
     }
 };
 
@@ -184,7 +184,7 @@ public:
 protected:
     //! Factory implementation
     class BOOST_LOG_VISIBLE impl :
-        public attribute_factory::impl
+        public attribute::impl
     {
     private:
         //! The actual value
@@ -219,13 +219,13 @@ public:
     /*!
      * Constructor with the stored value initialization
      */
-    explicit mutable_constant(value_type const& value) : attribute_factory(new impl(value))
+    explicit mutable_constant(value_type const& value) : attribute(new impl(value))
     {
     }
     /*!
      * Constructor for casting support
      */
-    explicit mutable_constant(cast_source const& source) : attribute_factory(source.as< impl >())
+    explicit mutable_constant(cast_source const& source) : attribute(source.as< impl >())
     {
     }
 
@@ -253,7 +253,7 @@ protected:
      */
     impl* get_impl() const
     {
-        return static_cast< impl* >(attribute_factory::get_impl());
+        return static_cast< impl* >(attribute::get_impl());
     }
 };
 

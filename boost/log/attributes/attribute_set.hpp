@@ -26,7 +26,7 @@
 #include <boost/mpl/if.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 
 namespace boost {
 
@@ -61,7 +61,7 @@ public:
     //! Key type
     typedef basic_attribute_name< char_type > key_type;
     //! Mapped attribute type
-    typedef attribute_factory mapped_type;
+    typedef attribute mapped_type;
 
     //! Value type
     typedef std::pair< const key_type, mapped_type > value_type;

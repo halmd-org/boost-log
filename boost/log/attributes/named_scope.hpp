@@ -32,7 +32,7 @@
 #include <boost/log/utility/string_literal.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
 #include <boost/log/utility/no_unused_warnings.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 
 #ifdef _MSC_VER
@@ -352,7 +352,7 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (
  */
 template< typename CharT >
 class BOOST_LOG_EXPORT basic_named_scope :
-    public attribute_factory
+    public attribute
 {
 public:
     //! Character type

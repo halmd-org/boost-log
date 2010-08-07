@@ -27,7 +27,7 @@
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -163,7 +163,7 @@ public:
      *         addition.
      */
     std::pair< typename attribute_set_type::iterator, bool > add_global_attribute(
-        attribute_name_type const& name, attribute_factory const& attr);
+        attribute_name_type const& name, attribute const& attr);
     /*!
      * The method removes an attribute from the global attribute set.
      *
@@ -202,7 +202,7 @@ public:
      *         addition.
      */
     std::pair< typename attribute_set_type::iterator, bool > add_thread_attribute(
-        attribute_name_type const& name, attribute_factory const& attr);
+        attribute_name_type const& name, attribute const& attr);
     /*!
      * The method removes an attribute from the thread-specific attribute set.
      *

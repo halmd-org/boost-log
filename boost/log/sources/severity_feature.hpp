@@ -22,8 +22,8 @@
 #include <boost/intrusive_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/locks.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/utility/strictest_lock.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
@@ -72,7 +72,7 @@ namespace aux {
     //! Severity level attribute implementation
     template< typename LevelT >
     class severity_level :
-        public attribute_factory
+        public attribute
     {
     public:
         //! Stored level type
@@ -81,7 +81,7 @@ namespace aux {
     protected:
         //! Factory implementation
         class BOOST_LOG_VISIBLE impl :
-            public attribute_factory::impl,
+            public attribute::impl,
             public attribute_value::impl
         {
         public:
@@ -121,12 +121,12 @@ namespace aux {
 
     public:
         //! Default constructor
-        severity_level() : attribute_factory(new impl())
+        severity_level() : attribute(new impl())
         {
         }
         //! Constructor for casting support
         explicit severity_level(attributes::cast_source const& source) :
-            attribute_factory(source.as< impl >())
+            attribute(source.as< impl >())
         {
         }
         //! The method sets the actual level

@@ -20,7 +20,7 @@
 #define BOOST_LOG_ATTRIBUTES_TIMER_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 
@@ -58,7 +58,7 @@ namespace attributes {
  * fall back to another implementation based on Boost.DateTime.
  */
 class BOOST_LOG_EXPORT timer :
-    public attribute_factory
+    public attribute
 {
 public:
     //! Attribute value type

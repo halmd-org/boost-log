@@ -20,7 +20,7 @@
 #define BOOST_LOG_ATTRIBUTES_CONSTANT_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/attributes/attribute_factory.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 
@@ -39,7 +39,7 @@ namespace attributes {
  */
 template< typename T >
 class constant :
-    public attribute_factory
+    public attribute
 {
 public:
     //! Attribute value type
@@ -48,7 +48,7 @@ public:
 protected:
     //! Factory implementation
     class BOOST_LOG_VISIBLE impl :
-        public attribute_factory::impl,
+        public attribute::impl,
         public basic_attribute_value< value_type >
     {
         //! Base type
@@ -70,11 +70,11 @@ public:
     /*!
      * Constructor with the stored value initialization
      */
-    explicit constant(value_type const& value) : attribute_factory(new impl(value)) {}
+    explicit constant(value_type const& value) : attribute(new impl(value)) {}
     /*!
      * Constructor for casting support
      */
-    explicit constant(cast_source const& source) : attribute_factory(source.as< impl >())
+    explicit constant(cast_source const& source) : attribute(source.as< impl >())
     {
     }
 
