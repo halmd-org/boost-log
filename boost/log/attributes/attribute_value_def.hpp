@@ -65,7 +65,7 @@ public:
      * All attribute value holders should derive from this interface.
      */
     struct BOOST_LOG_NO_VTABLE impl :
-        public intrusive_ref_counter
+        virtual public intrusive_ref_counter
     {
     public:
         /*!

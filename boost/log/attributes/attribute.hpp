@@ -50,7 +50,7 @@ public:
      * All attributes must derive their implementation from this class.
      */
     struct BOOST_LOG_NO_VTABLE BOOST_LOG_VISIBLE impl :
-        public intrusive_ref_counter
+        virtual public intrusive_ref_counter
     {
         /*!
          * \return The actual attribute value. It shall not return empty values (exceptions
