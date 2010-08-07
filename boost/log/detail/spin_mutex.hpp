@@ -72,11 +72,21 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
+#if defined(__INTEL_COMPILER) || defined(_MSC_VER)
+#define BOOST_LOG_PAUSE_OP __asm { pause }
+#elif defined(__GNUC__)
+#define BOOST_LOG_PAUSE_OP __asm__ __volatile__("pause;")
+#endif
+
 //! A simple spinning mutex
 class spin_mutex
 {
 private:
-    enum _ { spin_count = 8 };
+    enum _
+    {
+        initial_pause = 2,
+        max_pause = 16
+    };
 
     long m_State;
 
@@ -90,33 +100,29 @@ public:
 
     void lock()
     {
-        register unsigned int spins = 0;
-        while (true)
-        {
-            if (try_lock())
-                break;
-            if (++spins < spin_count)
-            {
-#if defined(__INTEL_COMPILER) || defined(_MSC_VER)
-                __asm
-                {
-                    pause
-                    pause
-                    pause
-                    pause
-                }
-#elif defined(__GNUC__)
-                __asm__ __volatile__("pause;");
-                __asm__ __volatile__("pause;");
-                __asm__ __volatile__("pause;");
-                __asm__ __volatile__("pause;");
+#if defined(BOOST_LOG_PAUSE_OP)
+        register unsigned int pause_count = initial_pause;
 #endif
+        while (!try_lock())
+        {
+#if defined(BOOST_LOG_PAUSE_OP)
+            if (pause_count < max_pause)
+            {
+                for (register unsigned int i = 0; i < pause_count; ++i)
+                {
+                    BOOST_LOG_PAUSE_OP;
+                }
+                pause_count += pause_count;
             }
             else
             {
-                spins = 0;
+                // Restart spinning after waking up this thread
+                pause_count = initial_pause;
                 SwitchToThread();
             }
+#else
+            SwitchToThread();
+#endif
         }
     }
 
@@ -130,6 +136,8 @@ private:
     spin_mutex(spin_mutex const&);
     spin_mutex& operator= (spin_mutex const&);
 };
+
+#undef BOOST_LOG_PAUSE_OP
 
 } // namespace aux
 

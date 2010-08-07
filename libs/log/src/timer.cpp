@@ -49,65 +49,62 @@ private:
     uint64_t m_FrequencyFactor;
     //! Last value of the performance counter
     uint64_t m_LastCounter;
-    //! Elapsed time duration
-    value_type m_Duration;
+    //! Elapsed time duration, in microseconds
+    uint64_t m_Duration;
 
 public:
     //! Constructor
-    impl()
+    impl() : m_Duration(0)
     {
         LARGE_INTEGER li;
         QueryPerformanceFrequency(&li);
         BOOST_ASSERT(li.QuadPart != 0LL);
-        m_FrequencyFactor = static_cast< uint64_t >(li.QuadPart);
+        m_FrequencyFactor = static_cast< uint64_t >(li.QuadPart) / 1000000ULL;
 
         QueryPerformanceCounter(&li);
         m_LastCounter = static_cast< uint64_t >(li.QuadPart);
     }
 
     //! The method returns the actual attribute value. It must not return NULL.
-    attribute_value timer::get_value()
+    attribute_value get_value()
     {
-        value_type duration;
-
         LARGE_INTEGER li;
         QueryPerformanceCounter(&li);
 
+        uint64_t duration;
         {
             BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< mutex_type > _(m_Mutex);)
 
             const uint64_t counts = static_cast< uint64_t >(li.QuadPart) - m_LastCounter;
-            const uint64_t sec_total = counts / m_FrequencyFactor;
-            const uint64_t usec = ((counts % m_FrequencyFactor) * 1000000ULL) / m_FrequencyFactor;
+            m_LastCounter = static_cast< uint64_t >(li.QuadPart);
+            m_Duration += counts / m_FrequencyFactor;
             duration = m_Duration;
+        }
 
-            if (sec_total < static_cast< uint64_t >((std::numeric_limits< long >::max)()))
+        // All these dances are needed simply to construct Boost.DateTime duration without truncating the value
+        value_type res;
+        if (duration < static_cast< uint64_t >((std::numeric_limits< value_type::fractional_seconds_type >::max)()))
+        {
+            res = value_type(0, 0, 0, static_cast< value_type::fractional_seconds_type >(
+                duration * (1000000 / value_type::traits_type::ticks_per_second)));
+        }
+        else
+        {
+            uint64_t total_seconds = duration / 1000000ULL;
+            value_type::fractional_seconds_type usec = static_cast< value_type::fractional_seconds_type >(duration % 1000000ULL);
+            if (total_seconds < static_cast< uint64_t >((std::numeric_limits< value_type::sec_type >::max)()))
             {
-                // Seconds downcasting won't truncate the duration,
-                // and microseconds will always fit into a 32 bit value, which long is on Windows
-                duration +=
-                    posix_time::seconds(static_cast< long >(sec_total))
-                    + posix_time::microseconds(static_cast< long >(usec));
+                res = value_type(0, 0, static_cast< value_type::sec_type >(total_seconds), usec);
             }
             else
             {
-                // Seems like the previous call to the function was ages ago.
-                // Here hours may still get truncated on down-casting, but that would happen
-                // if the function was last called about 245 centuries ago. I guess,
-                // m_Duration would overflow even sooner, so there's no use to try to
-                // avoid truncating gracefully. So I'll just leave this to the progeny. :)
-                const uint64_t hours = sec_total / 3600ULL;
-                const uint64_t sec = sec_total % 3600ULL;
-                duration +=
-                    posix_time::hours(static_cast< long >(hours))
-                    + posix_time::seconds(static_cast< long >(sec))
-                    + posix_time::microseconds(static_cast< long >(usec));
+                uint64_t total_hours = total_seconds / 3600ULL;
+                value_type::sec_type seconds = static_cast< value_type::sec_type >(total_seconds % 3600ULL);
+                res = value_type(static_cast< value_type::hour_type >(total_hours), 0, seconds, usec);
             }
-            m_LastCounter = static_cast< uint64_t >(li.QuadPart);
-            m_Duration = duration;
         }
 
-        return attribute_value(new basic_attribute_value< value_type >(duration));
+        return attribute_value(new basic_attribute_value< value_type >(res));
     }
 };
 
