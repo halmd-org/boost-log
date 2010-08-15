@@ -81,17 +81,9 @@ namespace aux {
     protected:
         //! Factory implementation
         class BOOST_LOG_VISIBLE impl :
-            public attribute::impl,
             public attribute_value::impl
         {
         public:
-            //! The method returns the actual attribute value. It must not return NULL.
-            attribute_value get_value()
-            {
-                BOOST_LOG_ASSUME(this != NULL);
-                return attribute_value(static_cast< attribute_value::impl* >(this));
-            }
-
             //! The method dispatches the value to the given object
             bool dispatch(type_dispatcher& dispatcher)
             {

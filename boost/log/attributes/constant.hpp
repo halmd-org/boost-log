@@ -48,7 +48,6 @@ public:
 protected:
     //! Factory implementation
     class BOOST_LOG_VISIBLE impl :
-        public attribute::impl,
         public basic_attribute_value< value_type >
     {
         //! Base type
@@ -59,11 +58,6 @@ protected:
          * Constructor with the stored value initialization
          */
         explicit impl(value_type const& value) : base_type(value) {}
-
-        attribute_value get_value()
-        {
-            return attribute_value(static_cast< base_type* >(this));
-        }
     };
 
 public:

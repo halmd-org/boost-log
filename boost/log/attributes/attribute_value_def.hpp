@@ -25,6 +25,7 @@
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/intrusive_ref_counter.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
+#include <boost/log/attributes/attribute_def.hpp>
 
 namespace boost {
 
@@ -65,7 +66,7 @@ public:
      * All attribute value holders should derive from this interface.
      */
     struct BOOST_LOG_NO_VTABLE impl :
-        virtual public intrusive_ref_counter
+        public attribute::impl
     {
     public:
         /*!
@@ -88,6 +89,11 @@ public:
         {
             return this;
         }
+
+        /*!
+         * \return The attribute value that refers to self implementation.
+         */
+        virtual attribute_value get_value() { return attribute_value(this); }
     };
 
     /*!

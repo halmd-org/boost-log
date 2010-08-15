@@ -53,7 +53,6 @@ public:
 protected:
     //! Factory implementation
     class BOOST_LOG_VISIBLE impl :
-        public attribute::impl,
         public attribute_value::impl
     {
     public:
@@ -68,12 +67,6 @@ protected:
             }
             else
                 return false;
-        }
-
-        attribute_value get_value()
-        {
-            BOOST_LOG_ASSUME(this != NULL);
-            return attribute_value(static_cast< attribute_value::impl* >(this));
         }
 
         intrusive_ptr< attribute_value::impl > detach_from_thread()
