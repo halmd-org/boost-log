@@ -145,7 +145,7 @@ private:
 
 } // namespace boost
 
-#elif defined(BOOST_LOG_LWRWMUTEX_USE_PTHREAD)
+#elif defined(BOOST_LOG_SPIN_MUTEX_USE_PTHREAD)
 
 #include <pthread.h>
 #include <boost/assert.hpp>
@@ -156,7 +156,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-#if defined(_POSIX_SPIN_LOCKS)
+#if defined(_POSIX_SPIN_LOCKS) && _POSIX_SPIN_LOCKS > 0
 
 //! A simple spinning mutex
 class spin_mutex
@@ -179,7 +179,7 @@ public:
     }
     void lock()
     {
-        BOOS_VERIFY(pthread_spin_lock(&m_State) == 0);
+        BOOST_VERIFY(pthread_spin_lock(&m_State) == 0);
     }
     void unlock()
     {
@@ -215,7 +215,7 @@ public:
     }
     void lock()
     {
-        BOOS_VERIFY(pthread_mutex_lock(&m_State) == 0);
+        BOOST_VERIFY(pthread_mutex_lock(&m_State) == 0);
     }
     void unlock()
     {
