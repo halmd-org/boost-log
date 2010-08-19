@@ -66,17 +66,35 @@ __declspec(dllimport) int __stdcall SwitchToThread();
 
 #endif // BOOST_USE_WINDOWS_H
 
+#if defined(__INTEL_COMPILER) || defined(_MSC_VER)
+#    if defined(_M_IX86)
+#        define BOOST_LOG_PAUSE_OP __asm { pause }
+#    elif defined(_M_AMD64)
+extern "C" void _mm_pause(void);
+#pragma intrinsic(_mm_pause)
+#        define BOOST_LOG_PAUSE_OP _mm_pause()
+#    endif
+#    if defined(__INTEL_COMPILER)
+#        define BOOST_LOG_WRITE_MEMORY_BARRIER __asm { nop }
+#    elif _MSC_VER >= 1400
+extern "C" void _WriteBarrier(void);
+#pragma intrinsic(_WriteBarrier)
+#        define BOOST_LOG_WRITE_MEMORY_BARRIER _WriteBarrier()
+#    elif _MSC_VER >= 1310
+extern "C" void _ReadWriteBarrier(void);
+#pragma intrinsic(_ReadWriteBarrier)
+#        define BOOST_LOG_WRITE_MEMORY_BARRIER _ReadWriteBarrier()
+#    endif
+#elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+#    define BOOST_LOG_PAUSE_OP __asm__ __volatile__("pause;")
+#    define BOOST_LOG_WRITE_MEMORY_BARRIER __asm__ __volatile__("" : : : "memory")
+#endif
+
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
-
-#if defined(__INTEL_COMPILER) || defined(_MSC_VER)
-#define BOOST_LOG_PAUSE_OP __asm { pause }
-#elif defined(__GNUC__)
-#define BOOST_LOG_PAUSE_OP __asm__ __volatile__("pause;")
-#endif
 
 //! A simple spinning mutex
 class spin_mutex
@@ -128,7 +146,12 @@ public:
 
     void unlock()
     {
-        BOOST_INTERLOCKED_EXCHANGE(&m_State, 0);
+#if defined(BOOST_LOG_WRITE_MEMORY_BARRIER)
+        m_State = 0L;
+        BOOST_LOG_WRITE_MEMORY_BARRIER;
+#else
+        BOOST_INTERLOCKED_EXCHANGE(&m_State, 0L);
+#endif
     }
 
 private:
@@ -138,6 +161,7 @@ private:
 };
 
 #undef BOOST_LOG_PAUSE_OP
+#undef BOOST_LOG_WRITE_MEMORY_BARRIER
 
 } // namespace aux
 
