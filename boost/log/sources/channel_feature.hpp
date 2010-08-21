@@ -20,8 +20,6 @@
 #define BOOST_LOG_SOURCES_CHANNEL_FEATURE_HPP_INCLUDED_
 
 #include <string>
-#include <boost/mpl/if.hpp>
-#include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/keywords/channel.hpp>
@@ -99,6 +97,14 @@ public:
     >::type swap_lock;
 
 private:
+    //! Default channel name generator
+    struct make_default_channel_name
+    {
+        typedef channel_type result_type;
+        result_type operator() () const { return result_type(); }
+    };
+
+private:
     //! Channel attribute
     channel_attribute m_ChannelAttr;
 
@@ -108,6 +114,9 @@ public:
      */
     basic_channel_logger() : base_type(), m_ChannelAttr(channel_type())
     {
+        base_type::add_attribute_unlocked(
+            aux::channel_attribute_name< char_type >::get(),
+            m_ChannelAttr);
     }
     /*!
      * Copy constructor
@@ -116,6 +125,9 @@ public:
         base_type(static_cast< base_type const& >(that)),
         m_ChannelAttr(that.m_ChannelAttr)
     {
+        base_type::add_attribute_unlocked(
+            aux::channel_attribute_name< char_type >::get(),
+            m_ChannelAttr);
     }
     /*!
      * Constructor with arguments. Allows to register a channel name attribute on construction.
@@ -126,8 +138,11 @@ public:
     template< typename ArgsT >
     explicit basic_channel_logger(ArgsT const& args) :
         base_type(args),
-        m_ChannelAttr(args[keywords::channel | channel_type()])
+        m_ChannelAttr(args[keywords::channel || make_default_channel_name()])
     {
+        base_type::add_attribute_unlocked(
+            aux::channel_attribute_name< char_type >::get(),
+            m_ChannelAttr);
     }
 
     /*!
@@ -171,11 +186,20 @@ struct channel
     {
         typedef basic_channel_logger<
             BaseT,
-            typename mpl::if_<
-                is_void< ChannelT >,
-                std::basic_string< typename BaseT::char_type >,
-                ChannelT
-            >::type
+            ChannelT
+        > type;
+    };
+};
+
+template< >
+struct channel< void >
+{
+    template< typename BaseT >
+    struct apply
+    {
+        typedef basic_channel_logger<
+            BaseT,
+            std::basic_string< typename BaseT::char_type >,
         > type;
     };
 };

@@ -71,10 +71,8 @@ int main(int argc, char* argv[])
         init_logging();
 
         // Add some attributes too
-        boost::shared_ptr< logging::attribute > attr(new attrs::local_clock);
-        logging::core::get()->add_global_attribute("TimeStamp", attr);
-        attr.reset(new attrs::counter< unsigned int >);
-        logging::core::get()->add_global_attribute("LineID", attr);
+        logging::core::get()->add_global_attribute("TimeStamp", attrs::local_clock());
+        logging::core::get()->add_global_attribute("LineID", attrs::counter< unsigned int >());
 
         // Do some logging
         src::severity_logger< severity_level > lg(keywords::severity = normal);
