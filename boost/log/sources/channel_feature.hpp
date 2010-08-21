@@ -199,7 +199,7 @@ struct channel< void >
     {
         typedef basic_channel_logger<
             BaseT,
-            std::basic_string< typename BaseT::char_type >,
+            std::basic_string< typename BaseT::char_type >
         > type;
     };
 };
