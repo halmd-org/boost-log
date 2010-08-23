@@ -191,7 +191,7 @@ private:
 public:
     spin_mutex()
     {
-        BOOST_VERIFY(pthread_spin_init(&m_State) == 0);
+        BOOST_VERIFY(pthread_spin_init(&m_State, PTHREAD_PROCESS_PRIVATE) == 0);
     }
     ~spin_mutex()
     {
