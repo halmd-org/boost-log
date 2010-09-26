@@ -513,7 +513,8 @@ typedef basic_named_scope< wchar_t > wnamed_scope;              //!< Convenience
         static wchar_t buf[sizeof(BOOST_CURRENT_FUNCTION)];\
         for (std::size_t i = 0U; i < sizeof(BOOST_CURRENT_FUNCTION); ++i)\
             buf[i] = static_cast< wchar_t > ((BOOST_CURRENT_FUNCTION)[i]);\
-        static ::boost::log::wstring_literal wfname((const wchar_t(&)[sizeof(BOOST_CURRENT_FUNCTION)])buf);\
+        typedef const wchar_t literal_type[sizeof(BOOST_CURRENT_FUNCTION)];\
+        static ::boost::log::wstring_literal wfname((literal_type const&)buf);\
         wfvar = &wfname;\
     }\
     BOOST_LOG_WNAMED_SCOPE(*wfvar)
