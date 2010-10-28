@@ -141,7 +141,7 @@
 #          endif
 #          include <boost/config/auto_link.hpp>
 #       endif
-#       // In static-library builds compilers ignore auto-link comments from Boost.Log binary to
+        // In static-library builds compilers ignore auto-link comments from Boost.Log binary to
         // other Boost libraries. We explicitly add comments here for other libraries.
         // In dynamic-library builds this is not needed.
 #       if !defined(BOOST_LOG_DLL)
