@@ -175,7 +175,8 @@ protected:
  * This version of attribute does not perform thread synchronization to access the stored value.
  */
 template< typename T >
-class mutable_constant< T, void, void, void >
+class mutable_constant< T, void, void, void > :
+    public attribute
 {
 public:
     //! The attribute value type
