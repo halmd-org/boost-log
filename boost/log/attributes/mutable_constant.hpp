@@ -40,12 +40,13 @@ namespace attributes {
  * \brief A class of an attribute that holds a single constant value with ability to change it
  *
  * The mutable_constant attribute stores a single value of type, specified as the first template argument.
- * A copy of this value is returned on each attribute value acquision.
+ * A copy of this value is returned on each attribute value acquisition.
  *
  * The attribute also allows to modify the stored value, even if the attibute is registered in an attribute set.
- * In order to ensure thread safety of such modifications the mutable_constant class is also parametrized
- * with three additional template arguments: mutex type, scoped write and scoped read lock types. By default
- * no synchronization is done.
+ * In order to ensure thread safety of such modifications the \c mutable_constant class is also parametrized
+ * with three additional template arguments: mutex type, scoped write and scoped read lock types. The implementation
+ * may avoid using these types to actually create and use the mutex, if a more efficient synchronization method is
+ * available (such as atomic operations on the value type). By default no synchronization is done.
  */
 template<
     typename T,
@@ -109,8 +110,7 @@ protected:
         attribute_value get_value()
         {
             typedef basic_attribute_value< value_type > attr_value;
-            scoped_read_lock _(m_Mutex);
-            return attribute_value(new attr_value(m_Value));
+            return attribute_value(new attr_value(get()));
         }
 
         void set(value_type const& value)
@@ -231,8 +231,7 @@ public:
     }
 
     /*!
-     * The method sets a new attribute value. The implementation exclusively locks the mutex in order
-     * to protect the value assignment.
+     * The method sets a new attribute value.
      */
     void set(value_type const& value)
     {
@@ -240,8 +239,7 @@ public:
     }
 
     /*!
-     * The method acquires the current attribute value. The implementation non-exclusively locks the mutex in order
-     * to protect the value acquisition.
+     * The method acquires the current attribute value.
      */
     value_type get() const
     {
