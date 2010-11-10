@@ -197,7 +197,7 @@ public:
     /*!
      * Initializing constructor
      */
-    impl(value_type initial, long step) : m_Step(step), m_Counter(initial - step)
+    impl_generic(value_type initial, long step) : m_Step(step), m_Counter(initial - step)
     {
     }
 
