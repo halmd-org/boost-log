@@ -238,7 +238,7 @@ public:
      */
     bool try_pop(reference value)
     {
-        node_base *dealloc, *destr;
+        threadsafe_queue_impl::node_base *dealloc, *destr;
         if (m_pImpl->try_pop(dealloc, destr))
         {
             register node* p = static_cast< node* >(destr);
