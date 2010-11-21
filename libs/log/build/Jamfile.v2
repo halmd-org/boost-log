@@ -84,6 +84,7 @@ lib boost_log
         syslog_backend.cpp
         thread_specific.cpp
         once_block.cpp
+        threadsafe_queue.cpp
         trivial.cpp
         platform_log_sources
     : ## requirements ##
