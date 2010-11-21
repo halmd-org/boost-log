@@ -217,7 +217,15 @@ public:
         node* p = base_type::allocate(1);
         if (p)
         {
-            new (p) node(value);
+            try
+            {
+                new (p) node(value);
+            }
+            catch (...)
+            {
+                base_type::deallocate(p, 1);
+                throw;
+            }
             m_pImpl->push(p);
         }
         else
