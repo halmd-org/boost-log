@@ -153,10 +153,38 @@ BOOST_LOG_FORCEINLINE unsigned char pointer_dcas(
     threadsafe_queue_impl::pointer_storage* comperand,
     const threadsafe_queue_impl::pointer_storage* replacement)
 {
-    __int64 comp = *(__int64*)comperand;
-    __int64 old_target = _InterlockedCompareExchange64((__int64*)target, *(__int64*)replacement, comp);
-    *(__int64*)comperand = old_target;
-    return comp == old_target;
+    register unsigned char result;
+    __asm
+    {
+        mov ecx, replacement
+        mov esi, comperand
+        mov edi, target
+        mov ebx, dword ptr [ecx]
+        mov ecx, dword ptr [ecx + 4]
+        mov eax, dword ptr [esi]
+        mov edx, dword ptr [esi + 4]
+        lock cmpxchg8b qword ptr [edi]
+        mov dword ptr [esi], eax
+        mov dword ptr [esi + 4], edx
+        sete result
+    };
+    return result;
+}
+
+//! Atomically loads the double-pointer value
+BOOST_LOG_FORCEINLINE void load_pointer(
+    threadsafe_queue_impl::pointer_storage* from,
+    threadsafe_queue_impl::pointer_storage* to)
+{
+    // The "from" pointer is always properly aligned
+    BOOST_ASSERT((((uintptr_t)from) & 7U) == 0U);
+    __asm
+    {
+        mov eax, from
+        mov edx, to
+        fild qword ptr [eax]
+        fistp qword ptr [edx]
+    };
 }
 
 BOOST_LOG_FORCEINLINE bool has_dcas()
@@ -181,9 +209,19 @@ BOOST_LOG_FORCEINLINE unsigned char pointer_dcas(
     const threadsafe_queue_impl::pointer_storage* replacement)
 {
     // Ensure the correct alignment
-    BOOST_ASSERT((uintptr_t)target & 15U == 0U);
+    BOOST_ASSERT((((uintptr_t)from) & 15U) == 0U);
     return _InterlockedCompareExchange128(
         (__int64*)target, ((__int64*)replacement)[1], ((__int64*)replacement)[0], comperand);
+}
+
+//! Atomically loads the double-pointer value
+BOOST_LOG_FORCEINLINE void load_pointer(
+    threadsafe_queue_impl::pointer_storage* from,
+    threadsafe_queue_impl::pointer_storage* to)
+{
+    // The "from" pointer is always properly aligned
+    BOOST_ASSERT((((uintptr_t)from) & 15U) == 0U);
+    _mm_storeu_si128((__m128i*)to, _mm_load_si128((__m128i*)from));
 }
 
 BOOST_LOG_FORCEINLINE bool has_dcas()
@@ -240,6 +278,23 @@ BOOST_LOG_FORCEINLINE unsigned char pointer_dcas(
     return result;
 }
 
+//! Atomically loads the double-pointer value
+BOOST_LOG_FORCEINLINE void load_pointer(
+    threadsafe_queue_impl::pointer_storage* from,
+    threadsafe_queue_impl::pointer_storage* to)
+{
+    // The "from" pointer is always properly aligned
+    BOOST_ASSERT((((uintptr_t)from) & 7U) == 0U);
+    __asm__ __volatile__
+    (
+        "fildq %1\n\t"
+        "fistpq %0"
+            : "=m" (*(unsigned long long*)to)
+            : "m" (*(unsigned long long*)from)
+            : "memory"
+    );
+}
+
 BOOST_LOG_FORCEINLINE bool has_dcas()
 {
     // Check for cmpxchg8b
@@ -276,7 +331,7 @@ BOOST_LOG_FORCEINLINE unsigned char pointer_dcas(
     const threadsafe_queue_impl::pointer_storage* replacement)
 {
     // Ensure the correct alignment
-    BOOST_ASSERT((uintptr_t)target & 15U == 0U);
+    BOOST_ASSERT((((uintptr_t)from) & 15U) == 0U);
     register unsigned char result;
 
     __asm__ __volatile__
@@ -294,6 +349,23 @@ BOOST_LOG_FORCEINLINE unsigned char pointer_dcas(
     );
 
     return result;
+}
+
+//! Atomically loads the double-pointer value
+BOOST_LOG_FORCEINLINE void load_pointer(
+    threadsafe_queue_impl::pointer_storage* from,
+    threadsafe_queue_impl::pointer_storage* to)
+{
+    // The "from" pointer is always properly aligned
+    BOOST_ASSERT((((uintptr_t)from) & 15U) == 0U);
+    __asm__ __volatile__
+    (
+        "movdqa %1, %%xmm0\n\t"
+        "movdqu %%xmm0, %0"
+            : "=m" (*to)
+            : "m" (*from)
+            : "memory", "xmm0"
+    );
 }
 
 BOOST_LOG_FORCEINLINE bool has_dcas()
@@ -315,15 +387,6 @@ BOOST_LOG_FORCEINLINE bool has_dcas()
 #endif
 
 #if defined(BOOST_LOG_HAS_DCAS)
-
-//! Atomically loads the value
-BOOST_LOG_FORCEINLINE void load_pointer(
-    threadsafe_queue_impl::pointer_storage* from,
-    threadsafe_queue_impl::pointer_storage* to)
-{
-    static const threadsafe_queue_impl::pointer_storage dummy = {};
-    pointer_dcas(from, to, &dummy);
-}
 
 //! DCAS-based queue implementation
 class threadsafe_queue_impl_dcas :
@@ -450,6 +513,7 @@ public:
             {
                 // Try to dequeue the node
                 node_with_value = next.as_rep.node;
+                node_to_free = head.as_rep.node;
                 pointer new_head;
                 new_head.as_rep.counter = head.as_rep.counter + 1;
                 new_head.as_rep.node = next.as_rep.node;
@@ -461,7 +525,6 @@ public:
             }
         }
 
-        node_to_free = head.as_rep.node;
         return true;
     }
 

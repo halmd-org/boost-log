@@ -93,19 +93,16 @@ void test(unsigned int record_count, boost::barrier& bar)
 int main(int argc, char* argv[])
 {
     std::cout << "Test config: " << THREAD_COUNT << " threads, " << SINK_COUNT << " sinks, " << RECORD_COUNT << " records" << std::endl;
-
-    typedef sinks::unlocked_sink< fake_backend< char > > fake_sink;
+//__debugbreak();
+//    typedef sinks::unlocked_sink< fake_backend< char > > fake_sink;
 //    typedef sinks::synchronous_sink< fake_backend< char > > fake_sink;
-//    typedef sinks::asynchronous_sink< fake_backend< char > > fake_sink;
+    typedef sinks::asynchronous_sink< fake_backend< char > > fake_sink;
     for (unsigned int i = 0; i < SINK_COUNT; ++i)
         logging::core::get()->add_sink(boost::make_shared< fake_sink >());
 
-    boost::shared_ptr< logging::attribute > pAttr(new attrs::counter< unsigned int >(1));
-    logging::core::get()->add_global_attribute("LineID", pAttr);
-    pAttr.reset(new attrs::local_clock());
-    logging::core::get()->add_global_attribute("TimeStamp", pAttr);
-    pAttr.reset(new attrs::named_scope());
-    logging::core::get()->add_global_attribute("Scope", pAttr);
+    logging::core::get()->add_global_attribute("LineID", attrs::counter< unsigned int >(1));
+    logging::core::get()->add_global_attribute("TimeStamp", attrs::local_clock());
+    logging::core::get()->add_global_attribute("Scope", attrs::named_scope());
 
     logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > normal); // all records pass the filter
 //    logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > error); // all records don't pass the filter
