@@ -24,7 +24,7 @@
 
 #ifdef BOOST_LOG_HAS_CXXABI
 #include <cxxabi.h>
-#include <memory.h>
+#include <stdlib.h>
 #endif // BOOST_LOG_HAS_CXXABI
 
 namespace boost {
