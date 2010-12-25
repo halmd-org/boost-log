@@ -125,7 +125,7 @@ public:
             size_t size = 0;
             const char* name = info->name();
             char* undecorated = abi::__cxa_demangle(name, NULL, &size, &status);
-            auto_free _(undecorated);
+            auto_free cleanup(undecorated);
 
             if (undecorated)
                 return undecorated;

@@ -282,7 +282,7 @@ public:
     {
         if (m_pLogger)
         {
-            auto_release _(m_pStreamCompound); // destructor doesn't throw
+            auto_release cleanup(m_pStreamCompound); // destructor doesn't throw
             if (!std::uncaught_exception())
                 m_pLogger->push_record(m_pStreamCompound->stream.record());
         }

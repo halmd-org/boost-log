@@ -132,7 +132,7 @@ public:
     void set_exception_handler(HandlerT const& handler)
     {
 #ifndef BOOST_LOG_NO_THREADS
-        boost::log::aux::exclusive_lock_guard< threading_model > _(this->get_threading_model());
+        boost::log::aux::exclusive_lock_guard< threading_model > lock(this->get_threading_model());
 #endif
         m_ExceptionHandler = handler;
     }
@@ -209,7 +209,7 @@ private:
             boost::log::aux::shared_lock_guard< threading_model >,
             no_lock< threading_model >
         >::type lock_type;
-        lock_type _(base_type::get_threading_model());
+        lock_type lock(base_type::get_threading_model());
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
         if (m_ExceptionHandler.empty())

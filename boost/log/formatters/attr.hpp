@@ -347,7 +347,7 @@ public:
      */
     void operator() (ostream_type& strm, record_type const& record) const
     {
-        boost::log::aux::cleanup_guard< format_type > _(m_Formatter);
+        boost::log::aux::cleanup_guard< format_type > cleanup(m_Formatter);
         aux::format_op< format_type > op(m_Formatter);
         if (!m_Invoker(record.attribute_values(), op))
             ExceptionPolicyT::on_attribute_value_not_found(__FILE__, __LINE__);

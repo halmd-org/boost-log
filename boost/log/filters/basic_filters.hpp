@@ -73,7 +73,7 @@ struct basic_filter : public filter_base
     typedef bool result_type;
     typedef values_view_type argument_type;
     typedef argument_type arg1_type;
-    enum _ { arity = 1 };
+    enum arity_t { arity = 1 };
 };
 
 /*!

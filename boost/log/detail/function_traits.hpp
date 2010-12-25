@@ -77,7 +77,7 @@ namespace aux {
     {
         static FunT const& get_FunT();
 
-        enum _ { value = (sizeof(has_arity_no_adl::has_arity_impl(get_FunT(), 0)) == sizeof(has_arity_no_adl::yes_type)) };
+        enum value_t { value = (sizeof(has_arity_no_adl::has_arity_impl(get_FunT(), 0)) == sizeof(has_arity_no_adl::yes_type)) };
         typedef mpl::bool_< value > type;
     };
 

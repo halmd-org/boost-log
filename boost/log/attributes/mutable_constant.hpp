@@ -115,13 +115,13 @@ protected:
 
         void set(value_type const& value)
         {
-            scoped_write_lock _(m_Mutex);
+            scoped_write_lock lock(m_Mutex);
             m_Value = value;
         }
 
         value_type get() const
         {
-            scoped_read_lock _(m_Mutex);
+            scoped_read_lock lock(m_Mutex);
             return m_Value;
         }
     };

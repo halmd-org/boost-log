@@ -370,7 +370,7 @@ public:
         {
             // We'll have to explicitly create the copy in order to make sure it's unlocked when we attempt to lock *this
             FinalT tmp(that);
-            boost::log::aux::exclusive_lock_guard< threading_model > _(base_type::get_threading_model());
+            boost::log::aux::exclusive_lock_guard< threading_model > lock(base_type::get_threading_model());
             base_type::swap_unlocked(tmp);
         }
         return static_cast< FinalT& >(*this);
@@ -389,7 +389,7 @@ public:
     std::pair< typename attribute_set_type::iterator, bool > add_attribute(
         attribute_name_type const& name, attribute const& attr)
     {
-        typename base_type::add_attribute_lock _(base_type::get_threading_model());
+        typename base_type::add_attribute_lock lock(base_type::get_threading_model());
         return base_type::add_attribute_unlocked(name, attr);
     }
     /*!
@@ -402,7 +402,7 @@ public:
      */
     void remove_attribute(typename attribute_set_type::iterator it)
     {
-        typename base_type::remove_attribute_lock _(base_type::get_threading_model());
+        typename base_type::remove_attribute_lock lock(base_type::get_threading_model());
         base_type::remove_attribute_unlocked(it);
     }
 
@@ -411,7 +411,7 @@ public:
      */
     void remove_all_attributes()
     {
-        typename base_type::remove_all_attributes_lock _(base_type::get_threading_model());
+        typename base_type::remove_all_attributes_lock lock(base_type::get_threading_model());
         base_type::remove_all_attributes_unlocked();
     }
 
@@ -422,7 +422,7 @@ public:
      */
     attribute_set_type get_attributes() const
     {
-        typename base_type::get_attributes_lock _(base_type::get_threading_model());
+        typename base_type::get_attributes_lock lock(base_type::get_threading_model());
         return base_type::get_attributes_unlocked();
     }
 
@@ -435,7 +435,7 @@ public:
      */
     void set_attributes(attribute_set_type const& attrs)
     {
-        typename base_type::set_attributes_lock _(base_type::get_threading_model());
+        typename base_type::set_attributes_lock lock(base_type::get_threading_model());
         base_type::set_attributes_unlocked(attrs);
     }
 
@@ -449,7 +449,7 @@ public:
         // Perform a quick check first
         if (this->core()->get_logging_enabled())
         {
-            typename base_type::open_record_lock _(base_type::get_threading_model());
+            typename base_type::open_record_lock lock(base_type::get_threading_model());
             return base_type::open_record_unlocked(boost::log::aux::empty_arg_list());
         }
         else
@@ -467,7 +467,7 @@ public:
         // Perform a quick check first
         if (this->core()->get_logging_enabled())
         {
-            typename base_type::open_record_lock _(base_type::get_threading_model());
+            typename base_type::open_record_lock lock(base_type::get_threading_model());
             return base_type::open_record_unlocked(args);
         }
         else
@@ -480,7 +480,7 @@ public:
      */
     void push_record(record_type const& record)
     {
-        typename base_type::push_record_lock _(base_type::get_threading_model());
+        typename base_type::push_record_lock lock(base_type::get_threading_model());
         base_type::push_record_unlocked(record);
     }
     /*!
@@ -491,7 +491,7 @@ public:
         boost::log::aux::multiple_unique_lock2<
             threading_model,
             threading_model
-        > _(base_type::get_threading_model(), that.get_threading_model());
+        > lock(base_type::get_threading_model(), that.get_threading_model());
         base_type::swap_unlocked(that);
     }
 };

@@ -100,7 +100,7 @@ namespace aux {
 class spin_mutex
 {
 private:
-    enum _
+    enum state
     {
         initial_pause = 2,
         max_pause = 16

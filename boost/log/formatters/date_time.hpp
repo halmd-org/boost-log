@@ -679,7 +679,7 @@ public:
      */
     void operator() (ostream_type& strm, record_type const& record) const
     {
-        boost::log::aux::cleanup_guard< formatter_type > _(m_Formatter);
+        boost::log::aux::cleanup_guard< formatter_type > cleanup(m_Formatter);
         if (!m_Invoker(record.attribute_values(), boost::log::aux::fun_ref(m_Formatter)))
             ExceptionPolicyT::on_attribute_value_not_found(__FILE__, __LINE__);
         strm.write(m_Formatter.get().data(), static_cast< std::streamsize >(m_Formatter.get().size()));
