@@ -284,6 +284,7 @@ boost::log::aux::light_function0< bool > any_cast_to_rotation_time_point(const C
 
         optional< date_time::weekdays > weekday;
         optional< unsigned short > day;
+        bool day_parsed = false;
         unsigned char hour = 0, minute = 0, second = 0;
 
         string_type str = any_cast< string_type >(val);
@@ -316,7 +317,7 @@ boost::log::aux::light_function0< bool > any_cast_to_rotation_time_point(const C
                                 day_p[bsc::assign_a(day)]
                             )
                         ) >>
-                        bsc::space_p
+                        bsc::space_p[bsc::assign_a(day_parsed, true)]
                     ) >>
                     // Then goes the time of day
                     (
@@ -330,12 +331,14 @@ boost::log::aux::light_function0< bool > any_cast_to_rotation_time_point(const C
         if (!result.full)
             throw_invalid_value(param_name);
 
-        if (weekday)
-            return sinks::file::rotation_at_time_point(weekday.get(), hour, minute, second);
-        else if (day)
-            return sinks::file::rotation_at_time_point(gregorian::greg_day(day.get()), hour, minute, second);
-        else
-            return sinks::file::rotation_at_time_point(hour, minute, second);
+        if (day_parsed)
+        {
+            if (weekday)
+                return sinks::file::rotation_at_time_point(weekday.get(), hour, minute, second);
+            else if (day)
+                return sinks::file::rotation_at_time_point(gregorian::greg_day(day.get()), hour, minute, second);
+        }
+        return sinks::file::rotation_at_time_point(hour, minute, second);
     }
     else
         throw_invalid_type(param_name, type);
