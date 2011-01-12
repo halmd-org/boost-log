@@ -133,7 +133,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     public:
         native_syslog_initializer()
         {
-            ::openlog("", 0, LOG_USER);
+            ::openlog(NULL, 0, LOG_USER);
         }
         ~native_syslog_initializer()
         {
