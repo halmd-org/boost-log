@@ -76,9 +76,12 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         if (len > 0 && len < (sizeof(buf) / sizeof(*buf)))
         {
             // Extract the file name from the full path and replace extension with .log
-            native_string_type filename(buf, len);
-            return log::aux::universal_path(
-                filesystem::basename(log::aux::to_universal_path(filename)) + ext);
+            log::aux::universal_path filename = log::aux::to_universal_path(native_string_type(buf, len));
+#if BOOST_FILESYSTEM_VERSION >= 3
+            return filename.replace_extension(log::aux::universal_path(ext));
+#else
+            return log::aux::universal_path(filesystem::basename(filename) + ext);
+#endif
         }
         else
         {
