@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2010.
+ *          Copyright Andrey Semashev 2007 - 2011.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -209,7 +209,7 @@ BOOST_LOG_FORCEINLINE unsigned char pointer_dcas(
     const threadsafe_queue_impl::pointer_storage* replacement)
 {
     // Ensure the correct alignment
-    BOOST_ASSERT((((uintptr_t)from) & 15U) == 0U);
+    BOOST_ASSERT((((uintptr_t)target) & 15U) == 0U);
     return _InterlockedCompareExchange128(
         (__int64*)target, ((__int64*)replacement)[1], ((__int64*)replacement)[0], comperand);
 }
@@ -331,7 +331,7 @@ BOOST_LOG_FORCEINLINE unsigned char pointer_dcas(
     const threadsafe_queue_impl::pointer_storage* replacement)
 {
     // Ensure the correct alignment
-    BOOST_ASSERT((((uintptr_t)from) & 15U) == 0U);
+    BOOST_ASSERT((((uintptr_t)target) & 15U) == 0U);
     register unsigned char result;
 
     __asm__ __volatile__

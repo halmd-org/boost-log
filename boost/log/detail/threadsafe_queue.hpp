@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2010.
+ *          Copyright Andrey Semashev 2007 - 2011.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -26,12 +26,11 @@
 
 #include <new>
 #include <memory>
-#include <algorithm> // std::swap
 #include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/aligned_storage.hpp>
+#include <boost/utility/swap.hpp>
 #include <boost/type_traits/alignment_of.hpp>
 #include <boost/type_traits/type_with_alignment.hpp>
-#include <boost/log/detail/spin_mutex.hpp>
 
 namespace boost {
 
@@ -102,7 +101,7 @@ struct threadsafe_queue_types
  *
  * \li Default constructible, the default constructor must not throw.
  * \li Copy constructible.
- * \li Swappable (i.e. there should be an efficient \c std::swap implementation for this type).
+ * \li Swappable (i.e. there should be an efficient \c swap implementation for this type).
  *
  * The last requirement is not mandatory but is crucial for decent performance. In future
  * it may be replaced with Moveable requirement.
@@ -243,8 +242,7 @@ public:
         {
             register node* p = static_cast< node* >(destr);
             auto_deallocate guard(static_cast< base_type* >(this), static_cast< node* >(dealloc), p);
-            using std::swap;
-            swap(value, p->value()); // move would be more appropriate, but it's not available ATM
+            boost::swap(value, p->value()); // move would be more appropriate, but it's not available ATM
             return true;
         }
         else

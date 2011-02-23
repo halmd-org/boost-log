@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2010.
+ *          Copyright Andrey Semashev 2007 - 2011.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -956,8 +956,12 @@ public:
      * executable file name in the Application log. If such a registration is already
      * present, it is not overridden.
      */
+#if (defined(BOOST_FILESYSTEM_VERSION) && BOOST_FILESYSTEM_VERSION >= 3) || defined(BOOST_LOG_DOXYGEN_PASS)
+    explicit basic_event_log_backend(filesystem::path const& message_file_name)
+#else
     template< typename T, typename U >
     explicit basic_event_log_backend(filesystem::basic_path< T, U > const& message_file_name)
+#endif
     {
         construct(keywords::message_file = message_file_name);
     }

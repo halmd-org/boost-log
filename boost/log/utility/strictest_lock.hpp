@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2010.
+ *          Copyright Andrey Semashev 2007 - 2011.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -31,6 +31,7 @@
 #include <boost/preprocessor/repetition/enum_params_with_a_default.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/locks.hpp>
+#include <boost/log/detail/pp_identity.hpp>
 
 #ifndef BOOST_LOG_STRICTEST_LOCK_LIMIT
 /*!
@@ -132,7 +133,6 @@ struct strictest_lock
 
 #else // defined(BOOST_LOG_DOXYGEN_PASS)
 
-#   define BOOST_LOG_IDENTITY_INTERNAL(z, i, data) data
 #   define BOOST_LOG_TYPE_INTERNAL(z, i, data) BOOST_PP_CAT(T, BOOST_PP_INC(i))
 
 template<
@@ -150,13 +150,12 @@ struct strictest_lock
 template< typename T >
 struct strictest_lock<
     T
-    BOOST_PP_ENUM_TRAILING(BOOST_PP_DEC(BOOST_LOG_STRICTEST_LOCK_LIMIT), BOOST_LOG_IDENTITY_INTERNAL, void)
+    BOOST_PP_ENUM_TRAILING(BOOST_PP_DEC(BOOST_LOG_STRICTEST_LOCK_LIMIT), BOOST_LOG_PP_IDENTITY, void)
 >
 {
     typedef T type;
 };
 
-#   undef BOOST_LOG_IDENTITY_INTERNAL
 #   undef BOOST_LOG_TYPE_INTERNAL
 
 #endif // defined(BOOST_LOG_DOXYGEN_PASS)

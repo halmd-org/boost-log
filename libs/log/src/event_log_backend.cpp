@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2010.
+ *          Copyright Andrey Semashev 2007 - 2011.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -26,6 +26,7 @@
 #include <boost/log/utility/once_block.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
+#include <boost/log/detail/code_conversion.hpp>
 #include "event_log_registry.hpp"
 #include <windows.h>
 #include <psapi.h>

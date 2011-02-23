@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2010.
+ *          Copyright Andrey Semashev 2007 - 2011.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -217,18 +217,18 @@ namespace boost {
 // Setup namespace name
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
 #   if defined(BOOST_LOG_NO_THREADS)
-#       define BOOST_LOG_NAMESPACE log_st
+#       define BOOST_LOG_NAMESPACE log2_st
 #   else
 #       if defined(BOOST_THREAD_PLATFORM_PTHREAD)
-#           define BOOST_LOG_NAMESPACE log_mt_posix
+#           define BOOST_LOG_NAMESPACE log2_mt_posix
 #       elif defined(BOOST_THREAD_PLATFORM_WIN32)
 #           if defined(BOOST_LOG_USE_WINNT6_API)
-#               define BOOST_LOG_NAMESPACE log_mt_nt6
+#               define BOOST_LOG_NAMESPACE log2_mt_nt6
 #           else
-#               define BOOST_LOG_NAMESPACE log_mt_nt5
+#               define BOOST_LOG_NAMESPACE log2_mt_nt5
 #           endif // defined(BOOST_LOG_USE_WINNT6_API)
 #       else
-#           define BOOST_LOG_NAMESPACE log_mt
+#           define BOOST_LOG_NAMESPACE log2_mt
 #       endif
 #   endif // defined(BOOST_LOG_NO_THREADS)
 namespace BOOST_LOG_NAMESPACE {}

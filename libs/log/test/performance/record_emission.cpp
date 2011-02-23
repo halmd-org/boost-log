@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2010.
+ *          Copyright Andrey Semashev 2007 - 2011.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -41,8 +41,8 @@
 enum config
 {
     RECORD_COUNT = 5000000,
-    THREAD_COUNT = 4,
-    SINK_COUNT = 4
+    THREAD_COUNT = 3,
+    SINK_COUNT = 3
 };
 
 namespace logging = boost::log;

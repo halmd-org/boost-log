@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2010.
+ *          Copyright Andrey Semashev 2007 - 2011.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -24,6 +24,7 @@
 #include <boost/preprocessor/repetition/enum_params_with_a_default.hpp>
 #include <boost/mpl/lambda.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/pp_identity.hpp>
 
 //! The macro defines the maximum number of features that can be specified for a logger
 #ifndef BOOST_LOG_FEATURES_LIMIT
@@ -76,18 +77,14 @@ namespace aux {
         >::type type;
     };
 
-#define BOOST_LOG_IDENTITY_INTERNAL(z, n, data) data
-
     template< typename RootT >
     struct inherit_features<
         RootT,
-        features< BOOST_PP_ENUM(BOOST_LOG_FEATURES_LIMIT, BOOST_LOG_IDENTITY_INTERNAL, void) >
+        features< BOOST_PP_ENUM(BOOST_LOG_FEATURES_LIMIT, BOOST_LOG_PP_IDENTITY, void) >
     >
     {
         typedef RootT type;
     };
-
-#undef BOOST_LOG_IDENTITY_INTERNAL
 
 } // namespace aux
 

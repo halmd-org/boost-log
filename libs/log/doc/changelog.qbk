@@ -1,5 +1,5 @@
 [/
-              Copyright Andrey Semashev 2007 - 2010.
+              Copyright Andrey Semashev 2007 - 2011.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -14,6 +14,7 @@
 [*General changes:]
 
 * The library is now compatible with Boost 1.42 or newer.
+* Added support for Boost.Filesystem v3.
 * The `BOOST_LOG_NO_COMPILER_TLS` configuration macro has been replaced with `BOOST_LOG_USE_COMPILER_TLS` with the opposite meaning. The support for compiler intrinsics for TLS is now disabled by default.
 * The library now uses __boost_xpressive__ instead of __boost_regex__ internally, which makes it unnecessary to build the latter in order to use the library. __boost_regex__ is still supported on the user's side.
 * Made some internal code to detect Windows NT6 API availability at run time, if not explicitly enabled by the `BOOST_LOG_USE_WINNT6_API` macro. The code compiled without the macro defined will still be able run on NT5, but when run on NT6 it will be more efficient. With the macro defined the resulting code will not run on NT5, but will be a little more efficient on NT6 than without the macro.
