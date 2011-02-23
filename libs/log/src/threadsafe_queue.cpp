@@ -200,7 +200,7 @@ BOOST_LOG_FORCEINLINE bool has_dcas()
     return (result & (1U << 8)) != 0U;
 }
 
-#   elif defined(_M_AMD64)
+#   elif defined(_M_AMD64) && _MSC_VER >= 1500 // MSVC 8 doesn't support _InterlockedCompareExchange128
 #       define BOOST_LOG_HAS_DCAS 1
 
 BOOST_LOG_FORCEINLINE unsigned char pointer_dcas(
@@ -211,7 +211,10 @@ BOOST_LOG_FORCEINLINE unsigned char pointer_dcas(
     // Ensure the correct alignment
     BOOST_ASSERT((((uintptr_t)target) & 15U) == 0U);
     return _InterlockedCompareExchange128(
-        (__int64*)target, ((__int64*)replacement)[1], ((__int64*)replacement)[0], comperand);
+        (__int64*)target,
+        ((__int64*)replacement)[1],
+        ((__int64*)replacement)[0],
+        (__int64*)comperand);
 }
 
 //! Atomically loads the double-pointer value
