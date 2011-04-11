@@ -45,7 +45,6 @@
 #include <boost/date_time/date_defs.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/type_traits/is_unsigned.hpp>
-#include <boost/asio/ip/address.hpp>
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_assign_actor.hpp>
 #include <boost/log/detail/code_conversion.hpp>
@@ -58,6 +57,9 @@
 #include <boost/log/utility/init/from_settings.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
 #include <boost/log/utility/init/formatter_parser.hpp>
+#if !defined(BOOST_LOG_NO_ASIO)
+#include <boost/asio/ip/address.hpp>
+#endif
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
@@ -236,7 +238,8 @@ inline boost::log::aux::light_function2<
         throw_invalid_type(param_name, type);
 }
 
-//! Extracts a formatter from any
+#if !defined(BOOST_LOG_NO_ASIO)
+//! Extracts a network address from any
 template< typename CharT >
 inline std::string any_cast_to_address(const CharT* param_name, any const& val)
 {
@@ -254,6 +257,7 @@ inline std::string any_cast_to_address(const CharT* param_name, any const& val)
     else
         throw_invalid_type(param_name, type);
 }
+#endif // !defined(BOOST_LOG_NO_ASIO)
 
 //! The function extracts the file rotation time point predicate from the parameter
 template< typename CharT >
@@ -544,6 +548,7 @@ private:
         backend->set_severity_mapper(
             sinks::syslog::basic_direct_severity_mapping< char_type >(constants::default_level_attribute_name()));
 
+#if !defined(BOOST_LOG_NO_ASIO)
         // Setup local and remote addresses
         typename params_t::const_iterator it = params.find(constants::local_address_param_name());
         if (it != params.end() && !it->second.empty())
@@ -552,6 +557,7 @@ private:
         it = params.find(constants::target_address_param_name());
         if (it != params.end() && !it->second.empty())
             backend->set_target_address(any_cast_to_address(constants::target_address_param_name(), it->second));
+#endif // !defined(BOOST_LOG_NO_ASIO)
 
         return init_sink(backend, params);
     }
