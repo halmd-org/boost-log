@@ -93,7 +93,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     log::aux::universal_path suggest_file_name()
     {
-#if defined(BOOST_HAS_UNISTD_H) && !defined(BOOST_CYGWIN)
+#if defined(BOOST_HAS_UNISTD_H) && !defined(__CYGWIN__)
 
         // Attempt to read the executable name from the proc filesystem
         char buf[FILENAME_MAX];
@@ -110,7 +110,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 filesystem::basename(log::aux::to_universal_path(full_name)) + ext);
         }
 
-#endif // defined(BOOST_HAS_UNISTD_H) && !defined(BOOST_CYGWIN)
+#endif // defined(BOOST_HAS_UNISTD_H) && !defined(__CYGWIN__)
 
         return log::aux::to_universal_path("application.log");
     }
