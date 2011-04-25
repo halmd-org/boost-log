@@ -44,7 +44,7 @@ private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
     //! An inaccessible type to indicate an uninitialized state of the wrapper
-    enum BOOST_LOG_VISIBLE uninitialized {};
+    struct BOOST_LOG_VISIBLE uninitialized {};
 
 #ifdef BOOST_LOG_HAS_CXXABI
     //! A simple scope guard for automatic memory free
