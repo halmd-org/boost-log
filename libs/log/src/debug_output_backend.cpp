@@ -29,12 +29,14 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     inline void output_debug_string(const char* str)
     {
         OutputDebugStringA(str);
+        OutputDebugStringA("\n");
     }
 #endif // defined(BOOST_LOG_USE_CHAR)
 #if defined(BOOST_LOG_USE_WCHAR_T)
     inline void output_debug_string(const wchar_t* str)
     {
         OutputDebugStringW(str);
+        OutputDebugStringW(L"\n");
     }
 #endif // defined(BOOST_LOG_USE_WCHAR_T)
 
