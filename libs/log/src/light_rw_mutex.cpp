@@ -15,6 +15,8 @@
 
 #include <boost/log/detail/light_rw_mutex.hpp>
 
+#if !defined(BOOST_LOG_NO_THREADS)
+
 #if !defined(BOOST_LOG_LWRWMUTEX_USE_PTHREAD) && !defined(BOOST_LOG_LWRWMUTEX_USE_SRWLOCK)
 
 #include <new>
@@ -191,3 +193,5 @@ BOOST_LOG_EXPORT void light_rw_mutex::unlock()
 } // namespace boost
 
 #endif // !defined(BOOST_LOG_LWRWMUTEX_USE_PTHREAD) && !defined(BOOST_LOG_LWRWMUTEX_USE_SRWLOCK)
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
