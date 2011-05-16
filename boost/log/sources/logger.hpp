@@ -49,7 +49,7 @@ namespace sources {
 class logger :
     public basic_composite_logger< char, logger, single_thread_model, features< > >
 {
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(logger)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS(logger)
 };
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -62,7 +62,7 @@ class logger :
 class logger_mt :
     public basic_composite_logger< char, logger_mt, multi_thread_model< boost::log::aux::light_rw_mutex >, features< > >
 {
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(logger_mt)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS(logger_mt)
 };
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
@@ -78,7 +78,7 @@ class logger_mt :
 class wlogger :
     public basic_composite_logger< wchar_t, wlogger, single_thread_model, features< > >
 {
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(wlogger)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS(wlogger)
 };
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -91,7 +91,7 @@ class wlogger :
 class wlogger_mt :
     public basic_composite_logger< wchar_t, wlogger_mt, multi_thread_model< boost::log::aux::light_rw_mutex >, features< > >
 {
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(wlogger_mt)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS(wlogger_mt)
 };
 
 #endif // !defined(BOOST_LOG_NO_THREADS)

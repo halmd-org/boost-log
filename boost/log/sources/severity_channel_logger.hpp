@@ -59,7 +59,7 @@ class severity_channel_logger :
         >
     >
 {
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_channel_logger)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(severity_channel_logger)
 };
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -77,7 +77,7 @@ class severity_channel_logger_mt :
         >
     >
 {
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_channel_logger_mt)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(severity_channel_logger_mt)
 };
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
@@ -99,7 +99,7 @@ class wseverity_channel_logger :
         >
     >
 {
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_channel_logger)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(wseverity_channel_logger)
 };
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -117,7 +117,7 @@ class wseverity_channel_logger_mt :
         >
     >
 {
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_channel_logger_mt)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(wseverity_channel_logger_mt)
 };
 
 #endif // !defined(BOOST_LOG_NO_THREADS)

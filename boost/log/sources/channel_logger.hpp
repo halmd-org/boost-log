@@ -52,7 +52,7 @@ class channel_logger :
     typedef typename channel_logger::logger_base base_type;
 
 public:
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(channel_logger)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(channel_logger)
 
     explicit channel_logger(ChannelT const& channel) : base_type(keywords::channel = channel)
     {
@@ -74,7 +74,7 @@ class channel_logger_mt :
     typedef typename channel_logger_mt::logger_base base_type;
 
 public:
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(channel_logger_mt)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(channel_logger_mt)
 
     explicit channel_logger_mt(ChannelT const& channel) : base_type(keywords::channel = channel)
     {
@@ -100,7 +100,7 @@ class wchannel_logger :
     typedef typename wchannel_logger::logger_base base_type;
 
 public:
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wchannel_logger)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(wchannel_logger)
 
     explicit wchannel_logger(ChannelT const& channel) : base_type(keywords::channel = channel)
     {
@@ -122,7 +122,7 @@ class wchannel_logger_mt :
     typedef typename wchannel_logger_mt::logger_base base_type;
 
 public:
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wchannel_logger_mt)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(wchannel_logger_mt)
 
     explicit wchannel_logger_mt(ChannelT const& channel) : base_type(keywords::channel = channel)
     {

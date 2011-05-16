@@ -305,7 +305,7 @@ Ok, we got our feature, and it's time to inject it into a logger. Assume we want
 
 [example_extension_record_tagger_my_logger]
 
-As you can see, creating a logger is a quite simple procedure. The `BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE` macro you see here is for mere convenience purpose: it unfolds into a default constructor, copy constructor and a number of constructors to support named arguments. For non-template loggers there is a similar `BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS` macro.
+As you can see, creating a logger is a quite simple procedure. The `BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE` macro you see here is for mere convenience purpose: it unfolds into a default constructor, copy constructor, assignment operator and a number of constructors to support named arguments. For non-template loggers there is a similar `BOOST_LOG_FORWARD_LOGGER_MEMBERS` macro.
 
 Assuming we have defined severity levels like this:
 

@@ -159,7 +159,7 @@ class my_logger :
 {
     // The following line will automatically generate forwarding constructors that
     // will call to the corresponding constructors of the base class
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(my_logger)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(my_logger)
 };
 //]
 

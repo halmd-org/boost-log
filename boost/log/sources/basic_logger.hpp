@@ -361,22 +361,6 @@ public:
     }
 
     /*!
-     * Assignment for the final class. Threadsafe, provides strong exception guarantee.
-     */
-    FinalT& operator= (FinalT const& that)
-    {
-        BOOST_LOG_ASSUME(this != NULL);
-        if (static_cast< FinalT* >(this) != boost::addressof(that))
-        {
-            // We'll have to explicitly create the copy in order to make sure it's unlocked when we attempt to lock *this
-            FinalT tmp(that);
-            boost::log::aux::exclusive_lock_guard< threading_model > lock(base_type::get_threading_model());
-            base_type::swap_unlocked(tmp);
-        }
-        return static_cast< FinalT& >(*this);
-    }
-
-    /*!
      * The method adds an attribute to the source-specific attribute set. The attribute will be implicitly added to
      * every log record made with the current logger.
      *
@@ -494,6 +478,23 @@ public:
         > lock(base_type::get_threading_model(), that.get_threading_model());
         base_type::swap_unlocked(that);
     }
+
+protected:
+    /*!
+     * Assignment for the final class. Threadsafe, provides strong exception guarantee.
+     */
+    FinalT& assign(FinalT const& that)
+    {
+        BOOST_LOG_ASSUME(this != NULL);
+        if (static_cast< FinalT* >(this) != boost::addressof(that))
+        {
+            // We'll have to explicitly create the copy in order to make sure it's unlocked when we attempt to lock *this
+            FinalT tmp(that);
+            boost::log::aux::exclusive_lock_guard< threading_model > lock(base_type::get_threading_model());
+            base_type::swap_unlocked(tmp);
+        }
+        return static_cast< FinalT& >(*this);
+    }
 };
 
 //! An optimized composite logger version with no multithreading support
@@ -529,12 +530,6 @@ public:
     template< typename ArgsT >
     explicit basic_composite_logger(ArgsT const& args) : base_type(args)
     {
-    }
-
-    FinalT& operator= (FinalT that)
-    {
-        base_type::swap_unlocked(that);
-        return static_cast< FinalT& >(*this);
     }
 
     std::pair< typename attribute_set_type::iterator, bool > add_attribute(
@@ -583,6 +578,13 @@ public:
     {
         base_type::swap_unlocked(that);
     }
+
+protected:
+    FinalT& assign(FinalT that)
+    {
+        base_type::swap_unlocked(that);
+        return static_cast< FinalT& >(*this);
+    }
 };
 
 
@@ -593,21 +595,29 @@ public:
         class_type() {}\
         class_type(class_type const& that) : class_type::logger_base(\
             static_cast< typename_keyword() class_type::logger_base const& >(that)) {}\
-        BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_FORWARD(class_type, class_type::logger_base)
+        BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_FORWARD(class_type, class_type::logger_base)\
 
 //! \endcond
-
-#define BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS(class_type)\
-    BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS_IMPL(class_type, BOOST_PP_EMPTY)
-
-#define BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS_TEMPLATE(class_type)\
-    BOOST_LOG_FORWARD_LOGGER_PARAMETRIZED_CONSTRUCTORS_IMPL(class_type, BOOST_PP_IDENTITY(typename))
 
 #define BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(class_type)\
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_IMPL(class_type, BOOST_PP_EMPTY)
 
 #define BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(class_type)\
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_IMPL(class_type, BOOST_PP_IDENTITY(typename))
+
+#define BOOST_LOG_FORWARD_LOGGER_ASSIGNMENT(class_type)\
+    class_type& operator= (class_type const& that) { return class_type::logger_base::assign(that); }
+
+#define BOOST_LOG_FORWARD_LOGGER_ASSIGNMENT_TEMPLATE(class_type)\
+    class_type& operator= (class_type const& that) { return class_type::logger_base::assign(that); }
+
+#define BOOST_LOG_FORWARD_LOGGER_MEMBERS(class_type)\
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(class_type)\
+    BOOST_LOG_FORWARD_LOGGER_ASSIGNMENT(class_type)
+
+#define BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(class_type)\
+    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(class_type)\
+    BOOST_LOG_FORWARD_LOGGER_ASSIGNMENT_TEMPLATE(class_type)
 
 } // namespace sources
 
@@ -636,7 +646,7 @@ public:
             ::boost::log::sources::features< BOOST_PP_SEQ_ENUM(base_seq) >\
         >\
     {\
-        BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(type_name)\
+        BOOST_LOG_FORWARD_LOGGER_MEMBERS(type_name)\
     }
 
 

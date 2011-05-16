@@ -52,7 +52,7 @@ class severity_logger :
     typedef typename severity_logger::logger_base base_type;
 
 public:
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_logger)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(severity_logger)
 
     explicit severity_logger(LevelT level) : base_type(keywords::severity = level)
     {
@@ -74,7 +74,7 @@ class severity_logger_mt :
     typedef typename severity_logger_mt::logger_base base_type;
 
 public:
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(severity_logger_mt)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(severity_logger_mt)
 
     explicit severity_logger_mt(LevelT level) : base_type(keywords::severity = level)
     {
@@ -100,7 +100,7 @@ class wseverity_logger :
     typedef typename wseverity_logger::logger_base base_type;
 
 public:
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_logger)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(wseverity_logger)
 
     explicit wseverity_logger(LevelT level) : base_type(keywords::severity = level)
     {
@@ -122,7 +122,7 @@ class wseverity_logger_mt :
     typedef typename wseverity_logger_mt::logger_base base_type;
 
 public:
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(wseverity_logger_mt)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(wseverity_logger_mt)
 
     explicit wseverity_logger_mt(LevelT level) : base_type(keywords::severity = level)
     {

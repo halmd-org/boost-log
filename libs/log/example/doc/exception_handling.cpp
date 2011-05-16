@@ -55,7 +55,7 @@ class my_logger_mt :
         >
     >
 {
-    BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(my_logger_mt)
+    BOOST_LOG_FORWARD_LOGGER_MEMBERS(my_logger_mt)
 };
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT(my_logger, my_logger_mt)
