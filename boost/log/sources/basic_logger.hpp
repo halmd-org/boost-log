@@ -606,10 +606,12 @@ protected:
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_IMPL(class_type, BOOST_PP_IDENTITY(typename))
 
 #define BOOST_LOG_FORWARD_LOGGER_ASSIGNMENT(class_type)\
-    class_type& operator= (class_type const& that) { return class_type::logger_base::assign(that); }
+    public:\
+        class_type& operator= (class_type const& that) { return class_type::logger_base::assign(that); }
 
 #define BOOST_LOG_FORWARD_LOGGER_ASSIGNMENT_TEMPLATE(class_type)\
-    class_type& operator= (class_type const& that) { return class_type::logger_base::assign(that); }
+    public:\
+        class_type& operator= (class_type const& that) { return class_type::logger_base::assign(that); }
 
 #define BOOST_LOG_FORWARD_LOGGER_MEMBERS(class_type)\
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(class_type)\
