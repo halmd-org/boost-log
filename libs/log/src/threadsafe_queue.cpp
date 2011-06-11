@@ -29,16 +29,20 @@
 #include <boost/log/detail/spin_mutex.hpp>
 #include <boost/log/detail/locks.hpp>
 
-#if defined(BOOST_WINDOWS)
+#if defined(BOOST_HAS_STDINT_H)
+#include <stdint.h> // uintptr_t
+#else
+// MSVC defines integer types here
 #include <stddef.h> // uintptr_t
+#endif
+
+#if defined(BOOST_WINDOWS)
 #if defined(_MSC_VER)
 #include <intrin.h>
 #else
 #include "windows_version.hpp"
 #include <windows.h>
 #endif
-#else
-#include <stdint.h> // uintptr_t
 #endif
 
 // The macro allows to specify type alignment

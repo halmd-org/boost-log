@@ -13,6 +13,8 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+// This first include is to ensure that __MSVCRT_VERSION__ is defined properly
+#include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -27,6 +29,13 @@
 #include "windows_version.hpp"
 #include <windows.h>
 #include <malloc.h>
+
+#if defined(__MINGW32__) && __MSVCRT_VERSION__ < 0x0700
+// MinGW doesn't declare aligned memory allocation routines for MSVC 6 runtime
+inline void* _aligned_malloc(size_t size, size_t) { return malloc(size); }
+inline void _aligned_free(void* p) { free(p); }
+#endif
+
 
 namespace boost {
 
