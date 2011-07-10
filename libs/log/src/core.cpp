@@ -238,6 +238,14 @@ void basic_core< CharT >::remove_sink(shared_ptr< sink_type > const& s)
         pImpl->Sinks.erase(it);
 }
 
+//! The method removes all registered sinks from the output
+template< typename CharT >
+void basic_core< CharT >::remove_all_sinks()
+{
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
+    pImpl->Sinks.clear();
+}
+
 
 //! The method adds an attribute to the global attribute set
 template< typename CharT >

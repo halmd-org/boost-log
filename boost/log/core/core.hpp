@@ -123,7 +123,7 @@ public:
      */
     bool set_logging_enabled(bool enabled = true);
     /*!
-     * The method allows to detect if logging is enabled. See the comment for \c set_logging_enabled
+     * The method allows to detect if logging is enabled. See the comment for \c set_logging_enabled.
      */
     bool get_logging_enabled() const;
 
@@ -152,6 +152,10 @@ public:
      * \param s The sink to be unregistered.
      */
     void remove_sink(shared_ptr< sink_type > const& s);
+    /*!
+     * The method removes all registered sinks from the output. The sinks will not receive any log records after removal.
+     */
+    void remove_all_sinks();
 
     /*!
      * The method adds an attribute to the global attribute set. The attribute will be implicitly added to every log record.
