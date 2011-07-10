@@ -143,4 +143,16 @@ As for hierarchical loggers, there is no need for this feature in the current li
 
 [endsect]
 
+[section:fork_support Does Boost.Log support process forking?]
+
+No, currently Boost.Log does not support process forking (i.e. `fork` call in UNIX systems). There are several issues with process forking, for instance:
+
+* File sinks do not attempt to reopen log files or synchronize access to files between parent and child processes. The resulting output may be garbled.
+* File collectors do not expect several processes attempting to collect log files to the same target directory. This may result in spurious failures at log file rotation.
+* The [link log.detailed.attributes.process_id current_process_id] attribute value will not update in the child process.
+
+There may be other issues as well. At some point support for process forking may be added to the library. In the meantime it is advised to perform library reinitialization right after forking, in the child process. Tools like `pthread_atfork` may be used to achieve that.
+
+[endsect]
+
 [endsect]
