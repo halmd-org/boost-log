@@ -105,7 +105,7 @@ public:
         return p;
     }
 
-    bool unsafe_empty() const
+    bool unsafe_empty()
     {
         return m_Head.node == m_Tail.node;
     }
@@ -147,6 +147,9 @@ private:
         return static_cast< node_base* >(p->next.data[0]);
     }
 };
+
+// Define this macro to disable DCAS-based implementation, which may fail in very rare cases
+#if !defined(BOOST_LOG_THREADSAFE_QUEUE_NO_DCAS)
 
 #if defined(_MSC_VER) && !defined(_M_CEE_PURE)
 #   if defined(_M_IX86)
@@ -254,7 +257,7 @@ BOOST_LOG_FORCEINLINE unsigned char pointer_dcas(
     register unsigned char result;
 
 #if __PIC__
-    // In position independed code EBX is reserved and cannot be allocated
+    // In position independent code EBX is reserved and cannot be allocated
     __asm__ __volatile__
     (
         "pushl %%ebx\n\t"
@@ -307,7 +310,7 @@ BOOST_LOG_FORCEINLINE bool has_dcas()
     // Check for cmpxchg8b
     register unsigned int result;
 #if __PIC__
-    // In position independed code EBX is reserved and cannot be allocated
+    // In position independent code EBX is reserved and cannot be allocated
     __asm__ __volatile__
     (
         "pushl %%ebx\n\t"
@@ -452,19 +455,50 @@ public:
         return p;
     }
 
-    bool unsafe_empty() const
+    bool unsafe_empty()
     {
-        return m_Head.as_rep.node == m_Tail.as_rep.node;
+        pointer head;
+        load_pointer(&m_Head.as_storage, &head.as_storage);
+        pointer tail;
+        load_pointer(&m_Tail.as_storage, &tail.as_storage);
+        if (head.as_rep.node != tail.as_rep.node)
+            return false;
+
+        // The tail pointer may be lagging behind for one element
+        pointer next;
+        load_pointer(&tail.as_rep.node->next, &next.as_storage); // this load is dangerous, see the comment in push
+        if (next.as_rep.node == NULL)
+            return true; // the queue is empty
+
+        // Try to update the tail pointer
+        pointer new_tail;
+        new_tail.as_rep.counter = tail.as_rep.counter + 1;
+        new_tail.as_rep.node = next.as_rep.node;
+        pointer_dcas(&m_Tail.as_storage, &tail.as_storage, &new_tail.as_storage);
+
+        return false;
     }
 
     void push(node_base* p)
     {
-        pointer tail = {};
-        p->next = tail.as_storage; // initialize the node pointer
+        // Initialize the node pointer
+        p->next.data[0] = 0;
+        p->next.data[1] = 0;
+
+        pointer tail;
         while (true)
         {
             load_pointer(&m_Tail.as_storage, &tail.as_storage);
-            pointer next = {};
+
+            // NOTE: The following load is dangerous, it may fail in very rare and heavilly contended cases.
+            //       For instance, the current thread is preempted just before the load, then other threads
+            //       manage to enqueue several elements and the reader thread manages to dequeue them, including
+            //       the one pointed to by the loaded tail and the next one. In that case the node pointed to by
+            //       tail is already deallocated when the current thread attempts to load the next pointer.
+            //       The paper doesn't mention this problem, probably because it almost never happen in real cases.
+            //       If it affects you, you can disable DCAS-based implementation by defining
+            //       BOOST_LOG_THREADSAFE_QUEUE_NO_DCAS macro during the library compilation.
+            pointer next;
             load_pointer(&tail.as_rep.node->next, &next.as_storage);
             if (next.as_rep.node == NULL)
             {
@@ -497,26 +531,22 @@ public:
 
     bool try_pop(node_base*& node_to_free, node_base*& node_with_value)
     {
-        pointer head = {};
         while (true)
         {
+            pointer head;
             load_pointer(&m_Head.as_storage, &head.as_storage);
-            pointer tail = {};
-            load_pointer(&m_Tail.as_storage, &tail.as_storage);
-            pointer next = {};
-            load_pointer(&head.as_rep.node->next, &next.as_storage);
-            if (head.as_rep.node == tail.as_rep.node)
-            {
-                if (next.as_rep.node == NULL)
-                    return false; // the queue is empty
 
-                // The tail pointer is one node behind, try to update it
-                pointer new_tail;
-                new_tail.as_rep.counter = tail.as_rep.counter + 1;
-                new_tail.as_rep.node = next.as_rep.node;
-                pointer_dcas(&m_Tail.as_storage, &tail.as_storage, &new_tail.as_storage);
-            }
-            else
+            // NOTE: The following load may break in heavy contention cases. If the current thread
+            //       becomes preempted just before the load and other threads manage to dequeue two
+            //       successive elements, then the element pointed to by head becomes deallocated.
+            //       That's why the comment in the interface header prohibits concurrent pops, although
+            //       the paper seems to allow. It's ok, Boost.Log doesn't use concurrent pops anyway.
+            pointer next;
+            load_pointer(&head.as_rep.node->next, &next.as_storage);
+
+            pointer tail;
+            load_pointer(&m_Tail.as_storage, &tail.as_storage);
+            if (head.as_rep.node != tail.as_rep.node)
             {
                 // Try to dequeue the node
                 node_with_value = next.as_rep.node;
@@ -530,6 +560,17 @@ public:
                     break;
                 }
             }
+            else
+            {
+                if (next.as_rep.node == NULL)
+                    return false; // the queue is empty
+
+                // The tail pointer is one node behind, try to update it
+                pointer new_tail;
+                new_tail.as_rep.counter = tail.as_rep.counter + 1;
+                new_tail.as_rep.node = next.as_rep.node;
+                pointer_dcas(&m_Tail.as_storage, &tail.as_storage, &new_tail.as_storage);
+            }
         }
 
         return true;
@@ -542,6 +583,8 @@ private:
 };
 
 #endif // defined(BOOST_LOG_HAS_DCAS)
+
+#endif // !defined(BOOST_LOG_THREADSAFE_QUEUE_NO_DCAS)
 
 BOOST_LOG_EXPORT threadsafe_queue_impl* threadsafe_queue_impl::create(node_base* first_node)
 {

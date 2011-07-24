@@ -63,7 +63,7 @@ struct threadsafe_queue_impl
     static BOOST_LOG_EXPORT threadsafe_queue_impl* create(node_base* first_node);
     virtual ~threadsafe_queue_impl() {}
     virtual node_base* reset_last_node() = 0;
-    virtual bool unsafe_empty() const = 0;
+    virtual bool unsafe_empty() = 0;
     virtual void push(node_base* p) = 0;
     virtual bool try_pop(node_base*& node_to_free, node_base*& node_with_value) = 0;
 };
@@ -95,7 +95,7 @@ struct threadsafe_queue_types
  * in PODC96 by Maged M. Michael and Michael L. Scott. Pseudocode is available here:
  * http://www.cs.rochester.edu/research/synchronization/pseudocode/queues.html
  *
- * The implementation provides thread-safe \c push and \c pop operations, as well as
+ * The implementation provides thread-safe \c push and \c try_pop operations, as well as
  * a thread-unsafe \c empty operation. The queue imposes the following requirements
  * on the element type:
  *
@@ -203,7 +203,7 @@ public:
     }
 
     /*!
-     * Checks if the queue is empty. Not thread-safe.
+     * Checks if the queue is empty. Not thread-safe, the returned result may not be actual.
      */
     bool unsafe_empty() const { return m_pImpl->unsafe_empty(); }
 
@@ -233,7 +233,8 @@ public:
 
     /*!
      * Attempts to pop an element from the beginning of the queue. Thread-safe, can
-     * be called concurrently by several threads, and concurrently with the \c push operation.
+     * be called concurrently with the \c push operation. Should not be called by
+     * several threads concurrently.
      */
     bool try_pop(reference value)
     {
