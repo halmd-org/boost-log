@@ -34,5 +34,6 @@ Points in this section are not necessarily going to be implemented. These are ma
 * Make it possible to set channel name for a specific log record, when using `channel_logger`.
 * Develop a statistics gathering framework. The basic idea is to provide a specific log source and a pin. The user can pin his data or explicitly indicate events by invoking the log source. The source would automatically collect the data from the pinned variables. This source should have a better integration with filters to be able which pins should be collected and which should not.
 * Allow to specify a process ID in the file name pattern for file-based sinks.
+* Support for process forking. There are at least two problems: `current_process_id` attribute doesn't change its value at fork and file sinks write logs into the same files from both parent and child processes.
 
 [endsect]

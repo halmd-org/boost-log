@@ -22,6 +22,7 @@
 #include <string>
 #include <boost/assert.hpp>
 #include <boost/intrusive_ptr.hpp>
+#include <boost/move/move.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/intrusive_ref_counter.hpp>
@@ -52,6 +53,8 @@ class basic_attribute_values_view;
  */
 class record_handle
 {
+    BOOST_COPYABLE_AND_MOVABLE(record_handle)
+
     template< typename >
     friend class basic_core;
     template< typename >
@@ -62,6 +65,42 @@ private:
     intrusive_ptr< intrusive_ref_counter > m_pData;
 
 public:
+    /*!
+     * Default constructor. Creates an empty handle.
+     */
+    record_handle() {}
+
+    /*!
+     * Copy constructor
+     */
+    record_handle(record_handle const& that) : m_pData(that.m_pData) {}
+
+    /*!
+     * Move constructor. Source record contents unspecified after the operation.
+     */
+    record_handle(BOOST_RV_REF(record_handle) that)
+    {
+         m_pData.swap(that.m_pData);
+    }
+
+    /*!
+     * Copy assignment
+     */
+    record_handle& operator= (BOOST_COPY_ASSIGN_REF(record_handle) that)
+    {
+        m_pData = that.m_pData;
+        return *this;
+    }
+
+    /*!
+     * Move assignment. Source record contents unspecified after the operation.
+     */
+    record_handle& operator= (BOOST_RV_REF(record_handle) that)
+    {
+        m_pData.swap(that.m_pData);
+        return *this;
+    }
+
     /*!
      * Equality comparison
      *
@@ -157,6 +196,9 @@ inline void swap(record_handle& left, record_handle& right)
 template< typename CharT >
 class basic_record
 {
+    typedef basic_record this_type;
+    BOOST_COPYABLE_AND_MOVABLE(this_type)
+
     friend class basic_core< CharT >;
 
 public:
@@ -210,6 +252,19 @@ public:
     basic_record() {}
 
     /*!
+     * Copy constructor
+     */
+    basic_record(basic_record const& that) : m_pData(that.m_pData) {}
+
+    /*!
+     * Move constructor. Source record contents unspecified after the operation.
+     */
+    basic_record(BOOST_RV_REF(this_type) that)
+    {
+        m_pData.swap(that.m_pData);
+    }
+
+    /*!
      * Conversion from a record handle. Adopts the record referenced by the handle.
      *
      * \pre The handle, if valid, have been issued by the logging core with the same character type as the record being constructed.
@@ -234,6 +289,24 @@ public:
      * Destructor. Destroys the record, releases any sinks and attribute values that were involved in processing this record.
      */
     ~basic_record() {}
+
+    /*!
+     * Copy assignment
+     */
+    basic_record& operator= (BOOST_COPY_ASSIGN_REF(this_type) that)
+    {
+        m_pData = that.m_pData;
+        return *this;
+    }
+
+    /*!
+     * Move assignment. Source record contents unspecified after the operation.
+     */
+    basic_record& operator= (BOOST_RV_REF(this_type) that)
+    {
+        m_pData.swap(that.m_pData);
+        return *this;
+    }
 
     /*!
      * \return The handle to the record

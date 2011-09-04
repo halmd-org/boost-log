@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2010.
+ *          Copyright Andrey Semashev 2007 - 2011.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -37,6 +37,7 @@
 #include <boost/thread/condition_variable.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 #include <boost/log/detail/locks.hpp>
+#include <boost/log/detail/threadsafe_queue.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/async_frontend.hpp>
@@ -53,29 +54,6 @@ namespace sinks {
 /////////////////////////////////////////////////////////////////////
 //  Basic sink frontend implementation
 /////////////////////////////////////////////////////////////////////
-//! Implementation data
-template< typename CharT >
-struct basic_sink_frontend< CharT >::implementation
-{
-#if !defined(BOOST_LOG_NO_THREADS)
-    //! Mutex type
-    typedef boost::log::aux::light_rw_mutex mutex_type;
-    //! Read lock type
-    typedef boost::log::aux::shared_lock_guard< mutex_type > scoped_read_lock;
-    //! Write lock type
-    typedef boost::log::aux::exclusive_lock_guard< mutex_type > scoped_write_lock;
-
-    //! Synchronization mutex
-    mutex_type m_Mutex;
-#endif
-    //! Filter
-    filter_type m_Filter;
-    //! Exception handler
-    exception_handler_type m_ExceptionHandler;
-
-    virtual ~implementation() {}
-};
-
 //! The constructor installs the pointer to the frontend implementation
 template< typename CharT >
 basic_sink_frontend< CharT >::basic_sink_frontend(implementation* p) : m_pImpl(p)
@@ -93,7 +71,7 @@ basic_sink_frontend< CharT >::~basic_sink_frontend()
 template< typename CharT >
 void basic_sink_frontend< CharT >::set_filter(filter_type const& filter)
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock _(m_pImpl->m_Mutex);)
+    BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< typename implementation::mutex_type > lock(m_pImpl->m_Mutex);)
     m_pImpl->m_Filter = filter;
 }
 
@@ -101,7 +79,7 @@ void basic_sink_frontend< CharT >::set_filter(filter_type const& filter)
 template< typename CharT >
 void basic_sink_frontend< CharT >::reset_filter()
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock _(m_pImpl->m_Mutex);)
+    BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< typename implementation::mutex_type > lock(m_pImpl->m_Mutex);)
     m_pImpl->m_Filter.clear();
 }
 
@@ -109,7 +87,7 @@ void basic_sink_frontend< CharT >::reset_filter()
 template< typename CharT >
 void basic_sink_frontend< CharT >::set_exception_handler(exception_handler_type const& handler)
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock _(m_pImpl->m_Mutex);)
+    BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< typename implementation::mutex_type > lock(m_pImpl->m_Mutex);)
     m_pImpl->m_ExceptionHandler = handler;
 }
 
@@ -117,7 +95,7 @@ void basic_sink_frontend< CharT >::set_exception_handler(exception_handler_type 
 template< typename CharT >
 bool basic_sink_frontend< CharT >::will_consume(values_view_type const& attributes)
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock _(m_pImpl->m_Mutex);)
+    BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< typename implementation::mutex_type > lock(m_pImpl->m_Mutex);)
     try
     {
         return (m_pImpl->m_Filter.empty() || m_pImpl->m_Filter(attributes));
@@ -197,7 +175,7 @@ void unlocked_frontend< CharT >::consume(record_type const& record)
 #endif // !defined(BOOST_LOG_NO_THREADS)
     catch (...)
     {
-        BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock _(pImpl->m_Mutex);)
+        BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< typename implementation::mutex_type > lock(pImpl->m_Mutex);)
         if (pImpl->m_ExceptionHandler.empty())
             throw;
         pImpl->m_ExceptionHandler();
@@ -276,7 +254,7 @@ void synchronous_frontend< CharT >::consume(record_type const& record)
     }
     catch (...)
     {
-        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
+        log::aux::shared_lock_guard< typename implementation::mutex_type > lock(pImpl->m_Mutex);
         if (pImpl->m_ExceptionHandler.empty())
             throw;
         pImpl->m_ExceptionHandler();
@@ -304,7 +282,7 @@ bool synchronous_frontend< CharT >::try_consume(record_type const& record)
     }
     catch (...)
     {
-        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
+        log::aux::shared_lock_guard< typename implementation::mutex_type > lock(pImpl->m_Mutex);
         if (pImpl->m_ExceptionHandler.empty())
             throw;
         pImpl->m_ExceptionHandler();
@@ -370,26 +348,7 @@ public:
     //! Base type
     typedef typename basic_sink_frontend< CharT >::implementation base_type;
     //! Pending records queue
-    typedef boost::log::aux::atomic_queue< record_type > enqueued_records;
-
-    //! Node traits for putting enqueued records into a Boost.Intrusive list
-    struct enqueued_records_node_traits
-    {
-        typedef typename enqueued_records::node node;
-        typedef node* node_ptr;
-        typedef const node* const_node_ptr;
-
-        static node* get_next(const node* n) { return n->m_pNext; }
-        static void set_next(node* n, node* next) { n->m_pNext = next; }
-        static node* get_previous(const node *n) { return n->m_pPrev; }
-        static void set_previous(node* n, node* prev) { n->m_pPrev = prev; }
-    };
-    //! Boost.Intrusive list type for enqueued records
-    typedef intrusive::list<
-        typename enqueued_records::node,
-        intrusive::value_traits< intrusive::trivial_value_traits< enqueued_records_node_traits, intrusive::normal_link > >,
-        intrusive::constant_time_size< false >
-    > records_list;
+    typedef boost::log::aux::threadsafe_queue< record_type > enqueued_records;
 
 public:
     //! The flag shows that the output thread should finish
@@ -449,12 +408,12 @@ public:
             m_Finishing = false;
         }
 
-        records_list records;
-        while (!m_Finishing) try
+        while (!m_Finishing)
         {
-            if (eject_records(records))
+            record_type rec;
+            if (m_EnqueuedRecords.try_pop(rec))
             {
-                feed_records(records);
+                feed_record(rec);
             }
             else
             {
@@ -464,12 +423,6 @@ public:
                 else
                     break;
             }
-        }
-        catch (...)
-        {
-            typedef typename enqueued_records::node node;
-            records.clear_and_dispose(checked_deleter< node >());
-            throw;
         }
     }
 
@@ -506,49 +459,22 @@ public:
             cleanup.activate();
         }
 
-        records_list records;
-        if (eject_records(records)) try
+        while (true)
         {
-            feed_records(records);
+            record_type rec;
+            if (m_EnqueuedRecords.try_pop(rec))
+                feed_record(rec);
+            else
+                break;
         }
-        catch (...)
-        {
-            typedef typename enqueued_records::node node;
-            records.clear_and_dispose(checked_deleter< node >());
-            throw;
-        }
-    }
-
-    //! The function ejects records from the queue and puts them into list
-    bool eject_records(records_list& records)
-    {
-        typedef typename enqueued_records::node node;
-        std::pair< node*, node* > range = m_EnqueuedRecords.eject_nodes();
-        if (range.first != NULL)
-        {
-            // Introduce artifical "end" node
-            node end_node;
-            range.first->m_pPrev = range.second->m_pNext = &end_node;
-            end_node.m_pPrev = range.second;
-            end_node.m_pNext = range.second;
-            // Inject all nodes into the list
-            records_list::node_algorithms::transfer(records.end().pointed_node(), range.first, &end_node);
-            return true;
-        }
-        else
-            return false;
     }
 
 private:
     //! The function feeds records to the backend
-    void feed_records(records_list& records)
+    void feed_record(record_type const& rec)
     {
-        while (!records.empty()) try
+        try
         {
-            typedef typename enqueued_records::node node;
-            record_type rec;
-            rec.swap(records.front().m_Value);
-            records.pop_front_and_dispose(checked_deleter< node >());
             log::aux::exclusive_lock_guard< mutex > _(m_BackendMutex);
             m_Consume(m_pBackend.get(), rec);
         }
@@ -558,7 +484,7 @@ private:
         }
         catch (...)
         {
-            typename base_type::scoped_read_lock _(this->m_Mutex);
+            log::aux::shared_lock_guard< typename base_type::mutex_type > lock(this->m_Mutex);
             if (this->m_ExceptionHandler.empty())
                 throw;
             this->m_ExceptionHandler();
@@ -616,7 +542,7 @@ void asynchronous_frontend< CharT >::consume(record_type const& record)
     }
     catch (...)
     {
-        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
+        log::aux::shared_lock_guard< typename implementation::mutex_type > lock(pImpl->m_Mutex);
         if (pImpl->m_ExceptionHandler.empty())
             throw;
         pImpl->m_ExceptionHandler();
@@ -631,13 +557,10 @@ bool asynchronous_frontend< CharT >::try_consume(record_type const& record)
     {
         record_type rec = record;
         rec.detach_from_thread();
-        if (pImpl->m_EnqueuedRecords.try_push(rec))
-        {
-            pImpl->m_Condition.notify_one();
-            return true;
-        }
-        else
-            return false;
+        // Just enqueue the record for now
+        pImpl->m_EnqueuedRecords.push(rec);
+        pImpl->m_Condition.notify_one();
+        return true;
     }
     catch (thread_interrupted&)
     {
@@ -645,7 +568,7 @@ bool asynchronous_frontend< CharT >::try_consume(record_type const& record)
     }
     catch (...)
     {
-        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
+        log::aux::shared_lock_guard< typename implementation::mutex_type > lock(pImpl->m_Mutex);
         if (pImpl->m_ExceptionHandler.empty())
             throw;
         pImpl->m_ExceptionHandler();
@@ -936,7 +859,7 @@ private:
         }
         catch (...)
         {
-            typename base_type::scoped_read_lock _(this->m_Mutex);
+            log::aux::shared_lock_guard< typename implementation::mutex_type > lock(this->m_Mutex);
             if (this->m_ExceptionHandler.empty())
                 throw;
             this->m_ExceptionHandler();
@@ -999,7 +922,7 @@ void ordering_asynchronous_frontend< CharT >::consume(record_type const& record)
     }
     catch (...)
     {
-        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
+        log::aux::shared_lock_guard< typename implementation::mutex_type > lock(pImpl->m_Mutex);
         if (pImpl->m_ExceptionHandler.empty())
             throw;
         pImpl->m_ExceptionHandler();
@@ -1028,7 +951,7 @@ bool ordering_asynchronous_frontend< CharT >::try_consume(record_type const& rec
     }
     catch (...)
     {
-        typename implementation::scoped_read_lock _(pImpl->m_Mutex);
+        log::aux::shared_lock_guard< typename implementation::mutex_type > lock(pImpl->m_Mutex);
         if (pImpl->m_ExceptionHandler.empty())
             throw;
         pImpl->m_ExceptionHandler();
@@ -1073,11 +996,11 @@ template< typename CharT >
 posix_time::time_duration ordering_asynchronous_frontend< CharT >::get_default_ordering_window()
 {
     // The main idea behind this parameter is that the ordering window should be large enough
-    // to make the frontend capable to order records from different threads on an attribute
-    // that contains system time. Thus this value should should:
-    // * Include the minimum time resolution quant that the Boost.DateTime provides on the current OS.
-    //   For instance, on Windows it's around 15-16 ms.
-    // * Include thread switching quant on the current OS. For now 30 ms is enough window size to
+    // to allow the frontend to order records from different threads on an attribute
+    // that contains system time. Thus this value should be:
+    // * No less than the minimum time resolution quant that the Boost.DateTime provides on the current OS.
+    //   For instance, on Windows it defaults to around 15-16 ms.
+    // * No less than thread switching quant on the current OS. For now 30 ms is large enough window size to
     //   switch threads on any known OS. It can be tuned for other platforms as needed.
     return posix_time::milliseconds(30);
 }
