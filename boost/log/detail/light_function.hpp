@@ -20,6 +20,7 @@
 #define BOOST_LOG_DETAIL_LIGHT_FUNCTION_HPP_INCLUDED_
 
 #include <boost/assert.hpp>
+#include <boost/move/move.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/iteration/iterate.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
@@ -60,6 +61,9 @@ template<
 >
 class BOOST_LOG_LWFUNCTION_NAME
 {
+    typedef BOOST_LOG_LWFUNCTION_NAME this_type;
+    BOOST_COPYABLE_AND_MOVABLE(this_type)
+
 public:
     typedef ResultT result_type;
 
@@ -106,12 +110,17 @@ public:
     BOOST_LOG_LWFUNCTION_NAME() : m_pImpl(NULL)
     {
     }
-    BOOST_LOG_LWFUNCTION_NAME(BOOST_LOG_LWFUNCTION_NAME const& that)
+    BOOST_LOG_LWFUNCTION_NAME(this_type const& that)
     {
         if (that.m_pImpl)
             m_pImpl = that.m_pImpl->clone();
         else
             m_pImpl = NULL;
+    }
+    BOOST_LOG_LWFUNCTION_NAME(BOOST_RV_REF(this_type) that)
+    {
+        m_pImpl = that.m_pImpl;
+        that.m_pImpl = NULL;
     }
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME(FunT const& fun) : m_pImpl(new implementation< FunT >(fun))
@@ -127,7 +136,7 @@ public:
         delete m_pImpl;
     }
 
-    BOOST_LOG_LWFUNCTION_NAME& operator= (BOOST_LOG_LWFUNCTION_NAME that)
+    BOOST_LOG_LWFUNCTION_NAME& operator= (this_type that)
     {
         this->swap(that);
         return *this;
@@ -154,7 +163,7 @@ public:
         m_pImpl = NULL;
     }
 
-    void swap(BOOST_LOG_LWFUNCTION_NAME& that)
+    void swap(this_type& that)
     {
         register implementation_base* p = m_pImpl;
         m_pImpl = that.m_pImpl;
@@ -170,6 +179,9 @@ class BOOST_LOG_LWFUNCTION_NAME<
     BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_ITERATION(), ArgT)
 >
 {
+    typedef BOOST_LOG_LWFUNCTION_NAME this_type;
+    BOOST_COPYABLE_AND_MOVABLE(this_type)
+
 public:
     typedef void result_type;
 
@@ -216,12 +228,17 @@ public:
     BOOST_LOG_LWFUNCTION_NAME() : m_pImpl(NULL)
     {
     }
-    BOOST_LOG_LWFUNCTION_NAME(BOOST_LOG_LWFUNCTION_NAME const& that)
+    BOOST_LOG_LWFUNCTION_NAME(this_type const& that)
     {
         if (that.m_pImpl)
             m_pImpl = that.m_pImpl->clone();
         else
             m_pImpl = NULL;
+    }
+    BOOST_LOG_LWFUNCTION_NAME(BOOST_RV_REF(this_type) that)
+    {
+        m_pImpl = that.m_pImpl;
+        that.m_pImpl = NULL;
     }
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME(FunT const& fun) : m_pImpl(new implementation< FunT >(fun))
@@ -237,7 +254,7 @@ public:
         delete m_pImpl;
     }
 
-    BOOST_LOG_LWFUNCTION_NAME& operator= (BOOST_LOG_LWFUNCTION_NAME that)
+    BOOST_LOG_LWFUNCTION_NAME& operator= (this_type that)
     {
         this->swap(that);
         return *this;
@@ -264,7 +281,7 @@ public:
         m_pImpl = NULL;
     }
 
-    void swap(BOOST_LOG_LWFUNCTION_NAME& that)
+    void swap(this_type& that)
     {
         register implementation_base* p = m_pImpl;
         m_pImpl = that.m_pImpl;
@@ -278,7 +295,8 @@ template<
 >
 inline void swap(
     BOOST_LOG_LWFUNCTION_NAME< ResultT BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_ITERATION(), ArgT) >& left,
-    BOOST_LOG_LWFUNCTION_NAME< ResultT BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_ITERATION(), ArgT) >& right)
+    BOOST_LOG_LWFUNCTION_NAME< ResultT BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_ITERATION(), ArgT) >& right
+)
 {
     left.swap(right);
 }
