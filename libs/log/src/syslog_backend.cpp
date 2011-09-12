@@ -433,7 +433,7 @@ struct basic_syslog_backend< CharT >::implementation::udp_socket_based :
         {
             // ::1, port 514
             asio::ip::address_v6::bytes_type addr;
-            std::fill_n(addr.c_array(), addr.size() - 1, static_cast< unsigned char >(0));
+            std::fill_n(addr.data(), addr.size() - 1, static_cast< unsigned char >(0));
             addr[addr.size() - 1] = 1;
             m_TargetHost = asio::ip::udp::endpoint(asio::ip::address_v6(addr), 514);
         }
