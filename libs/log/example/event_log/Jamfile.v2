@@ -9,6 +9,7 @@ import os ;
 
 project
     : requirements
+        <define>BOOST_FILESYSTEM_VERSION=2
         <link>shared:<define>BOOST_ALL_DLL
         <logapi>unix:<define>BOOST_LOG_USE_NATIVE_SYSLOG=1
         <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
