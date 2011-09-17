@@ -462,28 +462,28 @@ struct basic_syslog_backend< CharT >::implementation::udp_socket_based :
 //  Sink backend implementation
 ////////////////////////////////////////////////////////////////////////////////
 template< typename CharT >
-basic_syslog_backend< CharT >::basic_syslog_backend()
+BOOST_LOG_EXPORT basic_syslog_backend< CharT >::basic_syslog_backend()
 {
     construct(log::aux::empty_arg_list());
 }
 
 //! Destructor
 template< typename CharT >
-basic_syslog_backend< CharT >::~basic_syslog_backend()
+BOOST_LOG_EXPORT basic_syslog_backend< CharT >::~basic_syslog_backend()
 {
     delete m_pImpl;
 }
 
 //! The method installs the function object that maps application severity levels to Syslog levels
 template< typename CharT >
-void basic_syslog_backend< CharT >::set_severity_mapper(severity_mapper_type const& mapper)
+BOOST_LOG_EXPORT void basic_syslog_backend< CharT >::set_severity_mapper(severity_mapper_type const& mapper)
 {
     m_pImpl->m_LevelMapper = mapper;
 }
 
 //! The method writes the message to the sink
 template< typename CharT >
-void basic_syslog_backend< CharT >::do_consume(
+BOOST_LOG_EXPORT void basic_syslog_backend< CharT >::do_consume(
     record_type const& record, target_string_type const& formatted_message)
 {
     m_pImpl->send(
@@ -494,7 +494,7 @@ void basic_syslog_backend< CharT >::do_consume(
 
 //! The method creates the backend implementation
 template< typename CharT >
-void basic_syslog_backend< CharT >::construct(
+BOOST_LOG_EXPORT void basic_syslog_backend< CharT >::construct(
     syslog::facility_t facility, syslog::impl_types use_impl, ip_versions ip_version)
 {
 #ifdef BOOST_LOG_USE_NATIVE_SYSLOG
@@ -526,7 +526,7 @@ void basic_syslog_backend< CharT >::construct(
 
 //! The method sets the local address which log records will be sent from.
 template< typename CharT >
-void basic_syslog_backend< CharT >::set_local_address(std::string const& addr, unsigned short port)
+BOOST_LOG_EXPORT void basic_syslog_backend< CharT >::set_local_address(std::string const& addr, unsigned short port)
 {
 #if !defined(BOOST_LOG_NO_THREADS)
     typedef typename implementation::udp_socket_based udp_socket_based_impl;
@@ -556,7 +556,7 @@ void basic_syslog_backend< CharT >::set_local_address(std::string const& addr, u
 }
 //! The method sets the local address which log records will be sent from.
 template< typename CharT >
-void basic_syslog_backend< CharT >::set_local_address(boost::asio::ip::address const& addr, unsigned short port)
+BOOST_LOG_EXPORT void basic_syslog_backend< CharT >::set_local_address(boost::asio::ip::address const& addr, unsigned short port)
 {
     typedef typename implementation::udp_socket_based udp_socket_based_impl;
     if (udp_socket_based_impl* impl = dynamic_cast< udp_socket_based_impl* >(m_pImpl))
@@ -568,7 +568,7 @@ void basic_syslog_backend< CharT >::set_local_address(boost::asio::ip::address c
 
 //! The method sets the address of the remote host where log records will be sent to.
 template< typename CharT >
-void basic_syslog_backend< CharT >::set_target_address(std::string const& addr, unsigned short port)
+BOOST_LOG_EXPORT void basic_syslog_backend< CharT >::set_target_address(std::string const& addr, unsigned short port)
 {
 #if !defined(BOOST_LOG_NO_THREADS)
     typedef typename implementation::udp_socket_based udp_socket_based_impl;
@@ -594,7 +594,7 @@ void basic_syslog_backend< CharT >::set_target_address(std::string const& addr, 
 }
 //! The method sets the address of the remote host where log records will be sent to.
 template< typename CharT >
-void basic_syslog_backend< CharT >::set_target_address(boost::asio::ip::address const& addr, unsigned short port)
+BOOST_LOG_EXPORT void basic_syslog_backend< CharT >::set_target_address(boost::asio::ip::address const& addr, unsigned short port)
 {
     typedef typename implementation::udp_socket_based udp_socket_based_impl;
     if (udp_socket_based_impl* impl = dynamic_cast< udp_socket_based_impl* >(m_pImpl))

@@ -56,7 +56,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 //! Constructor
 template< typename CharT, typename TraitsT >
-converting_ostringstreambuf< CharT, TraitsT >::converting_ostringstreambuf(string_type& storage) :
+BOOST_LOG_EXPORT converting_ostringstreambuf< CharT, TraitsT >::converting_ostringstreambuf(string_type& storage) :
     m_Storage(storage),
     m_ConversionState()
 {
@@ -66,13 +66,13 @@ converting_ostringstreambuf< CharT, TraitsT >::converting_ostringstreambuf(strin
 
 //! Destructor
 template< typename CharT, typename TraitsT >
-converting_ostringstreambuf< CharT, TraitsT >::~converting_ostringstreambuf()
+BOOST_LOG_EXPORT converting_ostringstreambuf< CharT, TraitsT >::~converting_ostringstreambuf()
 {
 }
 
 //! Clears the buffer to the initial state
 template< typename CharT, typename TraitsT >
-void converting_ostringstreambuf< CharT, TraitsT >::clear()
+BOOST_LOG_EXPORT void converting_ostringstreambuf< CharT, TraitsT >::clear()
 {
     const char_type* pBase = this->pbase();
     const char_type* pPtr = this->pptr();
@@ -83,7 +83,7 @@ void converting_ostringstreambuf< CharT, TraitsT >::clear()
 
 //! Puts all buffered data to the string
 template< typename CharT, typename TraitsT >
-int converting_ostringstreambuf< CharT, TraitsT >::sync()
+BOOST_LOG_EXPORT int converting_ostringstreambuf< CharT, TraitsT >::sync()
 {
     const char_type* pBase = this->pbase();
     const char_type* pPtr = this->pptr();
@@ -103,7 +103,7 @@ int converting_ostringstreambuf< CharT, TraitsT >::sync()
 
 //! Puts an unbuffered character to the string
 template< typename CharT, typename TraitsT >
-typename converting_ostringstreambuf< CharT, TraitsT >::int_type
+BOOST_LOG_EXPORT typename converting_ostringstreambuf< CharT, TraitsT >::int_type
 converting_ostringstreambuf< CharT, TraitsT >::overflow(int_type c)
 {
     int_type res;
@@ -131,7 +131,7 @@ converting_ostringstreambuf< CharT, TraitsT >::overflow(int_type c)
 
 //! Puts a character sequence to the string
 template< typename CharT, typename TraitsT >
-std::streamsize converting_ostringstreambuf< CharT, TraitsT >::xsputn(const char_type* s, std::streamsize n)
+BOOST_LOG_EXPORT std::streamsize converting_ostringstreambuf< CharT, TraitsT >::xsputn(const char_type* s, std::streamsize n)
 {
     const char_type* pend = s + n;
 
@@ -169,7 +169,7 @@ std::streamsize converting_ostringstreambuf< CharT, TraitsT >::xsputn(const char
 
 //! The function writes the specified characters to the storage
 template< typename CharT, typename TraitsT >
-void converting_ostringstreambuf< CharT, TraitsT >::write(const char_type*& pBase, const char_type* pPtr)
+BOOST_LOG_EXPORT void converting_ostringstreambuf< CharT, TraitsT >::write(const char_type*& pBase, const char_type* pPtr)
 {
     std::locale loc = this->getloc();
     facet_type const& fac = std::use_facet< facet_type >(loc);

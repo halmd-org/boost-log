@@ -1060,14 +1060,14 @@ struct basic_text_file_backend< CharT >::implementation
 
 //! Constructor. No streams attached to the constructed backend, auto flush feature disabled.
 template< typename CharT >
-basic_text_file_backend< CharT >::basic_text_file_backend()
+BOOST_LOG_EXPORT basic_text_file_backend< CharT >::basic_text_file_backend()
 {
     construct(log::aux::empty_arg_list());
 }
 
 //! Destructor
 template< typename CharT >
-basic_text_file_backend< CharT >::~basic_text_file_backend()
+BOOST_LOG_EXPORT basic_text_file_backend< CharT >::~basic_text_file_backend()
 {
     try
     {
@@ -1084,7 +1084,7 @@ basic_text_file_backend< CharT >::~basic_text_file_backend()
 
 //! Constructor implementation
 template< typename CharT >
-void basic_text_file_backend< CharT >::construct(
+BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::construct(
     path_type const& pattern,
     std::ios_base::openmode mode,
     uintmax_t rotation_size,
@@ -1099,28 +1099,28 @@ void basic_text_file_backend< CharT >::construct(
 
 //! The method sets maximum file size.
 template< typename CharT >
-void basic_text_file_backend< CharT >::set_rotation_size(uintmax_t size)
+BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_rotation_size(uintmax_t size)
 {
     m_pImpl->m_FileRotationSize = size;
 }
 
 //! The method sets the maximum time interval between file rotations.
 template< typename CharT >
-void basic_text_file_backend< CharT >::set_time_based_rotation(time_based_rotation_predicate const& predicate)
+BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_time_based_rotation(time_based_rotation_predicate const& predicate)
 {
     m_pImpl->m_TimeBasedRotation = predicate;
 }
 
 //! Sets the flag to automatically flush buffers of all attached streams after each log record
 template< typename CharT >
-void basic_text_file_backend< CharT >::auto_flush(bool f)
+BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::auto_flush(bool f)
 {
     m_pImpl->m_AutoFlush = f;
 }
 
 //! The method writes the message to the sink
 template< typename CharT >
-void basic_text_file_backend< CharT >::do_consume(
+BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::do_consume(
     record_type const& record, target_string_type const& formatted_message)
 {
     typedef file_char_traits< typename target_string_type::value_type > traits_t;
@@ -1171,7 +1171,7 @@ void basic_text_file_backend< CharT >::do_consume(
 
 //! The method sets file name mask
 template< typename CharT >
-void basic_text_file_backend< CharT >::set_file_name_pattern_internal(path_type const& pattern)
+BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_file_name_pattern_internal(path_type const& pattern)
 {
     typedef file_char_traits< path_char_type > traits_t;
     path_type p = pattern;
@@ -1245,7 +1245,7 @@ void basic_text_file_backend< CharT >::set_file_name_pattern_internal(path_type 
 
 //! The method rotates the file
 template< typename CharT >
-void basic_text_file_backend< CharT >::rotate_file()
+BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::rotate_file()
 {
     if (!m_pImpl->m_CloseHandler.empty())
         m_pImpl->m_CloseHandler(m_pImpl->m_File);
@@ -1258,7 +1258,7 @@ void basic_text_file_backend< CharT >::rotate_file()
 
 //! The method sets the file open mode
 template< typename CharT >
-void basic_text_file_backend< CharT >::set_open_mode(std::ios_base::openmode mode)
+BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_open_mode(std::ios_base::openmode mode)
 {
     mode |= std::ios_base::out;
     mode &= ~std::ios_base::in;
@@ -1269,28 +1269,28 @@ void basic_text_file_backend< CharT >::set_open_mode(std::ios_base::openmode mod
 
 //! The method sets file collector
 template< typename CharT >
-void basic_text_file_backend< CharT >::set_file_collector(shared_ptr< file::collector > const& collector)
+BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_file_collector(shared_ptr< file::collector > const& collector)
 {
     m_pImpl->m_pFileCollector = collector;
 }
 
 //! The method sets file open handler
 template< typename CharT >
-void basic_text_file_backend< CharT >::set_open_handler(open_handler_type const& handler)
+BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_open_handler(open_handler_type const& handler)
 {
     m_pImpl->m_OpenHandler = handler;
 }
 
 //! The method sets file close handler
 template< typename CharT >
-void basic_text_file_backend< CharT >::set_close_handler(close_handler_type const& handler)
+BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_close_handler(close_handler_type const& handler)
 {
     m_pImpl->m_CloseHandler = handler;
 }
 
 //! Performs scanning of the target directory for log files
 template< typename CharT >
-uintmax_t basic_text_file_backend< CharT >::scan_for_files(file::scan_method method, bool update_counter)
+BOOST_LOG_EXPORT uintmax_t basic_text_file_backend< CharT >::scan_for_files(file::scan_method method, bool update_counter)
 {
     if (m_pImpl->m_pFileCollector)
     {
@@ -1319,27 +1319,27 @@ struct basic_text_multifile_backend< CharT >::implementation
 
 //! Default constructor
 template< typename CharT >
-basic_text_multifile_backend< CharT >::basic_text_multifile_backend() : m_pImpl(new implementation)
+BOOST_LOG_EXPORT basic_text_multifile_backend< CharT >::basic_text_multifile_backend() : m_pImpl(new implementation)
 {
 }
 
 //! Destructor
 template< typename CharT >
-basic_text_multifile_backend< CharT >::~basic_text_multifile_backend()
+BOOST_LOG_EXPORT basic_text_multifile_backend< CharT >::~basic_text_multifile_backend()
 {
     delete m_pImpl;
 }
 
 //! The method sets the file name composer
 template< typename CharT >
-void basic_text_multifile_backend< CharT >::set_file_name_composer_internal(file_name_composer_type const& composer)
+BOOST_LOG_EXPORT void basic_text_multifile_backend< CharT >::set_file_name_composer_internal(file_name_composer_type const& composer)
 {
     m_pImpl->m_FileNameComposer = composer;
 }
 
 //! The method writes the message to the sink
 template< typename CharT >
-void basic_text_multifile_backend< CharT >::do_consume(
+BOOST_LOG_EXPORT void basic_text_multifile_backend< CharT >::do_consume(
     record_type const& record, target_string_type const& formatted_message)
 {
     typedef file_char_traits< typename target_string_type::value_type > traits_t;

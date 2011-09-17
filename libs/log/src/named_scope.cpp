@@ -196,7 +196,7 @@ basic_named_scope< CharT >::implementation::pScopesCache = NULL;
 
 //! Copy constructor
 template< typename CharT >
-basic_named_scope_list< CharT >::basic_named_scope_list(basic_named_scope_list const& that) :
+BOOST_LOG_EXPORT basic_named_scope_list< CharT >::basic_named_scope_list(basic_named_scope_list const& that) :
     allocator_type(static_cast< allocator_type const& >(that)),
     m_Size(that.size()),
     m_fNeedToDeallocate(!that.empty())
@@ -220,7 +220,7 @@ basic_named_scope_list< CharT >::basic_named_scope_list(basic_named_scope_list c
 
 //! Destructor
 template< typename CharT >
-basic_named_scope_list< CharT >::~basic_named_scope_list()
+BOOST_LOG_EXPORT basic_named_scope_list< CharT >::~basic_named_scope_list()
 {
     if (m_fNeedToDeallocate)
     {
@@ -234,7 +234,7 @@ basic_named_scope_list< CharT >::~basic_named_scope_list()
 
 //! Swaps two instances of the container
 template< typename CharT >
-void basic_named_scope_list< CharT >::swap(basic_named_scope_list& that)
+BOOST_LOG_EXPORT void basic_named_scope_list< CharT >::swap(basic_named_scope_list& that)
 {
     using std::swap;
 

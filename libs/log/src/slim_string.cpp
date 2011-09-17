@@ -300,22 +300,25 @@ private:
 
 //! Default constructor
 template< typename CharT, typename TraitsT >
-basic_slim_string< CharT, TraitsT >::basic_slim_string() : m_pImpl(implementation::allocate_and_add_ref(this, NULL, 0)) {}
+BOOST_LOG_EXPORT basic_slim_string< CharT, TraitsT >::basic_slim_string()
+    : m_pImpl(implementation::allocate_and_add_ref(this, NULL, 0))
+{
+}
 //! Copy constructor
 template< typename CharT, typename TraitsT >
-basic_slim_string< CharT, TraitsT >::basic_slim_string(basic_slim_string const& that) : m_pImpl(that.m_pImpl)
+BOOST_LOG_EXPORT basic_slim_string< CharT, TraitsT >::basic_slim_string(basic_slim_string const& that) : m_pImpl(that.m_pImpl)
 {
     m_pImpl->add_ref();
 }
 
 //  Standard constructors
 template< typename CharT, typename TraitsT >
-basic_slim_string< CharT, TraitsT >::basic_slim_string(string_type const& that)
+BOOST_LOG_EXPORT basic_slim_string< CharT, TraitsT >::basic_slim_string(string_type const& that)
     : m_pImpl(implementation::allocate_and_add_ref(this, that.data(), that.size()))
 {
 }
 template< typename CharT, typename TraitsT >
-basic_slim_string< CharT, TraitsT >::basic_slim_string(string_type const& s, size_type pos, size_type n)
+BOOST_LOG_EXPORT basic_slim_string< CharT, TraitsT >::basic_slim_string(string_type const& s, size_type pos, size_type n)
 {
     const size_type that_size = s.size();
     if (pos <= that_size)
@@ -328,7 +331,7 @@ basic_slim_string< CharT, TraitsT >::basic_slim_string(string_type const& s, siz
     }
 }
 template< typename CharT, typename TraitsT >
-basic_slim_string< CharT, TraitsT >::basic_slim_string(basic_slim_string const& that, size_type pos, size_type n)
+BOOST_LOG_EXPORT basic_slim_string< CharT, TraitsT >::basic_slim_string(basic_slim_string const& that, size_type pos, size_type n)
 {
     const size_type that_size = that.m_pImpl->size();
     if (pos == 0 && n >= that_size)
@@ -349,13 +352,13 @@ basic_slim_string< CharT, TraitsT >::basic_slim_string(basic_slim_string const& 
     }
 }
 template< typename CharT, typename TraitsT >
-basic_slim_string< CharT, TraitsT >::basic_slim_string(const_pointer s)
+BOOST_LOG_EXPORT basic_slim_string< CharT, TraitsT >::basic_slim_string(const_pointer s)
     : m_pImpl(implementation::allocate_and_add_ref(this, s, traits_type::length(s))) {}
 template< typename CharT, typename TraitsT >
-basic_slim_string< CharT, TraitsT >::basic_slim_string(const_pointer s, size_type n)
+BOOST_LOG_EXPORT basic_slim_string< CharT, TraitsT >::basic_slim_string(const_pointer s, size_type n)
     : m_pImpl(implementation::allocate_and_add_ref(this, s, n)) {}
 template< typename CharT, typename TraitsT >
-basic_slim_string< CharT, TraitsT >::basic_slim_string(size_type n, char_type c)
+BOOST_LOG_EXPORT basic_slim_string< CharT, TraitsT >::basic_slim_string(size_type n, char_type c)
     : m_pImpl(implementation::allocate_and_add_ref(this, NULL, n))
 {
     traits_type::assign(m_pImpl->begin(), n, c);
@@ -363,13 +366,14 @@ basic_slim_string< CharT, TraitsT >::basic_slim_string(size_type n, char_type c)
 
 //! Destructor
 template< typename CharT, typename TraitsT >
-basic_slim_string< CharT, TraitsT >::~basic_slim_string()
+BOOST_LOG_EXPORT basic_slim_string< CharT, TraitsT >::~basic_slim_string()
 {
     implementation::release_and_dispose(m_pImpl, this);
 }
 
 //! Indexing
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::const_reference
 #else
@@ -379,6 +383,7 @@ basic_slim_string< CharT, TraitsT >::operator[] (size_type n) const { return *(m
 
 //  Accessors
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::const_reference
 #else
@@ -394,6 +399,7 @@ basic_slim_string< CharT, TraitsT >::at(size_type n) const
     return *(m_pImpl->begin() + n);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::const_pointer
 #else
@@ -402,6 +408,7 @@ CharT const*
 basic_slim_string< CharT, TraitsT >::data() const { return m_pImpl->begin(); }
 
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -410,6 +417,7 @@ std::size_t
 basic_slim_string< CharT, TraitsT >::size() const { return m_pImpl->size(); }
 
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::const_iterator
 #else
@@ -417,6 +425,7 @@ CharT const*
 #endif
 basic_slim_string< CharT, TraitsT >::begin() const { return m_pImpl->begin(); }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::const_iterator
 #else
@@ -425,6 +434,7 @@ CharT const*
 basic_slim_string< CharT, TraitsT >::end() const { return m_pImpl->end(); }
 
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT 
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -444,6 +454,7 @@ basic_slim_string< CharT, TraitsT >::copy(pointer s, size_type n, size_type pos)
 }
 
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -454,6 +465,7 @@ basic_slim_string< CharT, TraitsT >::find(basic_slim_string const& that, size_ty
     return m_pImpl->find(that.m_pImpl->begin(), that.m_pImpl->size(), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -464,6 +476,7 @@ basic_slim_string< CharT, TraitsT >::find(string_type const& s, size_type pos) c
     return m_pImpl->find(s.data(), s.size(), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -474,6 +487,7 @@ basic_slim_string< CharT, TraitsT >::find(const_pointer s, size_type pos) const
     return m_pImpl->find(s, traits_type::length(s), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -484,6 +498,7 @@ basic_slim_string< CharT, TraitsT >::find(const_pointer s, size_type pos, size_t
     return m_pImpl->find(s, n, pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -495,6 +510,7 @@ basic_slim_string< CharT, TraitsT >::find(char_type c, size_type pos) const
 }
 
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -505,6 +521,7 @@ basic_slim_string< CharT, TraitsT >::rfind(basic_slim_string const& that, size_t
     return m_pImpl->rfind(that.m_pImpl->begin(), that.m_pImpl->size(), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -515,6 +532,7 @@ basic_slim_string< CharT, TraitsT >::rfind(string_type const& s, size_type pos) 
     return m_pImpl->rfind(s.data(), s.size(), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -525,6 +543,7 @@ basic_slim_string< CharT, TraitsT >::rfind(const_pointer s, size_type pos) const
     return m_pImpl->rfind(s, traits_type::length(s), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -535,6 +554,7 @@ basic_slim_string< CharT, TraitsT >::rfind(const_pointer s, size_type pos, size_
     return m_pImpl->rfind(s, n, pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -546,6 +566,7 @@ basic_slim_string< CharT, TraitsT >::rfind(char_type c, size_type pos) const
 }
 
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -556,6 +577,7 @@ basic_slim_string< CharT, TraitsT >::find_first_of(basic_slim_string const& that
     return m_pImpl->find_first_of(that.m_pImpl->begin(), that.m_pImpl->size(), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -566,6 +588,7 @@ basic_slim_string< CharT, TraitsT >::find_first_of(string_type const& s, size_ty
     return m_pImpl->find_first_of(s.data(), s.size(), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -576,6 +599,7 @@ basic_slim_string< CharT, TraitsT >::find_first_of(const_pointer s, size_type po
     return m_pImpl->find_first_of(s, traits_type::length(s), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -586,6 +610,7 @@ basic_slim_string< CharT, TraitsT >::find_first_of(const_pointer s, size_type po
     return m_pImpl->find_first_of(s, n, pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -597,6 +622,7 @@ basic_slim_string< CharT, TraitsT >::find_first_of(char_type c, size_type pos) c
 }
 
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -607,6 +633,7 @@ basic_slim_string< CharT, TraitsT >::find_last_of(basic_slim_string const& that,
     return m_pImpl->find_last_of(that.m_pImpl->begin(), that.m_pImpl->size(), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -617,6 +644,7 @@ basic_slim_string< CharT, TraitsT >::find_last_of(string_type const& s, size_typ
     return m_pImpl->find_last_of(s.data(), s.size(), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -627,6 +655,7 @@ basic_slim_string< CharT, TraitsT >::find_last_of(const_pointer s, size_type pos
     return m_pImpl->find_last_of(s, traits_type::length(s), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -637,6 +666,7 @@ basic_slim_string< CharT, TraitsT >::find_last_of(const_pointer s, size_type pos
     return m_pImpl->find_last_of(s, n, pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -648,6 +678,7 @@ basic_slim_string< CharT, TraitsT >::find_last_of(char_type c, size_type pos) co
 }
 
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -658,6 +689,7 @@ basic_slim_string< CharT, TraitsT >::find_first_not_of(basic_slim_string const& 
     return m_pImpl->find_first_not_of(that.m_pImpl->begin(), that.m_pImpl->size(), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -668,6 +700,7 @@ basic_slim_string< CharT, TraitsT >::find_first_not_of(string_type const& s, siz
     return m_pImpl->find_first_not_of(s.data(), s.size(), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -678,6 +711,7 @@ basic_slim_string< CharT, TraitsT >::find_first_not_of(const_pointer s, size_typ
     return m_pImpl->find_first_not_of(s, traits_type::length(s), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -688,6 +722,7 @@ basic_slim_string< CharT, TraitsT >::find_first_not_of(const_pointer s, size_typ
     return m_pImpl->find_first_not_of(s, n, pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -699,6 +734,7 @@ basic_slim_string< CharT, TraitsT >::find_first_not_of(char_type c, size_type po
 }
 
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -709,6 +745,7 @@ basic_slim_string< CharT, TraitsT >::find_last_not_of(basic_slim_string const& t
     return m_pImpl->find_last_not_of(that.m_pImpl->begin(), that.m_pImpl->size(), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -719,6 +756,7 @@ basic_slim_string< CharT, TraitsT >::find_last_not_of(string_type const& s, size
     return m_pImpl->find_last_not_of(s.data(), s.size(), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -729,6 +767,7 @@ basic_slim_string< CharT, TraitsT >::find_last_not_of(const_pointer s, size_type
     return m_pImpl->find_last_not_of(s, traits_type::length(s), pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -739,6 +778,7 @@ basic_slim_string< CharT, TraitsT >::find_last_not_of(const_pointer s, size_type
     return m_pImpl->find_last_not_of(s, n, pos);
 }
 template< typename CharT, typename TraitsT >
+BOOST_LOG_EXPORT
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename basic_slim_string< CharT, TraitsT >::size_type
 #else
@@ -750,7 +790,7 @@ basic_slim_string< CharT, TraitsT >::find_last_not_of(char_type c, size_type pos
 }
 
 template< typename CharT, typename TraitsT >
-int basic_slim_string< CharT, TraitsT >::compare(basic_slim_string const& that) const
+BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(basic_slim_string const& that) const
 {
     if (m_pImpl == that.m_pImpl)
         return 0;
@@ -758,22 +798,22 @@ int basic_slim_string< CharT, TraitsT >::compare(basic_slim_string const& that) 
         return traits_type::compare(m_pImpl->begin(), that.m_pImpl->begin(), m_pImpl->size() + 1);
 }
 template< typename CharT, typename TraitsT >
-int basic_slim_string< CharT, TraitsT >::compare(string_type const& s) const
+BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(string_type const& s) const
 {
     return traits_type::compare(m_pImpl->begin(), s.c_str(), m_pImpl->size() + 1);
 }
 template< typename CharT, typename TraitsT >
-int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, basic_slim_string const& that) const
+BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, basic_slim_string const& that) const
 {
     return m_pImpl->compare(pos1, n1, that.m_pImpl->begin(), that.m_pImpl->size());
 }
 template< typename CharT, typename TraitsT >
-int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, string_type const& s) const
+BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, string_type const& s) const
 {
     return m_pImpl->compare(pos1, n1, s.data(), s.size());
 }
 template< typename CharT, typename TraitsT >
-int basic_slim_string< CharT, TraitsT >::compare(
+BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(
     size_type pos1, size_type n1, basic_slim_string const& that, size_type pos2, size_type n2) const
 {
     const size_type that_size = that.m_pImpl->size();
@@ -785,7 +825,7 @@ int basic_slim_string< CharT, TraitsT >::compare(
     return m_pImpl->compare(pos1, n1, that.m_pImpl->begin() + pos2, (std::min)(n2, that_size - pos2));
 }
 template< typename CharT, typename TraitsT >
-int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, string_type const& s, size_type pos2, size_type n2) const
+BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, string_type const& s, size_type pos2, size_type n2) const
 {
     const size_type that_size = s.size();
     if (that_size < pos2)
@@ -796,17 +836,17 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, s
     return m_pImpl->compare(pos1, n1, s.data() + pos2, (std::min)(n2, that_size - pos2));
 }
 template< typename CharT, typename TraitsT >
-int basic_slim_string< CharT, TraitsT >::compare(const_pointer s) const
+BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(const_pointer s) const
 {
     return traits_type::compare(m_pImpl->begin(), s, m_pImpl->size() + 1);
 }
 template< typename CharT, typename TraitsT >
-int basic_slim_string< CharT, TraitsT >::compare(const_pointer s, size_type n2) const
+BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(const_pointer s, size_type n2) const
 {
     return m_pImpl->compare(0, m_pImpl->size(), s, n2);
 }
 template< typename CharT, typename TraitsT >
-int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, const_pointer s) const
+BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, const_pointer s) const
 {
     // A bit more optimal version to avoid traits_type::length cycle
     const size_type size = m_pImpl->size();
@@ -822,7 +862,7 @@ int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, c
         return res;
 }
 template< typename CharT, typename TraitsT >
-int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, const_pointer s, size_type n2) const
+BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, const_pointer s, size_type n2) const
 {
     return m_pImpl->compare(pos1, n1, s, n2);
 }

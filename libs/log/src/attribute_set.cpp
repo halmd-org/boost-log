@@ -322,27 +322,27 @@ public:
 
 //! Default constructor
 template< typename CharT >
-basic_attribute_set< CharT >::basic_attribute_set() : m_pImpl(new implementation())
+BOOST_LOG_EXPORT basic_attribute_set< CharT >::basic_attribute_set() : m_pImpl(new implementation())
 {
 }
 
 //! Copy constructor
 template< typename CharT >
-basic_attribute_set< CharT >::basic_attribute_set(basic_attribute_set const& that)
+BOOST_LOG_EXPORT basic_attribute_set< CharT >::basic_attribute_set(basic_attribute_set const& that)
     : m_pImpl(new implementation(*that.m_pImpl))
 {
 }
 
 //! Destructor
 template< typename CharT >
-basic_attribute_set< CharT >::~basic_attribute_set()
+BOOST_LOG_EXPORT basic_attribute_set< CharT >::~basic_attribute_set()
 {
     delete m_pImpl;
 }
 
 //! Assignment
 template< typename CharT >
-basic_attribute_set< CharT >& basic_attribute_set< CharT >::operator= (basic_attribute_set const& that)
+BOOST_LOG_EXPORT basic_attribute_set< CharT >& basic_attribute_set< CharT >::operator= (basic_attribute_set const& that)
 {
     if (this != &that)
     {
@@ -354,36 +354,36 @@ basic_attribute_set< CharT >& basic_attribute_set< CharT >::operator= (basic_att
 
 //  Iterator generators
 template< typename CharT >
-typename basic_attribute_set< CharT >::iterator basic_attribute_set< CharT >::begin()
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::iterator basic_attribute_set< CharT >::begin()
 {
     return iterator(m_pImpl->Nodes.begin().pointed_node());
 }
 template< typename CharT >
-typename basic_attribute_set< CharT >::iterator basic_attribute_set< CharT >::end()
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::iterator basic_attribute_set< CharT >::end()
 {
     return iterator(m_pImpl->Nodes.end().pointed_node());
 }
 template< typename CharT >
-typename basic_attribute_set< CharT >::const_iterator basic_attribute_set< CharT >::begin() const
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::const_iterator basic_attribute_set< CharT >::begin() const
 {
     return const_iterator(m_pImpl->Nodes.begin().pointed_node());
 }
 template< typename CharT >
-typename basic_attribute_set< CharT >::const_iterator basic_attribute_set< CharT >::end() const
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::const_iterator basic_attribute_set< CharT >::end() const
 {
     return const_iterator(m_pImpl->Nodes.end().pointed_node());
 }
 
 //! The method returns number of elements in the container
 template< typename CharT >
-typename basic_attribute_set< CharT >::size_type basic_attribute_set< CharT >::size() const
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::size_type basic_attribute_set< CharT >::size() const
 {
     return m_pImpl->Nodes.size();
 }
 
 //! Insertion method
 template< typename CharT >
-std::pair< typename basic_attribute_set< CharT >::iterator, bool >
+BOOST_LOG_EXPORT std::pair< typename basic_attribute_set< CharT >::iterator, bool >
 basic_attribute_set< CharT >::insert(key_type const& key, mapped_type const& data)
 {
     typename implementation::node n(key, data);
@@ -397,7 +397,7 @@ basic_attribute_set< CharT >::insert(key_type const& key, mapped_type const& dat
 
 //! The method erases all attributes with the specified name
 template< typename CharT >
-typename basic_attribute_set< CharT >::size_type
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::size_type
 basic_attribute_set< CharT >::erase(key_type const& key)
 {
     return m_pImpl->Nodes.erase(key);
@@ -405,13 +405,13 @@ basic_attribute_set< CharT >::erase(key_type const& key)
 
 //! The method erases the specified attribute
 template< typename CharT >
-void basic_attribute_set< CharT >::erase(iterator it)
+BOOST_LOG_EXPORT void basic_attribute_set< CharT >::erase(iterator it)
 {
     m_pImpl->Nodes.erase(static_cast< typename implementation::node* >(it.m_pNode));
 }
 //! The method erases all attributes within the specified range
 template< typename CharT >
-void basic_attribute_set< CharT >::erase(iterator begin, iterator end)
+BOOST_LOG_EXPORT void basic_attribute_set< CharT >::erase(iterator begin, iterator end)
 {
     while (begin != end)
         m_pImpl->Nodes.erase(static_cast< typename implementation::node* >((begin++).m_pNode));
@@ -419,14 +419,14 @@ void basic_attribute_set< CharT >::erase(iterator begin, iterator end)
 
 //! The method clears the container
 template< typename CharT >
-void basic_attribute_set< CharT >::clear()
+BOOST_LOG_EXPORT void basic_attribute_set< CharT >::clear()
 {
     m_pImpl->Nodes.clear();
 }
 
 //! Internal lookup implementation
 template< typename CharT >
-typename basic_attribute_set< CharT >::iterator
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::iterator
 basic_attribute_set< CharT >::find_impl(const char_type* key, size_type len)
 {
     return iterator(m_pImpl->Nodes.find(typename implementation::light_key_type(key, len)).pointed_node());

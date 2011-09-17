@@ -221,14 +221,14 @@ struct basic_simple_event_log_backend< CharT >::implementation
 
 //! Default constructor. Registers event source Boost.Log <Boost version> in the Application log.
 template< typename CharT >
-basic_simple_event_log_backend< CharT >::basic_simple_event_log_backend()
+BOOST_LOG_EXPORT basic_simple_event_log_backend< CharT >::basic_simple_event_log_backend()
 {
     construct(log::aux::empty_arg_list());
 }
 
 //! Destructor
 template< typename CharT >
-basic_simple_event_log_backend< CharT >::~basic_simple_event_log_backend()
+BOOST_LOG_EXPORT basic_simple_event_log_backend< CharT >::~basic_simple_event_log_backend()
 {
     DeregisterEventSource(m_pImpl->m_SourceHandle);
     delete m_pImpl;
@@ -236,7 +236,7 @@ basic_simple_event_log_backend< CharT >::~basic_simple_event_log_backend()
 
 //! Constructs backend implementation
 template< typename CharT >
-void basic_simple_event_log_backend< CharT >::construct(
+BOOST_LOG_EXPORT void basic_simple_event_log_backend< CharT >::construct(
     string_type const& target, string_type const& log_name, string_type const& source_name, event_log::registration_mode reg_mode)
 {
     if (reg_mode != event_log::never)
@@ -268,7 +268,7 @@ void basic_simple_event_log_backend< CharT >::construct(
 
 //! Returns default log name
 template< typename CharT >
-typename basic_simple_event_log_backend< CharT >::string_type
+BOOST_LOG_EXPORT typename basic_simple_event_log_backend< CharT >::string_type
 basic_simple_event_log_backend< CharT >::get_default_log_name()
 {
     return aux::registry_traits< char_type >::make_default_log_name();
@@ -276,7 +276,7 @@ basic_simple_event_log_backend< CharT >::get_default_log_name()
 
 //! Returns default source name
 template< typename CharT >
-typename basic_simple_event_log_backend< CharT >::string_type
+BOOST_LOG_EXPORT typename basic_simple_event_log_backend< CharT >::string_type
 basic_simple_event_log_backend< CharT >::get_default_source_name()
 {
     string_type source_name = aux::registry_traits< char_type >::make_default_source_name();
@@ -286,14 +286,15 @@ basic_simple_event_log_backend< CharT >::get_default_source_name()
 
 //! The method installs the function object that maps application severity levels to WinAPI event types
 template< typename CharT >
-void basic_simple_event_log_backend< CharT >::set_event_type_mapper(event_type_mapper_type const& mapper)
+BOOST_LOG_EXPORT void basic_simple_event_log_backend< CharT >::set_event_type_mapper(event_type_mapper_type const& mapper)
 {
     m_pImpl->m_LevelMapper = mapper;
 }
 
 //! The method puts the formatted message to the event log
 template< typename CharT >
-void basic_simple_event_log_backend< CharT >::do_consume(record_type const& record, target_string_type const& formatted_message)
+BOOST_LOG_EXPORT void basic_simple_event_log_backend< CharT >::do_consume(
+    record_type const& record, target_string_type const& formatted_message)
 {
     const char_type* message = formatted_message.c_str();
     WORD event_type = EVENTLOG_INFORMATION_TYPE;
@@ -482,7 +483,7 @@ struct basic_event_log_backend< CharT >::implementation
 
 //! Destructor
 template< typename CharT >
-basic_event_log_backend< CharT >::~basic_event_log_backend()
+BOOST_LOG_EXPORT basic_event_log_backend< CharT >::~basic_event_log_backend()
 {
     DeregisterEventSource(m_pImpl->m_SourceHandle);
     delete m_pImpl;
@@ -490,7 +491,7 @@ basic_event_log_backend< CharT >::~basic_event_log_backend()
 
 //! Constructs backend implementation
 template< typename CharT >
-void basic_event_log_backend< CharT >::construct(
+BOOST_LOG_EXPORT void basic_event_log_backend< CharT >::construct(
     boost::log::aux::universal_path const& message_file_name,
     string_type const& target,
     string_type const& log_name,
@@ -528,7 +529,7 @@ void basic_event_log_backend< CharT >::construct(
 
 //! The method puts the formatted message to the event log
 template< typename CharT >
-void basic_event_log_backend< CharT >::consume(record_type const& record)
+BOOST_LOG_EXPORT void basic_event_log_backend< CharT >::consume(record_type const& record)
 {
     if (!m_pImpl->m_EventComposer.empty())
     {
@@ -566,7 +567,7 @@ void basic_event_log_backend< CharT >::consume(record_type const& record)
 
 //! Returns default log name
 template< typename CharT >
-typename basic_event_log_backend< CharT >::string_type
+BOOST_LOG_EXPORT typename basic_event_log_backend< CharT >::string_type
 basic_event_log_backend< CharT >::get_default_log_name()
 {
     return aux::registry_traits< char_type >::make_default_log_name();
@@ -574,7 +575,7 @@ basic_event_log_backend< CharT >::get_default_log_name()
 
 //! Returns default source name
 template< typename CharT >
-typename basic_event_log_backend< CharT >::string_type
+BOOST_LOG_EXPORT typename basic_event_log_backend< CharT >::string_type
 basic_event_log_backend< CharT >::get_default_source_name()
 {
     string_type source_name = aux::registry_traits< char_type >::make_default_source_name();
@@ -584,14 +585,14 @@ basic_event_log_backend< CharT >::get_default_source_name()
 
 //! The method installs the function object that maps application severity levels to WinAPI event types
 template< typename CharT >
-void basic_event_log_backend< CharT >::set_event_type_mapper(event_type_mapper_type const& mapper)
+BOOST_LOG_EXPORT void basic_event_log_backend< CharT >::set_event_type_mapper(event_type_mapper_type const& mapper)
 {
     m_pImpl->m_LevelMapper = mapper;
 }
 
 //! The method installs the function object that extracts event category from attribute values
 template< typename CharT >
-void basic_event_log_backend< CharT >::set_event_category_mapper(event_category_mapper_type const& mapper)
+BOOST_LOG_EXPORT void basic_event_log_backend< CharT >::set_event_category_mapper(event_category_mapper_type const& mapper)
 {
     m_pImpl->m_CategoryMapper = mapper;
 }
@@ -601,7 +602,7 @@ void basic_event_log_backend< CharT >::set_event_category_mapper(event_category_
  * insertion strings that will replace placeholders in the event message.
  */
 template< typename CharT >
-void basic_event_log_backend< CharT >::set_event_composer(event_composer_type const& composer)
+BOOST_LOG_EXPORT void basic_event_log_backend< CharT >::set_event_composer(event_composer_type const& composer)
 {
     m_pImpl->m_EventComposer = composer;
 }

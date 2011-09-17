@@ -93,7 +93,7 @@ private:
 
 //! The method returns an allocated stream compound
 template< typename CharT >
-typename stream_provider< CharT >::stream_compound* stream_provider< CharT >::allocate_compound(record_type const& rec)
+BOOST_LOG_EXPORT typename stream_provider< CharT >::stream_compound* stream_provider< CharT >::allocate_compound(record_type const& rec)
 {
     stream_compound_pool< char_type >& pool = stream_compound_pool< char_type >::get();
     if (pool.m_Top)
@@ -110,7 +110,7 @@ typename stream_provider< CharT >::stream_compound* stream_provider< CharT >::al
 
 //! The method releases a compound
 template< typename CharT >
-void stream_provider< CharT >::release_compound(stream_compound* compound) /* throw() */
+BOOST_LOG_EXPORT void stream_provider< CharT >::release_compound(stream_compound* compound) /* throw() */
 {
     stream_compound_pool< char_type >& pool = stream_compound_pool< char_type >::get();
     compound->next = pool.m_Top;

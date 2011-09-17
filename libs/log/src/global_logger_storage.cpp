@@ -52,7 +52,7 @@ struct loggers_repository :
 
 //! Finds or creates the logger and returns its holder
 template< typename CharT >
-shared_ptr< logger_holder_base > global_storage< CharT >::get_or_init(
+BOOST_LOG_EXPORT shared_ptr< logger_holder_base > global_storage< CharT >::get_or_init(
     std::type_info const& key,
     function0< shared_ptr< logger_holder_base > > const& initializer)
 {

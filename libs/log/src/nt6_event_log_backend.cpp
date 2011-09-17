@@ -97,13 +97,13 @@ struct basic_simple_nt6_event_log_backend< CharT >::implementation
 };
 
 template< typename CharT >
-basic_simple_nt6_event_log_backend< CharT >::event_enabled_filter::event_enabled_filter(boost::shared_ptr< implementation > const& impl) :
+BOOST_LOG_EXPORT basic_simple_nt6_event_log_backend< CharT >::event_enabled_filter::event_enabled_filter(boost::shared_ptr< implementation > const& impl) :
     m_pImpl(impl)
 {
 }
 
 template< typename CharT >
-bool basic_simple_nt6_event_log_backend< CharT >::event_enabled_filter::operator() (values_view_type const& values) const
+BOOST_LOG_EXPORT bool basic_simple_nt6_event_log_backend< CharT >::event_enabled_filter::operator() (values_view_type const& values) const
 {
     boost::shared_ptr< implementation > impl = m_pImpl.lock();
     if (!!impl)
@@ -114,7 +114,7 @@ bool basic_simple_nt6_event_log_backend< CharT >::event_enabled_filter::operator
 
 
 template< typename CharT >
-basic_simple_nt6_event_log_backend< CharT >::basic_simple_nt6_event_log_backend(GUID const& provider_id) :
+BOOST_LOG_EXPORT basic_simple_nt6_event_log_backend< CharT >::basic_simple_nt6_event_log_backend(GUID const& provider_id) :
     m_pImpl(boost::make_shared< implementation >())
 {
     if (EventRegister(&provider_id, NULL, NULL, &m_pImpl->m_ProviderHandle) != ERROR_SUCCESS)
@@ -122,20 +122,20 @@ basic_simple_nt6_event_log_backend< CharT >::basic_simple_nt6_event_log_backend(
 }
 
 template< typename CharT >
-basic_simple_nt6_event_log_backend< CharT >::~basic_simple_nt6_event_log_backend()
+BOOST_LOG_EXPORT basic_simple_nt6_event_log_backend< CharT >::~basic_simple_nt6_event_log_backend()
 {
     EventUnregister(m_pImpl->m_ProviderHandle);
 }
 
 //! Returns default provider guid
 template< typename CharT >
-GUID const& basic_simple_nt6_event_log_backend< CharT >::get_default_provider_id()
+BOOST_LOG_EXPORT GUID const& basic_simple_nt6_event_log_backend< CharT >::get_default_provider_id()
 {
     return CLSID_DefaultProviderID;
 }
 
 template< typename CharT >
-typename basic_simple_nt6_event_log_backend< CharT >::event_enabled_filter
+BOOST_LOG_EXPORT typename basic_simple_nt6_event_log_backend< CharT >::event_enabled_filter
 basic_simple_nt6_event_log_backend< CharT >::get_event_enabled_filter() const
 {
     return event_enabled_filter(m_pImpl);
@@ -143,14 +143,14 @@ basic_simple_nt6_event_log_backend< CharT >::get_event_enabled_filter() const
 
 //! The method installs the WinAPI record level mapping function object
 template< typename CharT >
-void basic_simple_nt6_event_log_backend< CharT >::set_severity_mapper(severity_mapper_type const& mapper)
+BOOST_LOG_EXPORT void basic_simple_nt6_event_log_backend< CharT >::set_severity_mapper(severity_mapper_type const& mapper)
 {
     m_pImpl->m_LevelMapper = mapper;
 }
 
 //! The method puts the formatted message to the event log
 template< typename CharT >
-void basic_simple_nt6_event_log_backend< CharT >::do_consume(
+BOOST_LOG_EXPORT void basic_simple_nt6_event_log_backend< CharT >::do_consume(
     record_type const& record, target_string_type const& formatted_message)
 {
     EventWriteString(
