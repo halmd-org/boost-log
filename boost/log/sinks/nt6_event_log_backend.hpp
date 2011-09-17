@@ -291,7 +291,7 @@ public:
         weak_ptr< implementation > m_pImpl;
 
     private:
-        explicit event_enabled_filter(shared_ptr< implementation > const& impl);
+        BOOST_LOG_EXPORT explicit event_enabled_filter(shared_ptr< implementation > const& impl);
 
     public:
         BOOST_LOG_EXPORT bool operator() (values_view_type const& values) const;
