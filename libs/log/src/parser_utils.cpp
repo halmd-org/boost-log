@@ -57,7 +57,7 @@ void char_constants< char >::translate_escape_sequences(std::basic_string< char_
         it = std::find(it, str.end(), '\\');
         if (std::distance(it, str.end()) >= 2)
         {
-            str.erase(it);
+            it = str.erase(it);
             switch (*it)
             {
                 case 'n':
@@ -81,7 +81,7 @@ void char_constants< char >::translate_escape_sequences(std::basic_string< char_
                         if (isxdigit(c1) && isxdigit(c2))
                         {
                             *it++ = char_type((to_number(c1) << 4) | to_number(c2));
-                            str.erase(it, b);
+                            it = str.erase(it, b);
                         }
                     }
                     break;
@@ -98,7 +98,7 @@ void char_constants< char >::translate_escape_sequences(std::basic_string< char_
                             c = c * 8 + (*b++) - '0';
 
                         *it++ = char_type(c);
-                        str.erase(it, b);
+                        it = str.erase(it, b);
                     }
                     break;
                 }
@@ -139,7 +139,7 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
         it = std::find(it, str.end(), L'\\');
         if (std::distance(it, str.end()) >= 2)
         {
-            str.erase(it);
+            it = str.erase(it);
             switch (*it)
             {
                 case L'n':
@@ -163,7 +163,7 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
                         if (iswxdigit(c1) && iswxdigit(c2))
                         {
                             *it++ = char_type((to_number(c1) << 4) | to_number(c2));
-                            str.erase(it, b);
+                            it = str.erase(it, b);
                         }
                     }
                     break;
@@ -181,7 +181,7 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
                                 (to_number(c2) << 8) |
                                 (to_number(c3) << 4) |
                                 to_number(c4));
-                            str.erase(it, b);
+                            it = str.erase(it, b);
                         }
                     }
                     break;
@@ -205,7 +205,7 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
                                 (to_number(c6) << 8) |
                                 (to_number(c7) << 4) |
                                 to_number(c8));
-                            str.erase(it, b);
+                            it = str.erase(it, b);
                         }
                     }
                     break;
@@ -222,7 +222,7 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
                             c = c * 8 + (*b++) - L'0';
 
                         *it++ = char_type(c);
-                        str.erase(it, b);
+                        it = str.erase(it, b);
                     }
                     break;
                 }
