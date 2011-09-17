@@ -57,22 +57,22 @@ void char_constants< char >::translate_escape_sequences(std::basic_string< char_
         it = std::find(it, str.end(), '\\');
         if (std::distance(it, str.end()) >= 2)
         {
-            str.erase(it);
+            it = str.erase(it);
             switch (*it)
             {
-                case 'n':
-                    *it = '\n'; break;
-                case 'r':
-                    *it = '\r'; break;
-                case 'a':
-                    *it = '\a'; break;
-                case '\\':
-                    ++it; break;
-                case 't':
-                    *it = '\t'; break;
-                case 'b':
-                    *it = '\b'; break;
-                case 'x':
+            case 'n':
+                *it = '\n'; break;
+            case 'r':
+                *it = '\r'; break;
+            case 'a':
+                *it = '\a'; break;
+            case '\\':
+                ++it; break;
+            case 't':
+                *it = '\t'; break;
+            case 'b':
+                *it = '\b'; break;
+            case 'x':
                 {
                     std::basic_string< char_type >::iterator b = it;
                     if (std::distance(++b, str.end()) >= 2)
@@ -81,12 +81,12 @@ void char_constants< char >::translate_escape_sequences(std::basic_string< char_
                         if (isxdigit(c1) && isxdigit(c2))
                         {
                             *it++ = char_type((to_number(c1) << 4) | to_number(c2));
-                            str.erase(it, b);
+                            it = str.erase(it, b);
                         }
                     }
                     break;
                 }
-                default:
+            default:
                 {
                     if (*it >= '0' && *it <= '7')
                     {
@@ -98,7 +98,7 @@ void char_constants< char >::translate_escape_sequences(std::basic_string< char_
                             c = c * 8 + (*b++) - '0';
 
                         *it++ = char_type(c);
-                        str.erase(it, b);
+                        it = str.erase(it, b);
                     }
                     break;
                 }
@@ -139,22 +139,22 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
         it = std::find(it, str.end(), L'\\');
         if (std::distance(it, str.end()) >= 2)
         {
-            str.erase(it);
+            it = str.erase(it);
             switch (*it)
             {
-                case L'n':
-                    *it = L'\n'; break;
-                case L'r':
-                    *it = L'\r'; break;
-                case L'a':
-                    *it = L'\a'; break;
-                case L'\\':
-                    ++it; break;
-                case L't':
-                    *it = L'\t'; break;
-                case L'b':
-                    *it = L'\b'; break;
-                case L'x':
+            case L'n':
+                *it = L'\n'; break;
+            case L'r':
+                *it = L'\r'; break;
+            case L'a':
+                *it = L'\a'; break;
+            case L'\\':
+                ++it; break;
+            case L't':
+                *it = L'\t'; break;
+            case L'b':
+                *it = L'\b'; break;
+            case L'x':
                 {
                     std::basic_string< char_type >::iterator b = it;
                     if (std::distance(++b, str.end()) >= 2)
@@ -163,12 +163,12 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
                         if (iswxdigit(c1) && iswxdigit(c2))
                         {
                             *it++ = char_type((to_number(c1) << 4) | to_number(c2));
-                            str.erase(it, b);
+                            it = str.erase(it, b);
                         }
                     }
                     break;
                 }
-                case L'u':
+            case L'u':
                 {
                     std::basic_string< char_type >::iterator b = it;
                     if (std::distance(++b, str.end()) >= 4)
@@ -181,12 +181,12 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
                                 (to_number(c2) << 8) |
                                 (to_number(c3) << 4) |
                                 to_number(c4));
-                            str.erase(it, b);
+                            it = str.erase(it, b);
                         }
                     }
                     break;
                 }
-                case L'U':
+            case L'U':
                 {
                     std::basic_string< char_type >::iterator b = it;
                     if (std::distance(++b, str.end()) >= 8)
@@ -205,12 +205,12 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
                                 (to_number(c6) << 8) |
                                 (to_number(c7) << 4) |
                                 to_number(c8));
-                            str.erase(it, b);
+                            it = str.erase(it, b);
                         }
                     }
                     break;
                 }
-                default:
+            default:
                 {
                     if (*it >= L'0' && *it <= L'7')
                     {
@@ -222,7 +222,7 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
                             c = c * 8 + (*b++) - L'0';
 
                         *it++ = char_type(c);
-                        str.erase(it, b);
+                        it = str.erase(it, b);
                     }
                     break;
                 }

@@ -223,10 +223,10 @@ void converting_ostringstreambuf< CharT, TraitsT >::write(const char_type*& pBas
     }
 }
 
-// We'll instantiate the buffer for both characters regardless of the configuration macros
+// We'll instantiate the buffer for all character typess regardless of the configuration macros
 // since code conversion is used in various places of code even if the library is built for only one character type.
-template class converting_ostringstreambuf< char, std::char_traits< char > >;
-template class converting_ostringstreambuf< wchar_t, std::char_traits< wchar_t > >;
+template class BOOST_LOG_EXPORT converting_ostringstreambuf< char, std::char_traits< char > >;
+template class BOOST_LOG_EXPORT converting_ostringstreambuf< wchar_t, std::char_traits< wchar_t > >;
 
 } // namespace aux
 
