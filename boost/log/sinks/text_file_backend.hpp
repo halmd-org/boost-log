@@ -518,7 +518,7 @@ private:
     BOOST_LOG_EXPORT void set_file_name_pattern_internal(path_type const& pattern);
 
     //! The method rotates the file
-    void rotate_file();
+    BOOST_LOG_EXPORT void rotate_file();
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 
