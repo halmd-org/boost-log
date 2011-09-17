@@ -43,20 +43,20 @@ struct basic_text_ostream_backend< CharT >::implementation
 
 //! Constructor
 template< typename CharT >
-basic_text_ostream_backend< CharT >::basic_text_ostream_backend() : m_pImpl(new implementation())
+BOOST_LOG_EXPORT basic_text_ostream_backend< CharT >::basic_text_ostream_backend() : m_pImpl(new implementation())
 {
 }
 
 //! Destructor (just to make it link from the shared library)
 template< typename CharT >
-basic_text_ostream_backend< CharT >::~basic_text_ostream_backend()
+BOOST_LOG_EXPORT basic_text_ostream_backend< CharT >::~basic_text_ostream_backend()
 {
     delete m_pImpl;
 }
 
 //! The method adds a new stream to the sink
 template< typename CharT >
-void basic_text_ostream_backend< CharT >::add_stream(shared_ptr< stream_type > const& strm)
+BOOST_LOG_EXPORT void basic_text_ostream_backend< CharT >::add_stream(shared_ptr< stream_type > const& strm)
 {
     typename implementation::ostream_sequence::iterator it =
         std::find(m_pImpl->m_Streams.begin(), m_pImpl->m_Streams.end(), strm);
@@ -68,7 +68,7 @@ void basic_text_ostream_backend< CharT >::add_stream(shared_ptr< stream_type > c
 
 //! The method removes a stream from the sink
 template< typename CharT >
-void basic_text_ostream_backend< CharT >::remove_stream(shared_ptr< stream_type > const& strm)
+BOOST_LOG_EXPORT void basic_text_ostream_backend< CharT >::remove_stream(shared_ptr< stream_type > const& strm)
 {
     typename implementation::ostream_sequence::iterator it =
         std::find(m_pImpl->m_Streams.begin(), m_pImpl->m_Streams.end(), strm);
@@ -78,14 +78,14 @@ void basic_text_ostream_backend< CharT >::remove_stream(shared_ptr< stream_type 
 
 //! Sets the flag to automatically flush buffers after each logged line
 template< typename CharT >
-void basic_text_ostream_backend< CharT >::auto_flush(bool f)
+BOOST_LOG_EXPORT void basic_text_ostream_backend< CharT >::auto_flush(bool f)
 {
     m_pImpl->m_fAutoFlush = f;
 }
 
 //! The method writes the message to the sink
 template< typename CharT >
-void basic_text_ostream_backend< CharT >::do_consume(
+BOOST_LOG_EXPORT void basic_text_ostream_backend< CharT >::do_consume(
     record_type const& record, target_string_type const& message)
 {
     typename string_type::const_pointer const p = message.data();

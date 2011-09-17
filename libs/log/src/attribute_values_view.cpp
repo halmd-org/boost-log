@@ -375,7 +375,7 @@ private:
 
 //! The constructor adopts three attribute sets to the view
 template< typename CharT >
-basic_attribute_values_view< CharT >::basic_attribute_values_view(
+BOOST_LOG_EXPORT basic_attribute_values_view< CharT >::basic_attribute_values_view(
     attribute_set_type const& source_attrs,
     attribute_set_type const& thread_attrs,
     attribute_set_type const& global_attrs
@@ -387,7 +387,7 @@ basic_attribute_values_view< CharT >::basic_attribute_values_view(
 
 //! Copy constructor
 template< typename CharT >
-basic_attribute_values_view< CharT >::basic_attribute_values_view(basic_attribute_values_view const& that) :
+BOOST_LOG_EXPORT basic_attribute_values_view< CharT >::basic_attribute_values_view(basic_attribute_values_view const& that) :
     internal_allocator_type(static_cast< internal_allocator_type const& >(that))
 {
     if (that.m_pImpl)
@@ -402,7 +402,7 @@ basic_attribute_values_view< CharT >::basic_attribute_values_view(basic_attribut
 
 //! Destructor
 template< typename CharT >
-basic_attribute_values_view< CharT >::~basic_attribute_values_view()
+BOOST_LOG_EXPORT basic_attribute_values_view< CharT >::~basic_attribute_values_view()
 {
     if (m_pImpl)
         implementation::destroy(static_cast< internal_allocator_type& >(*this), m_pImpl);
@@ -410,7 +410,8 @@ basic_attribute_values_view< CharT >::~basic_attribute_values_view()
 
 //! Assignment
 template< typename CharT >
-basic_attribute_values_view< CharT >& basic_attribute_values_view< CharT >::operator= (basic_attribute_values_view that)
+BOOST_LOG_EXPORT basic_attribute_values_view< CharT >&
+basic_attribute_values_view< CharT >::operator= (basic_attribute_values_view that)
 {
     swap(that);
     return *this;
@@ -418,14 +419,14 @@ basic_attribute_values_view< CharT >& basic_attribute_values_view< CharT >::oper
 
 //  Iterator generators
 template< typename CharT >
-typename basic_attribute_values_view< CharT >::const_iterator
+BOOST_LOG_EXPORT typename basic_attribute_values_view< CharT >::const_iterator
 basic_attribute_values_view< CharT >::begin() const
 {
     return const_iterator(m_pImpl->begin(), const_cast< basic_attribute_values_view* >(this));
 }
 
 template< typename CharT >
-typename basic_attribute_values_view< CharT >::const_iterator
+BOOST_LOG_EXPORT typename basic_attribute_values_view< CharT >::const_iterator
 basic_attribute_values_view< CharT >::end() const
 {
     return const_iterator(m_pImpl->end(), const_cast< basic_attribute_values_view* >(this));
@@ -433,14 +434,15 @@ basic_attribute_values_view< CharT >::end() const
 
 //! The method returns number of elements in the container
 template< typename CharT >
-typename basic_attribute_values_view< CharT >::size_type basic_attribute_values_view< CharT >::size() const
+BOOST_LOG_EXPORT typename basic_attribute_values_view< CharT >::size_type
+basic_attribute_values_view< CharT >::size() const
 {
     return m_pImpl->size();
 }
 
 //! Internal lookup implementation
 template< typename CharT >
-typename basic_attribute_values_view< CharT >::const_iterator
+BOOST_LOG_EXPORT typename basic_attribute_values_view< CharT >::const_iterator
 basic_attribute_values_view< CharT >::find(key_type key) const
 {
     return const_iterator(m_pImpl->find(key), const_cast< basic_attribute_values_view* >(this));
@@ -448,7 +450,7 @@ basic_attribute_values_view< CharT >::find(key_type key) const
 
 //! The method acquires values of all adopted attributes. Users don't need to call it, since will always get an already frozen view.
 template< typename CharT >
-void basic_attribute_values_view< CharT >::freeze()
+BOOST_LOG_EXPORT void basic_attribute_values_view< CharT >::freeze()
 {
     m_pImpl->freeze();
 }

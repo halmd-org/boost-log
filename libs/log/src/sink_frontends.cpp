@@ -56,20 +56,20 @@ namespace sinks {
 /////////////////////////////////////////////////////////////////////
 //! The constructor installs the pointer to the frontend implementation
 template< typename CharT >
-basic_sink_frontend< CharT >::basic_sink_frontend(implementation* p) : m_pImpl(p)
+BOOST_LOG_EXPORT basic_sink_frontend< CharT >::basic_sink_frontend(implementation* p) : m_pImpl(p)
 {
 }
 
 //! Destructor
 template< typename CharT >
-basic_sink_frontend< CharT >::~basic_sink_frontend()
+BOOST_LOG_EXPORT basic_sink_frontend< CharT >::~basic_sink_frontend()
 {
     delete m_pImpl;
 }
 
 //! The method sets sink-specific filter functional object
 template< typename CharT >
-void basic_sink_frontend< CharT >::set_filter(filter_type const& filter)
+BOOST_LOG_EXPORT void basic_sink_frontend< CharT >::set_filter(filter_type const& filter)
 {
     BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< typename implementation::mutex_type > lock(m_pImpl->m_Mutex);)
     m_pImpl->m_Filter = filter;
@@ -77,7 +77,7 @@ void basic_sink_frontend< CharT >::set_filter(filter_type const& filter)
 
 //! The method resets the filter
 template< typename CharT >
-void basic_sink_frontend< CharT >::reset_filter()
+BOOST_LOG_EXPORT void basic_sink_frontend< CharT >::reset_filter()
 {
     BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< typename implementation::mutex_type > lock(m_pImpl->m_Mutex);)
     m_pImpl->m_Filter.clear();
@@ -85,7 +85,7 @@ void basic_sink_frontend< CharT >::reset_filter()
 
 //! The method sets an exception handler function
 template< typename CharT >
-void basic_sink_frontend< CharT >::set_exception_handler(exception_handler_type const& handler)
+BOOST_LOG_EXPORT void basic_sink_frontend< CharT >::set_exception_handler(exception_handler_type const& handler)
 {
     BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< typename implementation::mutex_type > lock(m_pImpl->m_Mutex);)
     m_pImpl->m_ExceptionHandler = handler;
@@ -93,7 +93,7 @@ void basic_sink_frontend< CharT >::set_exception_handler(exception_handler_type 
 
 //! The method returns \c true if no filter is set or the attribute values pass the filter
 template< typename CharT >
-bool basic_sink_frontend< CharT >::will_consume(values_view_type const& attributes)
+BOOST_LOG_EXPORT bool basic_sink_frontend< CharT >::will_consume(values_view_type const& attributes)
 {
     BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< typename implementation::mutex_type > lock(m_pImpl->m_Mutex);)
     try
@@ -147,20 +147,21 @@ struct unlocked_frontend< CharT >::implementation :
 };
 
 template< typename CharT >
-unlocked_frontend< CharT >::unlocked_frontend(shared_ptr< void > const& backend, consume_trampoline_t consume_tramp) :
+BOOST_LOG_EXPORT unlocked_frontend< CharT >::unlocked_frontend(
+    shared_ptr< void > const& backend, consume_trampoline_t consume_tramp) :
     base_type(new implementation(backend, consume_tramp))
 {
     BOOST_ASSERT(!!backend);
 }
 
 template< typename CharT >
-shared_ptr< void > const& unlocked_frontend< CharT >::get_backend() const
+BOOST_LOG_EXPORT shared_ptr< void > const& unlocked_frontend< CharT >::get_backend() const
 {
     return this->BOOST_NESTED_TEMPLATE get_impl< implementation >()->m_pBackend;
 }
 
 template< typename CharT >
-void unlocked_frontend< CharT >::consume(record_type const& record)
+BOOST_LOG_EXPORT void unlocked_frontend< CharT >::consume(record_type const& record)
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
@@ -221,26 +222,27 @@ struct synchronous_frontend< CharT >::implementation :
 };
 
 template< typename CharT >
-synchronous_frontend< CharT >::synchronous_frontend(shared_ptr< void > const& backend, consume_trampoline_t consume_tramp) :
+BOOST_LOG_EXPORT synchronous_frontend< CharT >::synchronous_frontend(
+    shared_ptr< void > const& backend, consume_trampoline_t consume_tramp) :
     base_type(new implementation(backend, consume_tramp))
 {
     BOOST_ASSERT(!!backend);
 }
 
 template< typename CharT >
-shared_ptr< void > const& synchronous_frontend< CharT >::get_backend() const
+BOOST_LOG_EXPORT shared_ptr< void > const& synchronous_frontend< CharT >::get_backend() const
 {
     return this->BOOST_NESTED_TEMPLATE get_impl< implementation >()->m_pBackend;
 }
 
 template< typename CharT >
-boost::log::aux::locking_ptr_counter_base& synchronous_frontend< CharT >::get_backend_locker() const
+BOOST_LOG_EXPORT boost::log::aux::locking_ptr_counter_base& synchronous_frontend< CharT >::get_backend_locker() const
 {
     return *this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
 }
 
 template< typename CharT >
-void synchronous_frontend< CharT >::consume(record_type const& record)
+BOOST_LOG_EXPORT void synchronous_frontend< CharT >::consume(record_type const& record)
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
@@ -262,7 +264,7 @@ void synchronous_frontend< CharT >::consume(record_type const& record)
 }
 
 template< typename CharT >
-bool synchronous_frontend< CharT >::try_consume(record_type const& record)
+BOOST_LOG_EXPORT bool synchronous_frontend< CharT >::try_consume(record_type const& record)
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
@@ -494,7 +496,7 @@ private:
 
 //! Constructor
 template< typename CharT >
-asynchronous_frontend< CharT >::asynchronous_frontend(
+BOOST_LOG_EXPORT asynchronous_frontend< CharT >::asynchronous_frontend(
     shared_ptr< void > const& backend, consume_trampoline_t consume_tramp, bool start_thread) :
     base_type(new implementation(backend, consume_tramp))
 {
@@ -508,25 +510,25 @@ asynchronous_frontend< CharT >::asynchronous_frontend(
 
 //! Destructor
 template< typename CharT >
-asynchronous_frontend< CharT >::~asynchronous_frontend()
+BOOST_LOG_EXPORT asynchronous_frontend< CharT >::~asynchronous_frontend()
 {
     stop();
 }
 
 template< typename CharT >
-shared_ptr< void > const& asynchronous_frontend< CharT >::get_backend() const
+BOOST_LOG_EXPORT shared_ptr< void > const& asynchronous_frontend< CharT >::get_backend() const
 {
     return this->BOOST_NESTED_TEMPLATE get_impl< implementation >()->m_pBackend;
 }
 
 template< typename CharT >
-boost::log::aux::locking_ptr_counter_base& asynchronous_frontend< CharT >::get_backend_locker() const
+BOOST_LOG_EXPORT boost::log::aux::locking_ptr_counter_base& asynchronous_frontend< CharT >::get_backend_locker() const
 {
     return *this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
 }
 
 template< typename CharT >
-void asynchronous_frontend< CharT >::consume(record_type const& record)
+BOOST_LOG_EXPORT void asynchronous_frontend< CharT >::consume(record_type const& record)
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
@@ -550,7 +552,7 @@ void asynchronous_frontend< CharT >::consume(record_type const& record)
 }
 
 template< typename CharT >
-bool asynchronous_frontend< CharT >::try_consume(record_type const& record)
+BOOST_LOG_EXPORT bool asynchronous_frontend< CharT >::try_consume(record_type const& record)
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
@@ -578,7 +580,7 @@ bool asynchronous_frontend< CharT >::try_consume(record_type const& record)
 
 //! The method starts record feeding loop
 template< typename CharT >
-void asynchronous_frontend< CharT >::run()
+BOOST_LOG_EXPORT void asynchronous_frontend< CharT >::run()
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     pImpl->run();
@@ -586,7 +588,7 @@ void asynchronous_frontend< CharT >::run()
 
 //! The method softly interrupts record feeding loop
 template< typename CharT >
-bool asynchronous_frontend< CharT >::stop()
+BOOST_LOG_EXPORT bool asynchronous_frontend< CharT >::stop()
 {
     implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     return pImpl->stop();
@@ -594,7 +596,7 @@ bool asynchronous_frontend< CharT >::stop()
 
 //! The method feeds log records that may have been buffered to the backend and returns
 template< typename CharT >
-void asynchronous_frontend< CharT >::feed_records()
+BOOST_LOG_EXPORT void asynchronous_frontend< CharT >::feed_records()
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     pImpl->feed_records();
@@ -869,7 +871,7 @@ private:
 
 //! Constructor
 template< typename CharT >
-ordering_asynchronous_frontend< CharT >::ordering_asynchronous_frontend(
+BOOST_LOG_EXPORT ordering_asynchronous_frontend< CharT >::ordering_asynchronous_frontend(
     shared_ptr< void > const& backend,
     consume_trampoline_t consume_tramp,
     bool start_thread,
@@ -888,25 +890,25 @@ ordering_asynchronous_frontend< CharT >::ordering_asynchronous_frontend(
 
 //! Destructor
 template< typename CharT >
-ordering_asynchronous_frontend< CharT >::~ordering_asynchronous_frontend()
+BOOST_LOG_EXPORT ordering_asynchronous_frontend< CharT >::~ordering_asynchronous_frontend()
 {
     stop();
 }
 
 template< typename CharT >
-shared_ptr< void > const& ordering_asynchronous_frontend< CharT >::get_backend() const
+BOOST_LOG_EXPORT shared_ptr< void > const& ordering_asynchronous_frontend< CharT >::get_backend() const
 {
     return this->BOOST_NESTED_TEMPLATE get_impl< implementation >()->m_pBackend;
 }
 
 template< typename CharT >
-boost::log::aux::locking_ptr_counter_base& ordering_asynchronous_frontend< CharT >::get_backend_locker() const
+BOOST_LOG_EXPORT boost::log::aux::locking_ptr_counter_base& ordering_asynchronous_frontend< CharT >::get_backend_locker() const
 {
     return *this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
 }
 
 template< typename CharT >
-void ordering_asynchronous_frontend< CharT >::consume(record_type const& record)
+BOOST_LOG_EXPORT void ordering_asynchronous_frontend< CharT >::consume(record_type const& record)
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
@@ -930,7 +932,7 @@ void ordering_asynchronous_frontend< CharT >::consume(record_type const& record)
 }
 
 template< typename CharT >
-bool ordering_asynchronous_frontend< CharT >::try_consume(record_type const& record)
+BOOST_LOG_EXPORT bool ordering_asynchronous_frontend< CharT >::try_consume(record_type const& record)
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     try
@@ -961,7 +963,7 @@ bool ordering_asynchronous_frontend< CharT >::try_consume(record_type const& rec
 
 //! The method starts record feeding loop
 template< typename CharT >
-void ordering_asynchronous_frontend< CharT >::run()
+BOOST_LOG_EXPORT void ordering_asynchronous_frontend< CharT >::run()
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     pImpl->run();
@@ -969,7 +971,7 @@ void ordering_asynchronous_frontend< CharT >::run()
 
 //! The method softly interrupts record feeding loop
 template< typename CharT >
-bool ordering_asynchronous_frontend< CharT >::stop()
+BOOST_LOG_EXPORT bool ordering_asynchronous_frontend< CharT >::stop()
 {
     implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     return pImpl->stop();
@@ -977,7 +979,7 @@ bool ordering_asynchronous_frontend< CharT >::stop()
 
 //! The method feeds log records that may have been buffered to the backend and returns
 template< typename CharT >
-void ordering_asynchronous_frontend< CharT >::feed_records(posix_time::time_duration ordering_window)
+BOOST_LOG_EXPORT void ordering_asynchronous_frontend< CharT >::feed_records(posix_time::time_duration ordering_window)
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     pImpl->feed_records(ordering_window);
@@ -985,7 +987,7 @@ void ordering_asynchronous_frontend< CharT >::feed_records(posix_time::time_dura
 
 //! Ordering window size
 template< typename CharT >
-posix_time::time_duration ordering_asynchronous_frontend< CharT >::get_ordering_window() const
+BOOST_LOG_EXPORT posix_time::time_duration ordering_asynchronous_frontend< CharT >::get_ordering_window() const
 {
     register implementation* pImpl = this->BOOST_NESTED_TEMPLATE get_impl< implementation >();
     return pImpl->m_OrderingWindow;
@@ -993,7 +995,7 @@ posix_time::time_duration ordering_asynchronous_frontend< CharT >::get_ordering_
 
 //! Default ordering window size
 template< typename CharT >
-posix_time::time_duration ordering_asynchronous_frontend< CharT >::get_default_ordering_window()
+BOOST_LOG_EXPORT posix_time::time_duration ordering_asynchronous_frontend< CharT >::get_default_ordering_window()
 {
     // The main idea behind this parameter is that the ordering window should be large enough
     // to allow the frontend to order records from different threads on an attribute

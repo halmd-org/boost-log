@@ -42,28 +42,28 @@ inline basic_attribute_set< CharT >::node::node(key_type const& key, mapped_type
 
 //! Default constructor
 template< typename CharT >
-basic_attribute_set< CharT >::basic_attribute_set() :
+BOOST_LOG_EXPORT basic_attribute_set< CharT >::basic_attribute_set() :
     m_pImpl(new implementation())
 {
 }
 
 //! Copy constructor
 template< typename CharT >
-basic_attribute_set< CharT >::basic_attribute_set(basic_attribute_set const& that) :
+BOOST_LOG_EXPORT basic_attribute_set< CharT >::basic_attribute_set(basic_attribute_set const& that) :
     m_pImpl(new implementation(*that.m_pImpl))
 {
 }
 
 //! Destructor
 template< typename CharT >
-basic_attribute_set< CharT >::~basic_attribute_set()
+BOOST_LOG_EXPORT basic_attribute_set< CharT >::~basic_attribute_set()
 {
     delete m_pImpl;
 }
 
 //! Assignment
 template< typename CharT >
-basic_attribute_set< CharT >& basic_attribute_set< CharT >::operator= (basic_attribute_set that)
+BOOST_LOG_EXPORT basic_attribute_set< CharT >& basic_attribute_set< CharT >::operator= (basic_attribute_set that)
 {
     this->swap(that);
     return *this;
@@ -71,36 +71,36 @@ basic_attribute_set< CharT >& basic_attribute_set< CharT >::operator= (basic_att
 
 //  Iterator generators
 template< typename CharT >
-typename basic_attribute_set< CharT >::iterator basic_attribute_set< CharT >::begin()
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::iterator basic_attribute_set< CharT >::begin()
 {
     return m_pImpl->begin();
 }
 template< typename CharT >
-typename basic_attribute_set< CharT >::iterator basic_attribute_set< CharT >::end()
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::iterator basic_attribute_set< CharT >::end()
 {
     return m_pImpl->end();
 }
 template< typename CharT >
-typename basic_attribute_set< CharT >::const_iterator basic_attribute_set< CharT >::begin() const
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::const_iterator basic_attribute_set< CharT >::begin() const
 {
     return const_iterator(m_pImpl->begin());
 }
 template< typename CharT >
-typename basic_attribute_set< CharT >::const_iterator basic_attribute_set< CharT >::end() const
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::const_iterator basic_attribute_set< CharT >::end() const
 {
     return const_iterator(m_pImpl->end());
 }
 
 //! The method returns number of elements in the container
 template< typename CharT >
-typename basic_attribute_set< CharT >::size_type basic_attribute_set< CharT >::size() const
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::size_type basic_attribute_set< CharT >::size() const
 {
     return m_pImpl->size();
 }
 
 //! Insertion method
 template< typename CharT >
-std::pair< typename basic_attribute_set< CharT >::iterator, bool >
+BOOST_LOG_EXPORT std::pair< typename basic_attribute_set< CharT >::iterator, bool >
 basic_attribute_set< CharT >::insert(key_type key, mapped_type const& data)
 {
     return m_pImpl->insert(key, data);
@@ -108,7 +108,7 @@ basic_attribute_set< CharT >::insert(key_type key, mapped_type const& data)
 
 //! The method erases all attributes with the specified name
 template< typename CharT >
-typename basic_attribute_set< CharT >::size_type
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::size_type
 basic_attribute_set< CharT >::erase(key_type key)
 {
     iterator it = m_pImpl->find(key);
@@ -123,13 +123,13 @@ basic_attribute_set< CharT >::erase(key_type key)
 
 //! The method erases the specified attribute
 template< typename CharT >
-void basic_attribute_set< CharT >::erase(iterator it)
+BOOST_LOG_EXPORT void basic_attribute_set< CharT >::erase(iterator it)
 {
     m_pImpl->erase(it);
 }
 //! The method erases all attributes within the specified range
 template< typename CharT >
-void basic_attribute_set< CharT >::erase(iterator begin, iterator end)
+BOOST_LOG_EXPORT void basic_attribute_set< CharT >::erase(iterator begin, iterator end)
 {
     while (begin != end)
     {
@@ -139,14 +139,14 @@ void basic_attribute_set< CharT >::erase(iterator begin, iterator end)
 
 //! The method clears the container
 template< typename CharT >
-void basic_attribute_set< CharT >::clear()
+BOOST_LOG_EXPORT void basic_attribute_set< CharT >::clear()
 {
     m_pImpl->clear();
 }
 
 //! Internal lookup implementation
 template< typename CharT >
-typename basic_attribute_set< CharT >::iterator
+BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::iterator
 basic_attribute_set< CharT >::find(key_type key)
 {
     return m_pImpl->find(key);
