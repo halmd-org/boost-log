@@ -63,7 +63,7 @@ namespace sinks {
 template< typename SinkBackendT >
 class synchronous_sink :
     public aux::make_sink_frontend_base< SinkBackendT >::type,
-    public boost::log::aux::locking_ptr_counter_base
+    private boost::log::aux::locking_ptr_counter_base
 {
     typedef typename aux::make_sink_frontend_base< SinkBackendT >::type base_type;
 
@@ -75,7 +75,7 @@ public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
     //! \cond
-    BOOST_MPL_ASSERT((is_requirement_satisfied< typename sink_backend_type::frontend_requirements, syncronized_feeding >));
+    BOOST_MPL_ASSERT((is_requirement_satisfied< typename sink_backend_type::frontend_requirements, synchronized_feeding >));
     //! \endcond
 
     typedef typename base_type::record_type record_type;
@@ -126,9 +126,11 @@ public:
     /*!
      * Locking accessor to the attached backend
      */
-    locked_backend_ptr locked_backend() const
+    locked_backend_ptr locked_backend()
     {
-        return locked_backend_ptr(m_pBackend, *this);
+        return locked_backend_ptr(
+            m_pBackend,
+            static_cast< boost::log::aux::locking_ptr_counter_base& >(*this));
     }
 
     /*!

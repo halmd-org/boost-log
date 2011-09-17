@@ -53,6 +53,7 @@
 #include <boost/log/core.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/exceptions.hpp>
+#include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/init/from_settings.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
@@ -661,6 +662,10 @@ private:
     static shared_ptr< sinks::sink< char_type > > init_sink(shared_ptr< BackendT > const& backend, params_t const& params)
     {
         typedef BackendT backend_t;
+        typedef typename sinks::is_requirement_satisfied<
+            typename backend_t::frontend_requirements,
+            sinks::formatted_records
+        >::type is_formatting_t;
 
         // Filter
         typedef typename sinks::sink< char_type >::filter_type filter_type;
@@ -669,13 +674,6 @@ private:
         if (it != params.end() && !it->second.empty())
         {
             filt = any_cast_to_filter(constants::filter_param_name(), it->second);
-        }
-
-        // Formatter
-        it = params.find(constants::format_param_name());
-        if (it != params.end() && !it->second.empty())
-        {
-            backend->set_formatter(any_cast_to_formatter(constants::format_param_name(), it->second));
         }
 
         shared_ptr< sinks::basic_sink_frontend< char_type > > p;
@@ -691,17 +689,35 @@ private:
 
         // Construct the frontend, considering Asynchronous parameter
         if (!async)
-            p = boost::make_shared< sinks::synchronous_sink< backend_t > >(backend);
+            p = init_formatter(boost::make_shared< sinks::synchronous_sink< backend_t > >(backend), params, is_formatting_t());
         else
-            p = boost::make_shared< sinks::asynchronous_sink< backend_t > >(backend);
+            p = init_formatter(boost::make_shared< sinks::asynchronous_sink< backend_t > >(backend), params, is_formatting_t());
 #else
         // When multithreading is disabled we always use the unlocked sink frontend
-        p = boost::make_shared< sinks::unlocked_sink< backend_t > >(backend);
+        p = init_formatter(boost::make_shared< sinks::unlocked_sink< backend_t > >(backend), params, is_formatting_t());
 #endif
 
         p->set_filter(filt);
 
         return p;
+    }
+
+    //! The function initializes formatter for the sinks that support formatting
+    template< typename SinkT >
+    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, params_t const& params, mpl::true_)
+    {
+        // Formatter
+        typename params_t::const_iterator it = params.find(constants::format_param_name());
+        if (it != params.end() && !it->second.empty())
+        {
+            sink->set_formatter(any_cast_to_formatter(constants::format_param_name(), it->second));
+        }
+        return sink;
+    }
+    template< typename SinkT >
+    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, params_t const& params, mpl::false_)
+    {
+        return sink;
     }
 };
 

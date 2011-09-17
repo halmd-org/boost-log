@@ -171,7 +171,8 @@ uint64_t get_tick_count_realtime_clock()
     timespec ts;
     if (clock_gettime(CLOCK_REALTIME, &ts) != 0)
     {
-        BOOST_THROW_EXCEPTION(boost::system_error(errno, system_category(), "Failed to acquire current time"));
+        BOOST_THROW_EXCEPTION(boost::system::system_error(
+            errno, boost::system::system_category(), "Failed to acquire current time"));
     }
 
     return static_cast< uint64_t >(ts.tv_sec) * 1000ULL + ts.tv_nsec / 1000000UL;
@@ -194,7 +195,8 @@ uint64_t get_tick_count_monotonic_clock()
             get_tick_count = &get_tick_count_realtime_clock;
             return get_tick_count_realtime_clock();
         }
-        BOOST_THROW_EXCEPTION(boost::system_error(err, system_category(), "Failed to acquire current time"));
+        BOOST_THROW_EXCEPTION(boost::system::system_error(
+            err, boost::system::system_category(), "Failed to acquire current time"));
     }
 
     return static_cast< uint64_t >(ts.tv_sec) * 1000ULL + ts.tv_nsec / 1000000UL;

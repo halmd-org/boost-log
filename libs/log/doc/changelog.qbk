@@ -41,6 +41,11 @@
 [*Logging sinks:]
 
 * Types for integral constants for syslog and event log were renamed to drop the `_t` suffix.
+* Formatting functionality moved to sink frontends. Sink backends that support record formatting derive from the `basic_formatting_sink_backend` class template, which indicates to the frontend that record formatting is required. This breaks user-side API of the library: the formatter and locale has to be set to the frontend rather than backend.
+* Formatting support no longer makes frontend thread synchronization mandatory. Formatting is done prior to locking for processing the record in the backend and can be performed concurrently in multiple threads.
+* Added support for flushing sinks. A sink backend that supports flushing has to define public method with the following signature: `void flush()`.
+* Asynchronous sink frontend reworkerd, ordering asynchronous sink removed. The `asynchronous_sink` class template now allows to specify record queueing strategy. Several strategies provided, including `unbounded_fifo_queue` (the default) and `unbounded_ordering_queue` which cover the functionality of asynchronous sink frontends in 1.x releases.
+* Lock-free FIFO record queueing in asynchronous sinks reworked to reduce log record processing stalls.
 
 [*Documentation changes:]
 

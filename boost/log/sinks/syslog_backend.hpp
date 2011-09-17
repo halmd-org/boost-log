@@ -389,11 +389,13 @@ public:
 
 #endif // !defined(BOOST_LOG_NO_ASIO)
 
+    /*!
+     * The method passes the formatted message to the syslog API or sends to a syslog server
+     */
+    BOOST_LOG_EXPORT void consume(record_type const& record, target_string_type const& formatted_message);
+
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    //! The method passes the formatted message to the Syslog API
-    BOOST_LOG_EXPORT void do_consume(record_type const& record, target_string_type const& formatted_message);
-
     //! The method creates the backend implementation
     template< typename ArgsT >
     void construct(ArgsT const& args)

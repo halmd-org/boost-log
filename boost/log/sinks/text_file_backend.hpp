@@ -21,6 +21,7 @@
 
 #include <ios>
 #include <string>
+#include <ostream>
 #include <boost/limits.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
@@ -327,12 +328,14 @@ public:
     typedef typename base_type::char_type char_type;
     //! String type to be used as a message text holder
     typedef typename base_type::string_type string_type;
+    //! Target character type
+    typedef typename base_type::target_char_type target_char_type;
     //! String type to be used as a message text holder
     typedef typename base_type::target_string_type target_string_type;
     //! Log record type
     typedef typename base_type::record_type record_type;
-    //! Stream type
-    typedef typename base_type::stream_type stream_type;
+    //! Output stream type
+    typedef std::basic_ostream< target_char_type > stream_type;
     //! Path type that is used by Boost.Log
     typedef boost::log::aux::universal_path path_type;
 
@@ -490,6 +493,16 @@ public:
     BOOST_LOG_EXPORT uintmax_t scan_for_files(
         file::scan_method method = file::scan_matching, bool update_counter = true);
 
+    /*!
+     * The method writes the message to the sink
+     */
+    BOOST_LOG_EXPORT void consume(record_type const& record, target_string_type const& formatted_message);
+
+    /*!
+     * The method flushes the currently open log file
+     */
+    BOOST_LOG_EXPORT void flush();
+
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! Constructor implementation
@@ -510,9 +523,6 @@ private:
         uintmax_t rotation_size,
         time_based_rotation_predicate const& time_based_rotation,
         bool auto_flush);
-
-    //! The method writes the message to the sink
-    BOOST_LOG_EXPORT void do_consume(record_type const& record, target_string_type const& formatted_message);
 
     //! The method sets file name mask
     BOOST_LOG_EXPORT void set_file_name_pattern_internal(path_type const& pattern);

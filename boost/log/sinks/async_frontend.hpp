@@ -77,7 +77,7 @@ namespace sinks {
 template< typename SinkBackendT, typename QueueingStrategyT = unbounded_fifo_queue >
 class asynchronous_sink :
     public aux::make_sink_frontend_base< SinkBackendT >::type,
-    public boost::log::aux::locking_ptr_counter_base,
+    private boost::log::aux::locking_ptr_counter_base,
     public QueueingStrategyT::template frontend_base< typename SinkBackendT::record_type >::type
 {
     typedef typename aux::make_sink_frontend_base< SinkBackendT >::type base_type;
@@ -147,7 +147,7 @@ private:
 
     public:
         explicit scoped_flag(frontend_mutex_type& mut, condition_variable_any& cond, volatile bool& f) :
-            m_Flag(f)
+            m_Mutex(mut), m_Cond(cond), m_Flag(f)
         {
         }
         ~scoped_flag()
@@ -259,9 +259,11 @@ public:
     /*!
      * Locking accessor to the attached backend
      */
-    locked_backend_ptr locked_backend() const
+    locked_backend_ptr locked_backend()
     {
-        return locked_backend_ptr(m_pBackend, *this);
+        return locked_backend_ptr(
+            m_pBackend,
+            static_cast< boost::log::aux::locking_ptr_counter_base& >(*this));
     }
 
     /*!
@@ -378,7 +380,7 @@ public:
      */
     void flush()
     {
-        unique_lock< frontend_mutex_type > lock(m_Mutex);
+        unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
         if (m_FeedingThreadID != thread::id())
         {
             // There is already a thread feeding records, let it do the job

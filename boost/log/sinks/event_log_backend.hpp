@@ -36,6 +36,7 @@
 #include <boost/log/keywords/registration.hpp>
 #include <boost/log/keywords/target.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
+#include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/sinks/attribute_mapping.hpp>
 #include <boost/log/sinks/event_log_constants.hpp>
 #include <boost/log/core/record.hpp>
@@ -780,10 +781,10 @@ namespace event_log {
  */
 template< typename CharT >
 class basic_simple_event_log_backend :
-    public basic_formatting_sink_backend< CharT >
+    public basic_formatting_sink_backend< CharT, CharT, concurrent_feeding >
 {
     //! Base type
-    typedef basic_formatting_sink_backend< CharT > base_type;
+    typedef basic_formatting_sink_backend< CharT, CharT, concurrent_feeding > base_type;
     //! Implementation type
     struct implementation;
 
@@ -857,11 +858,13 @@ public:
      */
     BOOST_LOG_EXPORT static string_type get_default_source_name();
 
+    /*!
+     * The method puts the formatted message to the event log
+     */
+    BOOST_LOG_EXPORT void consume(record_type const& record, target_string_type const& formatted_message);
+
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    //! The method puts the formatted message to the event log
-    BOOST_LOG_EXPORT void do_consume(record_type const& record, target_string_type const& formatted_message);
-
     //! Constructs backend implementation
     template< typename ArgsT >
     void construct(ArgsT const& args)
@@ -900,10 +903,10 @@ private:
  */
 template< typename CharT >
 class basic_event_log_backend :
-    public basic_sink_backend< CharT, frontend_synchronization_tag >
+    public basic_sink_backend< CharT, syncronized_feeding >
 {
     //! Base type
-    typedef basic_sink_backend< CharT, frontend_synchronization_tag > base_type;
+    typedef basic_sink_backend< CharT, syncronized_feeding > base_type;
     //! Implementation type
     struct implementation;
 

@@ -295,7 +295,7 @@ BOOST_LOG_EXPORT void basic_simple_event_log_backend< CharT >::set_event_type_ma
 
 //! The method puts the formatted message to the event log
 template< typename CharT >
-BOOST_LOG_EXPORT void basic_simple_event_log_backend< CharT >::do_consume(
+BOOST_LOG_EXPORT void basic_simple_event_log_backend< CharT >::consume(
     record_type const& record, target_string_type const& formatted_message)
 {
     const char_type* message = formatted_message.c_str();
@@ -530,7 +530,7 @@ BOOST_LOG_EXPORT void basic_event_log_backend< CharT >::consume(record_type cons
 {
     if (!m_pImpl->m_EventComposer.empty())
     {
-        log::aux::cleanup_guard< insertion_list > _(m_pImpl->m_Insertions);
+        log::aux::cleanup_guard< insertion_list > cleaner(m_pImpl->m_Insertions);
 
         // Get event ID and construct insertions
         DWORD id = m_pImpl->m_EventComposer(record, m_pImpl->m_Insertions);

@@ -20,11 +20,10 @@
 #define BOOST_LOG_SINKS_DEBUG_OUTPUT_BACKEND_HPP_INCLUDED_
 
 #include <string>
-#include <boost/weak_ptr.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
+#include <boost/log/sinks/frontend_requirements.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -50,10 +49,10 @@ namespace sinks {
  */
 template< typename CharT >
 class basic_debug_output_backend :
-    public basic_formatting_sink_backend< CharT >
+    public basic_formatting_sink_backend< CharT, CharT, concurrent_feeding >
 {
     //! Base type
-    typedef basic_formatting_sink_backend< CharT > base_type;
+    typedef basic_formatting_sink_backend< CharT, CharT, concurrent_feeding > base_type;
 
 public:
     //! Character type
@@ -93,11 +92,10 @@ public:
      */
     BOOST_LOG_EXPORT debugger_presence_filter get_debugger_presence_filter() const;
 
-private:
-#ifndef BOOST_LOG_DOXYGEN_PASS
-    //! The method puts the formatted message to debugger
-    BOOST_LOG_EXPORT void do_consume(record_type const& rec, target_string_type const& formatted_message);
-#endif
+    /*!
+     * The method passes the formatted message to debugger
+     */
+    BOOST_LOG_EXPORT void consume(record_type const& rec, target_string_type const& formatted_message);
 };
 
 #ifdef BOOST_LOG_USE_CHAR

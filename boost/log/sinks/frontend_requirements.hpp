@@ -37,11 +37,11 @@ namespace sinks {
  * in the frontend (IOW, only one thread is feeding records to the backend concurrently, but
  * is is possible for several threads to write sequentially).
  */
-struct syncronized_feeding {};
+struct synchronized_feeding {};
 /*!
  * The sink backend ensures all needed synchronization, it is capable to handle multithreaded calls
  */
-struct concurrent_feeding : syncronized_feeding {};
+struct concurrent_feeding : synchronized_feeding {};
 
 #else // !defined(BOOST_LOG_NO_THREADS)
 

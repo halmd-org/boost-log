@@ -27,6 +27,7 @@
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/fake_mutex.hpp>
 #include <boost/log/sinks/sink.hpp>
+#include <boost/log/sinks/frontend_requirements.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/exceptions.hpp>
 #include <boost/thread/tss.hpp>
@@ -54,7 +55,6 @@ namespace aux {
 
 struct has_flush_impl
 {
-private:
     typedef char yes_type;
     struct no_type { char dummy[2]; };
     template< typename U, U >
@@ -259,7 +259,7 @@ protected:
     template< typename BackendMutexT, typename BackendT >
     void flush_backend(BackendMutexT& backend_mutex, BackendT& backend)
     {
-        flush_backend_impl(backend_mutex, backend, sinks::aux::has_flush< BackendT >::type());
+        flush_backend_impl(backend_mutex, backend, typename sinks::aux::has_flush< BackendT >::type());
     }
 
 private:
@@ -307,18 +307,18 @@ public:
     typedef typename base_type::values_view_type values_view_type;
     typedef typename base_type::record_type record_type;
 
-    //! Formatter function object type
-    typedef boost::log::aux::light_function2<
-        void,
-        stream_type&,
-        record_type const&
-    > formatter_type;
     //! Output stream type
     typedef std::basic_ostream< char_type > stream_type;
     //! Target character type
     typedef TargetCharT target_char_type;
     //! Target string type
     typedef std::basic_string< target_char_type > target_string_type;
+    //! Formatter function object type
+    typedef boost::log::aux::light_function2<
+        void,
+        stream_type&,
+        record_type const&
+    > formatter_type;
 
 #if !defined(BOOST_LOG_NO_THREADS)
 protected:

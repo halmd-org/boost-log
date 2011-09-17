@@ -282,12 +282,12 @@ protected:
  * use one of the bounded strategies.
  */
 template< typename OrderT >
-struct unbounded_ordered_queue
+struct unbounded_ordering_queue
 {
     template< typename RecordT >
     struct frontend_base
     {
-        typedef sinks::aux::unbounded_ordered_queue< RecordT, OrderT > type;
+        typedef sinks::aux::unbounded_ordering_queue< RecordT, OrderT > type;
     };
 };
 

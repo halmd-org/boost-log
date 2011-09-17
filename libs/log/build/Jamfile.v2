@@ -59,7 +59,6 @@ local BOOST_LOG_COMMON_SRC =
     process_id.cpp
     timer.cpp
     exceptions.cpp
-    sink_frontends.cpp
     text_ostream_backend.cpp
     text_file_backend.cpp
     syslog_backend.cpp

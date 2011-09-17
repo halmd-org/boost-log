@@ -108,7 +108,7 @@ public:
      * \note Does not do any actual locking, provided only for intarface consistency
      *       with other frontends.
      */
-    locked_backend_ptr locked_backend() const
+    locked_backend_ptr locked_backend()
     {
         return m_pBackend;
     }
