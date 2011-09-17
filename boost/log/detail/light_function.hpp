@@ -28,6 +28,11 @@
 #include <boost/preprocessor/repetition/enum_trailing_params.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
+#if defined(BOOST_NO_RVALUE_REFERENCES)
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_same.hpp>
+#include <boost/type_traits/remove_cv.hpp>
+#endif
 
 #ifndef BOOST_LOG_LIGHT_FUNCTION_LIMIT
 #define BOOST_LOG_LIGHT_FUNCTION_LIMIT 2
@@ -122,8 +127,14 @@ public:
         m_pImpl = that.m_pImpl;
         that.m_pImpl = NULL;
     }
+#if !defined(BOOST_NO_RVALUE_REFERENCES)
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun) : m_pImpl(new implementation< FunT >(fun))
+    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun)
+#else
+    template< typename FunT >
+    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun, typename disable_if< move_detail::is_rv< FunT >, int >::type = 0)
+#endif
+        : m_pImpl(new implementation< FunT >(fun))
     {
     }
     //! Constructor from NULL
@@ -136,9 +147,15 @@ public:
         delete m_pImpl;
     }
 
-    BOOST_LOG_LWFUNCTION_NAME& operator= (this_type that)
+    BOOST_LOG_LWFUNCTION_NAME& operator= (BOOST_RV_REF(this_type) that)
     {
         this->swap(that);
+        return *this;
+    }
+    BOOST_LOG_LWFUNCTION_NAME& operator= (BOOST_COPY_ASSIGN_REF(this_type) that)
+    {
+        BOOST_LOG_LWFUNCTION_NAME tmp = that;
+        this->swap(tmp);
         return *this;
     }
     //! Assignment of NULL
@@ -146,6 +163,19 @@ public:
     {
         BOOST_ASSERT(p == 0);
         clear();
+        return *this;
+    }
+#if !defined(BOOST_NO_RVALUE_REFERENCES)
+    template< typename FunT >
+    BOOST_LOG_LWFUNCTION_NAME& operator= (FunT const& fun)
+#else
+    template< typename FunT >
+    typename disable_if< is_same< typename remove_cv< FunT >::type, this_type >, this_type& >::type
+    operator= (FunT const& fun)
+#endif
+    {
+        BOOST_LOG_LWFUNCTION_NAME tmp(fun);
+        this->swap(tmp);
         return *this;
     }
 
@@ -240,8 +270,14 @@ public:
         m_pImpl = that.m_pImpl;
         that.m_pImpl = NULL;
     }
+#if !defined(BOOST_NO_RVALUE_REFERENCES)
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun) : m_pImpl(new implementation< FunT >(fun))
+    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun)
+#else
+    template< typename FunT >
+    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun, typename disable_if< move_detail::is_rv< FunT >, int >::type = 0)
+#endif
+        : m_pImpl(new implementation< FunT >(fun))
     {
     }
     //! Constructor from NULL
@@ -254,9 +290,15 @@ public:
         delete m_pImpl;
     }
 
-    BOOST_LOG_LWFUNCTION_NAME& operator= (this_type that)
+    BOOST_LOG_LWFUNCTION_NAME& operator= (BOOST_RV_REF(this_type) that)
     {
         this->swap(that);
+        return *this;
+    }
+    BOOST_LOG_LWFUNCTION_NAME& operator= (BOOST_COPY_ASSIGN_REF(this_type) that)
+    {
+        BOOST_LOG_LWFUNCTION_NAME tmp = that;
+        this->swap(tmp);
         return *this;
     }
     //! Assignment of NULL
@@ -264,6 +306,19 @@ public:
     {
         BOOST_ASSERT(p == 0);
         clear();
+        return *this;
+    }
+#if !defined(BOOST_NO_RVALUE_REFERENCES)
+    template< typename FunT >
+    BOOST_LOG_LWFUNCTION_NAME& operator= (FunT const& fun)
+#else
+    template< typename FunT >
+    typename disable_if< is_same< typename remove_cv< FunT >::type, this_type >, this_type& >::type
+    operator= (FunT const& fun)
+#endif
+    {
+        BOOST_LOG_LWFUNCTION_NAME tmp(fun);
+        this->swap(tmp);
         return *this;
     }
 
