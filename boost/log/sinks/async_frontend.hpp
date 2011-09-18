@@ -172,7 +172,7 @@ public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
     //! \cond
-    BOOST_MPL_ASSERT((is_requirement_satisfied< typename sink_backend_type::frontend_requirements, synchronized_feeding >));
+    BOOST_MPL_ASSERT((has_requirement< typename sink_backend_type::frontend_requirements, synchronized_feeding >));
     //! \endcond
 
     typedef typename base_type::char_type char_type;

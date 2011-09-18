@@ -55,17 +55,6 @@ struct basic_sink_backend : noncopyable
     typedef FrontendRequirementsT frontend_requirements;
 };
 
-namespace aux {
-
-template< typename FrontendRequirementsT >
-struct add_formatted_records_requirement :
-    public formatted_records,
-    public FrontendRequirementsT
-{
-};
-
-} // namespace aux
-
 /*!
  * \brief A base class for a logging sink backend with message formatting support
  *
@@ -84,10 +73,16 @@ template<
     typename FrontendRequirementsT = synchronized_feeding
 >
 struct basic_formatting_sink_backend :
-    public basic_sink_backend< CharT, sinks::aux::add_formatted_records_requirement< FrontendRequirementsT > >
+    public basic_sink_backend<
+        CharT,
+        typename combine_requirements< FrontendRequirementsT, formatted_records >::type
+    >
 {
 private:
-    typedef basic_sink_backend< CharT, sinks::aux::add_formatted_records_requirement< FrontendRequirementsT > > base_type;
+    typedef basic_sink_backend<
+        CharT,
+        typename combine_requirements< FrontendRequirementsT, formatted_records >::type
+    > base_type;
 
 public:
     //  Type imports from the base class

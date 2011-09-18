@@ -51,41 +51,6 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-namespace aux {
-
-struct has_flush_impl
-{
-    typedef char yes_type;
-    struct no_type { char dummy[2]; };
-    template< typename U, U >
-    struct member;
-    struct constructible_from_any
-    {
-        template< typename U >
-        constructible_from_any(U const&);
-    };
-
-    template< typename T >
-    static yes_type check(T const&, member< void (T::*)(), &T::flush >* = 0);
-    template< typename T >
-    static yes_type check(T const&, member< void (T::*)() const, &T::flush >* = 0);
-    static no_type check(constructible_from_any const&, ...);
-};
-
-//! The metafunction checks if the type has a member function \c flush
-template< typename T >
-struct has_flush
-{
-private:
-    static T const& make_obj();
-
-public:
-    enum { value = (sizeof(has_flush_impl::check(make_obj())) == sizeof(has_flush_impl::yes_type)) };
-    typedef mpl::bool_< value > type;
-};
-
-} // namespace aux
-
 //! A base class for a logging sink frontend
 template< typename CharT >
 class BOOST_LOG_NO_VTABLE basic_sink_frontend :
@@ -259,7 +224,9 @@ protected:
     template< typename BackendMutexT, typename BackendT >
     void flush_backend(BackendMutexT& backend_mutex, BackendT& backend)
     {
-        flush_backend_impl(backend_mutex, backend, typename sinks::aux::has_flush< BackendT >::type());
+        typedef typename BackendT::frontend_requirements frontend_requirements;
+        flush_backend_impl(backend_mutex, backend,
+            typename has_requirement< frontend_requirements, flushing >::type());
     }
 
 private:
@@ -546,7 +513,7 @@ namespace aux {
 
     template<
         typename BackendT,
-        bool RequiresFormattingV = is_requirement_satisfied<
+        bool RequiresFormattingV = has_requirement<
             typename BackendT::frontend_requirements,
             formatted_records
         >::value

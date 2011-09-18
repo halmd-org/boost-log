@@ -662,7 +662,7 @@ private:
     static shared_ptr< sinks::sink< char_type > > init_sink(shared_ptr< BackendT > const& backend, params_t const& params)
     {
         typedef BackendT backend_t;
-        typedef typename sinks::is_requirement_satisfied<
+        typedef typename sinks::has_requirement<
             typename backend_t::frontend_requirements,
             sinks::formatted_records
         >::type is_formatting_t;

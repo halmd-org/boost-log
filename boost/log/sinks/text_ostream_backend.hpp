@@ -23,6 +23,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
+#include <boost/log/sinks/frontend_requirements.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -45,10 +46,18 @@ namespace sinks {
  */
 template< typename CharT >
 class basic_text_ostream_backend :
-    public basic_formatting_sink_backend< CharT >
+    public basic_formatting_sink_backend<
+        CharT,
+        CharT,
+        combine_requirements< synchronized_feeding, flushing >::type
+    >
 {
     //! Base type
-    typedef basic_formatting_sink_backend< CharT > base_type;
+    typedef basic_formatting_sink_backend<
+        CharT,
+        CharT,
+        combine_requirements< synchronized_feeding, flushing >::type
+    > base_type;
 
 public:
     //! Character type

@@ -43,6 +43,7 @@
 #include <boost/log/detail/universal_path.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
+#include <boost/log/sinks/frontend_requirements.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -318,10 +319,18 @@ public:
  */
 template< typename CharT >
 class basic_text_file_backend :
-    public basic_formatting_sink_backend< CharT >
+    public basic_formatting_sink_backend<
+        CharT,
+        CharT,
+        combine_requirements< synchronized_feeding, flushing >::type
+    >
 {
     //! Base type
-    typedef basic_formatting_sink_backend< CharT > base_type;
+    typedef basic_formatting_sink_backend<
+        CharT,
+        CharT,
+        combine_requirements< synchronized_feeding, flushing >::type
+    > base_type;
 
 public:
     //! Character type
