@@ -155,7 +155,7 @@ protected:
     template< typename ArgsT >
     explicit unbounded_ordering_queue(ArgsT const& args) :
         m_queue(args[keywords::order]),
-        m_ordering_window(args[keywords::ordering_window | get_default_ordering_window()]),
+        m_ordering_window(args[keywords::ordering_window || &unbounded_ordering_queue::get_default_ordering_window].total_milliseconds()),
         m_interruption_requested(false)
     {
     }
@@ -189,11 +189,12 @@ protected:
         if (!m_queue.empty())
         {
             uint64_t now = boost::log::aux::get_tick_count();
-            enqueued_record& elem = m_queue.top();
+            enqueued_record const& elem = m_queue.top();
             if ((now - elem.m_timestamp) >= m_ordering_window)
             {
                 // We got a new element
-                rec.swap(elem.m_record);
+                //rec.swap(elem.m_record);
+                rec = elem.m_record;
                 m_queue.pop();
                 return true;
             }
@@ -208,8 +209,9 @@ protected:
         lock_guard< mutex_type > lock(m_mutex);
         if (!m_queue.empty())
         {
-            enqueued_record& elem = m_queue.top();
-            rec.swap(elem.m_record);
+            enqueued_record const& elem = m_queue.top();
+            //rec.swap(elem.m_record);
+            rec = elem.m_record;
             m_queue.pop();
             return true;
         }
@@ -226,11 +228,12 @@ protected:
             if (!m_queue.empty())
             {
                 uint64_t now = boost::log::aux::get_tick_count();
-                enqueued_record& elem = m_queue.top();
+                enqueued_record const& elem = m_queue.top();
                 if ((now - elem.m_timestamp) >= m_ordering_window)
                 {
                     // We got a new element
-                    rec.swap(elem.m_record);
+                    //rec.swap(elem.m_record);
+                    rec = elem.m_record;
                     m_queue.pop();
                     return true;
                 }

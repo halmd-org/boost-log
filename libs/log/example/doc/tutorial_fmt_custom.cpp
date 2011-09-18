@@ -46,7 +46,7 @@ void init()
     pSink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("sample.log"));
 
-    pSink->locked_backend()->set_formatter(&my_formatter);
+    pSink->set_formatter(&my_formatter);
 
     logging::core::get()->add_sink(pSink);
 }

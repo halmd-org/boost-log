@@ -43,7 +43,7 @@ void init_logging()
     // Create an event log sink
     boost::shared_ptr< sink_t > sink(new sink_t());
 
-    sink->locked_backend()->set_formatter(
+    sink->set_formatter(
         fmt::format("%1%: [%2%] - %3%")
             % fmt::attr< unsigned int >("LineID")
             % fmt::date_time< boost::posix_time::ptime >("TimeStamp")

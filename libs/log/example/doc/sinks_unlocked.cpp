@@ -12,7 +12,7 @@
 #include <boost/log/filters.hpp>
 #include <boost/log/sinks/unlocked_frontend.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
-#include <boost/log/sinks/threading_models.hpp>
+#include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 
@@ -25,7 +25,7 @@ namespace keywords = boost::log::keywords;
 //[ example_sinks_unlocked
 // A trivial sink backend that requires no thread synchronization
 class my_backend :
-    public sinks::basic_sink_backend< char, sinks::backend_synchronization_tag >
+    public sinks::basic_sink_backend< char, sinks::concurrent_feeding >
 {
 public:
     // The function is called for every log record to be written to log

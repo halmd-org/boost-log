@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 
         sink->locked_backend()->add_stream(strm);
 
-        sink->locked_backend()->set_formatter(
+        sink->set_formatter(
             fmt::format("%1%: [%2%] [%3%] - %4%")
                 % fmt::attr< unsigned int >("RecordID")
                 % fmt::date_time< boost::posix_time::ptime >("TimeStamp")

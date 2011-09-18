@@ -903,10 +903,10 @@ private:
  */
 template< typename CharT >
 class basic_event_log_backend :
-    public basic_sink_backend< CharT, syncronized_feeding >
+    public basic_sink_backend< CharT, synchronized_feeding >
 {
     //! Base type
-    typedef basic_sink_backend< CharT, syncronized_feeding > base_type;
+    typedef basic_sink_backend< CharT, synchronized_feeding > base_type;
     //! Implementation type
     struct implementation;
 

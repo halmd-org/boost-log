@@ -80,6 +80,10 @@ public:
             ++m_Consumed[it->first];
     }
 
+    void flush()
+    {
+    }
+
     void clear()
     {
         m_RecordCounter = 0;

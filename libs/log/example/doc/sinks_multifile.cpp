@@ -39,18 +39,18 @@ void init_logging()
         fmt::stream << "logs/" << fmt::attr< std::string >("RequestID") << ".log"
     );
 
+    // Wrap it into the frontend and register in the core.
+    // The backend requires synchronization in the frontend.
+    typedef sinks::synchronous_sink< sinks::text_multifile_backend > sink_t;
+    boost::shared_ptr< sink_t > sink(new sink_t(backend));
+
     // Set the formatter
-    backend->set_formatter
+    sink->set_formatter
     (
         fmt::stream
             << "[RequestID: " << fmt::attr< std::string >("RequestID")
             << "] " << fmt::message()
     );
-
-    // Wrap it into the frontend and register in the core.
-    // The backend requires synchronization in the frontend.
-    typedef sinks::synchronous_sink< sinks::text_multifile_backend > sink_t;
-    boost::shared_ptr< sink_t > sink(new sink_t(backend));
 
     core->add_sink(sink);
 }

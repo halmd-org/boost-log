@@ -336,6 +336,34 @@ void basic_core< CharT >::set_exception_handler(exception_handler_type const& ha
     pImpl->ExceptionHandler = handler;
 }
 
+//! The method performs flush on all registered sinks.
+template< typename CharT >
+void basic_core< CharT >::flush()
+{
+    // Acquire exclusive lock to prevent any logging attempts while flushing
+    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
+    typename implementation::sink_list::iterator it = pImpl->Sinks.begin(), end = pImpl->Sinks.end();
+    for (; it != end; ++it)
+    {
+        try
+        {
+            it->get()->flush();
+        }
+#if !defined(BOOST_LOG_NO_THREADS)
+        catch (thread_interrupted&)
+        {
+            throw;
+        }
+#endif // !defined(BOOST_LOG_NO_THREADS)
+        catch (...)
+        {
+            if (pImpl->ExceptionHandler.empty())
+                throw;
+            pImpl->ExceptionHandler();
+        }
+    }
+}
+
 //! The method opens a new record to be written and returns true if the record was opened
 template< typename CharT >
 typename basic_core< CharT >::record_type basic_core< CharT >::open_record(attribute_set_type const& source_attributes)

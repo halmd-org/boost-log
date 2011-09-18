@@ -64,6 +64,14 @@ namespace sinks {
     {\
         if ((BOOST_PP_ENUM_PARAMS(n, arg))[keywords::start_thread | true])\
             start_feeding_thread();\
+    }\
+    template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
+    explicit asynchronous_sink(shared_ptr< sink_backend_type > const& backend, BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
+        queue_base_type((BOOST_PP_ENUM_PARAMS(n, arg))),\
+        m_pBackend(backend)\
+    {\
+        if ((BOOST_PP_ENUM_PARAMS(n, arg))[keywords::start_thread | true])\
+            start_feeding_thread();\
     }
 
 //! \endcond

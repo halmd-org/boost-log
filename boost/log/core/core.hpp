@@ -158,6 +158,14 @@ public:
     void remove_all_sinks();
 
     /*!
+     * The method performs flush on all registered sinks.
+     *
+     * \note This method may take long time to complete as it may block until all sinks manage to process all buffered log records.
+     *       The call will also block all logging attempts until the operation completes.
+     */
+    void flush();
+
+    /*!
      * The method adds an attribute to the global attribute set. The attribute will be implicitly added to every log record.
      *
      * \param name The attribute name.

@@ -85,7 +85,7 @@ int main(int, char*[])
         boost::make_shared< std::ofstream >("sample.log"));
 
     // Set the formatter
-    pSink->locked_backend()->set_formatter
+    pSink->set_formatter
     (
         fmt::stream
             << fmt::attr< unsigned int >("LineID")
