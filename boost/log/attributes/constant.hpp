@@ -77,7 +77,7 @@ public:
      */
     value_type const& get() const
     {
-        return static_cast< impl >(this->get_impl())->get();
+        return static_cast< impl* >(this->get_impl())->get();
     }
 };
 
