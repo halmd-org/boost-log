@@ -73,7 +73,8 @@ private:
 
             result_type operator() (enqueued_record const& left, enqueued_record const& right) const
             {
-                return OrderT::operator() (left.m_record, right.m_record);
+                // std::priority_queue requires ordering with semantics of std::greater, so we swap arguments
+                return OrderT::operator() (right.m_record, left.m_record);
             }
         };
 
