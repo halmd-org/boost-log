@@ -97,7 +97,7 @@ protected:
         //! The actual value
         value_type m_Value;
         //! Thread protection mutex
-        mutex_type m_Mutex;
+        mutable mutex_type m_Mutex;
 
     public:
         /*!
