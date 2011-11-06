@@ -102,7 +102,7 @@ struct BOOST_LOG_NO_VTABLE collector :
      * match the specified pattern. The pattern may contain the following placeholders:
      *
      * \li %y, %Y, %m, %d - date components, in Boost.DateTime meaning.
-     * \li %H, %M, %S, %F - time components, in Boost.DateTime meaning.
+     * \li %H, %M, %S, %f - time components, in Boost.DateTime meaning.
      * \li %N - numeric file counter. May also contain width specification
      *     in printf-compatible form (e.g. %5N). The resulting number will always be zero-filled.
      * \li %% - a percent sign
