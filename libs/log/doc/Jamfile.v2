@@ -243,4 +243,4 @@ boostbook log
         <xsl:param>boost.compact.function=0
     ;
 
-# install html : ../../../doc/html/boostbook.css ;
+# install html : ../../../doc/src/boostbook.css ;
