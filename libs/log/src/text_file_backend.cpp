@@ -105,6 +105,12 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     typedef boost::log::aux::universal_path::string_type path_string_type;
     typedef path_string_type::value_type path_char_type;
 
+#if BOOST_FILESYSTEM_VERSION >= 3
+    typedef filesystem::filesystem_error filesystem_error;
+#else
+    typedef filesystem::basic_filesystem_error< boost::log::aux::universal_path > filesystem_error;
+#endif
+
     //! An auxiliary traits that contain various constants and functions regarding string and character operations
     template< typename CharT >
     struct file_char_traits;
@@ -518,6 +524,12 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         uintmax_t m_MaxSize;
         //! Free space lower limit
         uintmax_t m_MinFreeSpace;
+        //! The current path at the point when the collector is created
+        /*
+         * The special member is required to calculate absolute paths with no
+         * dependency on the current path for the application, which may change
+         */
+        const path_type m_BasePath;
         //! Target directory to store files to
         path_type m_StorageDir;
 
@@ -551,6 +563,26 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         bool is_governed(path_type const& dir) const
         {
             return filesystem::equivalent(m_StorageDir, dir);
+        }
+
+    private:
+        //! Makes relative path absolute with respect to the base path
+        path_type make_absolute(path_type const& p)
+        {
+#if BOOST_FILESYSTEM_VERSION >= 3
+            return filesystem::absolute(p, m_BasePath);
+#else
+            return filesystem::complete(p, m_BasePath);
+#endif
+        }
+        //! Acquires file name string from the path
+        static path_string_type filename_string(path_type const& p)
+        {
+#if BOOST_FILESYSTEM_VERSION >= 3
+            return p.filename().string< path_string_type >();
+#else
+            return p.filename();
+#endif
         }
     };
 
@@ -611,9 +643,16 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         m_pRepository(repo),
         m_MaxSize(max_size),
         m_MinFreeSpace(min_free_space),
-        m_StorageDir(filesystem::complete(target_dir)),
+        m_BasePath(
+#if BOOST_FILESYSTEM_VERSION >= 3
+            filesystem::current_path()
+#else
+            filesystem::current_path< path_type >()
+#endif
+        ),
         m_TotalSize(0)
     {
+        m_StorageDir = make_absolute(target_dir);
     }
 
     //! Destructor
@@ -630,13 +669,13 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         info.m_TimeStamp = filesystem::last_write_time(src_path);
         info.m_Size = filesystem::file_size(src_path);
 
-        path_string_type file_name = src_path.filename();
+        path_string_type file_name = filename_string(src_path);
         info.m_Path = m_StorageDir / file_name;
 
         // Check if the file is already in the target directory
         path_type src_dir = src_path.has_parent_path() ?
                             filesystem::system_complete(src_path.parent_path()) :
-                            filesystem::current_path< path_type >();
+                            m_BasePath;
         const bool is_in_target_dir = filesystem::equivalent(src_dir, m_StorageDir);
         if (!is_in_target_dir)
         {
@@ -713,9 +752,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             path_string_type mask;
             if (method == file::scan_matching)
             {
-                mask = pattern.filename();
+                mask = filename_string(pattern);
                 if (pattern.has_parent_path())
-                    dir = filesystem::complete(pattern.parent_path());
+                    dir = make_absolute(pattern.parent_path());
             }
             else
             {
@@ -729,7 +768,11 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 if (counter)
                     *counter = 0;
 
+#if BOOST_FILESYSTEM_VERSION >= 3
+                typedef filesystem::directory_iterator dir_iterator;
+#else
                 typedef filesystem::basic_directory_iterator< path_type > dir_iterator;
+#endif
                 file_list files;
                 dir_iterator it(dir), end;
                 uintmax_t total_size = 0;
@@ -752,7 +795,8 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                         {
                             // Check that the file name matches the pattern
                             unsigned int file_number = 0;
-                            if (method != file::scan_matching || match_pattern(info.m_Path.filename(), mask, file_number))
+                            if (method != file::scan_matching ||
+                                match_pattern(filename_string(info.m_Path), mask, file_number))
                             {
                                 info.m_Size = filesystem::file_size(info.m_Path);
                                 total_size += info.m_Size;
@@ -1147,7 +1191,7 @@ BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::do_consume(
         m_pImpl->m_File.open(m_pImpl->m_FileName, m_pImpl->m_FileOpenMode);
         if (!m_pImpl->m_File.is_open())
         {
-            filesystem::basic_filesystem_error< path_type > err(
+            filesystem_error err(
                 "Failed to open file for writing",
                 m_pImpl->m_FileName,
                 system::error_code(system::errc::io_error, system::get_generic_category()));
@@ -1178,9 +1222,19 @@ BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_file_name_pattern_in
     if (p.empty())
         p = traits_t::default_file_name_pattern();
 
-    path_string_type name_pattern = p.filename();
+    path_string_type name_pattern =
+#if BOOST_FILESYSTEM_VERSION >= 3
+        p.filename().string< path_string_type >();
+#else
+        p.filename();
+#endif
     m_pImpl->m_FileNamePattern = name_pattern;
-    m_pImpl->m_StorageDir = filesystem::complete(p.parent_path());
+    m_pImpl->m_StorageDir =
+#if BOOST_FILESYSTEM_VERSION >= 3
+        filesystem::absolute(p.parent_path());
+#else
+        filesystem::complete(p.parent_path(), filesystem::current_path< path_type >());
+#endif
 
     // Let's try to find the file counter placeholder
     unsigned int placeholder_count = 0;
@@ -1313,8 +1367,31 @@ struct basic_text_multifile_backend< CharT >::implementation
 {
     //! File name composer
     file_name_composer_type m_FileNameComposer;
+    //! Base path for absolute path composition
+    const path_type m_BasePath;
     //! File stream
     filesystem::basic_ofstream< CharT > m_File;
+
+    implementation() :
+        m_BasePath(
+#if BOOST_FILESYSTEM_VERSION >= 3
+            filesystem::current_path()
+#else
+            filesystem::current_path< path_type >()
+#endif
+        )
+    {
+    }
+
+    //! Makes relative path absolute with respect to the base path
+    path_type make_absolute(path_type const& p)
+    {
+#if BOOST_FILESYSTEM_VERSION >= 3
+        return filesystem::absolute(p, m_BasePath);
+#else
+        return filesystem::complete(p, m_BasePath);
+#endif
+    }
 };
 
 //! Default constructor
@@ -1345,7 +1422,7 @@ BOOST_LOG_EXPORT void basic_text_multifile_backend< CharT >::do_consume(
     typedef file_char_traits< typename target_string_type::value_type > traits_t;
     if (!m_pImpl->m_FileNameComposer.empty())
     {
-        path_type file_name = filesystem::complete(m_pImpl->m_FileNameComposer(record));
+        path_type file_name = m_pImpl->make_absolute(m_pImpl->m_FileNameComposer(record));
         filesystem::create_directories(file_name.parent_path());
         m_pImpl->m_File.open(file_name, std::ios_base::out | std::ios_base::app);
         if (m_pImpl->m_File.is_open())

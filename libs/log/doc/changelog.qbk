@@ -9,6 +9,14 @@
 
 [section:changelog Changelog]
 
+[heading 1.1, 02 December 2011]
+
+This release mostly fixes bugs in the code and documentation.
+
+* Added support for __boost_filesystem__ v3.
+* A number of bugs fixed.
+* Corrections in the documentation.
+
 [heading 1.0, 09 May 2010]
 
 This release mostly fixes bugs in the code and documentation. The next major release (2.0) will contain breaking changes and feature additions. The 1.0 branch will not receive any feature updates.

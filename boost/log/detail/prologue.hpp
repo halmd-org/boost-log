@@ -65,10 +65,10 @@
 #   define BOOST_LOG_NO_ASIO
 #endif
 
-#if (defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530) && !(defined BOOST_NO_COMPILER_CONFIG)
-    // Sun C++ 5.3 can't handle the safe_bool idiom, so don't use it
+#if (defined(BOOST_CLANG) || ((defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530))) && !(defined BOOST_NO_COMPILER_CONFIG)
+    // Sun C++ 5.3 and Clang can't handle the safe_bool idiom, so don't use it
 #   define BOOST_LOG_NO_UNSPECIFIED_BOOL
-#endif // (defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530) && !(defined BOOST_NO_COMPILER_CONFIG)
+#endif // (defined(BOOST_CLANG) || ((defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530))) && !(defined BOOST_NO_COMPILER_CONFIG)
 
 #if defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 1))
     // GCC 4.0.0 (and probably older) can't cope with some optimizations regarding string literals

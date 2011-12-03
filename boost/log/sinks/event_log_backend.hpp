@@ -959,8 +959,12 @@ public:
      * executable file name in the Application log. If such a registration is already
      * present, it is not overridden.
      */
+#if (defined(BOOST_FILESYSTEM_VERSION) && BOOST_FILESYSTEM_VERSION >= 3) || defined(BOOST_LOG_DOXYGEN_PASS)
+    explicit basic_event_log_backend(filesystem::path const& message_file_name)
+#else
     template< typename T, typename U >
     explicit basic_event_log_backend(filesystem::basic_path< T, U > const& message_file_name)
+#endif
     {
         construct(keywords::message_file = message_file_name);
     }
