@@ -198,4 +198,4 @@ boostbook standalone
         <dependency>support_reference
     ;
 
-install html : ../../../doc/html/boostbook.css ;
+install html : ../../../doc/src/boostbook.css ;
