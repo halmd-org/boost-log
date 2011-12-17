@@ -1165,7 +1165,7 @@ BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::auto_flush(bool f)
 
 //! The method writes the message to the sink
 template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::do_consume(
+BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::consume(
     record_type const& record, target_string_type const& formatted_message)
 {
     typedef file_char_traits< typename target_string_type::value_type > traits_t;
@@ -1211,6 +1211,14 @@ BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::do_consume(
     m_pImpl->m_CharactersWritten += formatted_message.size() + 1;
 
     if (m_pImpl->m_AutoFlush)
+        m_pImpl->m_File.flush();
+}
+
+//! The method flushes the currently open log file
+template< typename CharT >
+BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::flush()
+{
+    if (m_pImpl->m_File.is_open())
         m_pImpl->m_File.flush();
 }
 
@@ -1417,7 +1425,7 @@ BOOST_LOG_EXPORT void basic_text_multifile_backend< CharT >::set_file_name_compo
 
 //! The method writes the message to the sink
 template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_multifile_backend< CharT >::do_consume(
+BOOST_LOG_EXPORT void basic_text_multifile_backend< CharT >::consume(
     record_type const& record, target_string_type const& formatted_message)
 {
     typedef file_char_traits< typename target_string_type::value_type > traits_t;

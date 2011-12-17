@@ -35,7 +35,7 @@ void init()
     // This makes the sink to write log records that look like this:
     // 00000001: <normal> A normal severity message
     // 00000002: <error> An error severity message
-    pSink->locked_backend()->set_formatter
+    pSink->set_formatter
     (
         fmt::format("%1%: <%2%> %3%")
             % fmt::attr< unsigned int >("LineID", keywords::format = "%08x")

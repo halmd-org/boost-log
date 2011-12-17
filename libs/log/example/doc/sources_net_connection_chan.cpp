@@ -88,7 +88,7 @@ int main(int, char*[])
     pSink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("net.log"));
 
-    pSink->locked_backend()->set_formatter
+    pSink->set_formatter
     (
         fmt::stream
             << fmt::attr< unsigned int >("LineID")
@@ -106,7 +106,7 @@ int main(int, char*[])
     pSink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("stat.log"));
 
-    pSink->locked_backend()->set_formatter
+    pSink->set_formatter
     (
         fmt::stream
             << fmt::attr< std::string >("RemoteAddress")

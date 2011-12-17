@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
         shared_ptr< sinks::synchronous_sink< sinks::syslog_backend > > sink(
             new sinks::synchronous_sink< sinks::syslog_backend >());
 
-        sink->locked_backend()->set_formatter(
+        sink->set_formatter(
             fmt::format("syslog.exe: %1%: %2%")
                 % fmt::attr< unsigned int >("RecordID")
                 % fmt::message()

@@ -31,9 +31,9 @@
 #include <boost/config.hpp>
 #include <boost/version.hpp>
 
-#if BOOST_VERSION < 104200
+#if BOOST_VERSION < 104800
     // Older Boost versions contained bugs that affected the library
-#   error Boost.Log: Boost version 1.42 or later is required
+#   error Boost.Log: Boost version 1.48 or later is required
 #endif
 
 #if defined(BOOST_MSVC)

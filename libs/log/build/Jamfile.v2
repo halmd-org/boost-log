@@ -59,13 +59,14 @@ local BOOST_LOG_COMMON_SRC =
     process_id.cpp
     timer.cpp
     exceptions.cpp
-    sink_frontends.cpp
     text_ostream_backend.cpp
     text_file_backend.cpp
     syslog_backend.cpp
     thread_specific.cpp
     once_block.cpp
+    tick_count.cpp
     threadsafe_queue.cpp
+    event.cpp
     trivial.cpp
     ;
 
@@ -83,7 +84,7 @@ lib boost_log
         <define>BOOST_LOG_BUILDING_THE_LIB=1
         <logapi>winnt
     ;
-    
+
 lib boost_log
     : ## sources ##
         $(BOOST_LOG_COMMON_SRC)

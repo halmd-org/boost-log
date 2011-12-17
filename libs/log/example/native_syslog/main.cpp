@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
                 keywords::use_impl = sinks::syslog::native,
                 keywords::facility = sinks::syslog::local7));
 
-        sink->locked_backend()->set_formatter(
+        sink->set_formatter(
             fmt::format("native_syslog: %1%: %2%")
                 % fmt::attr< unsigned int >("RecordID")
                 % fmt::message()

@@ -73,14 +73,14 @@ public:
     virtual bool will_consume(values_view_type const& attributes) = 0;
 
     /*!
-     * The method puts logging message to the sink
+     * The method puts logging record to the sink
      *
      * \param record Logging record to consume
      */
     virtual void consume(record_type const& record) = 0;
 
     /*!
-     * The method attempts to put logging message to the sink. The method may be used by the
+     * The method attempts to put logging record to the sink. The method may be used by the
      * core in order to determine the most efficient order of sinks to feed records to in
      * case of heavy contention. Sink implementations may implement try/backoff logic in
      * order to improve overall logging throughput.
@@ -93,6 +93,13 @@ public:
         consume(record);
         return true;
     }
+
+    /*!
+     * The method performs flushing of any internal buffers that may hold log records. The method
+     * may take considerable time to complete and may block both the calling thread and threads
+     * attempting to put new records into the sink while this call is in progress.
+     */
+    virtual void flush() = 0;
 };
 
 } // namespace sinks

@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
     // Each logging record may have a number of attributes in addition to the
     // message body itself. By setting up formatter we define which of them
     // will be written to log and in what way they will look there.
-    pSink->locked_backend()->set_formatter(fmt::stream
+    pSink->set_formatter(fmt::stream
         << fmt::attr("RecordID") // First an attribute "RecordID" is written to the log
         << " [" << fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f")
         << "] [" << fmt::attr< severity_level >("Severity", std::nothrow)
@@ -170,7 +170,7 @@ int main(int argc, char* argv[])
 
 /*
     // There is an alternative way of specifying formatters
-    pSink->locked_backend()->set_formatter(
+    pSink->set_formatter(
         fmt::format("%1% @ %2% [%3%] >%4%< Scope: %5%: %6%")
             % fmt::attr("RecordID")
             % fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f")

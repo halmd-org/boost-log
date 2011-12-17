@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
         // Upon restart, scan the target directory for files matching the file_name pattern
         sink->locked_backend()->scan_for_files();
 
-        sink->locked_backend()->set_formatter(
+        sink->set_formatter(
             fmt::format("%1%: [%2%] - %3%")
                 % fmt::attr< unsigned int >("RecordID")
                 % fmt::date_time< boost::posix_time::ptime >("TimeStamp")

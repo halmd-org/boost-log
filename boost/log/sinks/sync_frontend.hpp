@@ -23,14 +23,16 @@
 #include <boost/make_shared.hpp>
 #include <boost/mpl/assert.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/locking_ptr.hpp>
-#include <boost/log/detail/parameter_tools.hpp>
-#include <boost/log/sinks/basic_sink_frontend.hpp>
-#include <boost/log/sinks/threading_models.hpp>
 
 #if defined(BOOST_LOG_NO_THREADS)
 #error Boost.Log: Synchronous sink frontend is only supported in multithreaded environment
 #endif
+
+#include <boost/thread/mutex.hpp>
+#include <boost/log/detail/locking_ptr.hpp>
+#include <boost/log/detail/parameter_tools.hpp>
+#include <boost/log/sinks/basic_sink_frontend.hpp>
+#include <boost/log/sinks/frontend_requirements.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -46,39 +48,11 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-namespace aux {
-
-    //! Synchronous sink frontend implementation
-    template< typename CharT >
-    class BOOST_LOG_NO_VTABLE synchronous_frontend :
-        public basic_sink_frontend< CharT >
-    {
-        typedef basic_sink_frontend< CharT > base_type;
-
-    public:
-        typedef typename base_type::record_type record_type;
-
-    protected:
-        typedef void (*consume_trampoline_t)(void*, record_type const&);
-
-    private:
-        struct implementation;
-
-    protected:
-        BOOST_LOG_EXPORT synchronous_frontend(shared_ptr< void > const& backend, consume_trampoline_t consume_tramp);
-        BOOST_LOG_EXPORT shared_ptr< void > const& get_backend() const;
-        BOOST_LOG_EXPORT boost::log::aux::locking_ptr_counter_base& get_backend_locker() const;
-        BOOST_LOG_EXPORT void consume(record_type const& record);
-        BOOST_LOG_EXPORT bool try_consume(record_type const& record);
-    };
-
-} // namespace aux
-
 //! \cond
 #define BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL(z, n, data)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit synchronous_sink(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
-        base_type(boost::make_shared< sink_backend_type >(BOOST_PP_ENUM_PARAMS(n, arg)), &synchronous_sink::consume_trampoline) {}
+        m_pBackend(boost::make_shared< sink_backend_type >(BOOST_PP_ENUM_PARAMS(n, arg))) {}
 //! \endcond
 
 /*!
@@ -88,15 +62,20 @@ namespace aux {
  */
 template< typename SinkBackendT >
 class synchronous_sink :
-    public aux::synchronous_frontend< typename SinkBackendT::char_type >
+    public aux::make_sink_frontend_base< SinkBackendT >::type,
+    private boost::log::aux::locking_ptr_counter_base
 {
-    typedef aux::synchronous_frontend< typename SinkBackendT::char_type > base_type;
+    typedef typename aux::make_sink_frontend_base< SinkBackendT >::type base_type;
+
+private:
+    //! Synchronization mutex type
+    typedef boost::mutex backend_mutex_type;
 
 public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
     //! \cond
-    BOOST_MPL_ASSERT((is_model_supported< typename sink_backend_type::threading_model, frontend_synchronization_tag >));
+    BOOST_MPL_ASSERT((has_requirement< typename sink_backend_type::frontend_requirements, synchronized_feeding >));
     //! \endcond
 
     typedef typename base_type::record_type record_type;
@@ -114,13 +93,19 @@ public:
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
+private:
+    //! Synchronization mutex
+    backend_mutex_type m_BackendMutex;
+    //! Pointer to the backend
+    const shared_ptr< sink_backend_type > m_pBackend;
+
 public:
     /*!
      * Default constructor. Constructs the sink backend instance.
      * Requires the backend to be default-constructible.
      */
     synchronous_sink() :
-        base_type(boost::make_shared< sink_backend_type >(), &synchronous_sink::consume_trampoline)
+        m_pBackend(boost::make_shared< sink_backend_type >())
     {
     }
     /*!
@@ -131,7 +116,7 @@ public:
      * \pre \a backend is not \c NULL.
      */
     explicit synchronous_sink(shared_ptr< sink_backend_type > const& backend) :
-        base_type(backend, &synchronous_sink::consume_trampoline)
+        m_pBackend(backend)
     {
     }
 
@@ -141,20 +126,45 @@ public:
     /*!
      * Locking accessor to the attached backend
      */
-    locked_backend_ptr locked_backend() const
+    locked_backend_ptr locked_backend()
     {
         return locked_backend_ptr(
-            boost::static_pointer_cast< sink_backend_type >(base_type::get_backend()),
-            base_type::get_backend_locker());
+            m_pBackend,
+            static_cast< boost::log::aux::locking_ptr_counter_base& >(*this));
+    }
+
+    /*!
+     * Passes the log record to the backend
+     */
+    void consume(record_type const& record)
+    {
+        base_type::feed_record(record, m_BackendMutex, *m_pBackend);
+    }
+
+    /*!
+     * The method attempts to pass logging record to the backend
+     */
+    bool try_consume(record_type const& record)
+    {
+        return base_type::try_feed_record(record, m_BackendMutex, *m_pBackend);
+    }
+
+    /*!
+     * The method performs flushing of any internal buffers that may hold log records. The method
+     * may take considerable time to complete and may block both the calling thread and threads
+     * attempting to put new records into the sink while this call is in progress.
+     */
+    void flush()
+    {
+        base_type::flush_backend(m_BackendMutex, *m_pBackend);
     }
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    //! The method puts logging message to the sink
-    static void consume_trampoline(void* backend, record_type const& record)
-    {
-        static_cast< sink_backend_type* >(backend)->consume(record);
-    }
+    // locking_ptr_counter_base methods
+    void lock() { m_BackendMutex.lock(); }
+    bool try_lock() { return m_BackendMutex.try_lock(); }
+    void unlock() { m_BackendMutex.unlock(); }
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

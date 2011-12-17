@@ -32,7 +32,7 @@ void init()
     pSink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("sample.log"));
 
-    pSink->locked_backend()->set_formatter
+    pSink->set_formatter
     (
         fmt::stream
                 // line id will be written in hex, 8-digits, zero-filled

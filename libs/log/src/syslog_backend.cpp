@@ -467,7 +467,7 @@ BOOST_LOG_EXPORT void basic_syslog_backend< CharT >::set_severity_mapper(severit
 
 //! The method writes the message to the sink
 template< typename CharT >
-BOOST_LOG_EXPORT void basic_syslog_backend< CharT >::do_consume(
+BOOST_LOG_EXPORT void basic_syslog_backend< CharT >::consume(
     record_type const& record, target_string_type const& formatted_message)
 {
     m_pImpl->send(

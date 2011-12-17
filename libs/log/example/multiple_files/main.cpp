@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
             fmt::stream << "logs/" << fmt::attr< boost::thread::id >("ThreadID") << ".log");
 
         // Set the log record formatter
-        sink->locked_backend()->set_formatter(
+        sink->set_formatter(
             fmt::format("%1%: [%2%] - %3%")
                 % fmt::attr< unsigned int >("RecordID")
                 % fmt::date_time< boost::posix_time::ptime >("TimeStamp")

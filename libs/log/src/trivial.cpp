@@ -137,7 +137,7 @@ BOOST_LOG_EXPORT logger::logger_type logger::construct_logger()
     );
 
     typedef log::aux::add_common_attributes_constants< char > traits_t;
-    sink->locked_backend()->set_formatter(
+    sink->set_formatter(
         formatters::stream
             << formatters::attr< unsigned int >(traits_t::line_id_attr_name())
             << " [" << formatters::date_time< posix_time::ptime >(traits_t::time_stamp_attr_name())

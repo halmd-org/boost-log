@@ -52,7 +52,7 @@ void init_logging()
         keywords::rotation_size = 16384                 /*< rotation size, in characters >*/
     ));
 
-    sink->locked_backend()->set_formatter
+    sink->set_formatter
     (
         fmt::format("\t<record id=\"%1%\" timestamp=\"%2%\">%3%</record>")
             % fmt::attr< unsigned int >("RecordID")
@@ -93,7 +93,7 @@ void init_logging()
     // Upon restart, scan the directory for files matching the file_name pattern
     sink->locked_backend()->scan_for_files();
 
-    sink->locked_backend()->set_formatter
+    sink->set_formatter
     (
         fmt::format("\t<record id=\"%1%\" timestamp=\"%2%\">%3%</record>")
             % fmt::attr< unsigned int >("RecordID")

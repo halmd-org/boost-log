@@ -85,14 +85,14 @@ shared_ptr<
         pBackend->scan_for_files(args[keywords::scan_method | sinks::file::scan_matching]);
     }
 
-    aux::setup_formatter(*pBackend, args,
-        typename is_void< typename parameter::binding< ArgsT, keywords::tag::format, void >::type >::type());
-
     shared_ptr< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< backend_t > > pSink =
         boost::make_shared< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< backend_t > >(pBackend);
 
     aux::setup_filter(*pSink, args,
         typename is_void< typename parameter::binding< ArgsT, keywords::tag::filter, void >::type >::type());
+
+    aux::setup_formatter(*pSink, args,
+        typename is_void< typename parameter::binding< ArgsT, keywords::tag::format, void >::type >::type());
 
     basic_core< CharT >::get()->add_sink(pSink);
 
