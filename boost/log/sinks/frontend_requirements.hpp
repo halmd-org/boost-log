@@ -10,8 +10,8 @@
  * \date   22.04.2007
  *
  * The header contains definition of requirement tags that sink backend may declare
- * with regard to frontends. These requirements ensure that backend will not
- * be combined with an incompatible frontend.
+ * with regard to frontends. These requirements ensure that a backend will not
+ * be used with an incompatible frontend.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)

@@ -5,11 +5,11 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   unbounded_ordering_queue.hpp
+ * \file   bounded_ordering_queue.hpp
  * \author Andrey Semashev
- * \date   24.07.2011
+ * \date   06.01.2012
  *
- * The header contains implementation of unbounded ordering record queueing strategy for
+ * The header contains implementation of bounded ordering queueing strategy for
  * the asynchronous sink frontend.
  */
 
@@ -17,8 +17,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_SINKS_UNBOUNDED_ORDERING_QUEUE_HPP_INCLUDED_
-#define BOOST_LOG_SINKS_UNBOUNDED_ORDERING_QUEUE_HPP_INCLUDED_
+#ifndef BOOST_LOG_SINKS_BOUNDED_ORDERING_QUEUE_HPP_INCLUDED_
+#define BOOST_LOG_SINKS_BOUNDED_ORDERING_QUEUE_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
 
@@ -26,6 +26,7 @@
 #error Boost.Log: This header content is only supported in multithreaded environment
 #endif
 
+#include <cstddef>
 #include <queue>
 #include <vector>
 #include <boost/cstdint.hpp>
@@ -47,15 +48,17 @@ namespace sinks {
 
 namespace aux {
 
-//! Unbounded ordering log record strategy implementation
-template< typename RecordT, typename OrderT >
-class unbounded_ordering_queue
+//! Bounded FIFO log record strategy implementation
+template< typename RecordT, typename OrderT, std::size_t MaxQueueSizeV, typename OverflowStrategyT >
+class bounded_ordering_queue :
+	private OverflowStrategyT
 {
 private:
+	typedef OverflowStrategyT overflow_strategy;
     typedef RecordT record_type;
-    typedef boost::mutex mutex_type;
+	typedef boost::mutex mutex_type;
 
-    //! Log record with enqueueing timestamp
+	//! Log record with enqueueing timestamp
     class enqueued_record
     {
         BOOST_COPYABLE_AND_MOVABLE(enqueued_record)
@@ -117,11 +120,11 @@ private:
 private:
 	//! Ordering window duration, in milliseconds
     const uint64_t m_ordering_window;
-    //! Synchronization mutex
-    mutex_type m_mutex;
-    //! Condition for blocking
-    condition_variable m_cond;
-    //! Thread-safe queue
+	//! Synchronization primitive
+	mutex_type m_mutex;
+	//! Condition to block the consuming thread on
+	condition_variable m_cond;
+    //! Log record queue
     queue_type m_queue;
     //! Interruption flag
     bool m_interruption_requested;
@@ -153,39 +156,57 @@ public:
 
 protected:
     //! Initializing constructor
-    template< typename ArgsT >
-    explicit unbounded_ordering_queue(ArgsT const& args) :
-		m_ordering_window(args[keywords::ordering_window || &unbounded_ordering_queue::get_default_ordering_window].total_milliseconds()),
+	template< typename ArgsT >
+    explicit bounded_ordering_queue(ArgsT const& args) :
+		m_ordering_window(args[keywords::ordering_window || &bounded_ordering_queue::get_default_ordering_window].total_milliseconds()),
         m_queue(args[keywords::order]),
-        m_interruption_requested(false)
+		m_interruption_requested(false)
     {
     }
 
     //! Enqueues log record to the queue
     void enqueue(record_type const& rec)
     {
-        lock_guard< mutex_type > lock(m_mutex);
-		enqueue_unlocked(rec);
+		unique_lock< mutex_type > lock(m_mutex);
+        std::size_t size = m_queue.size();
+		for (; size >= MaxQueueSizeV; size = m_queue.size())
+		{
+			if (!overflow_strategy::on_overflow(rec, lock))
+				return;
+		}
+
+		m_queue.push(enqueued_record(rec));
+		if (size == 0)
+			m_cond.notify_one();
     }
 
     //! Attempts to enqueue log record to the queue
     bool try_enqueue(record_type const& rec)
     {
-        unique_lock< mutex_type > lock(m_mutex, try_to_lock);
-        if (lock.owns_lock())
-        {
-			enqueue_unlocked(rec);
-            return true;
-        }
-        else
-            return false;
+		unique_lock< mutex_type > lock(m_mutex, try_to_lock);
+		if (lock.owns_lock())
+		{
+			const std::size_t size = m_queue.size();
+
+			// Do not invoke the bounding strategy in case of overflow as it may block
+			if (size < MaxQueueSizeV)
+			{
+				m_queue.push(rec);
+		        if (size == 0)
+		            m_cond.notify_one();
+				return true;
+			}
+		}
+
+		return false;
     }
 
-    //! Attempts to dequeue a log record ready for processing from the queue, does not block if no log records are ready to be processed
+    //! Attempts to dequeue a log record ready for processing from the queue, does not block if the queue is empty
     bool try_dequeue_ready(record_type& rec)
     {
-        lock_guard< mutex_type > lock(m_mutex);
-        if (!m_queue.empty())
+		lock_guard< mutex_type > lock(m_mutex);
+		const std::size_t size = m_queue.size();
+        if (size > 0)
         {
             const uint64_t now = boost::log::aux::get_tick_count();
             enqueued_record const& elem = m_queue.top();
@@ -194,6 +215,8 @@ protected:
                 // We got a new element
                 rec = elem.m_record;
                 m_queue.pop();
+				if (size == MaxQueueSizeV)
+					overflow_strategy::on_queue_space_available();
                 return true;
             }
         }
@@ -201,102 +224,99 @@ protected:
         return false;
     }
 
-    //! Attempts to dequeue log record from the queue, does not block.
+    //! Attempts to dequeue log record from the queue, does not block if the queue is empty
     bool try_dequeue(record_type& rec)
     {
-        lock_guard< mutex_type > lock(m_mutex);
-        if (!m_queue.empty())
-        {
-            enqueued_record const& elem = m_queue.top();
+		lock_guard< mutex_type > lock(m_mutex);
+		const std::size_t size = m_queue.size();
+		if (size > 0)
+		{
+			enqueued_record const& elem = m_queue.top();
             rec = elem.m_record;
-            m_queue.pop();
-            return true;
-        }
+			m_queue.pop();
+			if (size == MaxQueueSizeV)
+				overflow_strategy::on_queue_space_available();
+			return true;
+		}
 
-        return false;
+		return false;
     }
 
-    //! Dequeues log record from the queue, blocks if no log records are ready to be processed
+    //! Dequeues log record from the queue, blocks if the queue is empty
     bool dequeue_ready(record_type& rec)
     {
-        unique_lock< mutex_type > lock(m_mutex);
-        while (!m_interruption_requested)
-        {
-            if (!m_queue.empty())
-            {
-                const uint64_t now = boost::log::aux::get_tick_count();
+		unique_lock< mutex_type > lock(m_mutex);
+
+		while (!m_interruption_requested)
+		{
+			const std::size_t size = m_queue.size();
+			if (size > 0)
+			{
+				const uint64_t now = boost::log::aux::get_tick_count();
                 enqueued_record const& elem = m_queue.top();
 				const uint64_t difference = now - elem.m_timestamp;
                 if (difference >= m_ordering_window)
-                {
-                    // We got a new element
-                    rec = elem.m_record;
-                    m_queue.pop();
-                    return true;
-                }
-                else
-                {
-                    // Wait until the element becomes ready to be processed
+				{
+					rec = elem.m_record;
+					m_queue.pop();
+					if (size == MaxQueueSizeV)
+						overflow_strategy::on_queue_space_available();
+					return true;
+				}
+				else
+				{
+					// Wait until the element becomes ready to be processed
                     m_cond.timed_wait(lock, posix_time::milliseconds(m_ordering_window - difference));
-                }
-            }
-            else
-            {
-                // Wait for an element to come
-                m_cond.wait(lock);
-            }
-        }
-        m_interruption_requested = false;
+				}
+			}
+			else
+			{
+				m_cond.wait(lock);
+			}
+		}
+		m_interruption_requested = false;
 
-        return false;
-    }
+		return false;
+	}
 
     //! Wakes a thread possibly blocked in the \c dequeue method
     void interrupt_dequeue()
     {
-        lock_guard< mutex_type > lock(m_mutex);
-        m_interruption_requested = true;
-        m_cond.notify_one();
+		lock_guard< mutex_type > lock(m_mutex);
+		m_interruption_requested = true;
+		overflow_strategy::interrupt();
+		m_cond.notify_one();
     }
-
-private:
-	//! Enqueues a log record
-	void enqueue_unlocked(record_type const& rec)
-	{
-		const bool was_empty = m_queue.empty();
-        m_queue.push(enqueued_record(rec));
-		if (was_empty)
-			m_cond.notify_one();
-	}
 };
 
 } // namespace aux
 
 /*!
- * \brief Unbounded ordering log record queueing strategy
+ * \brief Bounded ordering log record queueing strategy
  *
- * The \c unbounded_ordering_queue class is intended to be used with
+ * The \c bounded_ordering_queue class is intended to be used with
  * the \c asynchronous_sink frontend as a log record queueing strategy.
  *
  * This strategy provides the following properties to the record queueing mechanism:
  *
- * \li The queue has no size limits.
+ * \li The queue has limited capacity specified by the \c MaxQueueSizeV template parameter.
+ * \li Upon reaching the size limit, the queue invokes the overflow handling strategy
+ *     specified in the \c OverflowStrategyT template parameter to handle the situation.
+ *     The library provides overflow handling strategies for most common cases:
+ *     \c drop_on_overflow will silently discard the log record, and \c block_on_overflow
+ *     will put the enqueueing thread to wait until there is space in the queue.
  * \li The queue has a fixed latency window. This means that each log record put
  *     into the queue will normally not be dequeued for a certain period of time.
  * \li The queue performs stable record ordering within the latency window.
  *     The ordering predicate can be specified in the \c OrderT template parameter.
- *
- * Since this queue has no size limits, it may grow uncontrollably if sink backends
- * dequeue log records not fast enough. When this is an issue, it is recommended to
- * use one of the bounded strategies.
  */
-template< typename OrderT >
-struct unbounded_ordering_queue
+template< typename OrderT, std::size_t MaxQueueSizeV, typename OverflowStrategyT >
+struct bounded_ordering_queue
 {
     template< typename RecordT >
     struct frontend_base
     {
-        typedef sinks::aux::unbounded_ordering_queue< RecordT, OrderT > type;
+        typedef sinks::aux::bounded_ordering_queue< RecordT, OrderT, MaxQueueSizeV, OverflowStrategyT > type;
     };
 };
 
@@ -306,4 +326,4 @@ struct unbounded_ordering_queue
 
 } // namespace boost
 
-#endif // BOOST_LOG_SINKS_UNBOUNDED_ORDERING_QUEUE_HPP_INCLUDED_
+#endif // BOOST_LOG_SINKS_BOUNDED_ORDERING_QUEUE_HPP_INCLUDED_

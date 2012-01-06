@@ -20,14 +20,14 @@
 #ifndef BOOST_LOG_SINKS_BOUNDED_FIFO_QUEUE_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_BOUNDED_FIFO_QUEUE_HPP_INCLUDED_
 
-#include <cstddef>
-#include <queue>
 #include <boost/log/detail/prologue.hpp>
 
 #if defined(BOOST_LOG_NO_THREADS)
 #error Boost.Log: This header content is only supported in multithreaded environment
 #endif
 
+#include <cstddef>
+#include <queue>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
@@ -132,14 +132,8 @@ protected:
     {
 		unique_lock< mutex_type > lock(m_mutex);
 
-		while (true)
+		while (!m_interruption_requested)
 		{
-			if (m_interruption_requested)
-            {
-                m_interruption_requested = false;
-                return false;
-            }
-
 			const std::size_t size = m_queue.size();
 			if (size > 0)
 			{
@@ -154,7 +148,10 @@ protected:
 				m_cond.wait(lock);
 			}
 		}
-    }
+		m_interruption_requested = false;
+
+		return false;
+	}
 
     //! Wakes a thread possibly blocked in the \c dequeue method
     void interrupt_dequeue()
