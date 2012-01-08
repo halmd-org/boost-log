@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2011.
+ *          Copyright Andrey Semashev 2007 - 2012.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -32,7 +32,7 @@
 #include <boost/move/move.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <boost/thread/condition_variable.hpp>
 #include <boost/thread/thread_time.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/detail/tick_count.hpp>
@@ -115,14 +115,14 @@ private:
     > queue_type;
 
 private:
+    //! Ordering window duration, in milliseconds
+    const uint64_t m_ordering_window;
     //! Synchronization mutex
     mutex_type m_mutex;
     //! Condition for blocking
     condition_variable m_cond;
     //! Thread-safe queue
     queue_type m_queue;
-    //! Ordering window duration, in milliseconds
-    uint64_t m_ordering_window;
     //! Interruption flag
     bool m_interruption_requested;
 
@@ -155,8 +155,8 @@ protected:
     //! Initializing constructor
     template< typename ArgsT >
     explicit unbounded_ordering_queue(ArgsT const& args) :
-        m_queue(args[keywords::order]),
         m_ordering_window(args[keywords::ordering_window || &unbounded_ordering_queue::get_default_ordering_window].total_milliseconds()),
+        m_queue(args[keywords::order]),
         m_interruption_requested(false)
     {
     }
@@ -165,8 +165,7 @@ protected:
     void enqueue(record_type const& rec)
     {
         lock_guard< mutex_type > lock(m_mutex);
-        m_queue.push(enqueued_record(rec));
-        m_cond.notify_one();
+        enqueue_unlocked(rec);
     }
 
     //! Attempts to enqueue log record to the queue
@@ -175,8 +174,7 @@ protected:
         unique_lock< mutex_type > lock(m_mutex, try_to_lock);
         if (lock.owns_lock())
         {
-            m_queue.push(enqueued_record(rec));
-            m_cond.notify_one();
+            enqueue_unlocked(rec);
             return true;
         }
         else
@@ -189,12 +187,11 @@ protected:
         lock_guard< mutex_type > lock(m_mutex);
         if (!m_queue.empty())
         {
-            uint64_t now = boost::log::aux::get_tick_count();
+            const uint64_t now = boost::log::aux::get_tick_count();
             enqueued_record const& elem = m_queue.top();
             if ((now - elem.m_timestamp) >= m_ordering_window)
             {
                 // We got a new element
-                //rec.swap(elem.m_record);
                 rec = elem.m_record;
                 m_queue.pop();
                 return true;
@@ -211,7 +208,6 @@ protected:
         if (!m_queue.empty())
         {
             enqueued_record const& elem = m_queue.top();
-            //rec.swap(elem.m_record);
             rec = elem.m_record;
             m_queue.pop();
             return true;
@@ -228,12 +224,12 @@ protected:
         {
             if (!m_queue.empty())
             {
-                uint64_t now = boost::log::aux::get_tick_count();
+                const uint64_t now = boost::log::aux::get_tick_count();
                 enqueued_record const& elem = m_queue.top();
-                if ((now - elem.m_timestamp) >= m_ordering_window)
+                const uint64_t difference = now - elem.m_timestamp;
+                if (difference >= m_ordering_window)
                 {
                     // We got a new element
-                    //rec.swap(elem.m_record);
                     rec = elem.m_record;
                     m_queue.pop();
                     return true;
@@ -241,8 +237,7 @@ protected:
                 else
                 {
                     // Wait until the element becomes ready to be processed
-                    m_cond.timed_wait(lock, posix_time::milliseconds(
-                        m_ordering_window - (now - elem.m_timestamp)));
+                    m_cond.timed_wait(lock, posix_time::milliseconds(m_ordering_window - difference));
                 }
             }
             else
@@ -262,6 +257,16 @@ protected:
         lock_guard< mutex_type > lock(m_mutex);
         m_interruption_requested = true;
         m_cond.notify_one();
+    }
+
+private:
+    //! Enqueues a log record
+    void enqueue_unlocked(record_type const& rec)
+    {
+        const bool was_empty = m_queue.empty();
+        m_queue.push(enqueued_record(rec));
+        if (was_empty)
+            m_cond.notify_one();
     }
 };
 

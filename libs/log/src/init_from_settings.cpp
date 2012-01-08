@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2011.
+ *          Copyright Andrey Semashev 2007 - 2012.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -20,6 +20,7 @@
 #pragma warning(disable: 4800)
 #endif
 
+#include <ios>
 #include <map>
 #include <vector>
 #include <string>
@@ -473,6 +474,13 @@ private:
         {
             backend->auto_flush(
                 any_cast_to_bool(constants::auto_flush_param_name(), it->second));
+        }
+
+        // Append
+        it = params.find(constants::append_param_name());
+        if (it != params.end() && !it->second.empty() && any_cast_to_bool(constants::auto_flush_param_name(), it->second))
+        {
+            backend->set_open_mode(std::ios_base::out | std::ios_base::app);
         }
 
         // File collector parameters

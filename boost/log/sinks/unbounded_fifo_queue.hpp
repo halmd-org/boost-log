@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2011.
+ *          Copyright Andrey Semashev 2007 - 2012.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -56,6 +56,11 @@ private:
 protected:
     //! Default constructor
     unbounded_fifo_queue() : m_interruption_requested(false)
+    {
+    }
+    //! Initializing constructor
+    template< typename ArgsT >
+    explicit unbounded_fifo_queue(ArgsT const&) : m_interruption_requested(false)
     {
     }
 

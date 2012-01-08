@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2011.
+ *          Copyright Andrey Semashev 2007 - 2012.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -20,7 +20,6 @@
 #ifndef BOOST_LOG_DETAIL_SINGLETON_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_SINGLETON_HPP_INCLUDED_
 
-#include <boost/noncopyable.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/once_block.hpp>
 
@@ -32,9 +31,11 @@ namespace aux {
 
 //! A base class for singletons, constructed on-demand
 template< typename DerivedT, typename StorageT = DerivedT >
-class lazy_singleton : noncopyable
+class lazy_singleton
 {
 public:
+    BOOST_LOG_DEFAULTED_FUNCTION(lazy_singleton(), {})
+
     //! Returns the singleton instance
     static StorageT& get()
     {
@@ -50,6 +51,9 @@ public:
     {
         get_instance();
     }
+
+    BOOST_LOG_DELETED_FUNCTION(lazy_singleton(lazy_singleton const&))
+    BOOST_LOG_DELETED_FUNCTION(lazy_singleton& operator= (lazy_singleton const&))
 
 protected:
     //! Returns the singleton instance (not thread-safe)

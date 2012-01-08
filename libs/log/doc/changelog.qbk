@@ -1,5 +1,5 @@
 [/
-              Copyright Andrey Semashev 2007 - 2011.
+              Copyright Andrey Semashev 2007 - 2012.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -13,7 +13,7 @@
 
 [*General changes:]
 
-* The library is now compatible with Boost 1.42 or newer.
+* The library is now compatible with Boost 1.48 or newer.
 * Added support for Boost.Filesystem v3.
 * The `BOOST_LOG_NO_COMPILER_TLS` configuration macro has been replaced with `BOOST_LOG_USE_COMPILER_TLS` with the opposite meaning. The support for compiler intrinsics for TLS is now disabled by default.
 * The library now uses __boost_xpressive__ instead of __boost_regex__ internally, which makes it unnecessary to build the latter in order to use the library. __boost_regex__ is still supported on the user's side.
@@ -46,6 +46,8 @@
 * Added support for flushing sinks. A sink backend that supports flushing has to define public method with the following signature: `void flush()`.
 * Asynchronous sink frontend reworkerd, ordering asynchronous sink removed. The `asynchronous_sink` class template now allows to specify record queueing strategy. Several strategies provided, including `unbounded_fifo_queue` (the default) and `unbounded_ordering_queue` which cover the functionality of asynchronous sink frontends in 1.x releases.
 * Lock-free FIFO record queueing in asynchronous sinks reworked to reduce log record processing stalls.
+* Added `Append` configuration file parameter for text file sinks. If this parameter is set to `true`, the sink will append log records to the existing log file instead of overwriting it.
+* Added bounded variants of asynchronous sink frontends. Implemented two strategies to handle queue overflows: either log records are dropped or logging threads are blocked until there is space in the queue.
 
 [*Documentation changes:]
 

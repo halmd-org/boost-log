@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2011.
+ *          Copyright Andrey Semashev 2007 - 2012.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -10,8 +10,8 @@
  * \date   22.04.2007
  *
  * The header contains definition of requirement tags that sink backend may declare
- * with regard to frontends. These requirements ensure that backend will not
- * be combined with an incompatible frontend.
+ * with regard to frontends. These requirements ensure that a backend will not
+ * be used with an incompatible frontend.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)

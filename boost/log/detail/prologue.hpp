@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2011.
+ *          Copyright Andrey Semashev 2007 - 2012.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -32,7 +32,7 @@
 #include <boost/version.hpp>
 
 #if BOOST_VERSION < 104800
-    // Older Boost versions contained bugs that affected the library
+    // Older Boost versions contained bugs that affected the library or did not have required features
 #   error Boost.Log: Boost version 1.48 or later is required
 #endif
 
@@ -217,6 +217,18 @@
 #       undef BOOST_LOG_USE_COMPILER_TLS
 #   endif
 #endif // defined(BOOST_LOG_USE_COMPILER_TLS)
+
+#if defined(BOOST_LOG_DOXYGEN_PASS) || !defined(BOOST_NO_DEFAULTED_FUNCTIONS)
+#   define BOOST_LOG_DEFAULTED_FUNCTION(fun, body) fun = default;
+#else
+#   define BOOST_LOG_DEFAULTED_FUNCTION(fun, body) fun body
+#endif
+
+#if defined(BOOST_LOG_DOXYGEN_PASS) || !defined(BOOST_NO_DELETED_FUNCTIONS)
+#   define BOOST_LOG_DELETED_FUNCTION(fun) fun = delete;
+#else
+#   define BOOST_LOG_DELETED_FUNCTION(fun) private: fun;
+#endif
 
 namespace boost {
 

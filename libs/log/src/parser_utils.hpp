@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2011.
+ *          Copyright Andrey Semashev 2007 - 2012.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -84,6 +84,7 @@ struct char_constants< char >
     static const char_type* rotation_size_param_name() { return "RotationSize"; }
     static const char_type* rotation_interval_param_name() { return "RotationInterval"; }
     static const char_type* rotation_time_point_param_name() { return "RotationTimePoint"; }
+    static const char_type* append_param_name() { return "Append"; }
     static const char_type* auto_flush_param_name() { return "AutoFlush"; }
     static const char_type* asynchronous_param_name() { return "Asynchronous"; }
     static const char_type* format_param_name() { return "Format"; }
@@ -195,6 +196,7 @@ struct char_constants< wchar_t >
     static const char_type* rotation_size_param_name() { return L"RotationSize"; }
     static const char_type* rotation_interval_param_name() { return L"RotationInterval"; }
     static const char_type* rotation_time_point_param_name() { return L"RotationTimePoint"; }
+    static const char_type* append_param_name() { return L"Append"; }
     static const char_type* auto_flush_param_name() { return L"AutoFlush"; }
     static const char_type* asynchronous_param_name() { return L"Asynchronous"; }
     static const char_type* format_param_name() { return L"Format"; }

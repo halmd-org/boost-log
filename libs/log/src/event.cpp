@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2011.
+ *          Copyright Andrey Semashev 2007 - 2012.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -22,8 +22,8 @@
 #if defined(BOOST_LOG_EVENT_USE_POSIX_SEMAPHORE)
 
 #if defined(__GNUC__) && defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
-#define BOOST_LOG_EVENT_TRY_SET(ref) __sync_bool_compare_and_swap(&ref, 0U, 1U)
-#define BOOST_LOG_EVENT_RESET(ref) ref = 0U; __sync_synchronize()
+#define BOOST_LOG_EVENT_TRY_SET(ref) (__sync_lock_test_and_set(&ref, 1U) == 0U)
+#define BOOST_LOG_EVENT_RESET(ref) __sync_lock_release(&ref)
 #else
 #error Boost.Log internal error: BOOST_LOG_EVENT_USE_POSIX_SEMAPHORE must only be defined when atomic ops are available
 #endif
@@ -51,7 +51,7 @@ namespace aux {
 #if defined(BOOST_LOG_EVENT_USE_POSIX_SEMAPHORE)
 
 //! Default constructor
-BOOST_LOG_EXPORT sem_based_event::sem_based_event() : m_state(0)
+BOOST_LOG_EXPORT sem_based_event::sem_based_event() : m_state(0U)
 {
     if (sem_init(&m_semaphore, 0, 0) != 0)
     {
