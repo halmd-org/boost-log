@@ -57,8 +57,10 @@ local BOOST_LOG_COMMON_SRC =
     global_logger_storage.cpp
     named_scope.cpp
     process_id.cpp
+    thread_id.cpp
     timer.cpp
     exceptions.cpp
+    default_sink.cpp
     text_ostream_backend.cpp
     text_file_backend.cpp
     syslog_backend.cpp

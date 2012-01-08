@@ -159,45 +159,26 @@ BOOST_LOG_EXPORT logger::logger_type& logger::get()
     return log::sources::aux::logger_singleton< logger >::get();
 }
 
-//! Streaming operator for severity level
-template< typename CharT, typename TraitsT >
-std::basic_ostream< CharT, TraitsT >& operator<< (
-    std::basic_ostream< CharT, TraitsT >& strm, severity_level lvl)
+BOOST_LOG_EXPORT const char* to_string(severity_level lvl)
 {
     switch (lvl)
     {
     case trace:
-        strm << "trace"; break;
+        return "trace";
     case debug:
-        strm << "debug"; break;
+        return "debug";
     case info:
-        strm << "info"; break;
+        return "info";
     case warning:
-        strm << "warning"; break;
+        return "warning";
     case error:
-        strm << "error"; break;
+        return "error";
     case fatal:
-        strm << "fatal"; break;
+        return "fatal";
     default:
-        strm << static_cast< int >(lvl); break;
+        return NULL;
     }
-
-    return strm;
 }
-
-//  Explicitly instantiate the operator
-#ifdef BOOST_LOG_USE_CHAR
-template BOOST_LOG_EXPORT std::basic_ostream< char, std::char_traits< char > >&
-operator<< < char, std::char_traits< char > >(
-    std::basic_ostream< char, std::char_traits< char > >& strm,
-    severity_level lvl);
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-template BOOST_LOG_EXPORT std::basic_ostream< wchar_t, std::char_traits< wchar_t > >&
-operator<< < wchar_t, std::char_traits< wchar_t > >(
-    std::basic_ostream< wchar_t, std::char_traits< wchar_t > >& strm,
-    severity_level lvl);
-#endif
 
 } // namespace trivial
 

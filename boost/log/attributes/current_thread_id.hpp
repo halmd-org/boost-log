@@ -26,7 +26,7 @@
 #endif
 
 #include <boost/intrusive_ptr.hpp>
-#include <boost/thread/thread.hpp>
+#include <boost/log/detail/thread_id.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
@@ -48,7 +48,7 @@ class current_thread_id :
 {
 public:
     //! A held attribute value type
-    typedef thread::id value_type;
+    typedef boost::log::aux::thread::id value_type;
 
 protected:
     //! Factory implementation
@@ -62,7 +62,7 @@ protected:
                 dispatcher.get_callback< value_type >();
             if (callback)
             {
-                callback(this_thread::get_id());
+                callback(boost::log::aux::this_thread::get_id());
                 return true;
             }
             else
@@ -72,7 +72,7 @@ protected:
         intrusive_ptr< attribute_value::impl > detach_from_thread()
         {
             typedef basic_attribute_value< value_type > detached_value;
-            return new detached_value(this_thread::get_id());
+            return new detached_value(boost::log::aux::this_thread::get_id());
         }
     };
 

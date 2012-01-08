@@ -88,6 +88,11 @@ private:
     //! A pointer to the implementation
     implementation* pImpl;
 
+private:
+    //! \cond
+    basic_core();
+    //! \endcond
+
 public:
     /*!
      * Destructor. Destroys the core, releases any sinks and attributes that were registered.
@@ -277,7 +282,6 @@ public:
      */
     void push_record(record_type const& rec);
 
-    BOOST_LOG_DELETED_FUNCTION(basic_core())
     BOOST_LOG_DELETED_FUNCTION(basic_core(basic_core const&))
     BOOST_LOG_DELETED_FUNCTION(basic_core& operator= (basic_core const&))
 };

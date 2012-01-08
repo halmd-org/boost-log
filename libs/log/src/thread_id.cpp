@@ -5,18 +5,22 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   process_id.cpp
+ * \file   thread_id.cpp
  * \author Andrey Semashev
- * \date   12.09.2009
+ * \date   08.1.2012
  *
  * \brief  This header is the Boost.Log library implementation, see the library documentation
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#include <boost/log/detail/prologue.hpp>
+
+#if !defined(BOOST_LOG_NO_THREADS)
+
 #include <iostream>
 #include <boost/integer.hpp>
 #include <boost/io/ios_state.hpp>
-#include <boost/log/detail/process_id.hpp>
+#include <boost/log/detail/thread_id.hpp>
 
 #if defined(BOOST_WINDOWS)
 
@@ -31,14 +35,14 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-enum { pid_size = sizeof(GetCurrentProcessId()) };
+enum { tid_size = sizeof(GetCurrentThreadId()) };
 
-namespace this_process {
+namespace this_thread {
 
     //! The function returns current process identifier
-    BOOST_LOG_EXPORT process::id get_id()
+    BOOST_LOG_EXPORT thread::id get_id()
     {
-        return process::id(GetCurrentProcessId());
+        return process::id(GetCurrentThreadId());
     }
 
 } // namespace this_process
@@ -51,7 +55,7 @@ namespace this_process {
 
 #else // defined(BOOST_WINDOWS)
 
-#include <unistd.h>
+#include <pthread.h>
 
 namespace boost {
 
@@ -59,19 +63,27 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-namespace this_process {
+namespace this_thread {
 
-    //! The function returns current process identifier
-    BOOST_LOG_EXPORT process::id get_id()
+    //! The function returns current thread identifier
+    BOOST_LOG_EXPORT thread::id get_id()
     {
-        // According to POSIX, pid_t should always be an integer type:
+        // According to POSIX, pthread_t may not be an integer type:
         // http://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/types.h.html
-        return process::id(getpid());
+        // For now we use the hackish cast to get some opaque number that hopefully correlates with system thread identification.
+        union
+        {
+            thread::id::native_type as_uint;
+            pthread_t as_pthread;
+        }
+        caster = {};
+        caster.as_pthread = pthread_self();
+        return thread::id(caster.as_uint);
     }
 
-} // namespace this_process
+} // namespace this_thread
 
-enum { pid_size = sizeof(pid_t) };
+enum { tid_size = sizeof(pthread_t) > sizeof(uintmax_t) ? sizeof(uintmax_t) : sizeof(pthread_t) };
 
 } // namespace aux
 
@@ -90,15 +102,15 @@ namespace aux {
 
 template< typename CharT, typename TraitsT >
 std::basic_ostream< CharT, TraitsT >&
-operator<< (std::basic_ostream< CharT, TraitsT >& strm, process::id const& pid)
+operator<< (std::basic_ostream< CharT, TraitsT >& strm, thread::id const& tid)
 {
     if (strm.good())
     {
         io::ios_flags_saver flags_saver(strm, std::ios_base::hex | std::ios_base::showbase);
         // The width is set calculated to accomodate pid in hex + "0x" prefix
-        io::ios_width_saver width_saver(strm, static_cast< std::streamsize >(pid_size * 2 + 2));
+        io::ios_width_saver width_saver(strm, static_cast< std::streamsize >(tid_size * 2 + 2));
         io::basic_ios_fill_saver< CharT, TraitsT > fill_saver(strm, static_cast< CharT >('0'));
-        strm << static_cast< uint_t< pid_size * 8 >::least >(pid.native_id());
+        strm << static_cast< uint_t< tid_size * 8 >::least >(tid.native_id());
     }
 
     return strm;
@@ -107,13 +119,13 @@ operator<< (std::basic_ostream< CharT, TraitsT >& strm, process::id const& pid)
 #if defined(BOOST_LOG_USE_CHAR)
 template BOOST_LOG_EXPORT
 std::basic_ostream< char, std::char_traits< char > >&
-operator<< (std::basic_ostream< char, std::char_traits< char > >& strm, process::id const& pid);
+operator<< (std::basic_ostream< char, std::char_traits< char > >& strm, thread::id const& tid);
 #endif // defined(BOOST_LOG_USE_CHAR)
 
 #if defined(BOOST_LOG_USE_WCHAR_T)
 template BOOST_LOG_EXPORT
 std::basic_ostream< wchar_t, std::char_traits< wchar_t > >&
-operator<< (std::basic_ostream< wchar_t, std::char_traits< wchar_t > >& strm, process::id const& pid);
+operator<< (std::basic_ostream< wchar_t, std::char_traits< wchar_t > >& strm, thread::id const& tid);
 #endif // defined(BOOST_LOG_USE_WCHAR_T)
 
 } // namespace aux
@@ -121,3 +133,5 @@ operator<< (std::basic_ostream< wchar_t, std::char_traits< wchar_t > >& strm, pr
 } // namespace log
 
 } // namespace boost
+
+#endif // !defined(BOOST_LOG_NO_THREADS)
