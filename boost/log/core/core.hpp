@@ -21,7 +21,6 @@
 
 #include <utility>
 #include <boost/shared_ptr.hpp>
-#include <boost/noncopyable.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/core/record.hpp>
@@ -60,7 +59,7 @@ class sink;
  * The logging core is a singleton. Users can acquire the core instance by calling the static method <tt>get</tt>.
  */
 template< typename CharT >
-class BOOST_LOG_EXPORT basic_core : noncopyable
+class BOOST_LOG_EXPORT basic_core
 {
 public:
     //! Character type
@@ -88,11 +87,6 @@ private:
 private:
     //! A pointer to the implementation
     implementation* pImpl;
-
-private:
-    //! \cond
-    basic_core();
-    //! \endcond
 
 public:
     /*!
@@ -282,6 +276,10 @@ public:
      *            throw if one of the sinks throws.
      */
     void push_record(record_type const& rec);
+
+    BOOST_LOG_DELETED_FUNCTION(basic_core())
+    BOOST_LOG_DELETED_FUNCTION(basic_core(basic_core const&))
+    BOOST_LOG_DELETED_FUNCTION(basic_core& operator= (basic_core const&))
 };
 
 #ifdef BOOST_LOG_USE_CHAR

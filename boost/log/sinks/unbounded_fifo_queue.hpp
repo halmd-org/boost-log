@@ -58,6 +58,11 @@ protected:
     unbounded_fifo_queue() : m_interruption_requested(false)
     {
     }
+    //! Initializing constructor
+    template< typename ArgsT >
+    explicit unbounded_fifo_queue(ArgsT const&) : m_interruption_requested(false)
+    {
+    }
 
     //! Enqueues log record to the queue
     void enqueue(record_type const& rec)

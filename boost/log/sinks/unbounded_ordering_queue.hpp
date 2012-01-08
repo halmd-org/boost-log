@@ -115,7 +115,7 @@ private:
     > queue_type;
 
 private:
-	//! Ordering window duration, in milliseconds
+    //! Ordering window duration, in milliseconds
     const uint64_t m_ordering_window;
     //! Synchronization mutex
     mutex_type m_mutex;
@@ -155,7 +155,7 @@ protected:
     //! Initializing constructor
     template< typename ArgsT >
     explicit unbounded_ordering_queue(ArgsT const& args) :
-		m_ordering_window(args[keywords::ordering_window || &unbounded_ordering_queue::get_default_ordering_window].total_milliseconds()),
+        m_ordering_window(args[keywords::ordering_window || &unbounded_ordering_queue::get_default_ordering_window].total_milliseconds()),
         m_queue(args[keywords::order]),
         m_interruption_requested(false)
     {
@@ -165,7 +165,7 @@ protected:
     void enqueue(record_type const& rec)
     {
         lock_guard< mutex_type > lock(m_mutex);
-		enqueue_unlocked(rec);
+        enqueue_unlocked(rec);
     }
 
     //! Attempts to enqueue log record to the queue
@@ -174,7 +174,7 @@ protected:
         unique_lock< mutex_type > lock(m_mutex, try_to_lock);
         if (lock.owns_lock())
         {
-			enqueue_unlocked(rec);
+            enqueue_unlocked(rec);
             return true;
         }
         else
@@ -226,7 +226,7 @@ protected:
             {
                 const uint64_t now = boost::log::aux::get_tick_count();
                 enqueued_record const& elem = m_queue.top();
-				const uint64_t difference = now - elem.m_timestamp;
+                const uint64_t difference = now - elem.m_timestamp;
                 if (difference >= m_ordering_window)
                 {
                     // We got a new element
@@ -260,14 +260,14 @@ protected:
     }
 
 private:
-	//! Enqueues a log record
-	void enqueue_unlocked(record_type const& rec)
-	{
-		const bool was_empty = m_queue.empty();
+    //! Enqueues a log record
+    void enqueue_unlocked(record_type const& rec)
+    {
+        const bool was_empty = m_queue.empty();
         m_queue.push(enqueued_record(rec));
-		if (was_empty)
-			m_cond.notify_one();
-	}
+        if (was_empty)
+            m_cond.notify_one();
+    }
 };
 
 } // namespace aux

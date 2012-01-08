@@ -21,7 +21,6 @@
 #define BOOST_LOG_SINKS_SINK_HPP_INCLUDED_
 
 #include <string>
-#include <boost/noncopyable.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/core/record.hpp>
@@ -43,7 +42,7 @@ namespace sinks {
 
 //! A base class for a logging sink frontend
 template< typename CharT >
-class BOOST_LOG_NO_VTABLE sink : noncopyable
+class BOOST_LOG_NO_VTABLE sink
 {
 public:
     //! Character type
@@ -60,6 +59,11 @@ public:
     typedef boost::log::aux::light_function0< void > exception_handler_type;
 
 public:
+    /*!
+     * Default constructor
+     */
+    BOOST_LOG_DEFAULTED_FUNCTION(sink(), {})
+
     /*!
      * Virtual destructor
      */
@@ -100,6 +104,9 @@ public:
      * attempting to put new records into the sink while this call is in progress.
      */
     virtual void flush() = 0;
+
+    BOOST_LOG_DELETED_FUNCTION(sink(sink const&))
+    BOOST_LOG_DELETED_FUNCTION(sink& operator= (sink const&))
 };
 
 } // namespace sinks

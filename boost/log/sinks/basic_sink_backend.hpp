@@ -20,7 +20,6 @@
 #define BOOST_LOG_SINKS_BASIC_SINK_BACKEND_HPP_INCLUDED_
 
 #include <string>
-#include <boost/noncopyable.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
@@ -40,7 +39,7 @@ namespace sinks {
  * all sink backends are required to define. All sink backends have to derive from the class.
  */
 template< typename CharT, typename FrontendRequirementsT >
-struct basic_sink_backend : noncopyable
+struct basic_sink_backend
 {
     //! Character type
     typedef CharT char_type;
@@ -53,6 +52,11 @@ struct basic_sink_backend : noncopyable
 
     //! Frontend requirements tag
     typedef FrontendRequirementsT frontend_requirements;
+
+    BOOST_LOG_DEFAULTED_FUNCTION(basic_sink_backend(), {})
+
+    BOOST_LOG_DELETED_FUNCTION(basic_sink_backend(basic_sink_backend const&))
+    BOOST_LOG_DELETED_FUNCTION(basic_sink_backend& operator= (basic_sink_backend const&))
 };
 
 /*!

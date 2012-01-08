@@ -218,6 +218,18 @@
 #   endif
 #endif // defined(BOOST_LOG_USE_COMPILER_TLS)
 
+#if defined(BOOST_LOG_DOXYGEN_PASS) || !defined(BOOST_NO_DEFAULTED_FUNCTIONS)
+#   define BOOST_LOG_DEFAULTED_FUNCTION(fun, body) fun = default;
+#else
+#   define BOOST_LOG_DEFAULTED_FUNCTION(fun, body) fun body
+#endif
+
+#if defined(BOOST_LOG_DOXYGEN_PASS) || !defined(BOOST_NO_DELETED_FUNCTIONS)
+#   define BOOST_LOG_DELETED_FUNCTION(fun) fun = delete;
+#else
+#   define BOOST_LOG_DELETED_FUNCTION(fun) private: fun;
+#endif
+
 namespace boost {
 
 // Setup namespace name

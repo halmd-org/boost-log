@@ -476,9 +476,9 @@ private:
                 any_cast_to_bool(constants::auto_flush_param_name(), it->second));
         }
 
-		// Append
-		it = params.find(constants::append_param_name());
-		if (it != params.end() && !it->second.empty() && any_cast_to_bool(constants::auto_flush_param_name(), it->second))
+        // Append
+        it = params.find(constants::append_param_name());
+        if (it != params.end() && !it->second.empty() && any_cast_to_bool(constants::auto_flush_param_name(), it->second))
         {
             backend->set_open_mode(std::ios_base::out | std::ios_base::app);
         }

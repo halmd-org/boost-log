@@ -39,31 +39,31 @@ class drop_on_overflow
 {
 #ifndef BOOST_LOG_DOXYGEN_PASS
 public:
-	/*!
-	 * This method is called by the queue when overflow is detected.
-	 *
-	 * \retval true Attempt to enqueue the record again.
-	 * \retval false Discard the record.
-	 */
+    /*!
+     * This method is called by the queue when overflow is detected.
+     *
+     * \retval true Attempt to enqueue the record again.
+     * \retval false Discard the record.
+     */
     template< typename RecordT, typename LockT >
-	static bool on_overflow(RecordT const&, LockT&)
-	{
-		return false;
-	}
+    static bool on_overflow(RecordT const&, LockT&)
+    {
+        return false;
+    }
 
-	/*!
-	 * This method is called by the queue when there appears a free space.
-	 */
-	static void on_queue_space_available()
-	{
-	}
+    /*!
+     * This method is called by the queue when there appears a free space.
+     */
+    static void on_queue_space_available()
+    {
+    }
 
-	/*!
-	 * This method is called by the queue to interrupt any possible waits in \c on_overflow.
-	 */
-	static void interrupt()
-	{
-	}
+    /*!
+     * This method is called by the queue to interrupt any possible waits in \c on_overflow.
+     */
+    static void interrupt()
+    {
+    }
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 
