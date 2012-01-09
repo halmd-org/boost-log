@@ -13,7 +13,7 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#include <stdio.h>
+#include <cstdio>
 #include <boost/optional/optional.hpp>
 #include <boost/log/detail/prologue.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -77,16 +77,38 @@ struct decomposed_time_point
     }
 };
 
+inline const char* severity_level_to_string(boost::log::trivial::severity_level lvl)
+{
+    switch (lvl)
+    {
+    case boost::log::trivial::trace:
+        return "[trace]  ";
+    case boost::log::trivial::debug:
+        return "[debug]  ";
+    case boost::log::trivial::info:
+        return "[info]   ";
+    case boost::log::trivial::warning:
+        return "[warning]";
+    case boost::log::trivial::error:
+        return "[error]  ";
+    case boost::log::trivial::fatal:
+        return "[fatal]  ";
+    default:
+        return "[-]      ";
+    }
+}
+
 #ifdef BOOST_LOG_USE_CHAR
 
 inline void print_message(boost::log::trivial::severity_level lvl, std::string const& msg)
 {
     const decomposed_time_point now = date_time::microsec_clock< decomposed_time_point >::local_time();
-    const char* level = boost::log::trivial::to_string(lvl);
-    if (!level)
-        level = "";
 
-    printf("[%04u-%02u-%02u %02u:%02u:%02u.%06u] [0x%08x] [%s] %s\n",
+    std::printf("[%04u-%02u-%02u %02u:%02u:%02u.%06u] "
+#if !defined(BOOST_LOG_NO_THREADS)
+                "[0x%08x] "
+#endif
+                "%s %s\n",
         static_cast< unsigned int >(now.date.year),
         static_cast< unsigned int >(now.date.month),
         static_cast< unsigned int >(now.date.day),
@@ -94,8 +116,10 @@ inline void print_message(boost::log::trivial::severity_level lvl, std::string c
         static_cast< unsigned int >(now.time.minutes),
         static_cast< unsigned int >(now.time.seconds),
         static_cast< unsigned int >(now.time.useconds),
+#if !defined(BOOST_LOG_NO_THREADS)
         static_cast< unsigned int >(boost::log::aux::this_thread::get_id().native_id()),
-        level,
+#endif
+        severity_level_to_string(lvl),
         msg.c_str());
 }
 
@@ -106,11 +130,12 @@ inline void print_message(boost::log::trivial::severity_level lvl, std::string c
 inline void print_message(boost::log::trivial::severity_level lvl, std::wstring const& msg)
 {
     const decomposed_time_point now = date_time::microsec_clock< decomposed_time_point >::local_time();
-    const char* level = boost::log::trivial::to_string(lvl);
-    if (!level)
-        level = "";
 
-    printf("[%04u-%02u-%02u %02u:%02u:%02u.%06u] [0x%08x] [%s] %ls\n",
+    std::printf("[%04u-%02u-%02u %02u:%02u:%02u.%06u] "
+#if !defined(BOOST_LOG_NO_THREADS)
+                "[0x%08x] "
+#endif
+                "%s %ls\n",
         static_cast< unsigned int >(now.date.year),
         static_cast< unsigned int >(now.date.month),
         static_cast< unsigned int >(now.date.day),
@@ -118,8 +143,10 @@ inline void print_message(boost::log::trivial::severity_level lvl, std::wstring 
         static_cast< unsigned int >(now.time.minutes),
         static_cast< unsigned int >(now.time.seconds),
         static_cast< unsigned int >(now.time.useconds),
+#if !defined(BOOST_LOG_NO_THREADS)
         static_cast< unsigned int >(boost::log::aux::this_thread::get_id().native_id()),
-        level,
+#endif
+        severity_level_to_string(lvl),
         msg.c_str());
 }
 
