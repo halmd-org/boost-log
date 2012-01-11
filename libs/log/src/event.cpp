@@ -137,7 +137,7 @@ BOOST_LOG_EXPORT void winapi_based_event::wait()
 //! Sets the object to a signalled state
 BOOST_LOG_EXPORT void winapi_based_event::set_signalled()
 {
-    if (BOOST_INTERLOCKED_COMPARE_EXCHANGE(&m_state, 1, 0) == 0)
+    if (BOOST_INTERLOCKED_COMPARE_EXCHANGE(reinterpret_cast< long* >(&m_state), 1, 0) == 0)
     {
         if (SetEvent(m_event) == 0)
         {

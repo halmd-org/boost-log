@@ -42,7 +42,7 @@ namespace this_thread {
     //! The function returns current process identifier
     BOOST_LOG_EXPORT thread::id get_id()
     {
-        return process::id(GetCurrentThreadId());
+        return thread::id(GetCurrentThreadId());
     }
 
 } // namespace this_process

@@ -102,7 +102,7 @@ public:
     //! List of sinks involved into output
     sink_list Sinks;
     //! Default sink
-    shared_ptr< sink_type > DefaultSink;
+    const shared_ptr< sink_type > DefaultSink;
 
     //! Global attribute set
     attribute_set_type GlobalAttributes;
@@ -130,7 +130,11 @@ public:
 
 public:
     //! Constructor
-    implementation() : Enabled(true) {}
+    implementation() :
+        DefaultSink(boost::make_shared< sinks::aux::basic_default_sink< char_type > >()),
+        Enabled(true)
+    {
+    }
 
     //! Invokes sink-specific filter and adds the sink to the record if the filter passes the log record
     void apply_sink_filter(shared_ptr< sink_type > const& sink, record_type& rec, record_private_data*& rec_impl, values_view_type*& attr_values)
@@ -445,8 +449,6 @@ typename basic_core< CharT >::record_type basic_core< CharT >::open_record(attri
                 else
                 {
                     // Use the default sink
-                    if (!pImpl->DefaultSink)
-                        pImpl->DefaultSink = boost::make_shared< sinks::aux::basic_default_sink< char_type > >();
                     pImpl->apply_sink_filter(pImpl->DefaultSink, rec, rec_impl, attr_values);
                 }
             }
