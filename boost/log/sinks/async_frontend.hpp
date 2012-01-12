@@ -60,7 +60,9 @@ namespace sinks {
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit asynchronous_sink(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
         queue_base_type((BOOST_PP_ENUM_PARAMS(n, arg))),\
-        m_pBackend(boost::make_shared< sink_backend_type >(BOOST_PP_ENUM_PARAMS(n, arg)))\
+        m_pBackend(boost::make_shared< sink_backend_type >(BOOST_PP_ENUM_PARAMS(n, arg))),\
+        m_StopRequested(false),\
+        m_FlushRequested(false)\
     {\
         if ((BOOST_PP_ENUM_PARAMS(n, arg))[keywords::start_thread | true])\
             start_feeding_thread();\
@@ -68,7 +70,9 @@ namespace sinks {
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit asynchronous_sink(shared_ptr< sink_backend_type > const& backend, BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
         queue_base_type((BOOST_PP_ENUM_PARAMS(n, arg))),\
-        m_pBackend(backend)\
+        m_pBackend(backend),\
+        m_StopRequested(false),\
+        m_FlushRequested(false)\
     {\
         if ((BOOST_PP_ENUM_PARAMS(n, arg))[keywords::start_thread | true])\
             start_feeding_thread();\
@@ -247,7 +251,9 @@ public:
      * \pre \a backend is not \c NULL.
      */
     explicit asynchronous_sink(shared_ptr< sink_backend_type > const& backend, bool start_thread = true) :
-        m_pBackend(backend)
+        m_pBackend(backend),
+        m_StopRequested(false),
+        m_FlushRequested(false)
     {
         if (start_thread)
             start_feeding_thread();
