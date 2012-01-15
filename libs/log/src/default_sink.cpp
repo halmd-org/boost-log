@@ -20,7 +20,7 @@
 #include <boost/thread/locks.hpp>
 #include <boost/log/detail/thread_id.hpp>
 #endif
-#include <boost/log/sources/severity_feature.hpp>
+#include <boost/log/detail/default_attribute_names.hpp>
 #include <boost/date_time/microsec_time_clock.hpp>
 #include <boost/date_time/time_resolution_traits.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
@@ -156,7 +156,7 @@ inline void print_message(boost::log::trivial::severity_level lvl, std::wstring 
 
 template< typename CharT >
 basic_default_sink< CharT >::basic_default_sink() :
-    m_severity_extractor(boost::log::sources::aux::severity_attribute_name< char_type >::get())
+    m_severity_extractor(boost::log::aux::default_attribute_names< char_type >::severity())
 {
 }
 

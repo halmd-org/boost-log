@@ -94,8 +94,6 @@ public:
     template< typename RecordT, typename LockT >
     bool on_overflow(RecordT const&, LockT& lock)
     {
-        static unsigned int n = 0;
-        printf("overflow %u\n", ++n);
         thread_context context;
         m_thread_contexts.push_back(context);
         do

@@ -39,6 +39,7 @@
 * Fixed compilation problems with exception handling logger feature.
 * Global logger storage made more friendly to the setups in which hidden visibility is set by default.
 * Added the macros for separated global logger declaration and definition. Old macros have been renamed to better reflect their effect (`BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT` to `BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT`, `BOOST_LOG_DECLARE_GLOBAL_LOGGER` to `BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT`, `BOOST_LOG_DECLARE_GLOBAL_LOGGER_CTOR_ARGS` to `BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS`). Also, the macros no longer define the `get_logger` free function for logger acquisition. Use `logger::get` instead. See [link log.detailed.sources.global_storage here] for more information.
+* The channel logger now supports changing the channel name after construction. The channel name can be set either by calling the modifier method or by specifying the name in the logging statement. Added `BOOST_LOG_STREAM_CHANNEL` and `BOOST_LOG_STREAM_CHANNEL_SEV` (as well as their shorthands `BOOST_LOG_CHANNEL` and `BOOST_LOG_CHANNEL_SEV`) macros that allow to specify channel name for the log record.
 
 [*Logging sinks:]
 
