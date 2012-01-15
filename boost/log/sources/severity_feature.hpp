@@ -22,6 +22,7 @@
 #include <boost/intrusive_ptr.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/locks.hpp>
+#include <boost/log/detail/default_attribute_names.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
@@ -44,25 +45,6 @@ namespace BOOST_LOG_NAMESPACE {
 namespace sources {
 
 namespace aux {
-
-    //! A helper traits to get severity attribute name constant in the proper type
-    template< typename >
-    struct severity_attribute_name;
-
-#ifdef BOOST_LOG_USE_CHAR
-    template< >
-    struct severity_attribute_name< char >
-    {
-        static const char* get() { return "Severity"; }
-    };
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-    template< >
-    struct severity_attribute_name< wchar_t >
-    {
-        static const wchar_t* get() { return L"Severity"; }
-    };
-#endif
 
     //! The method returns the severity level for the current thread
     BOOST_LOG_EXPORT int get_severity_level();
@@ -158,14 +140,14 @@ public:
     typedef aux::severity_level< severity_level > severity_attribute;
 
 #if defined(BOOST_LOG_DOXYGEN_PASS)
-    //! Lock requirement for the open_record_unlocked method
+    //! Lock requirement for the \c open_record_unlocked method
     typedef typename strictest_lock<
         typename base_type::open_record_lock,
         no_lock< threading_model >
     >::type open_record_lock;
 #endif // defined(BOOST_LOG_DOXYGEN_PASS)
 
-    //! Lock requirement for the swap_unlocked method
+    //! Lock requirement for the \c swap_unlocked method
     typedef typename strictest_lock<
         typename base_type::swap_lock,
 #ifndef BOOST_LOG_NO_THREADS
@@ -191,7 +173,7 @@ public:
         m_DefaultSeverity(static_cast< severity_level >(0))
     {
         base_type::add_attribute_unlocked(
-            aux::severity_attribute_name< char_type >::get(),
+            boost::log::aux::default_attribute_names< char_type >::severity(),
             m_SeverityAttr);
     }
     /*!
@@ -202,7 +184,7 @@ public:
         m_DefaultSeverity(that.m_DefaultSeverity),
         m_SeverityAttr(that.m_SeverityAttr)
     {
-        base_type::attributes()[aux::severity_attribute_name< char_type >::get()] = m_SeverityAttr;
+        base_type::attributes()[boost::log::aux::default_attribute_names< char_type >::severity()] = m_SeverityAttr;
     }
     /*!
      * Constructor with named arguments. Allows to setup the default level for log records.
@@ -216,7 +198,7 @@ public:
         m_DefaultSeverity(args[keywords::severity | severity_level()])
     {
         base_type::add_attribute_unlocked(
-            aux::severity_attribute_name< char_type >::get(),
+            boost::log::aux::default_attribute_names< char_type >::severity(),
             m_SeverityAttr);
     }
 

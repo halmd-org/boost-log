@@ -40,7 +40,7 @@ namespace attributes {
  * \brief A class of an attribute that holds a single constant value with ability to change it
  *
  * The mutable_constant attribute stores a single value of type, specified as the first template argument.
- * A copy of this value is returned on each attribute value acquisition.
+ * This value is returned on each attribute value acquisition.
  *
  * The attribute also allows to modify the stored value, even if the attibute is registered in an attribute set.
  * In order to ensure thread safety of such modifications the \c mutable_constant class is also parametrized
@@ -92,37 +92,40 @@ protected:
         //! Exclusive lock type
         typedef ScopedWriteLockT scoped_write_lock;
         BOOST_STATIC_ASSERT(!(is_void< mutex_type >::value || is_void< scoped_read_lock >::value || is_void< scoped_write_lock >::value));
+        //! Attribute value wrapper
+        typedef basic_attribute_value< value_type > attr_value;
 
     private:
-        //! The actual value
-        value_type m_Value;
         //! Thread protection mutex
         mutable mutex_type m_Mutex;
+        //! Pointer to the actual attribute value
+        intrusive_ptr< attr_value > m_Value;
 
     public:
         /*!
          * Initializing constructor
          */
-        impl(value_type const& value) : m_Value(value)
+        explicit impl(value_type const& value) : m_Value(new attr_value(value))
         {
         }
 
         attribute_value get_value()
         {
-            typedef basic_attribute_value< value_type > attr_value;
-            return attribute_value(new attr_value(get()));
+            scoped_read_lock lock(m_Mutex);
+            return attribute_value(m_Value);
         }
 
         void set(value_type const& value)
         {
+            intrusive_ptr< attr_value > p = new attr_value(value);
             scoped_write_lock lock(m_Mutex);
-            m_Value = value;
+            m_Value.swap(p);
         }
 
         value_type get() const
         {
             scoped_read_lock lock(m_Mutex);
-            return m_Value;
+            return m_Value->get();
         }
     };
 
@@ -188,31 +191,34 @@ protected:
         public attribute::impl
     {
     private:
+        //! Attribute value wrapper
+        typedef basic_attribute_value< value_type > attr_value;
+
+    private:
         //! The actual value
-        value_type m_Value;
+        intrusive_ptr< attr_value > m_Value;
 
     public:
         /*!
          * Initializing constructor
          */
-        impl(value_type const& value) : m_Value(value)
+        explicit impl(value_type const& value) : m_Value(new attr_value(value))
         {
         }
 
         attribute_value get_value()
         {
-            typedef basic_attribute_value< value_type > attr_value;
-            return attribute_value(new attr_value(m_Value));
+            return attribute_value(m_Value);
         }
 
         void set(value_type const& value)
         {
-            m_Value = value;
+            m_Value = new attr_value(value);
         }
 
         value_type get() const
         {
-            return m_Value;
+            return m_Value->get();
         }
     };
 

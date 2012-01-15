@@ -30,7 +30,7 @@ namespace BOOST_LOG_NAMESPACE {
 namespace attributes {
 
 /*!
- * \brief Basic attribute value class
+ * \brief Basic attribute value implementation class
  *
  * This class can be used as a boilerplate for simple attribute values. The class implements all needed
  * interfaces of attribute values and allows to store a single value of the type specified as a template parameter.
