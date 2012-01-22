@@ -54,7 +54,7 @@ private:
     typedef mutex mutex_type;
     mutex_type m_mutex;
 #endif
-    value_extractor< char_type, boost::log::trivial::severity_level > const m_severity_extractor;
+    value_extractor< char_type, extract_value_or_default< boost::log::trivial::severity_level > > const m_severity_extractor;
 
 public:
     basic_default_sink();

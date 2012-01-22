@@ -156,7 +156,7 @@ inline void print_message(boost::log::trivial::severity_level lvl, std::wstring 
 
 template< typename CharT >
 basic_default_sink< CharT >::basic_default_sink() :
-    m_severity_extractor(boost::log::aux::default_attribute_names< char_type >::severity())
+    m_severity_extractor(boost::log::aux::default_attribute_names< char_type >::severity(), boost::log::trivial::info)
 {
 }
 
@@ -177,7 +177,7 @@ void basic_default_sink< CharT >::consume(record_type const& record)
     BOOST_LOG_EXPR_IF_MT(lock_guard< mutex_type > lock(m_mutex);)
     print_message
     (
-        m_severity_extractor(record).get_value_or(boost::log::trivial::info),
+        m_severity_extractor(record),
         record.message()
     );
 }
