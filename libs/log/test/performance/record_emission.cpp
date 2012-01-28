@@ -38,9 +38,12 @@
 
 #include <boost/log/attributes/scoped_attribute.hpp>
 
+#include <boost/log/expressions/keyword.hpp>
+#include <boost/phoenix/operator.hpp>
+
 enum config
 {
-    RECORD_COUNT = 5000000,
+    RECORD_COUNT = 50000000,
     THREAD_COUNT = 3,
     SINK_COUNT = 3
 };
@@ -59,14 +62,16 @@ enum severity_level
     error
 };
 
+BOOST_LOG_DECLARE_ATTRIBUTE_IMPL(tag, char, "Severity", severity_, attrs::mutable_constant< severity_level >, normal)
+
 namespace {
 
     //! A fake sink backend that receives log records
     template< typename CharT >
     class fake_backend :
-        public sinks::basic_sink_backend< CharT, sinks::backend_synchronization_tag >
+        public sinks::basic_sink_backend< CharT, sinks::concurrent_feeding >
     {
-        typedef sinks::basic_sink_backend< CharT, sinks::backend_synchronization_tag > base_type;
+        typedef sinks::basic_sink_backend< CharT, sinks::concurrent_feeding > base_type;
 
     public:
         typedef typename base_type::record_type record_type;
@@ -104,8 +109,10 @@ int main(int argc, char* argv[])
     logging::core::get()->add_global_attribute("TimeStamp", attrs::local_clock());
     logging::core::get()->add_global_attribute("Scope", attrs::named_scope());
 
-    logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > normal); // all records pass the filter
+//    logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > normal); // all records pass the filter
 //    logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > error); // all records don't pass the filter
+
+    logging::core::get()->set_filter(severity_ > error); // all records don't pass the filter
 
     const unsigned int record_count = RECORD_COUNT / THREAD_COUNT;
     boost::barrier bar(THREAD_COUNT);
