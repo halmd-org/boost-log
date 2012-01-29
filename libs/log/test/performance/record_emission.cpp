@@ -62,7 +62,7 @@ enum severity_level
     error
 };
 
-BOOST_LOG_DECLARE_ATTRIBUTE_IMPL(tag, char, "Severity", severity_, attrs::mutable_constant< severity_level >, normal)
+BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_CTOR_ARGS(char, "Severity", severity, attrs::mutable_constant< severity_level >, (normal))
 
 namespace {
 
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
 //    logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > normal); // all records pass the filter
 //    logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > error); // all records don't pass the filter
 
-    logging::core::get()->set_filter(severity_ > error); // all records don't pass the filter
+    logging::core::get()->set_filter(severity > error); // all records don't pass the filter
 
     const unsigned int record_count = RECORD_COUNT / THREAD_COUNT;
     boost::barrier bar(THREAD_COUNT);

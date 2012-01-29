@@ -194,6 +194,14 @@ public:
     {
         return operator() (record.attribute_values());
     }
+
+    /*!
+     * \return The cached attribute name to be extracted.
+     */
+    attribute_name_type get_name() const
+    {
+        return m_Name;
+    }
 };
 
 #ifdef BOOST_LOG_DOXYGEN_PASS
