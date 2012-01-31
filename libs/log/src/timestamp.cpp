@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   tick_count.cpp
+ * \file   timestamp.cpp
  * \author Andrey Semashev
  * \date   31.07.2011
  *
@@ -13,13 +13,18 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#include <boost/log/detail/tick_count.hpp>
+#include <boost/log/detail/timestamp.hpp>
 
 #if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
 #include "windows_version.hpp"
 #include <windows.h>
 #else
 #include <unistd.h> // for config macros
+#if defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
+#include <mach/mach_time.h>
+#include <mach/kern_return.h>
+#include <boost/log/utility/once_block.hpp>
+#endif
 #include <time.h>
 #include <errno.h>
 #include <boost/throw_exception.hpp>
@@ -128,7 +133,6 @@ uint64_t __stdcall get_tick_count64()
     return state.as_uint64;
 }
 
-//! Performs runtime initialization of the GetTickCount API
 uint64_t __stdcall get_tick_count_init()
 {
     HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
@@ -150,23 +154,26 @@ uint64_t __stdcall get_tick_count_init()
 
 } // namespace
 
-// Use runtime API detection
 BOOST_LOG_EXPORT get_tick_count_t get_tick_count = &get_tick_count_init;
 
 #endif // _WIN32_WINNT >= 0x0600
 
-#else
+#elif defined(_POSIX_TIMERS) && _POSIX_TIMERS > 0
 
-#   if defined(_POSIX_TIMERS) && _POSIX_TIMERS > 0
+BOOST_LOG_EXPORT int64_t duration::milliseconds() const
+{
+    // Timestamps are always in nanoseconds
+    return m_ticks / 1000000LL;
+}
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 /*!
- * GetTickCount64 implementation based on POSIX realtime clock.
+ * \c get_timestamp implementation based on POSIX realtime clock.
  * Note that this implementation is only used as a last resort since
  * this timer can be manually set and may jump due to DST change.
  */
-uint64_t get_tick_count_realtime_clock()
+timestamp get_timestamp_realtime_clock()
 {
     timespec ts;
     if (clock_gettime(CLOCK_REALTIME, &ts) != 0)
@@ -175,13 +182,13 @@ uint64_t get_tick_count_realtime_clock()
             errno, boost::system::system_category(), "Failed to acquire current time"));
     }
 
-    return static_cast< uint64_t >(ts.tv_sec) * 1000ULL + ts.tv_nsec / 1000000UL;
+    return timestamp(static_cast< uint64_t >(ts.tv_sec) * 1000000000ULL + ts.tv_nsec);
 }
 
-#       if defined(_POSIX_MONOTONIC_CLOCK)
+#   if defined(_POSIX_MONOTONIC_CLOCK)
 
-//! GetTickCount64 implementation based on POSIX monotonic clock
-uint64_t get_tick_count_monotonic_clock()
+//! \c get_timestamp implementation based on POSIX monotonic clock
+timestamp get_timestamp_monotonic_clock()
 {
     timespec ts;
     if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0)
@@ -192,34 +199,72 @@ uint64_t get_tick_count_monotonic_clock()
             // The current platform does not support monotonic timer.
             // Fall back to realtime clock, which is not exactly what we need
             // but is better than nothing.
-            get_tick_count = &get_tick_count_realtime_clock;
-            return get_tick_count_realtime_clock();
+            get_timestamp = &get_timestamp_realtime_clock;
+            return get_timestamp_realtime_clock();
         }
         BOOST_THROW_EXCEPTION(boost::system::system_error(
             err, boost::system::system_category(), "Failed to acquire current time"));
     }
 
-    return static_cast< uint64_t >(ts.tv_sec) * 1000ULL + ts.tv_nsec / 1000000UL;
+    return timestamp(static_cast< uint64_t >(ts.tv_sec) * 1000000000ULL + ts.tv_nsec);
 }
 
-#           define BOOST_LOG_DEFAULT_GET_TICK_COUNT get_tick_count_monotonic_clock
+#       define BOOST_LOG_DEFAULT_GET_TIMESTAMP get_timestamp_monotonic_clock
 
-#       else // if defined(_POSIX_MONOTONIC_CLOCK)
-#           define BOOST_LOG_DEFAULT_GET_TICK_COUNT get_tick_count_realtime_clock
-#       endif // if defined(_POSIX_MONOTONIC_CLOCK)
+#   else // if defined(_POSIX_MONOTONIC_CLOCK)
+#       define BOOST_LOG_DEFAULT_GET_TIMESTAMP get_timestamp_realtime_clock
+#   endif // if defined(_POSIX_MONOTONIC_CLOCK)
 
 } // namespace
 
 // Use POSIX API
-BOOST_LOG_EXPORT get_tick_count_t get_tick_count = &BOOST_LOG_DEFAULT_GET_TICK_COUNT;
+BOOST_LOG_EXPORT get_timestamp_t get_timestamp = &BOOST_LOG_DEFAULT_GET_TIMESTAMP;
 
-#       undef BOOST_LOG_DEFAULT_GET_TICK_COUNT
+#   undef BOOST_LOG_DEFAULT_GET_TIMESTAMP
 
-#   else // if defined(_POSIX_TIMERS) && _POSIX_TIMERS > 0
+#elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
 
-#   error Boost.Log: POSIX timers not supported on your platform
+BOOST_LOG_EXPORT int64_t duration::milliseconds() const
+{
+    static mach_timebase_info_data_t timebase_info = {};
+    BOOST_LOG_ONCE_BLOCK
+    {
+        kern_return_t err = mach_timebase_info(&timebase_info);
+        if (err != KERN_SUCCESS)
+        {
+            BOOST_THROW_EXCEPTION(boost::system::system_error(
+                err, boost::system::system_category(), "Failed to initialize timebase info"));
+        }
+    }
 
-#   endif // if defined(_POSIX_TIMERS) && _POSIX_TIMERS > 0
+    // Often the timebase rational equals 1, we can optimize for this case
+    if (timebase_info.numer == timebase_info.denom)
+    {
+        // Timestamps are in nanoseconds
+        return m_ticks / 1000000LL;
+    }
+    else
+    {
+        return (m_ticks * timebase_info.numer) / (1000000LL * timebase_info.denom);
+    }
+}
+
+BOOST_LOG_ANONYMOUS_NAMESPACE {
+
+//! \c get_timestamp implementation based on MacOS X absolute time
+timestamp get_timestamp_mach()
+{
+    return timestamp(mach_absolute_time());
+}
+
+} // namespace
+
+// Use MacOS X API
+BOOST_LOG_EXPORT get_timestamp_t get_timestamp = &get_timestamp_mach;
+
+#else
+
+#   error Boost.Log: Timestamp generation is not supported for your platform
 
 #endif
 
