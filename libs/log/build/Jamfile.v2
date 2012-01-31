@@ -66,7 +66,7 @@ local BOOST_LOG_COMMON_SRC =
     syslog_backend.cpp
     thread_specific.cpp
     once_block.cpp
-    tick_count.cpp
+    timestamp.cpp
     threadsafe_queue.cpp
     event.cpp
     trivial.cpp

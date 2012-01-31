@@ -36,7 +36,7 @@
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/thread_time.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
-#include <boost/log/detail/tick_count.hpp>
+#include <boost/log/detail/timestamp.hpp>
 #include <boost/log/keywords/order.hpp>
 #include <boost/log/keywords/ordering_window.hpp>
 
@@ -81,7 +81,7 @@ private:
             }
         };
 
-        uint64_t m_timestamp;
+        boost::log::aux::timestamp m_timestamp;
         record_type m_record;
 
         enqueued_record(enqueued_record const& that) : m_timestamp(that.m_timestamp), m_record(that.m_record)
@@ -93,7 +93,7 @@ private:
         {
         }
         explicit enqueued_record(record_type const& rec) :
-            m_timestamp(boost::log::aux::get_tick_count()),
+            m_timestamp(boost::log::aux::get_timestamp()),
             m_record(rec)
         {
         }
@@ -208,9 +208,9 @@ protected:
         const std::size_t size = m_queue.size();
         if (size > 0)
         {
-            const uint64_t now = boost::log::aux::get_tick_count();
+            const boost::log::aux::timestamp now = boost::log::aux::get_timestamp();
             enqueued_record const& elem = m_queue.top();
-            if ((now - elem.m_timestamp) >= m_ordering_window)
+            if ((now - elem.m_timestamp).milliseconds() >= m_ordering_window)
             {
                 // We got a new element
                 rec = elem.m_record;
@@ -252,9 +252,9 @@ protected:
             const std::size_t size = m_queue.size();
             if (size > 0)
             {
-                const uint64_t now = boost::log::aux::get_tick_count();
+                const boost::log::aux::timestamp now = boost::log::aux::get_timestamp();
                 enqueued_record const& elem = m_queue.top();
-                const uint64_t difference = now - elem.m_timestamp;
+                const uint64_t difference = (now - elem.m_timestamp).milliseconds();
                 if (difference >= m_ordering_window)
                 {
                     rec = elem.m_record;
