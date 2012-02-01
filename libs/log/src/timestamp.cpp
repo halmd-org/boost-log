@@ -227,7 +227,7 @@ BOOST_LOG_EXPORT get_timestamp_t get_timestamp = &BOOST_LOG_DEFAULT_GET_TIMESTAM
 BOOST_LOG_EXPORT int64_t duration::milliseconds() const
 {
     static mach_timebase_info_data_t timebase_info = {};
-    BOOST_LOG_ONCE_BLOCK
+    BOOST_LOG_ONCE_BLOCK()
     {
         kern_return_t err = mach_timebase_info(&timebase_info);
         if (err != KERN_SUCCESS)
