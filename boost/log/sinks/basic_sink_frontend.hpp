@@ -335,8 +335,8 @@ private:
             m_FormattingStream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
             m_FormattingStream.imbue(loc);
         }
-    };
 #endif
+    };
 
 private:
 #if !defined(BOOST_LOG_NO_THREADS)
