@@ -42,8 +42,6 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-#if !defined(BOOST_LOG_NO_THREADS)
-
 /*!
  * The sink backend expects pre-synchronized calls, all needed synchronization is implemented
  * in the frontend (IOW, only one thread is feeding records to the backend concurrently, but
@@ -51,6 +49,9 @@ namespace sinks {
  * synchronized record feeding, it will also report capable of concurrent record feeding.
  */
 struct synchronized_feeding {};
+
+#if !defined(BOOST_LOG_NO_THREADS)
+
 /*!
  * The sink backend ensures all needed synchronization, it is capable to handle multithreaded calls
  */
@@ -59,8 +60,7 @@ struct concurrent_feeding : synchronized_feeding {};
 #else // !defined(BOOST_LOG_NO_THREADS)
 
 //  If multithreading is disabled, threading models become redundant
-struct syncronized_feeding {};
-typedef syncronized_feeding concurrent_feeding;
+typedef synchronized_feeding concurrent_feeding;
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
