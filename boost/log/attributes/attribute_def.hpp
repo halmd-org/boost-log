@@ -21,6 +21,7 @@
 #define BOOST_LOG_ATTRIBUTES_ATTRIBUTE_DEF_HPP_INCLUDED_
 
 #include <boost/intrusive_ptr.hpp>
+#include <boost/move/move.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/intrusive_ref_counter.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
@@ -47,6 +48,8 @@ class attribute_value;
  */
 class attribute
 {
+    BOOST_COPYABLE_AND_MOVABLE(attribute)
+
 public:
     /*!
      * \brief A base class for an attribute value factory
@@ -75,11 +78,39 @@ public:
     attribute() {}
 
     /*!
+     * Copy constructor
+     */
+    attribute(attribute const& that) : m_pImpl(that.m_pImpl) {}
+
+    /*!
+     * Move constructor
+     */
+    attribute(BOOST_RV_REF(attribute) that) { m_pImpl.swap(that.m_pImpl); }
+
+    /*!
      * Initializing constructor
      *
      * \param p Pointer to the implementation. Must not be \c NULL.
      */
     explicit attribute(intrusive_ptr< impl > p) { m_pImpl.swap(p); }
+
+    /*!
+     * Copy assignment
+     */
+    attribute& operator= (BOOST_COPY_ASSIGN_REF(attribute) that)
+    {
+        m_pImpl = that.m_pImpl;
+        return *this;
+    }
+
+    /*!
+     * Move assignment
+     */
+    attribute& operator= (BOOST_RV_REF(attribute) that)
+    {
+        m_pImpl.swap(that.m_pImpl);
+        return *this;
+    }
 
     /*!
      * Verifies that the factory is not in empty state

@@ -34,7 +34,7 @@
 #endif
 #include <boost/system/error_code.hpp>
 #include <boost/date_time/c_time.hpp>
-#include <boost/compatibility/cpp_c_headers/ctime>
+#include <ctime>
 #include <boost/log/sinks/syslog_backend.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/snprintf.hpp>

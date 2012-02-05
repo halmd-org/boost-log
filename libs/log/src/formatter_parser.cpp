@@ -30,7 +30,7 @@
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
 #include <boost/version.hpp>
-#include <boost/compatibility/cpp_c_headers/ctime>
+#include <ctime>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/copy.hpp>
 #include <boost/mpl/push_back.hpp>

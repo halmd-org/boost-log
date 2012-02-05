@@ -22,7 +22,7 @@
 
 #include <string>
 #include <iostream>
-#include <boost/compatibility/cpp_c_headers/cctype>
+#include <cctype>
 #include <boost/log/detail/prologue.hpp>
 
 namespace boost {

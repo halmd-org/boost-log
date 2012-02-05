@@ -20,7 +20,7 @@
 #include <boost/weak_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/compatibility/cpp_c_headers/cstddef>
+#include <cstddef>
 #include <boost/log/core/core.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>

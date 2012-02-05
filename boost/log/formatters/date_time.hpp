@@ -23,8 +23,8 @@
 #include <iterator>
 #include <boost/limits.hpp>
 #include <boost/assert.hpp>
-#include <boost/compatibility/cpp_c_headers/ctime>
-#include <boost/compatibility/cpp_c_headers/cmath>
+#include <ctime>
+#include <cmath>
 #include <boost/utility/addressof.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/algorithm/string/find.hpp>

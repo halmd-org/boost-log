@@ -16,11 +16,11 @@
 #ifndef BOOST_LOG_DETAIL_SNPRINTF_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_SNPRINTF_HPP_INCLUDED_
 
-#include <boost/compatibility/cpp_c_headers/cstdio>
-#include <boost/compatibility/cpp_c_headers/cstdarg>
+#include <cstdio>
+#include <cstdarg>
 #include <boost/log/detail/prologue.hpp>
 #ifdef BOOST_LOG_USE_WCHAR_T
-#include <boost/compatibility/cpp_c_headers/cwchar>
+#include <cwchar>
 #endif // BOOST_LOG_USE_WCHAR_T
 
 namespace boost {

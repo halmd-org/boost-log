@@ -21,6 +21,7 @@
 #define BOOST_LOG_ATTRIBUTE_VALUE_DEF_HPP_INCLUDED_
 
 #include <boost/intrusive_ptr.hpp>
+#include <boost/move/move.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/intrusive_ref_counter.hpp>
@@ -59,6 +60,8 @@ namespace BOOST_LOG_NAMESPACE {
  */
 class attribute_value
 {
+    BOOST_COPYABLE_AND_MOVABLE(attribute_value)
+
 public:
     /*!
      * \brief A base class for an attribute value implementation
@@ -115,12 +118,41 @@ public:
      * Default constructor. Creates an empty (absent) attribute value.
      */
     attribute_value() {}
+
+    /*!
+     * Copy constructor
+     */
+    attribute_value(attribute_value const& that) : m_pImpl(that.m_pImpl) {}
+
+    /*!
+     * Move constructor
+     */
+    attribute_value(BOOST_RV_REF(attribute_value) that) { m_pImpl.swap(that.m_pImpl); }
+
     /*!
      * Initializing constructor. Creates an attribute value that refers to the specified holder.
      *
      * \param p A pointer to the attribute value holder.
      */
     explicit attribute_value(intrusive_ptr< impl > p) { m_pImpl.swap(p); }
+
+    /*!
+     * Copy assignment
+     */
+    attribute_value& operator= (BOOST_COPY_ASSIGN_REF(attribute_value) that)
+    {
+        m_pImpl = that.m_pImpl;
+        return *this;
+    }
+
+    /*!
+     * Move assignment
+     */
+    attribute_value& operator= (BOOST_RV_REF(attribute_value) that)
+    {
+        m_pImpl.swap(that.m_pImpl);
+        return *this;
+    }
 
     /*!
      * The operator checks if the attribute value is empty

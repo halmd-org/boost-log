@@ -26,7 +26,7 @@
 
 #include <new>
 #include <memory>
-#include <boost/compatibility/cpp_c_headers/cstddef>
+#include <cstddef>
 #include <boost/aligned_storage.hpp>
 #include <boost/move/move.hpp>
 #include <boost/type_traits/alignment_of.hpp>

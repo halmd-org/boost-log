@@ -23,7 +23,7 @@
 #include <ostream>
 #include <memory>
 #include <iterator>
-#include <boost/compatibility/cpp_c_headers/cstddef>
+#include <cstddef>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/current_function.hpp>
 #include <boost/mpl/if.hpp>

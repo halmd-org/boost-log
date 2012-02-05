@@ -48,14 +48,11 @@ namespace BOOST_LOG_NAMESPACE {
  * to other library methods, such as attribute lookup functions, will not require
  * this thanslation and/or string copying and thus will result in a more efficient code.
  */
-template< typename CharT >
-class basic_attribute_name
+class attribute_name
 {
 public:
-    //! Character type
-    typedef CharT char_type;
     //! String type
-    typedef std::basic_string< char_type > string_type;
+    typedef std::string string_type;
 #ifdef BOOST_LOG_DOXYGEN_PASS
     //! Associated identifier
     typedef unspecified id_type;
@@ -72,7 +69,7 @@ public:
     /*!
      * Default constructor. Creates an object that does not refer to any attribute name.
      */
-    basic_attribute_name() : m_id(uninitialized)
+    attribute_name() : m_id(uninitialized)
     {
     }
     /*!
@@ -81,7 +78,7 @@ public:
      * \param name An attribute name
      * \pre \a name is not NULL and points to a zero-terminated string
      */
-    basic_attribute_name(const char_type* name) :
+    attribute_name(const char* name) :
         m_id(get_id_from_string(name))
     {
     }
@@ -90,7 +87,7 @@ public:
      *
      * \param name An attribute name
      */
-    basic_attribute_name(string_type const& name) :
+    attribute_name(string_type const& name) :
         m_id(get_id_from_string(name.c_str()))
     {
     }
@@ -101,14 +98,14 @@ public:
      * \return \c true if <tt>*this</tt> and \c that refer to the same attribute name,
      *         and \c false otherwise.
      */
-    bool operator== (basic_attribute_name const& that) const { return m_id == that.m_id; }
+    bool operator== (attribute_name const& that) const { return m_id == that.m_id; }
     /*!
      * Compares the attribute names
      *
      * \return \c true if <tt>*this</tt> and \c that refer to different attribute names,
      *         and \c false otherwise.
      */
-    bool operator!= (basic_attribute_name const& that) const { return m_id != that.m_id; }
+    bool operator!= (attribute_name const& that) const { return m_id != that.m_id; }
 
     /*!
      * Checks if the object was default-constructed
@@ -141,22 +138,15 @@ public:
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    static BOOST_LOG_EXPORT id_type get_id_from_string(const char_type* name);
+    static BOOST_LOG_EXPORT id_type get_id_from_string(const char* name);
     static BOOST_LOG_EXPORT string_type const& get_string_from_id(id_type id);
 #endif
 };
 
-#ifdef BOOST_LOG_USE_CHAR
-typedef basic_attribute_name< char > attribute_name;        //!< Convenience typedef for narrow-character logging
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_attribute_name< wchar_t > wattribute_name;    //!< Convenience typedef for wide-character logging
-#endif
-
 template< typename CharT, typename TraitsT >
 BOOST_LOG_EXPORT std::basic_ostream< CharT, TraitsT >& operator<< (
     std::basic_ostream< CharT, TraitsT >& strm,
-    basic_attribute_name< CharT > const& name);
+    attribute_name const& name);
 
 } // namespace log
 

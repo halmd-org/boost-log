@@ -19,11 +19,11 @@
 #ifndef BOOST_LOG_ATTRIBUTE_SET_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTE_SET_HPP_INCLUDED_
 
-#include <memory>
-#include <string>
+#include <cstddef>
 #include <utility>
 #include <iterator>
 #include <boost/mpl/if.hpp>
+#include <boost/move/move.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute.hpp>
@@ -32,8 +32,7 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-template< typename >
-class basic_attribute_values_view;
+class attribute_values_view;
 
 /*!
  * \brief An attribute set class.
@@ -45,40 +44,32 @@ class basic_attribute_values_view;
  * Besides, attribute names are stored as a read-only <tt>attribute_name</tt>'s instead of \c std::string,
  * which saves memory and CPU time.
  */
-template< typename CharT >
-class basic_attribute_set
+class attribute_set
 {
-    friend class basic_attribute_values_view< CharT >;
+    BOOST_COPYABLE_AND_MOVABLE(attribute_set)
 
-    //! Self type
-    typedef basic_attribute_set< CharT > this_type;
+    friend class attribute_values_view;
 
 public:
-    //! Character type
-    typedef CharT char_type;
-    //! String type
-    typedef std::basic_string< char_type > string_type;
     //! Key type
-    typedef basic_attribute_name< char_type > key_type;
+    typedef attribute_name key_type;
     //! Mapped attribute type
     typedef attribute mapped_type;
 
     //! Value type
     typedef std::pair< const key_type, mapped_type > value_type;
-    //! Allocator type
-    typedef std::allocator< value_type > allocator_type;
     //! Reference type
-    typedef typename allocator_type::reference reference;
+    typedef value_type& reference;
     //! Const reference type
-    typedef typename allocator_type::const_reference const_reference;
+    typedef value_type const& const_reference;
     //! Pointer type
-    typedef typename allocator_type::pointer pointer;
+    typedef value_type* pointer;
     //! Const pointer type
-    typedef typename allocator_type::const_pointer const_pointer;
+    typedef value_type const* const_pointer;
     //! Size type
-    typedef typename allocator_type::size_type size_type;
+    typedef std::size_t size_type;
     //! Difference type
-    typedef typename allocator_type::difference_type difference_type;
+    typedef std::ptrdiff_t difference_type;
 
 private:
     //! \cond
@@ -92,12 +83,12 @@ private:
     friend class reference_proxy;
     class reference_proxy
     {
-        basic_attribute_set* const m_pContainer;
+        attribute_set* const m_pContainer;
         const key_type m_key;
 
     public:
         //! Constructor
-        explicit reference_proxy(basic_attribute_set* pContainer, key_type const& key) :
+        explicit reference_proxy(attribute_set* pContainer, key_type const& key) :
             m_pContainer(pContainer),
             m_key(key)
         {
@@ -155,21 +146,21 @@ private:
     class iter
     {
         friend class iter< !fConstV >;
-        friend class basic_attribute_set< CharT >;
+        friend class attribute_set;
 
     public:
         //  Standard typedefs
-        typedef typename this_type::difference_type difference_type;
-        typedef typename this_type::value_type value_type;
+        typedef attribute_set::difference_type difference_type;
+        typedef attribute_set::value_type value_type;
         typedef typename mpl::if_c<
             fConstV,
-            typename this_type::const_reference,
-            typename this_type::reference
+            attribute_set::const_reference,
+            attribute_set::reference
         >::type reference;
         typedef typename mpl::if_c<
             fConstV,
-            typename this_type::const_pointer,
-            typename this_type::pointer
+            attribute_set::const_pointer,
+            attribute_set::pointer
         >::type pointer;
         typedef std::bidirectional_iterator_tag iterator_category;
 
@@ -256,33 +247,52 @@ public:
      *
      * \post <tt>empty() == true</tt>
      */
-    BOOST_LOG_EXPORT basic_attribute_set();
+    BOOST_LOG_EXPORT attribute_set();
+
     /*!
      * Copy constructor.
      *
-     * \post <tt>std::equal(begin(), end(), that.begin()) == true</tt>
+     * \post <tt>size() == that.size() && std::equal(begin(), end(), that.begin()) == true</tt>
      */
-    BOOST_LOG_EXPORT basic_attribute_set(basic_attribute_set const& that);
+    BOOST_LOG_EXPORT attribute_set(attribute_set const& that);
+
+    /*!
+     * Move constructor
+     */
+    attribute_set(BOOST_RV_REF(attribute_set) that) : m_pImpl(that.m_pImpl)
+    {
+        that.m_pImpl = NULL;
+    }
+
     /*!
      * Destructor. All stored references to attributes are released.
      */
-    BOOST_LOG_EXPORT ~basic_attribute_set();
+    BOOST_LOG_EXPORT ~attribute_set();
 
     /*!
-     * Assignment operator.
-     *
-     * \post <tt>std::equal(begin(), end(), that.begin()) == true</tt>
+     * Move assignment operator
      */
-    BOOST_LOG_EXPORT basic_attribute_set& operator= (basic_attribute_set that);
+    attribute_set& operator= (BOOST_RV_REF(attribute_set) that)
+    {
+        this->swap(that);
+        return *this;
+    }
+
+    /*!
+     * Copy assignment operator.
+     *
+     * \post <tt>size() == that.size() && std::equal(begin(), end(), that.begin()) == true</tt>
+     */
+    BOOST_LOG_EXPORT attribute_set& operator= (BOOST_COPY_ASSIGN_REF(attribute_set) that);
 
     /*!
      * Swaps two instances of the container.
      *
      * \b Throws: Nothing.
      */
-    void swap(basic_attribute_set& that)
+    void swap(attribute_set& that)
     {
-        register implementation* p = m_pImpl;
+        register implementation* const p = m_pImpl;
         m_pImpl = that.m_pImpl;
         that.m_pImpl = p;
     }
@@ -328,7 +338,7 @@ public:
      */
     const_iterator find(key_type key) const
     {
-        return const_iterator(const_cast< basic_attribute_set* >(this)->find(key));
+        return const_iterator(const_cast< attribute_set* >(this)->find(key));
     }
     /*!
      * The method counts the number of the attribute occurrences in the container. Since there can be only one
@@ -458,18 +468,10 @@ public:
 /*!
  * Free swap overload
  */
-template< typename CharT >
-inline void swap(basic_attribute_set< CharT >& left, basic_attribute_set< CharT >& right)
+inline void swap(attribute_set& left, attribute_set& right)
 {
     left.swap(right);
 }
-
-#ifdef BOOST_LOG_USE_CHAR
-typedef basic_attribute_set< char > attribute_set;      //!< Convenience typedef for narrow-character logging
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_attribute_set< wchar_t > wattribute_set;  //!< Convenience typedef for wide-character logging
-#endif
 
 } // namespace log
 

@@ -13,7 +13,9 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#include <malloc.h>
 #include <new>
+#include <memory>
 #include <boost/array.hpp>
 #include <boost/intrusive/options.hpp>
 #include <boost/intrusive/list.hpp>
@@ -29,30 +31,56 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-template< typename CharT >
-BOOST_LOG_FORCEINLINE basic_attribute_values_view< CharT >::node_base::node_base() :
+BOOST_LOG_FORCEINLINE attribute_values_view::node_base::node_base() :
     m_pPrev(NULL),
     m_pNext(NULL)
 {
 }
 
-template< typename CharT >
-BOOST_LOG_FORCEINLINE basic_attribute_values_view< CharT >::node::node(key_type const& key, mapped_type& data) :
+BOOST_LOG_FORCEINLINE attribute_values_view::node::node(key_type const& key, mapped_type& data, bool dynamic) :
     node_base(),
-    m_Value(key, mapped_type())
+    m_Value(key, mapped_type()),
+    m_DynamicallyAllocated(dynamic)
 {
     m_Value.second.swap(data);
 }
 
 //! Container implementation
-template< typename CharT >
-struct basic_attribute_values_view< CharT >::implementation
+struct attribute_values_view::implementation
 {
 public:
-    typedef typename key_type::id_type id_type;
+    typedef key_type::id_type id_type;
 
 private:
-    typedef typename attribute_set_type::implementation attribute_set_impl_type;
+    typedef attribute_set_type::implementation attribute_set_impl_type;
+
+#if defined(_STLPORT_VERSION)
+    typedef std::allocator< char > stateless_allocator;
+#else
+    struct stateless_allocator
+    {
+        typedef char value_type;
+        typedef value_type* pointer;
+        typedef value_type const* const_pointer;
+        typedef value_type& reference;
+        typedef value_type const& const_reference;
+        typedef std::size_t size_type;
+        typedef std::ptrdiff_t difference_type;
+
+        pointer allocate(size_type n, const void* = NULL)
+        {
+            pointer p = static_cast< pointer >(malloc(n * sizeof(value_type)));
+            if (p)
+                return p;
+            else
+                throw std::bad_alloc();
+        }
+        void deallocate(pointer p, size_type)
+        {
+            free(p);
+        }
+    };
+#endif
 
     //! Node base class traits for the intrusive list
     struct node_traits
@@ -92,7 +120,7 @@ private:
     };
 
     //! A list of buckets
-    typedef array< bucket, 1U << BOOST_LOG_HASH_TABLE_SIZE_LOG > buckets;
+    typedef boost::array< bucket, 1U << BOOST_LOG_HASH_TABLE_SIZE_LOG > buckets;
 
     //! Element disposer
     struct disposer
@@ -100,7 +128,10 @@ private:
         typedef void result_type;
         void operator() (node* p) const
         {
-            p->~node();
+            if (!p->m_DynamicallyAllocated)
+                p->~node();
+            else
+                delete p;
         }
     };
 
@@ -150,7 +181,6 @@ private:
 
     //! The function allocates memory and creates the object
     static implementation* create(
-        internal_allocator_type& alloc,
         size_type element_count,
         attribute_set_impl_type* source_attrs,
         attribute_set_impl_type* thread_attrs,
@@ -161,6 +191,7 @@ private:
             aux::alignment_gap_between< implementation, node >::value;
         const size_type buffer_size = header_size + element_count * sizeof(node);
 
+        stateless_allocator alloc;
         implementation* p = reinterpret_cast< implementation* >(alloc.allocate(buffer_size));
         node* const storage = reinterpret_cast< node* >(reinterpret_cast< char* >(p) + header_size);
         new (p) implementation(storage, storage + element_count, source_attrs, thread_attrs, global_attrs);
@@ -171,24 +202,29 @@ private:
 public:
     //! The function allocates memory and creates the object
     static implementation* create(
-        internal_allocator_type& alloc,
         attribute_set_type const& source_attrs,
         attribute_set_type const& thread_attrs,
-        attribute_set_type const& global_attrs)
+        attribute_set_type const& global_attrs,
+        size_type reserve_count)
     {
         return create(
-            alloc,
-            source_attrs.m_pImpl->size() + thread_attrs.m_pImpl->size() + global_attrs.m_pImpl->size(),
+            source_attrs.m_pImpl->size() + thread_attrs.m_pImpl->size() + global_attrs.m_pImpl->size() + reserve_count,
             source_attrs.m_pImpl,
             thread_attrs.m_pImpl,
             global_attrs.m_pImpl);
     }
 
+    //! The function allocates memory and creates the object
+    static implementation* create(size_type reserve_count)
+    {
+        return create(reserve_count, NULL, NULL, NULL);
+    }
+
     //! Creates a copy of the object
-    static implementation* copy(internal_allocator_type& alloc, implementation* that)
+    static implementation* copy(implementation* that)
     {
         // Create new object
-        implementation* p = create(alloc, that->size(), NULL, NULL, NULL);
+        implementation* p = create(that->size(), NULL, NULL, NULL);
 
         // Copy all elements
         typename node_list::iterator it = that->m_Nodes.begin(), end = that->m_Nodes.end();
@@ -196,7 +232,7 @@ public:
         {
             node* n = p->m_pEnd++;
             mapped_type data = it->m_Value.second;
-            new (n) node(it->m_Value.first, data);
+            new (n) node(it->m_Value.first, data, false);
             p->m_Nodes.push_back(*n);
 
             // Since nodes within buckets are ordered, we can simply append the node to the end of the bucket
@@ -211,11 +247,12 @@ public:
     }
 
     //! Destroys the object and releases the memory
-    static void destroy(internal_allocator_type& alloc, implementation* p)
+    static void destroy(implementation* p)
     {
         const size_type buffer_size = reinterpret_cast< char* >(p->m_pEOS) - reinterpret_cast< char* >(p);
         p->~implementation();
-        alloc.deallocate(reinterpret_cast< typename internal_allocator_type::pointer >(p), buffer_size);
+        stateless_allocator alloc;
+        alloc.deallocate(reinterpret_cast< stateless_allocator::pointer >(p), buffer_size);
     }
 
     //! Returns the pointer to the first element
@@ -270,6 +307,22 @@ public:
         }
     }
 
+    //! Inserts an element
+    std::pair< node*, bool > insert(key_type key, mapped_type const& mapped)
+    {
+        bucket& b = get_bucket(key.id());
+        node* p = find_in_bucket(key, b);
+        if (!p || p->m_Value.first != key)
+        {
+            p = insert_node(key, b, p, mapped);
+            return std::pair< node*, bool >(p, true);
+        }
+        else
+        {
+            return std::pair< node*, bool >(p, false);
+        }
+    }
+
 private:
     //! The function returns a bucket for the specified element
     bucket& get_bucket(id_type id)
@@ -280,8 +333,8 @@ private:
     //! Attempts to find an element with the specified key in the bucket
     node* find_in_bucket(key_type key, bucket const& b)
     {
-        typedef typename node_list::node_traits node_traits;
-        typedef typename node_list::value_traits value_traits;
+        typedef node_list::node_traits node_traits;
+        typedef node_list::value_traits value_traits;
 
         // All elements within the bucket are sorted to speedup the search.
         register node* p = b.first;
@@ -296,7 +349,7 @@ private:
     //! Acquires the attribute value from the attribute sets
     node_base* freeze_node(key_type key, bucket& b, node* where)
     {
-        typename attribute_set_type::iterator it = m_pSourceAttributes->find(key);
+        attribute_set_type::iterator it = m_pSourceAttributes->find(key);
         if (it == m_pSourceAttributes->end())
         {
             it = m_pThreadAttributes->find(key);
@@ -318,8 +371,16 @@ private:
     //! The function inserts a node into the container
     node* insert_node(key_type key, bucket& b, node* where, mapped_type data)
     {
-        node* const p = m_pEnd++;
-        new (p) node(key, data);
+        node* p;
+        if (m_pEnd != m_pEOS)
+        {
+            p = m_pEnd++;
+            new (p) node(key, data, false);
+        }
+        else
+        {
+            p = new node(key, data, true);
+        }
 
         if (b.first == NULL)
         {
@@ -330,7 +391,7 @@ private:
         else if (where == b.last && key.id() > where->m_Value.first.id())
         {
             // The new element should become the last element of the bucket
-            typename node_list::iterator it = m_Nodes.iterator_to(*where);
+            node_list::iterator it = m_Nodes.iterator_to(*where);
             ++it;
             m_Nodes.insert(it, *p);
             b.last = p;
@@ -338,7 +399,7 @@ private:
         else
         {
             // The new element should be within the bucket
-            typename node_list::iterator it = m_Nodes.iterator_to(*where);
+            node_list::iterator it = m_Nodes.iterator_to(*where);
             m_Nodes.insert(it, *p);
         }
 
@@ -348,7 +409,7 @@ private:
     //! Acquires attribute values from the set of attributes
     void freeze_nodes_from(attribute_set_impl_type* attrs)
     {
-        typename attribute_set_type::const_iterator
+        attribute_set_type::const_iterator
             it = attrs->begin(), end = attrs->end();
         for (; it != end; ++it)
         {
@@ -373,25 +434,30 @@ private:
 #pragma warning(disable: 4355)
 #endif
 
+//! The constructor creates an empty view
+BOOST_LOG_EXPORT attribute_values_view::attribute_values_view(
+    size_type reserve_count
+) :
+    m_pImpl(implementation::create(reserve_count))
+{
+}
+
 //! The constructor adopts three attribute sets to the view
-template< typename CharT >
-BOOST_LOG_EXPORT basic_attribute_values_view< CharT >::basic_attribute_values_view(
+BOOST_LOG_EXPORT attribute_values_view::attribute_values_view(
     attribute_set_type const& source_attrs,
     attribute_set_type const& thread_attrs,
-    attribute_set_type const& global_attrs
+    attribute_set_type const& global_attrs,
+    size_type reserve_count
 ) :
-    m_pImpl(implementation::create(
-        static_cast< internal_allocator_type& >(*this), source_attrs, thread_attrs, global_attrs))
+    m_pImpl(implementation::create(source_attrs, thread_attrs, global_attrs, reserve_count))
 {
 }
 
 //! Copy constructor
-template< typename CharT >
-BOOST_LOG_EXPORT basic_attribute_values_view< CharT >::basic_attribute_values_view(basic_attribute_values_view const& that) :
-    internal_allocator_type(static_cast< internal_allocator_type const& >(that))
+BOOST_LOG_EXPORT attribute_values_view::attribute_values_view(attribute_values_view const& that)
 {
     if (that.m_pImpl)
-        m_pImpl = implementation::copy(static_cast< internal_allocator_type& >(*this), that.m_pImpl);
+        m_pImpl = implementation::copy(that.m_pImpl);
     else
         m_pImpl = NULL;
 }
@@ -401,67 +467,64 @@ BOOST_LOG_EXPORT basic_attribute_values_view< CharT >::basic_attribute_values_vi
 #endif
 
 //! Destructor
-template< typename CharT >
-BOOST_LOG_EXPORT basic_attribute_values_view< CharT >::~basic_attribute_values_view()
+BOOST_LOG_EXPORT attribute_values_view::~attribute_values_view()
 {
     if (m_pImpl)
+    {
         implementation::destroy(static_cast< internal_allocator_type& >(*this), m_pImpl);
+        m_pImpl = NULL;
+    }
 }
 
 //! Assignment
-template< typename CharT >
-BOOST_LOG_EXPORT basic_attribute_values_view< CharT >&
-basic_attribute_values_view< CharT >::operator= (basic_attribute_values_view that)
+BOOST_LOG_EXPORT attribute_values_view&
+attribute_values_view::operator= (BOOST_COPY_ASSIGN_REF(attribute_values_view) that)
 {
-    swap(that);
+    attribute_values_view that_copy = that;
+    swap(that_copy);
     return *this;
 }
 
 //  Iterator generators
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_attribute_values_view< CharT >::const_iterator
-basic_attribute_values_view< CharT >::begin() const
+BOOST_LOG_EXPORT attribute_values_view::const_iterator
+attribute_values_view::begin() const
 {
-    return const_iterator(m_pImpl->begin(), const_cast< basic_attribute_values_view* >(this));
+    return const_iterator(m_pImpl->begin(), const_cast< attribute_values_view* >(this));
 }
 
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_attribute_values_view< CharT >::const_iterator
-basic_attribute_values_view< CharT >::end() const
+BOOST_LOG_EXPORT attribute_values_view::const_iterator
+attribute_values_view::end() const
 {
-    return const_iterator(m_pImpl->end(), const_cast< basic_attribute_values_view* >(this));
+    return const_iterator(m_pImpl->end(), const_cast< attribute_values_view* >(this));
 }
 
 //! The method returns number of elements in the container
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_attribute_values_view< CharT >::size_type
-basic_attribute_values_view< CharT >::size() const
+BOOST_LOG_EXPORT attribute_values_view::size_type
+attribute_values_view::size() const
 {
     return m_pImpl->size();
 }
 
 //! Internal lookup implementation
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_attribute_values_view< CharT >::const_iterator
-basic_attribute_values_view< CharT >::find(key_type key) const
+BOOST_LOG_EXPORT attribute_values_view::const_iterator
+attribute_values_view::find(key_type key) const
 {
-    return const_iterator(m_pImpl->find(key), const_cast< basic_attribute_values_view* >(this));
+    return const_iterator(m_pImpl->find(key), const_cast< attribute_values_view* >(this));
 }
 
 //! The method acquires values of all adopted attributes. Users don't need to call it, since will always get an already frozen view.
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_attribute_values_view< CharT >::freeze()
+BOOST_LOG_EXPORT void attribute_values_view::freeze()
 {
     m_pImpl->freeze();
 }
 
-//! Explicitly instantiate container implementation
-#ifdef BOOST_LOG_USE_CHAR
-template class basic_attribute_values_view< char >;
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-template class basic_attribute_values_view< wchar_t >;
-#endif
+//! Inserts an element into the view
+BOOST_LOG_EXPORT std::pair< attribute_values_view::const_iterator, bool >
+attribute_values_view::insert(key_type key, mapped_type const& mapped)
+{
+    std::pair< node*, bool > res = m_pImpl->insert(key, mapped);
+    return std::pair< const_iterator, bool >(const_iterator(res.first, this), res.second);
+}
 
 } // namespace log
 

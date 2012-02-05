@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <boost/array.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/compatibility/cpp_c_headers/cstddef>
+#include <cstddef>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/assert.hpp>
 #include <boost/mpl/size.hpp>

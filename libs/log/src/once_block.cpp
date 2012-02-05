@@ -101,7 +101,7 @@ BOOST_LOG_EXPORT void once_block_sentry::rollback()
 
 #else // defined(BOOST_LOG_USE_WINNT6_API)
 
-#include <boost/compatibility/cpp_c_headers/cstdlib> // atexit
+#include <cstdlib> // atexit
 #include <boost/detail/interlocked.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>

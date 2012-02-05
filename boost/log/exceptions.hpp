@@ -22,7 +22,7 @@
 #include <string>
 #include <stdexcept>
 #include <boost/preprocessor/seq/enum.hpp>
-#include <boost/compatibility/cpp_c_headers/cstddef>
+#include <cstddef>
 #include <boost/log/detail/prologue.hpp>
 
 #ifdef _MSC_VER

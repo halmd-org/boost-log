@@ -19,7 +19,7 @@
 #ifndef BOOST_LOG_DATE_TIME_TYPES_HPP_INCLUDED_
 #define BOOST_LOG_DATE_TIME_TYPES_HPP_INCLUDED_
 
-#include <boost/compatibility/cpp_c_headers/ctime>
+#include <ctime>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/joint_view.hpp>
 #include <boost/mpl/push_back.hpp>

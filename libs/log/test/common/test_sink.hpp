@@ -16,7 +16,7 @@
 #define BOOST_LOG_TESTS_TEST_SINK_HPP_INCLUDED_
 
 #include <map>
-#include <boost/compatibility/cpp_c_headers/cstddef>
+#include <cstddef>
 #include <boost/log/sinks/sink.hpp>
 
 //! A sink implementation for testing purpose

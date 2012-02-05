@@ -35,22 +35,21 @@ namespace BOOST_LOG_NAMESPACE {
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 //! A global container of all known attribute names
-template< typename CharT >
 class attribute_name_repository :
     public log::aux::lazy_singleton<
-        attribute_name_repository< CharT >,
-        shared_ptr< attribute_name_repository< CharT > >
+        attribute_name_repository,
+        shared_ptr< attribute_name_repository >
     >
 {
     typedef log::aux::lazy_singleton<
-        attribute_name_repository< CharT >,
-        shared_ptr< attribute_name_repository< CharT > >
+        attribute_name_repository,
+        shared_ptr< attribute_name_repository >
     > base_type;
 
 #if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS)
     friend class log::aux::lazy_singleton<
-        attribute_name_repository< CharT >,
-        shared_ptr< attribute_name_repository< CharT > >
+        attribute_name_repository,
+        shared_ptr< attribute_name_repository >
     >;
 #else
     friend class base_type;
@@ -58,9 +57,8 @@ class attribute_name_repository :
 
 public:
     //  Import types from the basic_attribute_name template
-    typedef CharT char_type;
-    typedef typename basic_attribute_name< char_type >::id_type id_type;
-    typedef typename basic_attribute_name< char_type >::string_type string_type;
+    typedef attribute_name::id_type id_type;
+    typedef attribute_name::string_type string_type;
 
     //! A base hook for arranging the attribute names into a set
     typedef intrusive::set_base_hook<
@@ -140,7 +138,7 @@ private:
 
 public:
     //! Converts attribute name string to id
-    id_type get_id_from_string(const char_type* name)
+    id_type get_id_from_string(const char* name)
     {
         BOOST_ASSERT(name != NULL);
 
@@ -148,16 +146,16 @@ public:
         {
             // Do a non-blocking lookup first
             log::aux::shared_lock_guard< mutex_type > _(m_Mutex);
-            typename node_set::const_iterator it =
-                m_NodeSet.find(name, typename node::order_by_name());
+            node_set::const_iterator it =
+                m_NodeSet.find(name, node::order_by_name());
             if (it != m_NodeSet.end())
                 return it->m_id;
         }
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
         BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< mutex_type > _(m_Mutex);)
-        typename node_set::iterator it =
-            m_NodeSet.lower_bound(name, typename node::order_by_name());
+        node_set::iterator it =
+            m_NodeSet.lower_bound(name, node::order_by_name());
         if (it == m_NodeSet.end() || it->m_name != name)
         {
             m_NodeList.push_back(node(static_cast< id_type >(m_NodeList.size()), name));
@@ -184,29 +182,25 @@ private:
 
 } // namespace
 
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_attribute_name< CharT >::id_type
-basic_attribute_name< CharT >::get_id_from_string(const char_type* name)
+BOOST_LOG_EXPORT attribute_name::id_type
+attribute_name::get_id_from_string(const char* name)
 {
-    typedef attribute_name_repository< char_type > repository;
-    return repository::get()->get_id_from_string(name);
+    return attribute_name_repository::get()->get_id_from_string(name);
 }
 
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_attribute_name< CharT >::string_type const&
-basic_attribute_name< CharT >::get_string_from_id(id_type id)
+BOOST_LOG_EXPORT attribute_name::string_type const&
+attribute_name::get_string_from_id(id_type id)
 {
-    typedef attribute_name_repository< char_type > repository;
-    return repository::get()->get_string_from_id(id);
+    return attribute_name_repository::get()->get_string_from_id(id);
 }
 
 template< typename CharT, typename TraitsT >
-std::basic_ostream< CharT, TraitsT >& operator<< (
+BOOST_LOG_EXPORT std::basic_ostream< CharT, TraitsT >& operator<< (
     std::basic_ostream< CharT, TraitsT >& strm,
-    basic_attribute_name< CharT > const& name)
+    attribute_name const& name)
 {
     if (!!name)
-        strm << name.string();
+        strm << name.string().c_str();
     else
         strm << "[uninitialized]";
     return strm;
@@ -214,14 +208,12 @@ std::basic_ostream< CharT, TraitsT >& operator<< (
 
 //  Explicitly instantiate attribute name implementation
 #ifdef BOOST_LOG_USE_CHAR
-template class basic_attribute_name< char >;
 template BOOST_LOG_EXPORT std::basic_ostream< char, std::char_traits< char > >&
     operator<< < char, std::char_traits< char > >(
         std::basic_ostream< char, std::char_traits< char > >& strm,
         basic_attribute_name< char > const& name);
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-template class basic_attribute_name< wchar_t >;
 template BOOST_LOG_EXPORT std::basic_ostream< wchar_t, std::char_traits< wchar_t > >&
     operator<< < wchar_t, std::char_traits< wchar_t > >(
         std::basic_ostream< wchar_t, std::char_traits< wchar_t > >& strm,

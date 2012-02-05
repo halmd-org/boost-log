@@ -25,7 +25,7 @@
 #include <iterator>
 #include <boost/operators.hpp>
 #include <boost/throw_exception.hpp>
-#include <boost/compatibility/cpp_c_headers/cstddef>
+#include <cstddef>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
