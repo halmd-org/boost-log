@@ -67,10 +67,8 @@ protected:
     //! Enqueues log record to the queue
     void enqueue(record_type const& rec)
     {
-        const bool was_empty = m_queue.unsafe_empty();
         m_queue.push(rec);
-        if (was_empty)
-            m_event.set_signalled();
+        m_event.set_signalled();
     }
 
     //! Attempts to enqueue log record to the queue

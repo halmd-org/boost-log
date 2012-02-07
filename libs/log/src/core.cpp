@@ -38,9 +38,7 @@ namespace boost {
 namespace BOOST_LOG_NAMESPACE {
 
 //! Private record data information, with core-specific structures
-template< typename CharT >
-struct basic_record< CharT >::private_data :
-    public public_data
+struct record::private_data
 {
     //! Sink interface type
     typedef sinks::sink< CharT > sink_type;
@@ -49,12 +47,32 @@ struct basic_record< CharT >::private_data :
 
     //! A list of sinks that will accept the record
     sink_list m_AcceptingSinks;
-
-    template< typename SourceT >
-    explicit private_data(SourceT const& values) : public_data(values)
-    {
-    }
 };
+
+//! Destructor
+BOOST_LOG_EXPORT record::public_data::~public_data()
+{
+    delete m_Private;
+    m_Private = NULL;
+}
+
+//! The function ensures that the log record does not depend on any thread-specific data.
+BOOST_LOG_EXPORT void record::detach_from_thread()
+{
+    if (!m_pData->m_Detached)
+    {
+        values_view_type::const_iterator
+            it = m_pData->m_AttributeValues.begin(),
+            end = m_pData->m_AttributeValues.end();
+        for (; it != end; ++it)
+        {
+            // Yep, a bit hackish. I'll need a better backdoor to do it gracefully.
+            const_cast< values_view_type::mapped_type& >(it->second).detach_from_thread();
+        }
+
+        m_pData->m_Detached = true;
+    }
+}
 
 //! Logging system implementation
 template< typename CharT >
