@@ -53,9 +53,6 @@ class record
     friend class core;
 
 public:
-    //! Attribute values view type
-    typedef attribute_values_view values_view_type;
-
 #ifndef BOOST_LOG_DOXYGEN_PASS
 private:
     //! Private data
@@ -67,32 +64,32 @@ private:
     {
         //! Reference counter
 #ifndef BOOST_LOG_NO_THREADS
-        mutable boost::detail::atomic_count m_RefCounter;
+        mutable boost::detail::atomic_count m_ref_counter;
 #else
-        mutable unsigned long m_RefCounter;
+        mutable unsigned long m_ref_counter;
 #endif // BOOST_LOG_NO_THREADS
 
         //! Attribute values view
-        values_view_type m_AttributeValues;
+        attribute_values_view m_attribute_values;
         //! Pointer to the private implemntation
-        private_data* m_Private;
+        private_data* m_private;
         //! Shows if the record has already been detached from thread
-        bool m_Detached;
+        bool m_detached;
 
         //! Constructor from the attribute sets
-        explicit public_data(BOOST_RV_REF(values_view_type) values) :
-            m_RefCounter(0),
-            m_AttributeValues(values),
-            m_Private(NULL),
-            m_Detached(false)
+        explicit public_data(BOOST_RV_REF(attribute_values_view) values) :
+            m_ref_counter(0),
+            m_attribute_values(values),
+            m_private(NULL),
+            m_detached(false)
         {
         }
         //! Constructor from the attribute sets
-        explicit public_data(values_view_type const& values) :
-            m_RefCounter(0),
-            m_AttributeValues(values),
-            m_Private(NULL),
-            m_Detached(false)
+        explicit public_data(attribute_values_view const& values) :
+            m_ref_counter(0),
+            m_attribute_values(values),
+            m_private(NULL),
+            m_detached(false)
         {
         }
 
@@ -102,13 +99,13 @@ private:
         BOOST_LOG_DELETED_FUNCTION(public_data(public_data const&))
         BOOST_LOG_DELETED_FUNCTION(public_data& operator= (public_data const&))
 
-        friend void intrusive_ptr_add_ref(const public_data* p) { ++p->m_RefCounter; }
-        friend void intrusive_ptr_release(const public_data* p) { if (--p->m_RefCounter == 0) delete p; }
+        friend void intrusive_ptr_add_ref(const public_data* p) { ++p->m_ref_counter; }
+        friend void intrusive_ptr_release(const public_data* p) { if (--p->m_ref_counter == 0) delete p; }
     };
 
 private:
-    //! A pointer to the log record data
-    intrusive_ptr< public_data > m_pData;
+    //! A pointer to the log record implementation
+    intrusive_ptr< public_data > m_impl;
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
@@ -123,14 +120,14 @@ public:
     /*!
      * Copy constructor
      */
-    record(record const& that) : m_pData(that.m_pData) {}
+    record(record const& that) : m_impl(that.m_impl) {}
 
     /*!
      * Move constructor. Source record contents unspecified after the operation.
      */
     record(BOOST_RV_REF(record) that)
     {
-        m_pData.swap(that.m_pData);
+        m_impl.swap(that.m_impl);
     }
 
     /*!
@@ -143,7 +140,7 @@ public:
      */
     record& operator= (BOOST_COPY_ASSIGN_REF(record) that)
     {
-        m_pData = that.m_pData;
+        m_impl = that.m_impl;
         return *this;
     }
 
@@ -152,7 +149,7 @@ public:
      */
     record& operator= (BOOST_RV_REF(record) that)
     {
-        m_pData.swap(that.m_pData);
+        m_impl.swap(that.m_impl);
         return *this;
     }
 
@@ -161,9 +158,9 @@ public:
      *
      * \pre <tt>!!*this</tt>
      */
-    values_view_type const& attribute_values() const
+    attribute_values_view const& attribute_values() const
     {
-        return m_pData->m_AttributeValues;
+        return m_impl->m_attribute_values;
     }
 
     /*!
@@ -175,7 +172,7 @@ public:
      */
     bool operator== (record const& that) const
     {
-        return m_pData == that.m_pData;
+        return m_impl == that.m_impl;
     }
     /*!
      * Inequality comparison
@@ -202,7 +199,7 @@ public:
      */
     bool operator! () const
     {
-        return !m_pData;
+        return !m_impl;
     }
 
     /*!
@@ -213,7 +210,7 @@ public:
      */
     void swap(record& that)
     {
-        m_pData.swap(that.m_pData);
+        m_impl.swap(that.m_impl);
     }
 
     /*!
@@ -224,7 +221,7 @@ public:
      */
     void reset()
     {
-        m_pData.reset();
+        m_impl.reset();
     }
 
     /*!

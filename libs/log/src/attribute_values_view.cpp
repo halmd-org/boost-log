@@ -13,7 +13,6 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#include <malloc.h>
 #include <new>
 #include <memory>
 #include <boost/array.hpp>
@@ -26,6 +25,7 @@
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include "alignment_gap_between.hpp"
 #include "attribute_set_impl.hpp"
+#include "stateless_allocator.hpp"
 
 namespace boost {
 
@@ -53,34 +53,7 @@ public:
 
 private:
     typedef attribute_set_type::implementation attribute_set_impl_type;
-
-#if defined(_STLPORT_VERSION)
-    typedef std::allocator< char > stateless_allocator;
-#else
-    struct stateless_allocator
-    {
-        typedef char value_type;
-        typedef value_type* pointer;
-        typedef value_type const* const_pointer;
-        typedef value_type& reference;
-        typedef value_type const& const_reference;
-        typedef std::size_t size_type;
-        typedef std::ptrdiff_t difference_type;
-
-        pointer allocate(size_type n, const void* = NULL)
-        {
-            pointer p = static_cast< pointer >(malloc(n * sizeof(value_type)));
-            if (p)
-                return p;
-            else
-                throw std::bad_alloc();
-        }
-        void deallocate(pointer p, size_type)
-        {
-            free(p);
-        }
-    };
-#endif
+    typedef boost::log::aux::stateless_allocator< char > stateless_allocator;
 
     //! Node base class traits for the intrusive list
     struct node_traits

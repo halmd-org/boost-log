@@ -27,6 +27,7 @@
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute.hpp>
+#include <boost/log/attributes/attribute_values_view.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -42,7 +43,6 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace sinks {
 
-template< typename >
 class sink;
 
 } // namespace sinks
@@ -58,24 +58,11 @@ class sink;
  *
  * The logging core is a singleton. Users can acquire the core instance by calling the static method <tt>get</tt>.
  */
-template< typename CharT >
-class BOOST_LOG_EXPORT basic_core
+class BOOST_LOG_EXPORT core
 {
 public:
-    //! Character type
-    typedef CharT char_type;
-    //! Log record type
-    typedef basic_record< char_type > record_type;
-    //! Attribute name type
-    typedef basic_attribute_name< char_type > attribute_name_type;
-    //! Attribute set type
-    typedef basic_attribute_set< char_type > attribute_set_type;
-    //! Attribute values view type
-    typedef typename record_type::values_view_type values_view_type;
-    //! Sink interface type
-    typedef sinks::sink< char_type > sink_type;
     //! Filter function type
-    typedef boost::log::aux::light_function1< bool, values_view_type const& > filter_type;
+    typedef boost::log::aux::light_function1< bool, attribute_values_view const& > filter_type;
     //! Exception handler function type
     typedef boost::log::aux::light_function0< void > exception_handler_type;
 
@@ -86,23 +73,23 @@ private:
 
 private:
     //! A pointer to the implementation
-    implementation* pImpl;
+    implementation* m_impl;
 
 private:
     //! \cond
-    basic_core();
+    core();
     //! \endcond
 
 public:
     /*!
      * Destructor. Destroys the core, releases any sinks and attributes that were registered.
      */
-    ~basic_core();
+    ~core();
 
     /*!
      * \return The method returns a pointer to the logging core singleton instance.
      */
-    static shared_ptr< basic_core > get();
+    static shared_ptr< core > get();
 
     /*!
      * The method enables or disables logging.
@@ -143,14 +130,14 @@ public:
      *
      * \param s The sink to be registered.
      */
-    void add_sink(shared_ptr< sink_type > const& s);
+    void add_sink(shared_ptr< sink > const& s);
     /*!
      * The method removes the sink from the output. The sink will not receive any log records after removal.
      * The call has no effect if the sink is not registered.
      *
      * \param s The sink to be unregistered.
      */
-    void remove_sink(shared_ptr< sink_type > const& s);
+    void remove_sink(shared_ptr< sink > const& s);
     /*!
      * The method removes all registered sinks from the output. The sinks will not receive any log records after removal.
      */
@@ -173,8 +160,7 @@ public:
      *         attribute. Otherwise the attribute was not added and the first member points to the attribute that prevents
      *         addition.
      */
-    std::pair< typename attribute_set_type::iterator, bool > add_global_attribute(
-        attribute_name_type const& name, attribute const& attr);
+    std::pair< attribute_set::iterator, bool > add_global_attribute(attribute_name const& name, attribute const& attr);
     /*!
      * The method removes an attribute from the global attribute set.
      *
@@ -183,12 +169,12 @@ public:
      *
      * \param it Iterator to the previously added attribute.
      */
-    void remove_global_attribute(typename attribute_set_type::iterator it);
+    void remove_global_attribute(attribute_set::iterator it);
 
     /*!
      * The method returns a copy of the complete set of currently registered global attributes.
      */
-    attribute_set_type get_global_attributes() const;
+    attribute_set get_global_attributes() const;
     /*!
      * The method replaces the complete set of currently registered global attributes with the provided set.
      *
@@ -197,7 +183,7 @@ public:
      *
      * \param attrs The set of attributes to be installed.
      */
-    void set_global_attributes(attribute_set_type const& attrs);
+    void set_global_attributes(attribute_set const& attrs);
 
     /*!
      * The method adds an attribute to the thread-specific attribute set. The attribute will be implicitly added to
@@ -212,8 +198,7 @@ public:
      *         attribute. Otherwise the attribute was not added and the first member points to the attribute that prevents
      *         addition.
      */
-    std::pair< typename attribute_set_type::iterator, bool > add_thread_attribute(
-        attribute_name_type const& name, attribute const& attr);
+    std::pair< attribute_set::iterator, bool > add_thread_attribute(attribute_name const& name, attribute const& attr);
     /*!
      * The method removes an attribute from the thread-specific attribute set.
      *
@@ -222,12 +207,12 @@ public:
      *
      * \param it Iterator to the previously added attribute.
      */
-    void remove_thread_attribute(typename attribute_set_type::iterator it);
+    void remove_thread_attribute(attribute_set::iterator it);
 
     /*!
      * The method returns a copy of the complete set of currently registered thread-specific attributes.
      */
-    attribute_set_type get_thread_attributes() const;
+    attribute_set get_thread_attributes() const;
     /*!
      * The method replaces the complete set of currently registered thread-specific attributes with the provided set.
      *
@@ -236,7 +221,7 @@ public:
      *
      * \param attrs The set of attributes to be installed.
      */
-    void set_thread_attributes(attribute_set_type const& attrs);
+    void set_thread_attributes(attribute_set const& attrs);
 
     /*!
      * The method sets exception handler function. The function will be called with no arguments
@@ -270,7 +255,7 @@ public:
      * \b Throws: If an exception handler is installed, only throws if the handler throws. Otherwise may
      *            throw if one of the sinks throws, or some system resource limitation has been reached.
      */
-    record_type open_record(attribute_set_type const& source_attributes);
+    record open_record(attribute_set const& source_attributes);
     /*!
      * The method pushes the record to sinks.
      *
@@ -280,18 +265,11 @@ public:
      * \b Throws: If an exception handler is installed, only throws if the handler throws. Otherwise may
      *            throw if one of the sinks throws.
      */
-    void push_record(record_type const& rec);
+    void push_record(record const& rec);
 
-    BOOST_LOG_DELETED_FUNCTION(basic_core(basic_core const&))
-    BOOST_LOG_DELETED_FUNCTION(basic_core& operator= (basic_core const&))
+    BOOST_LOG_DELETED_FUNCTION(core(core const&))
+    BOOST_LOG_DELETED_FUNCTION(core& operator= (core const&))
 };
-
-#ifdef BOOST_LOG_USE_CHAR
-typedef basic_core< char > core;        //!< Convenience typedef for narrow-character logging
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_core< wchar_t > wcore;    //!< Convenience typedef for wide-character logging
-#endif
 
 } // namespace log
 

@@ -16,6 +16,9 @@
 #ifndef BOOST_LOG_ALIGNMENT_GAP_BETWEEN_HPP_INCLUDED_
 #define BOOST_LOG_ALIGNMENT_GAP_BETWEEN_HPP_INCLUDED_
 
+#include <boost/type_traits/alignment_of.hpp>
+#include <boost/log/detail/prologue.hpp>
+
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
@@ -27,19 +30,12 @@ namespace aux {
 template< typename T1, typename T2 >
 struct alignment_gap_between
 {
-private:
-    struct both
+    enum _
     {
-        T1 t1;
-        T2 t2;
-
-        // To avoid warnings about inability to generate the destructor
-        // if T1's or T2's destructor is inaccessible
-        ~both();
+        T1_alignment = boost::alignment_of< T1 >::value,
+        T2_alignment = boost::alignment_of< T2 >::value,
+        value = T1_alignment >= T2_alignment ? 0 : T2_alignment - T1_alignment
     };
-
-public:
-    enum _ { value = sizeof(both) - (sizeof(T1) + sizeof(T2)) };
 };
 
 } // namespace aux

@@ -1,0 +1,92 @@
+/*
+ *          Copyright Andrey Semashev 2007 - 2012.
+ * Distributed under the Boost Software License, Version 1.0.
+ *    (See accompanying file LICENSE_1_0.txt or copy at
+ *          http://www.boost.org/LICENSE_1_0.txt)
+ */
+/*!
+ * \file   stateless_allocator.hpp
+ * \author Andrey Semashev
+ * \date   11.02.2012
+ *
+ * \brief  This header is the Boost.Log library implementation, see the library documentation
+ *         at http://www.boost.org/libs/log/doc/log.html.
+ */
+
+#if (defined(_MSC_VER) && _MSC_VER > 1000)
+#pragma once
+#endif // _MSC_VER > 1000
+
+#ifndef BOOST_LOG_STATELESS_ALLOCATOR_HPP_INCLUDED_
+#define BOOST_LOG_STATELESS_ALLOCATOR_HPP_INCLUDED_
+
+#include <malloc.h>
+#include <cstddef>
+#include <memory>
+#include <boost/log/detail/prologue.hpp>
+
+namespace boost {
+
+namespace BOOST_LOG_NAMESPACE {
+
+namespace aux {
+
+#if defined(_STLPORT_VERSION)
+
+#if !defined(BOOST_NO_TEMPLATE_ALIASES)
+
+template< typename T >
+using stateless_allocator = std::allocator< T >;
+
+#else
+
+template< typename T >
+struct stateless_allocator :
+    public std::allocator< T >
+{
+};
+
+#endif
+
+#else
+
+template< typename T >
+struct stateless_allocator
+{
+    template< typename U >
+    struct rebind
+    {
+        typedef stateless_allocator< U > other;
+    };
+
+    typedef T value_type;
+    typedef value_type* pointer;
+    typedef value_type const* const_pointer;
+    typedef value_type& reference;
+    typedef value_type const& const_reference;
+    typedef std::size_t size_type;
+    typedef std::ptrdiff_t difference_type;
+
+    static pointer allocate(size_type n, const void* = NULL)
+    {
+        pointer p = static_cast< pointer >(malloc(n * sizeof(value_type)));
+        if (p)
+            return p;
+        else
+            throw std::bad_alloc();
+    }
+    static void deallocate(pointer p, size_type)
+    {
+        free(p);
+    }
+};
+
+#endif
+
+} // namespace aux
+
+} // namespace log
+
+} // namespace boost
+
+#endif // BOOST_LOG_STATELESS_ALLOCATOR_HPP_INCLUDED_
