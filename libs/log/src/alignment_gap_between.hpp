@@ -32,9 +32,9 @@ struct alignment_gap_between
 {
     enum _
     {
-        T1_alignment = boost::alignment_of< T1 >::value,
         T2_alignment = boost::alignment_of< T2 >::value,
-        value = T1_alignment >= T2_alignment ? 0 : T2_alignment - T1_alignment
+        tail_size = sizeof(T1) % T2_alignment,
+        value = tail_size > 0 ? T2_alignment - tail_size : 0
     };
 };
 
