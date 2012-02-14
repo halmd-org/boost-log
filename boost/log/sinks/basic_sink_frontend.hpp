@@ -422,7 +422,14 @@ public:
 
 protected:
     //! Returns reference to the formatter
-    formatter_type& formatter() { return m_Formatter; }
+    formatter_type& formatter()
+    {
+#if !defined(BOOST_LOG_NO_THREADS)
+        return m_Formatter;
+#else
+        return m_Context.m_Formatter;
+#endif
+    }
 
     //! Feeds log record to the backend
     template< typename BackendMutexT, typename BackendT >
