@@ -41,20 +41,11 @@ namespace BOOST_LOG_NAMESPACE {
 namespace sinks {
 
 //! A base class for a logging sink frontend
-template< typename CharT >
 class BOOST_LOG_NO_VTABLE sink
 {
 public:
-    //! Character type
-    typedef CharT char_type;
-    //! String type to be used as a message text holder
-    typedef std::basic_string< char_type > string_type;
-    //! Log record type
-    typedef basic_record< char_type > record_type;
-    //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > values_view_type;
     //! Filter function type
-    typedef boost::log::aux::light_function1< bool, values_view_type const& > filter_type;
+    typedef boost::log::aux::light_function1< bool, attribute_values_view const& > filter_type;
     //! An exception handler type
     typedef boost::log::aux::light_function0< void > exception_handler_type;
 
@@ -74,14 +65,14 @@ public:
      *
      * \param attributes A set of attribute values of a logging record
      */
-    virtual bool will_consume(values_view_type const& attributes) = 0;
+    virtual bool will_consume(attribute_values_view const& attributes) = 0;
 
     /*!
      * The method puts logging record to the sink
      *
      * \param record Logging record to consume
      */
-    virtual void consume(record_type const& record) = 0;
+    virtual void consume(record const& record) = 0;
 
     /*!
      * The method attempts to put logging record to the sink. The method may be used by the
@@ -92,7 +83,7 @@ public:
      * \param record Logging record to consume
      * \return \c true, if the record was consumed, \c false, if not.
      */
-    virtual bool try_consume(record_type const& record)
+    virtual bool try_consume(record const& record)
     {
         consume(record);
         return true;

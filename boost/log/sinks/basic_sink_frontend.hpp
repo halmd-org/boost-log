@@ -52,26 +52,17 @@ namespace BOOST_LOG_NAMESPACE {
 namespace sinks {
 
 //! A base class for a logging sink frontend
-template< typename CharT >
 class BOOST_LOG_NO_VTABLE basic_sink_frontend :
-    public sink< CharT >
+    public sink
 {
     //! Base type
-    typedef sink< CharT > base_type;
+    typedef sink base_type;
 
 public:
-    //! Character type
-    typedef typename base_type::char_type char_type;
-    //! String type to be used as a message text holder
-    typedef typename base_type::string_type string_type;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
-    //! Attribute values view type
-    typedef typename base_type::values_view_type values_view_type;
     //! Filter function type
-    typedef boost::log::aux::light_function1< bool, values_view_type const& > filter_type;
+    typedef base_type::filter_type filter_type;
     //! An exception handler type
-    typedef boost::log::aux::light_function0< void > exception_handler_type;
+    typedef base_type::exception_handler_type exception_handler_type;
 
 #if !defined(BOOST_LOG_NO_THREADS)
 protected:
@@ -261,30 +252,25 @@ private:
 };
 
 //! A base class for a logging sink frontend with formatting support
-template< typename CharT, typename TargetCharT = CharT >
+template< typename CharT >
 class BOOST_LOG_NO_VTABLE basic_formatting_sink_frontend :
-    public basic_sink_frontend< CharT >
+    public basic_sink_frontend
 {
-    typedef basic_sink_frontend< CharT > base_type;
+    typedef basic_sink_frontend base_type;
 
 public:
-    //  Type imports from the base class
-    typedef typename base_type::char_type char_type;
-    typedef typename base_type::string_type string_type;
-    typedef typename base_type::values_view_type values_view_type;
-    typedef typename base_type::record_type record_type;
+    //! Character type
+    typedef CharT char_type;
+    //! Formatted string type
+    typedef std::basic_string< char_type > string_type;
 
     //! Output stream type
     typedef std::basic_ostream< char_type > stream_type;
-    //! Target character type
-    typedef TargetCharT target_char_type;
-    //! Target string type
-    typedef std::basic_string< target_char_type > target_string_type;
     //! Formatter function object type
     typedef boost::log::aux::light_function2<
         void,
-        stream_type&,
-        record_type const&
+        record const&,
+        stream_type&
     > formatter_type;
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -295,11 +281,7 @@ protected:
 
 private:
     //! Stream buffer type
-    typedef typename mpl::if_<
-        is_same< char_type, target_char_type >,
-        boost::log::aux::basic_ostringstreambuf< char_type >,
-        boost::log::aux::converting_ostringstreambuf< char_type >
-    >::type streambuf_type;
+    typedef boost::log::aux::basic_ostringstreambuf< char_type > streambuf_type;
 
     struct formatting_context
     {
@@ -308,7 +290,7 @@ private:
         const unsigned int m_Version;
 #endif
         //! Formatted log record storage
-        target_string_type m_FormattedRecord;
+        string_type m_FormattedRecord;
         //! Stream buffer to fill the storage
         streambuf_type m_StreamBuf;
         //! Formatting stream
@@ -527,12 +509,12 @@ namespace aux {
     >
     struct make_sink_frontend_base
     {
-        typedef basic_sink_frontend< typename BackendT::char_type > type;
+        typedef basic_sink_frontend type;
     };
     template< typename BackendT >
     struct make_sink_frontend_base< BackendT, true >
     {
-        typedef basic_formatting_sink_frontend< typename BackendT::char_type, typename BackendT::target_char_type > type;
+        typedef basic_formatting_sink_frontend< typename BackendT::char_type > type;
     };
 
 } // namespace aux
