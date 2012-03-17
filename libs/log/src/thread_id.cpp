@@ -106,9 +106,11 @@ operator<< (std::basic_ostream< CharT, TraitsT >& strm, thread::id const& tid)
 {
     if (strm.good())
     {
-        io::ios_flags_saver flags_saver(strm, std::ios_base::hex | std::ios_base::showbase);
-        // The width is set calculated to accomodate pid in hex + "0x" prefix
-        io::ios_width_saver width_saver(strm, static_cast< std::streamsize >(tid_size * 2 + 2));
+        // NOTE: MSVC 10 STL seem to have a buggy showbase + setwidth implementation, which results in multiple leading zeros _before_ 'x'.
+        //       So we print the "0x" prefix ourselves.
+        strm << "0x";
+        io::ios_flags_saver flags_saver(strm, std::ios_base::hex);
+        io::ios_width_saver width_saver(strm, static_cast< std::streamsize >(tid_size * 2));
         io::basic_ios_fill_saver< CharT, TraitsT > fill_saver(strm, static_cast< CharT >('0'));
         strm << static_cast< uint_t< tid_size * 8 >::least >(tid.native_id());
     }
