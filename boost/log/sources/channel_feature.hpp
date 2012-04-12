@@ -142,7 +142,7 @@ public:
      */
     channel_type channel() const
     {
-        BOOST_LOG_EXPR_IF_MT(boost::log::aux::shared_lock_guard< threading_model > lock(this->threading_model());)
+        BOOST_LOG_EXPR_IF_MT(boost::log::aux::shared_lock_guard< const threading_model > lock(this->get_threading_model());)
         return m_ChannelAttr.get();
     }
 
@@ -153,7 +153,7 @@ public:
      */
     void channel(channel_type const& ch)
     {
-        BOOST_LOG_EXPR_IF_MT(boost::log::aux::exclusive_lock_guard< threading_model > lock(this->threading_model());)
+        BOOST_LOG_EXPR_IF_MT(boost::log::aux::exclusive_lock_guard< threading_model > lock(this->get_threading_model());)
         m_ChannelAttr.set(ch);
     }
 
