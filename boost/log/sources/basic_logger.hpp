@@ -224,7 +224,7 @@ protected:
     std::pair< typename attribute_set_type::iterator, bool > add_attribute_unlocked(
         string_type const& name, shared_ptr< attribute > const& attr)
     {
-        return m_Attributes.insert(std::make_pair(name, attr));
+        return m_Attributes.insert(typename attribute_set_type::key_type(name), attr);
     }
 
     /*!
