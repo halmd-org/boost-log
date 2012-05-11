@@ -94,22 +94,23 @@ public:
 
 #endif // !defined(BOOST_LOG_DOXYGEN_PASS) && !defined(BOOST_LOG_BROKEN_STRING_LITERALS)
 
-    static const stream_placeholder instance;
+    static stream_placeholder const& instance()
+    {
+        static stream_placeholder const sp = {};
+        return sp;
+    }
 };
-
-template< typename CharT >
-const stream_placeholder< CharT > stream_placeholder< CharT >::instance = {};
 
 //  Placeholders to begin lambda expressions
 namespace {
 
 #ifdef BOOST_LOG_USE_CHAR
     //! A placeholder used to construct lambda expressions of streaming formatters for narrow-character logging
-    stream_placeholder< char > const& stream = stream_placeholder< char >::instance;
+    stream_placeholder< char > const& stream = stream_placeholder< char >::instance();
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
     //! A placeholder used to construct lambda expressions of streaming formatters for wide-character logging
-    stream_placeholder< wchar_t > const& wstream = stream_placeholder< wchar_t >::instance;
+    stream_placeholder< wchar_t > const& wstream = stream_placeholder< wchar_t >::instance();
 #endif
 
 } // namespace
