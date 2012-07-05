@@ -45,13 +45,13 @@
 #include <boost/intrusive/options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
-#include <boost/compatibility/cpp_c_headers/ctime>
-#include <boost/compatibility/cpp_c_headers/cctype>
-#include <boost/compatibility/cpp_c_headers/cwctype>
-#include <boost/compatibility/cpp_c_headers/ctime>
-#include <boost/compatibility/cpp_c_headers/cstdio>
-#include <boost/compatibility/cpp_c_headers/cstdlib>
-#include <boost/compatibility/cpp_c_headers/cstddef>
+#include <ctime>
+#include <cctype>
+#include <cwctype>
+#include <ctime>
+#include <cstdio>
+#include <cstdlib>
+#include <cstddef>
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_assign_actor.hpp>
 #include <boost/log/detail/snprintf.hpp>
@@ -1195,7 +1195,7 @@ BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::consume(
             filesystem_error err(
                 "Failed to open file for writing",
                 m_pImpl->m_FileName,
-                system::error_code(system::errc::io_error, system::get_generic_category()));
+                system::error_code(system::errc::io_error, system::generic_category()));
             BOOST_THROW_EXCEPTION(err);
         }
 
