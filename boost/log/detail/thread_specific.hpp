@@ -96,7 +96,7 @@ public:
     //! Accessor
     T get() const
     {
-        value_storage cast;
+        value_storage cast = {};
         cast.as_pointer = thread_specific_base::get_content();
         return cast.as_value;
     }
@@ -104,7 +104,7 @@ public:
     //! Setter
     void set(T const& value)
     {
-        value_storage cast;
+        value_storage cast = {};
         cast.as_value = value;
         thread_specific_base::set_content(cast.as_pointer);
     }
