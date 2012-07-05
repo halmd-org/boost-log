@@ -267,6 +267,7 @@ public:
      */
     ~asynchronous_sink()
     {
+        boost::this_thread::disable_interruption no_interrupts;
         stop();
     }
 
@@ -360,12 +361,19 @@ public:
         unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
         if (m_FeedingThreadID != thread::id() || m_DedicatedFeedingThread.joinable())
         {
+            try
             {
                 m_StopRequested = true;
                 queue_base_type::interrupt_dequeue();
                 while (m_StopRequested)
                     m_BlockCond.wait(lock);
             }
+            catch (...)
+            {
+                m_StopRequested = false;
+                throw;
+            }
+
             lock.unlock();
             m_DedicatedFeedingThread.join();
         }
