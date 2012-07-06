@@ -26,15 +26,18 @@
 #ifndef BOOST_LOG_NO_THREADS
 
 #include <stdlib.h>
-#include <malloc.h>
 #include <new>
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/type_traits/alignment_of.hpp>
-#include <boost/log/utility/once_block.hpp>
 #include <boost/log/detail/spin_mutex.hpp>
 #include <boost/log/detail/locks.hpp>
+#include <boost/log/detail/alignas.hpp>
+
+#if defined(BOOST_HAS_UNISTD_H)
+#include <unistd.h> // _POSIX_VERSION
+#endif
 
 #if defined(BOOST_HAS_STDINT_H)
 #include <stdint.h> // uintptr_t
@@ -43,26 +46,12 @@
 #include <stddef.h> // uintptr_t
 #endif
 
-#if (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L) || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
+#if (defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L) || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
 #define BOOST_LOG_HAS_POSIX_MEMALIGN 1
 #endif
 
 #if defined(BOOST_WINDOWS)
-#if defined(_MSC_VER)
-#include <intrin.h>
-#else
-#include "windows_version.hpp"
-#include <windows.h>
-#endif
-#endif
-
-// The macro allows to specify type alignment
-#if defined(_MSC_VER)
-#define BOOST_LOG_ALIGNMENT(x) __declspec(align(x))
-#elif defined(__GNUC__)
-#define BOOST_LOG_ALIGNMENT(x) __attribute__((__aligned__(x)))
-#else
-#define BOOST_LOG_ALIGNMENT(x)
+#include <malloc.h> // _aligned_malloc, _aligned_free
 #endif
 
 namespace boost {
@@ -83,7 +72,7 @@ private:
      * A structure that contains a pointer to the node and the associated mutex.
      * The alignment below allows to eliminate false sharing, it should be not less than CPU cache line size (which is assumed to be 64 bytes in most cases).
      */
-    BOOST_LOG_ALIGNMENT(64) struct pointer
+    BOOST_LOG_ALIGNAS(64) struct pointer
     {
         //! Pointer to the either end of the queue
         node_base* node;
@@ -184,7 +173,7 @@ BOOST_LOG_EXPORT void* threadsafe_queue_impl::operator new (std::size_t size)
         BOOST_THROW_EXCEPTION(std::bad_alloc());
     unsigned char* q = static_cast< unsigned char* >(p) + 64;
     q = (unsigned char*)((uintptr_t)q & (~(uintptr_t)63));
-    const unsigned char diff = q - p;
+    const unsigned char diff = q - static_cast< unsigned char* >(p);
     p = q;
     *--q = diff;
 #endif
