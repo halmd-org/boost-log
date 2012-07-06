@@ -124,7 +124,7 @@ private:
         scoped_thread_id(unique_lock< frontend_mutex_type >& l, condition_variable_any& cond, thread::id& tid, bool volatile& sr)
             : m_Mutex(*l.mutex()), m_Cond(cond), m_ThreadID(tid), m_StopRequested(sr)
         {
-            unique_lock< frontend_mutex_type > lock(l.move());
+            unique_lock< frontend_mutex_type > lock(move(l));
             if (m_ThreadID != thread::id())
                 BOOST_LOG_THROW_DESCR(unexpected_call, "Asynchronous sink frontend already runs a record feeding thread");
             m_ThreadID = this_thread::get_id();
@@ -430,7 +430,7 @@ private:
     //! The method spawns record feeding thread
     void start_feeding_thread()
     {
-        m_DedicatedFeedingThread = boost::thread(boost::bind(&asynchronous_sink::run, this)).move();
+        m_DedicatedFeedingThread = move(boost::thread(boost::bind(&asynchronous_sink::run, this)));
     }
 
     // locking_ptr_counter_base methods
