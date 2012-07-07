@@ -430,7 +430,7 @@ private:
     //! The method spawns record feeding thread
     void start_feeding_thread()
     {
-        m_DedicatedFeedingThread = move(boost::thread(boost::bind(&asynchronous_sink::run, this)));
+        boost::thread(boost::bind(&asynchronous_sink::run, this)).swap(m_DedicatedFeedingThread);
     }
 
     // locking_ptr_counter_base methods
