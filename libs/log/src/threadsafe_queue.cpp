@@ -46,7 +46,13 @@
 #include <stddef.h> // uintptr_t
 #endif
 
-#if (defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L) || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
+#if defined(__APPLE__) || defined(__APPLE_CC__) || defined(macintosh)
+#include <AvailabilityMacros.h>
+#if defined(MAC_OS_X_VERSION_MIN_REQUIRED) && (MAC_OS_X_VERSION_MIN_REQUIRED >= 1060)
+// Mac OS X 10.6 and later have posix_memalign
+#define BOOST_LOG_HAS_POSIX_MEMALIGN 1
+#endif
+#elif (defined(_POSIX_VERSION) && (_POSIX_VERSION >= 200112L)) || (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 600))
 #define BOOST_LOG_HAS_POSIX_MEMALIGN 1
 #endif
 
