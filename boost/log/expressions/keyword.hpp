@@ -51,8 +51,6 @@ struct attribute_keyword
     typedef DescriptorT descriptor_type;
     //! Attribute value type
     typedef typename descriptor_type::value_type value_type;
-    //! Character type
-    typedef typename descriptor_type::char_type char_type;
     //! Expression type
     typedef ActorT< attribute_terminal< DescriptorT > > expr_type;
 
@@ -62,7 +60,6 @@ struct attribute_keyword
     typedef ActorT<
         cached_attribute_terminal<
             value_extractor<
-                char_type,
                 extract_value_or_none< value_type >
             >
         >
@@ -73,7 +70,6 @@ struct attribute_keyword
     {
         typedef cached_attribute_terminal<
             value_extractor<
-                char_type,
                 extract_value_or_none< value_type >
             >
         > cached_terminal;
@@ -85,7 +81,6 @@ struct attribute_keyword
     typedef ActorT<
         cached_attribute_terminal<
             value_extractor<
-                char_type,
                 extract_value_or_default< value_type >
             >
         >
@@ -97,7 +92,6 @@ struct attribute_keyword
     {
         typedef cached_attribute_terminal<
             value_extractor<
-                char_type,
                 extract_value_or_default< value_type >
             >
         > cached_terminal;
@@ -114,23 +108,21 @@ struct attribute_keyword
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
-#define BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag_ns_, char_type_, name_, keyword_, attr_type_, create_decl_)\
+#define BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag_ns_, name_, keyword_, attr_type_, create_decl_)\
     namespace tag_ns_\
     {\
         struct keyword_\
         {\
-            typedef char_type_ char_type;\
             typedef attr_type_ attribute_type;\
             typedef attribute_type::value_type value_type;\
-            typedef ::boost::log::basic_attribute_name< char_type > name_type;\
-            static name_type get_name() { return name_type(name_); }\
+            static ::boost::log::attribute_name get_name() { return ::boost::log::attribute_name(name_); }\
             static create_decl_() attribute_type create();\
         };\
     }\
     typedef ::boost::log::expressions::attribute_keyword< tag_ns_::keyword_ > BOOST_PP_CAT(keyword_, _type);
 
-#define BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_IMPL(tag_ns_, char_type_, name_, keyword_, attr_type_, create_decl_)\
-    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag_ns_, char_type_, name_, keyword_, attr_type_, create_decl_)\
+#define BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_IMPL(tag_ns_, name_, keyword_, attr_type_, create_decl_)\
+    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag_ns_, name_, keyword_, attr_type_, create_decl_)\
     const BOOST_PP_CAT(keyword_, _type) keyword_ = {};
 
 #define BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE_IMPL(create_decl_, keyword_ns_, keyword_)\
@@ -149,11 +141,9 @@ struct attribute_keyword
  * {
  *   struct keyword_
  *   {
- *     typedef char_type_ char_type;
  *     typedef attr_type_ attribute_type;
  *     typedef attribute_type::value_type value_type;
- *     typedef boost::log::basic_attribute_name< char_type > name_type;
- *     static name_type get_name();
+ *     static boost::log::attribute_name get_name();
  *     static create_decl_() attribute_type create();
  *   };
  * }
@@ -168,15 +158,14 @@ struct attribute_keyword
  * \note This macro only defines a type of the keyword. To also define the keyword object, use
  *       the \c BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD macro instead.
  *
- * \param char_type_ The character type for which the keyword is to be used
  * \param name_ Attribute name string
  * \param keyword_ Keyword name
  * \param attr_type_ Attribute type
  * \param create_decl_ A preprocessor metafunction that expands to the attribute creation method declaration prefix.
  *                     Specify \c BOOST_PP_EMPTY if not needed.
  */
-#define BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE(char_type_, name_, keyword_, attr_type_, create_decl_)\
-    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag, char_type_, name_, keyword_, attr_type_, create_decl_)
+#define BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE(name_, keyword_, attr_type_, create_decl_)\
+    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag, name_, keyword_, attr_type_, create_decl_)
 
 /*!
  * \brief The macro declares an attribute keyword
@@ -184,15 +173,14 @@ struct attribute_keyword
  * The macro provides definitions similar to \c BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE and addidionally
  * defines the keyword object.
  *
- * \param char_type_ The character type for which the keyword is to be used
  * \param name_ Attribute name string
  * \param keyword_ Keyword name
  * \param attr_type_ Attribute type
  * \param create_decl_ A preprocessor metafunction that expands to the attribute creation method declaration prefix.
  *                     Specify \c BOOST_PP_EMPTY if not needed.
  */
-#define BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD(char_type_, name_, keyword_, attr_type_, create_decl_)\
-    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_IMPL(tag, char_type_, name_, keyword_, attr_type_, create_decl_)
+#define BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD(name_, keyword_, attr_type_, create_decl_)\
+    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_IMPL(tag, name_, keyword_, attr_type_, create_decl_)
 
 /*!
  * \brief The macro expands into the attribute creation method definition header
@@ -221,13 +209,12 @@ struct attribute_keyword
  * The attribute creation method body must immediately follow this macro, see the \c BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE
  * macro documentation.
  *
- * \param char_type_ The character type for which the keyword is to be used
  * \param name_ Attribute name string
  * \param keyword_ Keyword name
  * \param attr_type_ Attribute type
  */
-#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE(char_type_, name_, keyword_, attr_type_)\
-    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag, char_type_, name_, keyword_, attr_type_, BOOST_PP_EMPTY)\
+#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE(name_, keyword_, attr_type_)\
+    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag, name_, keyword_, attr_type_, BOOST_PP_EMPTY)\
     BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE_IMPL(BOOST_PP_IDENTITY(inline), tag, keyword_)
 
 /*!
@@ -236,13 +223,12 @@ struct attribute_keyword
  * The attribute creation method body must immediately follow this macro, see the \c BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE
  * macro documentation.
  *
- * \param char_type_ The character type for which the keyword is to be used
  * \param name_ Attribute name string
  * \param keyword_ Keyword name
  * \param attr_type_ Attribute type
  */
-#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD(char_type_, name_, keyword_, attr_type_)\
-    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_IMPL(tag, char_type_, name_, keyword_, attr_type_, BOOST_PP_EMPTY)\
+#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD(name_, keyword_, attr_type_)\
+    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_IMPL(tag, name_, keyword_, attr_type_, BOOST_PP_EMPTY)\
     BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE_IMPL(BOOST_PP_IDENTITY(inline), tag, keyword_)
 
 /*!
@@ -250,13 +236,12 @@ struct attribute_keyword
  *
  * The generated attribute creation method will default-construct the attribute.
  *
- * \param char_type_ The character type for which the keyword is to be used
  * \param name_ Attribute name string
  * \param keyword_ Keyword name
  * \param attr_type_ Attribute type
  */
-#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE_DEFAULT(char_type_, name_, keyword_, attr_type_)\
-    BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE(char_type_, name_, keyword_, attr_type_)\
+#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE_DEFAULT(name_, keyword_, attr_type_)\
+    BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE(name_, keyword_, attr_type_)\
     {\
         return attribute_type();\
     }
@@ -266,13 +251,12 @@ struct attribute_keyword
  *
  * The generated attribute creation method will default-construct the attribute.
  *
- * \param char_type_ The character type for which the keyword is to be used
  * \param name_ Attribute name string
  * \param keyword_ Keyword name
  * \param attr_type_ Attribute type
  */
-#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_DEFAULT(char_type_, name_, keyword_, attr_type_)\
-    BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD(char_type_, name_, keyword_, attr_type_)\
+#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_DEFAULT(name_, keyword_, attr_type_)\
+    BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD(name_, keyword_, attr_type_)\
     {\
         return attribute_type();\
     }
@@ -282,14 +266,13 @@ struct attribute_keyword
  *
  * The generated attribute creation method will construct the attribute with the specified arguments.
  *
- * \param char_type_ The character type for which the keyword is to be used
  * \param name_ Attribute name string
  * \param keyword_ Keyword name
  * \param attr_type_ Attribute type
  * \param args_ A preprocessor sequence of constructor arguments for the attribute
  */
-#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE_CTOR_ARGS(char_type_, name_, keyword_, attr_type_, args_)\
-    BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE(char_type_, name_, keyword_, attr_type_)\
+#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE_CTOR_ARGS(name_, keyword_, attr_type_, args_)\
+    BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE(name_, keyword_, attr_type_)\
     {\
         return attribute_type(BOOST_PP_SEQ_ENUM(args_));\
     }
@@ -299,14 +282,13 @@ struct attribute_keyword
  *
  * The generated attribute creation method will construct the attribute with the specified arguments.
  *
- * \param char_type_ The character type for which the keyword is to be used
  * \param name_ Attribute name string
  * \param keyword_ Keyword name
  * \param attr_type_ Attribute type
  * \param args_ A preprocessor sequence of constructor arguments for the attribute
  */
-#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_CTOR_ARGS(char_type_, name_, keyword_, attr_type_, args_)\
-    BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD(char_type_, name_, keyword_, attr_type_)\
+#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_CTOR_ARGS(name_, keyword_, attr_type_, args_)\
+    BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD(name_, keyword_, attr_type_)\
     {\
         return attribute_type(BOOST_PP_SEQ_ENUM(args_));\
     }

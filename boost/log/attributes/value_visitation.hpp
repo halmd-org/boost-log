@@ -89,27 +89,19 @@ public:
  * The invoker can be specialized on one or several attribute value types that should be
  * specified in the second template argument.
  */
-template< typename CharT, typename T >
+template< typename T >
 class value_visitor_invoker
 {
 public:
     //! Function object result type
     typedef visitation_result result_type;
 
-    //! Character type
-    typedef CharT char_type;
-    //! Attribute name type
-    typedef basic_attribute_name< char_type > attribute_name_type;
-    //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > values_view_type;
-    //! Log record type
-    typedef basic_record< char_type > record_type;
     //! Attribute value types
     typedef T value_types;
 
 private:
     //! The name of the attribute value to visit
-    attribute_name_type m_Name;
+    attribute_name m_Name;
 
 public:
     /*!
@@ -117,7 +109,7 @@ public:
      *
      * \param name Attribute name to be visited on invokation
      */
-    explicit value_visitor_invoker(attribute_name_type const& name) : m_Name(name) {}
+    explicit value_visitor_invoker(attribute_name const& name) : m_Name(name) {}
 
     /*!
      * Visitation operator. Looks for an attribute value with the name specified on construction
@@ -129,12 +121,12 @@ public:
      * \return The result of visitation (see codes in the \c visitation_result class).
      */
     template< typename VisitorT >
-    result_type operator() (values_view_type const& attrs, VisitorT visitor) const
+    result_type operator() (attribute_values_view const& attrs, VisitorT visitor) const
     {
-        typename values_view_type::const_iterator it = attrs.find(m_Name);
+        attribute_values_view::const_iterator it = attrs.find(m_Name);
         if (it != attrs.end())
         {
-            if (it->second.BOOST_NESTED_TEMPLATE visit< value_types >(visitor))
+            if (it->second.visit< value_types >(visitor))
                 return visitation_result::ok;
             else
                 return visitation_result::value_has_invalid_type;
@@ -152,9 +144,9 @@ public:
      * \return The result of visitation (see codes in the \c visitation_result class).
      */
     template< typename VisitorT >
-    result_type operator() (record_type const& record, VisitorT visitor) const
+    result_type operator() (record const& rec, VisitorT visitor) const
     {
-        return operator() (record.attribute_values(), visitor);
+        return operator() (rec.attribute_values(), visitor);
     }
 };
 
@@ -169,64 +161,36 @@ public:
  * \param visitor A receiving function object to pass the attribute value to.
  * \return The result of visitation (see codes in the \c visitation_result class).
  */
-template< typename T, typename CharT, typename VisitorT >
-visitation_result visit(
-    basic_attribute_name< CharT > const& name, basic_attribute_values_view< CharT > const& attrs, VisitorT visitor);
+template< typename T, typename VisitorT >
+visitation_result visit(attribute_name const& name, attribute_values_view const& attrs, VisitorT visitor);
 
 /*!
  * The function applies a visitor to an attribute value from the view. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be visited.
  *
  * \param name The name of the attribute value to visit.
- * \param record A log record. The attribute value will be sought among those associated with the record.
+ * \param rec A log record. The attribute value will be sought among those associated with the record.
  * \param visitor A receiving function object to pass the attribute value to.
  * \return The result of visitation (see codes in the \c visitation_result class).
  */
-template< typename T, typename CharT, typename VisitorT >
-visitation_result visit(
-    basic_attribute_name< CharT > const& name, basic_record< CharT > const& record, VisitorT visitor);
+template< typename T, typename VisitorT >
+visitation_result visit(attribute_name const& name, record const& rec, VisitorT visitor);
 
 #else // BOOST_LOG_DOXYGEN_PASS
 
-#ifdef BOOST_LOG_USE_CHAR
-
 template< typename T, typename VisitorT >
-inline visitation_result visit(
-    basic_attribute_name< char > const& name, basic_attribute_values_view< char > const& attrs, VisitorT visitor)
+inline visitation_result visit(attribute_name const& name, attribute_values_view const& attrs, VisitorT visitor)
 {
-    value_visitor_invoker< char, T > invoker(name);
+    value_visitor_invoker< T > invoker(name);
     return invoker(attrs, visitor);
 }
 
 template< typename T, typename VisitorT >
-inline visitation_result visit(
-    basic_attribute_name< char > const& name, basic_record< char > const& record, VisitorT visitor)
+inline visitation_result visit(attribute_name const& name, record const& rec, VisitorT visitor)
 {
-    value_visitor_invoker< char, T > invoker(name);
-    return invoker(record, visitor);
+    value_visitor_invoker< T > invoker(name);
+    return invoker(rec, visitor);
 }
-
-#endif // BOOST_LOG_USE_CHAR
-
-#ifdef BOOST_LOG_USE_WCHAR_T
-
-template< typename T, typename VisitorT >
-inline visitation_result visit(
-    basic_attribute_name< wchar_t > const& name, basic_attribute_values_view< wchar_t > const& attrs, VisitorT visitor)
-{
-    value_visitor_invoker< wchar_t, T > invoker(name);
-    return invoker(attrs, visitor);
-}
-
-template< typename T, typename VisitorT >
-inline visitation_result visit(
-    basic_attribute_name< wchar_t > const& name, basic_record< wchar_t > const& record, VisitorT visitor)
-{
-    value_visitor_invoker< wchar_t, T > invoker(name);
-    return invoker(record, visitor);
-}
-
-#endif // BOOST_LOG_USE_WCHAR_T
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 

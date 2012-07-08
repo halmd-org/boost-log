@@ -30,6 +30,7 @@
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_value_def.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
+#include <boost/log/expressions/keyword_fwd.hpp>
 
 namespace boost {
 
@@ -322,6 +323,25 @@ public:
             return it->second;
         else
             return mapped_type();
+    }
+
+    /*!
+     * Alternative lookup syntax.
+     *
+     * \param keyword Attribute keyword.
+     * \return An \c optional with extracted attribute value if it is found, empty value otherwise.
+     */
+    template< typename DescriptorT, template< typename > class ActorT >
+    typename result_of::extract< typename expressions::attribute_keyword< DescriptorT, ActorT >::value_type >::type
+    operator[] (expressions::attribute_keyword< DescriptorT, ActorT > const&) const
+    {
+        typedef typename expressions::attribute_keyword< DescriptorT, ActorT >::value_type attr_value_type;
+        typedef typename result_of::extract< attr_value_type >::type result_type;
+        const_iterator it = this->find(DescriptorT::get_name());
+        if (it != this->end())
+            return it->second.extract< attr_value_type >();
+        else
+            return result_type();
     }
 
     /*!

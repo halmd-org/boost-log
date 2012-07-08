@@ -20,31 +20,14 @@
 #ifndef BOOST_LOG_ATTRIBUTES_ATTRIBUTE_VALUE_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_ATTRIBUTE_VALUE_HPP_INCLUDED_
 
-#include <boost/mpl/eval_if.hpp>
-#include <boost/mpl/identity.hpp>
-#include <boost/mpl/is_sequence.hpp>
-#include <boost/variant/variant_fwd.hpp>
-#include <boost/optional/optional_fwd.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/functional.hpp>
 #include <boost/log/attributes/attribute_value_def.hpp>
+#include <boost/log/attributes/value_extraction.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
-
-template< typename T >
-struct attribute_value::result_of_extract
-{
-    typedef typename mpl::eval_if<
-        mpl::is_sequence< T >,
-        make_variant_over< T >,
-        mpl::identity< T >
-    >::type extracted_type;
-
-    typedef optional< extracted_type > type;
-};
 
 template< typename T, typename VisitorT >
 inline bool attribute_value::visit(VisitorT visitor) const
@@ -54,12 +37,21 @@ inline bool attribute_value::visit(VisitorT visitor) const
 }
 
 template< typename T >
-inline typename attribute_value::result_of_extract< T >::type attribute_value::extract() const
+inline typename result_of::extract< T >::type attribute_value::extract() const
 {
-    typedef typename result_of_extract< T >::type result_type;
-    result_type res;
-    this->BOOST_NESTED_TEMPLATE visit< T >(boost::log::aux::assign_fun< result_type >(res));
-    return res;
+    return boost::log::extract_value_or_none< T >()(*this);
+}
+
+template< typename T >
+inline typename result_of::extract_or_default< T, T >::type extract_or_default(T const& def_value) const
+{
+    return boost::log::extract_value_or_default< T, T >(def_value)(*this);
+}
+
+template< typename T, typename DefaultT >
+inline typename result_of::extract_or_default< T, DefaultT >::type extract_or_default(DefaultT const& def_value) const
+{
+    return boost::log::extract_value_or_default< T, DefaultT >(def_value)(*this);
 }
 
 } // namespace log

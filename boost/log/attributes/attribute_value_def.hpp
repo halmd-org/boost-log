@@ -32,6 +32,16 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
+namespace result_of {
+
+template< typename T, typename DefaultT >
+struct extract_or_default;
+
+template< typename T >
+struct extract;
+
+} // namespace result_of
+
 /*!
  * \brief An attribute value class
  *
@@ -98,16 +108,6 @@ public:
          */
         virtual attribute_value get_value() { return attribute_value(this); }
     };
-
-    /*!
-     * \brief A metafunction that allows to acquire the result of the value extraction
-     *
-     * The metafunction results in a type that is in form of <tt>optional< T ></tt>, if \c T is
-     * not a MPL type sequence, or <tt>optional< variant< T1, T2, ... > ></tt> otherwise, with
-     * \c T1, \c T2, etc. being the types comprising the type sequence \c T.
-     */
-    template< typename T >
-    struct result_of_extract;
 
 private:
     //! Pointer to the value implementation
@@ -196,11 +196,39 @@ public:
      * is checked against every type in the sequence.
      *
      * \return The extracted value, if the attribute value is not empty and the value is the same
-     *         as specified. Otherwise returns an empty value. See description of the \c result_of_extract
+     *         as specified. Otherwise returns an empty value. See description of the \c result_of::extract
      *         metafunction for information on the nature of the result value.
      */
     template< typename T >
-    typename result_of_extract< T >::type extract() const;
+    typename result_of::extract< T >::type extract() const;
+
+    /*!
+     * The method attempts to extract the stored value, assuming the value has the specified type.
+     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * is checked against every type in the sequence. If extraction fails, the default value is returned.
+     *
+     * \param def_value Default value.
+     *
+     * \return The extracted value, if the attribute value is not empty and the value is the same
+     *         as specified. Otherwise returns the default value. See description of the \c result_of::extract_or_default
+     *         metafunction for information on the nature of the result value.
+     */
+    template< typename T >
+    typename result_of::extract_or_default< T, T >::type extract_or_default(T const& def_value) const;
+
+    /*!
+     * The method attempts to extract the stored value, assuming the value has the specified type.
+     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * is checked against every type in the sequence. If extraction fails, the default value is returned.
+     *
+     * \param def_value Default value.
+     *
+     * \return The extracted value, if the attribute value is not empty and the value is the same
+     *         as specified. Otherwise returns the default value. See description of the \c result_of::extract_or_default
+     *         metafunction for information on the nature of the result value.
+     */
+    template< typename T, typename DefaultT >
+    typename result_of::extract_or_default< T, DefaultT >::type extract_or_default(DefaultT const& def_value) const;
 
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type,

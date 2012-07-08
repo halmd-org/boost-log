@@ -24,13 +24,14 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/expressions/keyword_fwd.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/detail/atomic_count.hpp>
 #endif // BOOST_LOG_NO_THREADS
 
 #ifdef _MSC_VER
 #pragma warning(push)
- // non dll-interface class 'A' used as base for dll-interface class 'B'
+// non dll-interface class 'A' used as base for dll-interface class 'B'
 #pragma warning(disable: 4275)
 #endif // _MSC_VER
 
@@ -230,6 +231,19 @@ public:
      * \pre <tt>!!*this</tt>
      */
     BOOST_LOG_EXPORT void detach_from_thread();
+
+    /*!
+     * Attribute value lookup.
+     *
+     * \param keyword Attribute keyword.
+     * \return An \c optional with extracted attribute value if it is found, empty value otherwise.
+     */
+    template< typename DescriptorT, template< typename > class ActorT >
+    typename result_of::extract< typename expressions::attribute_keyword< DescriptorT, ActorT >::value_type >::type
+    operator[] (expressions::attribute_keyword< DescriptorT, ActorT > const& keyword) const
+    {
+        return m_impl->m_attribute_values[keyword];
+    }
 };
 
 /*!

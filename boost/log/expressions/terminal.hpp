@@ -49,13 +49,8 @@ struct attribute_terminal
 
     //! Attribute value type
     typedef typename descriptor_type::value_type value_type;
-    //! Character type
-    typedef typename descriptor_type::char_type char_type;
     //! Attribute value extractor type
-    typedef value_extractor<
-        char_type,
-        extract_value_or_none< value_type >
-    > extractor_type;
+    typedef value_extractor< extract_value_or_none< value_type > > extractor_type;
 
     //! Result type
     typedef typename extractor_type::result_type result_type;
