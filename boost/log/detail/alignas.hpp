@@ -20,12 +20,14 @@
 #ifndef BOOST_LOG_DETAIL_ALIGNAS_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_ALIGNAS_HPP_INCLUDED_
 
+#include <boost/log/detail/prologue.hpp>
+
 // The macro allows to specify type or variable alignment
 #if defined(_MSC_VER)
 #define BOOST_LOG_ALIGNAS(x) __declspec(align(x))
 #elif defined(__GNUC__)
 #define BOOST_LOG_ALIGNAS(x) __attribute__((__aligned__(x)))
-#elif defined(__clang__)
+#elif defined(BOOST_CLANG)
 #if __has_feature(cxx_alignas)
 #define BOOST_LOG_ALIGNAS(x) alignas(x)
 #endif

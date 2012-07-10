@@ -75,7 +75,7 @@ namespace event_log {
     /*!
      * The function constructs log record level from an integer
      */
-    BOOST_LOG_EXPORT event_type make_event_type(unsigned short lev);
+    BOOST_LOG_API event_type make_event_type(unsigned short lev);
 
 } // namespace event_log
 

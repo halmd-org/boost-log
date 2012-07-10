@@ -58,7 +58,7 @@ class sink;
  *
  * The logging core is a singleton. Users can acquire the core instance by calling the static method <tt>get</tt>.
  */
-class BOOST_LOG_EXPORT core
+class BOOST_LOG_API core
 {
 public:
     //! Filter function type

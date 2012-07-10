@@ -89,15 +89,15 @@ public:
         return (m_Flag.status == once_block_flag::initialized || enter_once_block());
     }
 
-    BOOST_LOG_EXPORT void commit();
+    BOOST_LOG_API void commit();
 
 private:
     //  Non-copyable, non-assignable
     once_block_sentry(once_block_sentry const&);
     once_block_sentry& operator= (once_block_sentry const&);
 
-    BOOST_LOG_EXPORT bool enter_once_block() const;
-    BOOST_LOG_EXPORT void rollback();
+    BOOST_LOG_API bool enter_once_block() const;
+    BOOST_LOG_API void rollback();
 };
 
 } // namespace aux

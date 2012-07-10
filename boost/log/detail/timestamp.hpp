@@ -42,7 +42,7 @@ public:
 #if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
     int64_t milliseconds() const { return m_ticks; }
 #else
-    BOOST_LOG_EXPORT int64_t milliseconds() const;
+    BOOST_LOG_API int64_t milliseconds() const;
 #endif
 };
 
@@ -73,7 +73,7 @@ public:
 #if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
 
 typedef uint64_t (__stdcall* get_tick_count_t)();
-extern BOOST_LOG_EXPORT get_tick_count_t get_tick_count;
+extern BOOST_LOG_API get_tick_count_t get_tick_count;
 
 inline timestamp get_timestamp()
 {
@@ -83,7 +83,7 @@ inline timestamp get_timestamp()
 #else
 
 typedef timestamp (*get_timestamp_t)();
-extern BOOST_LOG_EXPORT get_timestamp_t get_timestamp;
+extern BOOST_LOG_API get_timestamp_t get_timestamp;
 
 #endif
 

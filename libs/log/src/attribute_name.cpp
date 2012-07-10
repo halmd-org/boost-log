@@ -182,20 +182,20 @@ private:
 
 } // namespace
 
-BOOST_LOG_EXPORT attribute_name::id_type
+BOOST_LOG_API attribute_name::id_type
 attribute_name::get_id_from_string(const char* name)
 {
     return attribute_name_repository::get()->get_id_from_string(name);
 }
 
-BOOST_LOG_EXPORT attribute_name::string_type const&
+BOOST_LOG_API attribute_name::string_type const&
 attribute_name::get_string_from_id(id_type id)
 {
     return attribute_name_repository::get()->get_string_from_id(id);
 }
 
 template< typename CharT, typename TraitsT >
-BOOST_LOG_EXPORT std::basic_ostream< CharT, TraitsT >& operator<< (
+BOOST_LOG_API std::basic_ostream< CharT, TraitsT >& operator<< (
     std::basic_ostream< CharT, TraitsT >& strm,
     attribute_name const& name)
 {
@@ -208,13 +208,13 @@ BOOST_LOG_EXPORT std::basic_ostream< CharT, TraitsT >& operator<< (
 
 //  Explicitly instantiate attribute name implementation
 #ifdef BOOST_LOG_USE_CHAR
-template BOOST_LOG_EXPORT std::basic_ostream< char, std::char_traits< char > >&
+template BOOST_LOG_API std::basic_ostream< char, std::char_traits< char > >&
     operator<< < char, std::char_traits< char > >(
         std::basic_ostream< char, std::char_traits< char > >& strm,
         basic_attribute_name< char > const& name);
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-template BOOST_LOG_EXPORT std::basic_ostream< wchar_t, std::char_traits< wchar_t > >&
+template BOOST_LOG_API std::basic_ostream< wchar_t, std::char_traits< wchar_t > >&
     operator<< < wchar_t, std::char_traits< wchar_t > >(
         std::basic_ostream< wchar_t, std::char_traits< wchar_t > >& strm,
         basic_attribute_name< wchar_t > const& name);

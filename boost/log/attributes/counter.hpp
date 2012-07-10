@@ -48,8 +48,7 @@ class counter :
     public attribute
 {
     //  For now only integral types up to long are supported
-    BOOST_STATIC_ASSERT(is_integral< T >::value);
-    BOOST_STATIC_ASSERT(sizeof(T) <= sizeof(long));
+    BOOST_STATIC_ASSERT_MSG(is_integral< T >::value && sizeof(T) <= sizeof(long), "Boost.Log: Only integral types up to long are supported by counter attribute");
 
 public:
     //! A counter value type

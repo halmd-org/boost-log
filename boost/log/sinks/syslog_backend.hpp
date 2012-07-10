@@ -314,7 +314,7 @@ public:
      * Constructor. Creates a UDP socket-based backend with <tt>syslog::user</tt> facility code.
      * IPv4 protocol will be used.
      */
-    BOOST_LOG_EXPORT basic_syslog_backend();
+    BOOST_LOG_API basic_syslog_backend();
     /*!
      * Constructor. Creates a sink backend with the specified named parameters.
      * The following named parameters are supported:
@@ -338,12 +338,12 @@ public:
     /*!
      * Destructor
      */
-    BOOST_LOG_EXPORT ~basic_syslog_backend();
+    BOOST_LOG_API ~basic_syslog_backend();
 
     /*!
      * The method installs the function object that maps application severity levels to syslog levels
      */
-    BOOST_LOG_EXPORT void set_severity_mapper(severity_mapper_type const& mapper);
+    BOOST_LOG_API void set_severity_mapper(severity_mapper_type const& mapper);
 
 #if !defined(BOOST_LOG_NO_ASIO)
 
@@ -356,7 +356,7 @@ public:
      * \param addr The local address
      * \param port The local port number
      */
-    BOOST_LOG_EXPORT void set_local_address(std::string const& addr, unsigned short port = 514);
+    BOOST_LOG_API void set_local_address(std::string const& addr, unsigned short port = 514);
     /*!
      * The method sets the local address which log records will be sent from.
      *
@@ -365,7 +365,7 @@ public:
      * \param addr The local address
      * \param port The local port number
      */
-    BOOST_LOG_EXPORT void set_local_address(boost::asio::ip::address const& addr, unsigned short port = 514);
+    BOOST_LOG_API void set_local_address(boost::asio::ip::address const& addr, unsigned short port = 514);
 
     /*!
      * The method sets the remote host name where log records will be sent to. The host name
@@ -376,7 +376,7 @@ public:
      * \param addr The remote host address
      * \param port The port number on the remote host
      */
-    BOOST_LOG_EXPORT void set_target_address(std::string const& addr, unsigned short port = 514);
+    BOOST_LOG_API void set_target_address(std::string const& addr, unsigned short port = 514);
     /*!
      * The method sets the address of the remote host where log records will be sent to.
      *
@@ -385,14 +385,14 @@ public:
      * \param addr The remote host address
      * \param port The port number on the remote host
      */
-    BOOST_LOG_EXPORT void set_target_address(boost::asio::ip::address const& addr, unsigned short port = 514);
+    BOOST_LOG_API void set_target_address(boost::asio::ip::address const& addr, unsigned short port = 514);
 
 #endif // !defined(BOOST_LOG_NO_ASIO)
 
     /*!
      * The method passes the formatted message to the syslog API or sends to a syslog server
      */
-    BOOST_LOG_EXPORT void consume(record_type const& record, target_string_type const& formatted_message);
+    BOOST_LOG_API void consume(record_type const& record, target_string_type const& formatted_message);
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -409,7 +409,7 @@ private:
 #endif
             args[keywords::ip_version | v4]);
     }
-    BOOST_LOG_EXPORT void construct(
+    BOOST_LOG_API void construct(
         syslog::facility facility, syslog::impl_types use_impl, ip_versions ip_version);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };

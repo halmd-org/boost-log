@@ -56,7 +56,7 @@ struct loggers_repository :
 
 //! Finds or creates the logger and returns its holder
 template< typename CharT >
-BOOST_LOG_EXPORT shared_ptr< logger_holder_base > global_storage< CharT >::get_or_init(
+BOOST_LOG_API shared_ptr< logger_holder_base > global_storage< CharT >::get_or_init(
     std::type_info const& key,
     initializer_t initializer)
 {
@@ -82,7 +82,7 @@ BOOST_LOG_EXPORT shared_ptr< logger_holder_base > global_storage< CharT >::get_o
 }
 
 //! Throws the \c odr_violation exception
-BOOST_LOG_EXPORT BOOST_LOG_NORETURN void throw_odr_violation(
+BOOST_LOG_API BOOST_LOG_NORETURN void throw_odr_violation(
     std::type_info const& tag_type,
     std::type_info const& logger_type,
     logger_holder_base const& registered)

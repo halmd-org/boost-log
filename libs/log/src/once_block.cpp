@@ -41,7 +41,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 } // namespace
 
-BOOST_LOG_EXPORT bool once_block_sentry::enter_once_block() const
+BOOST_LOG_API bool once_block_sentry::enter_once_block() const
 {
     AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
@@ -71,7 +71,7 @@ BOOST_LOG_EXPORT bool once_block_sentry::enter_once_block() const
     return true;
 }
 
-BOOST_LOG_EXPORT void once_block_sentry::commit()
+BOOST_LOG_API void once_block_sentry::commit()
 {
     AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
@@ -82,7 +82,7 @@ BOOST_LOG_EXPORT void once_block_sentry::commit()
     WakeAllConditionVariable(&g_OnceBlockCond);
 }
 
-BOOST_LOG_EXPORT void once_block_sentry::rollback()
+BOOST_LOG_API void once_block_sentry::rollback()
 {
     AcquireSRWLockExclusive(&g_OnceBlockMutex);
 
@@ -348,17 +348,17 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 } // namespace
 
-BOOST_LOG_EXPORT bool once_block_sentry::enter_once_block() const
+BOOST_LOG_API bool once_block_sentry::enter_once_block() const
 {
     return get_once_block_impl()->enter_once_block(m_Flag);
 }
 
-BOOST_LOG_EXPORT void once_block_sentry::commit()
+BOOST_LOG_API void once_block_sentry::commit()
 {
     get_once_block_impl()->commit(m_Flag);
 }
 
-BOOST_LOG_EXPORT void once_block_sentry::rollback()
+BOOST_LOG_API void once_block_sentry::rollback()
 {
     get_once_block_impl()->rollback(m_Flag);
 }
@@ -388,7 +388,7 @@ static pthread_cond_t g_OnceBlockCond = PTHREAD_COND_INITIALIZER;
 
 } // namespace
 
-BOOST_LOG_EXPORT bool once_block_sentry::enter_once_block() const
+BOOST_LOG_API bool once_block_sentry::enter_once_block() const
 {
     BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
@@ -417,7 +417,7 @@ BOOST_LOG_EXPORT bool once_block_sentry::enter_once_block() const
     return true;
 }
 
-BOOST_LOG_EXPORT void once_block_sentry::commit()
+BOOST_LOG_API void once_block_sentry::commit()
 {
     BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 
@@ -428,7 +428,7 @@ BOOST_LOG_EXPORT void once_block_sentry::commit()
     BOOST_VERIFY(!pthread_cond_broadcast(&g_OnceBlockCond));
 }
 
-BOOST_LOG_EXPORT void once_block_sentry::rollback()
+BOOST_LOG_API void once_block_sentry::rollback()
 {
     BOOST_VERIFY(!pthread_mutex_lock(&g_OnceBlockMutex));
 

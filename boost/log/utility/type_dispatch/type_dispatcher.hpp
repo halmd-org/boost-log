@@ -59,7 +59,7 @@ public:
             m_pVisitor(visitor)
         {
             typedef void (*trampoline_t)(void*, ValueT const&);
-            BOOST_STATIC_ASSERT(sizeof(trampoline_t) == sizeof(void*));
+            BOOST_STATIC_ASSERT_MSG(sizeof(trampoline_t) == sizeof(void*), "Boost.Log: Unsupported platform, the size of a function pointer differs from the size of a pointer");
             union
             {
                 void* as_pvoid;
@@ -100,7 +100,7 @@ public:
 
         void operator() (T const& value) const
         {
-            BOOST_STATIC_ASSERT(sizeof(trampoline_t) == sizeof(void*));
+            BOOST_STATIC_ASSERT_MSG(sizeof(trampoline_t) == sizeof(void*), "Boost.Log: Unsupported platform, the size of a function pointer differs from the size of a pointer");
             union
             {
                 void* as_pvoid;

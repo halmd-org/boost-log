@@ -55,7 +55,7 @@ enum severity_level
 };
 
 //! Returns stringified enumeration value or \c NULL, if the value is not valid
-BOOST_LOG_EXPORT const char* to_string(severity_level lvl);
+BOOST_LOG_API const char* to_string(severity_level lvl);
 
 template< typename CharT, typename TraitsT >
 inline std::basic_ostream< CharT, TraitsT >& operator<< (
@@ -85,13 +85,13 @@ struct logger
     /*!
      * Returns a reference to the trivial logger instance
      */
-    static BOOST_LOG_EXPORT logger_type& get();
+    static BOOST_LOG_API logger_type& get();
 
     // Implementation details - never use these
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
     enum registration_line_t { registration_line = __LINE__ };
     static const char* registration_file() { return __FILE__; }
-    static BOOST_LOG_EXPORT logger_type construct_logger();
+    static BOOST_LOG_API logger_type construct_logger();
 #endif
 };
 

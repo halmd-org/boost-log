@@ -71,7 +71,7 @@ struct dispatching_map_initializer
         m_p->first = typeid(visible_type< T >);
 
         typedef void (*trampoline_t)(void*, T const&);
-        BOOST_STATIC_ASSERT(sizeof(trampoline_t) == sizeof(void*));
+        BOOST_STATIC_ASSERT_MSG(sizeof(trampoline_t) == sizeof(void*), "Boost.Log: Unsupported platform, the size of a function pointer differs from the size of a pointer");
         union
         {
             void* as_pvoid;

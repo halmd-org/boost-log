@@ -51,7 +51,7 @@ namespace aux {
 #if defined(BOOST_LOG_EVENT_USE_POSIX_SEMAPHORE)
 
 //! Default constructor
-BOOST_LOG_EXPORT sem_based_event::sem_based_event() : m_state(0U)
+BOOST_LOG_API sem_based_event::sem_based_event() : m_state(0U)
 {
     if (sem_init(&m_semaphore, 0, 0) != 0)
     {
@@ -61,13 +61,13 @@ BOOST_LOG_EXPORT sem_based_event::sem_based_event() : m_state(0U)
 }
 
 //! Destructor
-BOOST_LOG_EXPORT sem_based_event::~sem_based_event()
+BOOST_LOG_API sem_based_event::~sem_based_event()
 {
     sem_destroy(&m_semaphore);
 }
 
 //! Waits for the object to become signalled
-BOOST_LOG_EXPORT void sem_based_event::wait()
+BOOST_LOG_API void sem_based_event::wait()
 {
     while (true)
     {
@@ -86,7 +86,7 @@ BOOST_LOG_EXPORT void sem_based_event::wait()
 }
 
 //! Sets the object to a signalled state
-BOOST_LOG_EXPORT void sem_based_event::set_signalled()
+BOOST_LOG_API void sem_based_event::set_signalled()
 {
     if (BOOST_LOG_EVENT_TRY_SET(m_state))
     {
@@ -102,7 +102,7 @@ BOOST_LOG_EXPORT void sem_based_event::set_signalled()
 #elif defined(BOOST_LOG_EVENT_USE_WINAPI)
 
 //! Default constructor
-BOOST_LOG_EXPORT winapi_based_event::winapi_based_event() :
+BOOST_LOG_API winapi_based_event::winapi_based_event() :
     m_state(0),
     m_event(CreateEventA(NULL, false, false, NULL))
 {
@@ -114,13 +114,13 @@ BOOST_LOG_EXPORT winapi_based_event::winapi_based_event() :
 }
 
 //! Destructor
-BOOST_LOG_EXPORT winapi_based_event::~winapi_based_event()
+BOOST_LOG_API winapi_based_event::~winapi_based_event()
 {
     CloseHandle(m_event);
 }
 
 //! Waits for the object to become signalled
-BOOST_LOG_EXPORT void winapi_based_event::wait()
+BOOST_LOG_API void winapi_based_event::wait()
 {
     // On Windows we assume that memory view is always actual (Intel x86 and x86_64 arch)
     if (const_cast< volatile boost::uint32_t& >(m_state) == 0)
@@ -135,7 +135,7 @@ BOOST_LOG_EXPORT void winapi_based_event::wait()
 }
 
 //! Sets the object to a signalled state
-BOOST_LOG_EXPORT void winapi_based_event::set_signalled()
+BOOST_LOG_API void winapi_based_event::set_signalled()
 {
     if (BOOST_INTERLOCKED_COMPARE_EXCHANGE(reinterpret_cast< long* >(&m_state), 1, 0) == 0)
     {
@@ -151,17 +151,17 @@ BOOST_LOG_EXPORT void winapi_based_event::set_signalled()
 #else
 
 //! Default constructor
-BOOST_LOG_EXPORT generic_event::generic_event() : m_state(false)
+BOOST_LOG_API generic_event::generic_event() : m_state(false)
 {
 }
 
 //! Destructor
-BOOST_LOG_EXPORT generic_event::~generic_event()
+BOOST_LOG_API generic_event::~generic_event()
 {
 }
 
 //! Waits for the object to become signalled
-BOOST_LOG_EXPORT void generic_event::wait()
+BOOST_LOG_API void generic_event::wait()
 {
     boost::unique_lock< boost::mutex > lock(m_mutex);
     while (!m_state)
@@ -172,7 +172,7 @@ BOOST_LOG_EXPORT void generic_event::wait()
 }
 
 //! Sets the object to a signalled state
-BOOST_LOG_EXPORT void generic_event::set_signalled()
+BOOST_LOG_API void generic_event::set_signalled()
 {
     boost::lock_guard< boost::mutex > lock(m_mutex);
     if (!m_state)

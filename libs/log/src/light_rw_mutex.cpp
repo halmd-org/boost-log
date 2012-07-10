@@ -161,7 +161,7 @@ void init_light_rw_mutex_impl()
 
 } // namespace
 
-BOOST_LOG_EXPORT light_rw_mutex::light_rw_mutex()
+BOOST_LOG_API light_rw_mutex::light_rw_mutex()
 {
     BOOST_LOG_ONCE_BLOCK()
     {
@@ -170,27 +170,27 @@ BOOST_LOG_EXPORT light_rw_mutex::light_rw_mutex()
     g_pInitializeLWRWMutex((mutex_impl*)&m_Mutex);
 }
 
-BOOST_LOG_EXPORT light_rw_mutex::~light_rw_mutex()
+BOOST_LOG_API light_rw_mutex::~light_rw_mutex()
 {
     g_pDestroyLWRWMutex((mutex_impl*)&m_Mutex);
 }
 
-BOOST_LOG_EXPORT void light_rw_mutex::lock_shared()
+BOOST_LOG_API void light_rw_mutex::lock_shared()
 {
     g_pLockSharedLWRWMutex((mutex_impl*)&m_Mutex);
 }
 
-BOOST_LOG_EXPORT void light_rw_mutex::unlock_shared()
+BOOST_LOG_API void light_rw_mutex::unlock_shared()
 {
     g_pUnlockSharedLWRWMutex((mutex_impl*)&m_Mutex);
 }
 
-BOOST_LOG_EXPORT void light_rw_mutex::lock()
+BOOST_LOG_API void light_rw_mutex::lock()
 {
     g_pLockExclusiveLWRWMutex((mutex_impl*)&m_Mutex);
 }
 
-BOOST_LOG_EXPORT void light_rw_mutex::unlock()
+BOOST_LOG_API void light_rw_mutex::unlock()
 {
     g_pUnlockExclusiveLWRWMutex((mutex_impl*)&m_Mutex);
 }

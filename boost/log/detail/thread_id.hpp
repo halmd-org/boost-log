@@ -41,12 +41,12 @@ namespace aux {
     namespace this_thread {
 
         //! The function returns current thread identifier
-        BOOST_LOG_EXPORT thread::id get_id();
+        BOOST_LOG_API thread::id get_id();
 
     } // namespace this_process
 
     template< typename CharT, typename TraitsT >
-    BOOST_LOG_EXPORT std::basic_ostream< CharT, TraitsT >&
+    BOOST_LOG_API std::basic_ostream< CharT, TraitsT >&
     operator<< (std::basic_ostream< CharT, TraitsT >& strm, thread::id const& tid);
 
 } // namespace aux

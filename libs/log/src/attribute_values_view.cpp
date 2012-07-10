@@ -408,7 +408,7 @@ private:
 #endif
 
 //! The constructor creates an empty view
-BOOST_LOG_EXPORT attribute_values_view::attribute_values_view(
+BOOST_LOG_API attribute_values_view::attribute_values_view(
     size_type reserve_count
 ) :
     m_pImpl(implementation::create(reserve_count))
@@ -416,7 +416,7 @@ BOOST_LOG_EXPORT attribute_values_view::attribute_values_view(
 }
 
 //! The constructor adopts three attribute sets to the view
-BOOST_LOG_EXPORT attribute_values_view::attribute_values_view(
+BOOST_LOG_API attribute_values_view::attribute_values_view(
     attribute_set_type const& source_attrs,
     attribute_set_type const& thread_attrs,
     attribute_set_type const& global_attrs,
@@ -427,7 +427,7 @@ BOOST_LOG_EXPORT attribute_values_view::attribute_values_view(
 }
 
 //! Copy constructor
-BOOST_LOG_EXPORT attribute_values_view::attribute_values_view(attribute_values_view const& that)
+BOOST_LOG_API attribute_values_view::attribute_values_view(attribute_values_view const& that)
 {
     if (that.m_pImpl)
         m_pImpl = implementation::copy(that.m_pImpl);
@@ -440,7 +440,7 @@ BOOST_LOG_EXPORT attribute_values_view::attribute_values_view(attribute_values_v
 #endif
 
 //! Destructor
-BOOST_LOG_EXPORT attribute_values_view::~attribute_values_view()
+BOOST_LOG_API attribute_values_view::~attribute_values_view()
 {
     if (m_pImpl)
     {
@@ -450,7 +450,7 @@ BOOST_LOG_EXPORT attribute_values_view::~attribute_values_view()
 }
 
 //! Assignment
-BOOST_LOG_EXPORT attribute_values_view&
+BOOST_LOG_API attribute_values_view&
 attribute_values_view::operator= (BOOST_COPY_ASSIGN_REF(attribute_values_view) that)
 {
     attribute_values_view that_copy = that;
@@ -459,40 +459,40 @@ attribute_values_view::operator= (BOOST_COPY_ASSIGN_REF(attribute_values_view) t
 }
 
 //  Iterator generators
-BOOST_LOG_EXPORT attribute_values_view::const_iterator
+BOOST_LOG_API attribute_values_view::const_iterator
 attribute_values_view::begin() const
 {
     return const_iterator(m_pImpl->begin(), const_cast< attribute_values_view* >(this));
 }
 
-BOOST_LOG_EXPORT attribute_values_view::const_iterator
+BOOST_LOG_API attribute_values_view::const_iterator
 attribute_values_view::end() const
 {
     return const_iterator(m_pImpl->end(), const_cast< attribute_values_view* >(this));
 }
 
 //! The method returns number of elements in the container
-BOOST_LOG_EXPORT attribute_values_view::size_type
+BOOST_LOG_API attribute_values_view::size_type
 attribute_values_view::size() const
 {
     return m_pImpl->size();
 }
 
 //! Internal lookup implementation
-BOOST_LOG_EXPORT attribute_values_view::const_iterator
+BOOST_LOG_API attribute_values_view::const_iterator
 attribute_values_view::find(key_type key) const
 {
     return const_iterator(m_pImpl->find(key), const_cast< attribute_values_view* >(this));
 }
 
 //! The method acquires values of all adopted attributes. Users don't need to call it, since will always get an already frozen view.
-BOOST_LOG_EXPORT void attribute_values_view::freeze()
+BOOST_LOG_API void attribute_values_view::freeze()
 {
     m_pImpl->freeze();
 }
 
 //! Inserts an element into the view
-BOOST_LOG_EXPORT std::pair< attribute_values_view::const_iterator, bool >
+BOOST_LOG_API std::pair< attribute_values_view::const_iterator, bool >
 attribute_values_view::insert(key_type key, mapped_type const& mapped)
 {
     std::pair< node*, bool > res = m_pImpl->insert(key, mapped);

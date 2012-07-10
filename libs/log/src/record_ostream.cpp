@@ -27,7 +27,7 @@ namespace BOOST_LOG_NAMESPACE {
 
 //! The function initializes the stream and the stream buffer
 template< typename CharT, typename TraitsT >
-BOOST_LOG_EXPORT void basic_record_ostream< CharT, TraitsT >::init_stream()
+BOOST_LOG_API void basic_record_ostream< CharT, TraitsT >::init_stream()
 {
     if (!!m_Record)
     {
@@ -46,7 +46,7 @@ BOOST_LOG_EXPORT void basic_record_ostream< CharT, TraitsT >::init_stream()
 }
 //! The function resets the stream into a detached (default initialized) state
 template< typename CharT, typename TraitsT >
-BOOST_LOG_EXPORT void basic_record_ostream< CharT, TraitsT >::detach_from_record()
+BOOST_LOG_API void basic_record_ostream< CharT, TraitsT >::detach_from_record()
 {
     if (!!m_Record)
     {
@@ -125,7 +125,7 @@ private:
 
 //! The method returns an allocated stream compound
 template< typename CharT >
-BOOST_LOG_EXPORT typename stream_provider< CharT >::stream_compound*
+BOOST_LOG_API typename stream_provider< CharT >::stream_compound*
 stream_provider< CharT >::allocate_compound(record_type const& rec)
 {
     stream_compound_pool< char_type >& pool = stream_compound_pool< char_type >::get();
@@ -143,7 +143,7 @@ stream_provider< CharT >::allocate_compound(record_type const& rec)
 
 //! The method releases a compound
 template< typename CharT >
-BOOST_LOG_EXPORT void stream_provider< CharT >::release_compound(stream_compound* compound) /* throw() */
+BOOST_LOG_API void stream_provider< CharT >::release_compound(stream_compound* compound) /* throw() */
 {
     stream_compound_pool< char_type >& pool = stream_compound_pool< char_type >::get();
     compound->next = pool.m_Top;

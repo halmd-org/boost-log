@@ -53,10 +53,10 @@ private:
     key_storage m_Key;
 
 protected:
-    BOOST_LOG_EXPORT thread_specific_base();
-    BOOST_LOG_EXPORT ~thread_specific_base();
-    BOOST_LOG_EXPORT void* get_content() const;
-    BOOST_LOG_EXPORT void set_content(void* value) const;
+    BOOST_LOG_API thread_specific_base();
+    BOOST_LOG_API ~thread_specific_base();
+    BOOST_LOG_API void* get_content() const;
+    BOOST_LOG_API void set_content(void* value) const;
 
 private:
     //  Copying prohibited
@@ -69,7 +69,7 @@ template< typename T >
 class thread_specific :
     public thread_specific_base
 {
-    BOOST_STATIC_ASSERT(sizeof(T) <= sizeof(void*) && is_pod< T >::value);
+    BOOST_STATIC_ASSERT_MSG(sizeof(T) <= sizeof(void*) && is_pod< T >::value, "Boost.Log: Thread-specific values must be PODs and must not exceed the size of a pointer");
 
     //! Union to perform type casting
     union value_storage

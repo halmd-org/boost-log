@@ -156,12 +156,12 @@ private:
     }
 };
 
-BOOST_LOG_EXPORT threadsafe_queue_impl* threadsafe_queue_impl::create(node_base* first_node)
+BOOST_LOG_API threadsafe_queue_impl* threadsafe_queue_impl::create(node_base* first_node)
 {
     return new threadsafe_queue_impl_generic(first_node);
 }
 
-BOOST_LOG_EXPORT void* threadsafe_queue_impl::operator new (std::size_t size)
+BOOST_LOG_API void* threadsafe_queue_impl::operator new (std::size_t size)
 {
     void* p = NULL;
 
@@ -187,7 +187,7 @@ BOOST_LOG_EXPORT void* threadsafe_queue_impl::operator new (std::size_t size)
     return p;
 }
 
-BOOST_LOG_EXPORT void threadsafe_queue_impl::operator delete (void* p, std::size_t)
+BOOST_LOG_API void threadsafe_queue_impl::operator delete (void* p, std::size_t)
 {
 #if defined(BOOST_LOG_HAS_POSIX_MEMALIGN)
     free(p);

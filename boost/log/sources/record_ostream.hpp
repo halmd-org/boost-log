@@ -171,9 +171,9 @@ private:
     basic_record_ostream& operator= (basic_record_ostream const&);
 
     //! The function initializes the stream and the stream buffer
-    BOOST_LOG_EXPORT void init_stream();
+    BOOST_LOG_API void init_stream();
     //! The function resets the stream into a detached (default initialized) state
-    BOOST_LOG_EXPORT void detach_from_record();
+    BOOST_LOG_API void detach_from_record();
 };
 
 
@@ -208,9 +208,9 @@ struct stream_provider
     };
 
     //! The method returns an allocated stream compound
-    BOOST_LOG_EXPORT static stream_compound* allocate_compound(record_type const& rec);
+    BOOST_LOG_API static stream_compound* allocate_compound(record_type const& rec);
     //! The method releases a compound
-    BOOST_LOG_EXPORT static void release_compound(stream_compound* compound) /* throw() */;
+    BOOST_LOG_API static void release_compound(stream_compound* compound) /* throw() */;
 
 private:
     //  Non-constructible, non-copyable, non-assignable

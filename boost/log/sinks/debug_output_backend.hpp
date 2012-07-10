@@ -72,7 +72,7 @@ public:
         public filters::basic_filter< char_type, debugger_presence_filter >
     {
     public:
-        BOOST_LOG_EXPORT bool operator() (values_view_type const& values) const;
+        BOOST_LOG_API bool operator() (values_view_type const& values) const;
     };
 
 #endif // BOOST_LOG_DOXYGEN_PASS
@@ -81,21 +81,21 @@ public:
     /*!
      * Constructor. Initializes the sink backend.
      */
-    BOOST_LOG_EXPORT basic_debug_output_backend();
+    BOOST_LOG_API basic_debug_output_backend();
     /*!
      * Destructor
      */
-    BOOST_LOG_EXPORT ~basic_debug_output_backend();
+    BOOST_LOG_API ~basic_debug_output_backend();
 
     /*!
      * \return A filter that checks whether the debugger is available
      */
-    BOOST_LOG_EXPORT debugger_presence_filter get_debugger_presence_filter() const;
+    BOOST_LOG_API debugger_presence_filter get_debugger_presence_filter() const;
 
     /*!
      * The method passes the formatted message to debugger
      */
-    BOOST_LOG_EXPORT void consume(record_type const& rec, target_string_type const& formatted_message);
+    BOOST_LOG_API void consume(record_type const& rec, target_string_type const& formatted_message);
 };
 
 #ifdef BOOST_LOG_USE_CHAR

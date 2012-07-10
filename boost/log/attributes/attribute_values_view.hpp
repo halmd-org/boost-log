@@ -215,7 +215,7 @@ public:
      *
      * \param reserve_count Number of elements to reserve space for.
      */
-    BOOST_LOG_EXPORT explicit attribute_values_view(size_type reserve_count = 1);
+    BOOST_LOG_API explicit attribute_values_view(size_type reserve_count = 1);
 
     /*!
      * Move constructor
@@ -236,7 +236,7 @@ public:
      * \param global_attrs A set of global attributes.
      * \param reserve_count Amount of elements to reserve space for, in addition to the elements in the three attribute sets provided.
      */
-    BOOST_LOG_EXPORT attribute_values_view(
+    BOOST_LOG_API attribute_values_view(
         attribute_set_type const& source_attrs,
         attribute_set_type const& thread_attrs,
         attribute_set_type const& global_attrs,
@@ -248,12 +248,12 @@ public:
      * \pre The original view is frozen.
      * \post The constructed view is frozen, <tt>std::equal(begin(), end(), that.begin()) == true</tt>
      */
-    BOOST_LOG_EXPORT attribute_values_view(attribute_values_view const& that);
+    BOOST_LOG_API attribute_values_view(attribute_values_view const& that);
 
     /*!
      * Destructor. Releases all referenced attribute values.
      */
-    BOOST_LOG_EXPORT ~attribute_values_view();
+    BOOST_LOG_API ~attribute_values_view();
 
     /*!
      * Move assignment operator
@@ -270,7 +270,7 @@ public:
      * \pre The original view is frozen.
      * \post The resulting view is frozen, <tt>size() == that.size() && std::equal(begin(), end(), that.begin()) == true</tt>
      */
-    BOOST_LOG_EXPORT attribute_values_view& operator= (BOOST_COPY_ASSIGN_REF(attribute_values_view) that);
+    BOOST_LOG_API attribute_values_view& operator= (BOOST_COPY_ASSIGN_REF(attribute_values_view) that);
 
     /*!
      * Swaps two views
@@ -287,16 +287,16 @@ public:
     /*!
      * \return Iterator to the first element of the view.
      */
-    BOOST_LOG_EXPORT const_iterator begin() const;
+    BOOST_LOG_API const_iterator begin() const;
     /*!
      * \return Iterator to the after-the-last element of the view.
      */
-    BOOST_LOG_EXPORT const_iterator end() const;
+    BOOST_LOG_API const_iterator end() const;
 
     /*!
      * \return Number of elements in the view.
      */
-    BOOST_LOG_EXPORT size_type size() const;
+    BOOST_LOG_API size_type size() const;
     /*!
      * \return true if there are no elements in the container, false otherwise.
      */
@@ -308,7 +308,7 @@ public:
      * \param key Attribute name.
      * \return Iterator to the found element or \c end() if the attribute with such name is not found.
      */
-    BOOST_LOG_EXPORT const_iterator find(key_type key) const;
+    BOOST_LOG_API const_iterator find(key_type key) const;
 
     /*!
      * Alternative lookup syntax.
@@ -358,7 +358,7 @@ public:
      *
      * \post The view is frozen.
      */
-    BOOST_LOG_EXPORT void freeze();
+    BOOST_LOG_API void freeze();
 
     /*!
      * Inserts an element into the view. The complexity of the operation is amortized constant.
@@ -372,7 +372,7 @@ public:
      *          if the view already contains a same-named attribute value, iterator to the
      *          existing element and \c false.
      */
-    BOOST_LOG_EXPORT std::pair< const_iterator, bool > insert(key_type key, mapped_type const& mapped);
+    BOOST_LOG_API std::pair< const_iterator, bool > insert(key_type key, mapped_type const& mapped);
 
     /*!
      * Inserts an element into the view. The complexity of the operation is amortized constant.

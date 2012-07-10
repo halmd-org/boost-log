@@ -54,7 +54,7 @@ namespace syslog {
     /*!
      * The function constructs log record level from an integer
      */
-    BOOST_LOG_EXPORT level make_level(int lev);
+    BOOST_LOG_API level make_level(int lev);
 
     //! Syslog facility codes
     enum facility
@@ -88,7 +88,7 @@ namespace syslog {
     /*!
      * The function constructs log source facility from an integer
      */
-    BOOST_LOG_EXPORT facility make_facility(int fac);
+    BOOST_LOG_API facility make_facility(int fac);
 
 } // namespace syslog
 

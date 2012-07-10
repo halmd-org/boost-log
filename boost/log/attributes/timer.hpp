@@ -57,7 +57,7 @@ namespace attributes {
  * In case if none of these solutions apply, you are free to define <tt>BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER</tt> macro to
  * fall back to another implementation based on Boost.DateTime.
  */
-class BOOST_LOG_EXPORT timer :
+class BOOST_LOG_API timer :
     public attribute
 {
 public:

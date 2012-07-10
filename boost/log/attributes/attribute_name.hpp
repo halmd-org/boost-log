@@ -138,13 +138,13 @@ public:
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    static BOOST_LOG_EXPORT id_type get_id_from_string(const char* name);
-    static BOOST_LOG_EXPORT string_type const& get_string_from_id(id_type id);
+    static BOOST_LOG_API id_type get_id_from_string(const char* name);
+    static BOOST_LOG_API string_type const& get_string_from_id(id_type id);
 #endif
 };
 
 template< typename CharT, typename TraitsT >
-BOOST_LOG_EXPORT std::basic_ostream< CharT, TraitsT >& operator<< (
+BOOST_LOG_API std::basic_ostream< CharT, TraitsT >& operator<< (
     std::basic_ostream< CharT, TraitsT >& strm,
     attribute_name const& name);
 

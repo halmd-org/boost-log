@@ -36,7 +36,7 @@ enum { pid_size = sizeof(GetCurrentProcessId()) };
 namespace this_process {
 
     //! The function returns current process identifier
-    BOOST_LOG_EXPORT process::id get_id()
+    BOOST_LOG_API process::id get_id()
     {
         return process::id(GetCurrentProcessId());
     }
@@ -62,7 +62,7 @@ namespace aux {
 namespace this_process {
 
     //! The function returns current process identifier
-    BOOST_LOG_EXPORT process::id get_id()
+    BOOST_LOG_API process::id get_id()
     {
         // According to POSIX, pid_t should always be an integer type:
         // http://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/types.h.html
@@ -105,13 +105,13 @@ operator<< (std::basic_ostream< CharT, TraitsT >& strm, process::id const& pid)
 }
 
 #if defined(BOOST_LOG_USE_CHAR)
-template BOOST_LOG_EXPORT
+template BOOST_LOG_API
 std::basic_ostream< char, std::char_traits< char > >&
 operator<< (std::basic_ostream< char, std::char_traits< char > >& strm, process::id const& pid);
 #endif // defined(BOOST_LOG_USE_CHAR)
 
 #if defined(BOOST_LOG_USE_WCHAR_T)
-template BOOST_LOG_EXPORT
+template BOOST_LOG_API
 std::basic_ostream< wchar_t, std::char_traits< wchar_t > >&
 operator<< (std::basic_ostream< wchar_t, std::char_traits< wchar_t > >& strm, process::id const& pid);
 #endif // defined(BOOST_LOG_USE_WCHAR_T)

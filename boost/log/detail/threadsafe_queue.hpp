@@ -60,10 +60,10 @@ struct threadsafe_queue_impl
         pointer_storage next;
     };
 
-    static BOOST_LOG_EXPORT threadsafe_queue_impl* create(node_base* first_node);
+    static BOOST_LOG_API threadsafe_queue_impl* create(node_base* first_node);
 
-    static BOOST_LOG_EXPORT void* operator new (std::size_t size);
-    static BOOST_LOG_EXPORT void operator delete (void* p, std::size_t);
+    static BOOST_LOG_API void* operator new (std::size_t size);
+    static BOOST_LOG_API void operator delete (void* p, std::size_t);
 
     virtual ~threadsafe_queue_impl() {}
     virtual node_base* reset_last_node() = 0;

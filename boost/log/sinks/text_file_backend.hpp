@@ -136,7 +136,7 @@ struct BOOST_LOG_NO_VTABLE collector
 namespace aux {
 
     //! Creates and returns a file collector with the specified parameters
-    BOOST_LOG_EXPORT shared_ptr< collector > make_collector(
+    BOOST_LOG_API shared_ptr< collector > make_collector(
         collector::path_type const& target_dir,
         uintmax_t max_size,
         uintmax_t min_free_space
@@ -245,7 +245,7 @@ public:
      * \param minute The rotation minute, should be within 0 and 59
      * \param second The rotation second, should be within 0 and 59
      */
-    BOOST_LOG_EXPORT explicit rotation_at_time_point(unsigned char hour, unsigned char minute, unsigned char second);
+    BOOST_LOG_API explicit rotation_at_time_point(unsigned char hour, unsigned char minute, unsigned char second);
 
     /*!
      * Creates a rotation time point of each specified weekday at the specified time
@@ -255,7 +255,7 @@ public:
      * \param minute The rotation minute, should be within 0 and 59
      * \param second The rotation second, should be within 0 and 59
      */
-    BOOST_LOG_EXPORT explicit rotation_at_time_point(
+    BOOST_LOG_API explicit rotation_at_time_point(
         date_time::weekdays wday,
         unsigned char hour = 0,
         unsigned char minute = 0,
@@ -269,7 +269,7 @@ public:
      * \param minute The rotation minute, should be within 0 and 59
      * \param second The rotation second, should be within 0 and 59
      */
-    BOOST_LOG_EXPORT explicit rotation_at_time_point(
+    BOOST_LOG_API explicit rotation_at_time_point(
         gregorian::greg_day mday,
         unsigned char hour = 0,
         unsigned char minute = 0,
@@ -278,7 +278,7 @@ public:
     /*!
      * Checks if it's time to rotate the file
      */
-    BOOST_LOG_EXPORT bool operator() () const;
+    BOOST_LOG_API bool operator() () const;
 };
 
 /*!
@@ -310,7 +310,7 @@ public:
     /*!
      * Checks if it's time to rotate the file
      */
-    BOOST_LOG_EXPORT bool operator() () const;
+    BOOST_LOG_API bool operator() () const;
 };
 
 } // namespace file
@@ -374,7 +374,7 @@ public:
     /*!
      * Default constructor. The constructed sink backend uses default values of all the parameters.
      */
-    BOOST_LOG_EXPORT basic_text_file_backend();
+    BOOST_LOG_API basic_text_file_backend();
 
     /*!
      * Constructor. Creates a sink backend with the specified named parameters.
@@ -413,7 +413,7 @@ public:
     /*!
      * Destructor
      */
-    BOOST_LOG_EXPORT ~basic_text_file_backend();
+    BOOST_LOG_API ~basic_text_file_backend();
 
     /*!
      * The method sets file name wildcard for the files being written. The wildcard supports
@@ -432,7 +432,7 @@ public:
      *
      * \param mode File open mode
      */
-    BOOST_LOG_EXPORT void set_open_mode(std::ios_base::openmode mode);
+    BOOST_LOG_API void set_open_mode(std::ios_base::openmode mode);
 
     /*!
      * The method sets the log file collector function. The function is called
@@ -440,7 +440,7 @@ public:
      *
      * \param collector The file collector function object
      */
-    BOOST_LOG_EXPORT void set_file_collector(shared_ptr< file::collector > const& collector);
+    BOOST_LOG_API void set_file_collector(shared_ptr< file::collector > const& collector);
 
     /*!
      * The method sets file opening handler. The handler will be called every time
@@ -449,7 +449,7 @@ public:
      *
      * \param handler The file open handler function object
      */
-    BOOST_LOG_EXPORT void set_open_handler(open_handler_type const& handler);
+    BOOST_LOG_API void set_open_handler(open_handler_type const& handler);
 
     /*!
      * The method sets file closing handler. The handler will be called every time
@@ -458,7 +458,7 @@ public:
      *
      * \param handler The file close handler function object
      */
-    BOOST_LOG_EXPORT void set_close_handler(close_handler_type const& handler);
+    BOOST_LOG_API void set_close_handler(close_handler_type const& handler);
 
     /*!
      * The method sets maximum file size. When the size is reached, file rotation is performed.
@@ -468,7 +468,7 @@ public:
      *
      * \param size The maximum file size, in characters.
      */
-    BOOST_LOG_EXPORT void set_rotation_size(uintmax_t size);
+    BOOST_LOG_API void set_rotation_size(uintmax_t size);
 
     /*!
      * The method sets the predicate that defines the time-based condition for file rotation.
@@ -479,12 +479,12 @@ public:
      * \param predicate The predicate that defines the time-based condition for file rotation.
      *                  If empty, no time-based rotation will take place.
      */
-    BOOST_LOG_EXPORT void set_time_based_rotation(time_based_rotation_predicate const& predicate);
+    BOOST_LOG_API void set_time_based_rotation(time_based_rotation_predicate const& predicate);
 
     /*!
      * Sets the flag to automatically flush buffers of all attached streams after each log record
      */
-    BOOST_LOG_EXPORT void auto_flush(bool f = true);
+    BOOST_LOG_API void auto_flush(bool f = true);
 
     /*!
      * Performs scanning of the target directory for log files that may have been left from
@@ -505,18 +505,18 @@ public:
      *
      * \note The method essentially delegates to the same-named function of the file collector.
      */
-    BOOST_LOG_EXPORT uintmax_t scan_for_files(
+    BOOST_LOG_API uintmax_t scan_for_files(
         file::scan_method method = file::scan_matching, bool update_counter = true);
 
     /*!
      * The method writes the message to the sink
      */
-    BOOST_LOG_EXPORT void consume(record_type const& record, target_string_type const& formatted_message);
+    BOOST_LOG_API void consume(record_type const& record, target_string_type const& formatted_message);
 
     /*!
      * The method flushes the currently open log file
      */
-    BOOST_LOG_EXPORT void flush();
+    BOOST_LOG_API void flush();
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -532,7 +532,7 @@ private:
             args[keywords::auto_flush | false]);
     }
     //! Constructor implementation
-    BOOST_LOG_EXPORT void construct(
+    BOOST_LOG_API void construct(
         path_type const& pattern,
         std::ios_base::openmode mode,
         uintmax_t rotation_size,
@@ -540,10 +540,10 @@ private:
         bool auto_flush);
 
     //! The method sets file name mask
-    BOOST_LOG_EXPORT void set_file_name_pattern_internal(path_type const& pattern);
+    BOOST_LOG_API void set_file_name_pattern_internal(path_type const& pattern);
 
     //! The method rotates the file
-    BOOST_LOG_EXPORT void rotate_file();
+    BOOST_LOG_API void rotate_file();
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

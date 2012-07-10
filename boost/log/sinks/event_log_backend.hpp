@@ -617,7 +617,7 @@ namespace event_log {
      *     thus the number and the order of the formatters must correspond to the message definition.
      */
     template< typename CharT >
-    class BOOST_LOG_EXPORT basic_event_composer
+    class BOOST_LOG_API basic_event_composer
     {
     public:
         //! Character type
@@ -816,7 +816,7 @@ public:
      * executable file name in the Application log. If such a registration is already
      * present, it is not overridden.
      */
-    BOOST_LOG_EXPORT basic_simple_event_log_backend();
+    BOOST_LOG_API basic_simple_event_log_backend();
     /*!
      * Constructor. Registers event log source with the specified parameters.
      * The following named parameters are supported:
@@ -842,26 +842,26 @@ public:
     /*!
      * Destructor. Unregisters event source. The log source description is not removed from the Windows registry.
      */
-    BOOST_LOG_EXPORT ~basic_simple_event_log_backend();
+    BOOST_LOG_API ~basic_simple_event_log_backend();
 
     /*!
      * The method installs the function object that maps application severity levels to WinAPI event types
      */
-    BOOST_LOG_EXPORT void set_event_type_mapper(event_type_mapper_type const& mapper);
+    BOOST_LOG_API void set_event_type_mapper(event_type_mapper_type const& mapper);
 
     /*!
      * \returns Default log name: Application
      */
-    BOOST_LOG_EXPORT static string_type get_default_log_name();
+    BOOST_LOG_API static string_type get_default_log_name();
     /*!
      * \returns Default log source name that is based on the application executable file name and the sink name
      */
-    BOOST_LOG_EXPORT static string_type get_default_source_name();
+    BOOST_LOG_API static string_type get_default_source_name();
 
     /*!
      * The method puts the formatted message to the event log
      */
-    BOOST_LOG_EXPORT void consume(record_type const& record, target_string_type const& formatted_message);
+    BOOST_LOG_API void consume(record_type const& record, target_string_type const& formatted_message);
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -875,7 +875,7 @@ private:
             args[keywords::log_source || &basic_simple_event_log_backend::get_default_source_name],
             args[keywords::registration | event_log::on_demand]);
     }
-    BOOST_LOG_EXPORT void construct(
+    BOOST_LOG_API void construct(
         string_type const& target,
         string_type const& log_name,
         string_type const& source_name,
@@ -995,39 +995,39 @@ public:
     /*!
      * Destructor. Unregisters event source. The log source description is not removed from the Windows registry.
      */
-    BOOST_LOG_EXPORT ~basic_event_log_backend();
+    BOOST_LOG_API ~basic_event_log_backend();
 
     /*!
      * The method creates an event in the event log
      *
      * \param record Log record to consume
      */
-    BOOST_LOG_EXPORT void consume(record_type const& record);
+    BOOST_LOG_API void consume(record_type const& record);
 
     /*!
      * The method installs the function object that maps application severity levels to WinAPI event types
      */
-    BOOST_LOG_EXPORT void set_event_type_mapper(event_type_mapper_type const& mapper);
+    BOOST_LOG_API void set_event_type_mapper(event_type_mapper_type const& mapper);
 
     /*!
      * The method installs the function object that extracts event category from attribute values
      */
-    BOOST_LOG_EXPORT void set_event_category_mapper(event_category_mapper_type const& mapper);
+    BOOST_LOG_API void set_event_category_mapper(event_category_mapper_type const& mapper);
 
     /*!
      * The method installs the function object that extracts event identifier from the attributes and creates
      * insertion strings that will replace placeholders in the event message.
      */
-    BOOST_LOG_EXPORT void set_event_composer(event_composer_type const& composer);
+    BOOST_LOG_API void set_event_composer(event_composer_type const& composer);
 
     /*!
      * \returns Default log name: Application
      */
-    BOOST_LOG_EXPORT static string_type get_default_log_name();
+    BOOST_LOG_API static string_type get_default_log_name();
     /*!
      * \returns Default log source name that is based on the application executable file name and the sink name
      */
-    BOOST_LOG_EXPORT static string_type get_default_source_name();
+    BOOST_LOG_API static string_type get_default_source_name();
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -1042,7 +1042,7 @@ private:
             args[keywords::log_source || &basic_event_log_backend::get_default_source_name],
             args[keywords::registration | event_log::on_demand]);
     }
-    BOOST_LOG_EXPORT void construct(
+    BOOST_LOG_API void construct(
         boost::log::aux::universal_path const& message_file_name,
         string_type const& target,
         string_type const& log_name,

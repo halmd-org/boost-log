@@ -32,7 +32,6 @@
 #include <boost/version.hpp>
 
 #if BOOST_VERSION < 104800
-    // Older Boost versions contained bugs that affected the library or did not have required features
 #   error Boost.Log: Boost version 1.48 or later is required
 #endif
 
@@ -71,10 +70,10 @@
 #   define BOOST_LOG_NO_ASIO
 #endif
 
-#if (defined(BOOST_CLANG) || ((defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530))) && !(defined BOOST_NO_COMPILER_CONFIG)
+#if (defined(BOOST_CLANG) || (defined(__SUNPRO_CC) && (__SUNPRO_CC <= 0x530))) && !defined(BOOST_NO_COMPILER_CONFIG)
     // Sun C++ 5.3 and Clang can't handle the safe_bool idiom, so don't use it
 #   define BOOST_LOG_NO_UNSPECIFIED_BOOL
-#endif // (defined(BOOST_CLANG) || ((defined __SUNPRO_CC) && (__SUNPRO_CC <= 0x530))) && !(defined BOOST_NO_COMPILER_CONFIG)
+#endif // (defined(BOOST_CLANG) || (defined(__SUNPRO_CC) && (__SUNPRO_CC <= 0x530))) && !defined(BOOST_NO_COMPILER_CONFIG)
 
 #if defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 1))
     // GCC 4.0.0 (and probably older) can't cope with some optimizations regarding string literals
@@ -89,18 +88,21 @@
 #endif
 
 // Extended declaration macros. Used to implement compiler-specific optimizations.
-#if defined(_MSC_VER)
+#if defined(BOOST_FORCEINLINE)
+#   define BOOST_LOG_FORCEINLINE BOOST_FORCEINLINE
+#elif defined(_MSC_VER)
 #   define BOOST_LOG_FORCEINLINE __forceinline
-#   define BOOST_LOG_NO_VTABLE __declspec(novtable)
-#elif defined(__GNUC__)
-#   if (__GNUC__ > 3)
-#       define BOOST_LOG_FORCEINLINE inline __attribute__((always_inline))
-#   else
-#       define BOOST_LOG_FORCEINLINE inline
-#   endif
-#   define BOOST_LOG_NO_VTABLE
+#elif defined(__GNUC__) && (__GNUC__ > 3)
+#   define BOOST_LOG_FORCEINLINE inline __attribute__((always_inline))
 #else
 #   define BOOST_LOG_FORCEINLINE inline
+#endif
+
+#if defined(_MSC_VER)
+#   define BOOST_LOG_NO_VTABLE __declspec(novtable)
+#elif defined(__GNUC__)
+#   define BOOST_LOG_NO_VTABLE
+#else
 #   define BOOST_LOG_NO_VTABLE
 #endif
 
@@ -124,6 +126,14 @@
 #   define BOOST_LOG_NORETURN
 #endif
 
+#if defined(BOOST_SYMBOL_VISIBLE)
+#   define BOOST_LOG_VISIBLE BOOST_SYMBOL_VISIBLE
+#elif defined(__GNUC__) && (__GNUC__ >= 4)
+#   define BOOST_LOG_VISIBLE __attribute__((visibility("default")))
+#else
+#   define BOOST_LOG_VISIBLE
+#endif
+
 #if !defined(BOOST_LOG_BUILDING_THE_LIB)
 
 // Detect if we're dealing with dll
@@ -131,11 +141,16 @@
 #        define BOOST_LOG_DLL
 #   endif
 
-#   if defined(BOOST_HAS_DECLSPEC) && defined(BOOST_LOG_DLL)
-#       define BOOST_LOG_EXPORT __declspec(dllimport)
-#   else
-#       define BOOST_LOG_EXPORT
-#   endif // defined(BOOST_HAS_DECLSPEC)
+#   if defined(BOOST_LOG_DLL)
+#       if defined(BOOST_SYMBOL_IMPORT)
+#           define BOOST_LOG_API BOOST_SYMBOL_IMPORT
+#       elif defined(BOOST_HAS_DECLSPEC)
+#           define BOOST_LOG_API __declspec(dllimport)
+#       endif
+#   endif
+#   ifndef BOOST_LOG_API
+#       define BOOST_LOG_API
+#   endif
 //
 // Automatically link to the correct build variant where possible.
 //
@@ -166,21 +181,18 @@
 
 #else // !defined(BOOST_LOG_BUILDING_THE_LIB)
 
-#   if defined(BOOST_HAS_DECLSPEC) && defined(BOOST_LOG_DLL)
-#       define BOOST_LOG_EXPORT __declspec(dllexport)
-#   elif defined(__GNUC__) && __GNUC__ >= 4 && (defined(linux) || defined(__linux) || defined(__linux__))
-#       define BOOST_LOG_EXPORT __attribute__((visibility("default")))
-#   else
-#       define BOOST_LOG_EXPORT
+#   if defined(BOOST_LOG_DLL)
+#       if defined(BOOST_SYMBOL_EXPORT)
+#           define BOOST_LOG_API BOOST_SYMBOL_EXPORT
+#       elif defined(BOOST_HAS_DECLSPEC)
+#           define BOOST_LOG_API __declspec(dllexport)
+#       endif
+#   endif
+#   ifndef BOOST_LOG_API
+#       define BOOST_LOG_API BOOST_LOG_VISIBLE
 #   endif
 
 #endif // !defined(BOOST_LOG_BUILDING_THE_LIB)
-
-#if defined(__GNUC__) && __GNUC__ >= 4 && (defined(linux) || defined(__linux) || defined(__linux__))
-#   define BOOST_LOG_VISIBLE __attribute__((visibility("default")))
-#else
-#   define BOOST_LOG_VISIBLE
-#endif
 
 #if !defined(BOOST_LOG_USE_CHAR) && !defined(BOOST_LOG_USE_WCHAR_T)
     // By default we provide support for both char and wchar_t

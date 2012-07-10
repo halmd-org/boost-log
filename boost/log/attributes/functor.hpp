@@ -48,8 +48,7 @@ template< typename R >
 class functor :
     public attribute
 {
-    //  The result type of the function object must not be void
-    BOOST_STATIC_ASSERT(!is_void< R >::value);
+    BOOST_STATIC_ASSERT_MSG(!is_void< R >::value, "Boost.Log: Function object return type must not be void");
 
 public:
     //! The attribute value type

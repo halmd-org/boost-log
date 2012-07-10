@@ -40,7 +40,7 @@ template<
     typename CharT,
     typename TraitsT = std::char_traits< CharT >
 >
-class BOOST_LOG_EXPORT converting_ostringstreambuf :
+class BOOST_LOG_API converting_ostringstreambuf :
     public std::basic_streambuf< CharT, TraitsT >
 {
     //! Base type

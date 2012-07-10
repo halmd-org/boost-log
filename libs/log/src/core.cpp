@@ -140,7 +140,7 @@ private:
 };
 
 //! Destructor
-BOOST_LOG_EXPORT record::public_data::~public_data()
+BOOST_LOG_API record::public_data::~public_data()
 {
     if (m_private)
     {
@@ -150,7 +150,7 @@ BOOST_LOG_EXPORT record::public_data::~public_data()
 }
 
 //! The function ensures that the log record does not depend on any thread-specific data.
-BOOST_LOG_EXPORT void record::detach_from_thread()
+BOOST_LOG_API void record::detach_from_thread()
 {
     if (!m_impl->m_detached)
     {

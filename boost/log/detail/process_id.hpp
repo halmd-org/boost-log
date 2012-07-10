@@ -40,12 +40,12 @@ namespace aux {
     namespace this_process {
 
         //! The function returns current process identifier
-        BOOST_LOG_EXPORT process::id get_id();
+        BOOST_LOG_API process::id get_id();
 
     } // namespace this_process
 
     template< typename CharT, typename TraitsT >
-    BOOST_LOG_EXPORT std::basic_ostream< CharT, TraitsT >&
+    BOOST_LOG_API std::basic_ostream< CharT, TraitsT >&
     operator<< (std::basic_ostream< CharT, TraitsT >& strm, process::id const& pid);
 
 } // namespace aux

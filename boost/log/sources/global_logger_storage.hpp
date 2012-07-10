@@ -82,7 +82,7 @@ struct global_storage
     typedef shared_ptr< logger_holder_base >(*initializer_t)();
 
     //! Finds or creates the logger and returns its holder
-    BOOST_LOG_EXPORT static shared_ptr< logger_holder_base > get_or_init(
+    BOOST_LOG_API static shared_ptr< logger_holder_base > get_or_init(
         std::type_info const& key,
         initializer_t initializer);
 
@@ -94,7 +94,7 @@ private:
 };
 
 //! Throws the \c odr_violation exception
-BOOST_LOG_EXPORT BOOST_LOG_NORETURN void throw_odr_violation(
+BOOST_LOG_API BOOST_LOG_NORETURN void throw_odr_violation(
     std::type_info const& tag_type,
     std::type_info const& logger_type,
     logger_holder_base const& registered);

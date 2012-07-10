@@ -51,13 +51,13 @@ class severity_level_holder :
 #if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_USE_COMPILER_TLS)
 
 //! The method returns the severity level for the current thread
-BOOST_LOG_EXPORT int get_severity_level()
+BOOST_LOG_API int get_severity_level()
 {
     return severity_level_holder::get().get();
 }
 
 //! The method sets the severity level for the current thread
-BOOST_LOG_EXPORT void set_severity_level(int level)
+BOOST_LOG_API void set_severity_level(int level)
 {
     severity_level_holder::get().set(level);
 }
@@ -65,13 +65,13 @@ BOOST_LOG_EXPORT void set_severity_level(int level)
 #else // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_USE_COMPILER_TLS)
 
 //! The method returns the severity level for the current thread
-BOOST_LOG_EXPORT int get_severity_level()
+BOOST_LOG_API int get_severity_level()
 {
     return g_Severity;
 }
 
 //! The method sets the severity level for the current thread
-BOOST_LOG_EXPORT void set_severity_level(int level)
+BOOST_LOG_API void set_severity_level(int level)
 {
     g_Severity = level;
 }

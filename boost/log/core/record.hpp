@@ -95,7 +95,7 @@ private:
         }
 
         //! Destructor
-        BOOST_LOG_EXPORT ~public_data();
+        BOOST_LOG_API ~public_data();
 
         BOOST_LOG_DELETED_FUNCTION(public_data(public_data const&))
         BOOST_LOG_DELETED_FUNCTION(public_data& operator= (public_data const&))
@@ -230,7 +230,7 @@ public:
      *
      * \pre <tt>!!*this</tt>
      */
-    BOOST_LOG_EXPORT void detach_from_thread();
+    BOOST_LOG_API void detach_from_thread();
 
     /*!
      * Attribute value lookup.

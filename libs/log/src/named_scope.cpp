@@ -203,7 +203,7 @@ basic_named_scope< CharT >::implementation::pScopesCache = NULL;
 
 //! Copy constructor
 template< typename CharT >
-BOOST_LOG_EXPORT basic_named_scope_list< CharT >::basic_named_scope_list(basic_named_scope_list const& that) :
+BOOST_LOG_API basic_named_scope_list< CharT >::basic_named_scope_list(basic_named_scope_list const& that) :
     allocator_type(static_cast< allocator_type const& >(that)),
     m_Size(that.size()),
     m_fNeedToDeallocate(!that.empty())
@@ -227,7 +227,7 @@ BOOST_LOG_EXPORT basic_named_scope_list< CharT >::basic_named_scope_list(basic_n
 
 //! Destructor
 template< typename CharT >
-BOOST_LOG_EXPORT basic_named_scope_list< CharT >::~basic_named_scope_list()
+BOOST_LOG_API basic_named_scope_list< CharT >::~basic_named_scope_list()
 {
     if (m_fNeedToDeallocate)
     {
@@ -241,7 +241,7 @@ BOOST_LOG_EXPORT basic_named_scope_list< CharT >::~basic_named_scope_list()
 
 //! Swaps two instances of the container
 template< typename CharT >
-BOOST_LOG_EXPORT void basic_named_scope_list< CharT >::swap(basic_named_scope_list& that)
+BOOST_LOG_API void basic_named_scope_list< CharT >::swap(basic_named_scope_list& that)
 {
     using std::swap;
 
@@ -317,11 +317,11 @@ typename basic_named_scope< CharT >::value_type const& basic_named_scope< CharT 
 
 //! Explicitly instantiate named_scope implementation
 #ifdef BOOST_LOG_USE_CHAR
-template class BOOST_LOG_EXPORT basic_named_scope< char >;
+template class BOOST_LOG_API basic_named_scope< char >;
 template class basic_named_scope_list< char >;
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-template class BOOST_LOG_EXPORT basic_named_scope< wchar_t >;
+template class BOOST_LOG_API basic_named_scope< wchar_t >;
 template class basic_named_scope_list< wchar_t >;
 #endif
 

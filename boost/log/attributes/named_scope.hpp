@@ -265,11 +265,11 @@ public:
      *
      * \post <tt>std::equal(begin(), end(), that.begin()) == true</tt>
      */
-    BOOST_LOG_EXPORT basic_named_scope_list(basic_named_scope_list const& that);
+    BOOST_LOG_API basic_named_scope_list(basic_named_scope_list const& that);
     /*!
      * Destructor. Destroys the stored entries.
      */
-    BOOST_LOG_EXPORT ~basic_named_scope_list();
+    BOOST_LOG_API ~basic_named_scope_list();
 
     /*!
      * Assignment operator
@@ -315,7 +315,7 @@ public:
     /*!
      * Swaps two instances of the container
      */
-    BOOST_LOG_EXPORT void swap(basic_named_scope_list& that);
+    BOOST_LOG_API void swap(basic_named_scope_list& that);
 
     /*!
      * \return Last pushed scope entry
@@ -353,7 +353,7 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (
  * maintain scope list manually. Use \c BOOST_LOG_NAMED_SCOPE or \c BOOST_LOG_FUNCTION macros instead.
  */
 template< typename CharT >
-class BOOST_LOG_EXPORT basic_named_scope :
+class BOOST_LOG_API basic_named_scope :
     public attribute
 {
 public:

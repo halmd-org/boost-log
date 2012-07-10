@@ -181,12 +181,12 @@ namespace aux {
         struct { void* p; } m_Mutex;
 
     public:
-        BOOST_LOG_EXPORT light_rw_mutex();
-        BOOST_LOG_EXPORT ~light_rw_mutex();
-        BOOST_LOG_EXPORT void lock_shared();
-        BOOST_LOG_EXPORT void unlock_shared();
-        BOOST_LOG_EXPORT void lock();
-        BOOST_LOG_EXPORT void unlock();
+        BOOST_LOG_API light_rw_mutex();
+        BOOST_LOG_API ~light_rw_mutex();
+        BOOST_LOG_API void lock_shared();
+        BOOST_LOG_API void unlock_shared();
+        BOOST_LOG_API void lock();
+        BOOST_LOG_API void unlock();
 
     private:
         // Noncopyable

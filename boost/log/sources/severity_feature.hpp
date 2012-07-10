@@ -47,9 +47,9 @@ namespace sources {
 namespace aux {
 
     //! The method returns the severity level for the current thread
-    BOOST_LOG_EXPORT int get_severity_level();
+    BOOST_LOG_API int get_severity_level();
     //! The method sets the severity level for the current thread
-    BOOST_LOG_EXPORT void set_severity_level(int level);
+    BOOST_LOG_API void set_severity_level(int level);
 
     //! Severity level attribute implementation
     template< typename LevelT >

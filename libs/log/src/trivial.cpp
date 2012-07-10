@@ -27,18 +27,18 @@ namespace BOOST_LOG_NAMESPACE {
 namespace trivial {
 
 //! Initialization routine
-BOOST_LOG_EXPORT logger::logger_type logger::construct_logger()
+BOOST_LOG_API logger::logger_type logger::construct_logger()
 {
     return logger_type(keywords::severity = info);
 }
 
 //! Returns a reference to the trivial logger instance
-BOOST_LOG_EXPORT logger::logger_type& logger::get()
+BOOST_LOG_API logger::logger_type& logger::get()
 {
     return log::sources::aux::logger_singleton< logger >::get();
 }
 
-BOOST_LOG_EXPORT const char* to_string(severity_level lvl)
+BOOST_LOG_API const char* to_string(severity_level lvl)
 {
     switch (lvl)
     {

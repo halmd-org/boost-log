@@ -54,14 +54,14 @@ private:
 
 public:
     //! Default constructor
-    BOOST_LOG_EXPORT sem_based_event();
+    BOOST_LOG_API sem_based_event();
     //! Destructor
-    BOOST_LOG_EXPORT ~sem_based_event();
+    BOOST_LOG_API ~sem_based_event();
 
     //! Waits for the object to become signalled
-    BOOST_LOG_EXPORT void wait();
+    BOOST_LOG_API void wait();
     //! Sets the object to a signalled state
-    BOOST_LOG_EXPORT void set_signalled();
+    BOOST_LOG_API void set_signalled();
 
 private:
     //  Copying prohibited
@@ -81,14 +81,14 @@ private:
 
 public:
     //! Default constructor
-    BOOST_LOG_EXPORT winapi_based_event();
+    BOOST_LOG_API winapi_based_event();
     //! Destructor
-    BOOST_LOG_EXPORT ~winapi_based_event();
+    BOOST_LOG_API ~winapi_based_event();
 
     //! Waits for the object to become signalled
-    BOOST_LOG_EXPORT void wait();
+    BOOST_LOG_API void wait();
     //! Sets the object to a signalled state
-    BOOST_LOG_EXPORT void set_signalled();
+    BOOST_LOG_API void set_signalled();
 
 private:
     //  Copying prohibited
@@ -109,14 +109,14 @@ private:
 
 public:
     //! Default constructor
-    BOOST_LOG_EXPORT generic_event();
+    BOOST_LOG_API generic_event();
     //! Destructor
-    BOOST_LOG_EXPORT ~generic_event();
+    BOOST_LOG_API ~generic_event();
 
     //! Waits for the object to become signalled
-    BOOST_LOG_EXPORT void wait();
+    BOOST_LOG_API void wait();
     //! Sets the object to a signalled state
-    BOOST_LOG_EXPORT void set_signalled();
+    BOOST_LOG_API void set_signalled();
 
 private:
     //  Copying prohibited

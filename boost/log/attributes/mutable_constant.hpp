@@ -91,7 +91,7 @@ protected:
         typedef ScopedReadLockT scoped_read_lock;
         //! Exclusive lock type
         typedef ScopedWriteLockT scoped_write_lock;
-        BOOST_STATIC_ASSERT(!(is_void< mutex_type >::value || is_void< scoped_read_lock >::value || is_void< scoped_write_lock >::value));
+        BOOST_STATIC_ASSERT_MSG(!(is_void< mutex_type >::value || is_void< scoped_read_lock >::value || is_void< scoped_write_lock >::value), "Boost.Log: Mutex and both lock types either must not be void or must all be void");
         //! Attribute value wrapper
         typedef basic_attribute_value< value_type > attr_value;
 

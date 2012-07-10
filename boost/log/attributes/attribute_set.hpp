@@ -247,14 +247,14 @@ public:
      *
      * \post <tt>empty() == true</tt>
      */
-    BOOST_LOG_EXPORT attribute_set();
+    BOOST_LOG_API attribute_set();
 
     /*!
      * Copy constructor.
      *
      * \post <tt>size() == that.size() && std::equal(begin(), end(), that.begin()) == true</tt>
      */
-    BOOST_LOG_EXPORT attribute_set(attribute_set const& that);
+    BOOST_LOG_API attribute_set(attribute_set const& that);
 
     /*!
      * Move constructor
@@ -267,7 +267,7 @@ public:
     /*!
      * Destructor. All stored references to attributes are released.
      */
-    BOOST_LOG_EXPORT ~attribute_set();
+    BOOST_LOG_API ~attribute_set();
 
     /*!
      * Move assignment operator
@@ -283,7 +283,7 @@ public:
      *
      * \post <tt>size() == that.size() && std::equal(begin(), end(), that.begin()) == true</tt>
      */
-    BOOST_LOG_EXPORT attribute_set& operator= (BOOST_COPY_ASSIGN_REF(attribute_set) that);
+    BOOST_LOG_API attribute_set& operator= (BOOST_COPY_ASSIGN_REF(attribute_set) that);
 
     /*!
      * Swaps two instances of the container.
@@ -300,24 +300,24 @@ public:
     /*!
      * \return Iterator to the first element of the container.
      */
-    BOOST_LOG_EXPORT iterator begin();
+    BOOST_LOG_API iterator begin();
     /*!
      * \return Iterator to the after-the-last element of the container.
      */
-    BOOST_LOG_EXPORT iterator end();
+    BOOST_LOG_API iterator end();
     /*!
      * \return Constant iterator to the first element of the container.
      */
-    BOOST_LOG_EXPORT const_iterator begin() const;
+    BOOST_LOG_API const_iterator begin() const;
     /*!
      * \return Constant iterator to the after-the-last element of the container.
      */
-    BOOST_LOG_EXPORT const_iterator end() const;
+    BOOST_LOG_API const_iterator end() const;
 
     /*!
      * \return Number of elements in the container.
      */
-    BOOST_LOG_EXPORT size_type size() const;
+    BOOST_LOG_API size_type size() const;
     /*!
      * \return true if there are no elements in the container, false otherwise.
      */
@@ -329,7 +329,7 @@ public:
      * \param key Attribute name.
      * \return Iterator to the found element or end() if the attribute with such name is not found.
      */
-    BOOST_LOG_EXPORT iterator find(key_type key);
+    BOOST_LOG_API iterator find(key_type key);
     /*!
      * The method finds the attribute by name.
      *
@@ -390,7 +390,7 @@ public:
      * \returns A pair of values. If second is true, the insertion succeeded and the first component points to the
      *          inserted element. Otherwise the first component points to the element that prevents insertion.
      */
-    BOOST_LOG_EXPORT std::pair< iterator, bool > insert(key_type key, mapped_type const& data);
+    BOOST_LOG_API std::pair< iterator, bool > insert(key_type key, mapped_type const& data);
 
     /*!
      * Insertion method
@@ -438,7 +438,7 @@ public:
      * \param key Attribute name.
      * \return Tne number of erased elements
      */
-    BOOST_LOG_EXPORT size_type erase(key_type key);
+    BOOST_LOG_API size_type erase(key_type key);
     /*!
      * The method erases the specified attribute
      *
@@ -446,7 +446,7 @@ public:
      * \param it A valid iterator to the element to be erased.
      * \return Tne number of erased elements
      */
-    BOOST_LOG_EXPORT void erase(iterator it);
+    BOOST_LOG_API void erase(iterator it);
     /*!
      * The method erases all attributes within the specified range
      *
@@ -455,14 +455,14 @@ public:
      * \param begin An iterator that points to the first element to be erased.
      * \param end An iterator that points to the after-the-last element to be erased.
      */
-    BOOST_LOG_EXPORT void erase(iterator begin, iterator end);
+    BOOST_LOG_API void erase(iterator begin, iterator end);
 
     /*!
      * The method removes all elements from the container
      *
      * \post <tt>empty() == true</tt>
      */
-    BOOST_LOG_EXPORT void clear();
+    BOOST_LOG_API void clear();
 };
 
 /*!

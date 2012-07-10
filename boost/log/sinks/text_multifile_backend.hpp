@@ -192,12 +192,12 @@ public:
      * Default constructor. The constructed sink backend has no file name composer and
      * thus will not write any files.
      */
-    BOOST_LOG_EXPORT basic_text_multifile_backend();
+    BOOST_LOG_API basic_text_multifile_backend();
 
     /*!
      * Destructor
      */
-    BOOST_LOG_EXPORT ~basic_text_multifile_backend();
+    BOOST_LOG_API ~basic_text_multifile_backend();
 
     /*!
      * The method sets file name composer functional object. Log record formatters are accepted, too.
@@ -213,7 +213,7 @@ public:
     /*!
      * The method writes the message to the sink
      */
-    BOOST_LOG_EXPORT void consume(record_type const& record, target_string_type const& formatted_message);
+    BOOST_LOG_API void consume(record_type const& record, target_string_type const& formatted_message);
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -230,7 +230,7 @@ private:
         set_file_name_composer_internal(composer);
     }
     //! The method sets the file name composer
-    BOOST_LOG_EXPORT void set_file_name_composer_internal(file_name_composer_type const& composer);
+    BOOST_LOG_API void set_file_name_composer_internal(file_name_composer_type const& composer);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

@@ -42,7 +42,7 @@ namespace BOOST_LOG_NAMESPACE {
  * be caused by the user's code that interacts with the library, such as
  * errors caused by input data.
  */
-class BOOST_LOG_EXPORT runtime_error :
+class BOOST_LOG_API runtime_error :
     public std::runtime_error
 {
 protected:
@@ -59,7 +59,7 @@ protected:
 /*!
  * \brief Exception class that is used to indicate errors of missing values
  */
-class BOOST_LOG_EXPORT missing_value :
+class BOOST_LOG_API missing_value :
     public runtime_error
 {
 public:
@@ -85,7 +85,7 @@ public:
 /*!
  * \brief Exception class that is used to indicate errors of incorrect type of an object
  */
-class BOOST_LOG_EXPORT invalid_type :
+class BOOST_LOG_API invalid_type :
     public runtime_error
 {
 public:
@@ -111,7 +111,7 @@ public:
 /*!
  * \brief Exception class that is used to indicate errors of incorrect value of an object
  */
-class BOOST_LOG_EXPORT invalid_value :
+class BOOST_LOG_API invalid_value :
     public runtime_error
 {
 public:
@@ -137,7 +137,7 @@ public:
 /*!
  * \brief Exception class that is used to indicate parsing errors
  */
-class BOOST_LOG_EXPORT parse_error :
+class BOOST_LOG_API parse_error :
     public runtime_error
 {
 public:
@@ -164,7 +164,7 @@ public:
 /*!
  * \brief Exception class that is used to indicate conversion errors
  */
-class BOOST_LOG_EXPORT conversion_error :
+class BOOST_LOG_API conversion_error :
     public runtime_error
 {
 public:
@@ -190,7 +190,7 @@ public:
 /*!
  * \brief Exception class that is used to indicate underlying OS API errors
  */
-class BOOST_LOG_EXPORT system_error :
+class BOOST_LOG_API system_error :
     public runtime_error
 {
 public:
@@ -219,7 +219,7 @@ public:
  * Exceptions derived from this class usually indicate errors on the user's side, such as
  * incorrect library usage.
  */
-class BOOST_LOG_EXPORT logic_error :
+class BOOST_LOG_API logic_error :
     public std::logic_error
 {
 protected:
@@ -236,7 +236,7 @@ protected:
 /*!
  * \brief Exception class that is used to indicate ODR violation
  */
-class BOOST_LOG_EXPORT odr_violation :
+class BOOST_LOG_API odr_violation :
     public logic_error
 {
 public:
@@ -262,7 +262,7 @@ public:
 /*!
  * \brief Exception class that is used to indicate invalid call sequence
  */
-class BOOST_LOG_EXPORT unexpected_call :
+class BOOST_LOG_API unexpected_call :
     public logic_error
 {
 public:
@@ -288,7 +288,7 @@ public:
 /*!
  * \brief Exception class that is used to indicate invalid library setup
  */
-class BOOST_LOG_EXPORT setup_error :
+class BOOST_LOG_API setup_error :
     public logic_error
 {
 public:

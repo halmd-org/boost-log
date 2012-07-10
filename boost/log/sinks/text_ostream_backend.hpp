@@ -85,40 +85,40 @@ public:
     /*!
      * Constructor. No streams attached to the constructed backend, auto flush feature disabled.
      */
-    BOOST_LOG_EXPORT basic_text_ostream_backend();
+    BOOST_LOG_API basic_text_ostream_backend();
     /*!
      * Destructor
      */
-    BOOST_LOG_EXPORT ~basic_text_ostream_backend();
+    BOOST_LOG_API ~basic_text_ostream_backend();
 
     /*!
      * The method adds a new stream to the sink.
      *
      * \param strm Pointer to the stream. Must not be NULL.
      */
-    BOOST_LOG_EXPORT void add_stream(shared_ptr< stream_type > const& strm);
+    BOOST_LOG_API void add_stream(shared_ptr< stream_type > const& strm);
     /*!
      * The method removes a stream from the sink. If the stream is not attached to the sink,
      * the method has no effect.
      *
      * \param strm Pointer to the stream. Must not be NULL.
      */
-    BOOST_LOG_EXPORT void remove_stream(shared_ptr< stream_type > const& strm);
+    BOOST_LOG_API void remove_stream(shared_ptr< stream_type > const& strm);
 
     /*!
      * Sets the flag to automatically flush buffers of all attached streams after each log record
      */
-    BOOST_LOG_EXPORT void auto_flush(bool f = true);
+    BOOST_LOG_API void auto_flush(bool f = true);
 
     /*!
      * The method writes the message to the sink
      */
-    BOOST_LOG_EXPORT void consume(record_type const& record, target_string_type const& formatted_message);
+    BOOST_LOG_API void consume(record_type const& record, target_string_type const& formatted_message);
 
     /*!
      * The method flushes the associated streams
      */
-    BOOST_LOG_EXPORT void flush();
+    BOOST_LOG_API void flush();
 };
 
 #ifdef BOOST_LOG_USE_CHAR
