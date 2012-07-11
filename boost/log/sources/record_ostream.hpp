@@ -295,9 +295,8 @@ public:
         return m_pStreamCompound->stream;
     }
 
-private:
     //! Closed assignment
-    record_pump& operator= (record_pump const&);
+    BOOST_LOG_DELETED_FUNCTION(record_pump& operator= (record_pump const&))
 };
 
 template< typename LoggerT >

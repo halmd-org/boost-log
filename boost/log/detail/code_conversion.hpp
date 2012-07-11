@@ -22,12 +22,7 @@
 
 #include <locale>
 #include <string>
-#include <ostream>
-#include <streambuf>
-#include <boost/mpl/if.hpp>
-#include <boost/type_traits/is_same.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/attachable_sstream_buf.hpp>
 
 namespace boost {
 
@@ -35,92 +30,41 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-//! The stream buffer that converts wide character to narrow characters or vise versa on writing
-template<
-    typename CharT,
-    typename TraitsT = std::char_traits< CharT >
->
-class BOOST_LOG_API converting_ostringstreambuf :
-    public std::basic_streambuf< CharT, TraitsT >
-{
-    //! Base type
-    typedef std::basic_streambuf< CharT, TraitsT > base_type;
-
-    //! Buffers size
-    enum { buffer_size = 256 };
-
-public:
-    //! Character type
-    typedef typename base_type::char_type char_type;
-    //! Traits type
-    typedef typename base_type::traits_type traits_type;
-    //! Int type
-    typedef typename base_type::int_type int_type;
-    //! Target character type
-    typedef typename mpl::if_<
-        is_same< char_type, char >,
-        wchar_t,
-        char
-    >::type target_char_type;
-    //! String type
-    typedef std::basic_string< target_char_type > string_type;
-    //! Code conversion facet
-    typedef std::codecvt< wchar_t, char, std::mbstate_t > facet_type;
-
-private:
-    //! A reference to the string that will be filled
-    string_type& m_Storage;
-    //! Character conversion state
-    std::mbstate_t m_ConversionState;
-    //! A buffer used to temporarily store output
-    char_type m_Buffer[buffer_size];
-
-public:
-    //! Constructor
-    explicit converting_ostringstreambuf(string_type& storage);
-    //! Destructor
-    ~converting_ostringstreambuf();
-
-    //! Clears the buffer to the initial state
-    void clear();
-
-protected:
-    //! Puts all buffered data to the string
-    int sync();
-    //! Puts an unbuffered character to the string
-    int_type overflow(int_type c);
-    //! Puts a character sequence to the string
-    std::streamsize xsputn(const char_type* s, std::streamsize n);
-
-private:
-    //! The function writes the specified characters to the storage
-    void write(const char_type*& pBase, const char_type* pPtr);
-};
-
+//! The function converts one string to the character type of another
+BOOST_LOG_API void code_convert(const wchar_t* str1, std::size_t len, std::string& str2, std::locale const& loc = std::locale());
+//! The function converts one string to the character type of another
+BOOST_LOG_API void code_convert(const char* str1, std::size_t len, std::wstring& str2, std::locale const& loc = std::locale());
+#ifndef BOOST_NO_CHAR16_T
+//! The function converts one string to the character type of another
+BOOST_LOG_API void code_convert(const char16_t* str1, std::size_t len, std::string& str2, std::locale const& loc = std::locale());
+//! The function converts one string to the character type of another
+BOOST_LOG_API void code_convert(const char* str1, std::size_t len, std::u16string& str2, std::locale const& loc = std::locale());
+#endif
+#ifndef BOOST_NO_CHAR32_T
+//! The function converts one string to the character type of another
+BOOST_LOG_API void code_convert(const char32_t* str1, std::size_t len, std::string& str2, std::locale const& loc = std::locale());
+//! The function converts one string to the character type of another
+BOOST_LOG_API void code_convert(const char* str1, std::size_t len, std::u32string& str2, std::locale const& loc = std::locale());
+#endif
 
 //! The function converts one string to the character type of another
-inline void code_convert(std::string const& str1, std::string& str2)
+template< typename CharT, typename SourceTraitsT, typename SourceAllocatorT, typename TargetTraitsT, typename TargetAllocatorT >
+inline void code_convert(std::basic_string< CharT, SourceTraitsT, SourceAllocatorT > const& str1, std::basic_string< CharT, TargetTraitsT, TargetAllocatorT >& str2, std::locale const& = std::locale())
 {
-    str2 = str1;
+    str2.append(str1.c_str(), str1.size());
 }
 //! The function converts one string to the character type of another
-inline void code_convert(std::wstring const& str1, std::string& str2)
+template< typename CharT, typename TargetTraitsT, typename TargetAllocatorT >
+inline void code_convert(const CharT* str1, std::size_t len, std::basic_string< CharT, TargetTraitsT, TargetAllocatorT >& str2, std::locale const& = std::locale())
 {
-    converting_ostringstreambuf< wchar_t > buf(str2);
-    buf.sputn(str1.data(), static_cast< std::streamsize >(str1.size()));
-    buf.pubsync();
+    str2.append(str1, len);
 }
+
 //! The function converts one string to the character type of another
-inline void code_convert(std::wstring const& str1, std::wstring& str2)
+template< typename SourceCharT, typename SourceTraitsT, typename SourceAllocatorT, typename TargetCharT, typename TargetTraitsT, typename TargetAllocatorT >
+inline void code_convert(std::basic_string< SourceCharT, SourceTraitsT, SourceAllocatorT > const& str1, std::basic_string< TargetCharT, TargetTraitsT, TargetAllocatorT >& str2, std::locale const& loc = std::locale())
 {
-    str2 = str1;
-}
-//! The function converts one string to the character type of another
-inline void code_convert(std::string const& str1, std::wstring& str2)
-{
-    converting_ostringstreambuf< char > buf(str2);
-    buf.sputn(str1.data(), static_cast< std::streamsize >(str1.size()));
-    buf.pubsync();
+    aux::code_convert(str1.c_str(), str1.size(), str2, loc);
 }
 
 //! The function converts the passed string to the narrow-character encoding

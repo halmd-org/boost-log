@@ -72,12 +72,6 @@ namespace aux {
         //! A buffer used to temporarily store output
         char_type m_Buffer[buffer_size];
 
-    private:
-        //! Copy constructor (closed)
-        basic_ostringstreambuf(basic_ostringstreambuf const& that);
-        //! Assignment (closed)
-        basic_ostringstreambuf& operator= (basic_ostringstreambuf const& that);
-
     public:
         //! Constructor
         explicit basic_ostringstreambuf() : m_Storage(0)
@@ -115,6 +109,9 @@ namespace aux {
             detach();
             m_Storage = boost::addressof(storage);
         }
+
+        //! Returns a pointer to the attached string
+        string_type* storage() const { return m_Storage; }
 
     protected:
         //! Puts all buffered data to the string
@@ -162,6 +159,11 @@ namespace aux {
                 return static_cast< std::streamsize >(max_storage_left);
             }
         }
+
+        //! Copy constructor (closed)
+        BOOST_LOG_DELETED_FUNCTION(basic_ostringstreambuf(basic_ostringstreambuf const& that))
+        //! Assignment (closed)
+        BOOST_LOG_DELETED_FUNCTION(basic_ostringstreambuf& operator= (basic_ostringstreambuf const& that))
     };
 
 } // namespace aux

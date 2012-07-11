@@ -19,16 +19,17 @@
 #ifndef BOOST_LOG_UTILITY_STRING_LITERAL_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_STRING_LITERAL_HPP_INCLUDED_
 
+#include <cstddef>
 #include <stdexcept>
 #include <iosfwd>
 #include <string>
 #include <iterator>
 #include <boost/operators.hpp>
 #include <boost/throw_exception.hpp>
-#include <cstddef>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/utility/string_literal_fwd.hpp>
 
 namespace boost {
 
@@ -45,7 +46,7 @@ namespace BOOST_LOG_NAMESPACE {
  * The main advantage of this class comparing to other string classes is that
  * it doesn't dynamically allocate memory and therefore is fast, thin and exception safe.
  */
-template< typename CharT, typename TraitsT = std::char_traits< CharT > >
+template< typename CharT, typename TraitsT >
 class basic_string_literal
     //! \cond
     : public totally_ordered1< basic_string_literal< CharT, TraitsT >,
@@ -527,14 +528,6 @@ inline void swap(
 {
     left.swap(right);
 }
-
-//  Convenience typedefs
-#ifdef BOOST_LOG_USE_CHAR
-typedef basic_string_literal< char > string_literal;        //!< String literal type for narrow characters
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_string_literal< wchar_t > wstring_literal;    //!< String literal type for wide characters
-#endif
 
 //! Creates a string literal wrapper from a constant string literal
 #ifdef BOOST_LOG_USE_CHAR
