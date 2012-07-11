@@ -627,16 +627,17 @@ namespace event_log {
         typedef std::basic_ostream< char_type > stream_type;
         //! Attribute values view type
         typedef basic_attribute_values_view< char_type > values_view_type;
+        //! Log record type
+        typedef basic_record< char_type > record_type;
 
         //! Event identifier mapper type
         typedef function1< event_id_t, values_view_type const& > event_id_mapper_type;
 
         //! Type of an insertion composer (a formatter)
-        typedef function3<
+        typedef function2<
             void,
             stream_type&,
-            values_view_type const&,
-            string_type const&
+            record_type const&
         > formatter_type;
         //! Type of the composed insertions list
         typedef std::vector< string_type > insertion_list;
@@ -730,15 +731,11 @@ namespace event_log {
          * Then runs all formatters that were registered for the event with the extracted ID. The results of formatting
          * are returned in the \c insertions parameter.
          *
-         * \param attributes A set of attribute values of a logging record
-         * \param message Log record message
+         * \param rec Log record
          * \param insertions A sequence of formatted insertion strings
          * \return An event identifier that was extracted from \c attributes
          */
-        event_id_t operator() (
-            values_view_type const& attributes,
-            string_type const& message,
-            insertion_list& insertions) const;
+        event_id_t operator() (record_type const& rec, insertion_list& insertions) const;
 
     private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -934,8 +931,7 @@ public:
     //! Event composer type
     typedef function3<
         event_log::event_id_t,
-        values_view_type const&,
-        string_type const&,
+        record_type const&,
         insertion_list&
     > event_composer_type;
 

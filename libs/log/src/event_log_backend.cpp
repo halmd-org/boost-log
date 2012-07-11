@@ -351,10 +351,7 @@ namespace event_log {
         //! Default constructor
         insertion_composer() {}
         //! Composition operator
-        void operator() (
-            values_view_type const& attributes,
-            string_type const& message,
-            insertion_list& insertions) const
+        void operator() (record_type const& rec, insertion_list& insertions) const
         {
             std::size_t size = m_Formatters.size();
             insertions.resize(size);
@@ -362,7 +359,7 @@ namespace event_log {
             {
                 log::aux::basic_ostringstreambuf< char_type > buf(insertions[i]);
                 stream_type strm(&buf);
-                m_Formatters[i](strm, attributes, message);
+                m_Formatters[i](strm, rec);
                 strm.flush();
             }
         }
@@ -423,15 +420,12 @@ namespace event_log {
 
     //! Event composition operator
     template< typename CharT >
-    event_id_t basic_event_composer< CharT >::operator() (
-        values_view_type const& attributes,
-        string_type const& message,
-        insertion_list& insertions) const
+    event_id_t basic_event_composer< CharT >::operator() (record_type const& rec, insertion_list& insertions) const
     {
         event_id_t id = m_EventIDMapper(attributes);
         typename event_map::const_iterator it = m_EventMap.find(id);
         if (it != m_EventMap.end())
-            it->second(attributes, message, insertions);
+            it->second(rec, insertions);
         return id;
     }
 
@@ -537,7 +531,7 @@ BOOST_LOG_EXPORT void basic_event_log_backend< CharT >::consume(record_type cons
         values_view_type const& values = record.attribute_values();
 
         // Get event ID and construct insertions
-        DWORD event_id = m_pImpl->m_EventComposer(values, record.message(), m_pImpl->m_Insertions).value;
+        DWORD event_id = m_pImpl->m_EventComposer(record, m_pImpl->m_Insertions).value;
         WORD string_count = static_cast< WORD >(m_pImpl->m_Insertions.size());
         scoped_array< const char_type* > strings(new const char_type*[string_count]);
         for (WORD i = 0; i < string_count; ++i)
