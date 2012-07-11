@@ -422,7 +422,7 @@ namespace event_log {
     template< typename CharT >
     event_id_t basic_event_composer< CharT >::operator() (record_type const& rec, insertion_list& insertions) const
     {
-        event_id_t id = m_EventIDMapper(attributes);
+        event_id_t id = m_EventIDMapper(rec.attribute_values());
         typename event_map::const_iterator it = m_EventMap.find(id);
         if (it != m_EventMap.end())
             it->second(rec, insertions);

@@ -929,7 +929,7 @@ public:
         values_view_type const&
     > event_category_mapper_type;
     //! Event composer type
-    typedef function3<
+    typedef function2<
         event_log::event_id_t,
         record_type const&,
         insertion_list&

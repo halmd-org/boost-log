@@ -1194,7 +1194,7 @@ BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::do_consume(
             filesystem_error err(
                 "Failed to open file for writing",
                 m_pImpl->m_FileName,
-                system::error_code(system::errc::io_error, system::get_generic_category()));
+                system::error_code(system::errc::io_error, system::generic_category()));
             BOOST_THROW_EXCEPTION(err);
         }
 
