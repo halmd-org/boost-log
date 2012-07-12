@@ -19,6 +19,7 @@
 #ifndef BOOST_LOG_ATTRIBUTES_BASIC_ATTRIBUTE_VALUE_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_BASIC_ATTRIBUTE_VALUE_HPP_INCLUDED_
 
+#include <boost/move/move.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute_value_def.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
@@ -53,6 +54,10 @@ public:
      * Constructor with initialization of the stored value
      */
     explicit basic_attribute_value(value_type const& v) : m_Value(v) {}
+    /*!
+     * Constructor with initialization of the stored value
+     */
+    explicit basic_attribute_value(BOOST_RV_REF(value_type) v) : m_Value(boost::move(v)) {}
 
     virtual bool dispatch(type_dispatcher& dispatcher)
     {
@@ -72,6 +77,15 @@ public:
      */
     value_type const& get() const { return m_Value; }
 };
+
+/*!
+ * The function creates an attribute value from the specified object.
+ */
+template< typename T >
+inline attribute_value make_attribute_value(BOOST_FWD_REF(T) v)
+{
+    return attribute_value(new basic_attribute_value< T >(boost::forward< T >(v)));
+}
 
 } // namespace attributes
 

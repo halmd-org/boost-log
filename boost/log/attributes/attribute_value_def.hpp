@@ -117,7 +117,7 @@ public:
     /*!
      * Default constructor. Creates an empty (absent) attribute value.
      */
-    attribute_value() {}
+    BOOST_LOG_DEFAULTED_FUNCTION(attribute_value(), {})
 
     /*!
      * Copy constructor

@@ -26,10 +26,10 @@
 #include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/native_typeof.hpp>
-#include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/log/utility/formatting_stream.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -49,29 +49,26 @@ namespace BOOST_LOG_NAMESPACE {
  * This class allows to compose the logging record message by streaming operations. It
  * aggregates the log record and provides the standard output stream interface.
  */
-template< typename CharT, typename TraitsT = std::char_traits< CharT > >
+template< typename CharT >
 class basic_record_ostream :
-    private boost::log::aux::basic_ostringstreambuf< CharT, TraitsT >,
-    public std::basic_ostream< CharT, TraitsT >
+    public basic_formatting_ostream< CharT >
 {
     //! Self type
-    typedef basic_record_ostream< CharT, TraitsT > this_type;
-    //! Base class that contains the stream buffer
-    typedef boost::log::aux::basic_ostringstreambuf< CharT, TraitsT > ostream_buf_base_type;
+    typedef basic_record_ostream< CharT > this_type;
+    //! Base stream class
+    typedef basic_formatting_ostream< CharT > base_type;
 
 public:
     //! Stream type
     typedef std::basic_ostream< CharT, TraitsT > ostream_type;
-    //! Log record type
-    typedef basic_record< CharT > record_type;
     //! Character type
-    typedef typename record_type::char_type char_type;
+    typedef CharT char_type;
     //! String type to be used as a message text holder
-    typedef typename record_type::string_type string_type;
+    typedef std::basic_string< char_type > string_type;
 
 private:
     //! Log record
-    record_type m_Record;
+    record m_Record;
 
 public:
     /*!
@@ -80,25 +77,8 @@ public:
      *
      * \post <tt>!*this == true</tt>
      */
-    basic_record_ostream() : ostream_type(static_cast< ostream_buf_base_type* >(this))
-    {
-        ostream_type::clear(ostream_type::badbit);
-    }
+    BOOST_LOG_DEFAULTED_FUNCTION(basic_record_ostream(), {})
 
-    /*!
-     * Conversion from a record handle. Adopts the record referenced by the handle.
-     *
-     * \pre The handle, if valid, have been issued by the logging core with the same character type as the record being constructed.
-     * \post <tt>this->handle() == rec</tt>
-     * \param rec The record handle being adopted
-     */
-    explicit basic_record_ostream(record_handle const& rec) :
-        ostream_type(static_cast< ostream_buf_base_type* >(this)),
-        m_Record(rec)
-    {
-        ostream_type::clear(ostream_type::badbit);
-        init_stream();
-    }
     /*!
      * Conversion from a record object. Adopts the record referenced by the object.
      *
@@ -106,11 +86,9 @@ public:
      * \post <tt>this->handle() == rec</tt>
      * \param rec The record handle being adopted
      */
-    basic_record_ostream(record_type const& rec) :
-        ostream_type(static_cast< ostream_buf_base_type* >(this)),
+    basic_record_ostream(record const& rec) :
         m_Record(rec)
     {
-        ostream_type::clear(ostream_type::badbit);
         init_stream();
     }
 
@@ -138,7 +116,7 @@ public:
      */
     bool operator! () const
     {
-        return (!m_Record || ostream_type::fail());
+        return (!m_Record || base_type::fail());
     }
 
     /*!
@@ -146,7 +124,7 @@ public:
      *
      * \return The aggregated record object
      */
-    record_type const& record() const
+    record const& record() const
     {
         const_cast< this_type* >(this)->flush();
         return m_Record;
@@ -158,22 +136,23 @@ public:
      *
      * \param rec New log record to attach to
      */
-    void record(record_type rec)
+    void record(record rec)
     {
         detach_from_record();
         m_Record.swap(rec);
         init_stream();
     }
 
-private:
-    //  Copy and assignment are closed
-    basic_record_ostream(basic_record_ostream const&);
-    basic_record_ostream& operator= (basic_record_ostream const&);
-
-    //! The function initializes the stream and the stream buffer
-    BOOST_LOG_API void init_stream();
     //! The function resets the stream into a detached (default initialized) state
     BOOST_LOG_API void detach_from_record();
+
+private:
+    //! The function initializes the stream and the stream buffer
+    BOOST_LOG_API void init_stream();
+
+    //  Copy and assignment are closed
+    BOOST_LOG_DELETED_FUNCTION(basic_record_ostream(basic_record_ostream const&))
+    BOOST_LOG_DELETED_FUNCTION(basic_record_ostream& operator= (basic_record_ostream const&))
 };
 
 
@@ -192,8 +171,6 @@ struct stream_provider
 {
     //! Character type
     typedef CharT char_type;
-    //! Record type
-    typedef basic_record< char_type > record_type;
 
     //! Formatting stream compound
     struct stream_compound
@@ -204,19 +181,18 @@ struct stream_provider
         basic_record_ostream< char_type > stream;
 
         //! Initializing constructor
-        explicit stream_compound(record_type const& rec) : next(NULL), stream(rec) {}
+        explicit stream_compound(record const& rec) : next(NULL), stream(rec) {}
     };
 
     //! The method returns an allocated stream compound
-    BOOST_LOG_API static stream_compound* allocate_compound(record_type const& rec);
+    BOOST_LOG_API static stream_compound* allocate_compound(record const& rec);
     //! The method releases a compound
     BOOST_LOG_API static void release_compound(stream_compound* compound) /* throw() */;
 
-private:
     //  Non-constructible, non-copyable, non-assignable
-    stream_provider();
-    stream_provider(stream_provider const&);
-    stream_provider& operator= (stream_provider const&);
+    BOOST_LOG_DELETED_FUNCTION(stream_provider())
+    BOOST_LOG_DELETED_FUNCTION(stream_provider(stream_provider const&))
+    BOOST_LOG_DELETED_FUNCTION(stream_provider& operator= (stream_provider const&))
 };
 
 
@@ -237,8 +213,6 @@ private:
     typedef LoggerT logger_type;
     //! Character type
     typedef typename logger_type::char_type char_type;
-    //! Log record type
-    typedef typename logger_type::record_type record_type;
     //! Stream compound provider
     typedef stream_provider< char_type > stream_provider_type;
     //! Stream compound type
@@ -264,7 +238,7 @@ protected:
 
 public:
     //! Constructor
-    explicit record_pump(logger_type& lg, record_type const& rec) :
+    explicit record_pump(logger_type& lg, record const& rec) :
         m_pLogger(boost::addressof(lg)),
         m_pStreamCompound(stream_provider_type::allocate_compound(rec))
     {
@@ -300,43 +274,22 @@ public:
 };
 
 template< typename LoggerT >
-BOOST_LOG_FORCEINLINE record_pump< LoggerT > make_pump_stream(LoggerT& lg, typename LoggerT::record_type const& rec)
+BOOST_LOG_FORCEINLINE record_pump< LoggerT > make_pump_stream(LoggerT& lg, record const& rec)
 {
     return record_pump< LoggerT >(lg, rec);
-}
-
-template< typename LoggerT >
-BOOST_LOG_FORCEINLINE record_pump< LoggerT > make_pump_stream(LoggerT& lg, record_handle const& rec)
-{
-    typedef typename LoggerT::record_type record_type;
-    return record_pump< LoggerT >(lg, record_type(rec));
 }
 
 } // namespace aux
 
 //! \cond
 
-#ifdef BOOST_LOG_AUTO
-
 #define BOOST_LOG_STREAM_INTERNAL(logger, rec_var)\
-    for (BOOST_LOG_AUTO(rec_var, (logger).open_record()); !!rec_var; rec_var.reset())\
+    for (::boost::log::record rec_var = (logger).open_record(); !!rec_var; rec_var.reset())\
         ::boost::log::aux::make_pump_stream((logger), rec_var).stream()
 
 #define BOOST_LOG_STREAM_WITH_PARAMS_INTERNAL(logger, rec_var, params_seq)\
-    for (BOOST_LOG_AUTO(rec_var, (logger).open_record((BOOST_PP_SEQ_ENUM(params_seq)))); !!rec_var; rec_var.reset())\
+    for (::boost::log::record rec_var = (logger).open_record((BOOST_PP_SEQ_ENUM(params_seq))); !!rec_var; rec_var.reset())\
         ::boost::log::aux::make_pump_stream((logger), rec_var).stream()
-
-#else // BOOST_LOG_AUTO
-
-#define BOOST_LOG_STREAM_INTERNAL(logger, rec_var)\
-    for (::boost::log::record_handle rec_var = (logger).open_record().handle(); !!rec_var; rec_var.reset())\
-        ::boost::log::aux::make_pump_stream((logger), rec_var).stream()
-
-#define BOOST_LOG_STREAM_WITH_PARAMS_INTERNAL(logger, rec_var, params_seq)\
-    for (::boost::log::record_handle rec_var = (logger).open_record((BOOST_PP_SEQ_ENUM(params_seq))).handle(); !!rec_var; rec_var.reset())\
-        ::boost::log::aux::make_pump_stream((logger), rec_var).stream()
-
-#endif // BOOST_LOG_AUTO
 
 //! \endcond
 
