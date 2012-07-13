@@ -19,10 +19,10 @@
 #ifndef BOOST_LOG_EXCEPTIONS_HPP_INCLUDED_
 #define BOOST_LOG_EXCEPTIONS_HPP_INCLUDED_
 
+#include <cstddef>
 #include <string>
 #include <stdexcept>
 #include <boost/preprocessor/seq/enum.hpp>
-#include <cstddef>
 #include <boost/log/detail/prologue.hpp>
 
 #ifdef _MSC_VER
@@ -304,6 +304,32 @@ public:
      * Destructor
      */
     ~setup_error() throw();
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
+#endif
+};
+
+/*!
+ * \brief Exception class that is used to indicate library limitation
+ */
+class BOOST_LOG_API limitation_error :
+    public logic_error
+{
+public:
+    /*!
+     * Default constructor. Creates an exception with the default error message.
+     */
+    limitation_error();
+    /*!
+     * Initializing constructor. Creates an exception with the specified error message.
+     */
+    explicit limitation_error(std::string const& descr);
+    /*!
+     * Destructor
+     */
+    ~limitation_error() throw();
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);

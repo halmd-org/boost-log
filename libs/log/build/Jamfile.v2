@@ -60,6 +60,7 @@ local BOOST_LOG_COMMON_SRC =
     thread_id.cpp
     timer.cpp
     exceptions.cpp
+    default_attribute_names.cpp
     default_sink.cpp
     text_ostream_backend.cpp
     text_file_backend.cpp

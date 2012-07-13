@@ -37,9 +37,8 @@ namespace aux {
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 //! The loggers repository singleton
-template< typename CharT >
 struct loggers_repository :
-    public log::aux::lazy_singleton< loggers_repository< CharT > >
+    public log::aux::lazy_singleton< loggers_repository >
 {
     //! Repository map type
     typedef std::map< type_info_wrapper, shared_ptr< logger_holder_base > > loggers_map_t;
@@ -55,18 +54,14 @@ struct loggers_repository :
 } // namespace
 
 //! Finds or creates the logger and returns its holder
-template< typename CharT >
-BOOST_LOG_API shared_ptr< logger_holder_base > global_storage< CharT >::get_or_init(
-    std::type_info const& key,
-    initializer_t initializer)
+BOOST_LOG_API shared_ptr< logger_holder_base > global_storage::get_or_init(std::type_info const& key, initializer_t initializer)
 {
-    typedef loggers_repository< CharT > repository_t;
-    typedef typename repository_t::loggers_map_t loggers_map_t;
-    repository_t& repo = repository_t::get();
+    typedef loggers_repository::loggers_map_t loggers_map_t;
+    loggers_repository& repo = loggers_repository::get();
     type_info_wrapper wrapped_key = key;
 
-    BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< mutex > _(repo.m_Mutex);)
-    typename loggers_map_t::iterator it = repo.m_Loggers.find(wrapped_key);
+    BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< mutex > lock(repo.m_Mutex);)
+    loggers_map_t::iterator it = repo.m_Loggers.find(wrapped_key);
     if (it != repo.m_Loggers.end())
     {
         // There is an instance
@@ -101,14 +96,6 @@ BOOST_LOG_API BOOST_LOG_NORETURN void throw_odr_violation(
 
     BOOST_LOG_THROW_DESCR(odr_violation, str);
 }
-
-//! Explicitly instantiate global_storage implementation
-#ifdef BOOST_LOG_USE_CHAR
-template struct global_storage< char >;
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-template struct global_storage< wchar_t >;
-#endif
 
 } // namespace aux
 

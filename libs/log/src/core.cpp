@@ -231,7 +231,7 @@ public:
     //! The global state of logging
     volatile bool m_enabled;
     //! Global filter
-    filter_type m_filter;
+    filter m_filter;
 
     //! Exception handler
     exception_handler_type m_exception_handler;
@@ -445,7 +445,7 @@ void core::set_thread_attributes(attribute_set const& attrs)
 }
 
 //! An internal method to set the global filter
-void core::set_filter(filter_type const& filter)
+void core::set_filter(filter const& filter)
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
     m_impl->m_filter = filter;
@@ -455,7 +455,7 @@ void core::set_filter(filter_type const& filter)
 void core::reset_filter()
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
-    m_impl->m_filter.clear();
+    m_impl->m_filter.reset();
 }
 
 //! The method sets exception handler function
@@ -510,7 +510,7 @@ record core::open_record(attribute_set const& source_attributes)
             // Compose a view of attribute values (unfrozen, yet)
             attribute_values_view attr_values(source_attributes, tsd->m_thread_attributes, m_impl->m_global_attributes);
 
-            if (m_impl->m_filter.empty() || m_impl->m_filter(attr_values))
+            if (m_impl->m_filter(attr_values))
             {
                 // The global filter passed, trying the sinks
                 implementation::record_private_data* rec_impl = NULL;

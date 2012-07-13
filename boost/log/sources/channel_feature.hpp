@@ -20,6 +20,7 @@
 #define BOOST_LOG_SOURCES_CHANNEL_FEATURE_HPP_INCLUDED_
 
 #include <string>
+#include <boost/move/move.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
@@ -48,18 +49,16 @@ class basic_channel_logger :
 {
     //! Base type
     typedef BaseT base_type;
+    typedef basic_channel_logger this_type;
+    BOOST_COPYABLE_AND_MOVABLE_ALT(this_type)
 
 public:
     //! Character type
     typedef typename base_type::char_type char_type;
     //! Final type
     typedef typename base_type::final_type final_type;
-    //! Attribute set type
-    typedef typename base_type::attribute_set_type attribute_set_type;
     //! Threading model being used
     typedef typename base_type::threading_model threading_model;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
 
     //! Channel type
     typedef ChannelT channel_type;
@@ -104,9 +103,7 @@ public:
      */
     basic_channel_logger() : base_type(), m_ChannelAttr(channel_type())
     {
-        base_type::add_attribute_unlocked(
-            boost::log::aux::default_attribute_names< char_type >::channel(),
-            m_ChannelAttr);
+        base_type::add_attribute_unlocked(boost::log::aux::default_attribute_names::channel(), m_ChannelAttr);
     }
     /*!
      * Copy constructor
@@ -115,9 +112,16 @@ public:
         base_type(static_cast< base_type const& >(that)),
         m_ChannelAttr(that.m_ChannelAttr)
     {
-        base_type::add_attribute_unlocked(
-            boost::log::aux::default_attribute_names< char_type >::channel(),
-            m_ChannelAttr);
+        base_type::attributes()[boost::log::aux::default_attribute_names::channel()] = m_ChannelAttr;
+    }
+    /*!
+     * Move constructor
+     */
+    basic_channel_logger(BOOST_RV_REF(basic_channel_logger) that) :
+        base_type(boost::move(static_cast< base_type& >(that))),
+        m_ChannelAttr(boost::move(that.m_ChannelAttr))
+    {
+        base_type::attributes()[boost::log::aux::default_attribute_names::channel()] = m_ChannelAttr;
     }
     /*!
      * Constructor with arguments. Allows to register a channel name attribute on construction.
@@ -130,9 +134,7 @@ public:
         base_type(args),
         m_ChannelAttr(args[keywords::channel || make_default_channel_name()])
     {
-        base_type::add_attribute_unlocked(
-            boost::log::aux::default_attribute_names< char_type >::channel(),
-            m_ChannelAttr);
+        base_type::add_attribute_unlocked(boost::log::aux::default_attribute_names::channel(), m_ChannelAttr);
     }
 
     /*!
@@ -167,7 +169,7 @@ protected:
      * Unlocked \c open_record
      */
     template< typename ArgsT >
-    record_type open_record_unlocked(ArgsT const& args)
+    record open_record_unlocked(ArgsT const& args)
     {
         return open_record_with_channel_unlocked(args, args[keywords::channel | parameter::void_()]);
     }
@@ -184,14 +186,14 @@ protected:
 private:
     //! The \c open_record implementation for the case when the channel is specified in log statement
     template< typename ArgsT, typename T >
-    record_type open_record_with_channel_unlocked(ArgsT const& args, T const& ch)
+    record open_record_with_channel_unlocked(ArgsT const& args, T const& ch)
     {
         m_ChannelAttr.set(ch);
         return base_type::open_record_unlocked(args);
     }
     //! The \c open_record implementation for the case when the channel is not specified in log statement
     template< typename ArgsT >
-    record_type open_record_with_channel_unlocked(ArgsT const& args, parameter::void_)
+    record open_record_with_channel_unlocked(ArgsT const& args, parameter::void_)
     {
         return base_type::open_record_unlocked(args);
     }
@@ -206,9 +208,9 @@ private:
  * the name in the logging statement.
  *
  * The type of the channel name can be customized by providing it as a template parameter
- * to the feature template. By default, a string with the corresponding character type will be used.
+ * to the feature template. By default, a string will be used.
  */
-template< typename ChannelT = void >
+template< typename ChannelT = std::string >
 struct channel
 {
     template< typename BaseT >
@@ -217,19 +219,6 @@ struct channel
         typedef basic_channel_logger<
             BaseT,
             ChannelT
-        > type;
-    };
-};
-
-template< >
-struct channel< void >
-{
-    template< typename BaseT >
-    struct apply
-    {
-        typedef basic_channel_logger<
-            BaseT,
-            std::basic_string< typename BaseT::char_type >
         > type;
     };
 };

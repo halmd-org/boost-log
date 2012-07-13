@@ -20,33 +20,22 @@
 #ifndef BOOST_LOG_DETAIL_DEFAULT_ATTRIBUTE_NAMES_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_DEFAULT_ATTRIBUTE_NAMES_HPP_INCLUDED_
 
+#include <boost/log/detail/prologue.hpp>
+#include <boost/log/attributes/attribute_name.hpp>
+
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
-//! A helper traits to get default attribute names
-template< typename >
-struct default_attribute_names;
+namespace default_attribute_names {
 
-#ifdef BOOST_LOG_USE_CHAR
-template< >
-struct default_attribute_names< char >
-{
-    static const char* severity() { return "Severity"; }
-    static const char* channel() { return "Channel"; }
-};
-#endif
+BOOST_LOG_API attribute_name severity();
+BOOST_LOG_API attribute_name channel();
+BOOST_LOG_API attribute_name message();
 
-#ifdef BOOST_LOG_USE_WCHAR_T
-template< >
-struct default_attribute_names< wchar_t >
-{
-    static const wchar_t* severity() { return L"Severity"; }
-    static const wchar_t* channel() { return L"Channel"; }
-};
-#endif
+} // namespace default_attribute_names
 
 } // namespace aux
 

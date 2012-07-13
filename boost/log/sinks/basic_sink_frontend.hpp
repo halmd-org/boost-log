@@ -28,6 +28,8 @@
 #include <boost/log/detail/fake_mutex.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
+#include <boost/log/expressions/filter.hpp>
+#include <boost/log/expressions/formatter.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/exceptions.hpp>
 #include <boost/thread/tss.hpp>
@@ -59,8 +61,6 @@ class BOOST_LOG_NO_VTABLE basic_sink_frontend :
     typedef sink base_type;
 
 public:
-    //! Filter function type
-    typedef base_type::filter_type filter_type;
     //! An exception handler type
     typedef base_type::exception_handler_type exception_handler_type;
 
@@ -76,7 +76,7 @@ private:
 
 private:
     //! Filter
-    filter_type m_Filter;
+    filter m_Filter;
     //! Exception handler
     exception_handler_type m_ExceptionHandler;
 
@@ -96,7 +96,7 @@ public:
     void reset_filter()
     {
         BOOST_LOG_EXPR_IF_MT(boost::log::aux::exclusive_lock_guard< mutex_type > lock(m_Mutex);)
-        m_Filter.clear();
+        m_Filter.reset();
     }
 
     /*!
@@ -128,7 +128,7 @@ public:
         BOOST_LOG_EXPR_IF_MT(boost::log::aux::exclusive_lock_guard< mutex_type > lock(m_Mutex);)
         try
         {
-            return (m_Filter.empty() || m_Filter(attributes));
+            return m_Filter(attributes);
         }
 #if !defined(BOOST_LOG_NO_THREADS)
         catch (thread_interrupted&)
@@ -264,14 +264,10 @@ public:
     //! Formatted string type
     typedef std::basic_string< char_type > string_type;
 
-    //! Output stream type
-    typedef std::basic_ostream< char_type > stream_type;
     //! Formatter function object type
-    typedef boost::log::aux::light_function2<
-        void,
-        record const&,
-        stream_type&
-    > formatter_type;
+    typedef formatter< char_type > formatter_type;
+    //! Output stream type
+    typedef typename formatter_type::ostream_type stream_type;
 
 #if !defined(BOOST_LOG_NO_THREADS)
 protected:
@@ -280,9 +276,6 @@ protected:
 #endif
 
 private:
-    //! Stream buffer type
-    typedef boost::log::aux::basic_ostringstreambuf< char_type > streambuf_type;
-
     struct formatting_context
     {
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -291,8 +284,6 @@ private:
 #endif
         //! Formatted log record storage
         string_type m_FormattedRecord;
-        //! Stream buffer to fill the storage
-        streambuf_type m_StreamBuf;
         //! Formatting stream
         stream_type m_FormattingStream;
         //! Formatter functor
@@ -302,16 +293,14 @@ private:
 #if !defined(BOOST_LOG_NO_THREADS)
             m_Version(0),
 #endif
-            m_StreamBuf(m_FormattedRecord),
-            m_FormattingStream(&m_StreamBuf)
+            m_FormattingStream(m_FormattedRecord)
         {
             m_FormattingStream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
         }
 #if !defined(BOOST_LOG_NO_THREADS)
         formatting_context(unsigned int version, std::locale const& loc, formatter_type const& formatter) :
             m_Version(version),
-            m_StreamBuf(m_FormattedRecord),
-            m_FormattingStream(&m_StreamBuf),
+            m_FormattingStream(m_FormattedRecord),
             m_Formatter(formatter)
         {
             m_FormattingStream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
@@ -369,10 +358,10 @@ public:
     {
 #if !defined(BOOST_LOG_NO_THREADS)
         boost::log::aux::exclusive_lock_guard< mutex_type > lock(this->frontend_mutex());
-        m_Formatter.clear();
+        m_Formatter.reset();
         ++m_Version;
 #else
-        m_Context.m_Formatter.clear();
+        m_Context.m_Formatter.reset();
 #endif
     }
 
@@ -434,17 +423,12 @@ protected:
 #endif
 
         boost::log::aux::cleanup_guard< stream_type > cleanup1(context->m_FormattingStream);
-        boost::log::aux::cleanup_guard< streambuf_type > cleanup2(context->m_StreamBuf);
-        boost::log::aux::cleanup_guard< target_string_type > cleanup3(context->m_FormattedRecord);
+        boost::log::aux::cleanup_guard< target_string_type > cleanup2(context->m_FormattedRecord);
 
         try
         {
             // Perform the formatting
-            if (!context->m_Formatter.empty())
-                context->m_Formatter(context->m_FormattingStream, rec);
-            else
-                context->m_FormattingStream << rec.message();
-
+            context->m_Formatter(rec, context->m_FormattingStream);
             context->m_FormattingStream.flush();
 
             // Feed the record

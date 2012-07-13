@@ -108,6 +108,36 @@ public:
     bool operator!= (attribute_name const& that) const { return m_id != that.m_id; }
 
     /*!
+     * Compares the attribute names
+     *
+     * \return \c true if <tt>*this</tt> and \c that refer to the same attribute name,
+     *         and \c false otherwise.
+     */
+    bool operator== (const char* that) const { return (m_id != uninitialized) && (this->string() == that); }
+    /*!
+     * Compares the attribute names
+     *
+     * \return \c true if <tt>*this</tt> and \c that refer to different attribute names,
+     *         and \c false otherwise.
+     */
+    bool operator!= (const char* that) const { return !operator== (that); }
+
+    /*!
+     * Compares the attribute names
+     *
+     * \return \c true if <tt>*this</tt> and \c that refer to the same attribute name,
+     *         and \c false otherwise.
+     */
+    bool operator== (string_type const& that) const { return (m_id != uninitialized) && (this->string() == that); }
+    /*!
+     * Compares the attribute names
+     *
+     * \return \c true if <tt>*this</tt> and \c that refer to different attribute names,
+     *         and \c false otherwise.
+     */
+    bool operator!= (string_type const& that) const { return !operator== (that); }
+
+    /*!
      * Checks if the object was default-constructed
      *
      * \return \c true if <tt>*this</tt> was constructed with an attribute name, \c false otherwise

@@ -19,6 +19,7 @@
 #ifndef BOOST_LOG_ATTRIBUTES_CONSTANT_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_CONSTANT_HPP_INCLUDED_
 
+#include <boost/move/move.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
@@ -58,6 +59,10 @@ protected:
          * Constructor with the stored value initialization
          */
         explicit impl(value_type const& value) : base_type(value) {}
+        /*!
+         * Constructor with the stored value initialization
+         */
+        explicit impl(BOOST_RV_REF(value_type) value) : base_type(boost::move(value)) {}
     };
 
 public:
@@ -65,6 +70,10 @@ public:
      * Constructor with the stored value initialization
      */
     explicit constant(value_type const& value) : attribute(new impl(value)) {}
+    /*!
+     * Constructor with the stored value initialization
+     */
+    explicit constant(BOOST_RV_REF(value_type) value) : attribute(new impl(boost::move(value))) {}
     /*!
      * Constructor for casting support
      */

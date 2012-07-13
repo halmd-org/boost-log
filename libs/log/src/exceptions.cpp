@@ -320,6 +320,36 @@ void setup_error::throw_(const char* file, std::size_t line, std::string const& 
     );
 }
 
+limitation_error::limitation_error() :
+    logic_error("Boost.Log library limit reached")
+{
+}
+
+limitation_error::limitation_error(std::string const& descr) :
+    logic_error(descr)
+{
+}
+
+limitation_error::~limitation_error() throw()
+{
+}
+
+void limitation_error::throw_(const char* file, std::size_t line)
+{
+    boost::throw_exception(boost::enable_error_info(limitation_error())
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
+void limitation_error::throw_(const char* file, std::size_t line, std::string const& descr)
+{
+    boost::throw_exception(boost::enable_error_info(limitation_error(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
 } // namespace log
 
 } // namespace boost

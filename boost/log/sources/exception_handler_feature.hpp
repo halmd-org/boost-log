@@ -20,6 +20,7 @@
 #define BOOST_LOG_SOURCES_EXCEPTION_HANDLER_FEATURE_HPP_INCLUDED_
 
 #include <boost/mpl/if.hpp>
+#include <boost/move/move.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/light_function.hpp>
@@ -51,10 +52,10 @@ class basic_exception_handler_logger :
 {
     //! Base type
     typedef BaseT base_type;
+    typedef basic_exception_handler_logger this_type;
+    BOOST_COPYABLE_AND_MOVABLE_ALT(this_type)
 
 public:
-    //! Log record type
-    typedef typename base_type::record_type record_type;
     //! Threading model being used
     typedef typename base_type::threading_model threading_model;
     //! Final logger type
@@ -105,6 +106,14 @@ public:
     {
     }
     /*!
+     * Move constructor
+     */
+    basic_exception_handler_logger(BOOST_RV_REF(basic_exception_handler_logger) that) :
+        base_type(boost::move(static_cast< base_type& >(that))),
+        m_ExceptionHandler(boost::move(that.m_ExceptionHandler))
+    {
+    }
+    /*!
      * Constructor with arguments. Passes arguments to other features.
      */
     template< typename ArgsT >
@@ -142,7 +151,7 @@ protected:
      * Unlocked \c open_record
      */
     template< typename ArgsT >
-    record_type open_record_unlocked(ArgsT const& args)
+    record open_record_unlocked(ArgsT const& args)
     {
         try
         {
@@ -157,14 +166,14 @@ protected:
         catch (...)
         {
             handle_exception();
-            return record_type();
+            return record();
         }
     }
 
     /*!
      * Unlocked \c push_record
      */
-    void push_record_unlocked(record_type const& record)
+    void push_record_unlocked(record const& record)
     {
         try
         {

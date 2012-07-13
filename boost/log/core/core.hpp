@@ -28,6 +28,7 @@
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/expressions/filter.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -61,8 +62,6 @@ class sink;
 class BOOST_LOG_API core
 {
 public:
-    //! Filter function type
-    typedef boost::log::aux::light_function1< bool, attribute_values_view const& > filter_type;
     //! Exception handler function type
     typedef boost::log::aux::light_function0< void > exception_handler_type;
 
@@ -118,7 +117,7 @@ public:
      *
      * \param filter The filter function object to be installed.
      */
-    void set_filter(filter_type const& filter);
+    void set_filter(filter const& filter);
     /*!
      * The method removes the global logging filter. All log records are passed to sinks without global filtering applied.
      */

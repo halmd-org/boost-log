@@ -395,6 +395,26 @@ private:
     AssigneeT& m_Assignee;
 };
 
+//! The function object that outputs its operand to the bound stream
+template< typename StreamT >
+struct output_fun
+{
+    typedef void result_type;
+
+    explicit output_fun(StreamT& strm) : m_Stream(strm)
+    {
+    }
+
+    template< typename T >
+    void operator() (T const& val) const
+    {
+        m_Stream << val;
+    }
+
+private:
+    StreamT& m_Stream;
+};
+
 //! Second argument binder
 template< typename FunT, typename SecondArgT >
 struct binder2nd :

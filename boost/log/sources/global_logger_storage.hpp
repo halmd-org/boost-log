@@ -76,21 +76,17 @@ struct BOOST_LOG_VISIBLE logger_holder :
 };
 
 //! The class implements a global repository of tagged loggers
-template< typename CharT >
 struct global_storage
 {
     typedef shared_ptr< logger_holder_base >(*initializer_t)();
 
     //! Finds or creates the logger and returns its holder
-    BOOST_LOG_API static shared_ptr< logger_holder_base > get_or_init(
-        std::type_info const& key,
-        initializer_t initializer);
+    BOOST_LOG_API static shared_ptr< logger_holder_base > get_or_init(std::type_info const& key, initializer_t initializer);
 
-private:
     //  Non-constructible, non-copyable, non-assignable
-    global_storage();
-    global_storage(global_storage const&);
-    global_storage& operator= (global_storage const&);
+    BOOST_LOG_DELETED_FUNCTION(global_storage())
+    BOOST_LOG_DELETED_FUNCTION(global_storage(global_storage const&))
+    BOOST_LOG_DELETED_FUNCTION(global_storage& operator= (global_storage const&))
 };
 
 //! Throws the \c odr_violation exception
@@ -124,12 +120,10 @@ struct logger_singleton :
     //! Initializes the logger instance (called only once)
     static void init_instance()
     {
-        typedef global_storage< typename logger_type::char_type > global_storage_t;
         shared_ptr< logger_holder< logger_type > >& instance = base_type::get_instance();
-        shared_ptr< logger_holder_base > holder =
-            global_storage_t::get_or_init(
-                typeid(boost::log::aux::visible_type< TagT >),
-                &logger_singleton::construct_logger);
+        shared_ptr< logger_holder_base > holder = global_storage::get_or_init(
+            typeid(boost::log::aux::visible_type< TagT >),
+            &logger_singleton::construct_logger);
         instance = boost::dynamic_pointer_cast< logger_holder< logger_type > >(holder);
         if (!instance)
         {

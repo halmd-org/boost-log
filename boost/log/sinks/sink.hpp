@@ -44,8 +44,6 @@ namespace sinks {
 class BOOST_LOG_NO_VTABLE sink
 {
 public:
-    //! Filter function type
-    typedef boost::log::aux::light_function1< bool, attribute_values_view const& > filter_type;
     //! An exception handler type
     typedef boost::log::aux::light_function0< void > exception_handler_type;
 

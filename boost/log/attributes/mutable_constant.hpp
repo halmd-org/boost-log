@@ -23,6 +23,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/mpl/if.hpp>
+#include <boost/move/move.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/locks.hpp>
@@ -108,6 +109,12 @@ protected:
         explicit impl(value_type const& value) : m_Value(new attr_value(value))
         {
         }
+        /*!
+         * Initializing constructor
+         */
+        explicit impl(BOOST_RV_REF(value_type) value) : m_Value(new attr_value(boost::move(value)))
+        {
+        }
 
         attribute_value get_value()
         {
@@ -118,6 +125,13 @@ protected:
         void set(value_type const& value)
         {
             intrusive_ptr< attr_value > p = new attr_value(value);
+            scoped_write_lock lock(m_Mutex);
+            m_Value.swap(p);
+        }
+
+        void set(BOOST_RV_REF(value_type) value)
+        {
+            intrusive_ptr< attr_value > p = new attr_value(boost::move(value));
             scoped_write_lock lock(m_Mutex);
             m_Value.swap(p);
         }
@@ -137,6 +151,12 @@ public:
     {
     }
     /*!
+     * Constructor with the stored value initialization
+     */
+    explicit mutable_constant(BOOST_RV_REF(value_type) value) : attribute(new impl(boost::move(value)))
+    {
+    }
+    /*!
      * Constructor for casting support
      */
     explicit mutable_constant(cast_source const& source) : attribute(source.as< impl >())
@@ -150,6 +170,14 @@ public:
     void set(value_type const& value)
     {
         get_impl()->set(value);
+    }
+
+    /*!
+     * The method sets a new attribute value.
+     */
+    void set(BOOST_RV_REF(value_type) value)
+    {
+        get_impl()->set(boost::move(value));
     }
 
     /*!
@@ -205,6 +233,12 @@ protected:
         explicit impl(value_type const& value) : m_Value(new attr_value(value))
         {
         }
+        /*!
+         * Initializing constructor
+         */
+        explicit impl(BOOST_RV_REF(value_type) value) : m_Value(new attr_value(boost::move(value)))
+        {
+        }
 
         attribute_value get_value()
         {
@@ -214,6 +248,10 @@ protected:
         void set(value_type const& value)
         {
             m_Value = new attr_value(value);
+        }
+        void set(BOOST_RV_REF(value_type) value)
+        {
+            m_Value = new attr_value(boost::move(value));
         }
 
         value_type get() const
@@ -230,6 +268,12 @@ public:
     {
     }
     /*!
+     * Constructor with the stored value initialization
+     */
+    explicit mutable_constant(BOOST_RV_REF(value_type) value) : attribute(new impl(boost::move(value)))
+    {
+    }
+    /*!
      * Constructor for casting support
      */
     explicit mutable_constant(cast_source const& source) : attribute(source.as< impl >())
@@ -242,6 +286,14 @@ public:
     void set(value_type const& value)
     {
         get_impl()->set(value);
+    }
+
+    /*!
+     * The method sets a new attribute value.
+     */
+    void set(BOOST_RV_REF(value_type) value)
+    {
+        get_impl()->set(boost::move(value));
     }
 
     /*!

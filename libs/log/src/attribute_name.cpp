@@ -15,12 +15,15 @@
 
 #include <deque>
 #include <ostream>
+#include <stdexcept>
 #include <boost/assert.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/throw_exception.hpp>
 #include <boost/intrusive/set.hpp>
 #include <boost/intrusive/set_hook.hpp>
 #include <boost/intrusive/options.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -78,7 +81,7 @@ private:
         struct order_by_name
         {
             typedef bool result_type;
-            typedef typename string_type::traits_type traits_type;
+            typedef string_type::traits_type traits_type;
 
             bool operator() (node const& left, node const& right) const
             {
@@ -158,7 +161,11 @@ public:
             m_NodeSet.lower_bound(name, node::order_by_name());
         if (it == m_NodeSet.end() || it->m_name != name)
         {
-            m_NodeList.push_back(node(static_cast< id_type >(m_NodeList.size()), name));
+            const std::size_t new_id = m_NodeList.size();
+            if (new_id >= static_cast< id_type >(attribute_name::uninitialized))
+                BOOST_THROW_EXCEPTION(limitation_error("Too many log attribute names"));
+
+            m_NodeList.push_back(node(static_cast< id_type >(new_id), name));
             it = m_NodeSet.insert(it, m_NodeList.back());
         }
         return it->m_id;

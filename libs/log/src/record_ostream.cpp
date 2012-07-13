@@ -18,6 +18,7 @@
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/expressions/message.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/tss.hpp>
 #endif
@@ -35,9 +36,13 @@ BOOST_LOG_API void basic_record_ostream< CharT >::init_stream()
     {
         typedef attributes::basic_attribute_value< string_type > message_impl_type;
         intrusive_ptr< message_impl_type > p = new message_impl_type(string_type());
+        attribute_value value(p);
 
-        // This may fail if the record already has Message attribute. We will not override the existing attribute.
-        m_Record.attribute_values().insert("Message", attribute_value(p));
+        // This may fail if the record already has Message attribute
+        std::pair< attribute_values_view::const_iterator, bool > res =
+            m_Record.attribute_values().insert(expressions::tag::message::get_name(), value);
+        if (!res.second)
+            const_cast< attribute_value& >(*res.first).swap(value);
 
         base_type::attach(const_cast< string_type& >(p->get()));
     }

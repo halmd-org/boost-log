@@ -56,6 +56,9 @@ struct attribute_keyword
 
     BOOST_PROTO_EXTENDS(expr_type, attribute_keyword, domain)
 
+    //! Returns attribute name
+    static attribute_name get_name() { return descriptor_type::get_name(); }
+
     //! Expression with cached attribute name
     typedef ActorT<
         cached_attribute_terminal<
