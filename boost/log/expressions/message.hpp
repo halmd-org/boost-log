@@ -24,8 +24,8 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
 #include <boost/log/expressions/keyword.hpp>
+#include <boost/log/expressions/is_keyword_descriptor.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/mutable_constant.hpp>
 
 namespace boost {
 
@@ -38,16 +38,11 @@ namespace tag {
 /*!
  * Generic log message attribute descriptor.
  */
-struct message
+struct message :
+    public keyword_descriptor
 {
     // The attribute value type here is not essential since message attributes are not intended to be created via the keyword
-    typedef attributes::mutable_constant<
-#if defined(BOOST_LOG_USE_CHAR)
-        std::string
-#elif defined(BOOST_LOG_USE_WCHAR_T)
-        std::wstring
-#endif
-    > attribute_type;
+    typedef void attribute_type;
 
 #if defined(BOOST_LOG_USE_CHAR) && defined(BOOST_LOG_USE_WCHAR_T)
     typedef mpl::vector2< std::string, std::wstring > value_type;
@@ -58,21 +53,20 @@ struct message
 #endif
 
     static attribute_name get_name() { return boost::log::aux::default_attribute_names::message(); }
-    static attribute_type create() { return attribute_type(attribute_type::value_type()); }
 };
 
 #if defined(BOOST_LOG_USE_CHAR)
 /*!
  * Narrow character log message attribute descriptor.
  */
-struct smessage
+struct smessage :
+    public keyword_descriptor
 {
     // The attribute value type here is not essential since message attributes are not intended to be created via the keyword
-    typedef attributes::mutable_constant< std::string > attribute_type;
+    typedef void attribute_type;
     typedef std::string value_type;
 
     static attribute_name get_name() { return boost::log::aux::default_attribute_names::message(); }
-    static attribute_type create() { return attribute_type(attribute_type::value_type()); }
 };
 #endif
 
@@ -80,14 +74,14 @@ struct smessage
 /*!
  * Wide character log message attribute descriptor.
  */
-struct wmessage
+struct wmessage :
+    public keyword_descriptor
 {
     // The attribute value type here is not essential since message attributes are not intended to be created via the keyword
-    typedef attributes::mutable_constant< std::wstring > attribute_type;
+    typedef void attribute_type;
     typedef std::wstring value_type;
 
     static attribute_name get_name() { return boost::log::aux::default_attribute_names::message(); }
-    static attribute_type create() { return attribute_type(attribute_type::value_type()); }
 };
 #endif
 
@@ -96,7 +90,7 @@ struct wmessage
 /*!
  * Generic message keyword type.
  */
-typedef expressions::attribute_keyword< tag::message > message_type;
+typedef attribute_keyword< tag::message > message_type;
 /*!
  * Generic message keyword.
  */
@@ -106,7 +100,7 @@ const message_type message = {};
 /*!
  * Narrow message keyword type.
  */
-typedef expressions::attribute_keyword< tag::smessage > smessage_type;
+typedef attribute_keyword< tag::smessage > smessage_type;
 /*!
  * Narrow message keyword.
  */
@@ -117,7 +111,7 @@ const smessage_type smessage = {};
 /*!
  * Wide message keyword type.
  */
-typedef expressions::attribute_keyword< tag::wmessage > wmessage_type;
+typedef attribute_keyword< tag::wmessage > wmessage_type;
 /*!
  * Wide message keyword.
  */

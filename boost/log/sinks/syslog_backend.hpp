@@ -278,31 +278,24 @@ namespace syslog {
  * methods have no effect for native backends. Using <tt>use_impl = native</tt>
  * on platforms with no native support for POSIX syslog API will have no effect.
  */
-template< typename CharT >
-class basic_syslog_backend :
-    public basic_formatting_sink_backend< CharT, char >
+class syslog_backend :
+    public basic_formatted_sink_backend< char >
 {
     //! Base type
-    typedef basic_formatting_sink_backend< CharT, char > base_type;
+    typedef basic_formatted_sink_backend< char > base_type;
     //! Implementation type
     struct implementation;
 
 public:
     //! Character type
-    typedef typename base_type::char_type char_type;
-    //! String type
-    typedef typename base_type::string_type string_type;
+    typedef base_type::char_type char_type;
     //! String type that is used to pass message test
-    typedef typename base_type::target_string_type target_string_type;
-    //! Attribute values view type
-    typedef typename base_type::values_view_type values_view_type;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
+    typedef base_type::string_type string_type;
 
     //! Syslog severity level mapper type
     typedef boost::log::aux::light_function1<
         syslog::level,
-        record_type const&
+        record const&
     > severity_mapper_type;
 
 private:
@@ -314,7 +307,7 @@ public:
      * Constructor. Creates a UDP socket-based backend with <tt>syslog::user</tt> facility code.
      * IPv4 protocol will be used.
      */
-    BOOST_LOG_API basic_syslog_backend();
+    BOOST_LOG_API syslog_backend();
     /*!
      * Constructor. Creates a sink backend with the specified named parameters.
      * The following named parameters are supported:
@@ -329,16 +322,16 @@ public:
      *                     is used. Can be either \c v4 (the default one) or \c v6.
      */
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(basic_syslog_backend, construct)
+    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(syslog_backend, construct)
 #else
     template< typename... ArgsT >
-    explicit basic_syslog_backend(ArgsT... const& args);
+    explicit syslog_backend(ArgsT... const& args);
 #endif
 
     /*!
      * Destructor
      */
-    BOOST_LOG_API ~basic_syslog_backend();
+    BOOST_LOG_API ~syslog_backend();
 
     /*!
      * The method installs the function object that maps application severity levels to syslog levels
@@ -392,7 +385,7 @@ public:
     /*!
      * The method passes the formatted message to the syslog API or sends to a syslog server
      */
-    BOOST_LOG_API void consume(record_type const& record, target_string_type const& formatted_message);
+    BOOST_LOG_API void consume(record const& rec, string_type const& formatted_message);
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -413,13 +406,6 @@ private:
         syslog::facility facility, syslog::impl_types use_impl, ip_versions ip_version);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
-
-#ifdef BOOST_LOG_USE_CHAR
-typedef basic_syslog_backend< char > syslog_backend;        //!< Convenience typedef for narrow-character logging
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_syslog_backend< wchar_t > wsyslog_backend;    //!< Convenience typedef for wide-character logging
-#endif
 
 } // namespace sinks
 

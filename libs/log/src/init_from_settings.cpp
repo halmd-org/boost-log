@@ -550,7 +550,7 @@ private:
     static shared_ptr< sinks::sink< char_type > > default_syslog_sink_factory(params_t const& params)
     {
         // Construct the backend
-        typedef sinks::basic_syslog_backend< char_type > backend_t;
+        typedef sinks::syslog_backend backend_t;
         shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
 
         // For now we use only the default level mapping. Will add support for configuration later.

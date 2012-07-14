@@ -80,8 +80,7 @@ namespace syslog {
 ////////////////////////////////////////////////////////////////////////////////
 //! Syslog sink backend implementation
 ////////////////////////////////////////////////////////////////////////////////
-template< typename CharT >
-struct basic_syslog_backend< CharT >::implementation
+struct syslog_backend::implementation
 {
 #ifdef BOOST_LOG_USE_NATIVE_SYSLOG
     struct native;
@@ -105,7 +104,7 @@ struct basic_syslog_backend< CharT >::implementation
     virtual ~implementation() {}
 
     //! The method sends the formatted message to the syslog host
-    virtual void send(syslog::level lev, target_string_type const& formatted_message) = 0;
+    virtual void send(syslog::level lev, string_type const& formatted_message) = 0;
 };
 
 
@@ -158,8 +157,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 } // namespace
 
-template< typename CharT >
-struct basic_syslog_backend< CharT >::implementation::native :
+struct syslog_backend::implementation::native :
     public implementation
 {
     //! Reference to the syslog service initializer
@@ -173,7 +171,7 @@ struct basic_syslog_backend< CharT >::implementation::native :
     }
 
     //! The method sends the formatted message to the syslog host
-    void send(syslog::level lev, target_string_type const& formatted_message)
+    void send(syslog::level lev, string_type const& formatted_message)
     {
         int native_level;
         switch (lev)
@@ -371,7 +369,8 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
         // The packet size is mandated in RFC3164, plus one for the terminating zero
         char packet[1025];
-        std::size_t packet_size = boost::log::aux::snprintf(
+        std::size_t packet_size = boost::log::aux::snprintf
+        (
             packet,
             sizeof(packet),
             "<%d> %s % 2d %02d:%02d:%02d %s %s",
@@ -390,8 +389,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 } // namespace
 
-template< typename CharT >
-struct basic_syslog_backend< CharT >::implementation::udp_socket_based :
+struct syslog_backend::implementation::udp_socket_based :
     public implementation
 {
     //! Protocol to be used
@@ -424,7 +422,7 @@ struct basic_syslog_backend< CharT >::implementation::udp_socket_based :
     }
 
     //! The method sends the formatted message to the syslog host
-    void send(syslog::level lev, target_string_type const& formatted_message)
+    void send(syslog::level lev, string_type const& formatted_message)
     {
         if (!m_pSocket.get())
         {
@@ -445,53 +443,46 @@ struct basic_syslog_backend< CharT >::implementation::udp_socket_based :
 ////////////////////////////////////////////////////////////////////////////////
 //  Sink backend implementation
 ////////////////////////////////////////////////////////////////////////////////
-template< typename CharT >
-BOOST_LOG_API basic_syslog_backend< CharT >::basic_syslog_backend()
+BOOST_LOG_API syslog_backend::syslog_backend()
 {
     construct(log::aux::empty_arg_list());
 }
 
 //! Destructor
-template< typename CharT >
-BOOST_LOG_API basic_syslog_backend< CharT >::~basic_syslog_backend()
+BOOST_LOG_API syslog_backend::~syslog_backend()
 {
     delete m_pImpl;
 }
 
 //! The method installs the function object that maps application severity levels to Syslog levels
-template< typename CharT >
-BOOST_LOG_API void basic_syslog_backend< CharT >::set_severity_mapper(severity_mapper_type const& mapper)
+BOOST_LOG_API void syslog_backend::set_severity_mapper(severity_mapper_type const& mapper)
 {
     m_pImpl->m_LevelMapper = mapper;
 }
 
 //! The method writes the message to the sink
-template< typename CharT >
-BOOST_LOG_API void basic_syslog_backend< CharT >::consume(
-    record_type const& record, target_string_type const& formatted_message)
+BOOST_LOG_API void syslog_backend::consume(record const& rec, string_type const& formatted_message)
 {
     m_pImpl->send(
-        m_pImpl->m_LevelMapper.empty() ? syslog::info : m_pImpl->m_LevelMapper(record),
+        m_pImpl->m_LevelMapper.empty() ? syslog::info : m_pImpl->m_LevelMapper(rec),
         formatted_message);
 }
 
 
 //! The method creates the backend implementation
-template< typename CharT >
-BOOST_LOG_API void basic_syslog_backend< CharT >::construct(
-    syslog::facility fac, syslog::impl_types use_impl, ip_versions ip_version)
+BOOST_LOG_API void syslog_backend::construct(syslog::facility fac, syslog::impl_types use_impl, ip_versions ip_version)
 {
 #ifdef BOOST_LOG_USE_NATIVE_SYSLOG
     if (use_impl == syslog::native)
     {
-        typedef typename implementation::native native_impl;
+        typedef implementation::native native_impl;
         m_pImpl = new native_impl(fac);
         return;
     }
 #endif // BOOST_LOG_USE_NATIVE_SYSLOG
 
 #if !defined(BOOST_LOG_NO_ASIO)
-    typedef typename implementation::udp_socket_based udp_socket_based_impl;
+    typedef implementation::udp_socket_based udp_socket_based_impl;
     switch (ip_version)
     {
     case v4:
@@ -509,11 +500,10 @@ BOOST_LOG_API void basic_syslog_backend< CharT >::construct(
 #if !defined(BOOST_LOG_NO_ASIO)
 
 //! The method sets the local address which log records will be sent from.
-template< typename CharT >
-BOOST_LOG_API void basic_syslog_backend< CharT >::set_local_address(std::string const& addr, unsigned short port)
+BOOST_LOG_API void syslog_backend::set_local_address(std::string const& addr, unsigned short port)
 {
 #if !defined(BOOST_LOG_NO_THREADS)
-    typedef typename implementation::udp_socket_based udp_socket_based_impl;
+    typedef implementation::udp_socket_based udp_socket_based_impl;
     if (udp_socket_based_impl* impl = dynamic_cast< udp_socket_based_impl* >(m_pImpl))
     {
         char service_name[std::numeric_limits< int >::digits10 + 3];
@@ -539,10 +529,9 @@ BOOST_LOG_API void basic_syslog_backend< CharT >::set_local_address(std::string 
 #endif // !defined(BOOST_LOG_NO_THREADS)
 }
 //! The method sets the local address which log records will be sent from.
-template< typename CharT >
-BOOST_LOG_API void basic_syslog_backend< CharT >::set_local_address(boost::asio::ip::address const& addr, unsigned short port)
+BOOST_LOG_API void syslog_backend::set_local_address(boost::asio::ip::address const& addr, unsigned short port)
 {
-    typedef typename implementation::udp_socket_based udp_socket_based_impl;
+    typedef implementation::udp_socket_based udp_socket_based_impl;
     if (udp_socket_based_impl* impl = dynamic_cast< udp_socket_based_impl* >(m_pImpl))
     {
         impl->m_pSocket.reset(new syslog_udp_socket(
@@ -551,11 +540,10 @@ BOOST_LOG_API void basic_syslog_backend< CharT >::set_local_address(boost::asio:
 }
 
 //! The method sets the address of the remote host where log records will be sent to.
-template< typename CharT >
-BOOST_LOG_API void basic_syslog_backend< CharT >::set_target_address(std::string const& addr, unsigned short port)
+BOOST_LOG_API void syslog_backend::set_target_address(std::string const& addr, unsigned short port)
 {
 #if !defined(BOOST_LOG_NO_THREADS)
-    typedef typename implementation::udp_socket_based udp_socket_based_impl;
+    typedef implementation::udp_socket_based udp_socket_based_impl;
     if (udp_socket_based_impl* impl = dynamic_cast< udp_socket_based_impl* >(m_pImpl))
     {
         char service_name[std::numeric_limits< int >::digits10 + 3];
@@ -577,10 +565,9 @@ BOOST_LOG_API void basic_syslog_backend< CharT >::set_target_address(std::string
 #endif // !defined(BOOST_LOG_NO_THREADS)
 }
 //! The method sets the address of the remote host where log records will be sent to.
-template< typename CharT >
-BOOST_LOG_API void basic_syslog_backend< CharT >::set_target_address(boost::asio::ip::address const& addr, unsigned short port)
+BOOST_LOG_API void syslog_backend::set_target_address(boost::asio::ip::address const& addr, unsigned short port)
 {
-    typedef typename implementation::udp_socket_based udp_socket_based_impl;
+    typedef implementation::udp_socket_based udp_socket_based_impl;
     if (udp_socket_based_impl* impl = dynamic_cast< udp_socket_based_impl* >(m_pImpl))
     {
         impl->m_TargetHost = asio::ip::udp::endpoint(addr, port);
@@ -588,14 +575,6 @@ BOOST_LOG_API void basic_syslog_backend< CharT >::set_target_address(boost::asio
 }
 
 #endif // !defined(BOOST_LOG_NO_ASIO)
-
-//! Explicitly instantiate sink implementation
-#ifdef BOOST_LOG_USE_CHAR
-template class basic_syslog_backend< char >;
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-template class basic_syslog_backend< wchar_t >;
-#endif
 
 } // namespace sinks
 

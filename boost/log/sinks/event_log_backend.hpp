@@ -40,6 +40,7 @@
 #include <boost/log/sinks/attribute_mapping.hpp>
 #include <boost/log/sinks/event_log_constants.hpp>
 #include <boost/log/core/record.hpp>
+#include <boost/log/expressions/formatter.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -624,22 +625,12 @@ namespace event_log {
         typedef CharT char_type;
         //! String type to be used as a message text holder
         typedef std::basic_string< char_type > string_type;
-        //! Output stream type
-        typedef std::basic_ostream< char_type > stream_type;
-        //! Attribute values view type
-        typedef basic_attribute_values_view< char_type > values_view_type;
-        //! Log record type
-        typedef basic_record< char_type > record_type;
 
         //! Event identifier mapper type
-        typedef boost::log::aux::light_function1< event_id, record_type const& > event_id_mapper_type;
+        typedef boost::log::aux::light_function1< event_id, record const& > event_id_mapper_type;
 
         //! Type of an insertion composer (a formatter)
-        typedef boost::log::aux::light_function2<
-            void,
-            stream_type&,
-            record_type const&
-        > formatter_type;
+        typedef boost::log::formatter< char_type > formatter_type;
         //! Type of the composed insertions list
         typedef std::vector< string_type > insertion_list;
 
@@ -737,7 +728,7 @@ namespace event_log {
          * \param insertions A sequence of formatted insertion strings
          * \return An event identifier that was extracted from \c attributes
          */
-        event_id operator() (record_type const& rec, insertion_list& insertions) const;
+        event_id operator() (record const& rec, insertion_list& insertions) const;
 
     private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -781,29 +772,23 @@ namespace event_log {
  */
 template< typename CharT >
 class basic_simple_event_log_backend :
-    public basic_formatting_sink_backend< CharT, CharT, concurrent_feeding >
+    public basic_formatted_sink_backend< CharT, concurrent_feeding >
 {
     //! Base type
-    typedef basic_formatting_sink_backend< CharT, CharT, concurrent_feeding > base_type;
+    typedef basic_formatted_sink_backend< CharT, concurrent_feeding > base_type;
     //! Implementation type
     struct implementation;
 
 public:
     //! Character type
     typedef typename base_type::char_type char_type;
-    //! String type
-    typedef typename base_type::string_type string_type;
     //! String type to be used as a message text holder
-    typedef typename base_type::target_string_type target_string_type;
-    //! Attribute values view type
-    typedef typename base_type::values_view_type values_view_type;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
+    typedef typename base_type::string_type string_type;
 
     //! Mapper type for the event type
     typedef boost::log::aux::light_function1<
         event_log::event_type,
-        record_type const&
+        record const&
     > event_type_mapper_type;
 
 private:
@@ -861,7 +846,7 @@ public:
     /*!
      * The method puts the formatted message to the event log
      */
-    BOOST_LOG_API void consume(record_type const& record, target_string_type const& formatted_message);
+    BOOST_LOG_API void consume(record const& rec, string_type const& formatted_message);
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -903,39 +888,35 @@ private:
  */
 template< typename CharT >
 class basic_event_log_backend :
-    public basic_sink_backend< CharT, synchronized_feeding >
+    public basic_sink_backend< synchronized_feeding >
 {
     //! Base type
-    typedef basic_sink_backend< CharT, synchronized_feeding > base_type;
+    typedef basic_sink_backend< synchronized_feeding > base_type;
     //! Implementation type
     struct implementation;
 
 public:
     //! Character type
-    typedef typename base_type::char_type char_type;
+    typedef CharT char_type;
     //! String type
-    typedef typename base_type::string_type string_type;
-    //! Attribute values view type
-    typedef typename base_type::values_view_type values_view_type;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
+    typedef std::basic_string< char_type > string_type;
     //! Type of the composed insertions list
     typedef std::vector< string_type > insertion_list;
 
     //! Mapper type for the event type
     typedef boost::log::aux::light_function1<
         event_log::event_type,
-        record_type const&
+        record const&
     > event_type_mapper_type;
     //! Mapper type for the event category
     typedef boost::log::aux::light_function1<
         event_log::event_category,
-        record_type const&
+        record const&
     > event_category_mapper_type;
     //! Event composer type
     typedef boost::log::aux::light_function2<
         event_log::event_id,
-        record_type const&,
+        record const&,
         insertion_list&
     > event_composer_type;
 
@@ -1000,9 +981,9 @@ public:
     /*!
      * The method creates an event in the event log
      *
-     * \param record Log record to consume
+     * \param rec Log record to consume
      */
-    BOOST_LOG_API void consume(record_type const& record);
+    BOOST_LOG_API void consume(record const& rec);
 
     /*!
      * The method installs the function object that maps application severity levels to WinAPI event types

@@ -21,7 +21,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/mpl/assert.hpp>
+#include <boost/static_assert.hpp>
 #include <boost/log/detail/prologue.hpp>
 
 #if defined(BOOST_LOG_NO_THREADS)
@@ -93,7 +93,7 @@ class asynchronous_sink :
     public QueueingStrategyT::template frontend_base< typename SinkBackendT::record_type >::type
 {
     typedef typename aux::make_sink_frontend_base< SinkBackendT >::type base_type;
-    typedef typename QueueingStrategyT::template frontend_base< typename SinkBackendT::record_type >::type queue_base_type;
+    typedef typename QueueingStrategyT::template frontend_base< record >::type queue_base_type;
 
 private:
     //! Backend synchronization mutex type
@@ -184,12 +184,8 @@ public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
     //! \cond
-    BOOST_MPL_ASSERT((has_requirement< typename sink_backend_type::frontend_requirements, synchronized_feeding >));
+    BOOST_STATIC_ASSERT_MSG((has_requirement< typename sink_backend_type::frontend_requirements, synchronized_feeding >::value), "Asynchronous sink frontend is incompatible with the specified backend: thread synchronization requirements are not met");
     //! \endcond
-
-    typedef typename base_type::char_type char_type;
-    typedef typename base_type::record_type record_type;
-    typedef typename base_type::string_type string_type;
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
@@ -284,9 +280,9 @@ public:
     /*!
      * Enqueues the log record to the backend
      */
-    void consume(record_type const& record)
+    void consume(record const& rec)
     {
-        const_cast< record_type& >(record).detach_from_thread();
+        const_cast< record& >(rec).detach_from_thread();
 
         if (m_FlushRequested)
         {
@@ -295,18 +291,18 @@ public:
             while (m_FlushRequested)
                 m_BlockCond.wait(lock);
         }
-        queue_base_type::enqueue(record);
+        queue_base_type::enqueue(rec);
     }
 
     /*!
      * The method attempts to pass logging record to the backend
      */
-    bool try_consume(record_type const& record)
+    bool try_consume(record const& rec)
     {
         if (!m_FlushRequested)
         {
-            const_cast< record_type& >(record).detach_from_thread();
-            return queue_base_type::try_enqueue(record);
+            const_cast< record_type& >(rec).detach_from_thread();
+            return queue_base_type::try_enqueue(rec);
         }
         else
             return false;
@@ -333,9 +329,9 @@ public:
             if (!m_StopRequested)
             {
                 // Block until new record is available
-                record_type record;
-                if (queue_base_type::dequeue_ready(record))
-                    base_type::feed_record(record, m_BackendMutex, *m_pBackend);
+                record rec;
+                if (queue_base_type::dequeue_ready(rec))
+                    base_type::feed_record(rec, m_BackendMutex, *m_pBackend);
             }
             else
                 break;
@@ -443,15 +439,15 @@ private:
     {
         while (!m_StopRequested)
         {
-            record_type record;
+            record rec;
             register bool dequeued = false;
             if (!m_FlushRequested)
-                dequeued = queue_base_type::try_dequeue_ready(record);
+                dequeued = queue_base_type::try_dequeue_ready(rec);
             else
-                dequeued = queue_base_type::try_dequeue(record);
+                dequeued = queue_base_type::try_dequeue(rec);
 
             if (dequeued)
-                base_type::feed_record(record, m_BackendMutex, *m_pBackend);
+                base_type::feed_record(rec, m_BackendMutex, *m_pBackend);
             else
                 break;
         }

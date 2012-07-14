@@ -323,34 +323,25 @@ public:
  * The sink supports file rotation and advanced file control, such as
  * size and file count restriction.
  */
-template< typename CharT >
-class basic_text_file_backend :
-    public basic_formatting_sink_backend<
-        CharT,
-        CharT,
+class text_file_backend :
+    public basic_formatted_sink_backend<
+        char,
         combine_requirements< synchronized_feeding, flushing >::type
     >
 {
     //! Base type
-    typedef basic_formatting_sink_backend<
-        CharT,
-        CharT,
+    typedef basic_formatted_sink_backend<
+        char,
         combine_requirements< synchronized_feeding, flushing >::type
     > base_type;
 
 public:
     //! Character type
-    typedef typename base_type::char_type char_type;
+    typedef base_type::char_type char_type;
     //! String type to be used as a message text holder
-    typedef typename base_type::string_type string_type;
-    //! Target character type
-    typedef typename base_type::target_char_type target_char_type;
-    //! String type to be used as a message text holder
-    typedef typename base_type::target_string_type target_string_type;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
-    //! Output stream type
-    typedef std::basic_ostream< target_char_type > stream_type;
+    typedef base_type::string_type string_type;
+    //! Stream type
+    typedef std::basic_ostream< char_type > stream_type;
     //! Path type that is used by Boost.Log
     typedef boost::log::aux::universal_path path_type;
 
@@ -374,7 +365,7 @@ public:
     /*!
      * Default constructor. The constructed sink backend uses default values of all the parameters.
      */
-    BOOST_LOG_API basic_text_file_backend();
+    BOOST_LOG_API text_file_backend();
 
     /*!
      * Constructor. Creates a sink backend with the specified named parameters.
@@ -404,16 +395,16 @@ public:
      *       documentation.
      */
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(basic_text_file_backend, construct)
+    BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(text_file_backend, construct)
 #else
     template< typename... ArgsT >
-    explicit basic_text_file_backend(ArgsT... const& args);
+    explicit text_file_backend(ArgsT... const& args);
 #endif
 
     /*!
      * Destructor
      */
-    BOOST_LOG_API ~basic_text_file_backend();
+    BOOST_LOG_API ~text_file_backend();
 
     /*!
      * The method sets file name wildcard for the files being written. The wildcard supports
@@ -511,7 +502,7 @@ public:
     /*!
      * The method writes the message to the sink
      */
-    BOOST_LOG_API void consume(record_type const& record, target_string_type const& formatted_message);
+    BOOST_LOG_API void consume(record const& record, string_type const& formatted_message);
 
     /*!
      * The method flushes the currently open log file
@@ -546,13 +537,6 @@ private:
     BOOST_LOG_API void rotate_file();
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
-
-#ifdef BOOST_LOG_USE_CHAR
-typedef basic_text_file_backend< char > text_file_backend;               //!< Convenience typedef for narrow-character logging
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_text_file_backend< wchar_t > wtext_file_backend;           //!< Convenience typedef for wide-character logging
-#endif
 
 } // namespace sinks
 

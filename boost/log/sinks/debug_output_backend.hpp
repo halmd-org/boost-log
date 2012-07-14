@@ -24,6 +24,8 @@
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
+#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/core/record.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -49,20 +51,16 @@ namespace sinks {
  */
 template< typename CharT >
 class basic_debug_output_backend :
-    public basic_formatting_sink_backend< CharT, CharT, concurrent_feeding >
+    public basic_formatted_sink_backend< CharT, concurrent_feeding >
 {
     //! Base type
-    typedef basic_formatting_sink_backend< CharT, CharT, concurrent_feeding > base_type;
+    typedef basic_formatted_sink_backend< CharT, concurrent_feeding > base_type;
 
 public:
     //! Character type
     typedef typename base_type::char_type char_type;
     //! String type to be used as a message text holder
-    typedef typename base_type::target_string_type target_string_type;
-    //! Attribute values view type
-    typedef typename base_type::values_view_type values_view_type;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
+    typedef typename base_type::string_type string_type;
 
 public:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -72,7 +70,7 @@ public:
         public filters::basic_filter< char_type, debugger_presence_filter >
     {
     public:
-        BOOST_LOG_API bool operator() (values_view_type const& values) const;
+        BOOST_LOG_API bool operator() (attribute_values_view const& values) const;
     };
 
 #endif // BOOST_LOG_DOXYGEN_PASS
@@ -95,7 +93,7 @@ public:
     /*!
      * The method passes the formatted message to debugger
      */
-    BOOST_LOG_API void consume(record_type const& rec, target_string_type const& formatted_message);
+    BOOST_LOG_API void consume(record const& rec, string_type const& formatted_message);
 };
 
 #ifdef BOOST_LOG_USE_CHAR

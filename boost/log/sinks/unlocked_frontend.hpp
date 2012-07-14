@@ -21,7 +21,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/mpl/assert.hpp>
+#include <boost/static_assert.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/detail/fake_mutex.hpp>
@@ -65,11 +65,8 @@ public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
     //! \cond
-    BOOST_MPL_ASSERT((has_requirement< typename sink_backend_type::frontend_requirements, concurrent_feeding >));
+    BOOST_STATIC_ASSERT_MSG((has_requirement< typename sink_backend_type::frontend_requirements, concurrent_feeding >::value), "Unlocked sink frontend is incompatible with the specified backend: thread synchronization requirements are not met");
     //! \endcond
-
-    typedef typename base_type::record_type record_type;
-    typedef typename base_type::string_type string_type;
 
     //! Type of pointer to the backend
     typedef shared_ptr< sink_backend_type > locked_backend_ptr;
@@ -116,10 +113,10 @@ public:
     /*!
      * Passes the log record to the backend
      */
-    void consume(record_type const& record)
+    void consume(record const& rec)
     {
         boost::log::aux::fake_mutex m;
-        base_type::feed_record(record, m, *m_pBackend);
+        base_type::feed_record(rec, m, *m_pBackend);
     }
 
     /*!

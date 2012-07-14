@@ -21,7 +21,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/mpl/assert.hpp>
+#include <boost/static_assert.hpp>
 #include <boost/log/detail/prologue.hpp>
 
 #if defined(BOOST_LOG_NO_THREADS)
@@ -75,11 +75,8 @@ public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
     //! \cond
-    BOOST_MPL_ASSERT((has_requirement< typename sink_backend_type::frontend_requirements, synchronized_feeding >));
+    BOOST_STATIC_ASSERT_MSG((has_requirement< typename sink_backend_type::frontend_requirements, synchronized_feeding >::value), "Synchronous sink frontend is incompatible with the specified backend: thread synchronization requirements are not met");
     //! \endcond
-
-    typedef typename base_type::record_type record_type;
-    typedef typename base_type::string_type string_type;
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
@@ -136,17 +133,17 @@ public:
     /*!
      * Passes the log record to the backend
      */
-    void consume(record_type const& record)
+    void consume(record const& rec)
     {
-        base_type::feed_record(record, m_BackendMutex, *m_pBackend);
+        base_type::feed_record(rec, m_BackendMutex, *m_pBackend);
     }
 
     /*!
      * The method attempts to pass logging record to the backend
      */
-    bool try_consume(record_type const& record)
+    bool try_consume(record const& rec)
     {
-        return base_type::try_feed_record(record, m_BackendMutex, *m_pBackend);
+        return base_type::try_feed_record(rec, m_BackendMutex, *m_pBackend);
     }
 
     /*!

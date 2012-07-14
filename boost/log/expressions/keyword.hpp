@@ -30,6 +30,7 @@
 #include <boost/log/expressions/domain.hpp>
 #include <boost/log/expressions/terminal.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
+#include <boost/log/expressions/is_keyword_descriptor.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
 
 namespace boost {
@@ -114,7 +115,8 @@ struct attribute_keyword
 #define BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag_ns_, name_, keyword_, attr_type_, create_decl_)\
     namespace tag_ns_\
     {\
-        struct keyword_\
+        struct keyword_ :\
+            public ::boost::log::expressions::keyword_descriptor\
         {\
             typedef attr_type_ attribute_type;\
             typedef attribute_type::value_type value_type;\
@@ -142,7 +144,8 @@ struct attribute_keyword
  * \code
  * namespace tag
  * {
- *   struct keyword_
+ *   struct keyword_ :
+ *     public boost::log::expressions::keyword_descriptor
  *   {
  *     typedef attr_type_ attribute_type;
  *     typedef attribute_type::value_type value_type;

@@ -46,15 +46,13 @@ namespace sinks {
  */
 template< typename CharT >
 class basic_text_ostream_backend :
-    public basic_formatting_sink_backend<
-        CharT,
+    public basic_formatted_sink_backend<
         CharT,
         combine_requirements< synchronized_feeding, flushing >::type
     >
 {
     //! Base type
-    typedef basic_formatting_sink_backend<
-        CharT,
+    typedef basic_formatted_sink_backend<
         CharT,
         combine_requirements< synchronized_feeding, flushing >::type
     > base_type;
@@ -64,14 +62,8 @@ public:
     typedef typename base_type::char_type char_type;
     //! String type to be used as a message text holder
     typedef typename base_type::string_type string_type;
-    //! Target character type
-    typedef typename base_type::target_char_type target_char_type;
-    //! String type to be used as a message text holder
-    typedef typename base_type::target_string_type target_string_type;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
     //! Output stream type
-    typedef std::basic_ostream< target_char_type > stream_type;
+    typedef std::basic_ostream< char_type > stream_type;
 
 private:
     //! \cond
@@ -113,7 +105,7 @@ public:
     /*!
      * The method writes the message to the sink
      */
-    BOOST_LOG_API void consume(record_type const& record, target_string_type const& formatted_message);
+    BOOST_LOG_API void consume(record const& rec, string_type const& formatted_message);
 
     /*!
      * The method flushes the associated streams

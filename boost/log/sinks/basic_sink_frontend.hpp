@@ -158,7 +158,7 @@ protected:
 
     //! Feeds log record to the backend
     template< typename BackendMutexT, typename BackendT >
-    void feed_record(record_type const& rec, BackendMutexT& backend_mutex, BackendT& backend)
+    void feed_record(record const& rec, BackendMutexT& backend_mutex, BackendT& backend)
     {
         try
         {
@@ -182,7 +182,7 @@ protected:
 
     //! Attempts to feeds log record to the backend, does not block if \a backend_mutex is locked
     template< typename BackendMutexT, typename BackendT >
-    bool try_feed_record(record_type const& rec, BackendMutexT& backend_mutex, BackendT& backend)
+    bool try_feed_record(record const& rec, BackendMutexT& backend_mutex, BackendT& backend)
     {
 #if !defined(BOOST_LOG_NO_THREADS)
         unique_lock< BackendMutexT > lock;
@@ -404,7 +404,7 @@ protected:
 
     //! Feeds log record to the backend
     template< typename BackendMutexT, typename BackendT >
-    void feed_record(record_type const& rec, BackendMutexT& backend_mutex, BackendT& backend)
+    void feed_record(record const& rec, BackendMutexT& backend_mutex, BackendT& backend)
     {
         formatting_context* context;
 
@@ -452,7 +452,7 @@ protected:
 
     //! Attempts to feeds log record to the backend, does not block if \a backend_mutex is locked
     template< typename BackendMutexT, typename BackendT >
-    bool try_feed_record(record_type const& rec, BackendMutexT& backend_mutex, BackendT& backend)
+    bool try_feed_record(record const& rec, BackendMutexT& backend_mutex, BackendT& backend)
     {
 #if !defined(BOOST_LOG_NO_THREADS)
         unique_lock< BackendMutexT > lock;
