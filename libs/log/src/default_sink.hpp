@@ -23,6 +23,8 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
+#include <boost/log/attributes/value_visitation.hpp>
+#include <boost/log/expressions/message.hpp>
 #include <boost/log/trivial.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/mutex.hpp>
@@ -37,30 +39,22 @@ namespace sinks {
 namespace aux {
 
 //! The default sink to be used when no sinks are registered in the logging core
-template< typename CharT >
-class basic_default_sink :
-    public sink< CharT >
+class default_sink :
+    public sink
 {
-    typedef sink< CharT > base_type;
-
-public:
-    typedef typename base_type::char_type char_type;
-    typedef typename base_type::string_type string_type;
-    typedef typename base_type::values_view_type values_view_type;
-    typedef typename base_type::record_type record_type;
-
 private:
 #if !defined(BOOST_LOG_NO_THREADS)
     typedef mutex mutex_type;
     mutex_type m_mutex;
 #endif
-    value_extractor< char_type, extract_value_or_default< boost::log::trivial::severity_level > > const m_severity_extractor;
+    value_extractor< extract_value_or_default< boost::log::trivial::severity_level > > const m_severity_extractor;
+    value_visitor_invoker< expressions::tag::message::value_type > m_message_visitor;
 
 public:
-    basic_default_sink();
-    ~basic_default_sink();
-    bool will_consume(values_view_type const&);
-    void consume(record_type const& record);
+    default_sink();
+    ~default_sink();
+    bool will_consume(attribute_values_view const&);
+    void consume(record const& rec);
     void flush();
 };
 

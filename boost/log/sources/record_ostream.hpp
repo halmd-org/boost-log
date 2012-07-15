@@ -59,12 +59,12 @@ class basic_record_ostream :
     typedef basic_formatting_ostream< CharT > base_type;
 
 public:
-    //! Stream type
-    typedef std::basic_ostream< CharT, TraitsT > ostream_type;
     //! Character type
     typedef CharT char_type;
     //! String type to be used as a message text holder
     typedef std::basic_string< char_type > string_type;
+    //! Stream type
+    typedef std::basic_ostream< char_type > ostream_type;
 
 private:
     //! Log record
@@ -124,7 +124,7 @@ public:
      *
      * \return The aggregated record object
      */
-    record const& record() const
+    record const& get_record() const
     {
         const_cast< this_type* >(this)->flush();
         return m_Record;
@@ -136,7 +136,7 @@ public:
      *
      * \param rec New log record to attach to
      */
-    void record(record rec)
+    void set_record(record rec)
     {
         detach_from_record();
         m_Record.swap(rec);
@@ -258,12 +258,12 @@ public:
         {
             auto_release cleanup(m_pStreamCompound); // destructor doesn't throw
             if (!std::uncaught_exception())
-                m_pLogger->push_record(m_pStreamCompound->stream.record());
+                m_pLogger->push_record(m_pStreamCompound->stream.get_record());
         }
     }
 
     //! Returns the stream to be used for message text formatting
-    std::basic_ostream< char_type >& stream() const
+    basic_record_ostream< char_type >& stream() const
     {
         BOOST_ASSERT(m_pStreamCompound != 0);
         return m_pStreamCompound->stream;

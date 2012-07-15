@@ -73,16 +73,12 @@ namespace event_log {
      * provides values that map directly onto the native event types. The mapping
      * simply returns the extracted attribute value converted to the native event type.
      */
-    template< typename CharT, typename AttributeValueT = int >
-    class basic_direct_event_type_mapping :
-        public basic_direct_mapping< CharT, event_type, AttributeValueT >
+    template< typename AttributeValueT = int >
+    class direct_event_type_mapping :
+        public basic_direct_mapping< event_type, AttributeValueT >
     {
         //! Base type
-        typedef basic_direct_mapping< CharT, event_type, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
+        typedef basic_direct_mapping< event_type, AttributeValueT > base_type;
 
     public:
         /*!
@@ -90,7 +86,7 @@ namespace event_log {
          *
          * \param name Attribute name
          */
-        explicit basic_direct_event_type_mapping(attribute_name_type const& name) :
+        explicit direct_event_type_mapping(attribute_name const& name) :
             base_type(name, info)
         {
         }
@@ -103,16 +99,12 @@ namespace event_log {
      * The mapping should be initialized similarly to the standard \c map container, by using
      * indexing operator and assignment.
      */
-    template< typename CharT, typename AttributeValueT = int >
-    class basic_custom_event_type_mapping :
-        public basic_custom_mapping< CharT, event_type, AttributeValueT >
+    template< typename AttributeValueT = int >
+    class custom_event_type_mapping :
+        public basic_custom_mapping< event_type, AttributeValueT >
     {
         //! Base type
-        typedef basic_custom_mapping< CharT, event_type, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
+        typedef basic_custom_mapping< event_type, AttributeValueT > base_type;
 
     public:
         /*!
@@ -120,7 +112,7 @@ namespace event_log {
          *
          * \param name Attribute name
          */
-        explicit basic_custom_event_type_mapping(attribute_name_type const& name) :
+        explicit custom_event_type_mapping(attribute_name const& name) :
             base_type(name, info)
         {
         }
@@ -133,16 +125,12 @@ namespace event_log {
      * provides values that map directly onto the event identifiers. The mapping
      * simply returns the extracted attribute value converted to the event ID.
      */
-    template< typename CharT, typename AttributeValueT = int >
-    class basic_direct_event_id_mapping :
-        public basic_direct_mapping< CharT, event_id, AttributeValueT >
+    template< typename AttributeValueT = int >
+    class direct_event_id_mapping :
+        public basic_direct_mapping< event_id, AttributeValueT >
     {
         //! Base type
-        typedef basic_direct_mapping< CharT, event_id, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
+        typedef basic_direct_mapping< event_id, AttributeValueT > base_type;
 
     public:
         /*!
@@ -150,7 +138,7 @@ namespace event_log {
          *
          * \param name Attribute name
          */
-        explicit basic_direct_event_id_mapping(attribute_name_type const& name) :
+        explicit direct_event_id_mapping(attribute_name const& name) :
             base_type(name, make_event_id(0))
         {
         }
@@ -163,16 +151,12 @@ namespace event_log {
      * The mapping should be initialized similarly to the standard \c map container, by using
      * indexing operator and assignment.
      */
-    template< typename CharT, typename AttributeValueT = int >
-    class basic_custom_event_id_mapping :
-        public basic_custom_mapping< CharT, event_id, AttributeValueT >
+    template< typename AttributeValueT = int >
+    class custom_event_id_mapping :
+        public basic_custom_mapping< event_id, AttributeValueT >
     {
         //! Base type
-        typedef basic_custom_mapping< CharT, event_id, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
+        typedef basic_custom_mapping< event_id, AttributeValueT > base_type;
 
     public:
         /*!
@@ -180,7 +164,7 @@ namespace event_log {
          *
          * \param name Attribute name
          */
-        explicit basic_custom_event_id_mapping(attribute_name_type const& name) :
+        explicit custom_event_id_mapping(attribute_name const& name) :
             base_type(name, make_event_id(0))
         {
         }
@@ -193,16 +177,12 @@ namespace event_log {
      * provides values that map directly onto the event categories. The mapping
      * simply returns the extracted attribute value converted to the event category.
      */
-    template< typename CharT, typename AttributeValueT = int >
-    class basic_direct_event_category_mapping :
-        public basic_direct_mapping< CharT, event_category, AttributeValueT >
+    template< typename AttributeValueT = int >
+    class direct_event_category_mapping :
+        public basic_direct_mapping< event_category, AttributeValueT >
     {
         //! Base type
-        typedef basic_direct_mapping< CharT, event_category, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
+        typedef basic_direct_mapping< event_category, AttributeValueT > base_type;
 
     public:
         /*!
@@ -210,7 +190,7 @@ namespace event_log {
          *
          * \param name Attribute name
          */
-        explicit basic_direct_event_category_mapping(attribute_name_type const& name) :
+        explicit direct_event_category_mapping(attribute_name const& name) :
             base_type(name, make_event_category(0))
         {
         }
@@ -223,16 +203,12 @@ namespace event_log {
      * The mapping should be initialized similarly to the standard \c map container, by using
      * indexing operator and assignment.
      */
-    template< typename CharT, typename AttributeValueT = int >
-    class basic_custom_event_category_mapping :
-        public basic_custom_mapping< CharT, event_category, AttributeValueT >
+    template< typename AttributeValueT = int >
+    class custom_event_category_mapping :
+        public basic_custom_mapping< event_category, AttributeValueT >
     {
         //! Base type
-        typedef basic_custom_mapping< CharT, event_category, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
+        typedef basic_custom_mapping< event_category, AttributeValueT > base_type;
 
     public:
         /*!
@@ -240,356 +216,11 @@ namespace event_log {
          *
          * \param name Attribute name
          */
-        explicit basic_custom_event_category_mapping(attribute_name_type const& name) :
+        explicit custom_event_category_mapping(attribute_name const& name) :
             base_type(name, make_event_category(0))
         {
         }
     };
-
-#ifdef BOOST_LOG_USE_CHAR
-
-    /*!
-     * \brief Straightforward event type mapping
-     *
-     * This is a convenience template typedef over \c basic_direct_event_type_mapping
-     * for narrow-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class direct_event_type_mapping :
-        public basic_direct_event_type_mapping< char, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_direct_event_type_mapping< char, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit direct_event_type_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-    /*!
-     * \brief Customizable event type mapping
-     *
-     * This is a convenience template typedef over \c basic_custom_event_type_mapping
-     * for narrow-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class custom_event_type_mapping :
-        public basic_custom_event_type_mapping< char, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_custom_event_type_mapping< char, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit custom_event_type_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-    /*!
-     * \brief Straightforward event id mapping
-     *
-     * This is a convenience template typedef over \c basic_direct_event_id_mapping
-     * for narrow-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class direct_event_id_mapping :
-        public basic_direct_event_id_mapping< char, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_direct_event_id_mapping< char, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit direct_event_id_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-    /*!
-     * \brief Customizable event id mapping
-     *
-     * This is a convenience template typedef over \c basic_custom_event_id_mapping
-     * for narrow-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class custom_event_id_mapping :
-        public basic_custom_event_id_mapping< char, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_custom_event_id_mapping< char, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit custom_event_id_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-    /*!
-     * \brief Straightforward event category mapping
-     *
-     * This is a convenience template typedef over \c basic_direct_event_category_mapping
-     * for narrow-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class direct_event_category_mapping :
-        public basic_direct_event_category_mapping< char, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_direct_event_category_mapping< char, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit direct_event_category_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-    /*!
-     * \brief Customizable event category mapping
-     *
-     * This is a convenience template typedef over \c basic_custom_event_category_mapping
-     * for narrow-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class custom_event_category_mapping :
-        public basic_custom_event_category_mapping< char, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_custom_event_category_mapping< char, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit custom_event_category_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-#endif // BOOST_LOG_USE_CHAR
-
-#ifdef BOOST_LOG_USE_WCHAR_T
-
-    /*!
-     * \brief Straightforward event type mapping
-     *
-     * This is a convenience template typedef over \c basic_direct_event_type_mapping
-     * for wide-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class wdirect_event_type_mapping :
-        public basic_direct_event_type_mapping< wchar_t, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_direct_event_type_mapping< wchar_t, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit wdirect_event_type_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-    /*!
-     * \brief Customizable event type mapping
-     *
-     * This is a convenience template typedef over \c basic_custom_event_type_mapping
-     * for wide-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class wcustom_event_type_mapping :
-        public basic_custom_event_type_mapping< wchar_t, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_custom_event_type_mapping< wchar_t, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit wcustom_event_type_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-    /*!
-     * \brief Straightforward event id mapping
-     *
-     * This is a convenience template typedef over \c basic_direct_event_id_mapping
-     * for wide-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class wdirect_event_id_mapping :
-        public basic_direct_event_id_mapping< wchar_t, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_direct_event_id_mapping< wchar_t, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit wdirect_event_id_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-    /*!
-     * \brief Customizable event id mapping
-     *
-     * This is a convenience template typedef over \c basic_custom_event_id_mapping
-     * for wide-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class wcustom_event_id_mapping :
-        public basic_custom_event_id_mapping< wchar_t, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_custom_event_id_mapping< wchar_t, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit wcustom_event_id_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-    /*!
-     * \brief Straightforward event category mapping
-     *
-     * This is a convenience template typedef over \c basic_direct_event_category_mapping
-     * for wide-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class wdirect_event_category_mapping :
-        public basic_direct_event_category_mapping< wchar_t, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_direct_event_category_mapping< wchar_t, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit wdirect_event_category_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-    /*!
-     * \brief Customizable event category mapping
-     *
-     * This is a convenience template typedef over \c basic_custom_event_category_mapping
-     * for wide-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class wcustom_event_category_mapping :
-        public basic_custom_event_category_mapping< wchar_t, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_custom_event_category_mapping< wchar_t, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit wcustom_event_category_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-#endif // BOOST_LOG_USE_WCHAR_T
-
 
     /*!
      * \brief An event composer

@@ -70,10 +70,11 @@ public:
     /*!
      * Ordering operator
      */
-    template< typename CharT >
-    result_type operator() (basic_record< CharT > const& left, basic_record< CharT > const& right) const
+    result_type operator() (record const& left, record const& right) const
     {
-        return FunT::operator() (left.handle().get(), right.handle().get());
+        // We rely on the fact that the attribute_values() method returns a reference to the object in the record implementation,
+        // so we can comare pointers.
+        return FunT::operator() (static_cast< const void* >(&left.attribute_values()), static_cast< const void* >(right.attribute_values()));
     }
 };
 
@@ -86,25 +87,19 @@ public:
  * if neither of the records have the value, these records are considered equivalent. Otherwise,
  * the ordering results are unspecified.
  */
-template< typename CharT, typename ValueT, typename FunT = aux::less >
+template< typename ValueT, typename FunT = aux::less >
 class attribute_value_ordering :
     private FunT
 {
 public:
     //! Result type
     typedef bool result_type;
-    //! Character type
-    typedef CharT char_type;
-    //! Log record type
-    typedef basic_record< char_type > record_type;
-    //! Attribute name type
-    typedef basic_attribute_name< char_type > attribute_name_type;
     //! Compared attribute value type
     typedef ValueT attribute_value_type;
 
 private:
     //! Attribute value name
-    const attribute_name_type m_Name;
+    const attribute_name m_Name;
 
 public:
     /*!
@@ -113,7 +108,7 @@ public:
      * \param name The attribute value name to be compared
      * \param fun The ordering functor
      */
-    explicit attribute_value_ordering(attribute_name_type const& name, FunT const& fun = FunT()) :
+    explicit attribute_value_ordering(attribute_name const& name, FunT const& fun = FunT()) :
         FunT(fun),
         m_Name(name)
     {
@@ -122,7 +117,7 @@ public:
     /*!
      * Ordering operator
      */
-    result_type operator() (record_type const& left, record_type const& right) const
+    result_type operator() (record const& left, record const& right) const
     {
         optional< attribute_value_type > left_value =
             boost::log::extract< attribute_value_type >(m_Name, left);
@@ -144,22 +139,10 @@ public:
 /*!
  * The function constructs a log record ordering predicate
  */
-template< typename ValueT, typename CharT, typename FunT >
-inline attribute_value_ordering< CharT, ValueT, FunT >
-make_attr_ordering(const CharT* name, FunT const& fun)
+template< typename ValueT, typename FunT >
+inline attribute_value_ordering< ValueT, FunT > make_attr_ordering(attribute_name const& name, FunT const& fun)
 {
-    typedef attribute_value_ordering< CharT, ValueT, FunT > ordering_t;
-    return ordering_t(name, fun);
-}
-
-/*!
- * The function constructs a log record ordering predicate
- */
-template< typename ValueT, typename CharT, typename FunT >
-inline attribute_value_ordering< CharT, ValueT, FunT >
-make_attr_ordering(std::basic_string< CharT > const& name, FunT const& fun)
-{
-    typedef attribute_value_ordering< CharT, ValueT, FunT > ordering_t;
+    typedef attribute_value_ordering< ValueT, FunT > ordering_t;
     return ordering_t(name, fun);
 }
 
@@ -169,7 +152,6 @@ namespace aux {
 
     //! An ordering predicate constructor that uses SFINAE to disable invalid instantiations
     template<
-        typename CharT,
         typename FunT,
         typename ArityCheckT = typename enable_if_c< aux::arity_of< FunT >::value == 2 >::type,
         typename Arg1T = typename aux::first_argument_type_of< FunT >::type,
@@ -178,7 +160,7 @@ namespace aux {
     >
     struct make_attr_ordering_type
     {
-        typedef attribute_value_ordering< CharT, Arg1T, FunT > type;
+        typedef attribute_value_ordering< Arg1T, FunT > type;
     };
 
 } // namespace aux
@@ -186,22 +168,10 @@ namespace aux {
 /*!
  * The function constructs a log record ordering predicate
  */
-template< typename CharT, typename FunT >
-inline typename aux::make_attr_ordering_type< CharT, FunT >::type
-make_attr_ordering(const CharT* name, FunT const& fun)
+template< typename FunT >
+inline typename aux::make_attr_ordering_type< FunT >::type make_attr_ordering(attribute_name const& name, FunT const& fun)
 {
-    typedef typename aux::make_attr_ordering_type< CharT, FunT >::type ordering_t;
-    return ordering_t(name, fun);
-}
-
-/*!
- * The function constructs a log record ordering predicate
- */
-template< typename CharT, typename FunT >
-inline typename aux::make_attr_ordering_type< CharT, FunT >::type
-make_attr_ordering(std::basic_string< CharT > const& name, FunT const& fun)
-{
-    typedef typename aux::make_attr_ordering_type< CharT, FunT >::type ordering_t;
+    typedef typename aux::make_attr_ordering_type< FunT >::type ordering_t;
     return ordering_t(name, fun);
 }
 

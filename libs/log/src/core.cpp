@@ -49,7 +49,7 @@ struct record::private_data
     //! Underlying memory allocator
     typedef boost::log::aux::stateless_allocator< char > stateless_allocator;
     //! Sink pointer type
-    typedef weak_ptr< sink > sink_ptr;
+    typedef weak_ptr< sinks::sink > sink_ptr;
     //! Iterator range with pointers to the accepting sinks
     typedef iterator_range< sink_ptr* > sink_list;
 
@@ -86,7 +86,7 @@ public:
     void destroy()
     {
         sink_list s = get_accepting_sinks();
-        for (sink_list::iterator it = s.beign(), end = s.end(); it != end; ++it)
+        for (sink_list::iterator it = s.begin(), end = s.end(); it != end; ++it)
         {
             it->~sink_ptr();
         }
@@ -112,7 +112,7 @@ public:
     }
 
     //! Adds an accepting sink
-    void push_back_accepting_sink(shared_ptr< sink > const& sink)
+    void push_back_accepting_sink(shared_ptr< sinks::sink > const& sink)
     {
         BOOST_ASSERT(m_accepting_sink_count < m_accepting_sink_capacity);
         sink_ptr* p = begin() + m_accepting_sink_count;
@@ -171,14 +171,14 @@ BOOST_LOG_API void record::detach_from_thread()
 struct core::implementation :
     public log::aux::lazy_singleton<
         implementation,
-        shared_ptr< core >
+        core_ptr
     >
 {
 public:
     //! Base type of singleton holder
     typedef log::aux::lazy_singleton<
         implementation,
-        shared_ptr< core >
+        core_ptr
     > base_type;
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -189,7 +189,7 @@ public:
 #endif
 
     //! Sinks container type
-    typedef std::vector< shared_ptr< sink > > sink_list;
+    typedef std::vector< shared_ptr< sinks::sink > > sink_list;
 
     //! Thread-specific data
     struct thread_data
@@ -210,7 +210,7 @@ public:
     //! List of sinks involved into output
     sink_list m_sinks;
     //! Default sink
-    const shared_ptr< sink > m_default_sink;
+    const shared_ptr< sinks::sink > m_default_sink;
 
     //! Global attribute set
     attribute_set m_global_attributes;
@@ -245,7 +245,7 @@ public:
     }
 
     //! Invokes sink-specific filter and adds the sink to the record if the filter passes the log record
-    void apply_sink_filter(shared_ptr< sink > const& sink, record_private_data*& rec_impl, attribute_values_view const& attr_values, uint32_t remaining_capacity)
+    void apply_sink_filter(shared_ptr< sinks::sink > const& sink, record_private_data*& rec_impl, attribute_values_view const& attr_values, uint32_t remaining_capacity)
     {
         try
         {
@@ -297,7 +297,7 @@ public:
     //! The function initializes the logging system
     static void init_instance()
     {
-        base_type::get_instance().reset(new core_type());
+        base_type::get_instance().reset(new core());
     }
 
 private:
@@ -337,7 +337,7 @@ core::~core()
 }
 
 //! The method returns a pointer to the logging system instance
-shared_ptr< core > core::get()
+core_ptr core::get()
 {
     return implementation::get();
 }
@@ -360,7 +360,7 @@ bool core::get_logging_enabled() const
 }
 
 //! The method adds a new sink
-void core::add_sink(shared_ptr< sink > const& s)
+void core::add_sink(shared_ptr< sinks::sink > const& s)
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
     implementation::sink_list::iterator it =
@@ -370,7 +370,7 @@ void core::add_sink(shared_ptr< sink > const& s)
 }
 
 //! The method removes the sink from the output
-void core::remove_sink(shared_ptr< sink > const& s)
+void core::remove_sink(shared_ptr< sinks::sink > const& s)
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
     implementation::sink_list::iterator it =
@@ -585,10 +585,10 @@ void core::push_record(record const& rec)
         BOOST_ASSERT(rec.m_impl->m_private != NULL);
         implementation::record_private_data* data = rec.m_impl->m_private;
 
-        typedef std::vector< shared_ptr< sink > > accepting_sinks_t;
+        typedef std::vector< shared_ptr< sinks::sink > > accepting_sinks_t;
         accepting_sinks_t accepting_sinks(data->accepting_sink_count());
-        shared_ptr< sink >* const begin = &*accepting_sinks.begin();
-        register shared_ptr< sink >* end = begin;
+        shared_ptr< sinks::sink >* const begin = &*accepting_sinks.begin();
+        register shared_ptr< sinks::sink >* end = begin;
 
         // Lock sinks that are willing to consume the record
         implementation::record_private_data::sink_list weak_sinks = data->get_accepting_sinks();
@@ -597,14 +597,14 @@ void core::push_record(record const& rec)
             weak_end = weak_sinks.end();
         for (; weak_it != weak_end; ++weak_it)
         {
-            shared_ptr< sink >& last = *end;
+            shared_ptr< sinks::sink >& last = *end;
             weak_it->lock().swap(last);
             if (last.get())
                 ++end;
         }
 
         bool shuffled = (end - begin) <= 1;
-        register shared_ptr< sink >* it = begin;
+        register shared_ptr< sinks::sink >* it = begin;
         while (true) try
         {
             // First try to distribute load between different sinks

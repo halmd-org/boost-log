@@ -89,12 +89,12 @@ private:
                 return traits_type::compare(
                     left.m_name.c_str(), right.m_name.c_str(), left.m_name.size() + 1) < 0;
             }
-            bool operator() (node const& left, const char_type* right) const
+            bool operator() (node const& left, const char* right) const
             {
                 // Include terminating 0 into comparison to also check the length match
                 return traits_type::compare(left.m_name.c_str(), right, left.m_name.size() + 1) < 0;
             }
-            bool operator() (const char_type* left, node const& right) const
+            bool operator() (const char* left, node const& right) const
             {
                 // Include terminating 0 into comparison to also check the length match
                 return traits_type::compare(left, right.m_name.c_str(), right.m_name.size() + 1) < 0;
@@ -218,13 +218,13 @@ BOOST_LOG_API std::basic_ostream< CharT, TraitsT >& operator<< (
 template BOOST_LOG_API std::basic_ostream< char, std::char_traits< char > >&
     operator<< < char, std::char_traits< char > >(
         std::basic_ostream< char, std::char_traits< char > >& strm,
-        basic_attribute_name< char > const& name);
+        attribute_name const& name);
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
 template BOOST_LOG_API std::basic_ostream< wchar_t, std::char_traits< wchar_t > >&
     operator<< < wchar_t, std::char_traits< wchar_t > >(
         std::basic_ostream< wchar_t, std::char_traits< wchar_t > >& strm,
-        basic_attribute_name< wchar_t > const& name);
+        attribute_name const& name);
 #endif
 
 } // namespace log

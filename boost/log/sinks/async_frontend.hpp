@@ -90,10 +90,10 @@ template< typename SinkBackendT, typename QueueingStrategyT = unbounded_fifo_que
 class asynchronous_sink :
     public aux::make_sink_frontend_base< SinkBackendT >::type,
     private boost::log::aux::locking_ptr_counter_base,
-    public QueueingStrategyT::template frontend_base< typename SinkBackendT::record_type >::type
+    public QueueingStrategyT
 {
     typedef typename aux::make_sink_frontend_base< SinkBackendT >::type base_type;
-    typedef typename QueueingStrategyT::template frontend_base< record >::type queue_base_type;
+    typedef QueueingStrategyT queue_base_type;
 
 private:
     //! Backend synchronization mutex type

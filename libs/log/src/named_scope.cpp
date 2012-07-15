@@ -37,20 +37,19 @@ namespace attributes {
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! Actual implementation of the named scope list
-    template< typename CharT >
-    class basic_writeable_named_scope_list :
-        public basic_named_scope_list< CharT >
+    class writeable_named_scope_list :
+        public named_scope_list
     {
         //! Base type
-        typedef basic_named_scope_list< CharT > base_type;
+        typedef named_scope_list base_type;
 
     public:
         //! Const reference type
-        typedef typename base_type::const_reference const_reference;
+        typedef base_type::const_reference const_reference;
 
     public:
         //! The method pushes the scope to the back of the list
-        BOOST_LOG_FORCEINLINE void push_back(const_reference entry)
+        BOOST_LOG_FORCEINLINE void push_back(const_reference entry) BOOST_NOEXCEPT
         {
             register aux::named_scope_list_node* top = this->m_RootNode._m_pPrev;
             entry._m_pPrev = top;
@@ -64,7 +63,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             ++this->m_Size;
         }
         //! The method removes the top scope entry from the list
-        BOOST_LOG_FORCEINLINE void pop_back()
+        BOOST_LOG_FORCEINLINE void pop_back() BOOST_NOEXCEPT
         {
             register aux::named_scope_list_node* top = this->m_RootNode._m_pPrev;
             top->_m_pPrev->_m_pNext = top->_m_pNext;
@@ -74,14 +73,11 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     };
 
     //! Named scope attribute value
-    template< typename CharT >
-    class basic_named_scope_value :
+    class named_scope_value :
         public attribute_value::impl
     {
-        //! Character type
-        typedef CharT char_type;
         //! Scope names stack
-        typedef basic_named_scope_list< char_type > scope_stack;
+        typedef named_scope_list scope_stack;
 
         //! Pointer to the actual scope value
         scope_stack* m_pValue;
@@ -90,7 +86,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     public:
         //! Constructor
-        explicit basic_named_scope_value(scope_stack* p) : m_pValue(p) {}
+        explicit named_scope_value(scope_stack* p) : m_pValue(p) {}
 
         //! The method dispatches the value to the given object. It returns true if the
         //! object was capable to consume the real attribute value type and false otherwise.
@@ -124,8 +120,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 } // namespace
 
 //! Named scope attribute implementation
-template< typename CharT >
-struct BOOST_LOG_VISIBLE basic_named_scope< CharT >::impl :
+struct BOOST_LOG_VISIBLE named_scope::impl :
     public attribute::impl,
     public log::aux::singleton<
         impl,
@@ -139,7 +134,7 @@ struct BOOST_LOG_VISIBLE basic_named_scope< CharT >::impl :
     > singleton_base_type;
 
     //! Writable scope list type
-    typedef basic_writeable_named_scope_list< char_type > scope_list;
+    typedef writeable_named_scope_list scope_list;
 
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Pointer to the thread-specific scope stack
@@ -186,7 +181,7 @@ struct BOOST_LOG_VISIBLE basic_named_scope< CharT >::impl :
     //! The method returns the actual attribute value. It must not return NULL.
     attribute_value get_value()
     {
-        return attribute_value(new basic_named_scope_value< char_type >(&get_scope_list()));
+        return attribute_value(new named_scope_value(&get_scope_list()));
     }
 
 private:
@@ -195,15 +190,13 @@ private:
 
 #if defined(BOOST_LOG_USE_COMPILER_TLS)
 //! Cached pointer to the thread-specific scope stack
-template< typename CharT >
-BOOST_LOG_TLS typename basic_named_scope< CharT >::implementation::scope_list*
-basic_named_scope< CharT >::implementation::pScopesCache = NULL;
+BOOST_LOG_TLS named_scope::implementation::scope_list*
+named_scope::implementation::pScopesCache = NULL;
 #endif // defined(BOOST_LOG_USE_COMPILER_TLS)
 
 
 //! Copy constructor
-template< typename CharT >
-BOOST_LOG_API basic_named_scope_list< CharT >::basic_named_scope_list(basic_named_scope_list const& that) :
+BOOST_LOG_API named_scope_list::named_scope_list(named_scope_list const& that) :
     allocator_type(static_cast< allocator_type const& >(that)),
     m_Size(that.size()),
     m_fNeedToDeallocate(!that.empty())
@@ -226,8 +219,7 @@ BOOST_LOG_API basic_named_scope_list< CharT >::basic_named_scope_list(basic_name
 }
 
 //! Destructor
-template< typename CharT >
-BOOST_LOG_API basic_named_scope_list< CharT >::~basic_named_scope_list()
+BOOST_LOG_API named_scope_list::~named_scope_list()
 {
     if (m_fNeedToDeallocate)
     {
@@ -240,8 +232,7 @@ BOOST_LOG_API basic_named_scope_list< CharT >::~basic_named_scope_list()
 }
 
 //! Swaps two instances of the container
-template< typename CharT >
-BOOST_LOG_API void basic_named_scope_list< CharT >::swap(basic_named_scope_list& that)
+BOOST_LOG_API void named_scope_list::swap(named_scope_list& that)
 {
     using std::swap;
 
@@ -274,56 +265,41 @@ BOOST_LOG_API void basic_named_scope_list< CharT >::swap(basic_named_scope_list&
         break;
 
     default: // both containers are empty, nothing to do here
-        ;
+        break;
     }
 }
 
 //! Constructor
-template< typename CharT >
-basic_named_scope< CharT >::basic_named_scope() :
+named_scope::named_scope() :
     attribute(impl::instance)
 {
 }
 
 //! Constructor for casting support
-template< typename CharT >
-basic_named_scope< CharT >::basic_named_scope(cast_source const& source) :
+named_scope::named_scope(cast_source const& source) :
     attribute(source.as< impl >())
 {
 }
 
 //! The method pushes the scope to the stack
-template< typename CharT >
-void basic_named_scope< CharT >::push_scope(scope_entry const& entry)
+void named_scope::push_scope(scope_entry const& entry) BOOST_NOEXCEPT
 {
-    typename impl::scope_list& s = impl::instance->get_scope_list();
+    impl::scope_list& s = impl::instance->get_scope_list();
     s.push_back(entry);
 }
 
 //! The method pops the top scope
-template< typename CharT >
-void basic_named_scope< CharT >::pop_scope()
+void named_scope::pop_scope() BOOST_NOEXCEPT
 {
-    typename impl::scope_list& s = impl::instance->get_scope_list();
+    impl::scope_list& s = impl::instance->get_scope_list();
     s.pop_back();
 }
 
 //! Returns the current thread's scope stack
-template< typename CharT >
-typename basic_named_scope< CharT >::value_type const& basic_named_scope< CharT >::get_scopes()
+named_scope::value_type const& named_scope::get_scopes()
 {
     return impl::instance->get_scope_list();
 }
-
-//! Explicitly instantiate named_scope implementation
-#ifdef BOOST_LOG_USE_CHAR
-template class BOOST_LOG_API basic_named_scope< char >;
-template class basic_named_scope_list< char >;
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-template class BOOST_LOG_API basic_named_scope< wchar_t >;
-template class basic_named_scope_list< wchar_t >;
-#endif
 
 } // namespace attributes
 

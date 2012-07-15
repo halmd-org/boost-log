@@ -43,13 +43,13 @@ inline typename result_of::extract< T >::type attribute_value::extract() const
 }
 
 template< typename T >
-inline typename result_of::extract_or_default< T, T >::type extract_or_default(T const& def_value) const
+inline typename result_of::extract_or_default< T, T >::type attribute_value::extract_or_default(T const& def_value) const
 {
     return boost::log::extract_value_or_default< T, T >(def_value)(*this);
 }
 
 template< typename T, typename DefaultT >
-inline typename result_of::extract_or_default< T, DefaultT >::type extract_or_default(DefaultT const& def_value) const
+inline typename result_of::extract_or_default< T, DefaultT >::type attribute_value::extract_or_default(DefaultT const& def_value) const
 {
     return boost::log::extract_value_or_default< T, DefaultT >(def_value)(*this);
 }

@@ -29,14 +29,14 @@
 #include <boost/mpl/contains.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/variant/variant_fwd.hpp>
-#include <boost/optional/optional_fwd.hpp>
+#include <boost/variant/variant.hpp>
+#include <boost/optional/optional.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/functional.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_def.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
@@ -380,5 +380,8 @@ inline typename value_extractor< extract_value_or_default< T, T > >::result_type
 } // namespace log
 
 } // namespace boost
+
+// This include has to be here to resolve dependencies between this header and the attribute_value methods implementation
+#include <boost/log/attributes/attribute_value.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTES_VALUE_EXTRACTION_HPP_INCLUDED_

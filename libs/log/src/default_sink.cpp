@@ -98,103 +98,100 @@ inline const char* severity_level_to_string(boost::log::trivial::severity_level 
     }
 }
 
+struct message_printer
+{
+    typedef void result_type;
+
+    explicit message_printer(boost::log::trivial::severity_level lvl) : m_level(lvl)
+    {
+    }
+
 #ifdef BOOST_LOG_USE_CHAR
 
-inline void print_message(boost::log::trivial::severity_level lvl, std::string const& msg)
-{
-    const decomposed_time_point now = date_time::microsec_clock< decomposed_time_point >::local_time();
+    result_type operator() (std::string const& msg) const
+    {
+        const decomposed_time_point now = date_time::microsec_clock< decomposed_time_point >::local_time();
 
-    std::printf("[%04u-%02u-%02u %02u:%02u:%02u.%06u] "
+        std::printf("[%04u-%02u-%02u %02u:%02u:%02u.%06u] "
 #if !defined(BOOST_LOG_NO_THREADS)
-                "[0x%08x] "
+                    "[0x%08x] "
 #endif
-                "%s %s\n",
-        static_cast< unsigned int >(now.date.year),
-        static_cast< unsigned int >(now.date.month),
-        static_cast< unsigned int >(now.date.day),
-        static_cast< unsigned int >(now.time.hours),
-        static_cast< unsigned int >(now.time.minutes),
-        static_cast< unsigned int >(now.time.seconds),
-        static_cast< unsigned int >(now.time.useconds),
+                    "%s %s\n",
+            static_cast< unsigned int >(now.date.year),
+            static_cast< unsigned int >(now.date.month),
+            static_cast< unsigned int >(now.date.day),
+            static_cast< unsigned int >(now.time.hours),
+            static_cast< unsigned int >(now.time.minutes),
+            static_cast< unsigned int >(now.time.seconds),
+            static_cast< unsigned int >(now.time.useconds),
 #if !defined(BOOST_LOG_NO_THREADS)
-        static_cast< unsigned int >(boost::log::aux::this_thread::get_id().native_id()),
+            static_cast< unsigned int >(boost::log::aux::this_thread::get_id().native_id()),
 #endif
-        severity_level_to_string(lvl),
-        msg.c_str());
-}
+            severity_level_to_string(m_level),
+            msg.c_str());
+    }
 
 #endif
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 
-inline void print_message(boost::log::trivial::severity_level lvl, std::wstring const& msg)
-{
-    const decomposed_time_point now = date_time::microsec_clock< decomposed_time_point >::local_time();
+    result_type operator() (std::wstring const& msg) const
+    {
+        const decomposed_time_point now = date_time::microsec_clock< decomposed_time_point >::local_time();
 
-    std::printf("[%04u-%02u-%02u %02u:%02u:%02u.%06u] "
+        std::printf("[%04u-%02u-%02u %02u:%02u:%02u.%06u] "
 #if !defined(BOOST_LOG_NO_THREADS)
-                "[0x%08x] "
+                    "[0x%08x] "
 #endif
-                "%s %ls\n",
-        static_cast< unsigned int >(now.date.year),
-        static_cast< unsigned int >(now.date.month),
-        static_cast< unsigned int >(now.date.day),
-        static_cast< unsigned int >(now.time.hours),
-        static_cast< unsigned int >(now.time.minutes),
-        static_cast< unsigned int >(now.time.seconds),
-        static_cast< unsigned int >(now.time.useconds),
+                    "%s %ls\n",
+            static_cast< unsigned int >(now.date.year),
+            static_cast< unsigned int >(now.date.month),
+            static_cast< unsigned int >(now.date.day),
+            static_cast< unsigned int >(now.time.hours),
+            static_cast< unsigned int >(now.time.minutes),
+            static_cast< unsigned int >(now.time.seconds),
+            static_cast< unsigned int >(now.time.useconds),
 #if !defined(BOOST_LOG_NO_THREADS)
-        static_cast< unsigned int >(boost::log::aux::this_thread::get_id().native_id()),
+            static_cast< unsigned int >(boost::log::aux::this_thread::get_id().native_id()),
 #endif
-        severity_level_to_string(lvl),
-        msg.c_str());
-}
+            severity_level_to_string(m_level),
+            msg.c_str());
+    }
 
 #endif
+
+private:
+    const boost::log::trivial::severity_level m_level;
+};
 
 } // namespace
 
-template< typename CharT >
-basic_default_sink< CharT >::basic_default_sink() :
-    m_severity_extractor(boost::log::aux::default_attribute_names< char_type >::severity(), boost::log::trivial::info)
+default_sink::default_sink() :
+    m_severity_extractor(boost::log::aux::default_attribute_names::severity(), boost::log::trivial::info),
+    m_message_visitor(boost::log::aux::default_attribute_names::message())
 {
 }
 
-template< typename CharT >
-basic_default_sink< CharT >::~basic_default_sink()
+default_sink::~default_sink()
 {
 }
 
-template< typename CharT >
-bool basic_default_sink< CharT >::will_consume(values_view_type const&)
+bool default_sink::will_consume(attribute_values_view const&)
 {
     return true;
 }
 
-template< typename CharT >
-void basic_default_sink< CharT >::consume(record_type const& record)
+void default_sink::consume(record const& rec)
 {
     BOOST_LOG_EXPR_IF_MT(lock_guard< mutex_type > lock(m_mutex);)
-    print_message
-    (
-        m_severity_extractor(record),
-        record.message()
-    );
+    m_message_visitor(rec.attribute_values(), message_printer(m_severity_extractor(rec)));
 }
 
-template< typename CharT >
-void basic_default_sink< CharT >::flush()
+void default_sink::flush()
 {
     BOOST_LOG_EXPR_IF_MT(lock_guard< mutex_type > lock(m_mutex);)
     fflush(stdout);
 }
-
-#ifdef BOOST_LOG_USE_CHAR
-template class basic_default_sink< char >;
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-template class basic_default_sink< wchar_t >;
-#endif
 
 } // namespace aux
 

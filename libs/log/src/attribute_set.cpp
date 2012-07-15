@@ -56,13 +56,6 @@ BOOST_LOG_API attribute_set::~attribute_set()
     delete m_pImpl;
 }
 
-//! Assignment
-BOOST_LOG_API attribute_set& attribute_set::operator= (attribute_set that)
-{
-    this->swap(that);
-    return *this;
-}
-
 //  Iterator generators
 BOOST_LOG_API attribute_set::iterator attribute_set::begin()
 {

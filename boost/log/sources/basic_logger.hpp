@@ -125,7 +125,7 @@ public:
 
 private:
     //! A pointer to the logging system
-    shared_ptr< core > m_pCore;
+    core_ptr m_pCore;
 
     //! Logger-specific attribute set
     attribute_set m_Attributes;
@@ -181,7 +181,7 @@ protected:
     /*!
      * An accessor to the logging system pointer
      */
-    shared_ptr< core > const& core() const { return m_pCore; }
+    core_ptr const& core() const { return m_pCore; }
     /*!
      * An accessor to the logger attributes
      */
@@ -267,9 +267,9 @@ protected:
     /*!
      * Unlocked \c push_record
      */
-    void push_record_unlocked(record const& record)
+    void push_record_unlocked(record const& rec)
     {
-        m_pCore->push_record(record);
+        m_pCore->push_record(rec);
     }
 
     /*!
@@ -393,7 +393,7 @@ public:
      *
      * \param it Iterator to the previously added attribute.
      */
-    void remove_attribute(attribute_settype::iterator it)
+    void remove_attribute(attribute_set::iterator it)
     {
         typename base_type::remove_attribute_lock lock(base_type::get_threading_model());
         base_type::remove_attribute_unlocked(it);
@@ -471,10 +471,10 @@ public:
      *
      * \param record The log record with the formatted message
      */
-    void push_record(record const& record)
+    void push_record(record const& rec)
     {
         typename base_type::push_record_lock lock(base_type::get_threading_model());
-        base_type::push_record_unlocked(record);
+        base_type::push_record_unlocked(rec);
     }
     /*!
      * Thread-safe implementation of swap
@@ -581,9 +581,9 @@ public:
         else
             return record();
     }
-    void push_record(record const& record)
+    void push_record(record const& rec)
     {
-        base_type::push_record_unlocked(record);
+        base_type::push_record_unlocked(rec);
     }
     void swap(basic_composite_logger& that)
     {

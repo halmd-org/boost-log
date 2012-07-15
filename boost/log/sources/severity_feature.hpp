@@ -23,12 +23,14 @@
 #include <boost/move/move.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/locks.hpp>
+#include <boost/log/detail/default_attribute_names.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/utility/strictest_lock.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 #include <boost/log/keywords/severity.hpp>
+#include <boost/log/core/record.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)

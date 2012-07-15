@@ -40,9 +40,9 @@ BOOST_LOG_API void basic_record_ostream< CharT >::init_stream()
 
         // This may fail if the record already has Message attribute
         std::pair< attribute_values_view::const_iterator, bool > res =
-            m_Record.attribute_values().insert(expressions::tag::message::get_name(), value);
+            const_cast< attribute_values_view& >(m_Record.attribute_values()).insert(expressions::tag::message::get_name(), value);
         if (!res.second)
-            const_cast< attribute_value& >(*res.first).swap(value);
+            const_cast< attribute_value& >(res.first->second).swap(value);
 
         base_type::attach(const_cast< string_type& >(p->get()));
     }
@@ -137,7 +137,7 @@ stream_provider< CharT >::allocate_compound(record const& rec)
         register stream_compound* p = pool.m_Top;
         pool.m_Top = p->next;
         p->next = NULL;
-        p->stream.record(rec);
+        p->stream.set_record(rec);
         return p;
     }
     else

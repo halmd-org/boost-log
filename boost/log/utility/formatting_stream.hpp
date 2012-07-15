@@ -23,11 +23,13 @@
 #include <string>
 #include <memory>
 #include <locale>
+#include <boost/ref.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/contains.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/utility/addressof.hpp>
+#include <boost/utility/base_from_member.hpp>
 #include <boost/optional/optional_fwd.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
@@ -50,9 +52,11 @@ template<
     typename AllocatorT = std::allocator< CharT >
 >
 class basic_formatting_ostream :
-    private boost::log::aux::basic_ostringstreambuf< CharT, TraitsT, AllocatorT >,
+    private base_from_member< boost::log::aux::basic_ostringstreambuf< CharT, TraitsT, AllocatorT > >,
     public std::basic_ostream< CharT, TraitsT >
 {
+    typedef base_from_member< boost::log::aux::basic_ostringstreambuf< CharT, TraitsT, AllocatorT > > streambuf_base_type;
+
 public:
     //! Character type
     typedef CharT char_type;
@@ -99,7 +103,7 @@ public:
      *
      * \post <tt>!*this == true</tt>
      */
-    basic_formatting_ostream() : ostream_type(static_cast< ostream_buf_base_type* >(this))
+    basic_formatting_ostream() : ostream_type(&this->streambuf_base_type::member)
     {
         init_stream();
     }
@@ -112,8 +116,8 @@ public:
      * \param rec The record handle being adopted
      */
     explicit basic_formatting_ostream(string_type& str) :
-        streambuf_type(str),
-        ostream_type(static_cast< ostream_buf_base_type* >(this))
+        streambuf_base_type(boost::ref(str)),
+        ostream_type(&this->streambuf_base_type::member)
     {
         init_stream();
     }
@@ -133,7 +137,7 @@ public:
      */
     void attach(string_type& str)
     {
-        streambuf_type::attach(str);
+        streambuf_base_type::member.attach(str);
         ostream_type::clear(ostream_type::goodbit);
     }
     /*!
@@ -141,7 +145,7 @@ public:
      */
     void detach()
     {
-        streambuf_type::detach();
+        streambuf_base_type::member.detach();
         ostream_type::clear(ostream_type::badbit);
     }
 
@@ -273,7 +277,7 @@ public:
 private:
     void init_stream()
     {
-        ostream_type::clear(streambuf_type::storage() ? ostream_type::goodbit : ostream_type::badbit);
+        ostream_type::clear(streambuf_base_type::member.storage() ? ostream_type::goodbit : ostream_type::badbit);
         ostream_type::flags
         (
             ostream_type::dec |

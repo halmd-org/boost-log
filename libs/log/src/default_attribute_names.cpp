@@ -54,7 +54,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
         static void init_instance()
         {
-            this->get_instance().reset(new names());
+            get_instance().reset(new names());
         }
 
     public:

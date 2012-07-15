@@ -50,6 +50,9 @@ class sink;
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
+class core;
+
+typedef shared_ptr< core > core_ptr;
 
 /*!
  * \brief Logging library core class
@@ -88,7 +91,7 @@ public:
     /*!
      * \return The method returns a pointer to the logging core singleton instance.
      */
-    static shared_ptr< core > get();
+    static core_ptr get();
 
     /*!
      * The method enables or disables logging.
@@ -129,14 +132,14 @@ public:
      *
      * \param s The sink to be registered.
      */
-    void add_sink(shared_ptr< sink > const& s);
+    void add_sink(shared_ptr< sinks::sink > const& s);
     /*!
      * The method removes the sink from the output. The sink will not receive any log records after removal.
      * The call has no effect if the sink is not registered.
      *
      * \param s The sink to be unregistered.
      */
-    void remove_sink(shared_ptr< sink > const& s);
+    void remove_sink(shared_ptr< sinks::sink > const& s);
     /*!
      * The method removes all registered sinks from the output. The sinks will not receive any log records after removal.
      */

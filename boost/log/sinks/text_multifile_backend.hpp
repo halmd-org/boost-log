@@ -63,7 +63,7 @@ namespace file {
         //! The adopted formatter type
         typedef FormatterT formatter_type;
         //! Formatting stream type
-        typedef basic_formatting_stream< native_char_type > stream_type;
+        typedef basic_formatting_ostream< native_char_type > stream_type;
 
     private:
         //! The adopted formatter

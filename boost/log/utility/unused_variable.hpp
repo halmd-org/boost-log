@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   no_unused_warnings.hpp
+ * \file   unused_variable.hpp
  * \author Andrey Semashev
  * \date   10.05.2008
  *
@@ -16,10 +16,17 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_UTILITY_NO_UNUSED_WARNINGS_HPP_INCLUDED_
-#define BOOST_LOG_UTILITY_NO_UNUSED_WARNINGS_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_UNUSED_VARIABLE_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_UNUSED_VARIABLE_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
+
+#if defined(__GNUC__)
+
+//! The macro suppresses compiler warnings for \c var being unused
+#define BOOST_LOG_UNUSED_VARIABLE(type, var, initializer) __attribute__((unused)) type var initializer
+
+#else
 
 namespace boost {
 
@@ -28,7 +35,7 @@ namespace BOOST_LOG_NAMESPACE {
 namespace aux {
 
 template< typename T >
-inline void no_unused_warnings(T const&) {}
+BOOST_LOG_FORCEINLINE unsigned long no_unused_warnings(T const& val) { return sizeof(val); }
 
 } // namespace aux
 
@@ -37,6 +44,8 @@ inline void no_unused_warnings(T const&) {}
 } // namespace boost
 
 //! The macro suppresses compiler warnings for \c var being unused
-#define BOOST_LOG_NO_UNUSED_WARNINGS(var) ::boost::log::aux::no_unused_warnings(var)
+#define BOOST_LOG_UNUSED_VARIABLE(type, var, initializer) type var initializer; ::boost::log::aux::no_unused_warnings(var)
 
-#endif // BOOST_LOG_UTILITY_NO_UNUSED_WARNINGS_HPP_INCLUDED_
+#endif
+
+#endif // BOOST_LOG_UTILITY_UNUSED_VARIABLE_HPP_INCLUDED_

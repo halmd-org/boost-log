@@ -116,7 +116,7 @@ public:
      *
      * \post <tt>!*this == true</tt>
      */
-    record() {}
+    BOOST_LOG_DEFAULTED_FUNCTION(record(), {})
 
     /*!
      * Copy constructor

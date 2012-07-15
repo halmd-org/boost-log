@@ -46,7 +46,7 @@ class attribute_values_view;
  */
 class attribute_set
 {
-    BOOST_COPYABLE_AND_MOVABLE(attribute_set)
+    BOOST_COPYABLE_AND_MOVABLE_ALT(attribute_set)
 
     friend class attribute_values_view;
 
@@ -270,20 +270,15 @@ public:
     BOOST_LOG_API ~attribute_set();
 
     /*!
-     * Move assignment operator
-     */
-    attribute_set& operator= (BOOST_RV_REF(attribute_set) that)
-    {
-        this->swap(that);
-        return *this;
-    }
-
-    /*!
      * Copy assignment operator.
      *
      * \post <tt>size() == that.size() && std::equal(begin(), end(), that.begin()) == true</tt>
      */
-    BOOST_LOG_API attribute_set& operator= (BOOST_COPY_ASSIGN_REF(attribute_set) that);
+    attribute_set& operator= (attribute_set that)
+    {
+        this->swap(that);
+        return *this;
+    }
 
     /*!
      * Swaps two instances of the container.

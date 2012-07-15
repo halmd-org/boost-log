@@ -27,6 +27,7 @@
 #include <boost/log/keywords/channel.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
 #include <boost/log/utility/strictest_lock.hpp>
+#include <boost/log/core/record.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)

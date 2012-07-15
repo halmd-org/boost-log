@@ -444,7 +444,7 @@ BOOST_LOG_API attribute_values_view::~attribute_values_view()
 {
     if (m_pImpl)
     {
-        implementation::destroy(static_cast< internal_allocator_type& >(*this), m_pImpl);
+        implementation::destroy(m_pImpl);
         m_pImpl = NULL;
     }
 }

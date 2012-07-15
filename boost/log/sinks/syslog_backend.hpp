@@ -77,16 +77,12 @@ namespace syslog {
      * provides values that map directly onto the Syslog levels. The mapping
      * simply returns the extracted attribute value converted to the Syslog severity level.
      */
-    template< typename CharT, typename AttributeValueT = int >
-    class basic_direct_severity_mapping :
-        public basic_direct_mapping< CharT, level, AttributeValueT >
+    template< typename AttributeValueT = int >
+    class direct_severity_mapping :
+        public basic_direct_mapping< level, AttributeValueT >
     {
         //! Base type
-        typedef basic_direct_mapping< CharT, level, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
+        typedef basic_direct_mapping< level, AttributeValueT > base_type;
 
     public:
         /*!
@@ -94,7 +90,7 @@ namespace syslog {
          *
          * \param name Attribute name
          */
-        explicit basic_direct_severity_mapping(attribute_name_type const& name) :
+        explicit direct_severity_mapping(attribute_name const& name) :
             base_type(name, info)
         {
         }
@@ -107,16 +103,12 @@ namespace syslog {
      * The mapping should be initialized similarly to the standard \c map container, by using
      * indexing operator and assignment.
      */
-    template< typename CharT, typename AttributeValueT = int >
-    class basic_custom_severity_mapping :
-        public basic_custom_mapping< CharT, level, AttributeValueT >
+    template< typename AttributeValueT = int >
+    class custom_severity_mapping :
+        public basic_custom_mapping< level, AttributeValueT >
     {
         //! Base type
-        typedef basic_custom_mapping< CharT, level, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
+        typedef basic_custom_mapping< level, AttributeValueT > base_type;
 
     public:
         /*!
@@ -124,131 +116,11 @@ namespace syslog {
          *
          * \param name Attribute name
          */
-        explicit basic_custom_severity_mapping(attribute_name_type const& name) :
+        explicit custom_severity_mapping(attribute_name const& name) :
             base_type(name, info)
         {
         }
     };
-
-#ifdef BOOST_LOG_USE_CHAR
-
-    /*!
-     * \brief Straightforward severity level mapping
-     *
-     * This is a convenience template typedef over \c basic_direct_severity_mapping
-     * for narrow-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class direct_severity_mapping :
-        public basic_direct_severity_mapping< char, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_direct_severity_mapping< char, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit direct_severity_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-    /*!
-     * \brief Customizable severity level mapping
-     *
-     * This is a convenience template typedef over \c basic_custom_severity_mapping
-     * for narrow-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class custom_severity_mapping :
-        public basic_custom_severity_mapping< char, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_custom_severity_mapping< char, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit custom_severity_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-#endif // BOOST_LOG_USE_CHAR
-
-#ifdef BOOST_LOG_USE_WCHAR_T
-
-    /*!
-     * \brief Straightforward severity level mapping
-     *
-     * This is a convenience template typedef over \c basic_direct_severity_mapping
-     * for wide-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class wdirect_severity_mapping :
-        public basic_direct_severity_mapping< wchar_t, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_direct_severity_mapping< wchar_t, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit wdirect_severity_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-    /*!
-     * \brief Customizable severity level mapping
-     *
-     * This is a convenience template typedef over \c basic_custom_severity_mapping
-     * for wide-character logging.
-     */
-    template< typename AttributeValueT = int >
-    class wcustom_severity_mapping :
-        public basic_custom_severity_mapping< wchar_t, AttributeValueT >
-    {
-        //! Base type
-        typedef basic_custom_severity_mapping< wchar_t, AttributeValueT > base_type;
-
-    public:
-        //! Attribute name type
-        typedef typename base_type::attribute_name_type attribute_name_type;
-
-    public:
-        /*!
-         * Constructor
-         *
-         * \param name Attribute name
-         */
-        explicit wcustom_severity_mapping(attribute_name_type const& name) : base_type(name)
-        {
-        }
-    };
-
-#endif // BOOST_LOG_USE_WCHAR_T
 
 } // namespace syslog
 

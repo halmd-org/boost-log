@@ -30,6 +30,7 @@
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/list_hook.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <boost/log/core/record.hpp>
 
 namespace boost {
 
@@ -91,8 +92,8 @@ public:
      * \retval true Attempt to enqueue the record again.
      * \retval false Discard the record.
      */
-    template< typename RecordT, typename LockT >
-    bool on_overflow(RecordT const&, LockT& lock)
+    template< typename LockT >
+    bool on_overflow(record const&, LockT& lock)
     {
         thread_context context;
         m_thread_contexts.push_back(context);

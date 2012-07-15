@@ -28,7 +28,7 @@
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
-#include <boost/log/utility/no_unused_warnings.hpp>
+#include <boost/log/utility/unused_variable.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
 
 namespace boost {
@@ -137,15 +137,13 @@ inline aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attribute(
 
 #define BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR_INTERNAL(logger, attr_name, attr_type, attr_ctor_args, attr_var_name, sentry_var_name)\
     attr_type attr_var_name(BOOST_PP_SEQ_ENUM(attr_ctor_args));\
-    ::boost::log::scoped_attribute sentry_var_name =\
-        ::boost::log::add_scoped_logger_attribute(logger, attr_name, attr_var_name);\
-    BOOST_LOG_NO_UNUSED_WARNINGS(sentry_var_name)
+    BOOST_LOG_UNUSED_VARIABLE(::boost::log::scoped_attribute, sentry_var_name,\
+        = ::boost::log::add_scoped_logger_attribute(logger, attr_name, attr_var_name));
 
 #define BOOST_LOG_SCOPED_LOGGER_ATTR_INTERNAL(logger, attr_name, attr_type, attr_var_name, sentry_var_name)\
     attr_type attr_var_name;\
-    ::boost::log::scoped_attribute sentry_var_name =\
-        ::boost::log::add_scoped_logger_attribute(logger, attr_name, attr_var_name);\
-    BOOST_LOG_NO_UNUSED_WARNINGS(sentry_var_name)
+    BOOST_LOG_UNUSED_VARIABLE(::boost::log::scoped_attribute, sentry_var_name,\
+        = ::boost::log::add_scoped_logger_attribute(logger, attr_name, attr_var_name));
 
 //! \endcond
 
@@ -256,15 +254,13 @@ inline aux::scoped_thread_attribute< CharT > add_scoped_thread_attribute(
 
 #define BOOST_LOG_SCOPED_THREAD_ATTR_CTOR_INTERNAL(attr_name, attr_type, attr_ctor_args, attr_var_name, sentry_var_name)\
     attr_type attr_var_name(BOOST_PP_SEQ_ENUM(attr_ctor_args));\
-    ::boost::log::scoped_attribute sentry_var_name =\
-        ::boost::log::add_scoped_thread_attribute(attr_name, attr_var_name);\
-    BOOST_LOG_NO_UNUSED_WARNINGS(sentry_var_name)
+    BOOST_LOG_UNUSED_VARIABLE(::boost::log::scoped_attribute, sentry_var_name,\
+        = ::boost::log::add_scoped_thread_attribute(attr_name, attr_var_name));
 
 #define BOOST_LOG_SCOPED_THREAD_ATTR_INTERNAL(attr_name, attr_type, attr_var_name, sentry_var_name)\
     attr_type attr_var_name;\
-    ::boost::log::scoped_attribute sentry_var_name =\
-        ::boost::log::add_scoped_thread_attribute(attr_name, attr_var_name);\
-    BOOST_LOG_NO_UNUSED_WARNINGS(sentry_var_name)
+    BOOST_LOG_UNUSED_VARIABLE(::boost::log::scoped_attribute, sentry_var_name,\
+        = ::boost::log::add_scoped_thread_attribute(attr_name, attr_var_name));
 
 //! \endcond
 

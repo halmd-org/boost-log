@@ -21,6 +21,7 @@
 #define BOOST_LOG_SINKS_DROP_ON_OVERFLOW_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/core/record.hpp>
 
 namespace boost {
 
@@ -45,8 +46,8 @@ public:
      * \retval true Attempt to enqueue the record again.
      * \retval false Discard the record.
      */
-    template< typename RecordT, typename LockT >
-    static bool on_overflow(RecordT const&, LockT&)
+    template< typename LockT >
+    static bool on_overflow(record const&, LockT&)
     {
         return false;
     }
