@@ -118,7 +118,7 @@ namespace aux {
  * \param factory Formatter factory function
  */
 template< typename CharT >
-BOOST_LOG_SETUP_EXPORT void register_formatter_factory(
+BOOST_LOG_SETUP_API void register_formatter_factory(
     const CharT* attr_name,
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
     typename formatter_types< CharT >::formatter_factory const& factory
@@ -195,7 +195,7 @@ inline void register_simple_formatter_factory(std::basic_string< CharT, TraitsT,
  * \b Throws: An <tt>std::exception</tt>-based exception, if a formatter cannot be recognized in the character sequence.
  */
 template< typename CharT >
-BOOST_LOG_SETUP_EXPORT
+BOOST_LOG_SETUP_API
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 typename formatter_types< CharT >::formatter_type
 #else

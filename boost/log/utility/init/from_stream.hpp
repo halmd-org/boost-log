@@ -43,7 +43,7 @@ namespace BOOST_LOG_NAMESPACE {
  * \b Throws: An <tt>std::exception</tt>-based exception if the read data cannot be interpreted as the library settings
  */
 template< typename CharT >
-BOOST_LOG_SETUP_EXPORT void init_from_stream(std::basic_istream< CharT >& strm);
+BOOST_LOG_SETUP_API void init_from_stream(std::basic_istream< CharT >& strm);
 
 } // namespace log
 

@@ -804,25 +804,25 @@ void register_sink_factory(
 }
 
 #ifdef BOOST_LOG_USE_CHAR
-template BOOST_LOG_SETUP_EXPORT
+template BOOST_LOG_SETUP_API
 void register_sink_factory< char >(
     const char* sink_name,
     boost::log::aux::light_function1<
         shared_ptr< sinks::sink< char > >,
         std::map< std::basic_string< char >, any > const&
     > const& factory);
-template BOOST_LOG_SETUP_EXPORT void init_from_settings< char >(basic_settings< char > const& setts);
+template BOOST_LOG_SETUP_API void init_from_settings< char >(basic_settings< char > const& setts);
 #endif
 
 #ifdef BOOST_LOG_USE_WCHAR_T
-template BOOST_LOG_SETUP_EXPORT
+template BOOST_LOG_SETUP_API
 void register_sink_factory< wchar_t >(
     const wchar_t* sink_name,
     boost::log::aux::light_function1<
         shared_ptr< sinks::sink< wchar_t > >,
         std::map< std::basic_string< wchar_t >, any > const&
     > const& factory);
-template BOOST_LOG_SETUP_EXPORT void init_from_settings< wchar_t >(basic_settings< wchar_t > const& setts);
+template BOOST_LOG_SETUP_API void init_from_settings< wchar_t >(basic_settings< wchar_t > const& setts);
 #endif
 
 } // namespace log

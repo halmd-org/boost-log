@@ -245,10 +245,10 @@ void init_from_stream(std::basic_istream< CharT >& strm)
 
 
 #ifdef BOOST_LOG_USE_CHAR
-template BOOST_LOG_SETUP_EXPORT void init_from_stream< char >(std::basic_istream< char >& strm);
+template BOOST_LOG_SETUP_API void init_from_stream< char >(std::basic_istream< char >& strm);
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-template BOOST_LOG_SETUP_EXPORT void init_from_stream< wchar_t >(std::basic_istream< wchar_t >& strm);
+template BOOST_LOG_SETUP_API void init_from_stream< wchar_t >(std::basic_istream< wchar_t >& strm);
 #endif
 
 } // namespace log

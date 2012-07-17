@@ -437,10 +437,10 @@ parse_filter(const CharT* begin, const CharT* end)
 
 #ifdef BOOST_LOG_USE_CHAR
 
-template BOOST_LOG_SETUP_EXPORT
+template BOOST_LOG_SETUP_API
 void register_filter_factory(const char* name, shared_ptr< filter_factory< char > > const& factory);
 
-template BOOST_LOG_SETUP_EXPORT
+template BOOST_LOG_SETUP_API
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 basic_core< char >::filter_type
 #else
@@ -452,10 +452,10 @@ parse_filter< char >(const char* begin, const char* end);
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 
-template BOOST_LOG_SETUP_EXPORT
+template BOOST_LOG_SETUP_API
 void register_filter_factory(const wchar_t* name, shared_ptr< filter_factory< wchar_t > > const& factory);
 
-template BOOST_LOG_SETUP_EXPORT
+template BOOST_LOG_SETUP_API
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
 basic_core< wchar_t >::filter_type
 #else

@@ -87,6 +87,18 @@
 #   define BOOST_LOG_ANONYMOUS_NAMESPACE namespace
 #endif
 
+#if defined(BOOST_CLANG)
+#   if !__has_feature(cxx_trailing_return)
+#       define BOOST_LOG_NO_TRAILING_RESULT_TYPE
+#   endif
+#elif defined(__GNUC__)
+#   if (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 4)) || !defined(__GXX_EXPERIMENTAL_CXX0X__)
+#       define BOOST_LOG_NO_TRAILING_RESULT_TYPE
+#   endif
+#else
+#   define BOOST_LOG_NO_TRAILING_RESULT_TYPE
+#endif
+
 // Extended declaration macros. Used to implement compiler-specific optimizations.
 #if defined(BOOST_FORCEINLINE)
 #   define BOOST_LOG_FORCEINLINE BOOST_FORCEINLINE
