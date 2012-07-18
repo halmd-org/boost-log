@@ -13,6 +13,8 @@
  *         for signalling application events.
  */
 
+#ifndef BOOST_LOG_NO_EVENT_LOG_SUPPORT
+
 #include "windows_version.hpp"
 #include <memory>
 #include <string>
@@ -485,7 +487,7 @@ BOOST_LOG_API basic_event_log_backend< CharT >::~basic_event_log_backend()
 //! Constructs backend implementation
 template< typename CharT >
 BOOST_LOG_API void basic_event_log_backend< CharT >::construct(
-    boost::log::aux::universal_path const& message_file_name,
+    filesystem::path const& message_file_name,
     string_type const& target,
     string_type const& log_name,
     string_type const& source_name,
@@ -614,3 +616,5 @@ template class basic_event_log_backend< wchar_t >;
 } // namespace log
 
 } // namespace boost
+
+#endif // !defined(BOOST_LOG_NO_EVENT_LOG_SUPPORT)

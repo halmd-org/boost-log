@@ -13,6 +13,8 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#ifndef BOOST_LOG_NO_SYSLOG_SUPPORT
+
 #include "windows_version.hpp"
 #include <boost/log/detail/prologue.hpp>
 #include <memory>
@@ -581,3 +583,5 @@ BOOST_LOG_API void syslog_backend::set_target_address(boost::asio::ip::address c
 } // namespace log
 
 } // namespace boost
+
+#endif // !defined(BOOST_LOG_NO_SYSLOG_SUPPORT)

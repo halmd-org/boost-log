@@ -29,6 +29,7 @@
 #include <boost/date_time/special_defs.hpp>
 #include <boost/date_time/gregorian/greg_day.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/log/keywords/max_size.hpp>
 #include <boost/log/keywords/min_free_space.hpp>
 #include <boost/log/keywords/target.hpp>
@@ -39,7 +40,6 @@
 #include <boost/log/keywords/time_based_rotation.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/light_function.hpp>
-#include <boost/log/detail/universal_path.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
@@ -75,9 +75,6 @@ enum scan_method
  */
 struct BOOST_LOG_NO_VTABLE collector
 {
-    //! Path type that is used by Boost.Log
-    typedef boost::log::aux::universal_path path_type;
-
     /*!
      * Default constructor
      */
@@ -94,7 +91,7 @@ struct BOOST_LOG_NO_VTABLE collector
      *
      * \param src_path The name of the file to be stored
      */
-    virtual void store_file(path_type const& src_path) = 0;
+    virtual void store_file(filesystem::path const& src_path) = 0;
 
     /*!
      * Scans the target directory for the files that have already been stored. The found
@@ -127,7 +124,7 @@ struct BOOST_LOG_NO_VTABLE collector
      *       to an incorrect file deletion.
      */
     virtual uintmax_t scan_for_files(
-        scan_method method, path_type const& pattern = path_type(), unsigned int* counter = 0) = 0;
+        scan_method method, filesystem::path const& pattern = filesystem::path(), unsigned int* counter = 0) = 0;
 
     BOOST_LOG_DELETED_FUNCTION(collector(collector const&))
     BOOST_LOG_DELETED_FUNCTION(collector& operator= (collector const&))
@@ -137,7 +134,7 @@ namespace aux {
 
     //! Creates and returns a file collector with the specified parameters
     BOOST_LOG_API shared_ptr< collector > make_collector(
-        collector::path_type const& target_dir,
+        filesystem::path const& target_dir,
         uintmax_t max_size,
         uintmax_t min_free_space
     );
@@ -145,7 +142,7 @@ namespace aux {
     inline shared_ptr< collector > make_collector(ArgsT const& args)
     {
         return aux::make_collector(
-            boost::log::aux::to_universal_path(args[keywords::target]),
+            filesystem::path(args[keywords::target]),
             args[keywords::max_size | (std::numeric_limits< uintmax_t >::max)()],
             args[keywords::min_free_space | static_cast< uintmax_t >(0)]);
     }
@@ -342,8 +339,6 @@ public:
     typedef base_type::string_type string_type;
     //! Stream type
     typedef std::basic_ostream< char_type > stream_type;
-    //! Path type that is used by Boost.Log
-    typedef boost::log::aux::universal_path path_type;
 
     //! File open handler
     typedef boost::log::aux::light_function1< void, stream_type& > open_handler_type;
@@ -415,7 +410,7 @@ public:
     template< typename PathT >
     void set_file_name_pattern(PathT const& pattern)
     {
-        set_file_name_pattern_internal(boost::log::aux::to_universal_path(pattern));
+        set_file_name_pattern_internal(filesystem::path(pattern));
     }
 
     /*!
@@ -516,7 +511,7 @@ private:
     void construct(ArgsT const& args)
     {
         construct(
-            boost::log::aux::to_universal_path(args[keywords::file_name | path_type()]),
+            filesystem::path(args[keywords::file_name | path_type()]),
             args[keywords::open_mode | (std::ios_base::trunc | std::ios_base::out)],
             args[keywords::rotation_size | (std::numeric_limits< uintmax_t >::max)()],
             args[keywords::time_based_rotation | time_based_rotation_predicate()],
@@ -524,14 +519,14 @@ private:
     }
     //! Constructor implementation
     BOOST_LOG_API void construct(
-        path_type const& pattern,
+        filesystem::path const& pattern,
         std::ios_base::openmode mode,
         uintmax_t rotation_size,
         time_based_rotation_predicate const& time_based_rotation,
         bool auto_flush);
 
     //! The method sets file name mask
-    BOOST_LOG_API void set_file_name_pattern_internal(path_type const& pattern);
+    BOOST_LOG_API void set_file_name_pattern_internal(filesystem::path const& pattern);
 
     //! The method rotates the file
     BOOST_LOG_API void rotate_file();

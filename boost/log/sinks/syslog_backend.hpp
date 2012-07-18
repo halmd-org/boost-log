@@ -19,9 +19,12 @@
 #ifndef BOOST_LOG_SINKS_SYSLOG_BACKEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_SYSLOG_BACKEND_HPP_INCLUDED_
 
+#include <boost/log/detail/prologue.hpp>
+
+#ifndef BOOST_LOG_NO_SYSLOG_SUPPORT
+
 #include <string>
 #include <boost/shared_ptr.hpp>
-#include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/asio_fwd.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
@@ -288,5 +291,7 @@ private:
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif // _MSC_VER
+
+#endif // BOOST_LOG_NO_SYSLOG_SUPPORT
 
 #endif // BOOST_LOG_SINKS_SYSLOG_BACKEND_HPP_INCLUDED_

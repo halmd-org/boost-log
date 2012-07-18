@@ -21,11 +21,13 @@
 
 #include <cstddef>
 #include <string>
+#include <iterator>
 #include <boost/assert.hpp>
 #include <boost/move/move.hpp>
 #include <boost/mpl/if.hpp>
+#include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/optional/optional.hpp>
-#include <boost/property_tree/ptree_fwd.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <boost/log/detail/setup_prologue.hpp>
 #include <boost/log/detail/native_typeof.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
@@ -80,12 +82,12 @@ private:
     //! A reference proxy object
 #ifndef BOOST_LOG_NO_MEMBER_TEMPLATE_FRIENDS
     template< bool IsConstV >
-    class param_reference;
+    class ref;
     template< bool IsConstV >
-    friend class param_reference;
+    friend class ref;
 #endif
     template< bool IsConstV >
-    class param_reference
+    class ref
     {
     private:
         typedef typename mpl::if_c<
@@ -99,18 +101,18 @@ private:
         std::string m_path;
 
     public:
-        param_reference(section_type& section, std::string const& section_name) :
+        ref(section_type& section, std::string const& section_name) :
             m_section(section),
             m_path(section_name)
         {
         }
-        param_reference(section_type& section, const char* section_name) :
+        ref(section_type& section, const char* section_name) :
             m_section(section),
             m_path(section_name)
         {
         }
 
-        param_reference& operator[] (std::string const& param_name)
+        ref& operator[] (std::string const& param_name)
         {
             if (!param_name.empty())
             {
@@ -121,21 +123,21 @@ private:
             return *this;
         }
 
-        param_reference& operator= (string_type const& value)
+        ref& operator= (string_type const& value)
         {
             m_section.set_parameter(m_path, value);
             return *this;
         }
 
         template< bool V >
-        param_reference& operator= (param_reference< V > const& value)
+        ref& operator= (ref< V > const& value)
         {
             m_section.set_parameter(m_path, value.get());
             return *this;
         }
 
         template< typename T >
-        param_reference& operator= (T const& value)
+        ref& operator= (T const& value)
         {
             BOOST_ASSERT(m_section.m_ptree != NULL);
             m_section.m_ptree->put(m_path, value);
@@ -147,6 +149,11 @@ private:
         bool operator! () const
         {
             return !m_section.get_section(m_path);
+        }
+
+        std::string get_name() const
+        {
+            return m_path;
         }
 
         operator optional< string_type > () const
@@ -229,9 +236,59 @@ private:
         }
     };
 
+    //! An iterator over subsections and parameters
+#ifndef BOOST_LOG_NO_MEMBER_TEMPLATE_FRIENDS
+    template< bool IsConstV >
+    class iter;
+    template< bool IsConstV >
+    friend class iter;
+#endif
+    template< bool IsConstV >
+    class iter :
+        public iterator_adaptor<
+            iter< IsConstV >,
+            typename mpl::if_c<
+                IsConstV,
+                typename property_tree_type::const_iterator,
+                typename property_tree_type::iterator
+            >::type,
+            basic_settings_section< char_type >,
+            use_default,
+            basic_settings_section< char_type >
+        >
+    {
+        typedef typename section_iterator::iterator_adaptor_ iterator_adaptor_;
+
+    public:
+        typedef typename iterator_adaptor_::base_type base_type;
+        typedef typename iterator_adaptor_::reference reference;
+
+    public:
+        BOOST_LOG_DEFAULTED_FUNCTION(iter(), {})
+        template< bool OtherIsConstV >
+        iter(iter< OtherIsConstV > const& that) : iterator_adaptor_(that.base()) {}
+        explicit iter(base_type const& it) : iterator_adaptor_(it) {}
+
+        //! Returns the section name
+        std::string const& get_name() const
+        {
+            return this->base()->first;
+        }
+
+    private:
+        reference dereference() const
+        {
+            return reference(&this->base()->second);
+        }
+    };
+
 public:
-    typedef param_reference< true > const_reference;
-    typedef param_reference< false > reference;
+    typedef ref< true > const_reference;
+    typedef ref< false > reference;
+    typedef iter< true > const_iterator;
+    typedef iter< false > iterator;
+    typedef std::reverse_iterator< const_iterator > const_reverse_iterator;
+    typedef std::reverse_iterator< iterator > reverse_iterator;
 
 #else
 
@@ -244,6 +301,15 @@ public:
      * Mutable reference to the parameter value
      */
     typedef implementation_defined reference;
+
+    /*!
+     * Constant iterator over nested parameters and subsections
+     */
+    typedef implementation_defined const_iterator;
+    /*!
+     * Mutable iterator over nested parameters and subsections
+     */
+    typedef implementation_defined iterator;
 
 #endif // !defined(BOOST_LOG_DOXYGEN_PASS)
 
@@ -274,15 +340,76 @@ public:
     /*!
      * Checks if the section refers to the container.
      */
-    bool operator! () const
+    bool operator! () const { return !m_ptree; }
+
+    /*!
+     * Returns an iterator over the nested subsections and parameters.
+     */
+    iterator begin()
     {
-        return !m_ptree;
+        if (m_ptree)
+            return iterator(m_ptree->begin());
+        else
+            return iterator();
     }
+
+    /*!
+     * Returns an iterator over the nested subsections and parameters.
+     */
+    iterator end()
+    {
+        if (m_ptree)
+            return iterator(m_ptree->end());
+        else
+            return iterator();
+    }
+
+    /*!
+     * Returns an iterator over the nested subsections and parameters.
+     */
+    const_iterator begin() const
+    {
+        if (m_ptree)
+            return const_iterator(m_ptree->begin());
+        else
+            return const_iterator();
+    }
+
+    /*!
+     * Returns an iterator over the nested subsections and parameters.
+     */
+    const_iterator end() const
+    {
+        if (m_ptree)
+            return const_iterator(m_ptree->end());
+        else
+            return const_iterator();
+    }
+
+    /*!
+     * Returns a reverse iterator over the nested subsections and parameters.
+     */
+    reverse_iterator rbegin() { return reverse_iterator(begin()); }
+
+    /*!
+     * Returns a reverse iterator over the nested subsections and parameters.
+     */
+    reverse_iterator rend() { return reverse_iterator(end()); }
+
+    /*!
+     * Returns a reverse iterator over the nested subsections and parameters.
+     */
+    const_reverse_iterator rbegin() const { return const_reverse_iterator(begin()); }
+
+    /*!
+     * Returns a reverse iterator over the nested subsections and parameters.
+     */
+    const_reverse_iterator rend() const { return const_reverse_iterator(end()); }
 
     /*!
      * Checks if the container is empty (i.e. contains no sections and parameters).
      */
-    BOOST_LOG_SETUP_API bool empty() const;
+    bool empty() const { return m_ptree == NULL || m_ptree->empty(); }
 
     /*!
      * Accessor to a single parameter. This operator should be used in conjunction
@@ -291,10 +418,7 @@ public:
      * \param section_name The name of the section in which the parameter resides
      * \return An unspecified reference type that can be used for parameter name specifying
      */
-    reference operator[] (std::string const& section_name)
-    {
-        return reference(*this, section_name);
-    }
+    reference operator[] (std::string const& section_name) { return reference(*this, section_name); }
     /*!
      * Accessor to a single parameter. This operator should be used in conjunction
      * with the subsequent subscript operator that designates the parameter name.
@@ -302,10 +426,7 @@ public:
      * \param section_name The name of the section in which the parameter resides
      * \return An unspecified reference type that can be used for parameter name specifying
      */
-    const_reference operator[] (std::string const& section_name) const
-    {
-        return const_reference(*this, section_name);
-    }
+    const_reference operator[] (std::string const& section_name) const { return const_reference(*this, section_name); }
 
     /*!
      * Accessor to a single parameter. This operator should be used in conjunction
@@ -314,10 +435,7 @@ public:
      * \param section_name The name of the section in which the parameter resides
      * \return An unspecified reference type that can be used for parameter name specifying
      */
-    reference operator[] (const char* section_name)
-    {
-        return reference(*this, section_name);
-    }
+    reference operator[] (const char* section_name) { return reference(*this, section_name); }
     /*!
      * Accessor to a single parameter. This operator should be used in conjunction
      * with the subsequent subscript operator that designates the parameter name.
@@ -325,10 +443,7 @@ public:
      * \param section_name The name of the section in which the parameter resides
      * \return An unspecified reference type that can be used for parameter name specifying
      */
-    const_reference operator[] (const char* section_name) const
-    {
-        return const_reference(*this, section_name);
-    }
+    const_reference operator[] (const char* section_name) const { return const_reference(*this, section_name); }
 
     /*!
      * Accessor for the embedded property tree
@@ -344,14 +459,27 @@ public:
      *
      * \param section_name The name of the section
      */
-    BOOST_LOG_SETUP_API bool has_section(string_type const& section_name) const;
+    bool has_section(string_type const& section_name) const
+    {
+        return m_ptree != NULL && !!m_ptree->get_child_optional(section_name);
+    }
     /*!
      * Checks if the specified parameter is present in the container.
      *
      * \param section_name The name of the section in which the parameter resides
      * \param param_name The name of the parameter
      */
-    BOOST_LOG_SETUP_API bool has_parameter(string_type const& section_name, string_type const& param_name) const;
+    bool has_parameter(string_type const& section_name, string_type const& param_name) const
+    {
+        if (m_ptree)
+        {
+            optional< property_tree_type const& > section = m_ptree->get_child_optional(section_name);
+            if (!!section)
+                return (section->find(param_name) != section->not_found());
+        }
+
+        return false;
+    }
 
     /*!
      * Swaps two references to settings sections.
@@ -368,10 +496,37 @@ protected:
     {
     }
 
-    BOOST_LOG_SETUP_API basic_settings_section get_section(std::string const& name) const;
-    BOOST_LOG_SETUP_API optional< string_type > get_parameter(std::string const& name) const;
-    BOOST_LOG_SETUP_API void set_parameter(std::string const& name, string_type const& value);
-    BOOST_LOG_SETUP_API void set_parameter(std::string const& name, optional< string_type > const& value);
+    basic_settings_section get_section(std::string const& name) const
+    {
+        BOOST_ASSERT(m_ptree != NULL);
+        return basic_settings_section(m_ptree->get_child_optional(name).get_ptr());
+    }
+
+    optional< string_type > get_parameter(std::string const& name) const
+    {
+        BOOST_ASSERT(m_ptree != NULL);
+        return m_ptree->get_optional(name);
+    }
+
+    void set_parameter(std::string const& name, string_type const& value)
+    {
+        BOOST_ASSERT(m_ptree != NULL);
+        m_ptree->put(name, value);
+    }
+
+    void set_parameter(std::string const& name, optional< string_type > const& value)
+    {
+        BOOST_ASSERT(m_ptree != NULL);
+
+        if (!!value)
+        {
+            m_ptree->put(name, value);
+        }
+        else if (optional< property_tree_type& > node = m_ptree->get_child_optional(name))
+        {
+            node.put_value(string_type());
+        }
+    }
 };
 
 template< typename CharT >
@@ -412,11 +567,18 @@ public:
     /*!
      * Default constructor. Creates an empty settings container.
      */
-    BOOST_LOG_SETUP_API basic_settings();
+    basic_settings() : section(new property_tree_type())
+    {
+    }
+
     /*!
      * Copy constructor.
      */
-    BOOST_LOG_SETUP_API basic_settings(basic_settings const& that);
+    basic_settings(basic_settings const& that) :
+        section(that.m_ptree ? new property_tree_type(*that.m_ptree) : static_cast< property_tree_type* >(NULL))
+    {
+    }
+
     /*!
      * Move constructor.
      */
@@ -427,12 +589,17 @@ public:
     /*!
      * Initializing constructor. Creates a settings container with the copy of the specified property tree.
      */
-    BOOST_LOG_SETUP_API explicit basic_settings(property_tree_type const& tree);
+    explicit basic_settings(property_tree_type const& tree) : section(new property_tree_type(tree))
+    {
+    }
 
     /*!
      * Destructor
      */
-    BOOST_LOG_SETUP_API ~basic_settings();
+    ~basic_settings()
+    {
+        delete this->m_ptree;
+    }
 
     /*!
      * Copy assignment operator.

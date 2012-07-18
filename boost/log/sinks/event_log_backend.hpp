@@ -20,14 +20,16 @@
 #ifndef BOOST_LOG_SINKS_EVENT_LOG_BACKEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_EVENT_LOG_BACKEND_HPP_INCLUDED_
 
+#include <boost/log/detail/prologue.hpp>
+
+#ifndef BOOST_LOG_NO_EVENT_LOG_SUPPORT
+
 #include <map>
 #include <vector>
 #include <string>
 #include <iosfwd>
 #include <boost/filesystem/path.hpp>
-#include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/light_function.hpp>
-#include <boost/log/detail/universal_path.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/keywords/message_file.hpp>
@@ -571,12 +573,7 @@ public:
      * executable file name in the Application log. If such a registration is already
      * present, it is not overridden.
      */
-#if (defined(BOOST_FILESYSTEM_VERSION) && BOOST_FILESYSTEM_VERSION >= 3) || defined(BOOST_LOG_DOXYGEN_PASS)
     explicit basic_event_log_backend(filesystem::path const& message_file_name)
-#else
-    template< typename T, typename U >
-    explicit basic_event_log_backend(filesystem::basic_path< T, U > const& message_file_name)
-#endif
     {
         construct(keywords::message_file = message_file_name);
     }
@@ -648,14 +645,14 @@ private:
     void construct(ArgsT const& args)
     {
         construct(
-            boost::log::aux::to_universal_path(args[keywords::message_file]),
+            filesystem::path(args[keywords::message_file]),
             args[keywords::target | string_type()],
             args[keywords::log_name || &basic_event_log_backend::get_default_log_name],
             args[keywords::log_source || &basic_event_log_backend::get_default_source_name],
             args[keywords::registration | event_log::on_demand]);
     }
     BOOST_LOG_API void construct(
-        boost::log::aux::universal_path const& message_file_name,
+        filesystem::path const& message_file_name,
         string_type const& target,
         string_type const& log_name,
         string_type const& source_name,
@@ -681,5 +678,7 @@ typedef basic_event_log_backend< wchar_t > wevent_log_backend;                //
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif // _MSC_VER
+
+#endif // BOOST_LOG_NO_EVENT_LOG_SUPPORT
 
 #endif // BOOST_LOG_SINKS_EVENT_LOG_BACKEND_HPP_INCLUDED_

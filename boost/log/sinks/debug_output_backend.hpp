@@ -21,7 +21,9 @@
 
 #include <string>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/filters/basic_filters.hpp>
+
+#ifndef BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
+
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
@@ -112,5 +114,7 @@ typedef basic_debug_output_backend< wchar_t > wdebug_output_backend;  //!< Conve
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif // _MSC_VER
+
+#endif // BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
 
 #endif // BOOST_LOG_SINKS_DEBUG_OUTPUT_BACKEND_HPP_INCLUDED_

@@ -22,6 +22,8 @@
 
 #include <boost/log/detail/prologue.hpp>
 
+#ifndef BOOST_LOG_NO_SYSLOG_SUPPORT
+
 #ifdef _MSC_VER
 #pragma warning(push)
 // 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
@@ -101,5 +103,7 @@ namespace syslog {
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif // _MSC_VER
+
+#endif // BOOST_LOG_NO_SYSLOG_SUPPORT
 
 #endif // BOOST_LOG_SINKS_SYSLOG_CONSTANTS_HPP_INCLUDED_HPP_

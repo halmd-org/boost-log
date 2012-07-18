@@ -12,6 +12,8 @@
  * \brief  A logging sink backend that uses debugger output
  */
 
+#ifndef BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
+
 #include "windows_version.hpp"
 #include <string>
 #include <boost/log/sinks/debug_output_backend.hpp>
@@ -82,3 +84,5 @@ template class basic_debug_output_backend< wchar_t >;
 } // namespace log
 
 } // namespace boost
+
+#endif // !defined(BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT)

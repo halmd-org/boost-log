@@ -46,7 +46,22 @@ namespace BOOST_LOG_NAMESPACE {
  * \b Throws: An <tt>std::exception</tt>-based exception if the provided settings are not valid.
  */
 template< typename CharT >
-BOOST_LOG_SETUP_API void init_from_settings(basic_settings< CharT > const& setts);
+BOOST_LOG_SETUP_API void init_from_settings(basic_settings_section< CharT > const& setts);
+
+#if !defined(BOOST_NO_TEMPLATE_ALIASES)
+
+template< typename CharT >
+using basic_sink_factory = boost::log::aux::light_function1< shared_ptr< sinks::sink >, basic_settings_section< CharT > const& >;
+
+typedef basic_sink_factory< char > sink_factory;
+typedef basic_sink_factory< wchar_t > wsink_factory;
+
+#else
+
+typedef boost::log::aux::light_function1< shared_ptr< sinks::sink >, basic_settings_section< char > const& > sink_factory;
+typedef boost::log::aux::light_function1< shared_ptr< sinks::sink >, basic_settings_section< wchar_t > const& > wsink_factory;
+
+#endif
 
 
 /*!
@@ -64,11 +79,8 @@ BOOST_LOG_SETUP_API void init_from_settings(basic_settings< CharT > const& setts
  */
 template< typename CharT >
 BOOST_LOG_SETUP_API void register_sink_factory(
-    const CharT* sink_name,
-    boost::log::aux::light_function1<
-        shared_ptr< sinks::sink< CharT > >,
-        std::map< std::basic_string< CharT >, any > const&
-    > const& factory);
+    const char* sink_name,
+    boost::log::aux::light_function1< shared_ptr< sinks::sink >, basic_settings_section< CharT > const& > const& factory);
 
 /*!
  * \brief The function registers a factory for a custom sink
@@ -82,13 +94,10 @@ BOOST_LOG_SETUP_API void register_sink_factory(
  * \param sink_name The custom sink name
  * \param factory Custom sink factory function
  */
-template< typename CharT, typename TraitsT, typename AllocatorT >
+template< typename CharT >
 inline void register_sink_factory(
-    std::basic_string< CharT, TraitsT, AllocatorT > const& sink_name,
-    boost::log::aux::light_function1<
-        shared_ptr< sinks::sink< CharT > >,
-        std::map< std::basic_string< CharT >, any > const&
-    > const& factory)
+    std::string const& sink_name,
+    boost::log::aux::light_function1< shared_ptr< sinks::sink >, basic_settings_section< CharT > const& > const& factory)
 {
     register_sink_factory(sink_name.c_str(), factory);
 }

@@ -35,6 +35,15 @@
 #   error Boost.Log: Boost version 1.48 or later is required
 #endif
 
+#if !defined(BOOST_WINDOWS)
+#   ifndef BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
+#       define BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
+#   endif
+#   ifndef BOOST_LOG_NO_EVENT_LOG_SUPPORT
+#       define BOOST_LOG_NO_EVENT_LOG_SUPPORT
+#   endif
+#endif
+
 #if defined(BOOST_MSVC)
     // For some reason MSVC 9.0 fails to link the library if static integral constants are defined in cpp
 #   define BOOST_LOG_BROKEN_STATIC_CONSTANTS_LINKAGE

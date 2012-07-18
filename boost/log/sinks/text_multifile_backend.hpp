@@ -26,9 +26,9 @@
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/light_function.hpp>
-#include <boost/log/detail/universal_path.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/utility/formatting_stream.hpp>
@@ -57,7 +57,7 @@ namespace file {
     {
     public:
         //! Functor result type
-        typedef boost::log::aux::universal_path result_type;
+        typedef filesystem::path result_type;
         //! File name character type
         typedef result_type::string_type::value_type native_char_type;
         //! The adopted formatter type
@@ -150,11 +150,9 @@ public:
     typedef base_type::char_type char_type;
     //! String type to be used as a message text holder
     typedef base_type::string_type string_type;
-    //! Path type that is used by Boost.Log
-    typedef boost::log::aux::universal_path path_type;
 
     //! File name composer functor type
-    typedef boost::log::aux::light_function1< path_type, record const& > file_name_composer_type;
+    typedef boost::log::aux::light_function1< filesystem::path, record const& > file_name_composer_type;
 
 private:
     //! \cond

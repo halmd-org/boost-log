@@ -20,6 +20,7 @@
 #pragma warning(disable: 4800)
 #endif
 
+#include "windows_version.hpp"
 #include <ios>
 #include <map>
 #include <vector>
@@ -29,32 +30,26 @@
 #include <typeinfo>
 #include <stdexcept>
 #include <algorithm>
-
-#if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
-#define BOOST_SPIRIT_THREADSAFE
-#endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
-
-#include "windows_version.hpp"
-#include <boost/any.hpp>
 #include <boost/bind.hpp>
 #include <boost/limits.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
-#include <boost/function.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/date_time/date_defs.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/type_traits/is_unsigned.hpp>
-#include <boost/spirit/include/classic_core.hpp>
-#include <boost/spirit/include/classic_assign_actor.hpp>
+#include <boost/spirit/include/qi_core.hpp>
+#include <boost/phoenix/core.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/singleton.hpp>
-#include <boost/log/detail/universal_path.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
+#include <boost/log/expressions/filter.hpp>
+#include <boost/log/expressions/formatter.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/init/from_settings.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
@@ -68,56 +63,47 @@
 #endif
 #include "parser_utils.hpp"
 
-namespace bsc = boost::spirit::classic;
-
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
+namespace qi = boost::spirit::qi;
+
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 //! Throws an exception when a parameter type is not valid
-template< typename CharT >
-void BOOST_LOG_NORETURN throw_invalid_type(const CharT* param_name, log::type_info_wrapper const& param_type)
+BOOST_LOG_NORETURN void throw_invalid_type(const char* param_name, log::type_info_wrapper const& param_type)
 {
-    std::string descr = "Invalid parameter \""
-                        + log::aux::to_narrow(param_name)
+    std::string descr = std::string("Invalid parameter \"")
+                        + param_name
                         + "\" type: "
                         + param_type.pretty_name();
     BOOST_LOG_THROW_DESCR(invalid_type, descr);
 }
 
 //! Throws an exception when a parameter value is not valid
-template< typename CharT >
-void BOOST_LOG_NORETURN throw_invalid_value(const CharT* param_name)
+BOOST_LOG_NORETURN void throw_invalid_value(const char* param_name)
 {
-    std::string descr = "Invalid parameter \""
-                        + log::aux::to_narrow(param_name)
+    std::string descr = std::string("Invalid parameter \"")
+                        + param_name
                         + "\" value";
     BOOST_LOG_THROW_DESCR(invalid_value, descr);
 }
 
 //! Extracts a filesystem path from any
-template< typename CharT >
-inline log::aux::universal_path any_cast_to_path(const CharT* param_name, any const& val)
+inline filesystem::path param_cast_to_path(const CharT* param_name, any const& val)
 {
     std::type_info const& type = val.type();
     if (type == typeid(filesystem::path))
         return log::aux::to_universal_path(any_cast< filesystem::path >(val));
     else if (type == typeid(std::string))
         return log::aux::to_universal_path(any_cast< std::string >(val));
-#if !defined(BOOST_FILESYSTEM_NARROW_ONLY)
-    else if (type == typeid(filesystem::wpath))
-        return log::aux::to_universal_path(any_cast< filesystem::wpath >(val));
-    else if (type == typeid(std::wstring))
-        return log::aux::to_universal_path(any_cast< std::wstring >(val));
-#endif //!defined(BOOST_FILESYSTEM_NARROW_ONLY)
     else
         throw_invalid_type(param_name, type);
 }
 //! Extracts an integral value from any
 template< typename IntT, typename CharT >
-inline IntT any_cast_to_int(const CharT* param_name, any const& val)
+inline IntT param_cast_to_int(const CharT* param_name, any const& val)
 {
     typedef std::basic_string< CharT > string_type;
     std::type_info const& type = val.type();
@@ -160,7 +146,7 @@ inline IntT any_cast_to_int(const CharT* param_name, any const& val)
 
 //! Extracts a boolean value from any
 template< typename CharT >
-inline bool any_cast_to_bool(const CharT* param_name, any const& val)
+inline bool param_cast_to_bool(const CharT* param_name, any const& val)
 {
     typedef std::basic_string< CharT > string_type;
     typedef log::aux::char_constants< CharT > char_constants;
@@ -191,7 +177,7 @@ template< typename CharT >
 inline boost::log::aux::light_function1<
     bool,
     basic_attribute_values_view< CharT > const&
-> any_cast_to_filter(const CharT* param_name, any const& val)
+> param_cast_to_filter(const CharT* param_name, any const& val)
 {
     typedef std::basic_string< CharT > string_type;
     typedef basic_attribute_values_view< CharT > values_view_type;
@@ -218,7 +204,7 @@ inline boost::log::aux::light_function2<
     void,
     std::basic_ostream< CharT >&,
     basic_record< CharT > const&
-> any_cast_to_formatter(const CharT* param_name, any const& val)
+> param_cast_to_formatter(const CharT* param_name, any const& val)
 {
     typedef std::basic_string< CharT > string_type;
     typedef std::basic_ostream< CharT > stream_type;
@@ -243,7 +229,7 @@ inline boost::log::aux::light_function2<
 #if !defined(BOOST_LOG_NO_ASIO)
 //! Extracts a network address from any
 template< typename CharT >
-inline std::string any_cast_to_address(const CharT* param_name, any const& val)
+inline std::string param_cast_to_address(const CharT* param_name, any const& val)
 {
     typedef std::basic_string< CharT > string_type;
 
@@ -263,7 +249,7 @@ inline std::string any_cast_to_address(const CharT* param_name, any const& val)
 
 //! The function extracts the file rotation time point predicate from the parameter
 template< typename CharT >
-boost::log::aux::light_function0< bool > any_cast_to_rotation_time_point(const CharT* param_name, any const& val)
+boost::log::aux::light_function0< bool > param_cast_to_rotation_time_point(const CharT* param_name, any const& val)
 {
     typedef CharT char_type;
     typedef boost::log::aux::char_constants< char_type > constants;
@@ -366,12 +352,14 @@ struct sinks_repository :
     typedef CharT char_type;
     typedef std::basic_string< char_type > string_type;
     typedef boost::log::aux::char_constants< char_type > constants;
-    typedef std::map< string_type, any > params_t;
+    typedef basic_settings_section< char_type > section;
+    typedef typename section::const_reference param_const_reference;
+    typedef typename section::reference param_reference;
     typedef boost::log::aux::light_function1<
-        shared_ptr< sinks::sink< char_type > >,
-        params_t const&
+        shared_ptr< sinks::sink >,
+        section const&
     > sink_factory;
-    typedef std::map< string_type, sink_factory > sink_factories;
+    typedef std::map< std::string, sink_factory > sink_factories;
 
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
@@ -381,22 +369,21 @@ struct sinks_repository :
     sink_factories m_Factories;
 
     //! The function constructs a sink from the settings
-    shared_ptr< sinks::sink< char_type > > construct_sink_from_settings(params_t const& params)
+    shared_ptr< sinks::sink > construct_sink_from_settings(section const& params)
     {
-        typename params_t::const_iterator dest = params.find(constants::sink_destination_param_name());
-        if (dest != params.end() && dest->second.type() == typeid(typename sink_factories::key_type))
+        if (param_const_reference dest_node = params["Destination"])
         {
-            typename sink_factories::key_type dest_name =
-                boost::any_cast< typename sink_factories::key_type >(dest->second);
-            BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< log::aux::light_rw_mutex > _(m_Mutex);)
-            typename sink_factories::const_iterator it = m_Factories.find(dest_name);
+            std::string dest = log::aux::to_narrow(dest_node.get().get());
+
+            BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< log::aux::light_rw_mutex > lock(m_Mutex);)
+            typename sink_factories::const_iterator it = m_Factories.find(dest);
             if (it != m_Factories.end())
             {
                 return it->second(params);
             }
             else
             {
-                BOOST_LOG_THROW_DESCR(invalid_value, "The sink destination is not supported");
+                BOOST_LOG_THROW_DESCR(invalid_value, "The sink destination is not supported: " + dest);
             }
         }
         else
@@ -408,36 +395,35 @@ struct sinks_repository :
     static void init_instance()
     {
         sinks_repository& instance = base_type::get_instance();
-        instance.m_Factories[constants::text_file_destination()] =
-            &sinks_repository< char_type >::default_text_file_sink_factory;
-        instance.m_Factories[constants::console_destination()] =
-            &sinks_repository< char_type >::default_console_sink_factory;
-        instance.m_Factories[constants::syslog_destination()] =
-            &sinks_repository< char_type >::default_syslog_sink_factory;
-#ifdef BOOST_WINDOWS
-        instance.m_Factories[constants::debugger_destination()] =
-            &sinks_repository< char_type >::default_debugger_sink_factory;
-        instance.m_Factories[constants::simple_event_log_destination()] =
-            &sinks_repository< char_type >::default_simple_event_log_sink_factory;
-#endif // BOOST_WINDOWS
+        instance.m_Factories["TextFile"] = &sinks_repository< char_type >::default_text_file_sink_factory;
+        instance.m_Factories["Console"] = &sinks_repository< char_type >::default_console_sink_factory;
+#ifndef BOOST_LOG_NO_SYSLOG_SUPPORT
+        instance.m_Factories["Syslog"] = &sinks_repository< char_type >::default_syslog_sink_factory;
+#endif
+#ifndef BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
+        instance.m_Factories["Debugger"] = &sinks_repository< char_type >::default_debugger_sink_factory;
+#endif
+#ifndef BOOST_LOG_NO_EVENT_LOG_SUPPORT
+        instance.m_Factories["SimpleEventLog"] = &sinks_repository< char_type >::default_simple_event_log_sink_factory;
+#endif
     }
 
 private:
     sinks_repository() {}
 
     //! The function constructs a sink that writes log records to a text file
-    static shared_ptr< sinks::sink< char_type > > default_text_file_sink_factory(params_t const& params)
+    static shared_ptr< sinks::sink > default_text_file_sink_factory(section const& params)
     {
         typedef sinks::basic_text_file_backend< char_type > backend_t;
         typedef typename backend_t::path_type path_type;
         shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
 
         // FileName
-        typename params_t::const_iterator it = params.find(constants::file_name_param_name());
+        typename section::const_iterator it = params.find(constants::file_name_param_name());
         if (it != params.end() && !it->second.empty())
         {
             backend->set_file_name_pattern(
-                any_cast_to_path(constants::file_name_param_name(), it->second));
+                param_cast_to_path(constants::file_name_param_name(), it->second));
         }
         else
             BOOST_LOG_THROW_DESCR(missing_value, "File name is not specified");
@@ -447,7 +433,7 @@ private:
         if (it != params.end() && !it->second.empty())
         {
             backend->set_rotation_size(
-                any_cast_to_int< uintmax_t >(constants::rotation_size_param_name(), it->second));
+                param_cast_to_int< uintmax_t >(constants::rotation_size_param_name(), it->second));
         }
 
         // File rotation interval
@@ -455,7 +441,7 @@ private:
         if (it != params.end() && !it->second.empty())
         {
             backend->set_time_based_rotation(sinks::file::rotation_at_time_interval(posix_time::seconds(
-                any_cast_to_int< unsigned int >(constants::rotation_interval_param_name(), it->second))));
+                param_cast_to_int< unsigned int >(constants::rotation_interval_param_name(), it->second))));
         }
         else
         {
@@ -464,7 +450,7 @@ private:
             if (it != params.end() && !it->second.empty())
             {
                 backend->set_time_based_rotation(
-                    any_cast_to_rotation_time_point(constants::rotation_time_point_param_name(), it->second));
+                    param_cast_to_rotation_time_point(constants::rotation_time_point_param_name(), it->second));
             }
         }
 
@@ -473,12 +459,12 @@ private:
         if (it != params.end() && !it->second.empty())
         {
             backend->auto_flush(
-                any_cast_to_bool(constants::auto_flush_param_name(), it->second));
+                param_cast_to_bool(constants::auto_flush_param_name(), it->second));
         }
 
         // Append
         it = params.find(constants::append_param_name());
-        if (it != params.end() && !it->second.empty() && any_cast_to_bool(constants::auto_flush_param_name(), it->second))
+        if (it != params.end() && !it->second.empty() && param_cast_to_bool(constants::auto_flush_param_name(), it->second))
         {
             backend->set_open_mode(std::ios_base::out | std::ios_base::app);
         }
@@ -488,19 +474,19 @@ private:
         it = params.find(constants::target_param_name());
         if (it != params.end() && !it->second.empty())
         {
-            path_type target_dir = any_cast_to_path(constants::target_param_name(), it->second);
+            path_type target_dir = param_cast_to_path(constants::target_param_name(), it->second);
 
             // Max total size
             uintmax_t max_size = (std::numeric_limits< uintmax_t >::max)();
             it = params.find(constants::max_size_param_name());
             if (it != params.end() && !it->second.empty())
-                max_size = any_cast_to_int< uintmax_t >(constants::max_size_param_name(), it->second);
+                max_size = param_cast_to_int< uintmax_t >(constants::max_size_param_name(), it->second);
 
             // Min free space
             uintmax_t space = 0;
             it = params.find(constants::min_free_space_param_name());
             if (it != params.end() && !it->second.empty())
-                space = any_cast_to_int< uintmax_t >(constants::min_free_space_param_name(), it->second);
+                space = param_cast_to_int< uintmax_t >(constants::min_free_space_param_name(), it->second);
 
             backend->set_file_collector(sinks::file::make_collector(
                 keywords::target = target_dir,
@@ -535,7 +521,7 @@ private:
     }
 
     //! The function constructs a sink that writes log records to the console
-    static shared_ptr< sinks::sink< char_type > > default_console_sink_factory(params_t const& params)
+    static shared_ptr< sinks::sink > default_console_sink_factory(section const& params)
     {
         // Construct the backend
         typedef sinks::basic_text_ostream_backend< char_type > backend_t;
@@ -546,8 +532,10 @@ private:
         return init_text_ostream_sink(backend, params);
     }
 
+#ifndef BOOST_LOG_NO_SYSLOG_SUPPORT
+
     //! The function constructs a sink that writes log records to the syslog service
-    static shared_ptr< sinks::sink< char_type > > default_syslog_sink_factory(params_t const& params)
+    static shared_ptr< sinks::sink > default_syslog_sink_factory(section const& params)
     {
         // Construct the backend
         typedef sinks::syslog_backend backend_t;
@@ -559,22 +547,24 @@ private:
 
 #if !defined(BOOST_LOG_NO_ASIO)
         // Setup local and remote addresses
-        typename params_t::const_iterator it = params.find(constants::local_address_param_name());
+        typename section::const_iterator it = params.find(constants::local_address_param_name());
         if (it != params.end() && !it->second.empty())
-            backend->set_local_address(any_cast_to_address(constants::local_address_param_name(), it->second));
+            backend->set_local_address(param_cast_to_address(constants::local_address_param_name(), it->second));
 
         it = params.find(constants::target_address_param_name());
         if (it != params.end() && !it->second.empty())
-            backend->set_target_address(any_cast_to_address(constants::target_address_param_name(), it->second));
+            backend->set_target_address(param_cast_to_address(constants::target_address_param_name(), it->second));
 #endif // !defined(BOOST_LOG_NO_ASIO)
 
         return init_sink(backend, params);
     }
 
-#ifdef BOOST_WINDOWS
+#endif // BOOST_LOG_NO_SYSLOG_SUPPORT
+
+#ifndef BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
 
     //! The function constructs a sink that writes log records to the debugger
-    static shared_ptr< sinks::sink< char_type > > default_debugger_sink_factory(params_t const& params)
+    static shared_ptr< sinks::sink > default_debugger_sink_factory(section const& params)
     {
         // Construct the backend
         typedef sinks::basic_debug_output_backend< char_type > backend_t;
@@ -583,14 +573,18 @@ private:
         return init_sink(backend, params);
     }
 
+#endif // BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
+
+#ifndef BOOST_LOG_NO_EVENT_LOG_SUPPORT
+
     //! The function constructs a sink that writes log records to the Windows NT Event Log
-    static shared_ptr< sinks::sink< char_type > > default_simple_event_log_sink_factory(params_t const& params)
+    static shared_ptr< sinks::sink > default_simple_event_log_sink_factory(section const& params)
     {
         typedef sinks::basic_simple_event_log_backend< char_type > backend_t;
 
         // Determine the log name
         string_type log_name = backend_t::get_default_log_name();
-        typename params_t::const_iterator it = params.find(constants::log_name_param_name());
+        typename section::const_iterator it = params.find(constants::log_name_param_name());
         if (it != params.end() && !it->second.empty())
         {
             if (it->second.type() == typeid(string_type))
@@ -649,25 +643,25 @@ private:
         return init_sink(backend, params);
     }
 
-#endif // BOOST_WINDOWS
+#endif // BOOST_LOG_NO_EVENT_LOG_SUPPORT
 
     //! The function initializes common parameters of text stream sink and returns the constructed sink
-    static shared_ptr< sinks::sink< char_type > > init_text_ostream_sink(
-        shared_ptr< sinks::basic_text_ostream_backend< char_type > > const& backend, params_t const& params)
+    static shared_ptr< sinks::sink > init_text_ostream_sink(
+        shared_ptr< sinks::basic_text_ostream_backend< char_type > > const& backend, section const& params)
     {
         typedef sinks::basic_text_ostream_backend< char_type > backend_t;
 
         // AutoFlush
-        typename params_t::const_iterator it = params.find(constants::auto_flush_param_name());
+        typename section::const_iterator it = params.find(constants::auto_flush_param_name());
         if (it != params.end() && !it->second.empty())
-            backend->auto_flush(any_cast_to_bool(constants::auto_flush_param_name(), it->second));
+            backend->auto_flush(param_cast_to_bool(constants::auto_flush_param_name(), it->second));
 
         return init_sink(backend, params);
     }
 
     //! The function initializes common parameters of a formatting sink and returns the constructed sink
     template< typename BackendT >
-    static shared_ptr< sinks::sink< char_type > > init_sink(shared_ptr< BackendT > const& backend, params_t const& params)
+    static shared_ptr< sinks::sink > init_sink(shared_ptr< BackendT > const& backend, section const& params)
     {
         typedef BackendT backend_t;
         typedef typename sinks::has_requirement<
@@ -678,10 +672,10 @@ private:
         // Filter
         typedef typename sinks::sink< char_type >::filter_type filter_type;
         filter_type filt;
-        typename params_t::const_iterator it = params.find(constants::filter_param_name());
+        typename section::const_iterator it = params.find(constants::filter_param_name());
         if (it != params.end() && !it->second.empty())
         {
-            filt = any_cast_to_filter(constants::filter_param_name(), it->second);
+            filt = param_cast_to_filter(constants::filter_param_name(), it->second);
         }
 
         shared_ptr< sinks::basic_sink_frontend< char_type > > p;
@@ -692,7 +686,7 @@ private:
         it = params.find(constants::asynchronous_param_name());
         if (it != params.end() && !it->second.empty())
         {
-            async = any_cast_to_bool(constants::asynchronous_param_name(), it->second);
+            async = param_cast_to_bool(constants::asynchronous_param_name(), it->second);
         }
 
         // Construct the frontend, considering Asynchronous parameter
@@ -712,18 +706,18 @@ private:
 
     //! The function initializes formatter for the sinks that support formatting
     template< typename SinkT >
-    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, params_t const& params, mpl::true_)
+    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, section const& params, mpl::true_)
     {
         // Formatter
-        typename params_t::const_iterator it = params.find(constants::format_param_name());
+        typename section::const_iterator it = params.find(constants::format_param_name());
         if (it != params.end() && !it->second.empty())
         {
-            sink->set_formatter(any_cast_to_formatter(constants::format_param_name(), it->second));
+            sink->set_formatter(param_cast_to_formatter(constants::format_param_name(), it->second));
         }
         return sink;
     }
     template< typename SinkT >
-    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, params_t const& params, mpl::false_)
+    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, section const& params, mpl::false_)
     {
         return sink;
     }
@@ -743,14 +737,14 @@ void apply_core_settings(std::map< std::basic_string< CharT >, any > const& para
     // Filter
     typename params_t::const_iterator it = params.find(constants::filter_param_name());
     if (it != params.end() && !it->second.empty())
-        core->set_filter(any_cast_to_filter(constants::filter_param_name(), it->second));
+        core->set_filter(param_cast_to_filter(constants::filter_param_name(), it->second));
     else
         core->reset_filter();
 
     // DisableLogging
     it = params.find(constants::core_disable_logging_param_name());
     if (it != params.end() && !it->second.empty())
-        core->set_logging_enabled(!any_cast_to_bool(constants::core_disable_logging_param_name(), it->second));
+        core->set_logging_enabled(!param_cast_to_bool(constants::core_disable_logging_param_name(), it->second));
     else
         core->set_logging_enabled(true);
 }
@@ -760,42 +754,46 @@ void apply_core_settings(std::map< std::basic_string< CharT >, any > const& para
 
 //! The function initializes the logging library from a settings container
 template< typename CharT >
-void init_from_settings(basic_settings< CharT > const& setts)
+void init_from_settings(basic_settings_section< CharT > const& setts)
 {
-    typedef basic_settings< CharT > settings_type;
-    typedef typename settings_type::char_type char_type;
-    typedef typename settings_type::string_type string_type;
-    typedef basic_core< char_type > core_t;
+    typedef basic_settings_section< CharT > section;
+    typedef typename section::char_type char_type;
+    typedef typename section::string_type string_type;
     typedef sinks_repository< char_type > sinks_repo_t;
-    typedef boost::log::aux::char_constants< char_type > constants;
 
     // Apply core settings
-    typename settings_type::sections_type const& sections = setts.sections();
-    typename settings_type::sections_type::const_iterator it =
-        sections.find(constants::core_section_name());
-    if (it != sections.end())
-        apply_core_settings(it->second);
+    if (section core_params = setts["Core"])
+        apply_core_settings(core_params);
 
     // Construct and initialize sinks
-    sinks_repo_t& sinks_repo = sinks_repo_t::get();
-    string_type sink_prefix = constants::sink_section_name_prefix();
-    std::vector< shared_ptr< sinks::sink< char_type > > > new_sinks;
-    for (it = setts.sections().begin(); it != setts.sections().end(); ++it)
+    if (section sink_params = setts["Sinks"])
     {
-        if (it->first.compare(0, sink_prefix.size(), sink_prefix) == 0)
-            new_sinks.push_back(sinks_repo.construct_sink_from_settings(it->second));
+        sinks_repo_t& sinks_repo = sinks_repo_t::get();
+        std::vector< shared_ptr< sinks::sink > > new_sinks;
+
+        for (typename section::const_iterator it = sink_params.begin(), end = sink_params.end(); it != end; ++it)
+        {
+            section sink_params = *it;
+
+            // Ignore empty sections as they are most likely individual parameters (which should not be here anyway)
+            if (!sink_params.empty())
+            {
+                new_sinks.push_back(sinks_repo.construct_sink_from_settings(it->second));
+            }
+        }
+
+        std::for_each(new_sinks.begin(), new_sinks.end(), boost::bind(&core_t::add_sink, core_t::get(), _1));
     }
-    std::for_each(new_sinks.begin(), new_sinks.end(), boost::bind(&core_t::add_sink, core_t::get(), _1));
 }
 
 
 //! The function registers a factory for a sink
 template< typename CharT >
 void register_sink_factory(
-    const CharT* sink_name,
+    const char* sink_name,
     boost::log::aux::light_function1<
-        shared_ptr< sinks::sink< CharT > >,
-        std::map< std::basic_string< CharT >, any > const&
+        shared_ptr< sinks::sink >,
+        basic_settings_section< CharT > const&
     > const& factory)
 {
     sinks_repository< CharT >& repo = sinks_repository< CharT >::get();
@@ -808,21 +806,21 @@ template BOOST_LOG_SETUP_API
 void register_sink_factory< char >(
     const char* sink_name,
     boost::log::aux::light_function1<
-        shared_ptr< sinks::sink< char > >,
-        std::map< std::basic_string< char >, any > const&
+        shared_ptr< sinks::sink >,
+        basic_settings_section< char > const&
     > const& factory);
-template BOOST_LOG_SETUP_API void init_from_settings< char >(basic_settings< char > const& setts);
+template BOOST_LOG_SETUP_API void init_from_settings< char >(basic_settings_section< char > const& setts);
 #endif
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 template BOOST_LOG_SETUP_API
 void register_sink_factory< wchar_t >(
-    const wchar_t* sink_name,
+    const char* sink_name,
     boost::log::aux::light_function1<
-        shared_ptr< sinks::sink< wchar_t > >,
-        std::map< std::basic_string< wchar_t >, any > const&
+        shared_ptr< sinks::sink >,
+        basic_settings_section< wchar_t > const&
     > const& factory);
-template BOOST_LOG_SETUP_API void init_from_settings< wchar_t >(basic_settings< wchar_t > const& setts);
+template BOOST_LOG_SETUP_API void init_from_settings< wchar_t >(basic_settings_section< wchar_t > const& setts);
 #endif
 
 } // namespace log

@@ -21,6 +21,9 @@
 #define BOOST_LOG_SINKS_EVENT_LOG_CONSTANTS_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
+
+#ifndef BOOST_LOG_NO_EVENT_LOG_SUPPORT
+
 #include <boost/log/detail/tagged_integer.hpp>
 
 #ifdef _MSC_VER
@@ -88,5 +91,7 @@ namespace event_log {
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif // _MSC_VER
+
+#endif // BOOST_LOG_NO_EVENT_LOG_SUPPORT
 
 #endif // BOOST_LOG_SINKS_EVENT_LOG_CONSTANTS_HPP_INCLUDED_
