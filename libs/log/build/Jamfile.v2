@@ -84,6 +84,7 @@ lib boost_log
         ws2_32
     : ## requirements ##
         <define>BOOST_LOG_BUILDING_THE_LIB=1
+        <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
         <logapi>winnt
     ;
 
@@ -93,6 +94,7 @@ lib boost_log
       ## unix sources ##
     : ## requirements ##
         <define>BOOST_LOG_BUILDING_THE_LIB=1
+        <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
         <logapi>unix
     ;
 
@@ -114,6 +116,7 @@ lib boost_log_setup
     : ## requirements ##
         <link>shared:<define>BOOST_LOG_SETUP_DLL
         <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1
+        <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
         <library>boost_log
         <logapi>winnt
     ;
@@ -125,6 +128,7 @@ lib boost_log_setup
     : ## requirements ##
         <link>shared:<define>BOOST_LOG_SETUP_DLL
         <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1
+        <define>BOOST_THREAD_DONT_USE_CHRONO=1 # Don't introduce false dependency on Boost.Chrono
         <library>boost_log
         <logapi>unix
     ;
