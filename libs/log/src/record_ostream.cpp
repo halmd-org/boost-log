@@ -55,7 +55,7 @@ BOOST_LOG_API void basic_record_ostream< CharT >::detach_from_record()
     {
         base_type::detach();
         m_Record.reset();
-        base_type::exceptions(ostream_type::goodbit);
+        base_type::exceptions(stream_type::goodbit);
     }
 }
 

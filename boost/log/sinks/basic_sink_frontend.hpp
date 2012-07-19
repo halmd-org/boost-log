@@ -121,14 +121,14 @@ public:
     /*!
      * The method returns \c true if no filter is set or the attribute values pass the filter
      *
-     * \param attributes A set of attribute values of a logging record
+     * \param attrs A set of attribute values of a logging record
      */
-    bool will_consume(values_view_type const& attributes)
+    bool will_consume(attribute_values_view const& attrs)
     {
         BOOST_LOG_EXPR_IF_MT(boost::log::aux::exclusive_lock_guard< mutex_type > lock(m_Mutex);)
         try
         {
-            return m_Filter(attributes);
+            return m_Filter(attrs);
         }
 #if !defined(BOOST_LOG_NO_THREADS)
         catch (thread_interrupted&)
@@ -265,9 +265,9 @@ public:
     typedef std::basic_string< char_type > string_type;
 
     //! Formatter function object type
-    typedef formatter< char_type > formatter_type;
+    typedef basic_formatter< char_type > formatter_type;
     //! Output stream type
-    typedef typename formatter_type::ostream_type stream_type;
+    typedef typename formatter_type::stream_type stream_type;
 
 #if !defined(BOOST_LOG_NO_THREADS)
 protected:
@@ -423,7 +423,7 @@ protected:
 #endif
 
         boost::log::aux::cleanup_guard< stream_type > cleanup1(context->m_FormattingStream);
-        boost::log::aux::cleanup_guard< target_string_type > cleanup2(context->m_FormattedRecord);
+        boost::log::aux::cleanup_guard< string_type > cleanup2(context->m_FormattedRecord);
 
         try
         {

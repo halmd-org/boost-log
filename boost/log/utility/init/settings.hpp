@@ -74,7 +74,9 @@ public:
     //! String type
     typedef std::basic_string< char_type > string_type;
     //! Property tree type
-    typedef basic_ptree< std::string, string_type > property_tree_type;
+    typedef property_tree::basic_ptree< std::string, string_type > property_tree_type;
+    //! Property tree path type
+    typedef typename property_tree_type::path_type path_type;
 
 private:
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
@@ -98,7 +100,7 @@ private:
 
     private:
         section_type& m_section;
-        std::string m_path;
+        path_type m_path;
 
     public:
         ref(section_type& section, std::string const& section_name) :
@@ -114,25 +116,31 @@ private:
 
         ref& operator[] (std::string const& param_name)
         {
-            if (!param_name.empty())
-            {
-                if (!m_path.empty())
-                    m_path.push_back('.');
-                m_path.append(param_name);
-            }
+            m_path /= param_name;
             return *this;
         }
 
         ref& operator= (string_type const& value)
         {
-            m_section.set_parameter(m_path, value);
+            BOOST_ASSERT(m_section.m_ptree != NULL);
+            m_section.m_ptree->put(m_path, value);
             return *this;
         }
 
         template< bool V >
         ref& operator= (ref< V > const& value)
         {
-            m_section.set_parameter(m_path, value.get());
+            BOOST_ASSERT(m_ptree != NULL);
+            optional< string_type > val = value.get();
+            if (!!val)
+            {
+                m_section.m_ptree->put(m_path, val);
+            }
+            else if (optional< property_tree_type& > node = m_section.m_ptree->get_child_optional(m_path))
+            {
+                node.put_value(string_type());
+            }
+
             return *this;
         }
 
@@ -148,12 +156,12 @@ private:
 
         bool operator! () const
         {
-            return !m_section.get_section(m_path);
+            return !m_section.m_ptree || !m_section.m_ptree->get_child_optional(name);
         }
 
         std::string get_name() const
         {
-            return m_path;
+            return m_path.dump();
         }
 
         operator optional< string_type > () const
@@ -163,14 +171,19 @@ private:
 
         optional< string_type > get() const
         {
-            return m_section.get_parameter(m_path);
+            if (m_section.m_ptree)
+                return m_section.m_ptree->template get_optional< string_type >(m_path);
+            else
+                return optional< string_type >();
         }
 
         template< typename T >
         optional< T > get() const
         {
-            BOOST_ASSERT(m_section.m_ptree != NULL);
-            return m_section.m_ptree->template get_optional< T >(m_path);
+            if (m_section.m_ptree)
+                return m_section.m_ptree->template get_optional< T >(m_path);
+            else
+                return optional< T >();
         }
 
         operator section_type () const
@@ -180,13 +193,16 @@ private:
 
         section_type get_section() const
         {
-            return m_section.get_section(m_path);
+            if (m_section.m_ptree)
+                return section_type(m_section.m_ptree->get_child_optional(name).get_ptr());
+            else
+                return section_type();
         }
 
 #if defined(BOOST_LOG_TYPEOF)
 #if !defined(BOOST_LOG_NO_TRAILING_RESULT_TYPE)
         template< typename T >
-        auto or_default(T const& def_value) const -> BOOST_LOG_TYPEOF(property_tree_ref_type().get(path_type(), def_value))
+        auto or_default(T const& def_value) const -> BOOST_LOG_TYPEOF(property_tree_type().get(typename property_tree_type::path_type(), def_value))
         {
             if (m_section.m_ptree)
                 return m_section.m_ptree->get(m_path, def_value);
@@ -195,7 +211,7 @@ private:
         }
 #else
         template< typename T >
-        BOOST_LOG_TYPEOF(property_tree_ref_type().get(path_type(), aux::make_value< T >::get())) or_default(T const& def_value) const
+        BOOST_LOG_TYPEOF(property_tree_type().get(typename property_tree_type::path_type(), aux::make_value< T >::get())) or_default(T const& def_value) const
         {
             if (m_section.m_ptree)
                 return m_section.m_ptree->get(m_path, def_value);
@@ -225,11 +241,11 @@ private:
 #endif
         string_type or_default(string_type const& def_value) const
         {
-            return m_section.get_parameter(m_path).get_value_or(def_value);
+            return get().get_value_or(def_value);
         }
         string_type or_default(typename string_type::value_type const* def_value) const
         {
-            if (optional< string_type > val = m_section.get_parameter(m_path))
+            if (optional< string_type > val = get())
                 return val.get();
             else
                 return def_value;
@@ -254,10 +270,16 @@ private:
             >::type,
             basic_settings_section< char_type >,
             use_default,
-            basic_settings_section< char_type >
+            typename mpl::if_c<
+                IsConstV,
+                const basic_settings_section< char_type >,
+                basic_settings_section< char_type >
+            >::type
         >
     {
-        typedef typename section_iterator::iterator_adaptor_ iterator_adaptor_;
+        friend class boost::iterator_core_access;
+
+        typedef typename iter::iterator_adaptor_ iterator_adaptor_;
 
     public:
         typedef typename iterator_adaptor_::base_type base_type;
@@ -278,7 +300,7 @@ private:
     private:
         reference dereference() const
         {
-            return reference(&this->base()->second);
+            return reference(const_cast< property_tree_type* >(&this->base()->second));
         }
     };
 
@@ -494,38 +516,6 @@ public:
 protected:
     explicit basic_settings_section(property_tree_type* tree) : m_ptree(tree)
     {
-    }
-
-    basic_settings_section get_section(std::string const& name) const
-    {
-        BOOST_ASSERT(m_ptree != NULL);
-        return basic_settings_section(m_ptree->get_child_optional(name).get_ptr());
-    }
-
-    optional< string_type > get_parameter(std::string const& name) const
-    {
-        BOOST_ASSERT(m_ptree != NULL);
-        return m_ptree->get_optional(name);
-    }
-
-    void set_parameter(std::string const& name, string_type const& value)
-    {
-        BOOST_ASSERT(m_ptree != NULL);
-        m_ptree->put(name, value);
-    }
-
-    void set_parameter(std::string const& name, optional< string_type > const& value)
-    {
-        BOOST_ASSERT(m_ptree != NULL);
-
-        if (!!value)
-        {
-            m_ptree->put(name, value);
-        }
-        else if (optional< property_tree_type& > node = m_ptree->get_child_optional(name))
-        {
-            node.put_value(string_type());
-        }
     }
 };
 

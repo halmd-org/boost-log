@@ -29,11 +29,6 @@
 #include <iterator>
 #include <algorithm>
 #include <stdexcept>
-
-#if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
-#define BOOST_SPIRIT_THREADSAFE
-#endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
-
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
@@ -52,8 +47,9 @@
 #include <boost/intrusive/options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
-#include <boost/spirit/include/classic_core.hpp>
-#include <boost/spirit/include/classic_assign_actor.hpp>
+#include <boost/phoenix/core.hpp>
+#include <boost/spirit/include/qi_core.hpp>
+#include <boost/spirit/include/qi_lit.hpp>
 #include <boost/log/detail/snprintf.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/light_function.hpp>
@@ -66,6 +62,8 @@
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
+
+namespace qi = boost::spirit::qi;
 
 namespace boost {
 
@@ -321,35 +319,24 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     };
 
     //! The function parses the format placeholder for file counter
-    bool parse_counter_placeholder(
-        path_string_type::const_iterator& it,
-        path_string_type::const_iterator end,
-        unsigned int& width)
+    bool parse_counter_placeholder(path_string_type::const_iterator& it, path_string_type::const_iterator end, unsigned int& width)
     {
         typedef file_char_traits< path_char_type > traits_t;
-        spirit::classic::parse_info< path_string_type::const_iterator > result = spirit::classic::parse(it, end,
+        return qi::parse
         (
-            !(
-                spirit::classic::ch_p(traits_t::zero) |
-                spirit::classic::ch_p(traits_t::plus) |
-                spirit::classic::ch_p(traits_t::minus) |
-                spirit::classic::ch_p(traits_t::space)
-            ) >>
-            !spirit::classic::uint_p[spirit::classic::assign_a(width)] >>
-            !(
-                spirit::classic::ch_p(traits_t::dot) >>
-                spirit::classic::uint_p
-            ) >>
-            spirit::classic::ch_p(traits_t::number_placeholder)
-        ));
-
-        if (result.hit)
-        {
-            it = result.stop;
-            return true;
-        }
-        else
-            return false;
+            it, end,
+            (
+//                -(
+//                    qi::lit(traits_t::zero) |
+//                    qi::lit(traits_t::plus) |
+//                    qi::lit(traits_t::minus) |
+//                    qi::lit(traits_t::space)
+//                ) >>
+                /*-(*/qi::uint_[phoenix::ref(width) = qi::_1_type()]//) >>
+//                -(qi::lit(traits_t::dot) >> qi::uint_) >>
+//                qi::lit(traits_t::number_placeholder)
+            )
+        );
     }
 
     //! The function matches the file name and the pattern
@@ -360,10 +347,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         struct local
         {
             // Verifies that the string contains exactly n digits
-            static bool scan_digits(
-                path_string_type::const_iterator& it,
-                path_string_type::const_iterator end,
-                std::ptrdiff_t n)
+            static bool scan_digits(path_string_type::const_iterator& it, path_string_type::const_iterator end, std::ptrdiff_t n)
             {
                 for (; n > 0; --n)
                 {
@@ -454,9 +438,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                             return false;
                         for (; f != f_end && traits_t::is_digit(*f); ++f);
 
-                        spirit::classic::parse(f_it, f, spirit::classic::uint_p[spirit::classic::assign_a(file_counter)]);
+                        if (!qi::parse(f_it, f, qi::uint_, file_counter))
+                            return false;
 
-                        f_it = f;
                         p_it = p;
                     }
                     break;
@@ -590,8 +574,6 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         friend class base_type;
 #endif
 
-        //! Path type
-        typedef file_collector::filesystem::path filesystem::path;
         //! The type of the list of collectors
         typedef intrusive::list<
             file_collector,
@@ -876,7 +858,7 @@ namespace aux {
 
     //! Creates and returns a file collector with the specified parameters
     BOOST_LOG_API shared_ptr< collector > make_collector(
-        collector::filesystem::path const& target_dir,
+        filesystem::path const& target_dir,
         uintmax_t max_size,
         uintmax_t min_free_space)
     {

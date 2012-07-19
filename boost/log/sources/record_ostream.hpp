@@ -64,7 +64,7 @@ public:
     //! String type to be used as a message text holder
     typedef std::basic_string< char_type > string_type;
     //! Stream type
-    typedef std::basic_ostream< char_type > ostream_type;
+    typedef std::basic_ostream< char_type > stream_type;
 
 private:
     //! Log record

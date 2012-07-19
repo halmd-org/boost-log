@@ -38,9 +38,9 @@ namespace BOOST_LOG_NAMESPACE {
  * Log record formatter function wrapper.
  */
 template< typename CharT >
-class formatter
+class basic_formatter
 {
-    typedef formatter this_type;
+    typedef basic_formatter this_type;
     BOOST_COPYABLE_AND_MOVABLE(this_type)
 
 public:
@@ -50,11 +50,11 @@ public:
     //! Character type
     typedef CharT char_type;
     //! Output stream type
-    typedef basic_formatting_ostream< char_type > ostream_type;
+    typedef basic_formatting_ostream< char_type > stream_type;
 
 private:
     //! Filter function type
-    typedef boost::log::aux::light_function2< void, record const&, ostream_type& > formatter_type;
+    typedef boost::log::aux::light_function2< void, record const&, stream_type& > formatter_type;
 
     //! Default formatter, always returns \c true
     struct default_formatter
@@ -65,9 +65,9 @@ private:
         {
         }
 
-        result_type operator() (record const& rec, ostream_type& strm) const
+        result_type operator() (record const& rec, stream_type& strm) const
         {
-            boost::log::visit< expressions::tag::message::value_type >(m_MessageName, rec, boost::log::aux::output_fun< ostream_type >(strm));
+            boost::log::visit< expressions::tag::message::value_type >(m_MessageName, rec, boost::log::aux::output_fun< stream_type >(strm));
         }
 
     private:
@@ -82,19 +82,19 @@ public:
     /*!
      * Default constructor. Creates a formatter that only outputs log message.
      */
-    formatter() : m_Formatter(default_formatter())
+    basic_formatter() : m_Formatter(default_formatter())
     {
     }
     /*!
      * Copy constructor
      */
-    formatter(formatter const& that) : m_Formatter(that.m_Formatter)
+    basic_formatter(basic_formatter const& that) : m_Formatter(that.m_Formatter)
     {
     }
     /*!
      * Move constructor
      */
-    formatter(BOOST_RV_REF(formatter) that) : m_Formatter(boost::move(that.m_Formatter))
+    basic_formatter(BOOST_RV_REF(this_type) that) : m_Formatter(boost::move(that.m_Formatter))
     {
     }
 
@@ -103,10 +103,10 @@ public:
      */
 #if !defined(BOOST_NO_RVALUE_REFERENCES)
     template< typename FunT >
-    formatter(FunT const& fun)
+    basic_formatter(FunT const& fun)
 #else
     template< typename FunT >
-    formatter(FunT const& fun, typename disable_if< move_detail::is_rv< FunT >, int >::type = 0)
+    basic_formatter(FunT const& fun, typename disable_if< move_detail::is_rv< FunT >, int >::type = 0)
 #endif
         : m_Formatter(fun)
     {
@@ -115,7 +115,7 @@ public:
     /*!
      * Move assignment.
      */
-    formatter& operator= (BOOST_RV_REF(formatter) that)
+    basic_formatter& operator= (BOOST_RV_REF(this_type) that)
     {
         m_Formatter.swap(that.m_Formatter);
         return *this;
@@ -123,7 +123,7 @@ public:
     /*!
      * Copy assignment.
      */
-    formatter& operator= (BOOST_COPY_ASSIGN_REF(formatter) that)
+    basic_formatter& operator= (BOOST_COPY_ASSIGN_REF(this_type) that)
     {
         m_Formatter = that.m_Formatter;
         return *this;
@@ -133,10 +133,10 @@ public:
      */
 #if !defined(BOOST_NO_RVALUE_REFERENCES)
     template< typename FunT >
-    formatter& operator= (FunT const& fun)
+    basic_formatter& operator= (FunT const& fun)
 #else
     template< typename FunT >
-    typename disable_if< is_same< typename remove_cv< FunT >::type, formatter >, formatter& >::type
+    typename disable_if< is_same< typename remove_cv< FunT >::type, this_type >, this_type& >::type
     operator= (FunT const& fun)
 #endif
     {
@@ -150,7 +150,7 @@ public:
      * \param rec A log record to format.
      * \param strm A stream to put the formatted characters to.
      */
-    result_type operator() (record const& rec, ostream_type& strm) const
+    result_type operator() (record const& rec, stream_type& strm) const
     {
         m_Formatter(rec, strm);
     }
@@ -166,17 +166,24 @@ public:
     /*!
      * Swaps two formatters
      */
-    void swap(formatter& that)
+    void swap(basic_formatter& that)
     {
         m_Formatter.swap(that.m_Formatter);
     }
 };
 
 template< typename CharT >
-inline void swap(formatter< CharT >& left, formatter< CharT >& right)
+inline void swap(basic_formatter< CharT >& left, basic_formatter< CharT >& right)
 {
     left.swap(right);
 }
+
+#ifdef BOOST_LOG_USE_CHAR
+typedef basic_formatter< char > formatter;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
+typedef basic_formatter< wchar_t > wformatter;
+#endif
 
 } // namespace log
 

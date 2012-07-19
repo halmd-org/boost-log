@@ -276,7 +276,7 @@ protected:
 
 private:
     //! Enqueues a log record
-    void enqueue_unlocked(record_type const& rec)
+    void enqueue_unlocked(record const& rec)
     {
         const bool was_empty = m_queue.empty();
         m_queue.push(enqueued_record(rec));

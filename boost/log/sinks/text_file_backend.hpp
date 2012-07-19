@@ -511,7 +511,7 @@ private:
     void construct(ArgsT const& args)
     {
         construct(
-            filesystem::path(args[keywords::file_name | path_type()]),
+            filesystem::path(args[keywords::file_name | filesystem::path()]),
             args[keywords::open_mode | (std::ios_base::trunc | std::ios_base::out)],
             args[keywords::rotation_size | (std::numeric_limits< uintmax_t >::max)()],
             args[keywords::time_based_rotation | time_based_rotation_predicate()],

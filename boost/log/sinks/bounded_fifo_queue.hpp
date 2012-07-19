@@ -62,7 +62,7 @@ class bounded_fifo_queue :
 {
 private:
     typedef OverflowStrategyT overflow_strategy;
-    typedef std::queue< record_type > queue_type;
+    typedef std::queue< record > queue_type;
     typedef boost::mutex mutex_type;
 
 private:

@@ -301,7 +301,7 @@ public:
     {
         if (!m_FlushRequested)
         {
-            const_cast< record_type& >(rec).detach_from_thread();
+            const_cast< record& >(rec).detach_from_thread();
             return queue_base_type::try_enqueue(rec);
         }
         else

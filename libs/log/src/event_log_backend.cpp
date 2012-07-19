@@ -360,7 +360,7 @@ namespace event_log {
             insertions.resize(size);
             for (std::size_t i = 0; i < size; ++i)
             {
-                typename formatter_type::ostream_type strm(insertions[i]);
+                typename formatter_type::stream_type strm(insertions[i]);
                 m_Formatters[i](rec, strm);
                 strm.flush();
             }

@@ -25,6 +25,7 @@
 #include <boost/log/detail/setup_prologue.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/sinks/sink.hpp>
+#include <boost/log/utility/init/settings.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
