@@ -44,10 +44,11 @@
 #include <boost/spirit/include/qi_core.hpp>
 #include <boost/spirit/include/qi_lit.hpp>
 #include <boost/spirit/include/qi_eoi.hpp>
-#include <boost/phoenix/core.hpp>
+#include <boost/spirit/include/qi_symbols.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
+#include <boost/log/detail/functional.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/exceptions.hpp>
@@ -66,6 +67,7 @@
 #include <boost/log/detail/light_rw_mutex.hpp>
 #endif
 #include "parser_utils.hpp"
+#include "spirit_encoding.hpp"
 
 namespace qi = boost::spirit::qi;
 
@@ -104,8 +106,10 @@ inline IntT param_cast_to_int(const char* param_name, std::basic_string< CharT >
 template< typename CharT >
 inline bool param_cast_to_bool(const char* param_name, std::basic_string< CharT > const& value)
 {
+    typedef boost::log::aux::encoding_specific< typename boost::log::aux::encoding< CharT >::type > encoding_specific;
+
     bool res = false;
-    if (qi::parse(value.begin(), value.end(), qi::ascii::no_case[ qi::uint_ | qi::bool_ ] >> qi::eoi, res))
+    if (qi::parse(value.begin(), value.end(), encoding_specific::no_case[ qi::uint_ | qi::bool_ ] >> qi::eoi, res))
         return res;
     else
         throw_invalid_value(param_name);
@@ -125,6 +129,7 @@ template< typename CharT >
 sinks::file::rotation_at_time_point param_cast_to_rotation_time_point(const char* param_name, std::basic_string< CharT > const& value)
 {
     typedef CharT char_type;
+    typedef boost::log::aux::encoding_specific< typename boost::log::aux::encoding< char_type >::type > encoding_specific;
     typedef boost::log::aux::char_constants< char_type > constants;
     typedef std::basic_string< char_type > string_type;
 
@@ -132,9 +137,26 @@ sinks::file::rotation_at_time_point param_cast_to_rotation_time_point(const char
     qi::uint_parser< unsigned char, 10, 2, 2 > time_component_p;
     qi::uint_parser< unsigned short, 10, 1, 2 > day_p;
 
+    qi::symbols< CharT, date_time::weekdays > weekday_p;
+    weekday_p.add
+        (constants::monday_keyword(), date_time::Monday)
+        (constants::tuesday_keyword(), date_time::Tuesday)
+        (constants::wednesday_keyword(), date_time::Wednesday)
+        (constants::thursday_keyword(), date_time::Thursday)
+        (constants::friday_keyword(), date_time::Friday)
+        (constants::saturday_keyword(), date_time::Saturday)
+        (constants::sunday_keyword(), date_time::Sunday);
+    weekday_p.add
+        (constants::short_monday_keyword(), date_time::Monday)
+        (constants::short_tuesday_keyword(), date_time::Tuesday)
+        (constants::short_wednesday_keyword(), date_time::Wednesday)
+        (constants::short_thursday_keyword(), date_time::Thursday)
+        (constants::short_friday_keyword(), date_time::Friday)
+        (constants::short_saturday_keyword(), date_time::Saturday)
+        (constants::short_sunday_keyword(), date_time::Sunday);
+
     optional< date_time::weekdays > weekday;
     optional< unsigned short > day;
-    bool day_parsed = false;
     unsigned char hour = 0, minute = 0, second = 0;
 
     bool result = qi::parse
@@ -144,50 +166,31 @@ sinks::file::rotation_at_time_point param_cast_to_rotation_time_point(const char
             -(
                 (
                     // First check for a weekday
-                    (
-                        (qi::lit(constants::monday_keyword()) | qi::lit(constants::short_monday_keyword()))
-                            [phoenix::ref(weekday) = date_time::Monday] |
-                        (qi::lit(constants::tuesday_keyword()) | qi::lit(constants::short_tuesday_keyword()))
-                            [phoenix::ref(weekday) = date_time::Tuesday] |
-                        (qi::lit(constants::wednesday_keyword()) | qi::lit(constants::short_wednesday_keyword()))
-                            [phoenix::ref(weekday) = date_time::Wednesday] |
-                        (qi::lit(constants::thursday_keyword()) | qi::lit(constants::short_thursday_keyword()))
-                            [phoenix::ref(weekday) = date_time::Thursday] |
-                        (qi::lit(constants::friday_keyword()) | qi::lit(constants::short_friday_keyword()))
-                            [phoenix::ref(weekday) = date_time::Friday] |
-                        (qi::lit(constants::saturday_keyword()) | qi::lit(constants::short_saturday_keyword()))
-                            [phoenix::ref(weekday) = date_time::Saturday] |
-                        (qi::lit(constants::sunday_keyword()) | qi::lit(constants::short_sunday_keyword()))
-                            [phoenix::ref(weekday) = date_time::Sunday]
-                    ) |
+                    weekday_p[boost::log::aux::bind_assign(weekday)] |
                     // ... or a day in month
-                    (
-                        day_p[phoenix::ref(day) = qi::_1_type()]
-                    )
+                    day_p[boost::log::aux::bind_assign(day)]
                 ) >>
-                (+qi::ascii::space)[phoenix::ref(day_parsed) = true]
+                (+encoding_specific::space)
             ) >>
             // Then goes the time of day
             (
-                time_component_p[phoenix::ref(hour) = qi::_1_type()] >> colon >>
-                time_component_p[phoenix::ref(minute) = qi::_1_type()] >> colon >>
-                time_component_p[phoenix::ref(second) = qi::_1_type()]
-            )
-            >> qi::eoi
+                time_component_p[boost::log::aux::bind_assign(hour)] >> colon >>
+                time_component_p[boost::log::aux::bind_assign(minute)] >> colon >>
+                time_component_p[boost::log::aux::bind_assign(second)]
+            ) >>
+            qi::eoi
         )
     );
 
     if (!result)
         throw_invalid_value(param_name);
 
-    if (day_parsed)
-    {
-        if (weekday)
-            return sinks::file::rotation_at_time_point(weekday.get(), hour, minute, second);
-        else if (day)
-            return sinks::file::rotation_at_time_point(gregorian::greg_day(day.get()), hour, minute, second);
-    }
-    return sinks::file::rotation_at_time_point(hour, minute, second);
+    if (weekday)
+        return sinks::file::rotation_at_time_point(weekday.get(), hour, minute, second);
+    else if (day)
+        return sinks::file::rotation_at_time_point(gregorian::greg_day(day.get()), hour, minute, second);
+    else
+        return sinks::file::rotation_at_time_point(hour, minute, second);
 }
 
 //! The supported sinks repository

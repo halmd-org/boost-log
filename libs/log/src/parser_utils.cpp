@@ -40,6 +40,7 @@ const char_constants< char >::char_type char_constants< char >::char_equal;
 const char_constants< char >::char_type char_constants< char >::char_greater;
 const char_constants< char >::char_type char_constants< char >::char_less;
 const char_constants< char >::char_type char_constants< char >::char_underline;
+const char_constants< char >::char_type char_constants< char >::char_backslash;
 const char_constants< char >::char_type char_constants< char >::char_section_bracket_left;
 const char_constants< char >::char_type char_constants< char >::char_section_bracket_right;
 const char_constants< char >::char_type char_constants< char >::char_paren_bracket_left;
@@ -124,6 +125,7 @@ const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_equal
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_greater;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_less;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_underline;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_backslash;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_section_bracket_left;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_section_bracket_right;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_paren_bracket_left;

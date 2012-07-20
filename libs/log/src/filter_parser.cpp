@@ -396,31 +396,25 @@ struct filter_grammar< CharT >::definition
 
 //! The function registers a filter factory object for the specified attribute name
 template< typename CharT >
-void register_filter_factory(const CharT* attr_name, shared_ptr< filter_factory< CharT > > const& factory)
+void register_filter_factory(attribute_name const& attr_name, shared_ptr< filter_factory< CharT > > const& factory)
 {
     std::basic_string< CharT > name(attr_name);
     filters_repository< CharT >& repo = filters_repository< CharT >::get();
 
-    BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);)
+    BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< log::aux::light_rw_mutex > lock(repo.m_Mutex);)
     repo.m_Map[name] = factory;
 }
 
 //! The function parses a filter from the string
 template< typename CharT >
-#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
-typename basic_core< CharT >::filter_type
-#else
-boost::log::aux::light_function1< bool, basic_attribute_values_view< CharT > const& >
-#endif
-parse_filter(const CharT* begin, const CharT* end)
+filter parse_filter(const CharT* begin, const CharT* end)
 {
     typedef CharT char_type;
-    typedef typename basic_core< char_type >::filter_type filter_type;
 
     BOOST_LOG_EXPR_IF_MT(filters_repository< CharT >& repo = filters_repository< CharT >::get();)
-    BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);)
+    BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< log::aux::light_rw_mutex > lock(repo.m_Mutex);)
 
-    filter_type filt;
+    filter filt;
     filter_grammar< char_type > gram(filt);
     bsc::parse_info< const char_type* > result = bsc::parse(begin, end, gram, bsc::space_p);
     if (!result.full)
@@ -432,36 +426,24 @@ parse_filter(const CharT* begin, const CharT* end)
     }
     gram.flush();
 
-    return filt;
+    return boost::move(filt);
 }
 
 #ifdef BOOST_LOG_USE_CHAR
 
 template BOOST_LOG_SETUP_API
-void register_filter_factory(const char* name, shared_ptr< filter_factory< char > > const& factory);
-
+void register_filter_factory(attribute_name const& name, shared_ptr< filter_factory< char > > const& factory);
 template BOOST_LOG_SETUP_API
-#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
-basic_core< char >::filter_type
-#else
-boost::log::aux::light_function1< bool, basic_attribute_values_view< char > const& >
-#endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
-parse_filter< char >(const char* begin, const char* end);
+filter parse_filter< char >(const char* begin, const char* end);
 
 #endif // BOOST_LOG_USE_CHAR
 
 #ifdef BOOST_LOG_USE_WCHAR_T
 
 template BOOST_LOG_SETUP_API
-void register_filter_factory(const wchar_t* name, shared_ptr< filter_factory< wchar_t > > const& factory);
-
+void register_filter_factory(attribute_name const& name, shared_ptr< filter_factory< wchar_t > > const& factory);
 template BOOST_LOG_SETUP_API
-#ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
-basic_core< wchar_t >::filter_type
-#else
-boost::log::aux::light_function1< bool, basic_attribute_values_view< wchar_t > const& >
-#endif // BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
-parse_filter< wchar_t >(const wchar_t* begin, const wchar_t* end);
+filter parse_filter< wchar_t >(const wchar_t* begin, const wchar_t* end);
 
 #endif // BOOST_LOG_USE_WCHAR_T
 

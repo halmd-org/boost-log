@@ -47,12 +47,12 @@
 #include <boost/intrusive/options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
-#include <boost/phoenix/core.hpp>
 #include <boost/spirit/include/qi_core.hpp>
 #include <boost/spirit/include/qi_lit.hpp>
 #include <boost/log/detail/snprintf.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/light_function.hpp>
+#include <boost/log/detail/functional.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
@@ -326,15 +326,15 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         (
             it, end,
             (
-//                -(
-//                    qi::lit(traits_t::zero) |
-//                    qi::lit(traits_t::plus) |
-//                    qi::lit(traits_t::minus) |
-//                    qi::lit(traits_t::space)
-//                ) >>
-                /*-(*/qi::uint_[phoenix::ref(width) = qi::_1_type()]//) >>
-//                -(qi::lit(traits_t::dot) >> qi::uint_) >>
-//                qi::lit(traits_t::number_placeholder)
+                -(
+                    qi::lit(traits_t::zero) |
+                    qi::lit(traits_t::plus) |
+                    qi::lit(traits_t::minus) |
+                    qi::lit(traits_t::space)
+                ) >>
+                -(qi::uint_[boost::log::aux::bind_assign(width)]) >>
+                -(qi::lit(traits_t::dot) >> qi::uint_) >>
+                qi::lit(traits_t::number_placeholder)
             )
         );
     }

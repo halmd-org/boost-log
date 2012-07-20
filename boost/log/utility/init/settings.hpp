@@ -156,7 +156,7 @@ private:
 
         bool operator! () const
         {
-            return !m_section.m_ptree || !m_section.m_ptree->get_child_optional(name);
+            return !m_section.m_ptree || !m_section.m_ptree->get_child_optional(m_path);
         }
 
         std::string get_name() const
@@ -194,7 +194,7 @@ private:
         section_type get_section() const
         {
             if (m_section.m_ptree)
-                return section_type(m_section.m_ptree->get_child_optional(name).get_ptr());
+                return section_type(m_section.m_ptree->get_child_optional(m_path).get_ptr());
             else
                 return section_type();
         }

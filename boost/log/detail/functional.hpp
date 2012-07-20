@@ -395,6 +395,12 @@ private:
     AssigneeT& m_Assignee;
 };
 
+template< typename AssigneeT >
+inline assign_fun< AssigneeT > bind_assign(AssigneeT& assignee)
+{
+    return assign_fun< AssigneeT >(assignee);
+}
+
 //! The function object that outputs its operand to the bound stream
 template< typename StreamT >
 struct output_fun
@@ -414,6 +420,12 @@ struct output_fun
 private:
     StreamT& m_Stream;
 };
+
+template< typename StreamT >
+inline output_fun< StreamT > bind_output(StreamT& strm)
+{
+    return output_fun< StreamT >(strm);
+}
 
 //! Second argument binder
 template< typename FunT, typename SecondArgT >

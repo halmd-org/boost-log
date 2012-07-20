@@ -74,10 +74,16 @@ inline std::string const& to_narrow(std::string const& str)
 }
 
 //! The function converts the passed string to the narrow-character encoding
-inline std::string to_narrow(std::wstring const& str)
+inline std::string const& to_narrow(std::string const& str, std::locale const&)
+{
+    return str;
+}
+
+//! The function converts the passed string to the narrow-character encoding
+inline std::string to_narrow(std::wstring const& str, std::locale const& loc = std::locale())
 {
     std::string res;
-    aux::code_convert(str, res);
+    aux::code_convert(str, res, loc);
     return res;
 }
 
@@ -88,10 +94,16 @@ inline std::wstring const& to_wide(std::wstring const& str)
 }
 
 //! The function converts the passed string to the wide-character encoding
-inline std::wstring to_wide(std::string const& str)
+inline std::wstring const& to_wide(std::wstring const& str, std::locale const&)
+{
+    return str;
+}
+
+//! The function converts the passed string to the wide-character encoding
+inline std::wstring to_wide(std::string const& str, std::locale const& loc = std::locale())
 {
     std::wstring res;
-    aux::code_convert(str, res);
+    aux::code_convert(str, res, loc);
     return res;
 }
 

@@ -50,6 +50,7 @@ struct char_constants< char >
     static const char_type char_greater = '>';
     static const char_type char_less = '<';
     static const char_type char_underline = '_';
+    static const char_type char_backslash = '\\';
     static const char_type char_section_bracket_left = '[';
     static const char_type char_section_bracket_right = ']';
     static const char_type char_paren_bracket_left = '(';
@@ -162,6 +163,7 @@ struct char_constants< wchar_t >
     static const char_type char_greater = L'>';
     static const char_type char_less = L'<';
     static const char_type char_underline = L'_';
+    static const char_type char_backslash = L'\\';
     static const char_type char_section_bracket_left = L'[';
     static const char_type char_section_bracket_right = L']';
     static const char_type char_paren_bracket_left = L'(';

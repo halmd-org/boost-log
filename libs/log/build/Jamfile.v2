@@ -34,6 +34,7 @@ project boost/log
         <toolset>intel-win:<define>_SCL_SECURE_NO_DEPRECATE
         <toolset>intel-win:<define>_CRT_SECURE_NO_WARNINGS
         <toolset>intel-win:<define>_CRT_SECURE_NO_DEPRECATE
+        <toolset>gcc:<cxxflags>-ftemplate-depth-1024
         <toolset>gcc:<cxxflags>-fno-strict-aliasing  # avoids strict aliasing violations in other Boost components
         <toolset>gcc-mingw:<linkflags>-Wl,--enable-auto-import
         <toolset>gcc-cygwin:<linkflags>-Wl,--enable-auto-import
@@ -71,6 +72,7 @@ local BOOST_LOG_COMMON_SRC =
     threadsafe_queue.cpp
     event.cpp
     trivial.cpp
+    spirit_encoding.cpp
     ;
 
 lib boost_log
@@ -106,6 +108,7 @@ local BOOST_LOG_SETUP_COMMON_SRC =
     parser_utils.cpp
     init_from_stream.cpp
     init_from_settings.cpp
+    settings_parser.cpp
     filter_parser.cpp
     formatter_parser.cpp
     default_filter_factory.cpp
