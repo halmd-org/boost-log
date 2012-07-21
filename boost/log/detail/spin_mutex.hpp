@@ -154,10 +154,9 @@ public:
 #endif
     }
 
-private:
     //  Non-copyable
-    spin_mutex(spin_mutex const&);
-    spin_mutex& operator= (spin_mutex const&);
+    BOOST_LOG_DELETED_FUNCTION(spin_mutex(spin_mutex const&))
+    BOOST_LOG_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
 };
 
 #undef BOOST_LOG_PAUSE_OP
@@ -210,10 +209,9 @@ public:
         pthread_spin_unlock(&m_State);
     }
 
-private:
     //  Non-copyable
-    spin_mutex(spin_mutex const&);
-    spin_mutex& operator= (spin_mutex const&);
+    BOOST_LOG_DELETED_FUNCTION(spin_mutex(spin_mutex const&))
+    BOOST_LOG_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
 };
 
 #else // defined(_POSIX_SPIN_LOCKS)
@@ -246,10 +244,9 @@ public:
         pthread_mutex_unlock(&m_State);
     }
 
-private:
     //  Non-copyable
-    spin_mutex(spin_mutex const&);
-    spin_mutex& operator= (spin_mutex const&);
+    BOOST_LOG_DELETED_FUNCTION(spin_mutex(spin_mutex const&))
+    BOOST_LOG_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
 };
 
 #endif // defined(_POSIX_SPIN_LOCKS)

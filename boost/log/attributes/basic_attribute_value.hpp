@@ -61,8 +61,7 @@ public:
 
     virtual bool dispatch(type_dispatcher& dispatcher)
     {
-        type_dispatcher::callback< value_type > callback =
-            dispatcher.get_callback< value_type >();
+        type_dispatcher::callback< value_type > callback = dispatcher.get_callback< value_type >();
         if (callback)
         {
             callback(m_Value);
@@ -71,6 +70,11 @@ public:
         else
             return false;
     }
+
+    /*!
+     * \return The attribute value type
+     */
+    type_info_wrapper get_type() const { return type_info_wrapper(typeid(value_type)); }
 
     /*!
      * \return Reference to the contained value.

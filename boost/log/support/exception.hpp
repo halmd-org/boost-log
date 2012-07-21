@@ -21,18 +21,28 @@
 
 #include <boost/exception/info.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/named_scope.hpp>
+#include <boost/log/utility/type_info_wrapper.hpp>
 
 namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
-struct current_scope_info_tag;
+/*!
+ * Attribute name exception information
+ */
+typedef error_info< struct attribute_name_info_tag, attribute_name > attribute_name_info;
 
 /*!
- * Current scope excpetion information
+ * Type info exception information
  */
-typedef error_info< current_scope_info_tag, attributes::named_scope_list > current_scope_info;
+typedef error_info< struct type_info_info_tag, type_info_wrapper > type_info_info;
+
+/*!
+ * Current scope exception information
+ */
+typedef error_info< struct current_scope_info_tag, attributes::named_scope_list > current_scope_info;
 
 /*!
  * The function returns an error information object that contains current stack of scopes.

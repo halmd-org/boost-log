@@ -25,6 +25,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/intrusive_ref_counter.hpp>
+#include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 #include <boost/log/attributes/attribute_def.hpp>
 
@@ -107,6 +108,11 @@ public:
          * \return The attribute value that refers to self implementation.
          */
         virtual attribute_value get_value() { return attribute_value(this); }
+
+        /*!
+         * \return The attribute value type
+         */
+        virtual type_info_wrapper get_type() const { return type_info_wrapper(); }
     };
 
 private:
@@ -164,6 +170,20 @@ public:
     bool operator! () const { return !m_pImpl; }
 
     /*!
+     * The method returns the type information of the stored value of the attribute.
+     * The returned type info wrapper may be empty if the attribute value is empty or
+     * the information cannot be provided. If the returned value is not empty, the type
+     * can be used for value extraction.
+     */
+    type_info_wrapper get_type() const
+    {
+        if (m_pImpl.get())
+            return m_pImpl->get_type();
+        else
+            return type_info_wrapper();
+    }
+
+    /*!
      * The method is called when the attribute value is passed to another thread (e.g.
      * in case of asynchronous logging). The value should ensure it properly owns all thread-specific data.
      *
@@ -171,7 +191,7 @@ public:
      */
     void detach_from_thread()
     {
-        if (m_pImpl)
+        if (m_pImpl.get())
             m_pImpl->detach_from_thread().swap(m_pImpl);
     }
 
@@ -184,7 +204,7 @@ public:
      */
     bool dispatch(type_dispatcher& dispatcher) const
     {
-        if (m_pImpl)
+        if (m_pImpl.get())
             return m_pImpl->dispatch(dispatcher);
         else
             return false;
@@ -201,6 +221,18 @@ public:
      */
     template< typename T >
     typename result_of::extract< T >::type extract() const;
+
+    /*!
+     * The method attempts to extract the stored value, assuming the value has the specified type.
+     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * is checked against every type in the sequence.
+     *
+     * \return The extracted value, if the attribute value is not empty and the value is the same
+     *         as specified. Otherwise an exception is thrown. See description of the \c result_of::extract_or_throw
+     *         metafunction for information on the nature of the result value.
+     */
+    template< typename T >
+    typename result_of::extract_or_throw< T >::type extract_or_throw() const;
 
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type.

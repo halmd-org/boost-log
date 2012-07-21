@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   prologue.hpp
+ * \file   visible_type.hpp
  * \author Andrey Semashev
  * \date   08.03.2007
  *

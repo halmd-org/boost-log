@@ -30,6 +30,7 @@
 #include <boost/log/expressions/domain.hpp>
 #include <boost/log/expressions/terminal.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
+#include <boost/log/expressions/extractor_adapter.hpp>
 #include <boost/log/expressions/is_keyword_descriptor.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
 
@@ -40,7 +41,35 @@ namespace BOOST_LOG_NAMESPACE {
 namespace expressions {
 
 /*!
- * \brief This class implements an expression template keyword
+ * A default attribute value extractor compatible with Boost.Phoenix invokation protocol.
+ */
+template< typename DescriptorT >
+struct default_extractor :
+    public value_extractor< extract_value_or_none< typename DescriptorT::value_type > >
+{
+    //! Attribute descriptor type
+    typedef DescriptorT descriptor_type;
+    //! Attribute value type
+    typedef typename descriptor_type::value_type value_type;
+
+    typedef value_extractor< extract_value_or_none< value_type > > base_type;
+    typedef typename base_type::result_type result_type;
+
+    //! Default constructor
+    default_extractor() : base_type(descriptor_type::get_name())
+    {
+    }
+
+    //! The operator extracts the value
+    template< typename EnvT >
+    result_type operator() (EnvT const& env) const
+    {
+        return base_type::operator() (fusion::at_c< 0 >(env.args()));
+    }
+};
+
+/*!
+ * This class implements an expression template keyword. It is used to start template expressions involving attribute values.
  */
 template< typename DescriptorT, template< typename > class ActorT >
 struct attribute_keyword
@@ -52,8 +81,9 @@ struct attribute_keyword
     typedef DescriptorT descriptor_type;
     //! Attribute value type
     typedef typename descriptor_type::value_type value_type;
+
     //! Expression type
-    typedef ActorT< attribute_terminal< DescriptorT > > expr_type;
+    typedef ActorT< terminal< default_extractor< descriptor_type > > > expr_type;
 
     BOOST_PROTO_EXTENDS(expr_type, attribute_keyword, domain)
 
@@ -61,42 +91,58 @@ struct attribute_keyword
     static attribute_name get_name() { return descriptor_type::get_name(); }
 
     //! Expression with cached attribute name
-    typedef ActorT<
-        cached_attribute_terminal<
-            value_extractor<
-                extract_value_or_none< value_type >
-            >
-        >
-    > or_none_result_type;
+    typedef expr_type or_none_result_type;
 
     //! Generates an expression that extracts the attribute value or a default value
-    or_none_result_type or_none() const
+    static or_none_result_type or_none()
     {
-        typedef cached_attribute_terminal<
-            value_extractor<
-                extract_value_or_none< value_type >
+        typedef terminal< default_extractor< descriptor_type > > cached_terminal;
+        ActorT< cached_terminal > res = { cached_terminal() };
+        return res;
+    }
+
+    //! Expression with cached attribute name
+    typedef ActorT<
+        terminal<
+            extractor_adapter<
+                value_extractor<
+                    extract_value_or_throw< value_type >
+                >
+            >
+        >
+    > or_throw_result_type;
+
+    //! Generates an expression that extracts the attribute value or throws an exception
+    static or_throw_result_type or_throw()
+    {
+        typedef terminal<
+            extractor_adapter<
+                value_extractor<
+                    extract_value_or_throw< value_type >
+                >
             >
         > cached_terminal;
         ActorT< cached_terminal > res = { cached_terminal(descriptor_type::get_name()) };
         return res;
     }
 
-    //! Expression with cached attribute name and default value
-    typedef ActorT<
-        cached_attribute_terminal<
-            value_extractor<
-                extract_value_or_default< value_type >
-            >
-        >
-    > or_default_result_type;
-
     //! Generates an expression that extracts the attribute value or a default value
     template< typename T >
-    or_default_result_type or_default(T const& def_val) const
+    static ActorT<
+        terminal<
+            extractor_adapter<
+                value_extractor<
+                    extract_value_or_default< value_type, T >
+                >
+            >
+        >
+    > or_default(T const& def_val)
     {
-        typedef cached_attribute_terminal<
-            value_extractor<
-                extract_value_or_default< value_type >
+        typedef terminal<
+            extractor_adapter<
+                value_extractor<
+                    extract_value_or_default< value_type, T >
+                >
             >
         > cached_terminal;
         ActorT< cached_terminal > res = { cached_terminal(descriptor_type::get_name(), def_val) };

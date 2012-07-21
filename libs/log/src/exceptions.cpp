@@ -23,6 +23,16 @@ namespace boost {
 
 namespace BOOST_LOG_NAMESPACE {
 
+namespace aux {
+
+//! Attaches attribute name exception information
+BOOST_LOG_API void attach_attribute_name_info(exception& e, attribute_name const& name)
+{
+    e << attribute_name_info(name);
+}
+
+} // namespace aux
+
 runtime_error::runtime_error(std::string const& descr) :
     std::runtime_error(descr)
 {
@@ -62,6 +72,15 @@ void missing_value::throw_(const char* file, std::size_t line, std::string const
     );
 }
 
+void missing_value::throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name)
+{
+    boost::throw_exception(boost::enable_error_info(missing_value(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << attribute_name_info(name)
+    );
+}
+
 invalid_type::invalid_type() :
     runtime_error("Requested value has invalid type")
 {
@@ -89,6 +108,34 @@ void invalid_type::throw_(const char* file, std::size_t line, std::string const&
     boost::throw_exception(boost::enable_error_info(invalid_type(descr))
         << boost::throw_file(file)
         << boost::throw_line(line)
+    );
+}
+
+void invalid_type::throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name)
+{
+    boost::throw_exception(boost::enable_error_info(invalid_type(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << attribute_name_info(name)
+    );
+}
+
+void invalid_type::throw_(const char* file, std::size_t line, std::string const& descr, type_info_wrapper const& type)
+{
+    boost::throw_exception(boost::enable_error_info(invalid_type(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << type_info_info(type)
+    );
+}
+
+void invalid_type::throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name, type_info_wrapper const& type)
+{
+    boost::throw_exception(boost::enable_error_info(invalid_type(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << attribute_name_info(name)
+        << type_info_info(type)
     );
 }
 

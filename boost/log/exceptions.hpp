@@ -24,6 +24,8 @@
 #include <stdexcept>
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/attributes/attribute_name.hpp>
+#include <boost/log/utility/type_info_wrapper.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -33,7 +35,17 @@
 
 namespace boost {
 
+// Forward-declaration of an exception base class from Boost.Exception
+class BOOST_LOG_VISIBLE exception;
+
 namespace BOOST_LOG_NAMESPACE {
+
+namespace aux {
+
+//! Attaches attribute name exception information
+BOOST_LOG_API void attach_attribute_name_info(exception& e, attribute_name const& name);
+
+} // namespace aux
 
 /*!
  * \brief Base class for runtime exceptions from the logging library
@@ -79,6 +91,7 @@ public:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name);
 #endif
 };
 
@@ -105,6 +118,9 @@ public:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, type_info_wrapper const& type);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name, type_info_wrapper const& type);
 #endif
 };
 
@@ -344,13 +360,13 @@ public:
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
 #define BOOST_LOG_THROW(ex)\
-    ex::throw_(__FILE__, __LINE__)
+    ex::throw_(__FILE__, static_cast< std::size_t >(__LINE__))
 
 #define BOOST_LOG_THROW_DESCR(ex, descr)\
-    ex::throw_(__FILE__, __LINE__, descr)
+    ex::throw_(__FILE__, static_cast< std::size_t >(__LINE__), descr)
 
 #define BOOST_LOG_THROW_DESCR_PARAMS(ex, descr, params)\
-    ex::throw_(__FILE__, __LINE__, descr, BOOST_PP_SEQ_ENUM(params))
+    ex::throw_(__FILE__, static_cast< std::size_t >(__LINE__), descr, BOOST_PP_SEQ_ENUM(params))
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 

@@ -21,6 +21,7 @@
 #define BOOST_LOG_ATTRIBUTES_VALUE_VISITATION_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/exceptions.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
@@ -123,15 +124,24 @@ public:
     template< typename VisitorT >
     result_type operator() (attribute_values_view const& attrs, VisitorT visitor) const
     {
-        attribute_values_view::const_iterator it = attrs.find(m_Name);
-        if (it != attrs.end())
+        try
         {
-            if (it->second.visit< value_types >(visitor))
-                return visitation_result::ok;
-            else
-                return visitation_result::value_has_invalid_type;
+            attribute_values_view::const_iterator it = attrs.find(m_Name);
+            if (it != attrs.end())
+            {
+                if (it->second.visit< value_types >(visitor))
+                    return visitation_result::ok;
+                else
+                    return visitation_result::value_has_invalid_type;
+            }
+            return visitation_result::value_not_found;
         }
-        return visitation_result::value_not_found;
+        catch (exception& e)
+        {
+            // Attach the attribute name to the exception
+            boost::log::aux::attach_attribute_name_info(e, m_Name);
+            throw;
+        }
     }
 
     /*!

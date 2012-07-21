@@ -123,7 +123,7 @@ public:
      */
     std::string pretty_name() const
     {
-        if (*info != typeid(uninitialized))
+        if (!this->operator!())
         {
 #ifdef BOOST_LOG_HAS_CXXABI
             // GCC returns decorated type name, will need to demangle it using ABI
@@ -155,7 +155,7 @@ public:
      * \return \c false if the type info wrapper was initialized with a particular type,
      *         \c true if the wrapper was default-constructed and not yet initialized
      */
-    bool operator! () const { return (*info == typeid(uninitialized)); }
+    bool operator! () const { return (info == &typeid(uninitialized) || *info == typeid(uninitialized)); }
 
     /*!
      * Equality comparison
@@ -167,7 +167,7 @@ public:
      */
     bool operator== (type_info_wrapper const& that) const
     {
-        return (*info == *that.info);
+        return (info == that.info || *info == *that.info);
     }
     /*!
      * Ordering operator
@@ -218,6 +218,12 @@ inline bool operator>= (type_info_wrapper const& left, type_info_wrapper const& 
 inline void swap(type_info_wrapper& left, type_info_wrapper& right)
 {
     left.swap(right);
+}
+
+//! A The function for support of exception serialization to string
+inline std::string to_string(type_info_wrapper const& ti)
+{
+    return ti.pretty_name();
 }
 
 } // namespace log

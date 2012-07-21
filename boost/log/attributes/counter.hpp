@@ -127,10 +127,9 @@ public:
 
     attribute_value get_value()
     {
-        typedef basic_attribute_value< value_type > attr_value;
         register unsigned long next_counter = static_cast< unsigned long >(++m_Counter);
         register value_type next = static_cast< value_type >(m_Initial + (next_counter * m_Step));
-        return attribute_value(new attr_value(next));
+        return make_attribute_value(next);
     }
 };
 
@@ -152,8 +151,7 @@ public:
 
     attribute_value get_value()
     {
-        typedef basic_attribute_value< value_type > attr_value;
-        return attribute_value(new attr_value(static_cast< value_type >(++m_Counter)));
+        return make_attribute_value(static_cast< value_type >(++m_Counter));
     }
 };
 
@@ -175,8 +173,7 @@ public:
 
     attribute_value get_value()
     {
-        typedef basic_attribute_value< value_type > attr_value;
-        return attribute_value(new attr_value(static_cast< value_type >(--m_Counter)));
+        return make_attribute_value(static_cast< value_type >(--m_Counter));
     }
 };
 
@@ -202,9 +199,8 @@ public:
 
     attribute_value get_value()
     {
-        typedef basic_attribute_value< value_type > attr_value;
         m_Counter += m_Step;
-        return attribute_value(new attr_value(m_Counter));
+        return make_attribute_value(m_Counter);
     }
 };
 

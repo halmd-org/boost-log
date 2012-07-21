@@ -58,10 +58,9 @@ protected:
     BOOST_LOG_API void* get_content() const;
     BOOST_LOG_API void set_content(void* value) const;
 
-private:
     //  Copying prohibited
-    thread_specific_base(thread_specific_base const&);
-    thread_specific_base& operator= (thread_specific_base const&);
+    BOOST_LOG_DELETED_FUNCTION(thread_specific_base(thread_specific_base const&))
+    BOOST_LOG_DELETED_FUNCTION(thread_specific_base& operator= (thread_specific_base const&))
 };
 
 //! A TLS wrapper for small POD types with least possible overhead
@@ -80,7 +79,7 @@ class thread_specific :
 
 public:
     //! Default constructor
-    thread_specific() {}
+    BOOST_LOG_DEFAULTED_FUNCTION(thread_specific(), {})
     //! Initializing constructor
     thread_specific(T const& value)
     {

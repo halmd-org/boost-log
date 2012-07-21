@@ -74,6 +74,8 @@ protected:
             typedef basic_attribute_value< value_type > detached_value;
             return new detached_value(boost::log::aux::this_thread::get_id());
         }
+
+        type_info_wrapper get_type() const { return type_info_wrapper(typeid(value_type)); }
     };
 
 public:

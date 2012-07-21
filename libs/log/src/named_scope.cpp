@@ -103,6 +103,11 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 return false;
         }
 
+        /*!
+         * \return The attribute value type
+         */
+        type_info_wrapper get_type() const { return type_info_wrapper(typeid(scope_stack)); }
+
         //! The method is called when the attribute value is passed to another thread (e.g.
         //! in case of asynchronous logging). The value should ensure it properly owns all thread-specific data.
         intrusive_ptr< attribute_value::impl > detach_from_thread()

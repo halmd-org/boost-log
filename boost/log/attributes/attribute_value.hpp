@@ -43,6 +43,12 @@ inline typename result_of::extract< T >::type attribute_value::extract() const
 }
 
 template< typename T >
+inline typename result_of::extract_or_throw< T >::type attribute_value::extract_or_throw() const
+{
+    return boost::log::extract_value_or_throw< T >()(*this);
+}
+
+template< typename T >
 inline typename result_of::extract_or_default< T, T >::type attribute_value::extract_or_default(T const& def_value) const
 {
     return boost::log::extract_value_or_default< T, T >(def_value)(*this);

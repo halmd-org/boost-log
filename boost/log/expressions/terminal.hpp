@@ -22,9 +22,8 @@
 #include <boost/mpl/bool.hpp>
 #include <boost/phoenix/core/terminal.hpp>
 #include <boost/phoenix/core/environment.hpp>
-#include <boost/fusion/sequence/intrinsic/at.hpp>
+#include <boost/utility/result_of.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/attributes/value_extraction.hpp>
 
 namespace boost {
 
@@ -35,66 +34,61 @@ namespace expressions {
 /*!
  * \brief A terminal node in the expression template tree
  *
- * This terminal is mostly used to declare attribute keywords and not for actual
- * evaluation of expression templates. See \c cached_attribute_terminal.
- */
-template< typename DescriptorT >
-struct attribute_terminal
-{
-    //! Internal typedef for type categorization
-    typedef void _is_boost_log_attribute_terminal;
-
-    //! Attribute descriptor type
-    typedef DescriptorT descriptor_type;
-
-    //! Attribute value type
-    typedef typename descriptor_type::value_type value_type;
-    //! Attribute value extractor type
-    typedef value_extractor< extract_value_or_none< value_type > > extractor_type;
-
-    //! Result type
-    typedef typename extractor_type::result_type result_type;
-
-    //! The operator extracts the value
-    template< typename EnvT >
-    result_type operator() (EnvT const& env) const
-    {
-        return extractor_type(descriptor_type::get_name())(fusion::at_c< 0 >(env.args()));
-    }
-};
-
-/*!
- * \brief A terminal node in the expression template tree
+ * This terminal contains a base function object and is used for expression
+ * templates evaluation. The function object is expected to receive a Boost.Fusion sequence
+ * of arguments upon calling. The result of the function will be returned as the terminal value.
  *
- * This terminal contains an attribute value extractor and is used for expression
- * templates evaluation. Since the extractor stores attribute name and other data
- * releavant to the attribute value extraction, this terminal cannot be used for
- * keyword declaration.
+ * The base function can be an attribute value extractor wrapped into the \c extractor_adapter
+ * class template, in which case the terminal results in the attribute value upon invokation.
  */
-template< typename ExtractorT >
-struct cached_attribute_terminal :
-    public ExtractorT
+template< typename BaseT >
+struct terminal :
+    public BaseT
 {
     //! Internal typedef for type categorization
-    typedef void _is_boost_log_attribute_terminal;
+    typedef void _is_boost_log_terminal;
 
-    //! Attribute value extractor
-    typedef ExtractorT extractor_type;
-    //! Result type
-    typedef typename extractor_type::result_type result_type;
+    //! Base function type
+    typedef BaseT base_type;
 
+    template< typename >
+    struct result;
+
+    template< typename EnvT >
+    struct result< terminal< base_type >(EnvT) > :
+        public result_of< base_type(typename EnvT::args_type) >
+    {
+    };
+
+    template< typename EnvT >
+    struct result< const terminal< base_type >(EnvT) > :
+        public result_of< const base_type(typename EnvT::args_type) >
+    {
+    };
+
+    //! Default constructor
+    BOOST_LOG_DEFAULTED_FUNCTION(terminal(), {})
     //! Initializing constructor
     template< typename ArgT1 >
-    explicit cached_attribute_terminal(ArgT1 const& arg1) : extractor_type(arg1) {}
+    explicit terminal(ArgT1 const& arg1) : base_type(arg1) {}
     //! Initializing constructor
     template< typename ArgT1, typename ArgT2 >
-    cached_attribute_terminal(ArgT1 const& arg1, ArgT2 const& arg2) : extractor_type(arg1, arg2) {}
+    terminal(ArgT1 const& arg1, ArgT2 const& arg2) : base_type(arg1, arg2) {}
 
-    //! The operator extracts the value
+    //! Invokation operator
     template< typename EnvT >
-    result_type operator() (EnvT const& env) const
+    typename result_of< base_type(typename EnvT::args_type) >::type
+    operator() (EnvT const& env)
     {
-        return extractor_type::operator()(fusion::at_c< 0 >(env.args()));
+        return base_type::operator() (env.args());
+    }
+
+    //! Invokation operator
+    template< typename EnvT >
+    typename result_of< const base_type(typename EnvT::args_type) >::type
+    operator() (EnvT const& env) const
+    {
+        return base_type::operator() (env.args());
     }
 };
 
@@ -109,7 +103,7 @@ namespace phoenix {
 namespace result_of {
 
 template< typename T >
-struct is_nullary< T, typename T::_is_boost_log_attribute_terminal > :
+struct is_nullary< T, typename T::_is_boost_log_terminal > :
     public mpl::false_
 {
 };
@@ -117,13 +111,13 @@ struct is_nullary< T, typename T::_is_boost_log_attribute_terminal > :
 } // namespace result_of
 
 template< typename T >
-struct is_custom_terminal< T, typename T::_is_boost_log_attribute_terminal > :
+struct is_custom_terminal< T, typename T::_is_boost_log_terminal > :
     public mpl::true_
 {
 };
 
 template< typename T >
-struct custom_terminal< T, typename T::_is_boost_log_attribute_terminal >
+struct custom_terminal< T, typename T::_is_boost_log_terminal >
 {
     typedef typename T::result_type result_type;
 

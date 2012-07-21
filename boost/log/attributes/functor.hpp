@@ -82,8 +82,7 @@ protected:
 
         attribute_value get_value()
         {
-            typedef basic_attribute_value< value_type > attr_value;
-            return attribute_value(new attr_value(m_Functor()));
+            return make_attribute_value(m_Functor());
         }
     };
 
