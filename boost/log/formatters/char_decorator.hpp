@@ -34,7 +34,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace formatters {
 
@@ -253,7 +253,7 @@ implementation_defined char_dec(RangeT1 const& from, RangeT2 const& to);
 
 } // namespace formatters
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

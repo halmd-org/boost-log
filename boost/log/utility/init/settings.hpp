@@ -45,7 +45,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 #if defined(BOOST_LOG_TYPEOF) && defined(BOOST_LOG_NO_TRAILING_RESULT_TYPE)
 namespace aux {
@@ -622,7 +622,7 @@ typedef basic_settings< wchar_t > wsettings;                    //!< Convenience
 typedef basic_settings_section< wchar_t > wsettings_section;    //!< Convenience typedef for wide-character logging
 #endif
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

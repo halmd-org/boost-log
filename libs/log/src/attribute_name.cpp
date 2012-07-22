@@ -33,7 +33,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
@@ -227,7 +227,7 @@ template BOOST_LOG_API std::basic_ostream< wchar_t, std::char_traits< wchar_t > 
         attribute_name const& name);
 #endif
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

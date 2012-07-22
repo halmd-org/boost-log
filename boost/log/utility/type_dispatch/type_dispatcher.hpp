@@ -27,7 +27,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * \brief A type dispatcher interface
@@ -170,7 +170,7 @@ private:
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

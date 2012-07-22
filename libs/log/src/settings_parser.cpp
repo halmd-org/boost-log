@@ -43,7 +43,7 @@ namespace qi = boost::spirit::qi;
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
@@ -229,7 +229,7 @@ template BOOST_LOG_SETUP_API basic_settings< char > parse_settings< char >(std::
 template BOOST_LOG_SETUP_API basic_settings< wchar_t > parse_settings< wchar_t >(std::basic_istream< wchar_t >& strm);
 #endif
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

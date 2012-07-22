@@ -36,7 +36,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -246,7 +246,7 @@ BOOST_LOG_FORCEINLINE aux::scoped_thread_attribute add_scoped_thread_attribute(a
 #define BOOST_LOG_SCOPED_THREAD_TAG(attr_name, attr_type, attr_value)\
     BOOST_LOG_SCOPED_THREAD_ATTR_CTOR(attr_name, ::boost::log::attributes::constant< attr_type >, (attr_value))
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

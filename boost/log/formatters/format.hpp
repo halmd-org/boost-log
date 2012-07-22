@@ -33,7 +33,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace formatters {
 
@@ -206,7 +206,7 @@ inline fmt_format< wchar_t > format(std::basic_string< wchar_t > const& fmt)
 
 } // namespace formatters
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

@@ -36,7 +36,7 @@ public:
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 inline bool operator== (attribute const& left, attribute const& right)
 {
@@ -53,7 +53,7 @@ inline std::ostream& operator<< (std::ostream& strm, attribute const& val)
     return strm;
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

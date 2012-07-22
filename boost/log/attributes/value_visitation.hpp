@@ -31,7 +31,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * \brief The class represents attribute value visitation result
@@ -204,7 +204,7 @@ inline visitation_result visit(attribute_name const& name, record const& rec, Vi
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

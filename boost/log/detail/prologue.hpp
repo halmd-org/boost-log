@@ -100,12 +100,17 @@
 #   if !__has_feature(cxx_trailing_return)
 #       define BOOST_LOG_NO_TRAILING_RESULT_TYPE
 #   endif
+#   if !__has_feature(cxx_inline_namespaces)
+#       define BOOST_LOG_NO_INLINE_NAMESPACES
+#   endif
 #elif defined(__GNUC__)
 #   if (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 4)) || !defined(__GXX_EXPERIMENTAL_CXX0X__)
 #       define BOOST_LOG_NO_TRAILING_RESULT_TYPE
+#       define BOOST_LOG_NO_INLINE_NAMESPACES
 #   endif
 #else
 #   define BOOST_LOG_NO_TRAILING_RESULT_TYPE
+#   define BOOST_LOG_NO_INLINE_NAMESPACES
 #endif
 
 // Extended declaration macros. Used to implement compiler-specific optimizations.
@@ -268,25 +273,52 @@ namespace boost {
 // Setup namespace name
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
 #   if defined(BOOST_LOG_NO_THREADS)
-#       define BOOST_LOG_NAMESPACE log2_st
+#       define BOOST_LOG_VERSION_NAMESPACE v2_st
 #   else
 #       if defined(BOOST_THREAD_PLATFORM_PTHREAD)
-#           define BOOST_LOG_NAMESPACE log2_mt_posix
+#           define BOOST_LOG_VERSION_NAMESPACE v2_mt_posix
 #       elif defined(BOOST_THREAD_PLATFORM_WIN32)
 #           if defined(BOOST_LOG_USE_WINNT6_API)
-#               define BOOST_LOG_NAMESPACE log2_mt_nt6
+#               define BOOST_LOG_VERSION_NAMESPACE v2_mt_nt6
 #           else
-#               define BOOST_LOG_NAMESPACE log2_mt_nt5
+#               define BOOST_LOG_VERSION_NAMESPACE v2_mt_nt5
 #           endif // defined(BOOST_LOG_USE_WINNT6_API)
 #       else
-#           define BOOST_LOG_NAMESPACE log2_mt
+#           define BOOST_LOG_VERSION_NAMESPACE v2_mt
 #       endif
 #   endif // defined(BOOST_LOG_NO_THREADS)
-namespace BOOST_LOG_NAMESPACE {}
-namespace log = BOOST_LOG_NAMESPACE;
+
+namespace log {
+
+#   if !defined(BOOST_LOG_NO_INLINE_NAMESPACES)
+
+inline namespace BOOST_LOG_VERSION_NAMESPACE {}
+}
+
+#       define BOOST_LOG_OPEN_NAMESPACE namespace log { inline namespace BOOST_LOG_VERSION_NAMESPACE {
+#       define BOOST_LOG_CLOSE_NAMESPACE }}
+
+#   else
+
+namespace BOOST_LOG_VERSION_NAMESPACE {}
+}
+
+using namespace BOOST_LOG_VERSION_NAMESPACE
+#       if defined(__GNUC__) && (__GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))
+__attribute__((__strong__))
+#       endif
+;
+
+#       define BOOST_LOG_OPEN_NAMESPACE namespace log { namespace BOOST_LOG_VERSION_NAMESPACE {
+#       define BOOST_LOG_CLOSE_NAMESPACE }}
+#   endif
+
 #else // !defined(BOOST_LOG_DOXYGEN_PASS)
+
 namespace log {}
-#   define BOOST_LOG_NAMESPACE log
+#   define BOOST_LOG_OPEN_NAMESPACE namespace log {
+#   define BOOST_LOG_CLOSE_NAMESPACE }
+
 #endif // !defined(BOOST_LOG_DOXYGEN_PASS)
 
 } // namespace boost

@@ -43,7 +43,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace filters {
 
@@ -438,7 +438,7 @@ attr(basic_attribute_name< wchar_t > const& name, std::nothrow_t const&)
 
 } // namespace filters
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

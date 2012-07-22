@@ -24,7 +24,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 inline attribute_set::node_base::node_base() :
     m_pPrev(NULL),
@@ -126,6 +126,6 @@ BOOST_LOG_API attribute_set::iterator attribute_set::find(key_type key)
     return m_pImpl->find(key);
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost

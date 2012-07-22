@@ -31,7 +31,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -127,7 +127,7 @@ inline void wadd_common_attributes()
 }
 #endif // defined(BOOST_LOG_USE_WCHAR_T)
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

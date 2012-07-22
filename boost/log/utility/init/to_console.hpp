@@ -45,7 +45,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -230,7 +230,7 @@ inline shared_ptr<
 
 #endif // BOOST_LOG_USE_WCHAR_T
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

@@ -30,7 +30,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 class attribute_values_view;
 
@@ -468,7 +468,7 @@ inline void swap(attribute_set& left, attribute_set& right)
     left.swap(right);
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

@@ -40,7 +40,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -344,7 +344,7 @@ make_exception_handler(HandlerT const& handler, std::nothrow_t const&);
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

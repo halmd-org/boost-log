@@ -25,7 +25,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 //! The function initializes the stream and the stream buffer
 template< typename CharT >
@@ -172,6 +172,6 @@ template class basic_record_ostream< char >;
 template class basic_record_ostream< wchar_t >;
 #endif
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost

@@ -30,7 +30,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -95,7 +95,7 @@ BOOST_LOG_API void once_block_sentry::rollback()
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
@@ -109,7 +109,7 @@ BOOST_LOG_API void once_block_sentry::rollback()
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -365,7 +365,7 @@ BOOST_LOG_API void once_block_sentry::rollback()
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
@@ -377,7 +377,7 @@ BOOST_LOG_API void once_block_sentry::rollback()
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -441,7 +441,7 @@ BOOST_LOG_API void once_block_sentry::rollback()
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

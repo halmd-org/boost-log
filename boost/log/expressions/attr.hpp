@@ -28,7 +28,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace expressions {
 
@@ -109,7 +109,7 @@ BOOST_LOG_FORCEINLINE attribute_terminal< extract_value_or_none< AttributeValueT
 
 } // namespace expressions
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

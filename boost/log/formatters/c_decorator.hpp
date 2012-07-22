@@ -32,7 +32,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace formatters {
 
@@ -288,7 +288,7 @@ implementation_defined c_ascii_dec;
 
 } // namespace formatters
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

@@ -27,7 +27,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 //! A function object that does nothing and can be used as an empty deleter for \c shared_ptr
 struct empty_deleter
@@ -40,7 +40,7 @@ struct empty_deleter
     void operator() (const volatile void*) const {}
 };
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

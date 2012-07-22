@@ -37,7 +37,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 class core;
 
@@ -254,7 +254,7 @@ inline void swap(record& left, record& right)
     left.swap(right);
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

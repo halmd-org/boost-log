@@ -32,7 +32,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * \brief Ordering predicate, based on log record handle comparison
@@ -177,7 +177,7 @@ inline typename aux::make_attr_ordering_type< FunT >::type make_attr_ordering(at
 
 #endif // BOOST_LOG_NO_FUNCTION_TRAITS
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

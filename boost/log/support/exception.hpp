@@ -27,7 +27,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * Attribute name exception information
@@ -57,7 +57,7 @@ inline current_scope_info current_scope()
     return current_scope_info(attributes::named_scope::get_scopes());
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

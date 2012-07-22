@@ -44,7 +44,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace result_of {
 
@@ -484,7 +484,7 @@ inline typename value_extractor< extract_value_or_default< T, T > >::result_type
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

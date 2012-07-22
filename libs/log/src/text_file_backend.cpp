@@ -67,7 +67,7 @@ namespace qi = boost::spirit::qi;
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
@@ -1361,6 +1361,6 @@ BOOST_LOG_API void text_multifile_backend::consume(record const& rec, string_typ
 
 } // namespace sinks
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost

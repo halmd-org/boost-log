@@ -27,7 +27,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace expressions {
 
@@ -56,13 +56,13 @@ struct terminal :
 
     template< typename EnvT >
     struct result< terminal< base_type >(EnvT) > :
-        public result_of< base_type(typename EnvT::args_type) >
+        public boost::result_of< base_type(typename EnvT::args_type) >
     {
     };
 
     template< typename EnvT >
     struct result< const terminal< base_type >(EnvT) > :
-        public result_of< const base_type(typename EnvT::args_type) >
+        public boost::result_of< const base_type(typename EnvT::args_type) >
     {
     };
 
@@ -77,7 +77,7 @@ struct terminal :
 
     //! Invokation operator
     template< typename EnvT >
-    typename result_of< base_type(typename EnvT::args_type) >::type
+    typename boost::result_of< base_type(typename EnvT::args_type) >::type
     operator() (EnvT const& env)
     {
         return base_type::operator() (env.args());
@@ -85,7 +85,7 @@ struct terminal :
 
     //! Invokation operator
     template< typename EnvT >
-    typename result_of< const base_type(typename EnvT::args_type) >::type
+    typename boost::result_of< const base_type(typename EnvT::args_type) >::type
     operator() (EnvT const& env) const
     {
         return base_type::operator() (env.args());
@@ -94,7 +94,7 @@ struct terminal :
 
 } // namespace expressions
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 

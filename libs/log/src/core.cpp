@@ -41,7 +41,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 //! Private record data information, with core-specific structures
 struct record::private_data
@@ -678,6 +678,6 @@ void core::push_record(record const& rec)
     }
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost

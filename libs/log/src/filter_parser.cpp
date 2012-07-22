@@ -49,7 +49,7 @@ namespace bsc = boost::spirit::classic;
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
@@ -447,7 +447,7 @@ filter parse_filter< wchar_t >(const wchar_t* begin, const wchar_t* end);
 
 #endif // BOOST_LOG_USE_WCHAR_T
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

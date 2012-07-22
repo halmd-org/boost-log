@@ -24,7 +24,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace attributes {
 
@@ -64,7 +64,7 @@ inline T attribute_cast(attribute const& attr)
     return T(attributes::cast_source(attr.get_impl()));
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

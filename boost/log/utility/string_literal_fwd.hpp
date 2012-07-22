@@ -24,7 +24,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * \brief String literal wrapper
@@ -48,7 +48,7 @@ typedef basic_string_literal< char > string_literal;        //!< String literal 
 typedef basic_string_literal< wchar_t > wstring_literal;    //!< String literal type for wide characters
 #endif
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

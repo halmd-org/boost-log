@@ -27,7 +27,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace filters {
 
@@ -165,7 +165,7 @@ inline flt_has_attr< wchar_t, AttributeValueTypesT > has_attr(basic_attribute_na
 
 } // namespace filters
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

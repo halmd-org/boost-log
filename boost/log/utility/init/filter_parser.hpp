@@ -40,7 +40,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * The interface class for all filter factories.
@@ -298,7 +298,7 @@ inline filter parse_filter(const CharT* str)
     return parse_filter(str, str + std::char_traits< CharT >::length(str));
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

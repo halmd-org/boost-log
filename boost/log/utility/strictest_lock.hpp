@@ -46,7 +46,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 //! Access modes for different types of locks
 enum lock_access_mode
@@ -160,7 +160,7 @@ struct strictest_lock<
 
 #endif // defined(BOOST_LOG_DOXYGEN_PASS)
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

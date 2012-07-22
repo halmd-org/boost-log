@@ -38,7 +38,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
@@ -273,7 +273,7 @@ public:
     BOOST_LOG_DELETED_FUNCTION(core& operator= (core const&))
 };
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

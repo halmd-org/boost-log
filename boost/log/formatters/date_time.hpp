@@ -64,7 +64,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace formatters {
 
@@ -952,7 +952,7 @@ fmt_date_time_facade<
 
 } // namespace formatters
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

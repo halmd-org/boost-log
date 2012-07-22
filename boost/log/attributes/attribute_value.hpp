@@ -27,7 +27,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 template< typename T, typename VisitorT >
 inline bool attribute_value::visit(VisitorT visitor) const
@@ -60,7 +60,7 @@ inline typename result_of::extract_or_default< T, DefaultT >::type attribute_val
     return boost::log::extract_value_or_default< T, DefaultT >(def_value)(*this);
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

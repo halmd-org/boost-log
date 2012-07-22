@@ -22,7 +22,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace trivial {
 
@@ -61,7 +61,7 @@ BOOST_LOG_API const char* to_string(severity_level lvl)
 
 } // namespace trivial
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

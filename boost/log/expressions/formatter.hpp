@@ -32,7 +32,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * Log record formatter function wrapper.
@@ -185,7 +185,7 @@ typedef basic_formatter< char > formatter;
 typedef basic_formatter< wchar_t > wformatter;
 #endif
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

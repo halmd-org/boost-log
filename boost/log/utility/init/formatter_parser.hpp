@@ -39,7 +39,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * \brief Auxiliary formatter traits
@@ -235,7 +235,7 @@ parse_formatter(const CharT* str)
     return parse_formatter(str, str + std::char_traits< CharT >::length(str));
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

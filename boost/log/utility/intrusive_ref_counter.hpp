@@ -27,7 +27,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 class intrusive_ref_counter;
 
@@ -112,7 +112,7 @@ inline void intrusive_ptr_release(const intrusive_ref_counter* p)
 }
 #endif // BOOST_LOG_DOXYGEN_PASS
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

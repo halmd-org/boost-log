@@ -35,7 +35,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * \brief A simple <tt>std::type_info</tt> wrapper that implements value semantic for type information objects
@@ -226,7 +226,7 @@ inline std::string to_string(type_info_wrapper const& ti)
     return ti.pretty_name();
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

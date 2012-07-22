@@ -41,7 +41,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * \brief Logging record adapter with a streaming capability
@@ -311,7 +311,7 @@ BOOST_LOG_FORCEINLINE record_pump< LoggerT > make_pump_stream(LoggerT& lg, recor
 
 #endif // BOOST_LOG_NO_SHORTHAND_NAMES
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

@@ -25,7 +25,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace formatters {
 
@@ -117,7 +117,7 @@ implementation_defined xml_dec;
 
 } // namespace formatters
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

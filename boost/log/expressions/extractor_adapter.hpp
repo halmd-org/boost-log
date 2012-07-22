@@ -24,7 +24,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace expressions {
 
@@ -63,7 +63,7 @@ struct extractor_adapter :
 
 } // namespace expressions
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

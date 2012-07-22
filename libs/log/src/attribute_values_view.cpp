@@ -29,7 +29,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 BOOST_LOG_FORCEINLINE attribute_values_view::node_base::node_base() :
     m_pPrev(NULL),
@@ -499,6 +499,6 @@ attribute_values_view::insert(key_type key, mapped_type const& mapped)
     return std::pair< const_iterator, bool >(const_iterator(res.first, this), res.second);
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost

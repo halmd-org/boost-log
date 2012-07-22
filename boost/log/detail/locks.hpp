@@ -38,7 +38,7 @@ struct is_mutex_type;
 
 #endif // BOOST_LOG_NO_THREADS
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 //! An auxiliary pseudo-lock to express no locking requirements in logger features
 template< typename MutexT >
@@ -166,7 +166,7 @@ private:
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

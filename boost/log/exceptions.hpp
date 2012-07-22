@@ -38,7 +38,7 @@ namespace boost {
 // Forward-declaration of an exception base class from Boost.Exception
 class BOOST_LOG_VISIBLE exception;
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -353,7 +353,7 @@ public:
 #endif
 };
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

@@ -34,7 +34,7 @@ struct actor;
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace expressions {
 
@@ -46,7 +46,7 @@ struct attribute_keyword;
 
 } // namespace expressions
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

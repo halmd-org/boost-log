@@ -39,7 +39,7 @@ inline void _aligned_free(void* p) { free(p); }
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -197,7 +197,7 @@ BOOST_LOG_API void light_rw_mutex::unlock()
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

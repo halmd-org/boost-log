@@ -30,7 +30,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -39,7 +39,7 @@ BOOST_LOG_FORCEINLINE unsigned long no_unused_warnings(T const& val) { return si
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

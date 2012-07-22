@@ -24,7 +24,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace expressions {
 
@@ -53,7 +53,7 @@ struct is_keyword_descriptor< T, typename T::_is_boost_log_keyword_descriptor > 
 
 } // namespace expressions
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

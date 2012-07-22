@@ -31,12 +31,15 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace result_of {
 
 template< typename T, typename DefaultT >
 struct extract_or_default;
+
+template< typename T >
+struct extract_or_throw;
 
 template< typename T >
 struct extract;
@@ -295,7 +298,7 @@ inline void swap(attribute_value& left, attribute_value& right)
     left.swap(right);
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

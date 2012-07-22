@@ -37,7 +37,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * The function initializes the logging library from a settings container
@@ -103,7 +103,7 @@ inline void register_sink_factory(
     register_sink_factory(sink_name.c_str(), factory);
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

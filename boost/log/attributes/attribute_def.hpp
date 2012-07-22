@@ -28,7 +28,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 class attribute_value;
@@ -157,7 +157,7 @@ inline void swap(attribute& left, attribute& right)
     left.swap(right);
 }
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

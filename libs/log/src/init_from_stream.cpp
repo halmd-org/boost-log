@@ -21,7 +21,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 //! The function initializes the logging library from a stream containing logging settings
 template< typename CharT >
@@ -37,7 +37,7 @@ template BOOST_LOG_SETUP_API void init_from_stream< char >(std::basic_istream< c
 template BOOST_LOG_SETUP_API void init_from_stream< wchar_t >(std::basic_istream< wchar_t >& strm);
 #endif
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

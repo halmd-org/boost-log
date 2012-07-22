@@ -37,7 +37,7 @@ namespace bsc = boost::spirit::classic;
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -172,6 +172,6 @@ template class default_filter_factory< wchar_t >;
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
