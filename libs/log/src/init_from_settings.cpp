@@ -120,7 +120,7 @@ inline bool param_cast_to_bool(const char* param_name, std::basic_string< CharT 
 template< typename CharT >
 inline std::string param_cast_to_address(const char* param_name, std::basic_string< CharT > const& value)
 {
-    return log::aux::to_narrow(any_cast< string_type >(val));
+    return log::aux::to_narrow(val);
 }
 #endif // !defined(BOOST_LOG_NO_ASIO)
 
