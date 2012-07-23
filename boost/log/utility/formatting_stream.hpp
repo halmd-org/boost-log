@@ -83,10 +83,10 @@ private:
       , signed char
       , unsigned char
       , wchar_t
-#ifndef BOOST_NO_CHAR16_T
+#if !defined(BOOST_NO_CHAR16_T) && !defined(BOOST_NO_CXX11_CHAR16_T)
       , char16_t
 #endif
-#ifndef BOOST_NO_CHAR32_T
+#if !defined(BOOST_NO_CHAR32_T) && !defined(BOOST_NO_CXX11_CHAR32_T)
       , char32_t
 #endif
     >::type char_types;

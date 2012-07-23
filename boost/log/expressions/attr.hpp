@@ -23,7 +23,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/expressions/terminal.hpp>
-#include <boost/log/expressions/extractor_adapter.hpp>
+#include <boost/log/expressions/unary_adapter.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
 
 namespace boost {
@@ -39,7 +39,7 @@ template< typename ExtractorT, template< typename > class ActorT = phoenix::acto
 struct attribute_terminal :
     public ActorT<
         terminal<
-            extractor_adapter<
+            unary_adapter<
                 value_extractor< ExtractorT >
             >
         >
@@ -47,7 +47,7 @@ struct attribute_terminal :
 {
     //! Base terminal type
     typedef terminal<
-        extractor_adapter<
+        unary_adapter<
             value_extractor< ExtractorT >
         >
     > terminal_type;

@@ -49,7 +49,7 @@ BOOST_LOG_OPEN_NAMESPACE
 template< typename CharT >
 BOOST_LOG_SETUP_API void init_from_settings(basic_settings_section< CharT > const& setts);
 
-#if !defined(BOOST_NO_TEMPLATE_ALIASES)
+#if !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 template< typename CharT >
 using basic_sink_factory = boost::log::aux::light_function1< shared_ptr< sinks::sink >, basic_settings_section< CharT > const& >;

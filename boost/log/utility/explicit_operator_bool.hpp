@@ -23,7 +23,7 @@
 
 #include <boost/log/detail/prologue.hpp>
 
-#if defined(BOOST_LOG_DOXYGEN_PASS) || !defined(BOOST_NO_EXPLICIT_CONVERSION_OPERATORS)
+#if defined(BOOST_LOG_DOXYGEN_PASS) || (!defined(BOOST_NO_EXPLICIT_CONVERSION_OPERATORS) && !defined(BOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS))
 
 /*!
  * \brief The macro defines an explicit operator of conversion to \c bool

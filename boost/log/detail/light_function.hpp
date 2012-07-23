@@ -29,7 +29,7 @@
 #include <boost/preprocessor/repetition/enum_trailing_binary_params.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
-#if defined(BOOST_NO_RVALUE_REFERENCES)
+#if defined(BOOST_NO_RVALUE_REFERENCES) || defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/remove_cv.hpp>
@@ -143,7 +143,7 @@ public:
         m_pImpl = that.m_pImpl;
         that.m_pImpl = NULL;
     }
-#if !defined(BOOST_NO_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME(FunT const& fun)
 #else
@@ -181,7 +181,7 @@ public:
         clear();
         return *this;
     }
-#if !defined(BOOST_NO_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME& operator= (FunT const& fun)
 #else
@@ -304,7 +304,7 @@ public:
         m_pImpl = that.m_pImpl;
         that.m_pImpl = NULL;
     }
-#if !defined(BOOST_NO_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME(FunT const& fun)
 #else
@@ -342,7 +342,7 @@ public:
         clear();
         return *this;
     }
-#if !defined(BOOST_NO_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME& operator= (FunT const& fun)
 #else

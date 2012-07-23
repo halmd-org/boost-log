@@ -35,6 +35,10 @@
 #   error Boost.Log: Boost version 1.48 or later is required
 #endif
 
+#if defined(BOOST_NO_RTTI)
+#   error Boost.Log: RTTI is required by the library
+#endif
+
 #if !defined(BOOST_WINDOWS)
 #   ifndef BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
 #       define BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
@@ -96,21 +100,21 @@
 #   define BOOST_LOG_ANONYMOUS_NAMESPACE namespace
 #endif
 
+#define BOOST_LOG_NO_TRAILING_RESULT_TYPE
+#define BOOST_LOG_NO_INLINE_NAMESPACES
+
 #if defined(BOOST_CLANG)
-#   if !__has_feature(cxx_trailing_return)
-#       define BOOST_LOG_NO_TRAILING_RESULT_TYPE
+#   if __has_feature(cxx_trailing_return)
+#       undef BOOST_LOG_NO_TRAILING_RESULT_TYPE
 #   endif
-#   if !__has_feature(cxx_inline_namespaces)
-#       define BOOST_LOG_NO_INLINE_NAMESPACES
+#   if __has_feature(cxx_inline_namespaces)
+#       undef BOOST_LOG_NO_INLINE_NAMESPACES
 #   endif
-#elif defined(__GNUC__)
-#   if (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 4)) || !defined(__GXX_EXPERIMENTAL_CXX0X__)
-#       define BOOST_LOG_NO_TRAILING_RESULT_TYPE
-#       define BOOST_LOG_NO_INLINE_NAMESPACES
+#elif defined(__GNUC__) && defined(__GXX_EXPERIMENTAL_CXX0X__)
+#   if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 4))
+#       undef BOOST_LOG_NO_TRAILING_RESULT_TYPE
+#       undef BOOST_LOG_NO_INLINE_NAMESPACES
 #   endif
-#else
-#   define BOOST_LOG_NO_TRAILING_RESULT_TYPE
-#   define BOOST_LOG_NO_INLINE_NAMESPACES
 #endif
 
 // Extended declaration macros. Used to implement compiler-specific optimizations.
@@ -256,13 +260,13 @@
 #   endif
 #endif // defined(BOOST_LOG_USE_COMPILER_TLS)
 
-#if defined(BOOST_LOG_DOXYGEN_PASS) || !defined(BOOST_NO_DEFAULTED_FUNCTIONS)
+#if defined(BOOST_LOG_DOXYGEN_PASS) || (!defined(BOOST_NO_DEFAULTED_FUNCTIONS) && !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS))
 #   define BOOST_LOG_DEFAULTED_FUNCTION(fun, body) fun = default;
 #else
 #   define BOOST_LOG_DEFAULTED_FUNCTION(fun, body) fun body
 #endif
 
-#if defined(BOOST_LOG_DOXYGEN_PASS) || !defined(BOOST_NO_DELETED_FUNCTIONS)
+#if defined(BOOST_LOG_DOXYGEN_PASS) || (!defined(BOOST_NO_DELETED_FUNCTIONS) && !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS))
 #   define BOOST_LOG_DELETED_FUNCTION(fun) fun = delete;
 #else
 #   define BOOST_LOG_DELETED_FUNCTION(fun) private: fun;

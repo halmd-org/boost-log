@@ -38,7 +38,7 @@ namespace expressions {
  * templates evaluation. The function object is expected to receive a Boost.Fusion sequence
  * of arguments upon calling. The result of the function will be returned as the terminal value.
  *
- * The base function can be an attribute value extractor wrapped into the \c extractor_adapter
+ * The base function can be an attribute value extractor wrapped into the \c unary_adapter
  * class template, in which case the terminal results in the attribute value upon invokation.
  */
 template< typename BaseT >

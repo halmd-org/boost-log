@@ -22,7 +22,7 @@
 
 #include <boost/log/detail/prologue.hpp>
 
-#if !defined(BOOST_NO_DECLTYPE)
+#if !defined(BOOST_NO_DECLTYPE) && !defined(BOOST_NO_CXX11_DECLTYPE)
 
 namespace boost {
 
@@ -52,7 +52,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #endif
 
 
-#if !defined(BOOST_NO_AUTO_DECLARATIONS)
+#if !defined(BOOST_NO_AUTO_DECLARATIONS) && !defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
 #define BOOST_LOG_AUTO(var, expr) auto var = (expr)
 #endif
 

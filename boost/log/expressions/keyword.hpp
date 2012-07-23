@@ -30,7 +30,7 @@
 #include <boost/log/expressions/domain.hpp>
 #include <boost/log/expressions/terminal.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
-#include <boost/log/expressions/extractor_adapter.hpp>
+#include <boost/log/expressions/unary_adapter.hpp>
 #include <boost/log/expressions/is_keyword_descriptor.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
 
@@ -104,7 +104,7 @@ struct attribute_keyword
     //! Expression with cached attribute name
     typedef ActorT<
         terminal<
-            extractor_adapter<
+            unary_adapter<
                 value_extractor<
                     extract_value_or_throw< value_type >
                 >
@@ -116,7 +116,7 @@ struct attribute_keyword
     static or_throw_result_type or_throw()
     {
         typedef terminal<
-            extractor_adapter<
+            unary_adapter<
                 value_extractor<
                     extract_value_or_throw< value_type >
                 >
@@ -130,7 +130,7 @@ struct attribute_keyword
     template< typename T >
     static ActorT<
         terminal<
-            extractor_adapter<
+            unary_adapter<
                 value_extractor<
                     extract_value_or_default< value_type, T >
                 >
@@ -139,7 +139,7 @@ struct attribute_keyword
     > or_default(T const& def_val)
     {
         typedef terminal<
-            extractor_adapter<
+            unary_adapter<
                 value_extractor<
                     extract_value_or_default< value_type, T >
                 >
