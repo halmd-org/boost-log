@@ -87,6 +87,7 @@ lib boost_log
         platform_log_sources
     : ## requirements ##
         <define>BOOST_LOG_BUILDING_THE_LIB=1
+        <define>BOOST_THREAD_DONT_USE_CHRONO=1
     ;
 
 alias platform_log_setup_sources
@@ -113,6 +114,7 @@ lib boost_log_setup
     : ## requirements ##
         <link>shared:<define>BOOST_LOG_SETUP_DLL
         <define>BOOST_LOG_SETUP_BUILDING_THE_LIB=1
+        <define>BOOST_THREAD_DONT_USE_CHRONO=1
         <library>boost_log
         <library>/boost/regex//boost_regex
     ;
