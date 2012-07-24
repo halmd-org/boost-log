@@ -208,6 +208,15 @@ void parse_error::throw_(const char* file, std::size_t line, std::string const& 
     );
 }
 
+void parse_error::throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name)
+{
+    boost::throw_exception(boost::enable_error_info(parse_error(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << attribute_name_info(name)
+    );
+}
+
 conversion_error::conversion_error() :
     runtime_error("Failed to perform conversion")
 {

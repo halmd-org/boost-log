@@ -23,11 +23,16 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/phoenix/operator/comparison.hpp>
 #include <boost/log/detail/setup_prologue.hpp>
+#include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/expressions/filter.hpp>
+#include <boost/log/expressions/keyword_fwd.hpp>
+#include <boost/log/expressions/attr.hpp>
+#include <boost/log/expressions/has_attr.hpp>
 #include <boost/log/core/core.hpp>
 
 #ifdef _MSC_VER
@@ -68,7 +73,7 @@ struct filter_factory
      */
     virtual filter on_exists_test(attribute_name const& name)
     {
-        return filter(filters::has_attr(name));
+        return filter(expressions::has_attr(name));
     }
 
     /*!
@@ -76,42 +81,42 @@ struct filter_factory
      */
     virtual filter on_equality_relation(attribute_name const& name, string_type const& arg)
     {
-        BOOST_LOG_THROW_DESCR(parse_error, "The equality attribute value relation is not supported");
+        BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "The equality attribute value relation is not supported", (name));
     }
     /*!
      * The callback for inequality relation filter
      */
     virtual filter on_inequality_relation(attribute_name const& name, string_type const& arg)
     {
-        BOOST_LOG_THROW_DESCR(parse_error, "The inequality attribute value relation is not supported");
+        BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "The inequality attribute value relation is not supported", (name));
     }
     /*!
      * The callback for less relation filter
      */
     virtual filter on_less_relation(attribute_name const& name, string_type const& arg)
     {
-        BOOST_LOG_THROW_DESCR(parse_error, "The less attribute value relation is not supported");
+        BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "The less attribute value relation is not supported", (name));
     }
     /*!
      * The callback for greater relation filter
      */
     virtual filter on_greater_relation(attribute_name const& name, string_type const& arg)
     {
-        BOOST_LOG_THROW_DESCR(parse_error, "The greater attribute value relation is not supported");
+        BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "The greater attribute value relation is not supported", (name));
     }
     /*!
      * The callback for less or equal relation filter
      */
     virtual filter on_less_or_equal_relation(attribute_name const& name, string_type const& arg)
     {
-        BOOST_LOG_THROW_DESCR(parse_error, "The less-or-equal attribute value relation is not supported");
+        BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "The less-or-equal attribute value relation is not supported", (name));
     }
     /*!
      * The callback for greater or equal relation filter
      */
     virtual filter on_greater_or_equal_relation(attribute_name const& name, string_type const& arg)
     {
-        BOOST_LOG_THROW_DESCR(parse_error, "The greater-or-equal attribute value relation is not supported");
+        BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "The greater-or-equal attribute value relation is not supported", (name));
     }
 
     /*!
@@ -119,7 +124,7 @@ struct filter_factory
      */
     virtual filter on_custom_relation(attribute_name const& name, string_type const& rel, string_type const& arg)
     {
-        BOOST_LOG_THROW_DESCR(parse_error, "The custom attribute value relation is not supported");
+        BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "The custom attribute value relation \"" + boost::log::aux::to_narrow(arg) + "\" is not supported", (name));
     }
 
     BOOST_LOG_DELETED_FUNCTION(filter_factory(filter_factory const&))
@@ -141,7 +146,7 @@ class basic_filter_factory :
 
 public:
     //! The type(s) of the attribute value expected
-    typedef AttributeValueT attribute_value_type;
+    typedef AttributeValueT value_type;
     //  Type imports
     typedef typename base_type::string_type string_type;
 
@@ -150,7 +155,7 @@ public:
      */
     virtual filter on_exists_test(attribute_name const& name)
     {
-        return filter(filters::has_attr< attribute_value_type >(name));
+        return filter(expressions::has_attr< value_type >(name));
     }
 
     /*!
@@ -158,42 +163,42 @@ public:
      */
     virtual filter on_equality_relation(attribute_name const& name, string_type const& arg)
     {
-        return filter(filters::attr< attribute_value_type >(name, std::nothrow) == parse_argument(arg));
+        return filter(expressions::attr< value_type >(name) == parse_argument(arg));
     }
     /*!
      * The callback for inequality relation filter
      */
     virtual filter on_inequality_relation(attribute_name const& name, string_type const& arg)
     {
-        return filter(filters::attr< attribute_value_type >(name, std::nothrow) != parse_argument(arg));
+        return filter(expressions::attr< value_type >(name) != parse_argument(arg));
     }
     /*!
      * The callback for less relation filter
      */
     virtual filter on_less_relation(attribute_name const& name, string_type const& arg)
     {
-        return filter(filters::attr< attribute_value_type >(name, std::nothrow) < parse_argument(arg));
+        return filter(expressions::attr< value_type >(name) < parse_argument(arg));
     }
     /*!
      * The callback for greater relation filter
      */
     virtual filter on_greater_relation(attribute_name const& name, string_type const& arg)
     {
-        return filter(filters::attr< attribute_value_type >(name, std::nothrow) > parse_argument(arg));
+        return filter(expressions::attr< value_type >(name) > parse_argument(arg));
     }
     /*!
      * The callback for less or equal relation filter
      */
     virtual filter on_less_or_equal_relation(attribute_name const& name, string_type const& arg)
     {
-        return filter(filters::attr< attribute_value_type >(name, std::nothrow) <= parse_argument(arg));
+        return filter(expressions::attr< value_type >(name) <= parse_argument(arg));
     }
     /*!
      * The callback for greater or equal relation filter
      */
     virtual filter on_greater_or_equal_relation(attribute_name const& name, string_type const& arg)
     {
-        return filter(filters::attr< attribute_value_type >(name, std::nothrow) >= parse_argument(arg));
+        return filter(expressions::attr< value_type >(name) >= parse_argument(arg));
     }
 
     /*!
@@ -201,15 +206,15 @@ public:
      */
     virtual filter on_custom_relation(attribute_name const& name, string_type const& rel, string_type const& arg)
     {
-        BOOST_LOG_THROW_DESCR(parse_error, "The custom attribute value relation is not supported");
+        BOOST_LOG_THROW_DESCR_PARAMS(parse_error, "The custom attribute value relation \"" + boost::log::aux::to_narrow(arg) + "\" is not supported", (name));
     }
 
     /*!
      * The function parses the argument value for a binary relation
      */
-    virtual attribute_value_type parse_argument(attribute_name const& arg)
+    virtual value_type parse_argument(string_type const& arg)
     {
-        return boost::lexical_cast< attribute_value_type >(arg);
+        return boost::lexical_cast< value_type >(arg);
     }
 };
 
@@ -228,7 +233,7 @@ BOOST_LOG_SETUP_API void register_filter_factory(
 /*!
  * The function registers a simple filter factory object for the specified attribute name. The factory will
  * support attribute values of type \c AttributeValueT, which must support all relation operations, such as
- * equality comparison and less/greater ordering.
+ * equality comparison and less/greater ordering, and also extraction from stream.
  *
  * \pre <tt>name != NULL</tt>, <tt>name</tt> points to a zero-terminated string
  * \param name Attribute name to associate the factory with
@@ -244,7 +249,7 @@ inline void register_simple_filter_factory(attribute_name const& name)
 /*!
  * The function registers a simple filter factory object for the specified attribute name. The factory will
  * support attribute values of type \c AttributeValueT, which must support all relation operations, such as
- * equality comparison and less/greater ordering.
+ * equality comparison and less/greater ordering, and also extraction from stream.
  *
  * \pre <tt>name != NULL</tt>, <tt>name</tt> points to a zero-terminated string
  * \param name Attribute name to associate the factory with
@@ -253,6 +258,20 @@ template< typename AttributeValueT >
 inline void register_simple_filter_factory(attribute_name const& name)
 {
     register_simple_filter_factory< AttributeValueT, char >(name);
+}
+
+/*!
+ * The function registers a simple filter factory object for the specified attribute keyword. The factory will
+ * support attribute values described by the keyword. The values must support all relation operations, such as
+ * equality comparison and less/greater ordering, and also extraction from stream.
+ *
+ * \pre <tt>name != NULL</tt>, <tt>name</tt> points to a zero-terminated string
+ * \param name Attribute name to associate the factory with
+ */
+template< typename CharT, typename DescriptorT, template< typename > class ActorT >
+inline void register_simple_filter_factory(expressions::attribute_keyword< DescriptorT, ActorT > const&)
+{
+    register_simple_filter_factory< typename DescriptorT::value_type, CharT >(DescriptorT::get_name());
 }
 
 /*!

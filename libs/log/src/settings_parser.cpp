@@ -30,6 +30,7 @@
 #include <boost/spirit/include/qi_eoi.hpp>
 #include <boost/spirit/include/qi_eol.hpp>
 #include <boost/spirit/include/qi_raw.hpp>
+#include <boost/spirit/include/qi_lexeme.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/code_conversion.hpp>
@@ -105,17 +106,19 @@ public:
                 [boost::bind(&this_type::set_section_name, this, _1)] >>
             -comment;
 
-        quoted_string =
+        quoted_string = qi::lexeme
+        [
             qi::lit(constants::char_quote) >>
             *(
                  (qi::lit(constants::char_backslash) >> qi::char_) |
-                 (qi::char_ - constants::char_quote)
+                 (qi::char_ - qi::lit(constants::char_quote))
             ) >>
-            constants::char_quote;
+            qi::lit(constants::char_quote)
+        ];
 
         parameter =
             // Parameter name
-            qi::raw[ encoding_specific::alpha >> *(encoding_specific::graph - constants::char_equal) ]
+            qi::raw[ qi::lexeme[ encoding_specific::alpha >> *(encoding_specific::graph - constants::char_equal) ] ]
                 [boost::bind(&this_type::set_parameter_name, this, _1)] >>
             qi::lit(constants::char_equal) >>
             // Parameter value

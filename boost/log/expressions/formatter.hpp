@@ -140,7 +140,7 @@ public:
     operator= (FunT const& fun)
 #endif
     {
-        formatter(fun).swap(*this);
+        this_type(fun).swap(*this);
         return *this;
     }
 

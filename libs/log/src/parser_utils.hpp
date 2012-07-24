@@ -59,6 +59,9 @@ struct char_constants< char >
     static const char_type* not_keyword() { return "not"; }
     static const char_type* and_keyword() { return "and"; }
     static const char_type* or_keyword() { return "or"; }
+    static const char_type* equal_keyword() { return "="; }
+    static const char_type* greater_keyword() { return ">"; }
+    static const char_type* less_keyword() { return "<"; }
     static const char_type* not_equal_keyword() { return "!="; }
     static const char_type* greater_or_equal_keyword() { return ">="; }
     static const char_type* less_or_equal_keyword() { return "<="; }
@@ -172,6 +175,9 @@ struct char_constants< wchar_t >
     static const char_type* not_keyword() { return L"not"; }
     static const char_type* and_keyword() { return L"and"; }
     static const char_type* or_keyword() { return L"or"; }
+    static const char_type* equal_keyword() { return L"="; }
+    static const char_type* greater_keyword() { return L">"; }
+    static const char_type* less_keyword() { return L"<"; }
     static const char_type* not_equal_keyword() { return L"!="; }
     static const char_type* greater_or_equal_keyword() { return L">="; }
     static const char_type* less_or_equal_keyword() { return L"<="; }

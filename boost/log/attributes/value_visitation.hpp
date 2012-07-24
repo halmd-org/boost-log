@@ -98,7 +98,7 @@ public:
     typedef visitation_result result_type;
 
     //! Attribute value types
-    typedef T value_types;
+    typedef T value_type;
 
 private:
     //! The name of the attribute value to visit
@@ -129,7 +129,7 @@ public:
             attribute_values_view::const_iterator it = attrs.find(m_Name);
             if (it != attrs.end())
             {
-                if (it->second.visit< value_types >(visitor))
+                if (it->second.visit< value_type >(visitor))
                     return visitation_result::ok;
                 else
                     return visitation_result::value_has_invalid_type;

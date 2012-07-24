@@ -136,9 +136,9 @@ class extract_value_or_none
 {
 public:
     //! Attribute value types
-    typedef T value_types;
+    typedef T value_type;
     //! Function object result type
-    typedef typename result_of::extract< value_types >::type result_type;
+    typedef typename result_of::extract< value_type >::type result_type;
 
 public:
     /*!
@@ -150,7 +150,7 @@ public:
         if (!!value)
         {
             result_type res;
-            value.visit< value_types >(boost::log::aux::bind_assign(res));
+            value.visit< value_type >(boost::log::aux::bind_assign(res));
             return res;
         }
         else
@@ -175,9 +175,9 @@ class extract_value_or_throw
 {
 public:
     //! Attribute value types
-    typedef T value_types;
+    typedef T value_type;
     //! Function object result type
-    typedef typename result_of::extract_or_throw< value_types >::type result_type;
+    typedef typename result_of::extract_or_throw< value_type >::type result_type;
 
 public:
     /*!
@@ -189,7 +189,7 @@ public:
         if (!!value)
         {
             result_type res;
-            if (!value.visit< value_types >(boost::log::aux::bind_assign(res)))
+            if (!value.visit< value_type >(boost::log::aux::bind_assign(res)))
                 BOOST_LOG_THROW_DESCR_PARAMS(invalid_type, "Attribute value has incompatible type", (value.get_type()));
             return res;
         }
@@ -215,11 +215,11 @@ class extract_value_or_default
 {
 public:
     //! Attribute value types
-    typedef T value_types;
+    typedef T value_type;
     //! Default value type
     typedef DefaultT default_type;
     //! Function object result type
-    typedef typename result_of::extract_or_default< value_types, default_type >::type result_type;
+    typedef typename result_of::extract_or_default< value_type, default_type >::type result_type;
 
 private:
     //! Default value
@@ -244,7 +244,7 @@ public:
         if (!!value)
         {
             result_type res = m_default;
-            value.visit< value_types >(boost::log::aux::bind_assign(res));
+            value.visit< value_type >(boost::log::aux::bind_assign(res));
             return res;
         }
         else

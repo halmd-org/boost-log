@@ -26,6 +26,7 @@
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/expressions/terminal.hpp>
+#include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/expressions/unary_adapter.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
 
@@ -143,6 +144,18 @@ BOOST_LOG_FORCEINLINE phoenix::actor< terminal< unary_adapter< has_attribute< vo
 {
     typedef terminal< unary_adapter< has_attribute< void > > > terminal_type;
     phoenix::actor< terminal_type > act = { terminal_type(name) };
+    return act;
+}
+
+/*!
+ * The function generates a terminal node in a template expression. The node will check for the attribute value
+ * presence in a log record. The node will also check that the attribute value has the specified type, if present.
+ */
+template< typename DescriptorT, template< typename > class ActorT >
+BOOST_LOG_FORCEINLINE phoenix::actor< terminal< unary_adapter< has_attribute< typename DescriptorT::value_type > > > > has_attr(attribute_keyword< DescriptorT, ActorT > const&)
+{
+    typedef terminal< unary_adapter< has_attribute< typename DescriptorT::value_type > > > terminal_type;
+    phoenix::actor< terminal_type > act = { terminal_type(DescriptorT::get_name()) };
     return act;
 }
 

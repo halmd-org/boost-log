@@ -174,6 +174,7 @@ public:
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr);
     static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, std::size_t content_line);
+    static BOOST_LOG_NORETURN void throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name);
 #endif
 };
 

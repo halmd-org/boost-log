@@ -23,7 +23,7 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/joint_view.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/utility/string_literal.hpp>
+#include <boost/log/utility/string_literal_fwd.hpp>
 
 namespace boost {
 
@@ -72,34 +72,27 @@ typedef mpl::joint_view<
 /*!
  * An MPL-sequence of string types of attributes, supported by default
  */
-template< typename CharT >
-struct basic_string_types :
-    public mpl::vector<
-        std::basic_string< CharT >,
-        basic_string_literal< CharT >
-    >::type
-{
-};
-
+typedef mpl::vector<
 #ifdef BOOST_LOG_USE_CHAR
-typedef basic_string_types< char > string_types;        //!< Convenience typedef for narrow-character string types
+    std::string,
+    string_literal
+#ifdef BOOST_LOG_USE_WCHAR_T
+    ,
+#endif
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_string_types< wchar_t > wstring_types;    //!< Convenience typedef for wide-character string types
+    std::wstring,
+    wstring_literal
 #endif
+>::type string_types;
 
 /*!
- * An auxiliary type sequence maker. The sequence contains all
- * attribute value types that are supported by the library by default.
+ * An MPL-sequence of all attribute value types that are supported by the library by default.
  */
-template< typename CharT >
-struct make_default_attribute_types :
-    public mpl::joint_view<
-        numeric_types,
-        basic_string_types< CharT >
-    >
-{
-};
+typedef mpl::joint_view<
+    numeric_types,
+    string_types
+>::type default_attribute_types;
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
