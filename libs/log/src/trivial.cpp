@@ -107,8 +107,13 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             // NOTE: Code conversion is required for cygwin
             log::aux::universal_path::string_type ext;
             log::aux::code_convert(std::string(".log"), ext);
+#if BOOST_FILESYSTEM_VERSION >= 3
+            return log::aux::universal_path(
+                log::aux::to_universal_path(full_name).stem().native() + ext);
+#else
             return log::aux::universal_path(
                 filesystem::basename(log::aux::to_universal_path(full_name)) + ext);
+#endif
         }
 
 #endif // defined(BOOST_HAS_UNISTD_H)
