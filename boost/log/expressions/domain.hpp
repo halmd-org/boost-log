@@ -63,11 +63,16 @@ struct domain :
         }
     };
 
+#if !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
+    template< typename T >
+    using as_child = as_expr< T >;
+#else
     template< typename T >
     struct as_child :
         public as_expr< T >
     {
     };
+#endif
 };
 
 } // namespace expressions

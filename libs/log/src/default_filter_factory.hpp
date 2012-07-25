@@ -34,12 +34,17 @@ class default_filter_factory :
     //! Self type
     typedef default_filter_factory< CharT > this_type;
 
+    template< typename ValueT, typename PredicateT >
+    struct predicate_wrapper;
+
     template< typename RelationT >
     struct on_integral_argument;
     template< typename RelationT >
     struct on_fp_argument;
     template< typename RelationT >
     struct on_string_argument;
+    template< typename RelationT >
+    struct on_regex_argument;
 
     //  Type imports
     typedef typename base_type::char_type char_type;

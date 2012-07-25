@@ -20,14 +20,15 @@
 #ifndef BOOST_LOG_UTILITY_INIT_FORMATTER_PARSER_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_INIT_FORMATTER_PARSER_HPP_INCLUDED_
 
-#include <new> // std::nothrow
 #include <iosfwd>
 #include <map>
 #include <string>
 #include <boost/log/detail/setup_prologue.hpp>
-#include <boost/log/detail/light_function.hpp>
+#include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/core/record.hpp>
-#include <boost/log/formatters/attr.hpp>
+#include <boost/log/expressions/formatter.hpp>
+#include <boost/log/expressions/attr.hpp>
+#include <boost/log/expressions/stream.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -55,10 +56,8 @@ struct formatter_types
     typedef std::basic_string< char_type > string_type;
     //! Output stream type
     typedef std::basic_ostream< char_type > ostream_type;
-    //! Log record type
-    typedef basic_record< char_type > record_type;
     //! The formatter function object
-    typedef boost::log::aux::light_function2< void, ostream_type&, record_type const& > formatter_type;
+    typedef formatter< char_type > formatter_type;
 
     /*!
      * Type of the map of formatter factory arguments [argument name -> argument value].
@@ -76,11 +75,11 @@ struct formatter_types
      */
     typedef boost::log::aux::light_function2<
         formatter_type,
-        string_type const&,
+        attribute_name const&,
         formatter_factory_args const&
     > formatter_factory;
     //! Map of formatter factory function objects
-    typedef std::map< string_type, formatter_factory > factories_map;
+    typedef std::map< attribute_name, formatter_factory > factories_map;
 };
 
 namespace aux {
@@ -90,7 +89,7 @@ namespace aux {
      * the formatter parser. The factory does not consider any formatter arguments, if specified,
      * but produces a formatter that uses the native \c operator<< to format the attribute value.
      *
-     * \param attr_name Attribute name to create formatter for.
+     * \param name Attribute name to create formatter for.
      */
     template< typename CharT, typename AttributeValueT >
     struct simple_formatter_factory
@@ -98,9 +97,9 @@ namespace aux {
         typedef formatter_types< CharT > types;
         typedef typename types::formatter_type result_type;
 
-        result_type operator() (typename types::string_type const& attr_name, typename types::formatter_factory_args const&) const
+        result_type operator() (attribute_name const& name, typename types::formatter_factory_args const&) const
         {
-            return result_type(boost::log::formatters::attr< AttributeValueT >(attr_name, std::nothrow));
+            return result_type(expressions::stream << expressions::attr< AttributeValueT >(name));
         }
     };
 
@@ -112,14 +111,14 @@ namespace aux {
  * The function registers a user-defined formatter factory. The registered factory function will be
  * called when the formatter parser detects the specified attribute name in the formatter string.
  *
- * \pre <tt>attr_name != NULL && !factory.empty()</tt>, \c attr_name must point to a zero-terminated sequence of characters.
+ * \pre <tt>!!attr_name && !factory.empty()</tt>, \c attr_name must point to a zero-terminated sequence of characters.
  *
  * \param attr_name Attribute name
  * \param factory Formatter factory function
  */
 template< typename CharT >
 BOOST_LOG_SETUP_API void register_formatter_factory(
-    const CharT* attr_name,
+    attribute_name const& attr_name,
 #ifndef BOOST_LOG_BROKEN_TEMPLATE_DEFINITION_MATCHING
     typename formatter_types< CharT >::formatter_factory const& factory
 #else

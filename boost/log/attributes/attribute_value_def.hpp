@@ -271,6 +271,8 @@ public:
      * One can specify either a single type or a MPL type sequence, in which case the stored value
      * is checked against every type in the sequence.
      *
+     * \note This is a low level interface for attribute value visitation. For typical usage consider the free function \c visit in value_visitation.hpp.
+     *
      * \param visitor A function object that will be invoked on the extracted attribute value.
      *                The visitor should be capable to be called with a single argument of
      *                any type of the specified types in \c T.

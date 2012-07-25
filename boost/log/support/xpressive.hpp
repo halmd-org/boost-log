@@ -62,6 +62,24 @@ struct matches_fun_impl< boost_xpressive_expression_tag >
     {
         return xpressive::regex_match(str, expr, flags);
     }
+
+    template< typename StringT >
+    static bool matches(
+        StringT const& str,
+        xpressive::basic_regex< typename StringT::value_type* > const& expr,
+        xpressive::regex_constants::match_flag_type flags = xpressive::regex_constants::match_default)
+    {
+        return xpressive::regex_match(str.c_str(), expr, flags);
+    }
+
+    template< typename StringT >
+    static bool matches(
+        StringT const& str,
+        xpressive::basic_regex< typename StringT::value_type const* > const& expr,
+        xpressive::regex_constants::match_flag_type flags = xpressive::regex_constants::match_default)
+    {
+        return xpressive::regex_match(str.c_str(), expr, flags);
+    }
 };
 
 } // namespace aux

@@ -149,7 +149,7 @@ private:
     //! A parser for an attribute name in a single relation
     rule_type attr_name;
     //! A parser for a quoted string
-    rule_type quoted_string;
+    rule_type quoted_string_operand;
     //! A parser for an operand in a single relation
     rule_type operand;
     //! A parser for a single relation that consists of two operands and an operation between them
@@ -174,24 +174,28 @@ public:
                 [boost::bind(&filter_grammar::on_attribute_name, this, _1)]
         ];
 
-        quoted_string = qi::lexeme
+        quoted_string_operand = qi::raw
         [
-            qi::lit(constants::char_quote) >>
-            *(
-                 (qi::lit(constants::char_backslash) >> qi::char_) |
-                 (qi::char_ - qi::lit(constants::char_quote))
-            ) >>
-            qi::lit(constants::char_quote)
-        ];
+            qi::lexeme
+            [
+                // A quoted string with C-style escape sequences support
+                qi::lit(constants::char_quote) >>
+                *(
+                     (qi::lit(constants::char_backslash) >> qi::char_) |
+                     (qi::char_ - qi::lit(constants::char_quote))
+                ) >>
+                qi::lit(constants::char_quote)
+            ]
+        ]
+            [boost::bind(&filter_grammar::on_quoted_string_operand, this, _1)];
 
-        operand = qi::lexeme
-        [
-            // A quoted string with C-style escape sequences support
-            qi::raw[ quoted_string ][boost::bind(&filter_grammar::on_quoted_string_operand, this, _1)] |
+        operand =
+        (
+            quoted_string_operand |
             // A single word, enclosed with white spaces. It cannot contain parenthesis, since is is used by the filter parser.
-            qi::raw[ +(encoding_specific::graph - qi::lit(constants::char_paren_bracket_left) - qi::lit(constants::char_paren_bracket_right)) ]
+            qi::raw[ qi::lexeme[ +(encoding_specific::graph - qi::lit(constants::char_paren_bracket_left) - qi::lit(constants::char_paren_bracket_right)) ] ]
                 [boost::bind(&filter_grammar::on_operand, this, _1)]
-        ];
+        );
 
         // Custom relation is a keyword that may contain either alphanumeric characters or an underscore
         custom_relation = qi::as< string_type >()[ qi::lexeme[ +(encoding_specific::alnum | qi::char_(constants::char_underline)) ] ]

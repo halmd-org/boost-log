@@ -20,6 +20,28 @@
 #ifndef BOOST_LOG_ATTRIBUTES_VALUE_VISITATION_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_VALUE_VISITATION_HPP_INCLUDED_
 
+#include <utility>
+#include <boost/type_traits/is_void.hpp>
+#include <boost/type_traits/is_same.hpp>
+#include <boost/mpl/set.hpp>
+#include <boost/mpl/if.hpp>
+#include <boost/mpl/eval_if.hpp>
+#include <boost/mpl/int.hpp>
+#include <boost/mpl/quote.hpp>
+#include <boost/mpl/is_sequence.hpp>
+#include <boost/mpl/insert.hpp>
+#include <boost/mpl/inserter.hpp>
+#include <boost/mpl/end.hpp>
+#include <boost/mpl/size.hpp>
+#include <boost/mpl/front.hpp>
+#include <boost/mpl/apply.hpp>
+#include <boost/mpl/equal_to.hpp>
+#include <boost/mpl/transform.hpp>
+#include <boost/mpl/identity.hpp>
+#include <boost/mpl/placeholders.hpp>
+#include <boost/variant/variant_fwd.hpp>
+#include <boost/utility/enable_if.hpp>
+#include <boost/utility/result_of.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/core/record.hpp>
@@ -80,6 +102,63 @@ public:
     error_code code() const { return m_Code; }
 };
 
+namespace result_of {
+
+/*!
+ * The metafunction defines the result type of an attribute visitation. The result can be in one of the following forms:
+ *
+ * \list
+ * \li \c visitation_result, if the visitor always returns \c void
+ * \li <tt>std::pair<T, visitation_result></tt>, if the visitor always returns a value of type \c T
+ * \li <tt>std::pair<variant< T1, T2... >, visitation_result></tt>, if the visitor may return different types \c Tn depending on the attribute value type
+ * \endlist
+ *
+ * The \c visitation_result component describes whether visitation succeeded or not, see result codes within the class definition.
+ */
+template< typename ValueT, typename VisitorT >
+struct visit
+{
+    //! Attribute value types
+    typedef ValueT value_type;
+
+    template< typename ArgT >
+    struct get_visitor_result :
+        public boost::result_of< VisitorT(ArgT) >
+    {
+    };
+
+    // Get all operator() results of the visitor
+    typedef typename mpl::eval_if<
+        mpl::is_sequence< value_type >,
+        mpl::transform1<
+            value_type,
+            mpl::quote1< get_visitor_result >,
+            mpl::inserter< mpl::set<>, mpl::insert< mpl::_1, mpl::end< mpl::_1 >, mpl::_2 > >
+        >,
+        mpl::apply< mpl::quote1< get_visitor_result >, value_type >
+    >::type result_types;
+
+    // Convert to a variant, if needed
+    typedef typename mpl::eval_if<
+        mpl::is_sequence< result_types >,
+        mpl::eval_if<
+            mpl::equal_to< mpl::size< result_types >, mpl::int_< 1 > >,
+            mpl::front< result_types >,
+            make_variant_over< result_types >
+        >,
+        mpl::identity< result_types >
+    >::type result_value_type;
+
+    // Compose the final result type
+    typedef typename mpl::if_<
+        is_void< result_value_type >,
+        visitation_result,
+        std::pair< result_value_type, visitation_result >
+    >::type type;
+};
+
+} // namespace result_of
+
 /*!
  * \brief Generic attribute value visitor invoker
  *
@@ -94,11 +173,66 @@ template< typename T >
 class value_visitor_invoker
 {
 public:
-    //! Function object result type
-    typedef visitation_result result_type;
-
     //! Attribute value types
     typedef T value_type;
+
+    //! Function object result type
+    template< typename >
+    struct result;
+
+    template< typename VisitorT >
+    struct result< value_visitor_invoker< value_type >(attribute_values_view, VisitorT) > :
+        public result_of::visit< value_type, VisitorT >
+    {
+    };
+
+    template< typename VisitorT >
+    struct result< const value_visitor_invoker< value_type >(attribute_values_view, VisitorT) > :
+        public result_of::visit< value_type, VisitorT >
+    {
+    };
+
+    template< typename VisitorT >
+    struct result< value_visitor_invoker< value_type >(record, VisitorT) > :
+        public result_of::visit< value_type, VisitorT >
+    {
+    };
+
+    template< typename VisitorT >
+    struct result< const value_visitor_invoker< value_type >(record, VisitorT) > :
+        public result_of::visit< value_type, VisitorT >
+    {
+    };
+
+private:
+    //! The function object wrapper saves the visitor result
+    template< typename ResultT, typename VisitorT >
+    struct forward_result
+    {
+        typedef void result_type;
+
+        forward_result(ResultT& result, VisitorT& visitor) : m_result(result), m_visitor(visitor)
+        {
+        }
+
+        template< typename ArgT >
+        typename enable_if< is_void< typename boost::result_of< VisitorT(ArgT) >::type >, result_type >::type
+        operator() (ArgT const& arg) const
+        {
+            m_visitor(arg);
+        }
+
+        template< typename ArgT >
+        typename disable_if< is_void< typename boost::result_of< VisitorT(ArgT) >::type >, result_type >::type
+        operator() (ArgT const& arg) const
+        {
+            m_result = m_visitor(arg);
+        }
+
+    private:
+        ResultT& m_result;
+        VisitorT& m_visitor;
+    };
 
 private:
     //! The name of the attribute value to visit
@@ -119,10 +253,11 @@ public:
      *
      * \param attrs A set of attribute values in which to look for the specified attribute value.
      * \param visitor A receiving function object to pass the attribute value to.
-     * \return The result of visitation (see codes in the \c visitation_result class).
+     * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
      */
     template< typename VisitorT >
-    result_type operator() (attribute_values_view const& attrs, VisitorT visitor) const
+    typename enable_if< is_same< typename result_of::visit< value_type, VisitorT >::type, visitation_result >, typename result_of::visit< value_type, VisitorT >::type >::type
+    operator() (attribute_values_view const& attrs, VisitorT visitor) const
     {
         try
         {
@@ -149,12 +284,51 @@ public:
      * and tries to acquire the stored value of one of the supported types. If acquisition succeeds,
      * the value is passed to \a visitor.
      *
-     * \param record A log record. The attribute value will be sought among those associated with the record.
+     * \param attrs A set of attribute values in which to look for the specified attribute value.
      * \param visitor A receiving function object to pass the attribute value to.
-     * \return The result of visitation (see codes in the \c visitation_result class).
+     * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
      */
     template< typename VisitorT >
-    result_type operator() (record const& rec, VisitorT visitor) const
+    typename disable_if< is_same< typename result_of::visit< value_type, VisitorT >::type, visitation_result >, typename result_of::visit< value_type, VisitorT >::type >::type
+    operator() (attribute_values_view const& attrs, VisitorT visitor) const
+    {
+        try
+        {
+            typedef typename result_of::visit< value_type, VisitorT >::type result_type;
+            result_type result;
+            attribute_values_view::const_iterator it = attrs.find(m_Name);
+            if (it != attrs.end())
+            {
+                if (it->second.visit< value_type >(forward_result< typename result_type::first_type, VisitorT >(result.first, visitor)))
+                    result.second = visitation_result::ok;
+                else
+                    result.second = visitation_result::value_has_invalid_type;
+            }
+            else
+                result.second = visitation_result::value_not_found;
+
+            return result;
+        }
+        catch (exception& e)
+        {
+            // Attach the attribute name to the exception
+            boost::log::aux::attach_attribute_name_info(e, m_Name);
+            throw;
+        }
+    }
+
+    /*!
+     * Visitation operator. Looks for an attribute value with the name specified on construction
+     * and tries to acquire the stored value of one of the supported types. If acquisition succeeds,
+     * the value is passed to \a visitor.
+     *
+     * \param record A log record. The attribute value will be sought among those associated with the record.
+     * \param visitor A receiving function object to pass the attribute value to.
+     * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
+     */
+    template< typename VisitorT >
+    typename result_of::visit< value_type, VisitorT >::type
+    operator() (record const& rec, VisitorT visitor) const
     {
         return operator() (rec.attribute_values(), visitor);
     }
@@ -169,10 +343,11 @@ public:
  * \param name The name of the attribute value to visit.
  * \param attrs A set of attribute values in which to look for the specified attribute value.
  * \param visitor A receiving function object to pass the attribute value to.
- * \return The result of visitation (see codes in the \c visitation_result class).
+ * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
  */
 template< typename T, typename VisitorT >
-visitation_result visit(attribute_name const& name, attribute_values_view const& attrs, VisitorT visitor);
+typename result_of::visit< T, VisitorT >::type
+visit(attribute_name const& name, attribute_values_view const& attrs, VisitorT visitor);
 
 /*!
  * The function applies a visitor to an attribute value from the view. The user has to explicitly specify the
@@ -181,22 +356,25 @@ visitation_result visit(attribute_name const& name, attribute_values_view const&
  * \param name The name of the attribute value to visit.
  * \param rec A log record. The attribute value will be sought among those associated with the record.
  * \param visitor A receiving function object to pass the attribute value to.
- * \return The result of visitation (see codes in the \c visitation_result class).
+ * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
  */
 template< typename T, typename VisitorT >
-visitation_result visit(attribute_name const& name, record const& rec, VisitorT visitor);
+typename result_of::visit< T, VisitorT >::type
+visit(attribute_name const& name, record const& rec, VisitorT visitor);
 
 #else // BOOST_LOG_DOXYGEN_PASS
 
 template< typename T, typename VisitorT >
-inline visitation_result visit(attribute_name const& name, attribute_values_view const& attrs, VisitorT visitor)
+inline typename result_of::visit< T, VisitorT >::type
+visit(attribute_name const& name, attribute_values_view const& attrs, VisitorT visitor)
 {
     value_visitor_invoker< T > invoker(name);
     return invoker(attrs, visitor);
 }
 
 template< typename T, typename VisitorT >
-inline visitation_result visit(attribute_name const& name, record const& rec, VisitorT visitor)
+inline typename result_of::visit< T, VisitorT >::type
+visit(attribute_name const& name, record const& rec, VisitorT visitor)
 {
     value_visitor_invoker< T > invoker(name);
     return invoker(rec, visitor);
