@@ -44,7 +44,9 @@
 #include <boost/date_time/date_defs.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/type_traits/is_unsigned.hpp>
+#if !defined(BOOST_LOG_NO_ASIO)
 #include <boost/asio/ip/address.hpp>
+#endif
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_assign_actor.hpp>
 #include <boost/log/detail/code_conversion.hpp>
@@ -237,7 +239,8 @@ inline function2<
         throw_invalid_type(param_name, type);
 }
 
-//! Extracts a formatter from any
+#if !defined(BOOST_LOG_NO_ASIO)
+//! Extracts an address from any
 template< typename CharT >
 inline std::string any_cast_to_address(const CharT* param_name, any const& val)
 {
@@ -255,6 +258,7 @@ inline std::string any_cast_to_address(const CharT* param_name, any const& val)
     else
         throw_invalid_type(param_name, type);
 }
+#endif
 
 #if defined(BOOST_WINDOWS) && defined(BOOST_LOG_USE_WINNT6_API)
 
@@ -608,6 +612,7 @@ private:
         backend->set_severity_mapper(
             sinks::syslog::basic_direct_severity_mapping< char_type >(constants::default_level_attribute_name()));
 
+#if !defined(BOOST_LOG_NO_ASIO)
         // Setup local and remote addresses
         typename params_t::const_iterator it = params.find(constants::local_address_param_name());
         if (it != params.end() && !it->second.empty())
@@ -616,6 +621,7 @@ private:
         it = params.find(constants::target_address_param_name());
         if (it != params.end() && !it->second.empty())
             backend->set_target_address(any_cast_to_address(constants::target_address_param_name(), it->second));
+#endif
 
         return init_sink(backend, params);
     }
