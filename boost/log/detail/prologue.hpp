@@ -305,13 +305,14 @@ inline namespace BOOST_LOG_VERSION_NAMESPACE {}
 #   else
 
 namespace BOOST_LOG_VERSION_NAMESPACE {}
-}
 
 using namespace BOOST_LOG_VERSION_NAMESPACE
 #       if defined(__GNUC__) && (__GNUC__ >= 4 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4))
 __attribute__((__strong__))
 #       endif
 ;
+
+}
 
 #       define BOOST_LOG_OPEN_NAMESPACE namespace log { namespace BOOST_LOG_VERSION_NAMESPACE {
 #       define BOOST_LOG_CLOSE_NAMESPACE }}

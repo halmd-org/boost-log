@@ -47,17 +47,49 @@ namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
-#if defined(BOOST_LOG_TYPEOF) && defined(BOOST_LOG_NO_TRAILING_RESULT_TYPE)
 namespace aux {
 
+#if defined(BOOST_LOG_TYPEOF) && defined(BOOST_LOG_NO_TRAILING_RESULT_TYPE)
 template< typename T >
 struct make_value
 {
     static T const& get();
 };
+#endif
+
+// This workaround is needed for MSVC 10 to work around ICE caused by stack overflow
+template< typename SectionT, bool IsConstV >
+struct basic_settings_section_iterator_base;
+
+template< typename SectionT >
+struct basic_settings_section_iterator_base< SectionT, true >
+{
+    typedef typename SectionT::template iter< true > iterator_type;
+    typedef typename SectionT::property_tree_type::const_iterator base_iterator_type;
+    typedef iterator_adaptor<
+        iterator_type,
+        base_iterator_type,
+        SectionT,
+        use_default,
+        const SectionT
+    > type;
+};
+
+template< typename SectionT >
+struct basic_settings_section_iterator_base< SectionT, false >
+{
+    typedef typename SectionT::template iter< false > iterator_type;
+    typedef typename SectionT::property_tree_type::iterator base_iterator_type;
+    typedef iterator_adaptor<
+        iterator_type,
+        base_iterator_type,
+        SectionT,
+        use_default,
+        SectionT
+    > type;
+};
 
 } // namespace aux
-#endif
 
 /*!
  * \brief The class represents a reference to the settings container section
@@ -68,6 +100,9 @@ struct make_value
 template< typename CharT >
 class basic_settings_section
 {
+    template< typename SectionT, bool IsConstV >
+    friend struct aux::basic_settings_section_iterator_base;
+
 public:
     //! Character type
     typedef CharT char_type;
@@ -261,35 +296,22 @@ private:
 #endif
     template< bool IsConstV >
     class iter :
-        public iterator_adaptor<
-            iter< IsConstV >,
-            typename mpl::if_c<
-                IsConstV,
-                typename property_tree_type::const_iterator,
-                typename property_tree_type::iterator
-            >::type,
-            basic_settings_section< char_type >,
-            use_default,
-            typename mpl::if_c<
-                IsConstV,
-                const basic_settings_section< char_type >,
-                basic_settings_section< char_type >
-            >::type
-        >
+        public aux::basic_settings_section_iterator_base< basic_settings_section< char_type >, IsConstV >::type
     {
         friend class boost::iterator_core_access;
 
         typedef typename iter::iterator_adaptor_ iterator_adaptor_;
+        // NOTE: This typedef must not come from iterator_adaptor_::base_type in order to work around MSVC 10 ICE
+        typedef typename aux::basic_settings_section_iterator_base< basic_settings_section< char_type >, IsConstV >::base_iterator_type base_iterator_type;
 
     public:
-        typedef typename iterator_adaptor_::base_type base_type;
         typedef typename iterator_adaptor_::reference reference;
 
     public:
         BOOST_LOG_DEFAULTED_FUNCTION(iter(), {})
         template< bool OtherIsConstV >
         iter(iter< OtherIsConstV > const& that) : iterator_adaptor_(that.base()) {}
-        explicit iter(base_type const& it) : iterator_adaptor_(it) {}
+        explicit iter(base_iterator_type const& it) : iterator_adaptor_(it) {}
 
         //! Returns the section name
         std::string const& get_name() const
@@ -524,6 +546,7 @@ inline void swap(basic_settings_section< CharT >& left, basic_settings_section< 
 {
     left.swap(right);
 }
+
 
 /*!
  * \brief The class represents settings container

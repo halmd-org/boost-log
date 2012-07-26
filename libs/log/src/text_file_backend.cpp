@@ -332,7 +332,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                     qi::lit(traits_t::minus) |
                     qi::lit(traits_t::space)
                 ) >>
-                -(qi::uint_[boost::log::aux::bind_assign(width)]) >>
+                -(qi::uint_[boost::log::aux::as_action(boost::log::aux::bind_assign(width))]) >>
                 -(qi::lit(traits_t::dot) >> qi::uint_) >>
                 qi::lit(traits_t::number_placeholder)
             )

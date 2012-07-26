@@ -68,8 +68,7 @@ public:
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
     //! A filter that checks whether the debugger is available
-    class debugger_presence_filter :
-        public filters::basic_filter< char_type, debugger_presence_filter >
+    class debugger_presence_filter
     {
     public:
         BOOST_LOG_API bool operator() (attribute_values_view const& values) const;

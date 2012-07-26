@@ -5,6 +5,7 @@
 #          http://www.boost.org/LICENSE_1_0.txt)
 #
 
+import modules ;
 import os ;
 import feature ;
 
@@ -45,7 +46,14 @@ project boost/log
         <threading>multi:<library>/boost/thread//boost_thread
     ;
 
-DEPENDS event_log_backend.cpp : simple_event_log.mc ;
+local no_event_log = [ MATCH (define=BOOST_LOG_NO_EVENT_LOG_SUPPORT) : [ modules.peek : ARGV ] ] ;
+local BOOST_LOG_MC_SRC ;
+
+if ! $(no_event_log)
+{
+    DEPENDS event_log_backend.cpp : simple_event_log.mc ;
+    BOOST_LOG_MC_SRC = simple_event_log.mc ;
+}
 
 local BOOST_LOG_COMMON_SRC =
     attribute_name.cpp
@@ -79,7 +87,7 @@ lib boost_log
     : ## sources ##
         $(BOOST_LOG_COMMON_SRC)
       ## winnt sources ##
-        simple_event_log.mc
+        $(BOOST_LOG_MC_SRC)
         event_log_backend.cpp
         debug_output_backend.cpp
         light_rw_mutex.cpp

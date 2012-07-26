@@ -263,7 +263,7 @@ namespace event_log {
         typedef boost::log::aux::light_function1< event_id, record const& > event_id_mapper_type;
 
         //! Type of an insertion composer (a formatter)
-        typedef boost::log::formatter< char_type > formatter_type;
+        typedef basic_formatter< char_type > formatter_type;
         //! Type of the composed insertions list
         typedef std::vector< string_type > insertion_list;
 

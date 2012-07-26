@@ -40,6 +40,8 @@
 #pragma warning(push)
 // 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
 #pragma warning(disable: 4251)
+// 'this' : used in base member initializer list
+#pragma warning(disable: 4355)
 #endif // _MSC_VER
 
 namespace boost {

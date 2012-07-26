@@ -362,9 +362,9 @@ filter default_filter_factory< CharT >::parse_argument(attribute_name const& nam
     (
         arg.c_str(), arg.c_str() + arg.size(),
         (
-            real_[on_fp] |
-            qi::long_[on_int] |
-            qi::as< string_type >()[ +encoding_specific::print ][on_str]
+            real_[boost::log::aux::as_action(on_fp)] |
+            qi::long_[boost::log::aux::as_action(on_int)] |
+            qi::as< string_type >()[ +encoding_specific::print ][boost::log::aux::as_action(on_str)]
         ) >> qi::eoi
     );
 

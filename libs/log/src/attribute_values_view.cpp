@@ -200,7 +200,7 @@ public:
         implementation* p = create(that->size(), NULL, NULL, NULL);
 
         // Copy all elements
-        typename node_list::iterator it = that->m_Nodes.begin(), end = that->m_Nodes.end();
+        node_list::iterator it = that->m_Nodes.begin(), end = that->m_Nodes.end();
         for (; it != end; ++it)
         {
             node* n = p->m_pEnd++;

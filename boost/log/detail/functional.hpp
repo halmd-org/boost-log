@@ -507,6 +507,29 @@ inline function_reference_wrapper< FunT > fun_ref(FunT& fun)
     return function_reference_wrapper< FunT >(fun);
 }
 
+//! Function object adapter for Boost.Spirit actions
+template< typename FunT >
+struct action_adapter :
+    public FunT
+{
+    typedef typename FunT::result_type result_type;
+
+    BOOST_LOG_DEFAULTED_FUNCTION(action_adapter(), {})
+    explicit action_adapter(FunT const& fun) : FunT(fun) {}
+
+    template< typename AttributeT, typename ContextT >
+    result_type operator() (AttributeT const& attr, ContextT const& ctx, bool& pass) const
+    {
+        return FunT::operator() (attr);
+    }
+};
+
+template< typename FunT >
+inline action_adapter< FunT > as_action(FunT const& fun)
+{
+    return action_adapter< FunT >(fun);
+}
+
 } // namespace aux
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
