@@ -252,7 +252,7 @@ private:
     }
 
     //! The operand string handler
-    void on_operand(boost::iterator_range< iterator_type > const& arg)
+    void on_operand(iterator_range< iterator_type > const& arg)
     {
         // An attribute name should have been parsed at this point
         if (!m_AttributeName)
@@ -262,7 +262,7 @@ private:
     }
 
     //! The quoted string handler
-    void on_quoted_string_operand(boost::iterator_range< iterator_type > const& arg)
+    void on_quoted_string_operand(iterator_range< iterator_type > const& arg)
     {
         // An attribute name should have been parsed at this point
         if (!m_AttributeName)
@@ -397,6 +397,9 @@ private:
 template< typename CharT >
 void register_filter_factory(attribute_name const& name, shared_ptr< filter_factory< CharT > > const& factory)
 {
+    BOOST_ASSERT(!!name);
+    BOOST_ASSERT(!!factory);
+
     filters_repository< CharT >& repo = filters_repository< CharT >::get();
 
     BOOST_LOG_EXPR_IF_MT(log::aux::exclusive_lock_guard< log::aux::light_rw_mutex > lock(repo.m_Mutex);)
@@ -410,11 +413,12 @@ filter parse_filter(const CharT* begin, const CharT* end)
     typedef CharT char_type;
     typedef log::aux::encoding_specific< typename log::aux::encoding< char_type >::type > encoding_specific;
 
+    filter_grammar< char_type > gram;
+    const char_type* p = begin;
+
     BOOST_LOG_EXPR_IF_MT(filters_repository< CharT >& repo = filters_repository< CharT >::get();)
     BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< log::aux::light_rw_mutex > lock(repo.m_Mutex);)
 
-    filter_grammar< char_type > gram;
-    const char_type* p = begin;
     bool result = qi::phrase_parse(p, end, gram, encoding_specific::space);
     if (!result || p != end)
     {

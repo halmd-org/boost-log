@@ -46,6 +46,7 @@ class default_filter_factory :
     template< typename RelationT >
     struct on_regex_argument;
 
+public:
     //  Type imports
     typedef typename base_type::char_type char_type;
     typedef typename base_type::string_type string_type;

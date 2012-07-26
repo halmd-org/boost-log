@@ -120,7 +120,7 @@ inline bool param_cast_to_bool(const char* param_name, std::basic_string< CharT 
 template< typename CharT >
 inline std::string param_cast_to_address(const char* param_name, std::basic_string< CharT > const& value)
 {
-    return log::aux::to_narrow(val);
+    return log::aux::to_narrow(value);
 }
 #endif // !defined(BOOST_LOG_NO_ASIO)
 
@@ -572,7 +572,10 @@ private:
         // Formatter
         if (optional< string_type > formatter_param = params["Formatter"])
         {
-            sink->set_formatter(parse_formatter< typename SinkT::char_type >(formatter_param.get()));
+            typedef typename SinkT::char_type sink_char_type;
+            std::basic_string< sink_char_type > formatter_str;
+            log::aux::code_convert(formatter_param.get(), formatter_str);
+            sink->set_formatter(parse_formatter(formatter_str));
         }
         return sink;
     }

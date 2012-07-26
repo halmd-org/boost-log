@@ -20,6 +20,7 @@
 #define BOOST_LOG_EXPRESSIONS_STREAM_HPP_INCLUDED_
 
 #include <boost/phoenix/core/argument.hpp>
+#include <boost/phoenix/operator/io.hpp>
 #include <boost/log/detail/prologue.hpp>
 
 namespace boost {

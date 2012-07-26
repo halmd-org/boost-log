@@ -269,7 +269,7 @@ public:
     {
         flush();
 
-        string_type* storage = streambuf_type::storage();
+        string_type* storage = this->streambuf_base_type::member.storage();
         BOOST_ASSERT(storage != NULL);
         aux::code_convert(p, static_cast< std::size_t >(size), *storage, this->getloc());
 
@@ -279,7 +279,7 @@ public:
 private:
     void init_stream()
     {
-        ostream_type::clear(streambuf_base_type::member.storage() ? ostream_type::goodbit : ostream_type::badbit);
+        ostream_type::clear(this->streambuf_base_type::member.storage() ? ostream_type::goodbit : ostream_type::badbit);
         ostream_type::flags
         (
             ostream_type::dec |

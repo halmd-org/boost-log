@@ -373,6 +373,8 @@ struct nop
     void operator() () const {}
     template< typename T >
     void operator() (T const&) const {}
+    template< typename T1, typename T2 >
+    void operator() (T1 const&, T2 const&) const {}
 };
 
 //! The function object that assigns its operand to the bound value
