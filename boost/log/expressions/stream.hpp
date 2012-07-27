@@ -20,7 +20,6 @@
 #define BOOST_LOG_EXPRESSIONS_STREAM_HPP_INCLUDED_
 
 #include <boost/phoenix/core/argument.hpp>
-#include <boost/phoenix/operator/io.hpp>
 #include <boost/log/detail/prologue.hpp>
 
 namespace boost {
@@ -32,7 +31,7 @@ namespace expressions {
 /*!
  * Stream placeholder type in formatter template expressions.
  */
-typedef phoenix::argument< 2 > stream_type;
+typedef phoenix::expression::argument< 2 >::type stream_type;
 
 /*!
  * Stream placeholder in formatter template expressions.

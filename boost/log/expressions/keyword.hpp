@@ -41,30 +41,32 @@ BOOST_LOG_OPEN_NAMESPACE
 namespace expressions {
 
 /*!
- * A default attribute value extractor compatible with Boost.Phoenix invokation protocol.
+ * \brief An auxiliary terminal node for declaring attribute keywords.
+ *
+ * This terminal is mostly used to declare attribute keywords and not to actually implement attribute extraction. The need
+ * for this separate class is dictated by requirement of keywords being POD to allow static initialization. Most terminals
+ * though would store an attribute value name internally, which would require dynamic initialization. Therefore keywords
+ * initially build upon this fake terminal and then get converted to real terminals as template expression builds.
  */
 template< typename DescriptorT >
-struct default_extractor :
-    public value_extractor< extract_value_or_none< typename DescriptorT::value_type > >
+struct keyword_terminal
 {
+    //! Internal typedef for type categorization
+    typedef void _is_boost_log_terminal;
+
     //! Attribute descriptor type
     typedef DescriptorT descriptor_type;
     //! Attribute value type
     typedef typename descriptor_type::value_type value_type;
 
-    typedef value_extractor< extract_value_or_none< value_type > > base_type;
-    typedef typename base_type::result_type result_type;
-
-    //! Default constructor
-    default_extractor() : base_type(descriptor_type::get_name())
-    {
-    }
+    //! Function object result type
+    typedef typename result_of::extract< value_type >::type result_type;
 
     //! The operator extracts the value
     template< typename EnvT >
     result_type operator() (EnvT const& env) const
     {
-        return base_type::operator() (fusion::at_c< 0 >(env.args()));
+        return boost::log::extract< value_type >(descriptor_type::get_name(), fusion::at_c< 0 >(env.args()));
     }
 };
 
@@ -83,7 +85,7 @@ struct attribute_keyword
     typedef typename descriptor_type::value_type value_type;
 
     //! Expression type
-    typedef ActorT< terminal< default_extractor< descriptor_type > > > expr_type;
+    typedef ActorT< keyword_terminal< descriptor_type > > expr_type;
 
     BOOST_PROTO_EXTENDS(expr_type, attribute_keyword, domain)
 
@@ -91,13 +93,27 @@ struct attribute_keyword
     static attribute_name get_name() { return descriptor_type::get_name(); }
 
     //! Expression with cached attribute name
-    typedef expr_type or_none_result_type;
+    typedef ActorT<
+        terminal<
+            unary_adapter<
+                value_extractor<
+                    extract_value_or_none< value_type >
+                >
+            >
+        >
+    > or_none_result_type;
 
     //! Generates an expression that extracts the attribute value or a default value
     static or_none_result_type or_none()
     {
-        typedef terminal< default_extractor< descriptor_type > > cached_terminal;
-        ActorT< cached_terminal > res = { cached_terminal() };
+        typedef terminal<
+            unary_adapter<
+                value_extractor<
+                    extract_value_or_none< value_type >
+                >
+            >
+        > cached_terminal;
+        ActorT< cached_terminal > res = { cached_terminal(descriptor_type::get_name()) };
         return res;
     }
 

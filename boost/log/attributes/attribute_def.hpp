@@ -72,10 +72,10 @@ private:
 
 public:
     /*!
-     * Default constructor. Creates an empty attribute factory, which is not usable until
+     * Default constructor. Creates an empty attribute value factory, which is not usable until
      * \c set_impl is called.
      */
-    attribute() {}
+    BOOST_LOG_DEFAULTED_FUNCTION(attribute(), {})
 
     /*!
      * Copy constructor

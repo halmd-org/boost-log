@@ -31,7 +31,7 @@ namespace expressions {
 /*!
  * Log record placeholder type in formatter template expressions.
  */
-typedef phoenix::argument< 1 > record_type;
+typedef phoenix::expression::argument< 1 >::type record_type;
 
 /*!
  * Log record placeholder in formatter template expressions.
