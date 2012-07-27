@@ -40,11 +40,11 @@
 #endif
 
 #if !defined(BOOST_WINDOWS)
-#   ifndef BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
-#       define BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
+#   ifndef BOOST_LOG_WITHOUT_DEBUG_OUTPUT
+#       define BOOST_LOG_WITHOUT_DEBUG_OUTPUT
 #   endif
-#   ifndef BOOST_LOG_NO_EVENT_LOG_SUPPORT
-#       define BOOST_LOG_NO_EVENT_LOG_SUPPORT
+#   ifndef BOOST_LOG_WITHOUT_EVENT_LOG
+#       define BOOST_LOG_WITHOUT_EVENT_LOG
 #   endif
 #endif
 
@@ -224,11 +224,13 @@
 
 #endif // !defined(BOOST_LOG_BUILDING_THE_LIB)
 
-#if !defined(BOOST_LOG_USE_CHAR) && !defined(BOOST_LOG_USE_WCHAR_T)
-    // By default we provide support for both char and wchar_t
+// By default we provide support for both char and wchar_t
+#if !defined(BOOST_LOG_WITHOUT_CHAR)
 #   define BOOST_LOG_USE_CHAR
-#   define BOOST_LOG_USE_WCHAR_T
-#endif // !defined(BOOST_LOG_USE_CHAR) && !defined(BOOST_LOG_USE_WCHAR_T)
+#endif
+#if !defined(BOOST_LOG_WITHOUT_WCHAR_T)
+#   define BOOST_LOG_USE_CHAR
+#endif
 
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
     // Check if multithreading is supported

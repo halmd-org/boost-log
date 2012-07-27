@@ -21,7 +21,7 @@
 
 #include <boost/log/detail/prologue.hpp>
 
-#ifndef BOOST_LOG_NO_SYSLOG_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_SYSLOG
 
 #include <string>
 #include <boost/shared_ptr.hpp>
@@ -292,6 +292,6 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_NO_SYSLOG_SUPPORT
+#endif // BOOST_LOG_WITHOUT_SYSLOG
 
 #endif // BOOST_LOG_SINKS_SYSLOG_BACKEND_HPP_INCLUDED_

@@ -12,7 +12,7 @@
  * \brief  A logging sink backend that uses debugger output
  */
 
-#ifndef BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_DEBUG_OUTPUT
 
 #include "windows_version.hpp"
 #include <string>
@@ -85,4 +85,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // !defined(BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT)
+#endif // !defined(BOOST_LOG_WITHOUT_DEBUG_OUTPUT)

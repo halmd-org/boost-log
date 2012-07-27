@@ -92,7 +92,7 @@ This library is not an official part of [@http://www.boost.org Boost libraries c
 
 [section:moti Motivation]
 
-Today applications grow rapidly, becoming complicated and difficult to test and debug. Most of the time applications run on a remote site, leaving the developer little chance to monitor their execution and figure out the reasons for their failure, once it should happen. Moreover, even the local debugging may become problematic if the application behavior depends heavily on asynchronous third-party events, like device feedback or another process activity.
+Today applications grow rapidly, becoming complicated and difficult to test and debug. Most of the time applications run on a remote site, leaving the developer little chance to monitor their execution and figure out the reasons for their failure, once it should happen. Moreover, even the local debugging may become problematic if the application behavior depends heavily on asynchronous side events, such as a device feedback or another process activity.
 
 This is where logging can help. The application stores all essential information about its execution to a log, and when something goes wrong this information can be used to analyze the program's behavior and make the necessary corrections. There are other very useful applications of logging, such as gathering statistical information and highlighting events (i.e. indicating that some situation has occurred or that the application is experiencing some problems). These tasks have proved to be vital for many real-world industrial applications.
 
@@ -134,14 +134,14 @@ Aside from these namespaces the library also provides `boost::log::experimental`
 
 The library should build and work with a reasonably compliant compiler. The library was successfully built and tested on the following platforms:
 
-* Windows XP, Windows Vista. MSVC 8.0, 9.0. MSVC 7.1 may work too, but it was not tested.
+* Windows XP, Windows Vista, Windows 7. MSVC 8.0 and newer.
 * Windows Vista. Intel C++ Compiler 10.1.022, 11.1.048.
 * Linux. GCC 4.2 and newer. GCC 4.1 may work too, but it was not tested.
 * Linux. Intel C++ 11.1.056.
 
 The following compilers/platforms are not supported and will likely fail to compile the library:
 
-* MSVC 7.0 and older.
+* MSVC 7.1 will probably have problems compiling the library. Older versions will not work.
 * Borland C++ 5.5.1 (free version). Newer versions might or might not work.
 * GCC 4.0 and older.
 * Windows 9x, ME, NT4 and older are not supported.
@@ -150,9 +150,11 @@ The following compilers/platforms are not supported and will likely fail to comp
 
 In order to compile the library under these compilers special preparations are needed. First, in case of MinGW or Cygwin make sure you have installed the latest GCC version. The library will most likely fail to compile with GCC 3.x.
 
-Second, at some point the library will require a Message Compiler tool (`mc.exe`), which is not available in MinGW, Cygwin and MSVC Express Edition. You have two options to settle the problem. In case of MinGW and Cygwin you can use the `windmc.exe` tool, which is the analogue of the original `mc.exe`. In order to do that you will have to patch Boost.Build files (in particular, the `tools/build/v2/tools/mc.jam` file) as described in [@https://svn.boost.org/trac/boost/ticket/4111 this] ticket. After that you will be able to specify the `mc-compiler=windmc` option to bjam to build the library.
+Second, at some point the library will require a Message Compiler tool (`mc.exe`), which is not available in MinGW, Cygwin and MSVC Express Edition. You have three options to settle the problem. The recommended solution is to obtain the original `mc.exe`. This tool is available in Windows SDK, which can be downloaded from the Microsoft site freely (for example, [@http://www.microsoft.com/downloads/details.aspx?FamilyID=71deb800-c591-4f97-a900-bea146e4fae1&displaylang=en here]). Also, this tool should be available in Visual Studio 2010 Express Edition. During the compilation, `mc.exe` should be accessible through one of the directories in your PATH environment variable.
 
-Another way is to obtain the original `mc.exe`. This tool is available in Windows SDK, which can be downloaded from the Microsoft site freely (for example, [@http://www.microsoft.com/downloads/details.aspx?FamilyID=71deb800-c591-4f97-a900-bea146e4fae1&displaylang=en here]). Also, this tool should be available in Visual Studio 2010 Express Edition. During the compilation, `mc.exe` should be accessible through one of the directories in your PATH environment variable.
+Another way is to attempt to use the `windmc.exe` tool distributed with MinGW and Cygwin, which is the analogue of the original `mc.exe`. In order to do that you will have to patch Boost.Build files (in particular, the `tools/build/v2/tools/mc.jam` file) as described in [@https://svn.boost.org/trac/boost/ticket/4111 this] ticket. After that you will be able to specify the `mc-compiler=windmc` option to bjam to build the library.
+
+Lastly, you can disable support for event log backend by defining the `BOOST_LOG_WITHOUT_EVENT_LOG` configuration macro when building the library. This will remove the need for the message compiler. See [link log.config this section] for more configuration options.
 
 [heading Additional notes for Cygwin users]
 
@@ -173,11 +175,14 @@ The library supports a number of configuration macros:
     [[`BOOST_LOG_DYN_LINK`]                     [If defined in user code, the library will assume the binary is built as a dynamically loaded library ("dll" or "so"). Otherwise it is assumed that the library is built in static mode. This macro must be either defined or not defined for all translation units of user application that uses logging. This macro can help with auto-linking on platforms that support it.]]
     [[`BOOST_ALL_DYN_LINK`]                     [Same as `BOOST_LOG_DYN_LINK` but also affects other Boost libraries the same way.]]
     [[`BOOST_LOG_NO_THREADS`]                   [If defined, disables multithreading support. Affects the compilation of both the library and users' code. The macro is automatically defined if no threading support is detected.]]
-    [[`BOOST_LOG_USE_CHAR`]                     [If defined, enables support for narrow character logging. Affects the compilation of both the library and users' code.]]
-    [[`BOOST_LOG_USE_WCHAR_T`]                  [If defined, enables support for wide character logging. Affects the compilation of both the library and users' code. If neither `BOOST_LOG_USE_CHAR` nor `BOOST_LOG_USE_WCHAR_T` is defined, support for both character types will be enabled. Defining only one of them significantly reduces the binary size of the library.]]
-    [[`BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER`] [This macro is is only useful on Windows. It affects the compilation of both the library and users' code. If defined, disables support for the `QueryPerformanceCounter` API in the `timer` attribute. This will result in significantly less accurate time readings. The macro is intended to solve possible problems with earlier revisions of AMD Athlon CPU, described [@http://support.microsoft.com/?scid=kb;en-us;895980 here] and [@http://support.microsoft.com/?id=896256 here]. There are also known chipset hardware failures that may prevent this API from functioning properly (see [@http://support.microsoft.com/kb/274323 here]).]]
+    [[`BOOST_LOG_WITHOUT_CHAR`]                 [If defined, disables support for narrow character logging. Affects the compilation of both the library and users' code.]]
+    [[`BOOST_LOG_WITHOUT_WCHAR_T`]              [If defined, disables support for wide character logging. Affects the compilation of both the library and users' code.]]
+    [[`BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER`] [This macro is only useful on Windows. It affects the compilation of both the library and users' code. If defined, disables support for the `QueryPerformanceCounter` API in the `timer` attribute. This will result in significantly less accurate time readings. The macro is intended to solve possible problems with earlier revisions of AMD Athlon CPU, described [@http://support.microsoft.com/?scid=kb;en-us;895980 here] and [@http://support.microsoft.com/?id=896256 here]. There are also known chipset hardware failures that may prevent this API from functioning properly (see [@http://support.microsoft.com/kb/274323 here]).]]
     [[`BOOST_LOG_USE_NATIVE_SYSLOG`]            [Affects only the compilation of the library. If for some reason support for the native SysLog API is not detected automatically, define this macro to forcibly enable it]]
-    [[`BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT`]  [Affects only the compilation of the library. If defined, none of the facilities related to the parsers for settings will be built. This can substantially reduce the binary size.]]
+    [[`BOOST_LOG_WITHOUT_SETTINGS_PARSERS`]     [Affects only the compilation of the library. If defined, none of the facilities related to the parsers for settings will be built. This can substantially reduce the binary size.]]
+    [[`BOOST_LOG_WITHOUT_DEBUG_OUTPUT`]         [Affects only the compilation of the library. If defined, the support for debugger output on Windows will not be built.]]
+    [[`BOOST_LOG_WITHOUT_EVENT_LOG`]            [Affects only the compilation of the library. If defined, the support for Windows event log will not be built. Defining the macro also makes Message Compiler toolset unnecessary.]]
+    [[`BOOST_LOG_WITHOUT_SYSLOG`]               [Affects only the compilation of the library. If defined, the support for syslog backend will not be built.]]
     [[`BOOST_LOG_NO_SHORTHAND_NAMES`]           [Affects only the compilation of users' code. If defined, some deprecated shorthand macro names will not be available.]]
     [[`BOOST_LOG_USE_WINNT6_API`]               [Affects the compilation of both the library and users' code. This macro is Windows-specific. If defined, the library makes use of the Windows NT 6 (Vista, Server 2008) and later APIs to generate more efficient code. This macro will also enable some experimental features of the library. Note, however, that the resulting binary will not run on Windows prior to NT 6. In order to use this feature Platform SDK 6.0 or later is required.]]
     [[`BOOST_LOG_USE_COMPILER_TLS`]             [Affects only the compilation of the library. This macro enables support for compiler intrinsics for thread-local storage. Defining it may improve performance of Boost.Log if certain usage limitations are acceptable. See below for more comments.]]
@@ -186,18 +191,18 @@ The library supports a number of configuration macros:
 You can define configuration macros in the `bjam` command line, like this:
 
 [pre
-    bjam --with-log variant=release define=BOOST_LOG_USE_CHAR define=BOOST_LOG_USE_WINNT6_API stage
+    bjam --with-log variant=release define=BOOST_LOG_WITHOUT_EVENT_LOG define=BOOST_LOG_USE_WINNT6_API stage
 ]
 
 However, it may be more convenient to define configuration macros in the "boost/config/user.hpp" file in order to automatically define them both for the library and user's projects. If none of the options are specified, the library will try to support the most comprehensive setup, including support for all character types and features available for the target platform.
 
-The logging library uses several other Boost libraries that need building too. These are __boost_filesystem__, __boost_system__, __boost_date_time__ and __boost_thread__. Refer to their documentation for detailed instructions on the building procedure.
+The logging library uses several other Boost libraries that require building too. These are __boost_filesystem__, __boost_system__, __boost_date_time__ and __boost_thread__. Refer to their documentation for detailed instructions on the building procedure.
 
 One final thing should be added. The library requires run-time type information (RTTI) to be enabled for both the library compilation and user's code compilation. Normally, this won't need anything from you except to verify that RTTI support is not disabled in your project.
 
 [heading Notes about compiler-supplied intrinsics for TLS]
 
-Many widely used compilers support builtin intrinsics for managing thread-local storage, which is used in several parts of the library. This feature is also included in the C++0x standard. Generally, these intrinsics allow for a much more efficient access to the storage than any surrogate implementation, be that __boost_thread__ or even native operating system API. However, this feature has several caveats:
+Many widely used compilers support builtin intrinsics for managing thread-local storage, which is used in several parts of the library. This feature is also included in the C++11 standard. Generally, these intrinsics allow for a much more efficient access to the storage than any surrogate implementation, be that __boost_thread__ or even native operating system API. However, this feature has several caveats:
 
 * Some operating systems don't support the use of these intrinsics in case if the TLS is defined in a shared library that is dynamically loaded during the application run time. These systems include Linux and Windows prior to Vista. Windows Vista and later do not have this issue.
 * The TLS may not be reliably accessed from global constructors and destructors. At least MSVC 8.0 on Windows is known to have this problem.
@@ -205,7 +210,7 @@ Many widely used compilers support builtin intrinsics for managing thread-local 
 The library provides the `BOOST_LOG_USE_COMPILER_TLS` configuration macro that allows to enable the use of this feature, which will improve the library performance at the cost of these limitations:
 
 * The application executable must be linked with the Boost.Log library. It should not be loaded dynamically during run time.
-* The application doesn't use logging in global constructors or destructors.
+* The application must not use logging in global constructors or destructors.
 
 [endsect]
 

@@ -13,7 +13,7 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#ifndef BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_SETTINGS_PARSERS
 
 #if defined(_MSC_VER)
 // 'const int' : forcing value to bool 'true' or 'false' (performance warning)
@@ -254,13 +254,13 @@ struct sinks_repository :
         sinks_repository& instance = base_type::get_instance();
         instance.m_Factories["TextFile"] = &sinks_repository< char_type >::default_text_file_sink_factory;
         instance.m_Factories["Console"] = &sinks_repository< char_type >::default_console_sink_factory;
-#ifndef BOOST_LOG_NO_SYSLOG_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_SYSLOG
         instance.m_Factories["Syslog"] = &sinks_repository< char_type >::default_syslog_sink_factory;
 #endif
-#ifndef BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_DEBUG_OUTPUT
         instance.m_Factories["Debugger"] = &sinks_repository< char_type >::default_debugger_sink_factory;
 #endif
-#ifndef BOOST_LOG_NO_EVENT_LOG_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_EVENT_LOG
         instance.m_Factories["SimpleEventLog"] = &sinks_repository< char_type >::default_simple_event_log_sink_factory;
 #endif
     }
@@ -403,7 +403,7 @@ private:
         return select_backend_character_type(params, default_console_sink_factory_impl());
     }
 
-#ifndef BOOST_LOG_NO_SYSLOG_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_SYSLOG
 
     //! The function constructs a sink that writes log records to the syslog service
     static shared_ptr< sinks::sink > default_syslog_sink_factory(section const& params)
@@ -427,9 +427,9 @@ private:
         return init_sink(backend, params);
     }
 
-#endif // BOOST_LOG_NO_SYSLOG_SUPPORT
+#endif // BOOST_LOG_WITHOUT_SYSLOG
 
-#ifndef BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_DEBUG_OUTPUT
 
     struct default_debugger_sink_factory_impl;
     friend struct default_debugger_sink_factory_impl;
@@ -454,9 +454,9 @@ private:
         return select_backend_character_type(params, default_debugger_sink_factory_impl());
     }
 
-#endif // BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
+#endif // BOOST_LOG_WITHOUT_DEBUG_OUTPUT
 
-#ifndef BOOST_LOG_NO_EVENT_LOG_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_EVENT_LOG
 
     struct default_simple_event_log_sink_factory_impl;
     friend struct default_simple_event_log_sink_factory_impl;
@@ -521,7 +521,7 @@ private:
         return select_backend_character_type(params, default_simple_event_log_sink_factory_impl());
     }
 
-#endif // BOOST_LOG_NO_EVENT_LOG_SUPPORT
+#endif // BOOST_LOG_WITHOUT_EVENT_LOG
 
     //! The function initializes common parameters of a formatting sink and returns the constructed sink
     template< typename BackendT >
@@ -686,4 +686,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
+#endif // BOOST_LOG_WITHOUT_SETTINGS_PARSERS

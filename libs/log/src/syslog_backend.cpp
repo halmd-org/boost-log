@@ -13,7 +13,7 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#ifndef BOOST_LOG_NO_SYSLOG_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_SYSLOG
 
 #include "windows_version.hpp"
 #include <boost/log/detail/prologue.hpp>
@@ -584,4 +584,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // !defined(BOOST_LOG_NO_SYSLOG_SUPPORT)
+#endif // !defined(BOOST_LOG_WITHOUT_SYSLOG)

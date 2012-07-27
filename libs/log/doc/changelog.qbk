@@ -14,7 +14,9 @@
 [*General changes:]
 
 * The library is now compatible with Boost 1.48 or newer.
+* The library now does not introduce separate logging cores for different character types. A lot of other library components also became character type agnostic. The application can now use loggers of different character types with the common logging core.
 * The `BOOST_LOG_NO_COMPILER_TLS` configuration macro has been replaced with `BOOST_LOG_USE_COMPILER_TLS` with the opposite meaning. The support for compiler intrinsics for TLS is now disabled by default.
+* Added configuration macros `BOOST_LOG_WITHOUT_DEBUG_OUTPUT`, `BOOST_LOG_WITHOUT_EVENT_LOG` and `BOOST_LOG_WITHOUT_SYSLOG`. `BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT` macro renamed to `BOOST_LOG_WITHOUT_SETTINGS_PARSERS`. The new macros allow to selectively disable support fo the corresponding sink backends.
 * The library now uses __boost_xpressive__ instead of __boost_regex__ internally, which makes it unnecessary to build the latter in order to use the library. __boost_regex__ is still supported on the user's side.
 * Made some internal code to detect Windows NT6 API availability at run time, if not explicitly enabled by the `BOOST_LOG_USE_WINNT6_API` macro. The code compiled without the macro defined will still be able run on NT5, but when run on NT6 it will be more efficient. With the macro defined the resulting code will not run on NT5, but will be a little more efficient on NT6 than without the macro.
 * Added a concept of a default sink. The default sink is used when there are no sinks configured in the logging core. The sink is synchronous and thread-safe, it requires no configuration and is overridden by any sinks configured in the core by user. The default sink will write log messages on the console, prepending with a timestamp, thread id and severity.
@@ -23,12 +25,11 @@
 
 [*Attributes:]
 
-* Fixed compilation problems with `BOOST_LOG_WFUNCTION`.
 * Changed the interface and the way of handling attribute values. The value is now a pimpl wrapper around the value holder. The `attribute_value` class in various components of the library is no longer pointed to with `shared_ptr`s but instead is handled by value. This allowed to simplify attribute value handling in simple cases.
 * Similarly to attribute values, the interface of attributes has been reworked in the pimpl fashion. All attributes now derive from the [class_log_attribute] base class, which holds the reference to the implementation. All attributes now have to be created by value rather than wrapped into `shared_ptr` by user, which makes the code more concise.
 * Added support for casting attributes from the base class [class_log_attribute] to the actual attribute type. This can be useful when the concrete attribute factory provides additional interfaces.
 * The attribute value no longer has the `get` method. Use the `extract` function as a replacement.
-* The key type of attribute sets and attribute values view has been changed. The new key type is called `attribute_name` (`wattribute_name` for wide-character logging). It is convertible from strings, so in most cases users won't need to change the code. See [link log.detailed.attributes.related_components.attribute_name here] for more information.
+* The key type of attribute sets and attribute values view has been changed. The new key type is called `attribute_name`. It is constructible from strings, so in most cases users won't need to change the code. See [link log.detailed.attributes.related_components.attribute_name here] for more information.
 * Attribute sets and attribute values views no longer maintain order of elements. Although it wasn't stated explicitly, the containers used to be ordered associative containers. Now the order of elements is unspecified. The implementation has been reworked to speed up insertion/removal of attributes, as well as attribute lookup and values view construction. The drawback is that memory footprint may get increased in some cases.
 * Attribute sets now use small memory pools to speed up element insertion/removal.
 * The header `scoped_attribute.hpp` moved from `utility` to the `attributes` directory. The header `attribute_value_extractor.hpp` in `utility` has been replaced with headers `value_extraction.hpp` and `value_visitation.hpp` in the `attributes` directory. The two new headers define the revised API of attribute value extraction and visitation, respectively. See [link log.detailed.attributes.related_components.extractors here] for more details.
@@ -64,7 +65,7 @@
 * Type dispatchers made more friendly to the setups in which hidden visibility is set by default.
 * The interface of type dispatchers changed. The dispatcher now returns `type_visitor` instance by value, and the visitor is no longer a base for the actual receiver of the dispatched value. Instead, the visitor now refers to the receiver, if one is capable to consume the value. The `visit` method has been renamed to `operator ()`. The static type dispatcher now requires a reference to the receiver on construction, it doesn't imply that the receiver derives from the dispatcher anymore.
 * The `slim_string` utility has been removed. There is no replacement.
-* Added support for move construction and assignment to many library components.
+* The library now uses many features from the latest C++ standard (aka C++11). For instance, many library components now support move semantics.
 
 [heading 1.1, 02 December 2011]
 

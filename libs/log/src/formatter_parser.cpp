@@ -13,7 +13,7 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#ifndef BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_SETTINGS_PARSERS
 
 #undef BOOST_MPL_LIMIT_VECTOR_SIZE
 #define BOOST_MPL_LIMIT_VECTOR_SIZE 50
@@ -445,4 +445,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
+#endif // BOOST_LOG_WITHOUT_SETTINGS_PARSERS

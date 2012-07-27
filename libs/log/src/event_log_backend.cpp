@@ -13,7 +13,7 @@
  *         for signalling application events.
  */
 
-#ifndef BOOST_LOG_NO_EVENT_LOG_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_EVENT_LOG
 
 #include "windows_version.hpp"
 #include <memory>
@@ -617,4 +617,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // !defined(BOOST_LOG_NO_EVENT_LOG_SUPPORT)
+#endif // !defined(BOOST_LOG_WITHOUT_EVENT_LOG)

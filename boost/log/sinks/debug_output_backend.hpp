@@ -22,7 +22,7 @@
 #include <string>
 #include <boost/log/detail/prologue.hpp>
 
-#ifndef BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_DEBUG_OUTPUT
 
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
@@ -114,6 +114,6 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_NO_DEBUG_OUTPUT_SUPPORT
+#endif // BOOST_LOG_WITHOUT_DEBUG_OUTPUT
 
 #endif // BOOST_LOG_SINKS_DEBUG_OUTPUT_BACKEND_HPP_INCLUDED_

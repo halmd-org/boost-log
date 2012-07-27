@@ -46,7 +46,7 @@ project boost/log
         <threading>multi:<library>/boost/thread//boost_thread
     ;
 
-local no_event_log = [ MATCH (define=BOOST_LOG_NO_EVENT_LOG_SUPPORT) : [ modules.peek : ARGV ] ] ;
+local no_event_log = [ MATCH (define=BOOST_LOG_WITHOUT_EVENT_LOG) : [ modules.peek : ARGV ] ] ;
 local BOOST_LOG_MC_SRC ;
 
 if ! $(no_event_log)

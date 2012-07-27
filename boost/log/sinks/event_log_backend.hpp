@@ -22,7 +22,7 @@
 
 #include <boost/log/detail/prologue.hpp>
 
-#ifndef BOOST_LOG_NO_EVENT_LOG_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_EVENT_LOG
 
 #include <map>
 #include <vector>
@@ -679,6 +679,6 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_NO_EVENT_LOG_SUPPORT
+#endif // BOOST_LOG_WITHOUT_EVENT_LOG
 
 #endif // BOOST_LOG_SINKS_EVENT_LOG_BACKEND_HPP_INCLUDED_
