@@ -45,10 +45,9 @@ namespace sources {
 #if defined(BOOST_LOG_DOXYGEN_PASS) || !(defined(BOOST_NO_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES))
 
 /*!
- * \brief An MPL sequence of logger features
+ * \brief A type sequence of logger features
  *
  * This class template can be used to specify logger features in a \c basic_composite_logger instantiation.
- * The resulting type is an MPL type sequence.
  */
 template< typename... FeaturesT >
 struct features
@@ -94,7 +93,7 @@ struct inherit_features< RootT, features< > >
 
 #else
 
-//! An MPL sequence of logger features
+//! A type sequence of logger features
 template< BOOST_PP_ENUM_BINARY_PARAMS(BOOST_LOG_FEATURES_LIMIT, typename FeatureT, = void BOOST_PP_INTERCEPT) >
 struct features
 {
