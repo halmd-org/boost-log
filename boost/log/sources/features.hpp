@@ -19,17 +19,22 @@
 #ifndef BOOST_LOG_SOURCES_FEATURES_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_FEATURES_HPP_INCLUDED_
 
-#include <boost/preprocessor/repetition/enum.hpp>
-#include <boost/preprocessor/repetition/enum_shifted_params.hpp>
-#include <boost/preprocessor/repetition/enum_params_with_a_default.hpp>
 #include <boost/mpl/lambda.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/pp_identity.hpp>
+
+#if defined(BOOST_NO_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+
+#include <boost/preprocessor/repetition/enum_params.hpp>
+#include <boost/preprocessor/repetition/enum_shifted_params.hpp>
+#include <boost/preprocessor/repetition/enum_shifted_binary_params.hpp>
+#include <boost/preprocessor/facilities/intercept.hpp>
 
 //! The macro defines the maximum number of features that can be specified for a logger
 #ifndef BOOST_LOG_FEATURES_LIMIT
 #define BOOST_LOG_FEATURES_LIMIT 10
 #endif // BOOST_LOG_FEATURES_LIMIT
+
+#endif
 
 namespace boost {
 
@@ -37,18 +42,7 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace sources {
 
-#if !defined(BOOST_LOG_DOXYGEN_PASS)
-
-//! An MPL sequence of logger features
-template< BOOST_PP_ENUM_PARAMS_WITH_A_DEFAULT(BOOST_LOG_FEATURES_LIMIT, typename FeatureT, void) >
-struct features
-{
-    typedef features type;
-    typedef FeatureT0 head;
-    typedef features< BOOST_PP_ENUM_SHIFTED_PARAMS(BOOST_LOG_FEATURES_LIMIT, FeatureT) > tail;
-};
-
-#else // !defined(BOOST_LOG_DOXYGEN_PASS)
+#if defined(BOOST_LOG_DOXYGEN_PASS) || !(defined(BOOST_NO_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES))
 
 /*!
  * \brief An MPL sequence of logger features
@@ -57,36 +51,92 @@ struct features
  * The resulting type is an MPL type sequence.
  */
 template< typename... FeaturesT >
-struct features;
-
-#endif // !defined(BOOST_LOG_DOXYGEN_PASS)
+struct features
+{
+};
 
 namespace aux {
 
-    //! The metafunction produces the inherited features hierarchy with \c RootT as the ultimate base type
-    template< typename RootT, typename FeaturesT >
-    struct inherit_features
-    {
-        typedef typename mpl::lambda<
-            typename FeaturesT::head
-        >::type::BOOST_NESTED_TEMPLATE apply<
-            typename inherit_features<
-                RootT,
-                typename FeaturesT::tail
-            >::type
-        >::type type;
-    };
+//! The metafunction produces the inherited features hierarchy with \c RootT as the ultimate base type
+template< typename RootT, typename FeaturesT >
+struct inherit_features;
 
-    template< typename RootT >
-    struct inherit_features<
-        RootT,
-        features< BOOST_PP_ENUM(BOOST_LOG_FEATURES_LIMIT, BOOST_LOG_PP_IDENTITY, void) >
-    >
-    {
-        typedef RootT type;
-    };
+template< typename RootT, typename FeatureT0, typename... FeaturesT >
+struct inherit_features< RootT, features< FeatureT0, FeaturesT... > >
+{
+    typedef typename mpl::lambda<
+        FeatureT0
+    >::type::BOOST_NESTED_TEMPLATE apply<
+        typename inherit_features<
+            RootT,
+            features< FeaturesT... >
+        >::type
+    >::type type;
+};
+
+template< typename RootT, typename FeatureT0 >
+struct inherit_features< RootT, features< FeatureT0 > >
+{
+    typedef typename mpl::lambda<
+        FeatureT0
+    >::type::BOOST_NESTED_TEMPLATE apply<
+        RootT
+    >::type type;
+};
+
+template< typename RootT >
+struct inherit_features< RootT, features< > >
+{
+    typedef RootT type;
+};
 
 } // namespace aux
+
+#else
+
+//! An MPL sequence of logger features
+template< BOOST_PP_ENUM_BINARY_PARAMS(BOOST_LOG_FEATURES_LIMIT, typename FeatureT, = void BOOST_PP_INTERCEPT) >
+struct features
+{
+};
+
+namespace aux {
+
+template< typename RootT, typename FeaturesT >
+struct inherit_features;
+
+template< typename RootT, BOOST_PP_ENUM_PARAMS(BOOST_LOG_FEATURES_LIMIT, typename FeatureT) >
+struct inherit_features< RootT, features< BOOST_PP_ENUM_PARAMS(BOOST_LOG_FEATURES_LIMIT, FeatureT) > >
+{
+    typedef typename mpl::lambda<
+        FeatureT0
+    >::type::BOOST_NESTED_TEMPLATE apply<
+        typename inherit_features<
+            RootT,
+            features< BOOST_PP_ENUM_SHIFTED_PARAMS(BOOST_LOG_FEATURES_LIMIT, FeatureT) >
+        >::type
+    >::type type;
+};
+
+template< typename RootT, typename FeatureT0 >
+struct inherit_features< RootT, features< FeatureT0, BOOST_PP_ENUM_SHIFTED_PARAMS(BOOST_LOG_FEATURES_LIMIT, void BOOST_PP_INTERCEPT) > >
+{
+    typedef typename mpl::lambda<
+        FeatureT0
+    >::type::BOOST_NESTED_TEMPLATE apply<
+        RootT
+    >::type type;
+};
+
+template< typename RootT >
+struct inherit_features< RootT, features< BOOST_PP_ENUM_PARAMS(BOOST_LOG_FEATURES_LIMIT, void BOOST_PP_INTERCEPT) > >
+{
+    typedef RootT type;
+};
+
+} // namespace aux
+
+#endif
 
 } // namespace sources
 

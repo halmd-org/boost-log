@@ -64,7 +64,7 @@ struct basic_settings_section_iterator_base;
 template< typename SectionT >
 struct basic_settings_section_iterator_base< SectionT, true >
 {
-    typedef typename SectionT::template iter< true > iterator_type;
+    typedef typename SectionT::BOOST_NESTED_TEMPLATE iter< true > iterator_type;
     typedef typename SectionT::property_tree_type::const_iterator base_iterator_type;
     typedef iterator_adaptor<
         iterator_type,
@@ -78,7 +78,7 @@ struct basic_settings_section_iterator_base< SectionT, true >
 template< typename SectionT >
 struct basic_settings_section_iterator_base< SectionT, false >
 {
-    typedef typename SectionT::template iter< false > iterator_type;
+    typedef typename SectionT::BOOST_NESTED_TEMPLATE iter< false > iterator_type;
     typedef typename SectionT::property_tree_type::iterator base_iterator_type;
     typedef iterator_adaptor<
         iterator_type,
