@@ -23,6 +23,7 @@
 #include <string>
 #include <memory>
 #include <locale>
+#include <boost/type.hpp>
 #include <boost/ref.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/contains.hpp>
@@ -34,7 +35,9 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/code_conversion.hpp>
+#include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
+#include <boost/log/utility/formatting_stream_fwd.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -48,11 +51,21 @@ namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
-template<
-    typename CharT,
-    typename TraitsT = std::char_traits< CharT >,
-    typename AllocatorT = std::allocator< CharT >
->
+/*!
+ * \brief Stream for log records formatting.
+ *
+ * This stream type is used by the library for log record formatting. It implements the standard string stream interface
+ * with a few extensions:
+ *
+ * \list
+ * \li By default, \c bool values are formatted using alphabetical representation rather than numeric.
+ * \li The stream supports writing strings of character types different from the stream character type. The stream will perform
+ *     character code conversion as needed using the imbued locale.
+ * \li The stream operates on an external string object rather than on the embedded one. The string can be attached or detached
+ *     from the stream dynamically.
+ * \endlist
+ */
+template< typename CharT, typename TraitsT, typename AllocatorT >
 class basic_formatting_ostream :
     private base_from_member< boost::log::aux::basic_ostringstreambuf< CharT, TraitsT, AllocatorT > >,
     public std::basic_ostream< CharT, TraitsT >
@@ -296,6 +309,58 @@ private:
     //! Assignment (closed)
     BOOST_LOG_DELETED_FUNCTION(basic_formatting_ostream& operator= (basic_formatting_ostream const& that))
 };
+
+/*!
+ * The function puts an object to the stream. This is a customization point for log record formatting. By default,
+ * the function will put the specified value to the stream with a regular stream output operator. However,
+ * different overloads of this function may expect additional arguments for customizing the output.
+ *
+ * \param stream Stream to put the formatted value to.
+ * \param value The value being formatted.
+ * \param args Optional additional arguments for the formatting procedure.
+ * \param tag Optional tag which can be used to associate the value with a particular attribute.
+ */
+template<
+    typename CharT,
+    typename TraitsT,
+    typename AllocatorT,
+    typename T,
+    typename ArgsT,
+    typename TagT
+>
+inline void to_log(basic_formatting_ostream< CharT, TraitsT, AllocatorT >& stream, T const& value, ArgsT const& args, TagT const& tag)
+{
+    stream << value;
+}
+
+/*!
+ * \overload
+ */
+template<
+    typename CharT,
+    typename TraitsT,
+    typename AllocatorT,
+    typename T,
+    typename ArgsT
+>
+inline void to_log(basic_formatting_ostream< CharT, TraitsT, AllocatorT >& stream, T const& value, ArgsT const& args)
+{
+    to_log(stream, value, args, boost::type< void >());
+}
+
+/*!
+ * \overload
+ */
+template<
+    typename CharT,
+    typename TraitsT,
+    typename AllocatorT,
+    typename T
+>
+inline void to_log(basic_formatting_ostream< CharT, TraitsT, AllocatorT >& stream, T const& value)
+{
+    to_log(stream, value, aux::empty_arg_list(), boost::type< void >());
+}
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 

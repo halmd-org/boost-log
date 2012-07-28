@@ -20,6 +20,8 @@
 #define BOOST_LOG_ATTRIBUTES_VALUE_REF_HPP_INCLUDED_
 
 #include <cstddef>
+#include <iosfwd>
+#include <boost/type.hpp>
 #include <boost/assert.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/eval_if.hpp>
@@ -34,15 +36,77 @@
 #include <boost/mpl/index_of.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/utility/enable_if.hpp>
+#include <boost/optional/optional_fwd.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <boost/type_traits/is_void.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/functional.hpp>
+#include <boost/log/detail/parameter_tools.hpp>
+#include <boost/log/detail/value_ref_visitation.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/log/utility/formatting_stream_fwd.hpp>
+#include <boost/log/attributes/value_ref_fwd.hpp>
 
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
+
+//! The metafunction creates a tag type
+template< typename T >
+struct make_tag_type
+{
+    typedef boost::type< T > type;
+};
+
+template< typename T >
+struct make_tag_type< boost::type< T > >
+{
+    typedef boost::type< T > type;
+};
+
+//! The function object applies the function object to the bound visitable object and argument
+template< typename VisitableT, typename FunT >
+struct vistation_invoker
+{
+    typedef typename FunT::result_type result_type;
+
+    vistation_invoker(VisitableT& visitable, result_type const& def_val) : m_visitable(visitable), m_def_val(def_val)
+    {
+    }
+
+    template< typename ArgT >
+    result_type operator() (ArgT const& arg) const
+    {
+        return m_visitable.apply_visitor_or_default(binder1st< FunT, ArgT const& >(FunT(), arg), def_val);
+    }
+
+private:
+    VisitableT& m_visitable;
+    result_type m_def_val;
+};
+
+//! The function object invokes \c tolog function for the argument
+template< typename StreamT, typename TagT >
+struct to_log_fun
+{
+    typedef void result_type;
+    typedef typename make_tag_type< TagT >::type tag_type;
+
+    explicit to_log_fun(StreamT& stream) : m_stream(stream)
+    {
+    }
+
+    template< typename ArgT >
+    result_type operator() (ArgT const& arg) const
+    {
+        to_log(m_stream, arg, empty_arg_list(), tag_type());
+    }
+
+private:
+    StreamT& m_stream;
+};
 
 //! Attribute value reference implementation for a single type case
 template< typename T, typename TagT >
@@ -52,7 +116,7 @@ public:
     //! Referenced value type
     typedef T value_type;
     //! Tag type
-    typedef TagT tag_type;
+    typedef typename make_tag_type< TagT >::type tag_type;
 
 protected:
     //! The metafunction tests if the type is compatible with the reference wrapper
@@ -104,6 +168,13 @@ public:
     }
 
     //! Returns a reference to the value
+    value_type const& operator* () const BOOST_NOEXCEPT
+    {
+        BOOST_ASSERT(m_ptr != NULL);
+        return *m_ptr;
+    }
+
+    //! Returns a reference to the value
     value_type const& get() const BOOST_NOEXCEPT
     {
         BOOST_ASSERT(m_ptr != NULL);
@@ -130,8 +201,59 @@ public:
     {
         return 0u;
     }
-};
 
+    //! Swaps two reference wrappers
+    void swap(singular_ref& that) BOOST_NOEXCEPT
+    {
+        const void* p = m_ptr;
+        m_ptr = that.m_ptr;
+        that.m_ptr = p;
+    }
+
+    //! Applies a visitor function object to the referred value
+    template< typename VisitorT >
+    typename enable_if< is_void< typename VisitorT::result_type >, bool >::type apply_visitor(VisitorT visitor) const
+    {
+        if (m_ptr)
+        {
+            visitor(*m_ptr);
+            return true;
+        }
+        else
+            return false;
+    }
+
+    //! Applies a visitor function object to the referred value
+    template< typename VisitorT >
+    typename disable_if< is_void< typename VisitorT::result_type >, optional< typename VisitorT::result_type > >::type apply_visitor(VisitorT visitor) const
+    {
+        typedef optional< typename VisitorT::result_type > result_type;
+        if (m_ptr)
+            return result_type(visitor(*m_ptr));
+        else
+            return result_type();
+    }
+
+    //! Applies a visitor function object to the referred value or returns a default value
+    template< typename VisitorT, typename DefaultT >
+    typename VisitorT::result_type apply_visitor_or_default(VisitorT visitor, DefaultT& def_val) const
+    {
+        if (m_ptr)
+            return visitor(*m_ptr);
+        else
+            return def_val;
+    }
+
+    //! Applies a visitor function object to the referred value or returns a default value
+    template< typename VisitorT, typename DefaultT >
+    typename VisitorT::result_type apply_visitor_or_default(VisitorT visitor, DefaultT const& def_val) const
+    {
+        if (m_ptr)
+            return visitor(*m_ptr);
+        else
+            return def_val;
+    }
+};
 
 //! Attribute value reference implementation for multiple types case
 template< typename T, typename TagT >
@@ -141,7 +263,7 @@ public:
     //! Referenced value type
     typedef T value_type;
     //! Tag type
-    typedef TagT tag_type;
+    typedef typename make_tag_type< TagT >::type tag_type;
 
 protected:
     //! The metafunction tests if the type is compatible with the reference wrapper
@@ -206,6 +328,69 @@ public:
     {
         return m_type_idx;
     }
+
+    //! Swaps two reference wrappers
+    void swap(variant_ref& that) BOOST_NOEXCEPT
+    {
+        const void* p = m_ptr;
+        m_ptr = that.m_ptr;
+        that.m_ptr = p;
+        unsigned int type_idx = m_type_idx;
+        m_type_idx = that.m_type_idx;
+        that.m_type_idx = type_idx;
+    }
+
+    //! Applies a visitor function object to the referred value
+    template< typename VisitorT >
+    typename enable_if< is_void< typename VisitorT::result_type >, bool >::type apply_visitor(VisitorT visitor) const
+    {
+        if (m_ptr)
+        {
+            do_apply_visitor(visitor);
+            return true;
+        }
+        else
+            return false;
+    }
+
+    //! Applies a visitor function object to the referred value
+    template< typename VisitorT >
+    typename disable_if< is_void< typename VisitorT::result_type >, optional< typename VisitorT::result_type > >::type apply_visitor(VisitorT visitor) const
+    {
+        typedef optional< typename VisitorT::result_type > result_type;
+        if (m_ptr)
+            return result_type(do_apply_visitor(visitor));
+        else
+            return result_type();
+    }
+
+    //! Applies a visitor function object to the referred value or returns a default value
+    template< typename VisitorT, typename DefaultT >
+    typename VisitorT::result_type apply_visitor_or_default(VisitorT visitor, DefaultT& def_val) const
+    {
+        if (m_ptr)
+            return do_apply_visitor(visitor);
+        else
+            return def_val;
+    }
+
+    //! Applies a visitor function object to the referred value or returns a default value
+    template< typename VisitorT, typename DefaultT >
+    typename VisitorT::result_type apply_visitor_or_default(VisitorT visitor, DefaultT const& def_val) const
+    {
+        if (m_ptr)
+            return do_apply_visitor(visitor);
+        else
+            return def_val;
+    }
+
+private:
+    template< typename VisitorT >
+    typename VisitorT::result_type do_apply_visitor(VisitorT& visitor) const
+    {
+        BOOST_ASSERT_MSG(m_type_index < mpl::size< value_type >::value, "Boost.Log: Value reference is corrupted, type index is out of bounds");
+        return apply_visitor_dispatch< SequenceT, VisitorT >::call(m_ptr, m_type_index, visitor);
+    }
 };
 
 template< typename T, typename TagT >
@@ -240,7 +425,7 @@ struct value_ref_base
  * Template parameter \c TagT is optional. It can be used for customizing the operations on this reference wrapper, such as
  * putting the referred value to log.
  */
-template< typename T, typename TagT = void >
+template< typename T, typename TagT >
 class value_ref :
     public value_ref_base< T, TagT >::type
 {
@@ -280,11 +465,167 @@ public:
     {
         return !this->m_ptr;
     }
+
+    /*!
+     * \return \c true if the wrapper does not refer to a value.
+     */
+    bool empty() const BOOST_NOEXCEPT
+    {
+        return !this->m_ptr;
+    }
+
+    /*!
+     * Swaps two reference wrappers
+     */
+    void swap(value_ref& that) BOOST_NOEXCEPT
+    {
+        base_type::swap(that);
+    }
 };
+
+//! Free swap function
+template< typename T, typename TagT >
+inline void swap(value_ref< T, TagT >& left, value_ref< T, TagT >& right)
+{
+    left.swap(right);
+}
+
+//! Stream output operator
+template< typename CharT, typename TraitsT, typename T, typename TagT >
+inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< CharT, TraitsT >& strm, value_ref< T, TagT > const& val)
+{
+    val.apply_visitor(aux::output_fun< std::basic_ostream< CharT, TraitsT > >(strm));
+    return strm;
+}
+
+//! Log formatting operator
+template< typename CharT, typename TraitsT, typename AllocatorT, typename T, typename TagT >
+inline basic_formatting_ostream< CharT, TraitsT, AllocatorT >& operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >& strm, value_ref< T, TagT > const& val)
+{
+    val.apply_visitor(aux::to_log_fun< basic_formatting_ostream< CharT, TraitsT, AllocatorT >, TagT >(strm));
+    return strm;
+}
+
+// Equality comparison
+template< typename T, typename TagT, typename U >
+inline bool operator== (value_ref< T, TagT > const& left, U const& right)
+{
+    return left.apply_visitor_or_default(aux::binder2nd< aux::equal_to, U const& >(aux::equal_to(), right), false);
+}
+
+template< typename U, typename T, typename TagT >
+inline bool operator== (U const& left, value_ref< T, TagT > const& right)
+{
+    return right.apply_visitor_or_default(aux::binder1st< aux::equal_to, U const& >(aux::equal_to(), left), false);
+}
+
+template< typename T1, typename TagT1, typename T2, typename TagT2 >
+inline bool operator== (value_ref< T1, TagT1 > const& left, value_ref< T2, TagT2 > const& right)
+{
+    if (!left && !right)
+        return true;
+    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, aux::equal_to >(right, false), false);
+}
+
+// Inequality comparison
+template< typename T, typename TagT, typename U >
+inline bool operator!= (value_ref< T, TagT > const& left, U const& right)
+{
+    return left.apply_visitor_or_default(aux::binder2nd< aux::not_equal_to, U const& >(aux::not_equal_to(), right), false);
+}
+
+template< typename U, typename T, typename TagT >
+inline bool operator!= (U const& left, value_ref< T, TagT > const& right)
+{
+    return right.apply_visitor_or_default(aux::binder1st< aux::not_equal_to, U const& >(aux::not_equal_to(), left), false);
+}
+
+template< typename T1, typename TagT1, typename T2, typename TagT2 >
+inline bool operator!= (value_ref< T1, TagT1 > const& left, value_ref< T2, TagT2 > const& right)
+{
+    if (!left && !right)
+        return false;
+    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, aux::not_equal_to >(right, false), false);
+}
+
+// Less than ordering
+template< typename T, typename TagT, typename U >
+inline bool operator< (value_ref< T, TagT > const& left, U const& right)
+{
+    return left.apply_visitor_or_default(aux::binder2nd< aux::less, U const& >(aux::less(), right), true);
+}
+
+template< typename U, typename T, typename TagT >
+inline bool operator< (U const& left, value_ref< T, TagT > const& right)
+{
+    return right.apply_visitor_or_default(aux::binder1st< aux::less, U const& >(aux::less(), left), false);
+}
+
+template< typename T1, typename TagT1, typename T2, typename TagT2 >
+inline bool operator< (value_ref< T1, TagT1 > const& left, value_ref< T2, TagT2 > const& right)
+{
+    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, aux::less >(right, false), true);
+}
+
+// Greater than ordering
+template< typename T, typename TagT, typename U >
+inline bool operator> (value_ref< T, TagT > const& left, U const& right)
+{
+    return left.apply_visitor_or_default(aux::binder2nd< aux::greater, U const& >(aux::greater(), right), false);
+}
+
+template< typename U, typename T, typename TagT >
+inline bool operator> (U const& left, value_ref< T, TagT > const& right)
+{
+    return right.apply_visitor_or_default(aux::binder1st< aux::greater, U const& >(aux::greater(), left), true);
+}
+
+template< typename T1, typename TagT1, typename T2, typename TagT2 >
+inline bool operator> (value_ref< T1, TagT1 > const& left, value_ref< T2, TagT2 > const& right)
+{
+    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, aux::greater >(right, true), false);
+}
+
+// Less or equal ordering
+template< typename T, typename TagT, typename U >
+inline bool operator<= (value_ref< T, TagT > const& left, U const& right)
+{
+    return left.apply_visitor_or_default(aux::binder2nd< aux::less_equal, U const& >(aux::less_equal(), right), true);
+}
+
+template< typename U, typename T, typename TagT >
+inline bool operator<= (U const& left, value_ref< T, TagT > const& right)
+{
+    return right.apply_visitor_or_default(aux::binder1st< aux::less_equal, U const& >(aux::less_equal(), left), false);
+}
+
+template< typename T1, typename TagT1, typename T2, typename TagT2 >
+inline bool operator<= (value_ref< T1, TagT1 > const& left, value_ref< T2, TagT2 > const& right)
+{
+    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, aux::less_equal >(right, false), true);
+}
+
+// Greater or equal ordering
+template< typename T, typename TagT, typename U >
+inline bool operator>= (value_ref< T, TagT > const& left, U const& right)
+{
+    return left.apply_visitor_or_default(aux::binder2nd< aux::greater_equal, U const& >(aux::greater_equal(), right), false);
+}
+
+template< typename U, typename T, typename TagT >
+inline bool operator>= (U const& left, value_ref< T, TagT > const& right)
+{
+    return right.apply_visitor_or_default(aux::binder1st< aux::greater_equal, U const& >(aux::greater_equal(), left), true);
+}
+
+template< typename T1, typename TagT1, typename T2, typename TagT2 >
+inline bool operator>= (value_ref< T1, TagT1 > const& left, value_ref< T2, TagT2 > const& right)
+{
+    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, aux::greater_equal >(right, true), false);
+}
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
-
 
 #endif // BOOST_LOG_ATTRIBUTES_VALUE_REF_HPP_INCLUDED_

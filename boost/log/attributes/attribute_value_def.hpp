@@ -28,23 +28,11 @@
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 #include <boost/log/attributes/attribute_def.hpp>
+#include <boost/log/attributes/value_extraction_fwd.hpp>
 
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
-
-namespace result_of {
-
-template< typename T, typename DefaultT >
-struct extract_or_default;
-
-template< typename T >
-struct extract_or_throw;
-
-template< typename T >
-struct extract;
-
-} // namespace result_of
 
 /*!
  * \brief An attribute value class

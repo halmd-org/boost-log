@@ -429,6 +429,31 @@ inline output_fun< StreamT > bind_output(StreamT& strm)
     return output_fun< StreamT >(strm);
 }
 
+//! First argument binder
+template< typename FunT, typename FirstArgT >
+struct binder1st :
+    private FunT
+{
+    typedef typename FunT::result_type result_type;
+
+    binder1st(FunT const& fun, FirstArgT const& arg) : FunT(fun), m_Arg(arg) {}
+
+    template< typename T >
+    result_type operator() (T const& arg) const
+    {
+        return FunT::operator() (m_Arg, arg);
+    }
+
+private:
+    FirstArgT m_Arg;
+};
+
+template< typename FunT, typename FirstArgT >
+inline binder1st< FunT, FirstArgT > bind1st(FunT const& fun, FirstArgT const& arg)
+{
+    return binder1st< FunT, FirstArgT >(fun, arg);
+}
+
 //! Second argument binder
 template< typename FunT, typename SecondArgT >
 struct binder2nd :
