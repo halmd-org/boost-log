@@ -19,6 +19,7 @@
 #ifndef BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_
 
+#include <boost/type.hpp>
 #include <boost/proto/extends.hpp>
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/fusion/sequence/intrinsic/at.hpp>
@@ -58,15 +59,17 @@ struct keyword_terminal
     typedef DescriptorT descriptor_type;
     //! Attribute value type
     typedef typename descriptor_type::value_type value_type;
+    //! Attribute value extractor
+    typedef value_extractor< extract_value_or_none< value_type, boost::type< descriptor_type > > > extractor_type;
 
     //! Function object result type
-    typedef typename result_of::extract< value_type >::type result_type;
+    typedef typename extractor_type::result_type result_type;
 
     //! The operator extracts the value
     template< typename EnvT >
     result_type operator() (EnvT const& env) const
     {
-        return boost::log::extract< value_type >(descriptor_type::get_name(), fusion::at_c< 0 >(env.args()));
+        return extractor_type(descriptor_type::get_name())(fusion::at_c< 0 >(env.args()));
     }
 };
 
@@ -97,7 +100,7 @@ struct attribute_keyword
         terminal<
             unary_adapter<
                 value_extractor<
-                    extract_value_or_none< value_type >
+                    extract_value_or_none< value_type, boost::type< descriptor_type > >
                 >
             >
         >
@@ -109,7 +112,7 @@ struct attribute_keyword
         typedef terminal<
             unary_adapter<
                 value_extractor<
-                    extract_value_or_none< value_type >
+                    extract_value_or_none< value_type, boost::type< descriptor_type > >
                 >
             >
         > cached_terminal;
@@ -122,7 +125,7 @@ struct attribute_keyword
         terminal<
             unary_adapter<
                 value_extractor<
-                    extract_value_or_throw< value_type >
+                    extract_value_or_throw< value_type, boost::type< descriptor_type > >
                 >
             >
         >
@@ -134,7 +137,7 @@ struct attribute_keyword
         typedef terminal<
             unary_adapter<
                 value_extractor<
-                    extract_value_or_throw< value_type >
+                    extract_value_or_throw< value_type, boost::type< descriptor_type > >
                 >
             >
         > cached_terminal;
@@ -148,7 +151,7 @@ struct attribute_keyword
         terminal<
             unary_adapter<
                 value_extractor<
-                    extract_value_or_default< value_type, T >
+                    extract_value_or_default< value_type, T, boost::type< descriptor_type > >
                 >
             >
         >
@@ -157,7 +160,7 @@ struct attribute_keyword
         typedef terminal<
             unary_adapter<
                 value_extractor<
-                    extract_value_or_default< value_type, T >
+                    extract_value_or_default< value_type, T, boost::type< descriptor_type > >
                 >
             >
         > cached_terminal;

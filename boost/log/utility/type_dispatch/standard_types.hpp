@@ -21,7 +21,8 @@
 
 #include <string>
 #include <boost/mpl/vector.hpp>
-#include <boost/mpl/joint_view.hpp>
+#include <boost/mpl/copy.hpp>
+#include <boost/mpl/back_inserter.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
 
@@ -50,7 +51,7 @@ typedef mpl::vector<
     , long long
     , unsigned long long
 #endif // defined(BOOST_HAS_LONG_LONG)
->::type integral_types;
+> integral_types;
 
 /*!
  * An MPL-sequence of FP types of attributes, supported by default
@@ -59,14 +60,14 @@ typedef mpl::vector<
     float,
     double,
     long double
->::type floating_point_types;
+> floating_point_types;
 
 /*!
  * An MPL-sequence of all numeric types of attributes, supported by default
  */
-typedef mpl::joint_view<
-    integral_types,
-    floating_point_types
+typedef mpl::copy<
+    floating_point_types,
+    mpl::back_inserter< integral_types >
 >::type numeric_types;
 
 /*!
@@ -84,14 +85,14 @@ typedef mpl::vector<
     std::wstring,
     wstring_literal
 #endif
->::type string_types;
+> string_types;
 
 /*!
  * An MPL-sequence of all attribute value types that are supported by the library by default.
  */
-typedef mpl::joint_view<
-    numeric_types,
-    string_types
+typedef mpl::copy<
+    string_types,
+    mpl::back_inserter< numeric_types >
 >::type default_attribute_types;
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log

@@ -95,8 +95,6 @@ private:
     //  Supported character types
     typedef mpl::vector<
         char
-      , signed char
-      , unsigned char
       , wchar_t
 #if !defined(BOOST_NO_CHAR16_T) && !defined(BOOST_NO_CXX11_CHAR16_T)
       , char16_t
@@ -241,7 +239,8 @@ public:
     }
 
     template< typename T >
-    basic_formatting_ostream& operator<< (T const& value)
+    typename disable_if< mpl::contains< char_types, T >, basic_formatting_ostream& >::type
+    operator<< (T const& value)
     {
         *static_cast< ostream_type* >(this) << value;
         return *this;

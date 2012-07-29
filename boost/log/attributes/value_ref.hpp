@@ -79,7 +79,7 @@ struct vistation_invoker
     template< typename ArgT >
     result_type operator() (ArgT const& arg) const
     {
-        return m_visitable.apply_visitor_or_default(binder1st< FunT, ArgT const& >(FunT(), arg), def_val);
+        return m_visitable.apply_visitor_or_default(binder1st< FunT, ArgT const& >(FunT(), arg), m_def_val);
     }
 
 private:
@@ -292,7 +292,7 @@ protected:
 
     //! Initializing constructor
     template< typename U >
-    explicit variant_ref(const U* p) BOOST_NOEXCEPT : m_ptr(p), m_type_idx(mpl::index_of< value_type, U >::value)
+    explicit variant_ref(const U* p) BOOST_NOEXCEPT : m_ptr(p), m_type_idx(mpl::index_of< value_type, U >::type::value)
     {
     }
 
@@ -389,7 +389,7 @@ private:
     typename VisitorT::result_type do_apply_visitor(VisitorT& visitor) const
     {
         BOOST_ASSERT_MSG(m_type_index < mpl::size< value_type >::value, "Boost.Log: Value reference is corrupted, type index is out of bounds");
-        return apply_visitor_dispatch< SequenceT, VisitorT >::call(m_ptr, m_type_index, visitor);
+        return apply_visitor_dispatch< value_type, VisitorT >::call(m_ptr, m_type_idx, visitor);
     }
 };
 
@@ -427,11 +427,11 @@ struct value_ref_base
  */
 template< typename T, typename TagT >
 class value_ref :
-    public value_ref_base< T, TagT >::type
+    public aux::value_ref_base< T, TagT >::type
 {
 private:
     //! Base implementation type
-    typedef typename value_ref_base< T, TagT >::type base_type;
+    typedef typename aux::value_ref_base< T, TagT >::type base_type;
 
 public:
     /*!

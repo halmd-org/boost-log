@@ -30,7 +30,6 @@
 #include <boost/mpl/copy.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/mpl/back_inserter.hpp>
-#include <boost/mpl/joint_view.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/utility/in_place_factory.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -328,29 +327,29 @@ private:
             else
             {
                 // No user-defined factory, shall use the most generic formatter we can ever imagine at this point
-                typedef mpl::joint_view<
+                typedef mpl::copy<
                     // We have to exclude std::time_t since it's an integral type and will conflict with one of the standard types
-                    boost_date_time_types,
-                    mpl::joint_view<
-                        boost_time_duration_types,
-                        boost_time_period_types
-                    >
-                > time_related_types;
-
-                typedef typename mpl::copy<
-                    mpl::joint_view<
-                        time_related_types,
-                        default_attribute_types
-                    >,
+                    boost_time_period_types,
                     mpl::back_inserter<
-                        typename mpl::vector<
+                        mpl::copy<
+                            boost_time_duration_types,
+                            mpl::back_inserter< boost_date_time_types >
+                        >::type
+                    >
+                >::type time_related_types;
+
+                typedef mpl::copy<
+                    mpl::copy<
+                        mpl::vector<
                             attributes::named_scope_list,
 #if !defined(BOOST_LOG_NO_THREADS)
                             log::aux::thread::id,
 #endif
                             log::aux::process::id
-                        >::type
-                    >
+                        >,
+                        mpl::back_inserter< time_related_types >
+                    >::type,
+                    mpl::back_inserter< default_attribute_types >
                 >::type supported_types;
 
                 append_formatter(expressions::stream << expressions::attr< supported_types >(m_AttrName));

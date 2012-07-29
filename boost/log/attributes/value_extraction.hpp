@@ -9,7 +9,7 @@
  * \author Andrey Semashev
  * \date   01.03.2008
  *
- * The header contains implementation of convenience tools to extract an attribute value
+ * The header contains implementation of tools for extracting an attribute value
  * from the view.
  */
 
@@ -29,18 +29,19 @@
 #include <boost/mpl/contains.hpp>
 #include <boost/mpl/push_back.hpp>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/variant/variant.hpp>
-#include <boost/optional/optional.hpp>
+#include <boost/type_traits/remove_cv.hpp>
+#include <boost/type_traits/remove_reference.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/functional.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_value_def.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/value_ref.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/log/attributes/value_extraction_fwd.hpp>
 
 namespace boost {
 
@@ -51,13 +52,13 @@ namespace result_of {
 /*!
  * \brief A metafunction that allows to acquire the result of the value extraction
  *
- * The metafunction results in a type that is in form of <tt>T</tt>, if \c T is
+ * The metafunction results in a type that is in form of <tt>T const&</tt>, if \c T is
  * not a MPL type sequence and <tt>DefaultT</tt> is the same as <tt>T</tt>,
- * or <tt>variant< T1, T2, ..., DefaultT ></tt> otherwise, with
- * \c T1, \c T2, etc. being the types comprising the type sequence \c T. If
- * <tt>DefaultT</tt> already exists in <tt>T</tt>, it is skipped.
+ * or <tt>value_ref< TypesT, TagT ></tt> otherwise, with
+ * \c TypesT being a type sequence comprising the types from sequence \c T and \c DefaultT,
+ * if it is not present in \c T already.
  */
-template< typename T, typename DefaultT >
+template< typename T, typename DefaultT, typename TagT >
 struct extract_or_default
 {
     typedef typename mpl::eval_if<
@@ -74,71 +75,102 @@ struct extract_or_default
         >
     >::type extracted_type;
 
-    typedef typename mpl::eval_if<
+    typedef typename mpl::if_<
         mpl::is_sequence< extracted_type >,
-        make_variant_over< extracted_type >,
-        mpl::identity< T >
+        value_ref< extracted_type, TagT >,
+        extracted_type const&
     >::type type;
 };
 
 /*!
  * \brief A metafunction that allows to acquire the result of the value extraction
  *
- * The metafunction results in a type that is in form of <tt>T</tt>, if \c T is
- * not a MPL type sequence, or <tt>variant< T1, T2, ... ></tt> otherwise, with
- * \c T1, \c T2, etc. being the types comprising the type sequence \c T.
+ * The metafunction results in a type that is in form of <tt>T const&</tt>, if \c T is
+ * not a MPL type sequence, or <tt>value_ref< T, TagT ></tt> otherwise. In the latter
+ * case the value reference shall never be empty.
  */
-template< typename T >
+template< typename T, typename TagT >
 struct extract_or_throw
 {
-    typedef typename mpl::eval_if<
+    typedef typename mpl::if_<
         mpl::is_sequence< T >,
-        make_variant_over< T >,
-        mpl::identity< T >
+        value_ref< T, TagT >,
+        T const&
     >::type type;
 };
 
 /*!
  * \brief A metafunction that allows to acquire the result of the value extraction
  *
- * The metafunction results in a type that is in form of <tt>optional< T ></tt>, if \c T is
- * not a MPL type sequence, or <tt>optional< variant< T1, T2, ... > ></tt> otherwise, with
- * \c T1, \c T2, etc. being the types comprising the type sequence \c T.
+ * The metafunction results in a type that is in form of <tt>value_ref< T, TagT ></tt>.
  */
-template< typename T >
+template< typename T, typename TagT >
 struct extract
 {
-    typedef typename mpl::eval_if<
-        mpl::is_sequence< T >,
-        make_variant_over< T >,
-        mpl::identity< T >
-    >::type extracted_type;
-
-    typedef optional< extracted_type > type;
+    typedef value_ref< T, TagT > type;
 };
 
 } // namespace result_of
+
+namespace aux {
+
+//! The function object initializes the value reference
+template< typename RefT >
+struct value_ref_initializer
+{
+    typedef void result_type;
+
+    value_ref_initializer(RefT& ref) : m_ref(ref)
+    {
+    }
+
+    template< typename ArgT >
+    result_type operator() (ArgT const& arg) const
+    {
+        m_ref = RefT(arg);
+    }
+
+private:
+    RefT& m_ref;
+};
+
+//! The function unwraps \c value_ref, if possible
+template< typename T, typename TagT >
+BOOST_LOG_FORCEINLINE typename enable_if< mpl::is_sequence< T >, value_ref< T, TagT > >::type
+unwrap_value_ref(value_ref< T, TagT > const& r)
+{
+    return r;
+}
+
+template< typename T, typename TagT >
+BOOST_LOG_FORCEINLINE typename disable_if< mpl::is_sequence< T >, T const& >::type
+unwrap_value_ref(value_ref< T, TagT > const& r)
+{
+    return r.get();
+}
+
+} // namespace aux
 
 /*!
  * \brief Attribute value extraction policy that returns an empty value if no value can be extracted
  *
  * This class is a function object which can also be used as a policy for the \c value_extractor
  * class template. The function object accepts an attribute value object and extracts the
- * contained value. If the extraction succeeds, the returned value is a filled \c optional
- * with the extracted value. Otherwise, an empty \c optional is returned.
+ * contained value. If the extraction succeeds, the returned value is a filled \c value_ref
+ * with the extracted value. Otherwise, an empty \c value_ref is returned.
  *
  * The extractor can be specialized on one or several attribute value types. The extraction
  * succeeds if the provided attribute value contains a value of type matching either one of the
  * specified types.
  */
-template< typename T >
+template< typename T, typename TagT >
 class extract_value_or_none
 {
 public:
     //! Attribute value types
     typedef T value_type;
     //! Function object result type
-    typedef typename result_of::extract< value_type >::type result_type;
+    typedef value_ref< value_type, TagT > result_type;
 
 public:
     /*!
@@ -147,14 +179,10 @@ public:
      */
     result_type operator() (attribute_value const& value) const
     {
+        result_type res;
         if (!!value)
-        {
-            result_type res;
-            value.visit< value_type >(boost::log::aux::bind_assign(res));
-            return res;
-        }
-        else
-            return result_type();
+            value.visit< value_type >(aux::value_ref_initializer< result_type >(res));
+        return res;
     }
 };
 
@@ -163,21 +191,21 @@ public:
  *
  * This class is a function object which can also be used as a policy for the \c value_extractor
  * class template. The function object accepts an attribute value object and extracts the
- * contained value. If the extraction succeeds, the returned value is the extracted value.
- * Otherwise, an exception is thrown.
+ * contained value. If the extraction succeeds, the returned value is a \c value_ref that refers
+ * to the extracted value. Otherwise, an exception is thrown.
  *
  * The extractor can be specialized on one or several attribute value types. The extraction
  * succeeds if the provided attribute value contains a value of type matching either one of the
  * specified types.
  */
-template< typename T >
+template< typename T, typename TagT >
 class extract_value_or_throw
 {
 public:
     //! Attribute value types
     typedef T value_type;
     //! Function object result type
-    typedef typename result_of::extract_or_throw< value_type >::type result_type;
+    typedef value_ref< value_type, TagT > result_type;
 
 public:
     /*!
@@ -189,7 +217,7 @@ public:
         if (!!value)
         {
             result_type res;
-            if (!value.visit< value_type >(boost::log::aux::bind_assign(res)))
+            if (!value.visit< value_type >(aux::value_ref_initializer< result_type >(res)))
                 BOOST_LOG_THROW_DESCR_PARAMS(invalid_type, "Attribute value has incompatible type", (value.get_type()));
             return res;
         }
@@ -203,33 +231,35 @@ public:
  *
  * This class is a function object which can also be used as a policy for the \c value_extractor
  * class template. The function object accepts an attribute value object and extracts the
- * contained value. If the extraction succeeds, the extracted value is returned.
- * Otherwise, the default value is returned.
+ * contained value. If the extraction succeeds, the returned value is a \c value_ref that refers to
+ * the extracted value. Otherwise, the \c value_ref refers to the default value.
  *
  * The extractor can be specialized on one or several attribute value types. The extraction
  * succeeds if the provided attribute value contains a value of type matching either one of the
  * specified types.
  */
-template< typename T, typename DefaultT = T >
+template< typename T, typename DefaultT, typename TagT >
 class extract_value_or_default
 {
 public:
     //! Attribute value types
     typedef T value_type;
     //! Default value type
-    typedef DefaultT default_type;
+    typedef typename remove_cv< typename remove_reference< DefaultT >::type >::type default_type;
+
+private:
+    //! Final set of result types
+    typedef typename result_of::extract_or_default< value_type, default_type >::extracted_type extracted_type;
+
+public:
     //! Function object result type
-    typedef typename result_of::extract_or_default< value_type, default_type >::type result_type;
+    typedef value_ref< extracted_type, TagT > result_type;
 
 private:
     //! Default value
-    default_type m_default;
+    DefaultT m_default;
 
 public:
-    /*!
-     * Default constructor. The default value is default-constructed.
-     */
-    extract_value_or_default() : m_default() {}
     /*!
      * Initializing constructor. The default value is initialized with the provided value.
      */
@@ -241,14 +271,10 @@ public:
      */
     result_type operator() (attribute_value const& value) const
     {
+        result_type res(m_default);
         if (!!value)
-        {
-            result_type res = m_default;
-            value.visit< value_type >(boost::log::aux::bind_assign(res));
-            return res;
-        }
-        else
-            return m_default;
+            value.visit< value_type >(aux::value_ref_initializer< result_type >(res));
+        return res;
     }
 };
 
@@ -338,7 +364,11 @@ public:
     }
 };
 
-#ifdef BOOST_LOG_DOXYGEN_PASS
+#if defined(BOOST_LOG_DOXYGEN_PASS) || !(defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS))
+#define BOOST_LOG_AUX_VOID_DEFAULT = void
+#else
+#define BOOST_LOG_AUX_VOID_DEFAULT
+#endif
 
 /*!
  * The function extracts an attribute value from the view. The user has to explicitly specify the
@@ -346,21 +376,43 @@ public:
  *
  * \param name The name of the attribute value to extract.
  * \param attrs A set of attribute values in which to look for the specified attribute value.
- * \return The extracted value, if found. An empty value otherwise.
+ * \return A \c value_ref that refers to the extracted value, if found. An empty value otherwise.
  */
-template< typename T >
-typename result_of::extract< T >::type extract(attribute_name const& name, attribute_values_view const& attrs);
+template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
+inline typename result_of::extract< T, TagT >::type extract(attribute_name const& name, attribute_values_view const& attrs)
+{
+    value_extractor< extract_value_or_none< T, TagT > > extractor(name);
+    return extractor(attrs);
+}
 
 /*!
  * The function extracts an attribute value from the view. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be extracted.
  *
  * \param name The name of the attribute value to extract.
- * \param record A log record. The attribute value will be sought among those associated with the record.
- * \return The extracted value, if found. An empty value otherwise.
+ * \param rec A log record. The attribute value will be sought among those associated with the record.
+ * \return A \c value_ref that refers to the extracted value, if found. An empty value otherwise.
  */
-template< typename T >
-typename result_of::extract< T >::type extract(attribute_name const& name, record const& record);
+template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
+inline typename result_of::extract< T, TagT >::type extract(attribute_name const& name, record const& rec)
+{
+    value_extractor< extract_value_or_none< T, TagT > > extractor(name);
+    return extractor(rec);
+}
+
+/*!
+ * The function extracts an attribute value from the view. The user has to explicitly specify the
+ * type or set of possible types of the attribute value to be extracted.
+ *
+ * \param value Attribute value.
+ * \return A \c value_ref that refers to the extracted value, if found. An empty value otherwise.
+ */
+template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
+inline typename result_of::extract< T, TagT >::type extract(attribute_value const& value)
+{
+    extract_value_or_none< T, TagT > extractor;
+    return extractor(value);
+}
 
 /*!
  * The function extracts an attribute value from the view. The user has to explicitly specify the
@@ -368,121 +420,175 @@ typename result_of::extract< T >::type extract(attribute_name const& name, recor
  *
  * \param name The name of the attribute value to extract.
  * \param attrs A set of attribute values in which to look for the specified attribute value.
- * \return The extracted value.
+ * \return The extracted value or a non-empty \c value_ref that refers to the value.
  * \throws An exception is thrown if the requested value cannot be extracted.
  */
-template< typename T >
-typename result_of::extract_or_throw< T >::type extract_or_throw(attribute_name const& name, attribute_values_view const& attrs);
+template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
+inline typename result_of::extract_or_throw< T, TagT >::type extract_or_throw(attribute_name const& name, attribute_values_view const& attrs)
+{
+    value_extractor< extract_value_or_throw< T, TagT > > extractor(name);
+    return aux::unwrap_value_ref(extractor(attrs));
+}
 
 /*!
  * The function extracts an attribute value from the view. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be extracted.
  *
  * \param name The name of the attribute value to extract.
- * \param record A log record. The attribute value will be sought among those associated with the record.
- * \return The extracted value.
+ * \param rec A log record. The attribute value will be sought among those associated with the record.
+ * \return The extracted value or a non-empty \c value_ref that refers to the value.
  * \throws An exception is thrown if the requested value cannot be extracted.
  */
-template< typename T >
-typename result_of::extract_or_throw< T >::type extract_or_throw(attribute_name const& name, record const& record);
+template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
+inline typename result_of::extract_or_throw< T, TagT >::type extract_or_throw(attribute_name const& name, record const& rec)
+{
+    value_extractor< extract_value_or_throw< T, TagT > > extractor(name);
+    return aux::unwrap_value_ref(extractor(rec));
+}
 
 /*!
  * The function extracts an attribute value from the view. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be extracted.
+ *
+ * \param value Attribute value.
+ * \return The extracted value or a non-empty \c value_ref that refers to the value.
+ * \throws An exception is thrown if the requested value cannot be extracted.
+ */
+template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
+inline typename result_of::extract_or_throw< T, TagT >::type extract_or_throw(attribute_value const& value)
+{
+    extract_value_or_throw< T, TagT > extractor;
+    return aux::unwrap_value_ref(extractor(value));
+}
+
+/*!
+ * The function extracts an attribute value from the view. The user has to explicitly specify the
+ * type or set of possible types of the attribute value to be extracted.
+ *
+ * \note Caution must be excercised if the default value is a temporary object. Because the function returns
+ *       a reference, if the temporary object is destroued, the reference may become dangling.
  *
  * \param name The name of the attribute value to extract.
  * \param attrs A set of attribute values in which to look for the specified attribute value.
  * \param def_val The default value
  * \return The extracted value, if found. The default value otherwise.
  */
-template< typename T, typename DefaultT >
-typename result_of::extract_or_default< T, DefaultT >::type extract_or_default(
-    attribute_name const& name, attribute_values_view const& attrs, DefaultT const& def_val);
+template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT, typename DefaultT >
+inline typename result_of::extract_or_default< T, DefaultT, TagT >::type extract_or_default(
+    attribute_name const& name, attribute_values_view const& attrs, DefaultT const& def_val)
+{
+    value_extractor< extract_value_or_default< T, DefaultT const&, TagT > > extractor(name, def_val);
+    return aux::unwrap_value_ref(extractor(attrs));
+}
 
 /*!
  * The function extracts an attribute value from the view. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be visited.
  *
+ * \note Caution must be excercised if the default value is a temporary object. Because the function returns
+ *       a reference, if the temporary object is destroued, the reference may become dangling.
+ *
  * \param name The name of the attribute value to extract.
- * \param record A log record. The attribute value will be sought among those associated with the record.
+ * \param rec A log record. The attribute value will be sought among those associated with the record.
  * \param def_val The default value
  * \return The extracted value, if found. The default value otherwise.
  */
-template< typename T, typename DefaultT >
-typename result_of::extract_or_default< T, DefaultT >::type extract_or_default(
-    attribute_name const& name, record const& record, DefaultT const& def_val);
+template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT, typename DefaultT >
+inline typename result_of::extract_or_default< T, DefaultT, TagT >::type extract_or_default(
+    attribute_name const& name, record const& rec, DefaultT const& def_val)
+{
+    value_extractor< extract_value_or_default< T, DefaultT const&, TagT > > extractor(name, def_val);
+    return aux::unwrap_value_ref(extractor(rec));
+}
 
-#else // BOOST_LOG_DOXYGEN_PASS
+/*!
+ * The function extracts an attribute value from the view. The user has to explicitly specify the
+ * type or set of possible types of the attribute value to be visited.
+ *
+ * \note Caution must be excercised if the default value is a temporary object. Because the function returns
+ *       a reference, if the temporary object is destroued, the reference may become dangling.
+ *
+ * \param value Attribute value.
+ * \param def_val The default value
+ * \return The extracted value, if found. The default value otherwise.
+ */
+template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT, typename DefaultT >
+inline typename result_of::extract_or_default< T, DefaultT, TagT >::type extract_or_default(attribute_value const& value, DefaultT const& def_val)
+{
+    extract_value_or_default< T, DefaultT const&, TagT > extractor(def_val);
+    return aux::unwrap_value_ref(extractor(value));
+}
+
+#undef BOOST_LOG_AUX_VOID_DEFAULT
+
+#if defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
 
 template< typename T >
-inline typename value_extractor< extract_value_or_none< T > >::result_type extract(
-    attribute_name const& name, attribute_values_view const& attrs)
+inline typename result_of::extract< T >::type extract(attribute_name const& name, attribute_values_view const& attrs)
 {
     value_extractor< extract_value_or_none< T > > extractor(name);
     return extractor(attrs);
 }
 
 template< typename T >
-inline typename value_extractor< extract_value_or_none< T > >::result_type extract(
-    attribute_name const& name, record const& record)
+inline typename result_of::extract< T >::type extract(attribute_name const& name, record const& rec)
 {
     value_extractor< extract_value_or_none< T > > extractor(name);
-    return extractor(record);
+    return extractor(rec);
 }
 
 template< typename T >
-inline typename value_extractor< extract_value_or_throw< T > >::result_type extract_or_throw(
-    attribute_name const& name, attribute_values_view const& attrs)
+inline typename result_of::extract< T >::type extract(attribute_value const& value)
 {
-    value_extractor< extract_value_or_throw< T > > extractor(name);
-    return extractor(attrs);
+    extract_value_or_none< T > extractor;
+    return extractor(value);
 }
 
 template< typename T >
-inline typename value_extractor< extract_value_or_throw< T > >::result_type extract_or_throw(
-    attribute_name const& name, record const& record)
+inline typename result_of::extract_or_throw< T >::type extract_or_throw(attribute_name const& name, attribute_values_view const& attrs)
 {
     value_extractor< extract_value_or_throw< T > > extractor(name);
-    return extractor(record);
+    return aux::unwrap_value_ref(extractor(attrs));
+}
+
+template< typename T >
+inline typename result_of::extract_or_throw< T >::type extract_or_throw(attribute_name const& name, record const& rec)
+{
+    value_extractor< extract_value_or_throw< T > > extractor(name);
+    return aux::unwrap_value_ref(extractor(rec));
+}
+
+template< typename T >
+inline typename result_of::extract_or_throw< T >::type extract_or_throw(attribute_value const& value)
+{
+    extract_value_or_throw< T > extractor;
+    return aux::unwrap_value_ref(extractor(value));
 }
 
 template< typename T, typename DefaultT >
-inline typename disable_if<
-    is_same< T, DefaultT >,
-    typename value_extractor< extract_value_or_default< T, DefaultT > >::result_type
->::type extract_or_default(attribute_name const& name, attribute_values_view const& attrs, DefaultT const& def_val)
+inline typename result_of::extract_or_default< T, DefaultT >::type extract_or_default(
+    attribute_name const& name, attribute_values_view const& attrs, DefaultT const& def_val)
 {
-    value_extractor< extract_value_or_default< T, DefaultT > > extractor(name, def_val);
-    return extractor(attrs);
+    value_extractor< extract_value_or_default< T, DefaultT const& > > extractor(name, def_val);
+    return aux::unwrap_value_ref(extractor(attrs));
 }
 
 template< typename T, typename DefaultT >
-inline typename disable_if<
-    is_same< T, DefaultT >,
-    typename value_extractor< extract_value_or_default< T, DefaultT > >::result_type
->::type extract_or_default(attribute_name const& name, record const& record, DefaultT const& def_val)
+inline typename result_of::extract_or_default< T, DefaultT >::type extract_or_default(
+    attribute_name const& name, record const& rec, DefaultT const& def_val)
 {
-    value_extractor< extract_value_or_default< T, DefaultT > > extractor(name, def_val);
-    return extractor(record);
+    value_extractor< extract_value_or_default< T, DefaultT const& > > extractor(name, def_val);
+    return aux::unwrap_value_ref(extractor(rec));
 }
 
-template< typename T >
-inline typename value_extractor< extract_value_or_default< T, T > >::result_type extract_or_default(
-    attribute_name const& name, attribute_values_view const& attrs, T const& def_val)
+template< typename T, typename DefaultT >
+inline typename result_of::extract_or_default< T, DefaultT >::type extract_or_default(attribute_value const& value, DefaultT const& def_val)
 {
-    value_extractor< extract_value_or_default< T, T > > extractor(name, def_val);
-    return extractor(attrs);
+    extract_value_or_default< T, DefaultT const& > extractor(def_val);
+    return aux::unwrap_value_ref(extractor(value));
 }
 
-template< typename T >
-inline typename value_extractor< extract_value_or_default< T, T > >::result_type extract_or_default(
-    attribute_name const& name, record const& record, T const& def_val)
-{
-    value_extractor< extract_value_or_default< T, T > > extractor(name, def_val);
-    return extractor(record);
-}
-
-#endif // BOOST_LOG_DOXYGEN_PASS
+#endif // defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 

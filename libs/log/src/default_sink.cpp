@@ -184,7 +184,7 @@ bool default_sink::will_consume(attribute_values_view const&)
 void default_sink::consume(record const& rec)
 {
     BOOST_LOG_EXPR_IF_MT(lock_guard< mutex_type > lock(m_mutex);)
-    m_message_visitor(rec.attribute_values(), message_printer(m_severity_extractor(rec)));
+        m_message_visitor(rec.attribute_values(), message_printer(m_severity_extractor(rec).get()));
 }
 
 void default_sink::flush()

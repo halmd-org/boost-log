@@ -31,19 +31,19 @@ namespace result_of {
 /*!
  * \brief A metafunction that allows to acquire the result of the value extraction
  */
-template< typename T, typename DefaultT >
+template< typename T, typename DefaultT = T, typename TagT = void >
 struct extract_or_default;
 
 /*!
  * \brief A metafunction that allows to acquire the result of the value extraction
  */
-template< typename T >
+template< typename T, typename TagT = void >
 struct extract_or_throw;
 
 /*!
  * \brief A metafunction that allows to acquire the result of the value extraction
  */
-template< typename T >
+template< typename T, typename TagT = void >
 struct extract;
 
 } // namespace result_of
@@ -51,19 +51,19 @@ struct extract;
 /*!
  * \brief Attribute value extraction policy that returns an empty value if no value can be extracted
  */
-template< typename T >
+template< typename T, typename TagT = void >
 class extract_value_or_none;
 
 /*!
  * \brief Attribute value extraction policy that throws an exception if no value can be extracted
  */
-template< typename T >
+template< typename T, typename TagT = void >
 class extract_value_or_throw;
 
 /*!
  * \brief Attribute value extraction policy that returns an default value if no value can be extracted
  */
-template< typename T, typename DefaultT = T >
+template< typename T, typename DefaultT = T, typename TagT = void >
 class extract_value_or_default;
 
 /*!
