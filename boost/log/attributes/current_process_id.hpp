@@ -40,7 +40,7 @@ class current_process_id :
 
 public:
     /*!
-     * Constructor. Inirializes the attribute with the current process identifier.
+     * Constructor. Initializes the attribute with the current process identifier.
      */
     current_process_id() : base_type(boost::log::aux::this_process::get_id()) {}
     /*!

@@ -65,6 +65,7 @@ local BOOST_LOG_COMMON_SRC =
     severity_level.cpp
     global_logger_storage.cpp
     named_scope.cpp
+    process_name.cpp
     process_id.cpp
     thread_id.cpp
     timer.cpp
