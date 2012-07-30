@@ -19,7 +19,7 @@
 #ifndef BOOST_LOG_DETAIL_LIGHT_FUNCTION_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_LIGHT_FUNCTION_HPP_INCLUDED_
 
-#include <boost/assert.hpp>
+#include <cstddef>
 #include <boost/move/move.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/iteration/iterate.hpp>
@@ -33,6 +33,9 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/remove_cv.hpp>
+#endif
+#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
+#include <boost/assert.hpp>
 #endif
 
 #ifndef BOOST_LOG_LIGHT_FUNCTION_LIMIT
@@ -154,9 +157,16 @@ public:
     {
     }
     //! Constructor from NULL
-    BOOST_LOG_LWFUNCTION_NAME(int p) : m_pImpl(NULL)
+#if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
+    BOOST_LOG_LWFUNCTION_NAME(std::nullptr_t)
+#else
+    BOOST_LOG_LWFUNCTION_NAME(int p)
+#endif
+        : m_pImpl(NULL)
     {
+#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
         BOOST_ASSERT(p == 0);
+#endif
     }
     ~BOOST_LOG_LWFUNCTION_NAME()
     {
@@ -175,9 +185,15 @@ public:
         return *this;
     }
     //! Assignment of NULL
+#if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
+    BOOST_LOG_LWFUNCTION_NAME& operator= (std::nullptr_t)
+#else
     BOOST_LOG_LWFUNCTION_NAME& operator= (int p)
+#endif
     {
+#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
         BOOST_ASSERT(p == 0);
+#endif
         clear();
         return *this;
     }
@@ -315,9 +331,16 @@ public:
     {
     }
     //! Constructor from NULL
-    BOOST_LOG_LWFUNCTION_NAME(int p) : m_pImpl(NULL)
+#if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
+    BOOST_LOG_LWFUNCTION_NAME(std::nullptr_t)
+#else
+    BOOST_LOG_LWFUNCTION_NAME(int p)
+#endif
+        : m_pImpl(NULL)
     {
+#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
         BOOST_ASSERT(p == 0);
+#endif
     }
     ~BOOST_LOG_LWFUNCTION_NAME()
     {
@@ -336,9 +359,15 @@ public:
         return *this;
     }
     //! Assignment of NULL
+#if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
+    BOOST_LOG_LWFUNCTION_NAME& operator= (std::nullptr_t)
+#else
     BOOST_LOG_LWFUNCTION_NAME& operator= (int p)
+#endif
     {
+#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
         BOOST_ASSERT(p == 0);
+#endif
         clear();
         return *this;
     }
