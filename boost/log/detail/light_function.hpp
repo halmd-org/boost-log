@@ -19,7 +19,7 @@
 #ifndef BOOST_LOG_DETAIL_LIGHT_FUNCTION_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_LIGHT_FUNCTION_HPP_INCLUDED_
 
-#include <boost/assert.hpp>
+#include <cstddef>
 #include <boost/move/move.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/iteration/iterate.hpp>
@@ -29,10 +29,13 @@
 #include <boost/preprocessor/repetition/enum_trailing_binary_params.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
-#if defined(BOOST_NO_RVALUE_REFERENCES)
+#if defined(BOOST_NO_RVALUE_REFERENCES) || defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/remove_cv.hpp>
+#endif
+#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
+#include <boost/assert.hpp>
 #endif
 
 #ifndef BOOST_LOG_LIGHT_FUNCTION_LIMIT
@@ -143,7 +146,7 @@ public:
         m_pImpl = that.m_pImpl;
         that.m_pImpl = NULL;
     }
-#if !defined(BOOST_NO_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME(FunT const& fun)
 #else
@@ -154,9 +157,16 @@ public:
     {
     }
     //! Constructor from NULL
-    BOOST_LOG_LWFUNCTION_NAME(int p) : m_pImpl(NULL)
+#if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
+    BOOST_LOG_LWFUNCTION_NAME(std::nullptr_t)
+#else
+    BOOST_LOG_LWFUNCTION_NAME(int p)
+#endif
+        : m_pImpl(NULL)
     {
+#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
         BOOST_ASSERT(p == 0);
+#endif
     }
     ~BOOST_LOG_LWFUNCTION_NAME()
     {
@@ -175,13 +185,19 @@ public:
         return *this;
     }
     //! Assignment of NULL
+#if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
+    BOOST_LOG_LWFUNCTION_NAME& operator= (std::nullptr_t)
+#else
     BOOST_LOG_LWFUNCTION_NAME& operator= (int p)
+#endif
     {
+#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
         BOOST_ASSERT(p == 0);
+#endif
         clear();
         return *this;
     }
-#if !defined(BOOST_NO_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME& operator= (FunT const& fun)
 #else
@@ -304,7 +320,7 @@ public:
         m_pImpl = that.m_pImpl;
         that.m_pImpl = NULL;
     }
-#if !defined(BOOST_NO_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME(FunT const& fun)
 #else
@@ -315,9 +331,16 @@ public:
     {
     }
     //! Constructor from NULL
-    BOOST_LOG_LWFUNCTION_NAME(int p) : m_pImpl(NULL)
+#if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
+    BOOST_LOG_LWFUNCTION_NAME(std::nullptr_t)
+#else
+    BOOST_LOG_LWFUNCTION_NAME(int p)
+#endif
+        : m_pImpl(NULL)
     {
+#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
         BOOST_ASSERT(p == 0);
+#endif
     }
     ~BOOST_LOG_LWFUNCTION_NAME()
     {
@@ -336,13 +359,19 @@ public:
         return *this;
     }
     //! Assignment of NULL
+#if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
+    BOOST_LOG_LWFUNCTION_NAME& operator= (std::nullptr_t)
+#else
     BOOST_LOG_LWFUNCTION_NAME& operator= (int p)
+#endif
     {
+#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
         BOOST_ASSERT(p == 0);
+#endif
         clear();
         return *this;
     }
-#if !defined(BOOST_NO_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME& operator= (FunT const& fun)
 #else
