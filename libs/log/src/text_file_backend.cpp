@@ -654,6 +654,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         m_TotalSize(0)
     {
         m_StorageDir = make_absolute(target_dir);
+        filesystem::create_directories(m_StorageDir);
     }
 
     //! Destructor
@@ -694,6 +695,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                 while (filesystem::exists(info.m_Path) && n < (std::numeric_limits< unsigned int >::max)());
             }
 
+            // The directory should have been created in constructor, but just in case it got deleted since then...
             filesystem::create_directories(m_StorageDir);
         }
 
