@@ -33,7 +33,7 @@
  * in terms of which the conversion operator will be implemented.
  */
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
-    explicit operator bool () const\
+    BOOST_LOG_FORCEINLINE explicit operator bool () const\
     {\
         return !this->operator! ();\
     }
@@ -67,7 +67,7 @@ template< typename T > void operator<< (T const&, boost::log::aux::unspecified_b
 template< typename T > void operator>> (T const&, boost::log::aux::unspecified_bool_type);
 
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
-    operator boost::log::aux::unspecified_bool_type () const\
+    BOOST_LOG_FORCEINLINE operator boost::log::aux::unspecified_bool_type () const\
     {\
         if (!this->operator!())\
             return &boost::log::aux::unspecified_bool::true_value;\
@@ -78,7 +78,7 @@ template< typename T > void operator>> (T const&, boost::log::aux::unspecified_b
 #else
 
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
-    operator bool () const\
+    BOOST_LOG_FORCEINLINE operator bool () const\
     {\
         return !this->operator! ();\
     }

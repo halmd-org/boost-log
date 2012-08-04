@@ -69,7 +69,7 @@ public:
     /*!
      * Default constructor. Creates an object that does not refer to any attribute name.
      */
-    attribute_name() : m_id(uninitialized)
+    BOOST_CONSTEXPR attribute_name() BOOST_NOEXCEPT : m_id(uninitialized)
     {
     }
     /*!
@@ -98,14 +98,14 @@ public:
      * \return \c true if <tt>*this</tt> and \c that refer to the same attribute name,
      *         and \c false otherwise.
      */
-    bool operator== (attribute_name const& that) const { return m_id == that.m_id; }
+    bool operator== (attribute_name const& that) const BOOST_NOEXCEPT { return m_id == that.m_id; }
     /*!
      * Compares the attribute names
      *
      * \return \c true if <tt>*this</tt> and \c that refer to different attribute names,
      *         and \c false otherwise.
      */
-    bool operator!= (attribute_name const& that) const { return m_id != that.m_id; }
+    bool operator!= (attribute_name const& that) const BOOST_NOEXCEPT { return m_id != that.m_id; }
 
     /*!
      * Compares the attribute names
@@ -149,13 +149,13 @@ public:
      * \return \c true if <tt>*this</tt> was default-constructed and does not refer to any attribute name,
      *         \c false otherwise
      */
-    bool operator! () const { return (m_id == uninitialized); }
+    bool operator! () const BOOST_NOEXCEPT { return (m_id == uninitialized); }
 
     /*!
      * \return The associated id value
      * \pre <tt>(!*this) == false</tt>
      */
-    id_type id() const
+    id_type id() const BOOST_NOEXCEPT
     {
         BOOST_ASSERT(m_id != uninitialized);
         return m_id;

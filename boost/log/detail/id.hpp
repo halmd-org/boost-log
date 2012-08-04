@@ -40,33 +40,33 @@ private:
     native_type m_NativeID;
 
 public:
-    id() : m_NativeID(0) {}
+    BOOST_CONSTEXPR id() BOOST_NOEXCEPT : m_NativeID(0) {}
 
-    explicit id(native_type native) : m_NativeID(native) {}
+    explicit id(native_type native) BOOST_NOEXCEPT : m_NativeID(native) {}
 
-    native_type native_id() const { return m_NativeID; }
+    native_type native_id() const BOOST_NOEXCEPT { return m_NativeID; }
 
-    bool operator== (id const& that) const
+    bool operator== (id const& that) const BOOST_NOEXCEPT
     {
         return (m_NativeID == that.m_NativeID);
     }
-    bool operator!= (id const& that) const
+    bool operator!= (id const& that) const BOOST_NOEXCEPT
     {
         return (m_NativeID != that.m_NativeID);
     }
-    bool operator< (id const& that) const
+    bool operator< (id const& that) const BOOST_NOEXCEPT
     {
         return (m_NativeID < that.m_NativeID);
     }
-    bool operator> (id const& that) const
+    bool operator> (id const& that) const BOOST_NOEXCEPT
     {
         return (m_NativeID > that.m_NativeID);
     }
-    bool operator<= (id const& that) const
+    bool operator<= (id const& that) const BOOST_NOEXCEPT
     {
         return (m_NativeID <= that.m_NativeID);
     }
-    bool operator>= (id const& that) const
+    bool operator>= (id const& that) const BOOST_NOEXCEPT
     {
         return (m_NativeID >= that.m_NativeID);
     }

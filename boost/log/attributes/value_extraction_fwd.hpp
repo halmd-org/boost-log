@@ -9,7 +9,7 @@
  * \author Andrey Semashev
  * \date   01.03.2008
  *
- * The header contains forward declaration of tools for extracting an attribute value
+ * The header contains forward declaration of tools for extracting attribute values
  * from the view.
  */
 

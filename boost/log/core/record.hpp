@@ -121,12 +121,12 @@ public:
     /*!
      * Copy constructor
      */
-    record(record const& that) : m_impl(that.m_impl) {}
+    record(record const& that) BOOST_NOEXCEPT : m_impl(that.m_impl) {}
 
     /*!
      * Move constructor. Source record contents unspecified after the operation.
      */
-    record(BOOST_RV_REF(record) that)
+    record(BOOST_RV_REF(record) that) BOOST_NOEXCEPT
     {
         m_impl.swap(that.m_impl);
     }
@@ -134,12 +134,12 @@ public:
     /*!
      * Destructor. Destroys the record, releases any sinks and attribute values that were involved in processing this record.
      */
-    ~record() {}
+    ~record() BOOST_NOEXCEPT {}
 
     /*!
      * Copy assignment
      */
-    record& operator= (BOOST_COPY_ASSIGN_REF(record) that)
+    record& operator= (BOOST_COPY_ASSIGN_REF(record) that) BOOST_NOEXCEPT
     {
         m_impl = that.m_impl;
         return *this;
@@ -148,7 +148,7 @@ public:
     /*!
      * Move assignment. Source record contents unspecified after the operation.
      */
-    record& operator= (BOOST_RV_REF(record) that)
+    record& operator= (BOOST_RV_REF(record) that) BOOST_NOEXCEPT
     {
         m_impl.swap(that.m_impl);
         return *this;
@@ -159,7 +159,7 @@ public:
      *
      * \pre <tt>!!*this</tt>
      */
-    attribute_values_view const& attribute_values() const
+    attribute_values_view const& attribute_values() const BOOST_NOEXCEPT
     {
         return m_impl->m_attribute_values;
     }
@@ -171,7 +171,7 @@ public:
      * \return \c true if both <tt>*this</tt> and \a that identify the same log record or do not
      *         identify any record, \c false otherwise.
      */
-    bool operator== (record const& that) const
+    bool operator== (record const& that) const BOOST_NOEXCEPT
     {
         return m_impl == that.m_impl;
     }
@@ -181,7 +181,7 @@ public:
      * \param that Comparand
      * \return <tt>!(*this == that)</tt>
      */
-    bool operator!= (record const& that) const
+    bool operator!= (record const& that) const BOOST_NOEXCEPT
     {
         return !operator== (that);
     }
@@ -198,7 +198,7 @@ public:
      *
      * \return \c false, if the <tt>*this</tt> identifies a log record, \c true, if the <tt>*this</tt> is not valid
      */
-    bool operator! () const
+    bool operator! () const BOOST_NOEXCEPT
     {
         return !m_impl;
     }
@@ -209,7 +209,7 @@ public:
      * \param that Another record to swap with
      * <b>Throws:</b> Nothing
      */
-    void swap(record& that)
+    void swap(record& that) BOOST_NOEXCEPT
     {
         m_impl.swap(that.m_impl);
     }
@@ -220,7 +220,7 @@ public:
      *
      * \post <tt>!*this == true</tt>
      */
-    void reset()
+    void reset() BOOST_NOEXCEPT
     {
         m_impl.reset();
     }
@@ -249,7 +249,7 @@ public:
 /*!
  * A free-standing swap function overload for \c basic_record
  */
-inline void swap(record& left, record& right)
+inline void swap(record& left, record& right) BOOST_NOEXCEPT
 {
     left.swap(right);
 }

@@ -88,7 +88,7 @@ private:
 
     public:
         //! Constructor
-        explicit reference_proxy(attribute_set* pContainer, key_type const& key) :
+        explicit reference_proxy(attribute_set* pContainer, key_type const& key) BOOST_NOEXCEPT :
             m_pContainer(pContainer),
             m_key(key)
         {
@@ -121,9 +121,8 @@ private:
 
         node_base();
 
-    private:
-        node_base(node_base const&);
-        node_base& operator= (node_base const&);
+        BOOST_LOG_DELETED_FUNCTION(node_base(node_base const&))
+        BOOST_LOG_DELETED_FUNCTION(node_base& operator= (node_base const&))
     };
 
     //! Container elements
@@ -166,13 +165,13 @@ private:
 
     public:
         //  Constructors
-        iter() : m_pNode(NULL) {}
-        explicit iter(node_base* pNode) : m_pNode(pNode) {}
-        iter(iter< false > const& that) : m_pNode(that.m_pNode) {}
+        BOOST_CONSTEXPR iter() : m_pNode(NULL) {}
+        explicit iter(node_base* pNode) BOOST_NOEXCEPT : m_pNode(pNode) {}
+        iter(iter< false > const& that) BOOST_NOEXCEPT : m_pNode(that.m_pNode) {}
 
         //! Assignment
         template< bool f >
-        iter& operator= (iter< f > const& that)
+        iter& operator= (iter< f > const& that) BOOST_NOEXCEPT
         {
             m_pNode = that.m_pNode;
             return *this;
@@ -180,28 +179,28 @@ private:
 
         //  Comparison
         template< bool f >
-        bool operator== (iter< f > const& that) const { return (m_pNode == that.m_pNode); }
+        bool operator== (iter< f > const& that) const BOOST_NOEXCEPT { return (m_pNode == that.m_pNode); }
         template< bool f >
-        bool operator!= (iter< f > const& that) const { return (m_pNode != that.m_pNode); }
+        bool operator!= (iter< f > const& that) const BOOST_NOEXCEPT { return (m_pNode != that.m_pNode); }
 
         //  Modification
-        iter& operator++ ()
+        iter& operator++ () BOOST_NOEXCEPT
         {
             m_pNode = m_pNode->m_pNext;
             return *this;
         }
-        iter& operator-- ()
+        iter& operator-- () BOOST_NOEXCEPT
         {
             m_pNode = m_pNode->m_pPrev;
             return *this;
         }
-        iter operator++ (int)
+        iter operator++ (int) BOOST_NOEXCEPT
         {
             iter tmp(*this);
             m_pNode = m_pNode->m_pNext;
             return tmp;
         }
-        iter operator-- (int)
+        iter operator-- (int) BOOST_NOEXCEPT
         {
             iter tmp(*this);
             m_pNode = m_pNode->m_pPrev;
@@ -209,10 +208,10 @@ private:
         }
 
         //  Dereferencing
-        pointer operator-> () const { return &(static_cast< node* >(m_pNode)->m_Value); }
-        reference operator* () const { return static_cast< node* >(m_pNode)->m_Value; }
+        pointer operator-> () const BOOST_NOEXCEPT { return &(static_cast< node* >(m_pNode)->m_Value); }
+        reference operator* () const BOOST_NOEXCEPT { return static_cast< node* >(m_pNode)->m_Value; }
 
-        node_base* base() const { return m_pNode; }
+        node_base* base() const BOOST_NOEXCEPT { return m_pNode; }
 
     private:
         node_base* m_pNode;
@@ -259,7 +258,7 @@ public:
     /*!
      * Move constructor
      */
-    attribute_set(BOOST_RV_REF(attribute_set) that) : m_pImpl(that.m_pImpl)
+    attribute_set(BOOST_RV_REF(attribute_set) that) BOOST_NOEXCEPT : m_pImpl(that.m_pImpl)
     {
         that.m_pImpl = NULL;
     }
@@ -267,14 +266,14 @@ public:
     /*!
      * Destructor. All stored references to attributes are released.
      */
-    BOOST_LOG_API ~attribute_set();
+    BOOST_LOG_API ~attribute_set() BOOST_NOEXCEPT;
 
     /*!
      * Copy assignment operator.
      *
      * \post <tt>size() == that.size() && std::equal(begin(), end(), that.begin()) == true</tt>
      */
-    attribute_set& operator= (attribute_set that)
+    attribute_set& operator= (attribute_set that) BOOST_NOEXCEPT
     {
         this->swap(that);
         return *this;
@@ -285,7 +284,7 @@ public:
      *
      * \b Throws: Nothing.
      */
-    void swap(attribute_set& that)
+    void swap(attribute_set& that) BOOST_NOEXCEPT
     {
         register implementation* const p = m_pImpl;
         m_pImpl = that.m_pImpl;
@@ -463,7 +462,7 @@ public:
 /*!
  * Free swap overload
  */
-inline void swap(attribute_set& left, attribute_set& right)
+inline void swap(attribute_set& left, attribute_set& right) BOOST_NOEXCEPT
 {
     left.swap(right);
 }

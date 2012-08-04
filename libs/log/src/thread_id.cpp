@@ -17,10 +17,26 @@
 
 #if !defined(BOOST_LOG_NO_THREADS)
 
+#include <new>
 #include <iostream>
 #include <boost/integer.hpp>
+#include <boost/throw_exception.hpp>
 #include <boost/io/ios_state.hpp>
 #include <boost/log/detail/thread_id.hpp>
+#if defined(BOOST_LOG_USE_COMPILER_TLS)
+#include <boost/aligned_storage.hpp>
+#include <boost/type_traits/alignment_of.hpp>
+#elif defined(BOOST_WINDOWS)
+#include <boost/thread/thread.hpp>
+#include <boost/log/detail/thread_specific.hpp>
+#else
+#include <boost/system/error_code.hpp>
+#include <boost/system/system_error.hpp>
+#include <boost/log/utility/once_block.hpp>
+#endif
+#if !defined(BOOST_LOG_USE_COMPILER_TLS)
+#include <boost/log/detail/singleton.hpp>
+#endif
 
 #if defined(BOOST_WINDOWS)
 
@@ -37,15 +53,15 @@ namespace aux {
 
 enum { tid_size = sizeof(GetCurrentThreadId()) };
 
-namespace this_thread {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! The function returns current process identifier
-    BOOST_LOG_API thread::id get_id()
+    inline thread::id get_id_impl()
     {
         return thread::id(GetCurrentThreadId());
     }
 
-} // namespace this_process
+} // namespace
 
 } // namespace aux
 
@@ -63,10 +79,10 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-namespace this_thread {
+BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! The function returns current thread identifier
-    BOOST_LOG_API thread::id get_id()
+    inline thread::id get_id_impl()
     {
         // According to POSIX, pthread_t may not be an integer type:
         // http://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/types.h.html
@@ -81,7 +97,7 @@ namespace this_thread {
         return thread::id(caster.as_uint);
     }
 
-} // namespace this_thread
+} // namespace
 
 enum { tid_size = sizeof(pthread_t) > sizeof(uintmax_t) ? sizeof(uintmax_t) : sizeof(pthread_t) };
 
@@ -100,16 +116,122 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
+namespace this_thread {
+
+#if defined(BOOST_LOG_USE_COMPILER_TLS)
+
+BOOST_LOG_ANONYMOUS_NAMESPACE {
+
+struct id_storage
+{
+    aligned_storage< thread::id, alignment_of< thread::id >::value >::type m_storage;
+    bool m_initialized;
+};
+
+BOOST_LOG_TLS id_storage g_id_storage = {};
+
+} // namespace
+
+//! The function returns current thread identifier
+BOOST_LOG_API thread::id const& get_id()
+{
+    id_storage& s = g_id_storage;
+    if (!s.m_initialized)
+    {
+        new (s.m_storage.address()) thread::id(get_id_impl());
+        s.m_initialized = true;
+    }
+
+    return *static_cast< thread::id const* >(s.m_storage.address());
+}
+
+#elif defined(BOOST_WINDOWS)
+
+BOOST_LOG_ANONYMOUS_NAMESPACE {
+
+struct id_storage :
+    lazy_singleton< id_storage >
+{
+    struct deleter
+    {
+        typedef void result_type;
+
+        explicit deleter(thread::id const* p) : m_p(p) {}
+
+        result_type operator() () const
+        {
+            delete m_p;
+        }
+
+    private:
+        thread::id const* m_p;
+    };
+
+    thread_specific< thread::id const* > m_id;
+};
+
+} // namespace
+
+//! The function returns current thread identifier
+BOOST_LOG_API thread::id const& get_id()
+{
+    id_storage& s = id_storage::get();
+    thread::id const* p = s.m_id.get();
+    if (!p)
+    {
+        p = new thread::id(get_id_impl());
+        s.m_id.set(p);
+        boost::this_thread::at_thread_exit(id_storage::deleter(p));
+    }
+
+    return *p;
+}
+
+#else
+
+BOOST_LOG_ANONYMOUS_NAMESPACE {
+
+pthread_key_t g_key;
+
+void deleter(void* p)
+{
+    delete static_cast< thread::id* >(p);
+}
+
+} // namespace
+
+//! The function returns current thread identifier
+BOOST_LOG_API thread::id const& get_id()
+{
+    BOOST_LOG_ONCE_BLOCK()
+    {
+        if (int err = pthread_key_create(&g_key, &deleter))
+        {
+            BOOST_THROW_EXCEPTION(system::system_error(err, system::system_category(), "Failed to create a thread-specific storage for thread id"));
+        }
+    }
+
+    thread::id* p = static_cast< thread::id* >(pthread_getspecific(g_key));
+    if (!p)
+    {
+        p = new thread::id(get_id_impl());
+        pthread_setspecific(g_key, p);
+    }
+
+    return *p;
+}
+
+#endif
+
+} // namespace this_thread
+
 template< typename CharT, typename TraitsT >
 std::basic_ostream< CharT, TraitsT >&
 operator<< (std::basic_ostream< CharT, TraitsT >& strm, thread::id const& tid)
 {
     if (strm.good())
     {
-        // NOTE: MSVC 10 STL seem to have a buggy showbase + setwidth implementation, which results in multiple leading zeros _before_ 'x'.
-        //       So we print the "0x" prefix ourselves.
-        strm << "0x";
-        io::ios_flags_saver flags_saver(strm, std::ios_base::hex);
+        io::ios_flags_saver flags_saver(strm, std::ios_base::hex | std::ios_base::internal | std::ios_base::showbase);
         io::ios_width_saver width_saver(strm, static_cast< std::streamsize >(tid_size * 2));
         io::basic_ios_fill_saver< CharT, TraitsT > fill_saver(strm, static_cast< CharT >('0'));
         strm << static_cast< uint_t< tid_size * 8 >::least >(tid.native_id());

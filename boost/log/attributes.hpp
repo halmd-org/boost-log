@@ -25,10 +25,11 @@
 #include <boost/log/attributes/clock.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/counter.hpp>
-#include <boost/log/attributes/functor.hpp>
+#include <boost/log/attributes/function.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/attributes/timer.hpp>
+#include <boost/log/attributes/current_process_name.hpp>
 #include <boost/log/attributes/current_process_id.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/attributes/current_thread_id.hpp>

@@ -51,7 +51,7 @@ BOOST_LOG_API attribute_set::attribute_set(attribute_set const& that) :
 }
 
 //! Destructor
-BOOST_LOG_API attribute_set::~attribute_set()
+BOOST_LOG_API attribute_set::~attribute_set() BOOST_NOEXCEPT
 {
     delete m_pImpl;
 }

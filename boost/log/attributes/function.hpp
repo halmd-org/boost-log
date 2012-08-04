@@ -5,19 +5,19 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   functor.hpp
+ * \file   function.hpp
  * \author Andrey Semashev
  * \date   24.06.2007
  *
- * The header contains implementation of an attribute that calls a third-party function on value acquirement.
+ * The header contains implementation of an attribute that calls a third-party function on value acquisition.
  */
 
 #if (defined(_MSC_VER) && _MSC_VER > 1000)
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_ATTRIBUTES_FUNCTOR_HPP_INCLUDED_
-#define BOOST_LOG_ATTRIBUTES_FUNCTOR_HPP_INCLUDED_
+#ifndef BOOST_LOG_ATTRIBUTES_FUNCTION_HPP_INCLUDED_
+#define BOOST_LOG_ATTRIBUTES_FUNCTION_HPP_INCLUDED_
 
 #include <boost/static_assert.hpp>
 #include <boost/utility/result_of.hpp>
@@ -36,16 +36,16 @@ BOOST_LOG_OPEN_NAMESPACE
 namespace attributes {
 
 /*!
- * \brief A class of an attribute that acquires its value from a third-party functor
+ * \brief A class of an attribute that acquires its value from a third-party function object
  *
  * The attribute calls a stored nullary function object to acquire each value.
  * The result type of the function object is the attribute value type.
  *
- * It is not recommended to use this class directly. Use \c make_functor_attr convenience functions
+ * It is not recommended to use this class directly. Use \c make_function convenience functions
  * to construct the attribute instead.
  */
 template< typename R >
-class functor :
+class function :
     public attribute
 {
     BOOST_STATIC_ASSERT_MSG(!is_void< R >::value, "Boost.Log: Function object return type must not be void");
@@ -91,13 +91,13 @@ public:
      * Initializing constructor
      */
     template< typename T >
-    explicit functor(T const& fun) : attribute(new impl_template< T >(fun))
+    explicit function(T const& fun) : attribute(new impl_template< T >(fun))
     {
     }
     /*!
      * Constructor for casting support
      */
-    explicit functor(cast_source const& source) :
+    explicit function(cast_source const& source) :
         attribute(source.as< impl >())
     {
     }
@@ -106,19 +106,19 @@ public:
 #ifndef BOOST_NO_RESULT_OF
 
 /*!
- * The function constructs functor attribute instance with the provided functional object.
+ * The function constructs \c function attribute instance with the provided function object.
  *
  * \param fun Nullary functional object that returns an actual stored value for an attribute value.
  * \return Pointer to the attribute instance
  */
 template< typename T >
-inline functor<
+inline function<
     typename remove_cv<
         typename remove_reference<
             typename result_of< T() >::type
         >::type
     >::type
-> make_functor_attr(T const& fun)
+> make_function(T const& fun)
 {
     typedef typename remove_cv<
         typename remove_reference<
@@ -126,8 +126,8 @@ inline functor<
         >::type
     >::type result_type;
 
-    typedef functor< result_type > functor_t;
-    return functor_t(fun);
+    typedef function< result_type > function_t;
+    return function_t(fun);
 }
 
 #endif // BOOST_NO_RESULT_OF
@@ -135,25 +135,25 @@ inline functor<
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
 /*!
- * The function constructs functor attribute instance with the provided functional object.
- * Use this version if your compiler fails to determine the result type of the functional object.
+ * The function constructs \c function attribute instance with the provided function object.
+ * Use this version if your compiler fails to determine the result type of the function object.
  *
  * \param fun Nullary functional object that returns an actual stored value for an attribute value.
  * \return Pointer to the attribute instance
  */
 template< typename R, typename T >
-inline functor<
+inline function<
     typename remove_cv<
         typename remove_reference< R >::type
     >::type
-> make_functor_attr(T const& fun)
+> make_function(T const& fun)
 {
     typedef typename remove_cv<
         typename remove_reference< R >::type
     >::type result_type;
 
-    typedef functor< result_type > functor_t;
-    return functor_t(fun);
+    typedef function< result_type > function_t;
+    return function_t(fun);
 }
 
 #endif // BOOST_LOG_DOXYGEN_PASS

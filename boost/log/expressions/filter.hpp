@@ -71,7 +71,7 @@ public:
     /*!
      * Move constructor
      */
-    filter(BOOST_RV_REF(filter) that) : m_Filter(boost::move(that.m_Filter))
+    filter(BOOST_RV_REF(filter) that) BOOST_NOEXCEPT : m_Filter(boost::move(that.m_Filter))
     {
     }
 
@@ -92,7 +92,7 @@ public:
     /*!
      * Move assignment.
      */
-    filter& operator= (BOOST_RV_REF(filter) that)
+    filter& operator= (BOOST_RV_REF(filter) that) BOOST_NOEXCEPT
     {
         m_Filter.swap(that.m_Filter);
         return *this;
@@ -143,13 +143,13 @@ public:
     /*!
      * Swaps two filters
      */
-    void swap(filter& that)
+    void swap(filter& that) BOOST_NOEXCEPT
     {
         m_Filter.swap(that.m_Filter);
     }
 };
 
-inline void swap(filter& left, filter& right)
+inline void swap(filter& left, filter& right) BOOST_NOEXCEPT
 {
     left.swap(right);
 }

@@ -440,7 +440,7 @@ BOOST_LOG_API attribute_values_view::attribute_values_view(attribute_values_view
 #endif
 
 //! Destructor
-BOOST_LOG_API attribute_values_view::~attribute_values_view()
+BOOST_LOG_API attribute_values_view::~attribute_values_view() BOOST_NOEXCEPT
 {
     if (m_pImpl)
     {

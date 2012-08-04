@@ -28,7 +28,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute.hpp>
-#include <boost/log/attributes/attribute_value_def.hpp>
+#include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 
@@ -105,9 +105,8 @@ private:
 
         node_base();
 
-    private:
-        node_base(node_base const&);
-        node_base& operator= (node_base const&);
+        BOOST_LOG_DELETED_FUNCTION(node_base(node_base const&))
+        BOOST_LOG_DELETED_FUNCTION(node_base& operator= (node_base const&))
     };
 
     //! Container elements
@@ -137,19 +136,19 @@ public:
 
     public:
         //  Constructors
-        const_iterator() : m_pNode(NULL), m_pContainer(NULL) {}
-        explicit const_iterator(node_base* n, attribute_values_view* cont) :
+        BOOST_CONSTEXPR const_iterator() : m_pNode(NULL), m_pContainer(NULL) {}
+        explicit const_iterator(node_base* n, attribute_values_view* cont) BOOST_NOEXCEPT :
             m_pNode(n),
             m_pContainer(cont)
         {
         }
 
         //  Comparison
-        bool operator== (const_iterator const& that) const
+        bool operator== (const_iterator const& that) const BOOST_NOEXCEPT
         {
             return (m_pNode == that.m_pNode);
         }
-        bool operator!= (const_iterator const& that) const
+        bool operator!= (const_iterator const& that) const BOOST_NOEXCEPT
         {
             return (m_pNode != that.m_pNode);
         }
@@ -183,8 +182,8 @@ public:
         }
 
         //  Dereferencing
-        pointer operator-> () const { return &(static_cast< node* >(m_pNode)->m_Value); }
-        reference operator* () const { return static_cast< node* >(m_pNode)->m_Value; }
+        pointer operator-> () const BOOST_NOEXCEPT { return &(static_cast< node* >(m_pNode)->m_Value); }
+        reference operator* () const BOOST_NOEXCEPT { return static_cast< node* >(m_pNode)->m_Value; }
 
     private:
         node_base* m_pNode;
@@ -220,7 +219,7 @@ public:
     /*!
      * Move constructor
      */
-    attribute_values_view(BOOST_RV_REF(attribute_values_view) that) : m_pImpl(that.m_pImpl)
+    attribute_values_view(BOOST_RV_REF(attribute_values_view) that) BOOST_NOEXCEPT : m_pImpl(that.m_pImpl)
     {
         that.m_pImpl = NULL;
     }
@@ -253,12 +252,12 @@ public:
     /*!
      * Destructor. Releases all referenced attribute values.
      */
-    BOOST_LOG_API ~attribute_values_view();
+    BOOST_LOG_API ~attribute_values_view() BOOST_NOEXCEPT;
 
     /*!
      * Move assignment operator
      */
-    attribute_values_view& operator= (BOOST_RV_REF(attribute_values_view) that)
+    attribute_values_view& operator= (BOOST_RV_REF(attribute_values_view) that) BOOST_NOEXCEPT
     {
         this->swap(that);
         return *this;
@@ -277,7 +276,7 @@ public:
      *
      * \b Throws: Nothing.
      */
-    void swap(attribute_values_view& that)
+    void swap(attribute_values_view& that) BOOST_NOEXCEPT
     {
         register implementation* const p = m_pImpl;
         m_pImpl = that.m_pImpl;
@@ -424,7 +423,7 @@ public:
 /*!
  * Free swap overload
  */
-inline void swap(attribute_values_view& left, attribute_values_view& right)
+inline void swap(attribute_values_view& left, attribute_values_view& right) BOOST_NOEXCEPT
 {
     left.swap(right);
 }

@@ -36,12 +36,12 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/attribute_value_def.hpp>
+#include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/attributes/value_ref.hpp>
-#include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/attributes/value_extraction_fwd.hpp>
+#include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
 namespace boost {
 
@@ -181,7 +181,11 @@ public:
     {
         result_type res;
         if (!!value)
-            value.visit< value_type >(aux::value_ref_initializer< result_type >(res));
+        {
+            aux::value_ref_initializer< result_type > initializer(res);
+            static_type_dispatcher< value_type > disp(initializer);
+            value.dispatch(disp);
+        }
         return res;
     }
 };
@@ -217,7 +221,9 @@ public:
         if (!!value)
         {
             result_type res;
-            if (!value.visit< value_type >(aux::value_ref_initializer< result_type >(res)))
+            aux::value_ref_initializer< result_type > initializer(res);
+            static_type_dispatcher< value_type > disp(initializer);
+            if (!value.dispatch(disp))
                 BOOST_LOG_THROW_DESCR_PARAMS(invalid_type, "Attribute value has incompatible type", (value.get_type()));
             return res;
         }
@@ -273,7 +279,11 @@ public:
     {
         result_type res(m_default);
         if (!!value)
-            value.visit< value_type >(aux::value_ref_initializer< result_type >(res));
+        {
+            aux::value_ref_initializer< result_type > initializer(res);
+            static_type_dispatcher< value_type > disp(initializer);
+            value.dispatch(disp);
+        }
         return res;
     }
 };
@@ -590,11 +600,36 @@ inline typename result_of::extract_or_default< T, DefaultT >::type extract_or_de
 
 #endif // defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
 
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
+
+template< typename T >
+inline typename result_of::extract< T >::type attribute_value::extract() const
+{
+    return boost::log::extract_value_or_none< T >()(*this);
+}
+
+template< typename T >
+inline typename result_of::extract_or_throw< T >::type attribute_value::extract_or_throw() const
+{
+    return boost::log::extract_value_or_throw< T >()(*this);
+}
+
+template< typename T >
+inline typename result_of::extract_or_default< T, T >::type attribute_value::extract_or_default(T const& def_value) const
+{
+    return boost::log::extract_value_or_default< T, T >(def_value)(*this);
+}
+
+template< typename T, typename DefaultT >
+inline typename result_of::extract_or_default< T, DefaultT >::type attribute_value::extract_or_default(DefaultT const& def_value) const
+{
+    return boost::log::extract_value_or_default< T, DefaultT >(def_value)(*this);
+}
+
+#endif // !defined(BOOST_LOG_DOXYGEN_PASS)
+
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
-
-// This include has to be here to resolve dependencies between this header and the attribute_value methods implementation
-#include <boost/log/attributes/attribute_value.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTES_VALUE_EXTRACTION_HPP_INCLUDED_

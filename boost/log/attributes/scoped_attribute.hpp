@@ -27,7 +27,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/core/core.hpp>
 #include <boost/log/sources/basic_logger.hpp>
-#include <boost/log/attributes/attribute_def.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/constant.hpp>

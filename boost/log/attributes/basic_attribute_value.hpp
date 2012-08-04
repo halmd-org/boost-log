@@ -21,7 +21,7 @@
 
 #include <boost/move/move.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/attributes/attribute_value_def.hpp>
+#include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 
 namespace boost {

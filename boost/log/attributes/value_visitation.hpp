@@ -49,7 +49,9 @@
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/value_visitation_fwd.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
 namespace boost {
 
@@ -81,7 +83,7 @@ public:
      * Initializing constructor. Creates the result that is equivalent to the
      * specified error code.
      */
-    visitation_result(error_code code = ok) : m_Code(code) {}
+    visitation_result(error_code code = ok) BOOST_NOEXCEPT : m_Code(code) {}
 
     /*!
      * Checks if the visitation was successful.
@@ -94,12 +96,12 @@ public:
      *
      * \return \c false if the value was visited successfully, \c true otherwise.
      */
-    bool operator! () const { return (m_Code != ok); }
+    bool operator! () const BOOST_NOEXCEPT { return (m_Code != ok); }
 
     /*!
      * \return The actual result code of value visitation
      */
-    error_code code() const { return m_Code; }
+    error_code code() const BOOST_NOEXCEPT { return m_Code; }
 };
 
 namespace result_of {
@@ -159,6 +161,39 @@ struct visit
 
 } // namespace result_of
 
+namespace aux {
+
+//! The function object wrapper saves the visitor result
+template< typename ResultT, typename VisitorT >
+struct forward_result
+{
+    typedef void result_type;
+
+    forward_result(ResultT& result, VisitorT& visitor) : m_result(result), m_visitor(visitor)
+    {
+    }
+
+    template< typename ArgT >
+    typename enable_if< is_void< typename boost::result_of< VisitorT(ArgT) >::type >, result_type >::type
+    operator() (ArgT const& arg) const
+    {
+        m_visitor(arg);
+    }
+
+    template< typename ArgT >
+    typename disable_if< is_void< typename boost::result_of< VisitorT(ArgT) >::type >, result_type >::type
+    operator() (ArgT const& arg) const
+    {
+        m_result = m_visitor(arg);
+    }
+
+private:
+    ResultT& m_result;
+    VisitorT& m_visitor;
+};
+
+} // namespace aux
+
 /*!
  * \brief Generic attribute value visitor invoker
  *
@@ -205,36 +240,6 @@ public:
     };
 
 private:
-    //! The function object wrapper saves the visitor result
-    template< typename ResultT, typename VisitorT >
-    struct forward_result
-    {
-        typedef void result_type;
-
-        forward_result(ResultT& result, VisitorT& visitor) : m_result(result), m_visitor(visitor)
-        {
-        }
-
-        template< typename ArgT >
-        typename enable_if< is_void< typename boost::result_of< VisitorT(ArgT) >::type >, result_type >::type
-        operator() (ArgT const& arg) const
-        {
-            m_visitor(arg);
-        }
-
-        template< typename ArgT >
-        typename disable_if< is_void< typename boost::result_of< VisitorT(ArgT) >::type >, result_type >::type
-        operator() (ArgT const& arg) const
-        {
-            m_result = m_visitor(arg);
-        }
-
-    private:
-        ResultT& m_result;
-        VisitorT& m_visitor;
-    };
-
-private:
     //! The name of the attribute value to visit
     attribute_name m_Name;
 
@@ -264,7 +269,8 @@ public:
             attribute_values_view::const_iterator it = attrs.find(m_Name);
             if (it != attrs.end())
             {
-                if (it->second.visit< value_type >(visitor))
+                static_type_dispatcher< value_type > disp(visitor);
+                if (it->second.dispatch(disp))
                     return visitation_result::ok;
                 else
                     return visitation_result::value_has_invalid_type;
@@ -299,7 +305,9 @@ public:
             attribute_values_view::const_iterator it = attrs.find(m_Name);
             if (it != attrs.end())
             {
-                if (it->second.visit< value_type >(forward_result< typename result_type::first_type, VisitorT >(result.first, visitor)))
+                aux::forward_result< typename result_type::first_type, VisitorT > forwarder(result.first, visitor);
+                static_type_dispatcher< value_type > disp(forwarder);
+                if (it->second.dispatch(disp))
                     result.second = visitation_result::ok;
                 else
                     result.second = visitation_result::value_has_invalid_type;
@@ -362,6 +370,18 @@ template< typename T, typename VisitorT >
 typename result_of::visit< T, VisitorT >::type
 visit(attribute_name const& name, record const& rec, VisitorT visitor);
 
+/*!
+ * The function applies a visitor to an attribute value. The user has to explicitly specify the
+ * type or set of possible types of the attribute value to be visited.
+ *
+ * \param value The attribute value to visit.
+ * \param visitor A receiving function object to pass the attribute value to.
+ * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
+ */
+template< typename T, typename VisitorT >
+typename result_of::visit< T, VisitorT >::type
+visit(attribute_value const& value, VisitorT visitor);
+
 #else // BOOST_LOG_DOXYGEN_PASS
 
 template< typename T, typename VisitorT >
@@ -380,7 +400,53 @@ visit(attribute_name const& name, record const& rec, VisitorT visitor)
     return invoker(rec, visitor);
 }
 
+template< typename T, typename VisitorT >
+typename enable_if< is_same< typename result_of::visit< T, VisitorT >::type, visitation_result >, typename result_of::visit< T, VisitorT >::type >::type
+visit(attribute_value const& value, VisitorT visitor)
+{
+    if (!!value)
+    {
+        static_type_dispatcher< T > disp(visitor);
+        if (value.dispatch(disp))
+            return visitation_result::ok;
+        else
+            return visitation_result::value_has_invalid_type;
+    }
+    return visitation_result::value_not_found;
+}
+
+template< typename T, typename VisitorT >
+typename disable_if< is_same< typename result_of::visit< T, VisitorT >::type, visitation_result >, typename result_of::visit< T, VisitorT >::type >::type
+visit(attribute_value const& value, VisitorT visitor)
+{
+    typedef typename result_of::visit< T, VisitorT >::type result_type;
+    result_type result;
+    if (!!value)
+    {
+        aux::forward_result< typename result_type::first_type, VisitorT > forwarder(result.first, visitor);
+        static_type_dispatcher< T > disp(forwarder);
+        if (value.dispatch(disp))
+            result.second = visitation_result::ok;
+        else
+            result.second = visitation_result::value_has_invalid_type;
+    }
+    else
+        result.second = visitation_result::value_not_found;
+
+    return result;
+}
+
 #endif // BOOST_LOG_DOXYGEN_PASS
+
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
+
+template< typename T, typename VisitorT >
+inline typename result_of::visit< T, VisitorT >::type attribute_value::visit(VisitorT visitor) const
+{
+    return boost::log::visit< T >(*this, visitor);
+}
+
+#endif // !defined(BOOST_LOG_DOXYGEN_PASS)
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 

@@ -131,7 +131,7 @@ private:
     implementation_base* m_pImpl;
 
 public:
-    BOOST_LOG_LWFUNCTION_NAME() : m_pImpl(NULL)
+    BOOST_CONSTEXPR BOOST_LOG_LWFUNCTION_NAME() BOOST_NOEXCEPT : m_pImpl(NULL)
     {
     }
     BOOST_LOG_LWFUNCTION_NAME(this_type const& that)
@@ -141,7 +141,7 @@ public:
         else
             m_pImpl = NULL;
     }
-    BOOST_LOG_LWFUNCTION_NAME(BOOST_RV_REF(this_type) that)
+    BOOST_LOG_LWFUNCTION_NAME(BOOST_RV_REF(this_type) that) BOOST_NOEXCEPT
     {
         m_pImpl = that.m_pImpl;
         that.m_pImpl = NULL;
@@ -158,9 +158,9 @@ public:
     }
     //! Constructor from NULL
 #if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
-    BOOST_LOG_LWFUNCTION_NAME(std::nullptr_t)
+    BOOST_CONSTEXPR BOOST_LOG_LWFUNCTION_NAME(std::nullptr_t) BOOST_NOEXCEPT
 #else
-    BOOST_LOG_LWFUNCTION_NAME(int p)
+    BOOST_CONSTEXPR BOOST_LOG_LWFUNCTION_NAME(int p) BOOST_NOEXCEPT
 #endif
         : m_pImpl(NULL)
     {
@@ -173,7 +173,7 @@ public:
         clear();
     }
 
-    BOOST_LOG_LWFUNCTION_NAME& operator= (BOOST_RV_REF(this_type) that)
+    BOOST_LOG_LWFUNCTION_NAME& operator= (BOOST_RV_REF(this_type) that) BOOST_NOEXCEPT
     {
         this->swap(that);
         return *this;
@@ -217,8 +217,8 @@ public:
     }
 
     BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
-    bool operator! () const { return (m_pImpl == NULL); }
-    bool empty() const { return (m_pImpl == NULL); }
+    bool operator! () const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
+    bool empty() const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
     void clear()
     {
         if (m_pImpl)
@@ -228,7 +228,7 @@ public:
         }
     }
 
-    void swap(this_type& that)
+    void swap(this_type& that) BOOST_NOEXCEPT
     {
         register implementation_base* p = m_pImpl;
         m_pImpl = that.m_pImpl;
@@ -305,7 +305,7 @@ private:
     implementation_base* m_pImpl;
 
 public:
-    BOOST_LOG_LWFUNCTION_NAME() : m_pImpl(NULL)
+    BOOST_CONSTEXPR BOOST_LOG_LWFUNCTION_NAME() BOOST_NOEXCEPT : m_pImpl(NULL)
     {
     }
     BOOST_LOG_LWFUNCTION_NAME(this_type const& that)
@@ -315,7 +315,7 @@ public:
         else
             m_pImpl = NULL;
     }
-    BOOST_LOG_LWFUNCTION_NAME(BOOST_RV_REF(this_type) that)
+    BOOST_LOG_LWFUNCTION_NAME(BOOST_RV_REF(this_type) that) BOOST_NOEXCEPT
     {
         m_pImpl = that.m_pImpl;
         that.m_pImpl = NULL;
@@ -332,9 +332,9 @@ public:
     }
     //! Constructor from NULL
 #if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
-    BOOST_LOG_LWFUNCTION_NAME(std::nullptr_t)
+    BOOST_CONSTEXPR BOOST_LOG_LWFUNCTION_NAME(std::nullptr_t) BOOST_NOEXCEPT
 #else
-    BOOST_LOG_LWFUNCTION_NAME(int p)
+    BOOST_CONSTEXPR BOOST_LOG_LWFUNCTION_NAME(int p) BOOST_NOEXCEPT
 #endif
         : m_pImpl(NULL)
     {
@@ -347,7 +347,7 @@ public:
         clear();
     }
 
-    BOOST_LOG_LWFUNCTION_NAME& operator= (BOOST_RV_REF(this_type) that)
+    BOOST_LOG_LWFUNCTION_NAME& operator= (BOOST_RV_REF(this_type) that) BOOST_NOEXCEPT
     {
         this->swap(that);
         return *this;
@@ -391,8 +391,8 @@ public:
     }
 
     BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
-    bool operator! () const { return (m_pImpl == NULL); }
-    bool empty() const { return (m_pImpl == NULL); }
+    bool operator! () const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
+    bool empty() const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
     void clear()
     {
         if (m_pImpl)
@@ -402,7 +402,7 @@ public:
         }
     }
 
-    void swap(this_type& that)
+    void swap(this_type& that) BOOST_NOEXCEPT
     {
         register implementation_base* p = m_pImpl;
         m_pImpl = that.m_pImpl;

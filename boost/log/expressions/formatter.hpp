@@ -94,7 +94,7 @@ public:
     /*!
      * Move constructor
      */
-    basic_formatter(BOOST_RV_REF(this_type) that) : m_Formatter(boost::move(that.m_Formatter))
+    basic_formatter(BOOST_RV_REF(this_type) that) BOOST_NOEXCEPT : m_Formatter(boost::move(that.m_Formatter))
     {
     }
 
@@ -115,7 +115,7 @@ public:
     /*!
      * Move assignment.
      */
-    basic_formatter& operator= (BOOST_RV_REF(this_type) that)
+    basic_formatter& operator= (BOOST_RV_REF(this_type) that) BOOST_NOEXCEPT
     {
         m_Formatter.swap(that.m_Formatter);
         return *this;
@@ -166,14 +166,14 @@ public:
     /*!
      * Swaps two formatters
      */
-    void swap(basic_formatter& that)
+    void swap(basic_formatter& that) BOOST_NOEXCEPT
     {
         m_Formatter.swap(that.m_Formatter);
     }
 };
 
 template< typename CharT >
-inline void swap(basic_formatter< CharT >& left, basic_formatter< CharT >& right)
+inline void swap(basic_formatter< CharT >& left, basic_formatter< CharT >& right) BOOST_NOEXCEPT
 {
     left.swap(right);
 }

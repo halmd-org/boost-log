@@ -35,6 +35,9 @@ namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
+//! Thread identifier type
+typedef boost::log::aux::thread::id thread_id;
+
 namespace attributes {
 
 /*!
@@ -48,7 +51,7 @@ class current_thread_id :
 {
 public:
     //! A held attribute value type
-    typedef boost::log::aux::thread::id value_type;
+    typedef thread_id value_type;
 
 protected:
     //! Factory implementation

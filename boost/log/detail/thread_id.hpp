@@ -34,14 +34,18 @@ namespace aux {
     //! The thread id descriptor
     struct thread
     {
+#if defined(BOOST_WINDOWS)
+        typedef uint32_t native_type;
+#else
         typedef uintmax_t native_type;
+#endif
         typedef boost::log::aux::id< thread > id;
     };
 
     namespace this_thread {
 
         //! The function returns current thread identifier
-        BOOST_LOG_API thread::id get_id();
+        BOOST_LOG_API thread::id const& get_id();
 
     } // namespace this_process
 
