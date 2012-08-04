@@ -166,17 +166,17 @@ sinks::file::rotation_at_time_point param_cast_to_rotation_time_point(const char
             -(
                 (
                     // First check for a weekday
-                    weekday_p[boost::log::aux::bind_assign(weekday)] |
+                    weekday_p[boost::log::aux::as_action(boost::log::aux::bind_assign(weekday))] |
                     // ... or a day in month
-                    day_p[boost::log::aux::bind_assign(day)]
+                    day_p[boost::log::aux::as_action(boost::log::aux::bind_assign(day))]
                 ) >>
                 (+encoding_specific::space)
             ) >>
             // Then goes the time of day
             (
-                time_component_p[boost::log::aux::bind_assign(hour)] >> colon >>
-                time_component_p[boost::log::aux::bind_assign(minute)] >> colon >>
-                time_component_p[boost::log::aux::bind_assign(second)]
+                time_component_p[boost::log::aux::as_action(boost::log::aux::bind_assign(hour))] >> colon >>
+                time_component_p[boost::log::aux::as_action(boost::log::aux::bind_assign(minute))] >> colon >>
+                time_component_p[boost::log::aux::as_action(boost::log::aux::bind_assign(second))]
             ) >>
             qi::eoi
         )
