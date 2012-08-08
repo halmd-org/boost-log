@@ -13,11 +13,3 @@ add_library(boost_log
 set_target_properties(boost_log PROPERTIES
   COMPILE_DEFINITIONS BOOST_LOG_BUILDING_THE_LIB=1
 )
-
-# Ensure C++ ABI compatibility with Boost libraries compiled in C++98 mode,
-# which is currently the default for C++ compilers supporting C++11.
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  set_target_properties(boost_log PROPERTIES COMPILE_FLAGS "-std=c++98 -Wno-long-long")
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set_target_properties(boost_log PROPERTIES COMPILE_FLAGS "-std=c++98 -Wno-long-long")
-endif()
