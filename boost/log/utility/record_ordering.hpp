@@ -19,16 +19,16 @@
 #ifndef BOOST_LOG_UTILITY_RECORD_ORDERING_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_RECORD_ORDERING_HPP_INCLUDED_
 
-#include <boost/optional.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/functional.hpp>
 #include <boost/log/detail/function_traits.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
-#include <boost/log/attributes/value_extraction.hpp>
+#include <boost/log/attributes/value_visitation.hpp>
+#include <boost/log/functional/logical.hpp>
+#include <boost/log/functional/nop.hpp>
 
 namespace boost {
 
@@ -45,7 +45,7 @@ BOOST_LOG_OPEN_NAMESPACE
  * This kind of ordering may be useful if log records are to be stored in an associative
  * container with as least performance overhead as possible.
  */
-template< typename FunT = aux::less >
+template< typename FunT = less >
 class handle_ordering :
     private FunT
 {
@@ -87,7 +87,7 @@ public:
  * if neither of the records have the value, these records are considered equivalent. Otherwise,
  * the ordering results are unspecified.
  */
-template< typename ValueT, typename FunT = aux::less >
+template< typename ValueT, typename FunT = less >
 class attribute_value_ordering :
     private FunT
 {
@@ -95,11 +95,57 @@ public:
     //! Result type
     typedef bool result_type;
     //! Compared attribute value type
-    typedef ValueT attribute_value_type;
+    typedef ValueT value_type;
+
+private:
+    template< typename LeftT >
+    struct l2_visitor
+    {
+        typedef void result_type;
+
+        l2_visitor(FunT const& fun, LeftT const& left, bool& result) :
+            m_fun(fun), m_left(left), m_result(result)
+        {
+        }
+
+        template< typename RightT >
+        result_type operator() (RightT const& right) const
+        {
+            m_result = m_fun(m_left, right);
+        }
+
+    private:
+        FunT const& m_fun;
+        LeftT const& m_left;
+        bool& m_result;
+    };
+
+    struct l1_visitor;
+    friend struct l1_visitor;
+    struct l1_visitor
+    {
+        typedef void result_type;
+
+        l1_visitor(attribute_value_ordering const& owner, record const& right, bool& result) :
+            m_owner(owner), m_right(right), m_result(result)
+        {
+        }
+
+        template< typename LeftT >
+        result_type operator() (LeftT const& left) const
+        {
+            boost::log::visit< value_type >(m_owner.m_name, m_right, l2_visitor< LeftT >(static_cast< FunT const& >(m_owner), left, m_result));
+        }
+
+    private:
+        attribute_value_ordering const& m_owner;
+        record const& m_right;
+        bool& m_result;
+    };
 
 private:
     //! Attribute value name
-    const attribute_name m_Name;
+    const attribute_name m_name;
 
 public:
     /*!
@@ -110,7 +156,7 @@ public:
      */
     explicit attribute_value_ordering(attribute_name const& name, FunT const& fun = FunT()) :
         FunT(fun),
-        m_Name(name)
+        m_name(name)
     {
     }
 
@@ -119,20 +165,12 @@ public:
      */
     result_type operator() (record const& left, record const& right) const
     {
-        optional< attribute_value_type > left_value =
-            boost::log::extract< attribute_value_type >(m_Name, left);
-        optional< attribute_value_type > right_value =
-            boost::log::extract< attribute_value_type >(m_Name, right);
-
-        if (!!left_value)
+        bool result = false;
+        if (!boost::log::visit< value_type >(m_name, left, l1_visitor(*this, right, result)))
         {
-            if (!!right_value)
-                return FunT::operator() (left_value.get(), right_value.get());
-            else
-                return false;
+            return !boost::log::visit< value_type >(m_name, right, nop());
         }
-        else
-            return !right_value;
+        return result;
     }
 };
 

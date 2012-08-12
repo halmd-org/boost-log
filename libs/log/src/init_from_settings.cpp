@@ -48,7 +48,6 @@
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
-#include <boost/log/detail/functional.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/exceptions.hpp>
@@ -59,6 +58,8 @@
 #include <boost/log/utility/init/from_settings.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>
 #include <boost/log/utility/init/formatter_parser.hpp>
+#include <boost/log/utility/functional/bind_assign.hpp>
+#include <boost/log/utility/functional/as_action.hpp>
 #if !defined(BOOST_LOG_NO_ASIO)
 #include <boost/asio/ip/address.hpp>
 #endif
@@ -166,17 +167,17 @@ sinks::file::rotation_at_time_point param_cast_to_rotation_time_point(const char
             -(
                 (
                     // First check for a weekday
-                    weekday_p[boost::log::aux::as_action(boost::log::aux::bind_assign(weekday))] |
+                    weekday_p[boost::log::as_action(boost::log::bind_assign(weekday))] |
                     // ... or a day in month
-                    day_p[boost::log::aux::as_action(boost::log::aux::bind_assign(day))]
+                    day_p[boost::log::as_action(boost::log::bind_assign(day))]
                 ) >>
                 (+encoding_specific::space)
             ) >>
             // Then goes the time of day
             (
-                time_component_p[boost::log::aux::as_action(boost::log::aux::bind_assign(hour))] >> colon >>
-                time_component_p[boost::log::aux::as_action(boost::log::aux::bind_assign(minute))] >> colon >>
-                time_component_p[boost::log::aux::as_action(boost::log::aux::bind_assign(second))]
+                time_component_p[boost::log::as_action(boost::log::bind_assign(hour))] >> colon >>
+                time_component_p[boost::log::as_action(boost::log::bind_assign(minute))] >> colon >>
+                time_component_p[boost::log::as_action(boost::log::bind_assign(second))]
             ) >>
             qi::eoi
         )

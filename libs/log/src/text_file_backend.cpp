@@ -52,7 +52,8 @@
 #include <boost/log/detail/snprintf.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/light_function.hpp>
-#include <boost/log/detail/functional.hpp>
+#include <boost/log/utility/functional/bind_assign.hpp>
+#include <boost/log/utility/functional/as_action.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
@@ -332,7 +333,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                     qi::lit(traits_t::minus) |
                     qi::lit(traits_t::space)
                 ) >>
-                -(qi::uint_[boost::log::aux::as_action(boost::log::aux::bind_assign(width))]) >>
+                -(qi::uint_[boost::log::as_action(boost::log::bind_assign(width))]) >>
                 -(qi::lit(traits_t::dot) >> qi::uint_) >>
                 qi::lit(traits_t::number_placeholder)
             )

@@ -24,7 +24,7 @@
 #include <boost/xpressive/regex_constants.hpp>
 #include <boost/xpressive/regex_algorithms.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/functional.hpp>
+#include <boost/log/utility/functional/matches.hpp>
 
 namespace boost {
 

@@ -21,7 +21,7 @@
 
 #include <boost/mpl/bool.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/functional.hpp>
+#include <boost/log/utility/functional/matches.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
 /*

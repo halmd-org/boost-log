@@ -55,7 +55,7 @@
 #include <boost/log/detail/process_id.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
-#include <boost/log/detail/functional.hpp>
+#include <boost/log/utility/functional/nop.hpp>
 #include <boost/log/utility/init/formatter_parser.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include <boost/log/utility/type_dispatch/date_time_types.hpp>
@@ -261,7 +261,7 @@ public:
         if (!m_Formatter)
         {
             // This may happen if parser input is an empty string
-            return formatter_type(log::aux::nop());
+            return formatter_type(nop());
         }
 
         return boost::move(m_Formatter.get());

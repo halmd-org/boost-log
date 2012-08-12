@@ -31,7 +31,7 @@
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/functional.hpp>
+#include <boost/log/utility/functional/nop.hpp>
 
 #ifndef BOOST_LOG_MAX_EXCEPTION_TYPES
 //! Maximum number of exception types that can be specified for exception handlers
@@ -219,9 +219,9 @@ public:
 /*!
  * The function creates an empty exception handler that effectively suppresses any exception
  */
-inline aux::nop make_exception_suppressor()
+inline nop make_exception_suppressor()
 {
-    return aux::nop();
+    return nop();
 }
 
 #ifndef BOOST_LOG_DOXYGEN_PASS

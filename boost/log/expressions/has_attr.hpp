@@ -21,7 +21,6 @@
 
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/functional.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
@@ -29,6 +28,7 @@
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/expressions/unary_adapter.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
+#include <boost/log/utility/functional/nop.hpp>
 
 namespace boost {
 
@@ -71,7 +71,7 @@ public:
     template< typename ArgT >
     result_type operator() (ArgT const& arg) const
     {
-        return m_visitor_invoker(arg, boost::log::aux::nop()).code() == visitation_result::ok;
+        return m_visitor_invoker(arg, nop()).code() == visitation_result::ok;
     }
 };
 

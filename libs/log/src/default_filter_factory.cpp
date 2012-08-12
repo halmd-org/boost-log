@@ -24,7 +24,13 @@
 #include <boost/log/expressions/has_attr.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include <boost/log/utility/string_literal.hpp>
-#include <boost/log/detail/functional.hpp>
+#include <boost/log/utility/functional/logical.hpp>
+#include <boost/log/utility/functional/begins_with.hpp>
+#include <boost/log/utility/functional/ends_with.hpp>
+#include <boost/log/utility/functional/contains.hpp>
+#include <boost/log/utility/functional/matches.hpp>
+#include <boost/log/utility/functional/bind.hpp>
+#include <boost/log/utility/functional/as_action.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/support/xpressive.hpp>
 #include <boost/xpressive/xpressive_dynamic.hpp>
@@ -82,7 +88,7 @@ struct default_filter_factory< CharT >::on_integral_argument
 
     result_type operator() (long val) const
     {
-        typedef log::aux::binder2nd< RelationT, long > predicate;
+        typedef binder2nd< RelationT, long > predicate;
         m_filter = predicate_wrapper< log::integral_types, predicate >(m_name, predicate(RelationT(), val));
     }
 
@@ -103,7 +109,7 @@ struct default_filter_factory< CharT >::on_fp_argument
 
     result_type operator() (double val) const
     {
-        typedef log::aux::binder2nd< RelationT, double > predicate;
+        typedef binder2nd< RelationT, double > predicate;
         m_filter = predicate_wrapper< log::floating_point_types, predicate >(m_name, predicate(RelationT(), val));
     }
 
@@ -166,7 +172,7 @@ struct default_filter_factory< CharT >::on_string_argument
         fusion::set< std::string, std::wstring > m_operands;
     };
 #else
-    typedef log::aux::binder2nd< RelationT, string_type > predicate;
+    typedef binder2nd< RelationT, string_type > predicate;
 #endif
 
     on_string_argument(attribute_name const& name, filter& f) : m_name(name), m_filter(f)
@@ -283,42 +289,42 @@ private:
 template< typename CharT >
 filter default_filter_factory< CharT >::on_equality_relation(attribute_name const& name, string_type const& arg)
 {
-    return parse_argument< log::aux::equal_to >(name, arg);
+    return parse_argument< equal_to >(name, arg);
 }
 
 //! The callback for inequality relation filter
 template< typename CharT >
 filter default_filter_factory< CharT >::on_inequality_relation(attribute_name const& name, string_type const& arg)
 {
-    return parse_argument< log::aux::not_equal_to >(name, arg);
+    return parse_argument< not_equal_to >(name, arg);
 }
 
 //! The callback for less relation filter
 template< typename CharT >
 filter default_filter_factory< CharT >::on_less_relation(attribute_name const& name, string_type const& arg)
 {
-    return parse_argument< log::aux::less >(name, arg);
+    return parse_argument< less >(name, arg);
 }
 
 //! The callback for greater relation filter
 template< typename CharT >
 filter default_filter_factory< CharT >::on_greater_relation(attribute_name const& name, string_type const& arg)
 {
-    return parse_argument< log::aux::greater >(name, arg);
+    return parse_argument< greater >(name, arg);
 }
 
 //! The callback for less or equal relation filter
 template< typename CharT >
 filter default_filter_factory< CharT >::on_less_or_equal_relation(attribute_name const& name, string_type const& arg)
 {
-    return parse_argument< log::aux::less_equal >(name, arg);
+    return parse_argument< less_equal >(name, arg);
 }
 
 //! The callback for greater or equal relation filter
 template< typename CharT >
 filter default_filter_factory< CharT >::on_greater_or_equal_relation(attribute_name const& name, string_type const& arg)
 {
-    return parse_argument< log::aux::greater_equal >(name, arg);
+    return parse_argument< greater_equal >(name, arg);
 }
 
 //! The callback for custom relation filter
@@ -329,13 +335,13 @@ filter default_filter_factory< CharT >::on_custom_relation(attribute_name const&
 
     filter f;
     if (rel == constants::begins_with_keyword())
-        on_string_argument< log::aux::begins_with_fun >(name, f)(arg);
+        on_string_argument< begins_with_fun >(name, f)(arg);
     else if (rel == constants::ends_with_keyword())
-        on_string_argument< log::aux::ends_with_fun >(name, f)(arg);
+        on_string_argument< ends_with_fun >(name, f)(arg);
     else if (rel == constants::contains_keyword())
-        on_string_argument< log::aux::contains_fun >(name, f)(arg);
+        on_string_argument< contains_fun >(name, f)(arg);
     else if (rel == constants::matches_keyword())
-        on_regex_argument< log::aux::matches_fun >(name, f)(arg);
+        on_regex_argument< matches_fun >(name, f)(arg);
     else
     {
         BOOST_LOG_THROW_DESCR(parse_error, "The custom attribute relation \"" + log::aux::to_narrow(rel) + "\" is not supported");
@@ -362,9 +368,9 @@ filter default_filter_factory< CharT >::parse_argument(attribute_name const& nam
     (
         arg.c_str(), arg.c_str() + arg.size(),
         (
-            real_[boost::log::aux::as_action(on_fp)] |
-            qi::long_[boost::log::aux::as_action(on_int)] |
-            qi::as< string_type >()[ +encoding_specific::print ][boost::log::aux::as_action(on_str)]
+            real_[boost::log::as_action(on_fp)] |
+            qi::long_[boost::log::as_action(on_int)] |
+            qi::as< string_type >()[ +encoding_specific::print ][boost::log::as_action(on_str)]
         ) >> qi::eoi
     );
 

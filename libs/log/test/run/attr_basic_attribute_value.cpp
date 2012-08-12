@@ -24,7 +24,7 @@
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
-#include <boost/log/detail/functional.hpp>
+#include <boost/log/utility/functional/bind_assign.hpp>
 
 namespace logging = boost::log;
 namespace attrs = logging::attributes;
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(value_extraction)
     boost::optional< double > val2 = p1.extract< double >();
     BOOST_CHECK(!val2);
 
-    BOOST_CHECK(p2.visit< double >(logging::aux::assign_fun< boost::optional< double > >(val2)));
+    BOOST_CHECK(p2.visit< double >(logging::bind_assign(val2)));
     BOOST_CHECK(!!val2);
     BOOST_CHECK_CLOSE(val2.get(), 5.5, 0.001);
 }

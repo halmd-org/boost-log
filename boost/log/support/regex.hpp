@@ -22,7 +22,7 @@
 #include <boost/regex.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/functional.hpp>
+#include <boost/log/utility/functional/matches.hpp>
 
 namespace boost {
 

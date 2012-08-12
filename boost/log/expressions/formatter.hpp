@@ -25,9 +25,9 @@
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/detail/light_function.hpp>
-#include <boost/log/detail/functional.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/utility/functional/bind_output.hpp>
 #include <boost/log/expressions/message.hpp>
 
 namespace boost {
@@ -67,7 +67,7 @@ private:
 
         result_type operator() (record const& rec, stream_type& strm) const
         {
-            boost::log::visit< expressions::tag::message::value_type >(m_MessageName, rec, boost::log::aux::output_fun< stream_type >(strm));
+            boost::log::visit< expressions::tag::message::value_type >(m_MessageName, rec, output_fun< stream_type >(strm));
         }
 
     private:
