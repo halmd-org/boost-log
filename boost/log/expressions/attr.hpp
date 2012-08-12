@@ -21,6 +21,7 @@
 
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/expressions/terminal.hpp>
 #include <boost/log/expressions/unary_adapter.hpp>
@@ -35,8 +36,8 @@ namespace expressions {
 /*!
  * An attribute value extraction terminal
  */
-template< typename ExtractorT, template< typename > class ActorT = phoenix::actor >
-struct attribute_terminal :
+template< typename ExtractorT, typename ParamsT = boost::log::aux::empty_arg_list, template< typename > class ActorT = phoenix::actor >
+class attribute_terminal :
     public ActorT<
         terminal<
             unary_adapter<
@@ -45,6 +46,7 @@ struct attribute_terminal :
         >
     >
 {
+public:
     //! Base terminal type
     typedef terminal<
         unary_adapter<
@@ -56,13 +58,33 @@ struct attribute_terminal :
     //! Attribute value type
     typedef typename ExtractorT::value_type value_type;
 
+    //! Additional parameters
+    typedef ParamsT parameters_type;
+
+private:
+    //! Additional parameters
+    parameters_type m_params;
+
+public:
     //! Initializing constructor
-    explicit attribute_terminal(base_type const& act) : base_type(act)
+    explicit attribute_terminal(base_type const& act, parameters_type const& params = parameters_type()) : base_type(act), m_params(params)
     {
     }
 
+    //! Returns the attribute name
+    attribute_name get_name() const
+    {
+        return this->proto_expr_.get_name();
+    }
+
+    //! Returns additional parameters
+    parameters_type const& get_params() const
+    {
+        return m_params;
+    }
+
     //! Expression with cached attribute name
-    typedef attribute_terminal< extract_value_or_none< value_type >, ActorT > or_none_result_type;
+    typedef attribute_terminal< extract_value_or_none< value_type >, parameters_type, ActorT > or_none_result_type;
 
     //! Generates an expression that extracts the attribute value or a default value
     or_none_result_type or_none() const
@@ -73,7 +95,7 @@ struct attribute_terminal :
     }
 
     //! Expression with cached attribute name
-    typedef attribute_terminal< extract_value_or_throw< value_type >, ActorT > or_throw_result_type;
+    typedef attribute_terminal< extract_value_or_throw< value_type >, parameters_type, ActorT > or_throw_result_type;
 
     //! Generates an expression that extracts the attribute value or throws an exception
     or_throw_result_type or_throw() const
@@ -85,11 +107,11 @@ struct attribute_terminal :
 
     //! Generates an expression that extracts the attribute value or a default value
     template< typename T >
-    attribute_terminal< extract_value_or_default< value_type, T >, ActorT > or_default(T const& def_val) const
+    attribute_terminal< extract_value_or_default< value_type, T >, parameters_type, ActorT > or_default(T const& def_val) const
     {
-        typedef attribute_terminal< extract_value_or_default< value_type, T >, ActorT > or_default_result_type;
+        typedef attribute_terminal< extract_value_or_default< value_type, T >, parameters_type, ActorT > or_default_result_type;
         typedef typename or_default_result_type::terminal_type result_terminal;
-        base_type act = { result_terminal(this->proto_expr_.get_name(), def_val) };
+        base_type act = { result_terminal(get_name(), def_val) };
         return or_default_result_type(act);
     }
 };
