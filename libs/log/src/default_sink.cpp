@@ -167,8 +167,9 @@ private:
 } // namespace
 
 default_sink::default_sink() :
-    m_severity_extractor(boost::log::aux::default_attribute_names::severity(), boost::log::trivial::info),
-    m_message_visitor(boost::log::aux::default_attribute_names::message())
+    m_severity_name(boost::log::aux::default_attribute_names::severity()),
+    m_message_name(boost::log::aux::default_attribute_names::message()),
+    m_severity_extractor(boost::log::trivial::info)
 {
 }
 
@@ -184,7 +185,7 @@ bool default_sink::will_consume(attribute_values_view const&)
 void default_sink::consume(record const& rec)
 {
     BOOST_LOG_EXPR_IF_MT(lock_guard< mutex_type > lock(m_mutex);)
-        m_message_visitor(rec.attribute_values(), message_printer(m_severity_extractor(rec).get()));
+    m_message_visitor(m_message_name, rec.attribute_values(), message_printer(m_severity_extractor(m_severity_name, rec).get()));
 }
 
 void default_sink::flush()

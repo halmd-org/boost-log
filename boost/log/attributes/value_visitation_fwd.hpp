@@ -21,6 +21,7 @@
 #define BOOST_LOG_ATTRIBUTES_VALUE_VISITATION_FWD_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/attributes/fallback_policy_fwd.hpp>
 
 namespace boost {
 
@@ -44,7 +45,7 @@ struct visit;
 /*!
  * \brief Generic attribute value visitor invoker
  */
-template< typename T >
+template< typename T, typename FallbackPolicyT = fallback_to_none >
 class value_visitor_invoker;
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log

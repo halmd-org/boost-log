@@ -50,6 +50,7 @@
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/attributes/value_visitation_fwd.hpp>
+#include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
@@ -204,141 +205,200 @@ private:
  * The invoker can be specialized on one or several attribute value types that should be
  * specified in the second template argument.
  */
-template< typename T >
-class value_visitor_invoker
+template< typename T, typename FallbackPolicyT >
+class value_visitor_invoker :
+    private FallbackPolicyT
 {
 public:
     //! Attribute value types
     typedef T value_type;
+
+    //! Fallback policy
+    typedef FallbackPolicyT fallback_policy;
 
     //! Function object result type
     template< typename >
     struct result;
 
     template< typename VisitorT >
-    struct result< value_visitor_invoker< value_type >(attribute_values_view, VisitorT) > :
+    struct result< value_visitor_invoker< value_type >(attribute_name, attribute_values_view, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
     template< typename VisitorT >
-    struct result< const value_visitor_invoker< value_type >(attribute_values_view, VisitorT) > :
+    struct result< const value_visitor_invoker< value_type >(attribute_name, attribute_values_view, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
     template< typename VisitorT >
-    struct result< value_visitor_invoker< value_type >(record, VisitorT) > :
+    struct result< value_visitor_invoker< value_type >(attribute_name, record, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
     template< typename VisitorT >
-    struct result< const value_visitor_invoker< value_type >(record, VisitorT) > :
+    struct result< const value_visitor_invoker< value_type >(attribute_name, record, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
-private:
-    //! The name of the attribute value to visit
-    attribute_name m_Name;
+    template< typename VisitorT >
+    struct result< value_visitor_invoker< value_type >(attribute_value, VisitorT) > :
+        public result_of::visit< value_type, VisitorT >
+    {
+    };
+
+    template< typename VisitorT >
+    struct result< const value_visitor_invoker< value_type >(attribute_value, VisitorT) > :
+        public result_of::visit< value_type, VisitorT >
+    {
+    };
 
 public:
     /*!
-     * Constructor
-     *
-     * \param name Attribute name to be visited on invokation
+     * Default constructor
      */
-    explicit value_visitor_invoker(attribute_name const& name) : m_Name(name) {}
+    BOOST_LOG_DEFAULTED_FUNCTION(value_visitor_invoker(), {})
 
     /*!
-     * Visitation operator. Looks for an attribute value with the name specified on construction
-     * and tries to acquire the stored value of one of the supported types. If acquisition succeeds,
+     * Initializing constructor
+     *
+     * \param arg Fallback policy argument
+     */
+    template< typename U >
+    explicit value_visitor_invoker(U const& arg) : fallback_policy(arg) {}
+
+    /*!
+     * Visitation operator. Attempts to acquire the stored value of one of the supported types. If acquisition succeeds,
      * the value is passed to \a visitor.
      *
-     * \param attrs A set of attribute values in which to look for the specified attribute value.
+     * \param attr An attribute value to apply the visitor to.
      * \param visitor A receiving function object to pass the attribute value to.
      * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
      */
     template< typename VisitorT >
     typename enable_if< is_same< typename result_of::visit< value_type, VisitorT >::type, visitation_result >, typename result_of::visit< value_type, VisitorT >::type >::type
-    operator() (attribute_values_view const& attrs, VisitorT visitor) const
+    operator() (attribute_value const& attr, VisitorT visitor) const
     {
-        try
+        if (!!attr)
         {
-            attribute_values_view::const_iterator it = attrs.find(m_Name);
-            if (it != attrs.end())
+            static_type_dispatcher< value_type > disp(visitor);
+            if (attr.dispatch(disp) || fallback_policy::apply_default(visitor))
             {
-                static_type_dispatcher< value_type > disp(visitor);
-                if (it->second.dispatch(disp))
-                    return visitation_result::ok;
-                else
-                    return visitation_result::value_has_invalid_type;
+                return visitation_result::ok;
             }
-            return visitation_result::value_not_found;
+            else
+            {
+                fallback_policy::on_invalid_type(attr.get_type());
+                return visitation_result::value_has_invalid_type;
+            }
         }
-        catch (exception& e)
-        {
-            // Attach the attribute name to the exception
-            boost::log::aux::attach_attribute_name_info(e, m_Name);
-            throw;
-        }
+
+        if (fallback_policy::apply_default(visitor))
+            return visitation_result::ok;
+
+        fallback_policy::on_missing_value();
+        return visitation_result::value_not_found;
     }
 
     /*!
-     * Visitation operator. Looks for an attribute value with the name specified on construction
+     * Visitation operator. Looks for an attribute value with the specified name
      * and tries to acquire the stored value of one of the supported types. If acquisition succeeds,
      * the value is passed to \a visitor.
      *
-     * \param attrs A set of attribute values in which to look for the specified attribute value.
+     * \param attr An attribute value to apply the visitor to.
      * \param visitor A receiving function object to pass the attribute value to.
      * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
      */
     template< typename VisitorT >
     typename disable_if< is_same< typename result_of::visit< value_type, VisitorT >::type, visitation_result >, typename result_of::visit< value_type, VisitorT >::type >::type
-    operator() (attribute_values_view const& attrs, VisitorT visitor) const
+    operator() (attribute_value const& attr, VisitorT visitor) const
+    {
+        typedef typename result_of::visit< value_type, VisitorT >::type result_type;
+        result_type result;
+        aux::forward_result< typename result_type::first_type, VisitorT > forwarder(result.first, visitor);
+
+        if (!!attr)
+        {
+            static_type_dispatcher< value_type > disp(forwarder);
+            if (attr.dispatch(disp) || fallback_policy::apply_default(forwarder))
+            {
+                result.second = visitation_result::ok;
+            }
+            else
+            {
+                fallback_policy::on_invalid_type(attr.get_type());
+                result.second = visitation_result::value_has_invalid_type;
+            }
+        }
+        else if (fallback_policy::apply_default(forwarder))
+        {
+            result.second = visitation_result::ok;
+        }
+        else
+        {
+            fallback_policy::on_missing_value();
+            result.second = visitation_result::value_not_found;
+        }
+
+        return result;
+    }
+
+    /*!
+     * Visitation operator. Looks for an attribute value with the specified name
+     * and tries to acquire the stored value of one of the supported types. If acquisition succeeds,
+     * the value is passed to \a visitor.
+     *
+     * \param name Attribute value name.
+     * \param attrs A set of attribute values in which to look for the specified attribute value.
+     * \param visitor A receiving function object to pass the attribute value to.
+     * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
+     */
+    template< typename VisitorT >
+    typename result_of::visit< value_type, VisitorT >::type
+    operator() (attribute_name const& name, attribute_values_view const& attrs, VisitorT visitor) const
     {
         try
         {
-            typedef typename result_of::visit< value_type, VisitorT >::type result_type;
-            result_type result;
-            attribute_values_view::const_iterator it = attrs.find(m_Name);
+            attribute_values_view::const_iterator it = attrs.find(name);
             if (it != attrs.end())
-            {
-                aux::forward_result< typename result_type::first_type, VisitorT > forwarder(result.first, visitor);
-                static_type_dispatcher< value_type > disp(forwarder);
-                if (it->second.dispatch(disp))
-                    result.second = visitation_result::ok;
-                else
-                    result.second = visitation_result::value_has_invalid_type;
-            }
+                return operator() (it->second, visitor);
             else
-                result.second = visitation_result::value_not_found;
-
-            return result;
+                return operator() (attribute_value(), visitor);
         }
         catch (exception& e)
         {
             // Attach the attribute name to the exception
-            boost::log::aux::attach_attribute_name_info(e, m_Name);
+            boost::log::aux::attach_attribute_name_info(e, name);
             throw;
         }
     }
 
     /*!
-     * Visitation operator. Looks for an attribute value with the name specified on construction
+     * Visitation operator. Looks for an attribute value with the specified name
      * and tries to acquire the stored value of one of the supported types. If acquisition succeeds,
      * the value is passed to \a visitor.
      *
+     * \param name Attribute value name.
      * \param record A log record. The attribute value will be sought among those associated with the record.
      * \param visitor A receiving function object to pass the attribute value to.
      * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
      */
     template< typename VisitorT >
     typename result_of::visit< value_type, VisitorT >::type
-    operator() (record const& rec, VisitorT visitor) const
+    operator() (attribute_name const& name, record const& rec, VisitorT visitor) const
     {
-        return operator() (rec.attribute_values(), visitor);
+        return operator() (name, rec.attribute_values(), visitor);
+    }
+
+    /*!
+     * \returns Fallback policy
+     */
+    fallback_policy const& get_fallback_policy() const
+    {
+        return *static_cast< fallback_policy const* >(this);
     }
 };
 
@@ -388,52 +448,24 @@ template< typename T, typename VisitorT >
 inline typename result_of::visit< T, VisitorT >::type
 visit(attribute_name const& name, attribute_values_view const& attrs, VisitorT visitor)
 {
-    value_visitor_invoker< T > invoker(name);
-    return invoker(attrs, visitor);
+    value_visitor_invoker< T > invoker;
+    return invoker(name, attrs, visitor);
 }
 
 template< typename T, typename VisitorT >
 inline typename result_of::visit< T, VisitorT >::type
 visit(attribute_name const& name, record const& rec, VisitorT visitor)
 {
-    value_visitor_invoker< T > invoker(name);
-    return invoker(rec, visitor);
+    value_visitor_invoker< T > invoker;
+    return invoker(name, rec, visitor);
 }
 
 template< typename T, typename VisitorT >
-typename enable_if< is_same< typename result_of::visit< T, VisitorT >::type, visitation_result >, typename result_of::visit< T, VisitorT >::type >::type
+inline typename result_of::visit< T, VisitorT >::type
 visit(attribute_value const& value, VisitorT visitor)
 {
-    if (!!value)
-    {
-        static_type_dispatcher< T > disp(visitor);
-        if (value.dispatch(disp))
-            return visitation_result::ok;
-        else
-            return visitation_result::value_has_invalid_type;
-    }
-    return visitation_result::value_not_found;
-}
-
-template< typename T, typename VisitorT >
-typename disable_if< is_same< typename result_of::visit< T, VisitorT >::type, visitation_result >, typename result_of::visit< T, VisitorT >::type >::type
-visit(attribute_value const& value, VisitorT visitor)
-{
-    typedef typename result_of::visit< T, VisitorT >::type result_type;
-    result_type result;
-    if (!!value)
-    {
-        aux::forward_result< typename result_type::first_type, VisitorT > forwarder(result.first, visitor);
-        static_type_dispatcher< T > disp(forwarder);
-        if (value.dispatch(disp))
-            result.second = visitation_result::ok;
-        else
-            result.second = visitation_result::value_has_invalid_type;
-    }
-    else
-        result.second = visitation_result::value_not_found;
-
-    return result;
+    value_visitor_invoker< T > invoker;
+    return invoker(value, visitor);
 }
 
 #endif // BOOST_LOG_DOXYGEN_PASS

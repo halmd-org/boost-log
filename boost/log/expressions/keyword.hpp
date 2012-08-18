@@ -33,7 +33,10 @@
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/expressions/unary_adapter.hpp>
 #include <boost/log/expressions/is_keyword_descriptor.hpp>
+#include <boost/log/expressions/attr.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
+#include <boost/log/attributes/fallback_policy.hpp>
+#include <boost/log/keywords/attr_tag.hpp>
 
 namespace boost {
 
@@ -60,7 +63,7 @@ struct keyword_terminal
     //! Attribute value type
     typedef typename descriptor_type::value_type value_type;
     //! Attribute value extractor
-    typedef value_extractor< extract_value_or_none< value_type, boost::type< descriptor_type > > > extractor_type;
+    typedef value_extractor< value_type, fallback_to_none, boost::type< descriptor_type > > extractor_type;
 
     //! Function object result type
     typedef typename extractor_type::result_type result_type;
@@ -69,7 +72,7 @@ struct keyword_terminal
     template< typename EnvT >
     result_type operator() (EnvT const& env) const
     {
-        return extractor_type(descriptor_type::get_name())(fusion::at_c< 0 >(env.args()));
+        return extractor_type()(descriptor_type::get_name(), fusion::at_c< 0 >(env.args()));
     }
 };
 
@@ -96,76 +99,51 @@ struct attribute_keyword
     static attribute_name get_name() { return descriptor_type::get_name(); }
 
     //! Expression with cached attribute name
-    typedef ActorT<
-        terminal<
-            unary_adapter<
-                value_extractor<
-                    extract_value_or_none< value_type, boost::type< descriptor_type > >
-                >
-            >
-        >
+    typedef attribute_terminal<
+        value_type,
+        fallback_to_none,
+        parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >
     > or_none_result_type;
 
     //! Generates an expression that extracts the attribute value or a default value
     static or_none_result_type or_none()
     {
-        typedef terminal<
-            unary_adapter<
-                value_extractor<
-                    extract_value_or_none< value_type, boost::type< descriptor_type > >
-                >
-            >
-        > cached_terminal;
-        ActorT< cached_terminal > res = { cached_terminal(descriptor_type::get_name()) };
-        return res;
+        typedef typename or_none_result_type::terminal_type result_terminal;
+        typename or_none_result_type::base_type act = { result_terminal(get_name()) };
+        return or_none_result_type(act, keywords::attr_tag = boost::type< descriptor_type >());
     }
 
     //! Expression with cached attribute name
-    typedef ActorT<
-        terminal<
-            unary_adapter<
-                value_extractor<
-                    extract_value_or_throw< value_type, boost::type< descriptor_type > >
-                >
-            >
-        >
+    typedef attribute_terminal<
+        value_type,
+        fallback_to_throw,
+        parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >
     > or_throw_result_type;
 
     //! Generates an expression that extracts the attribute value or throws an exception
     static or_throw_result_type or_throw()
     {
-        typedef terminal<
-            unary_adapter<
-                value_extractor<
-                    extract_value_or_throw< value_type, boost::type< descriptor_type > >
-                >
-            >
-        > cached_terminal;
-        ActorT< cached_terminal > res = { cached_terminal(descriptor_type::get_name()) };
-        return res;
+        typedef typename or_throw_result_type::terminal_type result_terminal;
+        typename or_throw_result_type::base_type act = { result_terminal(get_name()) };
+        return or_throw_result_type(act, keywords::attr_tag = boost::type< descriptor_type >());
     }
 
     //! Generates an expression that extracts the attribute value or a default value
-    template< typename T >
-    static ActorT<
-        terminal<
-            unary_adapter<
-                value_extractor<
-                    extract_value_or_default< value_type, T, boost::type< descriptor_type > >
-                >
-            >
-        >
-    > or_default(T const& def_val)
+    template< typename DefaultT >
+    static attribute_terminal<
+        value_type,
+        fallback_to_default< DefaultT >,
+        parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >
+    > or_default(DefaultT const& def_val)
     {
-        typedef terminal<
-            unary_adapter<
-                value_extractor<
-                    extract_value_or_default< value_type, T, boost::type< descriptor_type > >
-                >
-            >
-        > cached_terminal;
-        ActorT< cached_terminal > res = { cached_terminal(descriptor_type::get_name(), def_val) };
-        return res;
+        typedef attribute_terminal<
+            value_type,
+            fallback_to_default< DefaultT >,
+            parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >
+        > or_default_result_type;
+        typedef typename or_default_result_type::terminal_type result_terminal;
+        typename or_default_result_type::base_type act = { result_terminal(get_name(), def_val) };
+        return or_default_result_type(act, keywords::attr_tag = boost::type< descriptor_type >());
     }
 };
 

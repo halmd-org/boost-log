@@ -21,6 +21,7 @@
 #define BOOST_LOG_ATTRIBUTES_VALUE_EXTRACTION_FWD_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/attributes/fallback_policy_fwd.hpp>
 
 namespace boost {
 
@@ -49,27 +50,9 @@ struct extract;
 } // namespace result_of
 
 /*!
- * \brief Attribute value extraction policy that returns an empty value if no value can be extracted
- */
-template< typename T, typename TagT = void >
-class extract_value_or_none;
-
-/*!
- * \brief Attribute value extraction policy that throws an exception if no value can be extracted
- */
-template< typename T, typename TagT = void >
-class extract_value_or_throw;
-
-/*!
- * \brief Attribute value extraction policy that returns an default value if no value can be extracted
- */
-template< typename T, typename DefaultT = T, typename TagT = void >
-class extract_value_or_default;
-
-/*!
  * \brief Generic attribute value extractor
  */
-template< typename ExtractionPolicyT >
+template< typename T, typename FallbackPolicyT = fallback_to_none, typename TagT = void >
 class value_extractor;
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log

@@ -49,6 +49,8 @@ public:
     typedef T value_type;
 
 private:
+    //! Attribute value name
+    const attribute_name m_name;
     //! Visitor invoker
     value_visitor_invoker< value_type > m_visitor_invoker;
 
@@ -58,7 +60,7 @@ public:
      *
      * \param name Attribute name
      */
-    explicit has_attribute(attribute_name const& name) : m_visitor_invoker(name)
+    explicit has_attribute(attribute_name const& name) : m_name(name)
     {
     }
 
@@ -71,7 +73,7 @@ public:
     template< typename ArgT >
     result_type operator() (ArgT const& arg) const
     {
-        return m_visitor_invoker(arg, nop()).code() == visitation_result::ok;
+        return m_visitor_invoker(m_name, arg, nop()).code() == visitation_result::ok;
     }
 };
 

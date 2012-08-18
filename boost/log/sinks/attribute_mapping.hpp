@@ -121,6 +121,8 @@ public:
     typedef typename base_type::mapped_type mapped_type;
 
 private:
+    //! Attribute name
+    const attribute_name m_Name;
     //! Visitor invoker for the attribute value
     value_visitor_invoker< attribute_value_type > m_Invoker;
     //! Default native value
@@ -134,7 +136,7 @@ public:
      * \param default_value The default native value that is returned if the attribute value is not found
      */
     explicit basic_direct_mapping(attribute_name const& name, mapped_type const& default_value) :
-        m_Invoker(name),
+        m_Name(name),
         m_DefaultValue(default_value)
     {
     }
@@ -149,7 +151,7 @@ public:
     {
         mapped_type res = m_DefaultValue;
         aux::direct_mapping_visitor< mapped_type > vis(res);
-        m_Invoker(rec.attribute_values(), vis);
+        m_Invoker(m_Name, rec.attribute_values(), vis);
         return res;
     }
 };
@@ -230,6 +232,8 @@ private:
     //! \endcond
 
 private:
+    //! Attribute name
+    const attribute_name m_Name;
     //! Visitor invoker for the attribute value
     value_visitor_invoker< attribute_value_type > m_Invoker;
     //! Default native value
@@ -245,7 +249,7 @@ public:
      * \param default_value The default native value that is returned if the conversion cannot be performed
      */
     explicit basic_custom_mapping(attribute_name const& name, mapped_type const& default_value) :
-        m_Invoker(name),
+        m_Name(name),
         m_DefaultValue(default_value)
     {
     }
@@ -261,7 +265,7 @@ public:
     {
         mapped_type res = m_DefaultValue;
         visitor vis(m_Mapping, res);
-        m_Invoker(rec.attribute_values(), vis);
+        m_Invoker(m_Name, rec.attribute_values(), vis);
         return res;
     }
     /*!

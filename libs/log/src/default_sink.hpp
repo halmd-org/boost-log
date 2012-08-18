@@ -22,8 +22,10 @@
 
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sinks/sink.hpp>
+#include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
+#include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/expressions/message.hpp>
 #include <boost/log/trivial.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -47,7 +49,8 @@ private:
     typedef mutex mutex_type;
     mutex_type m_mutex;
 #endif
-    value_extractor< extract_value_or_default< boost::log::trivial::severity_level > > const m_severity_extractor;
+    attribute_name const m_severity_name, m_message_name;
+    value_extractor< boost::log::trivial::severity_level, fallback_to_default< boost::log::trivial::severity_level > > const m_severity_extractor;
     value_visitor_invoker< expressions::tag::message::value_type > m_message_visitor;
 
 public:
