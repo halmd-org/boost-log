@@ -69,7 +69,7 @@ public:
     };
 
 public:
-    //! Default constructor
+    //! Initializing constructor
     explicit extractor_adapter(attribute_name const& name) : m_name(name)
     {
     }
@@ -85,7 +85,7 @@ public:
     }
 
     //! Returns attribute value name
-    attribute_name const& get_name() const
+    attribute_name get_name() const
     {
         return m_name;
     }
@@ -115,33 +115,26 @@ public:
 template<
     typename T,
     typename FallbackPolicyT = fallback_to_none,
-    typename ParamsT = boost::log::aux::empty_arg_list,
-    template< typename > class ActorT = phoenix::actor
+    typename ParamsT = boost::log::aux::empty_arg_list
 >
 class attribute_terminal :
-    public ActorT<
-        terminal<
-            aux::extractor_adapter<
-                value_extractor<
-                    T,
-                    FallbackPolicyT,
-                    typename remove_cv< typename parameter::binding< ParamsT, keywords::tag::attr_tag, void >::type >::type
-                >
+    public terminal<
+        aux::extractor_adapter<
+            value_extractor<
+                T,
+                FallbackPolicyT,
+                typename remove_cv< typename parameter::binding< ParamsT, keywords::tag::attr_tag, void >::type >::type
             >
         >
     >
 {
 public:
+    //! Attribute tag type
+    typedef typename remove_cv< typename parameter::binding< ParamsT, keywords::tag::attr_tag, void >::type >::type tag_type;
     //! Attribute value extractor
-    typedef value_extractor<
-        T,
-        FallbackPolicyT,
-        typename remove_cv< typename parameter::binding< ParamsT, keywords::tag::attr_tag, void >::type >::type
-    > extractor_type;
+    typedef value_extractor< T, FallbackPolicyT, tag_type > extractor_type;
     //! Base terminal type
     typedef terminal< aux::extractor_adapter< extractor_type > > terminal_type;
-    //! Base actor type
-    typedef ActorT< terminal_type > base_type;
     //! Attribute value type
     typedef typename extractor_type::value_type value_type;
 
@@ -154,14 +147,14 @@ private:
 
 public:
     //! Initializing constructor
-    explicit attribute_terminal(base_type const& act, parameters_type const& params = parameters_type()) : base_type(act), m_params(params)
+    explicit attribute_terminal(attribute_name const& name, parameters_type const& params = parameters_type()) : terminal_type(name), m_params(params)
     {
     }
 
-    //! Returns the attribute name
-    attribute_name get_name() const
+    //! Initializing constructor
+    template< typename U >
+    attribute_terminal(attribute_name const& name, parameters_type const& params, U const& arg) : terminal_type(name, arg), m_params(params)
     {
-        return this->proto_expr_.get_name();
     }
 
     //! Returns additional parameters
@@ -169,36 +162,94 @@ public:
     {
         return m_params;
     }
+};
+
+/*!
+ * An attribute value extraction terminal actor
+ */
+template<
+    typename T,
+    typename FallbackPolicyT = fallback_to_none,
+    typename ParamsT = boost::log::aux::empty_arg_list,
+    template< typename > class ActorT = phoenix::actor
+>
+class attribute_actor :
+    public ActorT< attribute_terminal< T, FallbackPolicyT, ParamsT > >
+{
+public:
+    //! Base terminal type
+    typedef attribute_terminal< T, FallbackPolicyT, ParamsT > terminal_type;
+    //! Base actor type
+    typedef ActorT< terminal_type > base_type;
+    //! Attribute value type
+    typedef typename terminal_type::value_type value_type;
+    //! Attribute tag type
+    typedef typename terminal_type::tag_type tag_type;
+
+    //! Additional parameters
+    typedef ParamsT parameters_type;
+    //! Fallback policy
+    typedef FallbackPolicyT fallback_policy;
+
+public:
+    //! Initializing constructor
+    explicit attribute_actor(base_type const& act) : base_type(act)
+    {
+    }
+
+    /*!
+     * \returns The attribute name
+     */
+    attribute_name get_name() const
+    {
+        return this->proto_expr_.child0.get_name();
+    }
+
+    /*!
+     * \returns Additional parameters
+     */
+    parameters_type const& get_params() const
+    {
+        return this->proto_expr_.child0.get_params();
+    }
+
+    /*!
+     * \returns Fallback policy
+     */
+    fallback_policy const& get_fallback_policy() const
+    {
+        return this->proto_expr_.child0.get_fallback_policy();
+    }
 
     //! Expression with cached attribute name
-    typedef attribute_terminal< value_type, fallback_to_none, parameters_type, ActorT > or_none_result_type;
+    typedef attribute_actor< value_type, fallback_to_none, parameters_type, ActorT > or_none_result_type;
 
     //! Generates an expression that extracts the attribute value or a default value
     or_none_result_type or_none() const
     {
         typedef typename or_none_result_type::terminal_type result_terminal;
-        base_type act = { result_terminal(this->proto_expr_.get_name()) };
+        base_type act = { result_terminal(get_name(), get_params()) };
         return or_none_result_type(act);
     }
 
     //! Expression with cached attribute name
-    typedef attribute_terminal< value_type, fallback_to_throw, parameters_type, ActorT > or_throw_result_type;
+    typedef attribute_actor< value_type, fallback_to_throw, parameters_type, ActorT > or_throw_result_type;
 
     //! Generates an expression that extracts the attribute value or throws an exception
     or_throw_result_type or_throw() const
     {
         typedef typename or_throw_result_type::terminal_type result_terminal;
-        base_type act = { result_terminal(this->proto_expr_.get_name()) };
+        base_type act = { result_terminal(get_name(), get_params()) };
         return or_throw_result_type(act);
     }
 
     //! Generates an expression that extracts the attribute value or a default value
     template< typename DefaultT >
-    attribute_terminal< value_type, fallback_to_default< DefaultT >, parameters_type, ActorT > or_default(DefaultT const& def_val) const
+    attribute_actor< value_type, fallback_to_default< DefaultT >, parameters_type, ActorT > or_default(DefaultT const& def_val) const
     {
-        typedef attribute_terminal< value_type, fallback_to_default< DefaultT >, parameters_type, ActorT > or_default_result_type;
+        typedef attribute_actor< value_type, fallback_to_default< DefaultT >, parameters_type, ActorT > or_default_result_type;
         typedef typename or_default_result_type::terminal_type result_terminal;
-        base_type act = { result_terminal(get_name(), def_val) };
+        base_type act = { result_terminal(get_name(), get_params(), def_val) };
         return or_default_result_type(act);
     }
 };
@@ -208,9 +259,9 @@ public:
  * with the specified name and type.
  */
 template< typename AttributeValueT >
-BOOST_LOG_FORCEINLINE attribute_terminal< AttributeValueT > attr(attribute_name const& name)
+BOOST_LOG_FORCEINLINE attribute_actor< AttributeValueT > attr(attribute_name const& name)
 {
-    typedef attribute_terminal< AttributeValueT > result_type;
+    typedef attribute_actor< AttributeValueT > result_type;
     typedef typename result_type::terminal_type result_terminal;
     typename result_type::base_type act = { result_terminal(name) };
     return result_type(act);
@@ -221,5 +272,9 @@ BOOST_LOG_FORCEINLINE attribute_terminal< AttributeValueT > attr(attribute_name 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#if defined(BOOST_LOG_EXPRESSIONS_STREAM_HPP_INCLUDED_)
+#include <boost/log/detail/attr_output_impl.hpp>
+#endif
 
 #endif // BOOST_LOG_EXPRESSIONS_ATTR_HPP_INCLUDED_

@@ -22,6 +22,7 @@
 #include <boost/type.hpp>
 #include <boost/proto/extends.hpp>
 #include <boost/phoenix/core/actor.hpp>
+#include <boost/phoenix/core/environment.hpp>
 #include <boost/fusion/sequence/intrinsic/at.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
@@ -69,10 +70,10 @@ struct keyword_terminal
     typedef typename extractor_type::result_type result_type;
 
     //! The operator extracts the value
-    template< typename EnvT >
-    result_type operator() (EnvT const& env) const
+    template< typename ContextT >
+    result_type operator() (ContextT const& ctx) const
     {
-        return extractor_type()(descriptor_type::get_name(), fusion::at_c< 0 >(env.args()));
+        return extractor_type()(descriptor_type::get_name(), fusion::at_c< 0 >(phoenix::env(ctx).args()));
     }
 };
 
@@ -99,10 +100,11 @@ struct attribute_keyword
     static attribute_name get_name() { return descriptor_type::get_name(); }
 
     //! Expression with cached attribute name
-    typedef attribute_terminal<
+    typedef attribute_actor<
         value_type,
         fallback_to_none,
-        parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >
+        parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >,
+        ActorT
     > or_none_result_type;
 
     //! Generates an expression that extracts the attribute value or a default value
@@ -114,10 +116,11 @@ struct attribute_keyword
     }
 
     //! Expression with cached attribute name
-    typedef attribute_terminal<
+    typedef attribute_actor<
         value_type,
         fallback_to_throw,
-        parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >
+        parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >,
+        ActorT
     > or_throw_result_type;
 
     //! Generates an expression that extracts the attribute value or throws an exception
@@ -130,16 +133,18 @@ struct attribute_keyword
 
     //! Generates an expression that extracts the attribute value or a default value
     template< typename DefaultT >
-    static attribute_terminal<
+    static attribute_actor<
         value_type,
         fallback_to_default< DefaultT >,
-        parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >
+        parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >,
+        ActorT
     > or_default(DefaultT const& def_val)
     {
-        typedef attribute_terminal<
+        typedef attribute_actor<
             value_type,
             fallback_to_default< DefaultT >,
-            parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >
+            parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >,
+            ActorT
         > or_default_result_type;
         typedef typename or_default_result_type::terminal_type result_terminal;
         typename or_default_result_type::base_type act = { result_terminal(get_name(), def_val) };

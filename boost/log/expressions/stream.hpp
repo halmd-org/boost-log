@@ -44,4 +44,8 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
+#if defined(BOOST_LOG_EXPRESSIONS_ATTR_HPP_INCLUDED_)
+#include <boost/log/detail/attr_output_impl.hpp>
+#endif
+
 #endif // BOOST_LOG_EXPRESSIONS_STREAM_HPP_INCLUDED_

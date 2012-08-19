@@ -22,6 +22,8 @@
 #include <boost/mpl/bool.hpp>
 #include <boost/phoenix/core/terminal.hpp>
 #include <boost/phoenix/core/environment.hpp>
+#include <boost/type_traits/remove_cv.hpp>
+#include <boost/type_traits/remove_reference.hpp>
 #include <boost/utility/result_of.hpp>
 #include <boost/log/detail/prologue.hpp>
 
@@ -50,20 +52,30 @@ struct terminal :
 
     //! Base function type
     typedef BaseT base_type;
+    //! Self type
+    typedef terminal< base_type > this_type;
 
     template< typename >
     struct result;
 
-    template< typename EnvT >
-    struct result< terminal< base_type >(EnvT) > :
-        public boost::result_of< base_type(typename EnvT::args_type) >
+    template< typename ContextT >
+    struct result< this_type(ContextT) >
     {
+        typedef typename remove_cv<
+            typename remove_reference< typename phoenix::result_of::env< ContextT >::type >::type
+        >::type env_type;
+
+        typedef typename boost::result_of< base_type(typename env_type::args_type) >::type type;
     };
 
-    template< typename EnvT >
-    struct result< const terminal< base_type >(EnvT) > :
-        public boost::result_of< const base_type(typename EnvT::args_type) >
+    template< typename ContextT >
+    struct result< const this_type(ContextT) >
     {
+        typedef typename remove_cv<
+            typename remove_reference< typename phoenix::result_of::env< ContextT >::type >::type
+        >::type env_type;
+
+        typedef typename boost::result_of< const base_type(typename env_type::args_type) >::type type;
     };
 
     //! Default constructor
@@ -76,19 +88,19 @@ struct terminal :
     terminal(ArgT1 const& arg1, ArgT2 const& arg2) : base_type(arg1, arg2) {}
 
     //! Invokation operator
-    template< typename EnvT >
-    typename boost::result_of< base_type(typename EnvT::args_type) >::type
-    operator() (EnvT const& env)
+    template< typename ContextT >
+    typename result< this_type(ContextT) >::type
+    operator() (ContextT const& ctx)
     {
-        return base_type::operator() (env.args());
+        return base_type::operator() (phoenix::env(ctx).args());
     }
 
     //! Invokation operator
-    template< typename EnvT >
-    typename boost::result_of< const base_type(typename EnvT::args_type) >::type
-    operator() (EnvT const& env) const
+    template< typename ContextT >
+    typename result< const this_type(ContextT) >::type
+    operator() (ContextT const& ctx) const
     {
-        return base_type::operator() (env.args());
+        return base_type::operator() (phoenix::env(ctx).args());
     }
 };
 
@@ -119,12 +131,22 @@ struct is_custom_terminal< T, typename T::_is_boost_log_terminal > :
 template< typename T >
 struct custom_terminal< T, typename T::_is_boost_log_terminal >
 {
-    typedef typename T::result_type result_type;
+    typedef custom_terminal< T, typename T::_is_boost_log_terminal > this_type;
+
+    template< typename >
+    struct result;
+
+    template< typename ThisT, typename TermT, typename ContextT >
+    struct result< ThisT(TermT, ContextT) >
+    {
+        typedef typename remove_cv< typename remove_reference< TermT >::type >::type term;
+        typedef typename boost::result_of< const term(ContextT) >::type type;
+    };
 
     template< typename ContextT >
-    result_type operator() (T const& term, ContextT& ctx) const
+    typename result< const this_type(T, ContextT) >::type operator() (T const& term, ContextT& ctx) const
     {
-        return term(phoenix::env(ctx));
+        return term(ctx);
     }
 };
 
