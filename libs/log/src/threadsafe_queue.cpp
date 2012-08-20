@@ -78,7 +78,7 @@ private:
      * A structure that contains a pointer to the node and the associated mutex.
      * The alignment below allows to eliminate false sharing, it should be not less than CPU cache line size (which is assumed to be 64 bytes in most cases).
      */
-    BOOST_LOG_ALIGNAS(64) struct pointer
+    struct BOOST_LOG_ALIGNAS(64) pointer
     {
         //! Pointer to the either end of the queue
         node_base* node;
