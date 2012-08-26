@@ -19,8 +19,9 @@
 #ifndef BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_
 
+#include <boost/ref.hpp>
 #include <boost/type.hpp>
-#include <boost/proto/extends.hpp>
+#include <boost/proto/make_expr.hpp>
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/phoenix/core/environment.hpp>
 #include <boost/fusion/sequence/intrinsic/at.hpp>
@@ -29,10 +30,8 @@
 #include <boost/preprocessor/facilities/identity.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/expressions/domain.hpp>
 #include <boost/log/expressions/terminal.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
-#include <boost/log/expressions/unary_adapter.hpp>
 #include <boost/log/expressions/is_keyword_descriptor.hpp>
 #include <boost/log/expressions/attr.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
@@ -46,55 +45,15 @@ BOOST_LOG_OPEN_NAMESPACE
 namespace expressions {
 
 /*!
- * \brief An auxiliary terminal node for declaring attribute keywords.
- *
- * This terminal is mostly used to declare attribute keywords and not to actually implement attribute extraction. The need
- * for this separate class is dictated by requirement of keywords being POD to allow static initialization. Most terminals
- * though would store an attribute value name internally, which would require dynamic initialization. Therefore keywords
- * initially build upon this fake terminal and then get converted to real terminals as template expression builds.
- */
-template< typename DescriptorT >
-struct keyword_terminal
-{
-    //! Internal typedef for type categorization
-    typedef void _is_boost_log_terminal;
-
-    //! Attribute descriptor type
-    typedef DescriptorT descriptor_type;
-    //! Attribute value type
-    typedef typename descriptor_type::value_type value_type;
-    //! Attribute value extractor
-    typedef value_extractor< value_type, fallback_to_none, boost::type< descriptor_type > > extractor_type;
-
-    //! Function object result type
-    typedef typename extractor_type::result_type result_type;
-
-    //! The operator extracts the value
-    template< typename ContextT >
-    result_type operator() (ContextT const& ctx) const
-    {
-        return extractor_type()(descriptor_type::get_name(), fusion::at_c< 0 >(phoenix::env(ctx).args()));
-    }
-};
-
-/*!
  * This class implements an expression template keyword. It is used to start template expressions involving attribute values.
  */
 template< typename DescriptorT, template< typename > class ActorT >
 struct attribute_keyword
 {
-    //! Internal typedef for type categorization
-    typedef void _is_boost_log_attribute_keyword;
-
     //! Attribute descriptor type
     typedef DescriptorT descriptor_type;
     //! Attribute value type
     typedef typename descriptor_type::value_type value_type;
-
-    //! Expression type
-    typedef ActorT< keyword_terminal< descriptor_type > > expr_type;
-
-    BOOST_PROTO_EXTENDS(expr_type, attribute_keyword, domain)
 
     //! Returns attribute name
     static attribute_name get_name() { return descriptor_type::get_name(); }
@@ -103,7 +62,7 @@ struct attribute_keyword
     typedef attribute_actor<
         value_type,
         fallback_to_none,
-        parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >,
+        parameter::aux::tagged_argument< keywords::tag::attr_tag, const boost::type< descriptor_type > >,
         ActorT
     > or_none_result_type;
 
@@ -119,7 +78,7 @@ struct attribute_keyword
     typedef attribute_actor<
         value_type,
         fallback_to_throw,
-        parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >,
+        parameter::aux::tagged_argument< keywords::tag::attr_tag, const boost::type< descriptor_type > >,
         ActorT
     > or_throw_result_type;
 
@@ -136,14 +95,14 @@ struct attribute_keyword
     static attribute_actor<
         value_type,
         fallback_to_default< DefaultT >,
-        parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >,
+        parameter::aux::tagged_argument< keywords::tag::attr_tag, const boost::type< descriptor_type > >,
         ActorT
     > or_default(DefaultT const& def_val)
     {
         typedef attribute_actor<
             value_type,
             fallback_to_default< DefaultT >,
-            parameter::aux::tagged_argument< keywords::tag::attr_tag, boost::type< descriptor_type > >,
+            parameter::aux::tagged_argument< keywords::tag::attr_tag, const boost::type< descriptor_type > >,
             ActorT
         > or_default_result_type;
         typedef typename or_default_result_type::terminal_type result_terminal;
@@ -155,6 +114,69 @@ struct attribute_keyword
 } // namespace expressions
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
+namespace proto {
+
+namespace detail {
+
+// This hack is needed in order to cache attribute name into the expression terminal when the template
+// expression is constructed. The standard way through a custom domain doesn't work because phoenix::actor
+// is bound to phoenix_domain.
+template< typename DescriptorT, template< typename > class ActorT, typename DomainT >
+struct protoify< boost::log::expressions::attribute_keyword< DescriptorT, ActorT >, DomainT >
+{
+    typedef boost::log::expressions::attribute_keyword< DescriptorT, ActorT > keyword_type;
+    typedef typename keyword_type::or_none_result_type result_type;
+
+    result_type operator() (keyword_type const& keyword) const
+    {
+        return keyword.or_none();
+    }
+};
+
+template< typename DescriptorT, template< typename > class ActorT, typename DomainT >
+struct protoify< boost::log::expressions::attribute_keyword< DescriptorT, ActorT >&, DomainT > :
+    public protoify< boost::log::expressions::attribute_keyword< DescriptorT, ActorT >, DomainT >
+{
+};
+
+template< typename DescriptorT, template< typename > class ActorT, typename DomainT >
+struct protoify< boost::log::expressions::attribute_keyword< DescriptorT, ActorT > const&, DomainT > :
+    public protoify< boost::log::expressions::attribute_keyword< DescriptorT, ActorT >, DomainT >
+{
+};
+
+template< typename DescriptorT, template< typename > class ActorT, typename DomainT >
+struct protoify< boost::reference_wrapper< boost::log::expressions::attribute_keyword< DescriptorT, ActorT > >, DomainT > :
+    public protoify< boost::log::expressions::attribute_keyword< DescriptorT, ActorT >, DomainT >
+{
+};
+
+template< typename DescriptorT, template< typename > class ActorT, typename DomainT >
+struct protoify< boost::reference_wrapper< boost::log::expressions::attribute_keyword< DescriptorT, ActorT > > const, DomainT > :
+    public protoify< boost::log::expressions::attribute_keyword< DescriptorT, ActorT >, DomainT >
+{
+};
+
+template< typename DescriptorT, template< typename > class ActorT, typename DomainT >
+struct protoify< boost::reference_wrapper< const boost::log::expressions::attribute_keyword< DescriptorT, ActorT > >, DomainT > :
+    public protoify< boost::log::expressions::attribute_keyword< DescriptorT, ActorT >, DomainT >
+{
+};
+
+template< typename DescriptorT, template< typename > class ActorT, typename DomainT >
+struct protoify< boost::reference_wrapper< const boost::log::expressions::attribute_keyword< DescriptorT, ActorT > > const, DomainT > :
+    public protoify< boost::log::expressions::attribute_keyword< DescriptorT, ActorT >, DomainT >
+{
+};
+
+} // namespace detail
+
+} // namespace proto
+
+#endif // !defined(BOOST_LOG_DOXYGEN_PASS)
 
 } // namespace boost
 

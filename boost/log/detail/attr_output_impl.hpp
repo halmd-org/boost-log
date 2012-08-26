@@ -28,6 +28,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
+#include <boost/log/expressions/terminal.hpp>
 #include <boost/log/expressions/attr.hpp>
 #include <boost/log/utility/functional/bind_output.hpp>
 #include <boost/log/detail/make_expression_fwd.hpp>
@@ -59,9 +60,10 @@ public:
     template< typename ContextT >
     struct result< this_type(ContextT) >
     {
-        typedef typename phoenix::evaluator::template impl<
+        typedef typename remove_cv< typename remove_reference< ContextT >::type >::type context_type;
+        typedef typename phoenix::evaluator::impl<
             typename LeftT::proto_base_expr&,
-            ContextT const&,
+            context_type,
             phoenix::unused
         >::result_type type;
     };
@@ -69,9 +71,10 @@ public:
     template< typename ContextT >
     struct result< const this_type(ContextT) >
     {
-        typedef typename phoenix::evaluator::template impl<
+        typedef typename remove_cv< typename remove_reference< ContextT >::type >::type context_type;
+        typedef typename phoenix::evaluator::impl<
             typename LeftT::proto_base_expr const&,
-            ContextT const&,
+            context_type,
             phoenix::unused
         >::result_type type;
     };
@@ -178,9 +181,97 @@ operator<< (phoenix::actor< LeftExprT > const& left, attribute_actor< T, Fallbac
     return aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::make(left, right);
 }
 
+template< typename LeftExprT, typename T, typename FallbackPolicyT, typename ParamsT >
+BOOST_LOG_FORCEINLINE typename aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::type
+operator<< (phoenix::actor< LeftExprT >& left, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > const& right)
+{
+    return aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::make(left, right);
+}
+
+template< typename LeftExprT, typename T, typename FallbackPolicyT, typename ParamsT >
+BOOST_LOG_FORCEINLINE typename aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::type
+operator<< (phoenix::actor< LeftExprT > const& left, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor >& right)
+{
+    return aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::make(left, right);
+}
+
+template< typename LeftExprT, typename T, typename FallbackPolicyT, typename ParamsT >
+BOOST_LOG_FORCEINLINE typename aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::type
+operator<< (phoenix::actor< LeftExprT >& left, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor >& right)
+{
+    return aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::make(left, right);
+}
+
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
+template< typename LeftExprT, typename T, typename FallbackPolicyT, typename ParamsT >
+BOOST_LOG_FORCEINLINE typename aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::type
+operator<< (phoenix::actor< LeftExprT >&& left, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor >& right)
+{
+    return aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::make(left, right);
+}
+
+template< typename LeftExprT, typename T, typename FallbackPolicyT, typename ParamsT >
+BOOST_LOG_FORCEINLINE typename aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::type
+operator<< (phoenix::actor< LeftExprT >&& left, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > const& right)
+{
+    return aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::make(left, right);
+}
+
+template< typename LeftExprT, typename T, typename FallbackPolicyT, typename ParamsT >
+BOOST_LOG_FORCEINLINE typename aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::type
+operator<< (phoenix::actor< LeftExprT >& left, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor >&& right)
+{
+    return aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::make(left, right);
+}
+
+template< typename LeftExprT, typename T, typename FallbackPolicyT, typename ParamsT >
+BOOST_LOG_FORCEINLINE typename aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::type
+operator<< (phoenix::actor< LeftExprT > const& left, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor >&& right)
+{
+    return aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::make(left, right);
+}
+
+template< typename LeftExprT, typename T, typename FallbackPolicyT, typename ParamsT >
+BOOST_LOG_FORCEINLINE typename aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::type
+operator<< (phoenix::actor< LeftExprT >&& left, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor >&& right)
+{
+    return aux::make_output_actor< phoenix::actor< LeftExprT >, attribute_actor< T, FallbackPolicyT, ParamsT, phoenix::actor > >::make(left, right);
+}
+
+#endif // !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
 } // namespace expressions
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
+namespace phoenix {
+
+namespace result_of {
+
+// This is a workaround for a Boost.Phoenix problem: the is_nullary metafunction is specialized for custom_terminal and always returns true,
+// and this specialization is preferred by GCC (even if we specialize is_nullary for our custom_terminal specialization). Is_nullary cannot
+// be fixed, so we fix the consequences: nullary_actor_result is used to determine the result type of a nullary actor, so we force it
+// to be equivalent to the result type when the actor is not nullary.
+template< typename LeftT, typename T, typename FallbackPolicyT, typename TagT >
+struct nullary_actor_result<
+    proto::expr<
+        proto::tag::terminal,
+        proto::term< boost::log::expressions::generic_attribute_output_terminal< LeftT, T, FallbackPolicyT, TagT > >,
+        0
+    >
+>
+{
+    typedef detail::error_expecting_arguments type;
+};
+
+} // namespace result_of
+
+} // namespace phoenix
+
+#endif // !defined(BOOST_LOG_DOXYGEN_PASS)
 
 } // namespace boost
 

@@ -115,7 +115,7 @@ public:
 template<
     typename T,
     typename FallbackPolicyT = fallback_to_none,
-    typename ParamsT = boost::log::aux::empty_arg_list
+    typename TagT = void
 >
 class attribute_terminal :
     public terminal<
@@ -123,14 +123,14 @@ class attribute_terminal :
             value_extractor<
                 T,
                 FallbackPolicyT,
-                typename remove_cv< typename parameter::binding< ParamsT, keywords::tag::attr_tag, void >::type >::type
+                TagT
             >
         >
     >
 {
 public:
     //! Attribute tag type
-    typedef typename remove_cv< typename parameter::binding< ParamsT, keywords::tag::attr_tag, void >::type >::type tag_type;
+    typedef TagT tag_type;
     //! Attribute value extractor
     typedef value_extractor< T, FallbackPolicyT, tag_type > extractor_type;
     //! Base terminal type
@@ -138,29 +138,16 @@ public:
     //! Attribute value type
     typedef typename extractor_type::value_type value_type;
 
-    //! Additional parameters
-    typedef ParamsT parameters_type;
-
-private:
-    //! Additional parameters
-    parameters_type m_params;
-
 public:
     //! Initializing constructor
-    explicit attribute_terminal(attribute_name const& name, parameters_type const& params = parameters_type()) : terminal_type(name), m_params(params)
+    explicit attribute_terminal(attribute_name const& name) : terminal_type(name)
     {
     }
 
     //! Initializing constructor
     template< typename U >
-    attribute_terminal(attribute_name const& name, parameters_type const& params, U const& arg) : terminal_type(name, arg), m_params(params)
+    attribute_terminal(attribute_name const& name, U const& arg) : terminal_type(name, arg)
     {
-    }
-
-    //! Returns additional parameters
-    parameters_type const& get_params() const
-    {
-        return m_params;
     }
 };
 
@@ -174,26 +161,36 @@ template<
     template< typename > class ActorT = phoenix::actor
 >
 class attribute_actor :
-    public ActorT< attribute_terminal< T, FallbackPolicyT, ParamsT > >
+    public ActorT<
+        attribute_terminal<
+            T,
+            FallbackPolicyT,
+            typename remove_cv< typename parameter::binding< ParamsT, keywords::tag::attr_tag, void >::type >::type
+        >
+    >
 {
 public:
+    //! Attribute tag type
+    typedef typename remove_cv< typename parameter::binding< ParamsT, keywords::tag::attr_tag, void >::type >::type tag_type;
     //! Base terminal type
-    typedef attribute_terminal< T, FallbackPolicyT, ParamsT > terminal_type;
+    typedef attribute_terminal< T, FallbackPolicyT, tag_type > terminal_type;
     //! Base actor type
     typedef ActorT< terminal_type > base_type;
     //! Attribute value type
     typedef typename terminal_type::value_type value_type;
-    //! Attribute tag type
-    typedef typename terminal_type::tag_type tag_type;
 
     //! Additional parameters
     typedef ParamsT parameters_type;
     //! Fallback policy
     typedef FallbackPolicyT fallback_policy;
 
+private:
+    //! Additional parameters
+    parameters_type m_params;
+
 public:
     //! Initializing constructor
-    explicit attribute_actor(base_type const& act) : base_type(act)
+    explicit attribute_actor(base_type const& act, parameters_type const& params = parameters_type()) : base_type(act), m_params(params)
     {
     }
 
@@ -210,7 +207,7 @@ public:
      */
     parameters_type const& get_params() const
     {
-        return this->proto_expr_.child0.get_params();
+        return this->m_params;
     }
 
     /*!
