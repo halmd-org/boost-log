@@ -16,6 +16,8 @@
 #ifndef BOOST_LOG_EVENT_LOG_REGISTRY_HPP_INCLUDED_
 #define BOOST_LOG_EVENT_LOG_REGISTRY_HPP_INCLUDED_
 
+#include <cwchar>
+#include <cstring>
 #include <string>
 #include <sstream>
 #include <stdexcept>
@@ -24,6 +26,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/exceptions.hpp>
+#include "windows_version.hpp"
 #include <windows.h>
 
 namespace boost {
@@ -37,6 +40,9 @@ namespace aux {
     // MSVC versions up to 2008 (or their Platform SDKs, to be more precise) don't define LSTATUS.
     // Perhaps, that is also the case for MinGW and Cygwin (untested).
     typedef DWORD LSTATUS;
+
+    // Max registry string size, in characters (for security reasons)
+    const DWORD max_string_size = 64u * 1024u;
 
     //! Helper traits to integrate with WinAPI
     template< typename CharT >
@@ -105,15 +111,50 @@ namespace aux {
             return RegCreateKeyExA(hKey, lpSubKey, Reserved, lpClass, dwOptions, samDesired, lpSecurityAttributes, phkResult, lpdwDisposition);
         }
 
+        static LSTATUS open_key(
+            HKEY hKey,
+            const char* lpSubKey,
+            DWORD dwOptions,
+            REGSAM samDesired,
+            PHKEY phkResult)
+        {
+            return RegOpenKeyExA(hKey, lpSubKey, dwOptions, samDesired, phkResult);
+        }
+
         static LSTATUS set_value(
             HKEY hKey,
             const char* lpValueName,
             DWORD Reserved,
             DWORD dwType,
-            const BYTE *lpData,
+            const BYTE* lpData,
             DWORD cbData)
         {
             return RegSetValueExA(hKey, lpValueName, Reserved, dwType, lpData, cbData);
+        }
+
+        static LSTATUS get_value(HKEY hKey, const char* lpValueName, DWORD& value)
+        {
+            DWORD type = REG_NONE, size = sizeof(value);
+            LSTATUS res = RegQueryValueExA(hKey, lpValueName, NULL, &type, reinterpret_cast< LPBYTE >(&value), &size);
+            if (res == ERROR_SUCCESS && type != REG_DWORD && type != REG_BINARY)
+                res = ERROR_INVALID_DATA;
+            return res;
+        }
+
+        static LSTATUS get_value(HKEY hKey, const char* lpValueName, std::string& value)
+        {
+            DWORD type = REG_NONE, size = 0;
+            LSTATUS res = RegQueryValueExA(hKey, lpValueName, NULL, &type, NULL, &size);
+            if (res == ERROR_SUCCESS && ((type != REG_EXPAND_SZ && type != REG_SZ) || size > max_string_size))
+                return ERROR_INVALID_DATA;
+            if (size == 0)
+                return res;
+
+            value.resize(size);
+            res = RegQueryValueExA(hKey, lpValueName, NULL, &type, reinterpret_cast< LPBYTE >(&value[0]), &size);
+            value.resize(std::strlen(value.c_str())); // remove extra terminating zero
+
+            return res;
         }
 
         static const char* get_event_message_file_param_name() { return "EventMessageFile"; }
@@ -186,15 +227,51 @@ namespace aux {
             return RegCreateKeyExW(hKey, lpSubKey, Reserved, lpClass, dwOptions, samDesired, lpSecurityAttributes, phkResult, lpdwDisposition);
         }
 
+        static LSTATUS open_key(
+            HKEY hKey,
+            const wchar_t* lpSubKey,
+            DWORD dwOptions,
+            REGSAM samDesired,
+            PHKEY phkResult)
+        {
+            return RegOpenKeyExW(hKey, lpSubKey, dwOptions, samDesired, phkResult);
+        }
+
         static LSTATUS set_value(
             HKEY hKey,
             const wchar_t* lpValueName,
             DWORD Reserved,
             DWORD dwType,
-            const BYTE *lpData,
+            const BYTE* lpData,
             DWORD cbData)
         {
             return RegSetValueExW(hKey, lpValueName, Reserved, dwType, lpData, cbData);
+        }
+
+        static LSTATUS get_value(HKEY hKey, const wchar_t* lpValueName, DWORD& value)
+        {
+            DWORD type = REG_NONE, size = sizeof(value);
+            LSTATUS res = RegQueryValueExW(hKey, lpValueName, NULL, &type, reinterpret_cast< LPBYTE >(&value), &size);
+            if (res == ERROR_SUCCESS && type != REG_DWORD && type != REG_BINARY)
+                res = ERROR_INVALID_DATA;
+            return res;
+        }
+
+        static LSTATUS get_value(HKEY hKey, const wchar_t* lpValueName, std::wstring& value)
+        {
+            DWORD type = REG_NONE, size = 0;
+            LSTATUS res = RegQueryValueExW(hKey, lpValueName, NULL, &type, NULL, &size);
+            size /= sizeof(wchar_t);
+            if (res == ERROR_SUCCESS && ((type != REG_EXPAND_SZ && type != REG_SZ) || size > max_string_size))
+                return ERROR_INVALID_DATA;
+            if (size == 0)
+                return res;
+
+            value.resize(size);
+            res = RegQueryValueExW(hKey, lpValueName, NULL, &type, reinterpret_cast< LPBYTE >(&value[0]), &size);
+            value.resize(std::wcslen(value.c_str())); // remove extra terminating zero
+
+            return res;
         }
 
         static const wchar_t* get_event_message_file_param_name() { return L"EventMessageFile"; }
@@ -227,6 +304,67 @@ namespace aux {
         HKEY hk_;
     };
 
+    //! The function checks if the event log is already registered
+    template< typename CharT >
+    bool verify_event_log_registry(std::basic_string< CharT > const& reg_key, bool force, registry_params< CharT > const& params)
+    {
+        typedef std::basic_string< CharT > string_type;
+        typedef registry_traits< CharT > registry;
+
+        // Open the key
+        HKEY hkey = 0;
+        LSTATUS res = registry::open_key(
+            HKEY_LOCAL_MACHINE,
+            reg_key.c_str(),
+            REG_OPTION_NON_VOLATILE,
+            KEY_READ,
+            &hkey);
+        if (res != ERROR_SUCCESS)
+            return false;
+
+        auto_hkey_close hkey_guard(hkey);
+
+        if (force)
+        {
+            // Verify key values
+            if (!!params.event_message_file)
+            {
+                string_type module_name;
+                res = registry::get_value(hkey, registry::get_event_message_file_param_name(), module_name);
+                if (res != ERROR_SUCCESS || module_name != params.event_message_file.get())
+                    return false;
+            }
+
+            if (!!params.category_message_file)
+            {
+                string_type module_name;
+                res = registry::get_value(hkey, registry::get_category_message_file_param_name(), module_name);
+                if (res != ERROR_SUCCESS || module_name != params.category_message_file.get())
+                    return false;
+            }
+
+            if (!!params.category_count)
+            {
+                // Set number of categories
+                DWORD category_count = 0;
+                res = registry::get_value(hkey, registry::get_category_count_param_name(), category_count);
+                if (res != ERROR_SUCCESS || category_count != params.category_count.get())
+                    return false;
+            }
+
+            if (!!params.types_supported)
+            {
+                // Set the supported event types
+                DWORD event_types = 0;
+                res = registry::get_value(hkey, registry::get_types_supported_param_name(), event_types);
+                if (res != ERROR_SUCCESS || event_types != params.types_supported.get())
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
     //! The function initializes the event log registry key
     template< typename CharT >
     void init_event_log_registry(
@@ -239,6 +377,11 @@ namespace aux {
         typedef registry_traits< CharT > registry;
         // Registry key name that contains log description
         string_type reg_key = registry::make_event_log_key(log_name, source_name);
+
+        // First check the registry keys and values in read-only mode.
+        // This allows to avoid UAC asking for elevated permissions to modify HKLM registry when no modification is actually needed.
+        if (verify_event_log_registry(reg_key, force, params))
+            return;
 
         // Create or open the key
         HKEY hkey = 0;
