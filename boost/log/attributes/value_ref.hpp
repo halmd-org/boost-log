@@ -42,6 +42,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/detail/value_ref_visitation.hpp>
+#include <boost/log/detail/make_tag_type.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/formatting_stream_fwd.hpp>
 #include <boost/log/utility/functional/logical.hpp>
@@ -54,19 +55,6 @@ namespace boost {
 BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
-
-//! The metafunction creates a tag type
-template< typename T >
-struct make_tag_type
-{
-    typedef boost::type< T > type;
-};
-
-template< typename T >
-struct make_tag_type< boost::type< T > >
-{
-    typedef boost::type< T > type;
-};
 
 //! The function object applies the function object to the bound visitable object and argument
 template< typename VisitableT, typename FunT >

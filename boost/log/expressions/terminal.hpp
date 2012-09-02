@@ -20,7 +20,8 @@
 #define BOOST_LOG_EXPRESSIONS_TERMINAL_HPP_INCLUDED_
 
 #include <boost/mpl/bool.hpp>
-#include <boost/phoenix/core/terminal.hpp>
+#include <boost/phoenix/core/terminal_fwd.hpp>
+#include <boost/phoenix/core/is_nullary.hpp>
 #include <boost/phoenix/core/environment.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/type_traits/remove_reference.hpp>
@@ -114,8 +115,8 @@ namespace phoenix {
 
 namespace result_of {
 
-template< typename T >
-struct is_nullary< T, typename T::_is_boost_log_terminal > :
+template< typename BaseT >
+struct is_nullary< custom_terminal< boost::log::expressions::terminal< BaseT > > > :
     public mpl::false_
 {
 };

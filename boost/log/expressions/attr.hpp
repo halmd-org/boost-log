@@ -19,16 +19,15 @@
 #ifndef BOOST_LOG_EXPRESSIONS_ATTR_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_ATTR_HPP_INCLUDED_
 
-#include <boost/parameter/binding.hpp>
 #include <boost/phoenix/core/actor.hpp>
-#include <boost/type_traits/remove_cv.hpp>
+#include <boost/phoenix/core/terminal_fwd.hpp>
+#include <boost/phoenix/core/is_nullary.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/parameter_tools.hpp>
+#include <boost/log/detail/make_tag_type.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/expressions/terminal.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
-#include <boost/log/keywords/attr_tag.hpp>
 
 namespace boost {
 
@@ -120,11 +119,7 @@ template<
 class attribute_terminal :
     public terminal<
         aux::extractor_adapter<
-            value_extractor<
-                T,
-                FallbackPolicyT,
-                TagT
-            >
+            value_extractor< T, FallbackPolicyT, TagT >
         >
     >
 {
@@ -157,40 +152,27 @@ public:
 template<
     typename T,
     typename FallbackPolicyT = fallback_to_none,
-    typename ParamsT = boost::log::aux::empty_arg_list,
+    typename TagT = void,
     template< typename > class ActorT = phoenix::actor
 >
 class attribute_actor :
-    public ActorT<
-        attribute_terminal<
-            T,
-            FallbackPolicyT,
-            typename remove_cv< typename parameter::binding< ParamsT, keywords::tag::attr_tag, void >::type >::type
-        >
-    >
+    public ActorT< attribute_terminal< T, FallbackPolicyT, TagT > >
 {
 public:
     //! Attribute tag type
-    typedef typename remove_cv< typename parameter::binding< ParamsT, keywords::tag::attr_tag, void >::type >::type tag_type;
+    typedef TagT tag_type;
+    //! Fallback policy
+    typedef FallbackPolicyT fallback_policy;
     //! Base terminal type
-    typedef attribute_terminal< T, FallbackPolicyT, tag_type > terminal_type;
+    typedef attribute_terminal< T, fallback_policy, tag_type > terminal_type;
     //! Base actor type
     typedef ActorT< terminal_type > base_type;
     //! Attribute value type
     typedef typename terminal_type::value_type value_type;
 
-    //! Additional parameters
-    typedef ParamsT parameters_type;
-    //! Fallback policy
-    typedef FallbackPolicyT fallback_policy;
-
-private:
-    //! Additional parameters
-    parameters_type m_params;
-
 public:
     //! Initializing constructor
-    explicit attribute_actor(base_type const& act, parameters_type const& params = parameters_type()) : base_type(act), m_params(params)
+    explicit attribute_actor(base_type const& act) : base_type(act)
     {
     }
 
@@ -203,14 +185,6 @@ public:
     }
 
     /*!
-     * \returns Additional parameters
-     */
-    parameters_type const& get_params() const
-    {
-        return this->m_params;
-    }
-
-    /*!
      * \returns Fallback policy
      */
     fallback_policy const& get_fallback_policy() const
@@ -219,34 +193,34 @@ public:
     }
 
     //! Expression with cached attribute name
-    typedef attribute_actor< value_type, fallback_to_none, parameters_type, ActorT > or_none_result_type;
+    typedef attribute_actor< value_type, fallback_to_none, tag_type, ActorT > or_none_result_type;
 
     //! Generates an expression that extracts the attribute value or a default value
     or_none_result_type or_none() const
     {
         typedef typename or_none_result_type::terminal_type result_terminal;
-        base_type act = { result_terminal(get_name(), get_params()) };
+        base_type act = { result_terminal(get_name()) };
         return or_none_result_type(act);
     }
 
     //! Expression with cached attribute name
-    typedef attribute_actor< value_type, fallback_to_throw, parameters_type, ActorT > or_throw_result_type;
+    typedef attribute_actor< value_type, fallback_to_throw, tag_type, ActorT > or_throw_result_type;
 
     //! Generates an expression that extracts the attribute value or throws an exception
     or_throw_result_type or_throw() const
     {
         typedef typename or_throw_result_type::terminal_type result_terminal;
-        base_type act = { result_terminal(get_name(), get_params()) };
+        base_type act = { result_terminal(get_name()) };
         return or_throw_result_type(act);
     }
 
     //! Generates an expression that extracts the attribute value or a default value
     template< typename DefaultT >
-    attribute_actor< value_type, fallback_to_default< DefaultT >, parameters_type, ActorT > or_default(DefaultT const& def_val) const
+    attribute_actor< value_type, fallback_to_default< DefaultT >, tag_type, ActorT > or_default(DefaultT const& def_val) const
     {
-        typedef attribute_actor< value_type, fallback_to_default< DefaultT >, parameters_type, ActorT > or_default_result_type;
+        typedef attribute_actor< value_type, fallback_to_default< DefaultT >, tag_type, ActorT > or_default_result_type;
         typedef typename or_default_result_type::terminal_type result_terminal;
-        base_type act = { result_terminal(get_name(), get_params(), def_val) };
+        base_type act = { result_terminal(get_name(), def_val) };
         return or_default_result_type(act);
     }
 };
@@ -264,9 +238,40 @@ BOOST_LOG_FORCEINLINE attribute_actor< AttributeValueT > attr(attribute_name con
     return result_type(act);
 }
 
+/*!
+ * The function generates a terminal node in a template expression. The node will extract the value of the attribute
+ * with the specified name and type.
+ */
+template< typename AttributeValueT, typename TagT >
+BOOST_LOG_FORCEINLINE attribute_actor< AttributeValueT, fallback_to_none, typename boost::log::aux::make_tag_type< TagT >::type > attr(attribute_name const& name)
+{
+    typedef attribute_actor< AttributeValueT, fallback_to_none, typename boost::log::aux::make_tag_type< TagT >::type > result_type;
+    typedef typename result_type::terminal_type result_terminal;
+    typename result_type::base_type act = { result_terminal(name) };
+    return result_type(act);
+}
+
 } // namespace expressions
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
+namespace phoenix {
+
+namespace result_of {
+
+template< typename T, typename FallbackPolicyT, typename TagT >
+struct is_nullary< custom_terminal< boost::log::expressions::attribute_terminal< T, FallbackPolicyT, TagT > > > :
+    public mpl::false_
+{
+};
+
+} // namespace result_of
+
+} // namespace phoenix
+
+#endif
 
 } // namespace boost
 

@@ -36,7 +36,6 @@
 #include <boost/log/expressions/attr.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
-#include <boost/log/keywords/attr_tag.hpp>
 
 namespace boost {
 
@@ -62,7 +61,7 @@ struct attribute_keyword
     typedef attribute_actor<
         value_type,
         fallback_to_none,
-        parameter::aux::tagged_argument< keywords::tag::attr_tag, const boost::type< descriptor_type > >,
+        boost::type< descriptor_type >,
         ActorT
     > or_none_result_type;
 
@@ -71,14 +70,14 @@ struct attribute_keyword
     {
         typedef typename or_none_result_type::terminal_type result_terminal;
         typename or_none_result_type::base_type act = { result_terminal(get_name()) };
-        return or_none_result_type(act, keywords::attr_tag = boost::type< descriptor_type >());
+        return or_none_result_type(act);
     }
 
     //! Expression with cached attribute name
     typedef attribute_actor<
         value_type,
         fallback_to_throw,
-        parameter::aux::tagged_argument< keywords::tag::attr_tag, const boost::type< descriptor_type > >,
+        boost::type< descriptor_type >,
         ActorT
     > or_throw_result_type;
 
@@ -87,7 +86,7 @@ struct attribute_keyword
     {
         typedef typename or_throw_result_type::terminal_type result_terminal;
         typename or_throw_result_type::base_type act = { result_terminal(get_name()) };
-        return or_throw_result_type(act, keywords::attr_tag = boost::type< descriptor_type >());
+        return or_throw_result_type(act);
     }
 
     //! Generates an expression that extracts the attribute value or a default value
@@ -95,19 +94,19 @@ struct attribute_keyword
     static attribute_actor<
         value_type,
         fallback_to_default< DefaultT >,
-        parameter::aux::tagged_argument< keywords::tag::attr_tag, const boost::type< descriptor_type > >,
+        boost::type< descriptor_type >,
         ActorT
     > or_default(DefaultT const& def_val)
     {
         typedef attribute_actor<
             value_type,
             fallback_to_default< DefaultT >,
-            parameter::aux::tagged_argument< keywords::tag::attr_tag, const boost::type< descriptor_type > >,
+            boost::type< descriptor_type >,
             ActorT
         > or_default_result_type;
         typedef typename or_default_result_type::terminal_type result_terminal;
         typename or_default_result_type::base_type act = { result_terminal(get_name(), def_val) };
-        return or_default_result_type(act, keywords::attr_tag = boost::type< descriptor_type >());
+        return or_default_result_type(act);
     }
 };
 
