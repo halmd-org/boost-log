@@ -81,6 +81,8 @@ struct terminal :
 
     //! Default constructor
     BOOST_LOG_DEFAULTED_FUNCTION(terminal(), {})
+    //! Copy constructor
+    terminal(terminal const& that) : base_type(static_cast< base_type const& >(that)) {}
     //! Initializing constructor
     template< typename ArgT1 >
     explicit terminal(ArgT1 const& arg1) : base_type(arg1) {}
