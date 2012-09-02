@@ -176,6 +176,13 @@ public:
     BOOST_LOG_DEFAULTED_FUNCTION(value_extractor(), {})
 
     /*!
+     * Copy constructor
+     */
+    value_extractor(value_extractor const& that) : fallback_policy(static_cast< fallback_policy const& >(that))
+    {
+    }
+
+    /*!
      * Constructor
      *
      * \param arg Fallback policy constructor argument

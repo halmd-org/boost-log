@@ -26,6 +26,7 @@
 #include <boost/log/detail/make_tag_type.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/expressions/terminal.hpp>
+#include <boost/log/expressions/attr_fwd.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 
@@ -111,11 +112,7 @@ public:
 /*!
  * An attribute value extraction terminal
  */
-template<
-    typename T,
-    typename FallbackPolicyT = fallback_to_none,
-    typename TagT = void
->
+template< typename T, typename FallbackPolicyT, typename TagT >
 class attribute_terminal :
     public terminal<
         aux::extractor_adapter<
@@ -149,12 +146,7 @@ public:
 /*!
  * An attribute value extraction terminal actor
  */
-template<
-    typename T,
-    typename FallbackPolicyT = fallback_to_none,
-    typename TagT = void,
-    template< typename > class ActorT = phoenix::actor
->
+template< typename T, typename FallbackPolicyT, typename TagT, template< typename > class ActorT >
 class attribute_actor :
     public ActorT< attribute_terminal< T, FallbackPolicyT, TagT > >
 {

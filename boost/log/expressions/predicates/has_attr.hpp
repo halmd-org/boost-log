@@ -16,8 +16,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_EXPRESSIONS_HAS_ATTR_HPP_INCLUDED_
-#define BOOST_LOG_EXPRESSIONS_HAS_ATTR_HPP_INCLUDED_
+#ifndef BOOST_LOG_EXPRESSIONS_PREDICATES_HAS_ATTR_HPP_INCLUDED_
+#define BOOST_LOG_EXPRESSIONS_PREDICATES_HAS_ATTR_HPP_INCLUDED_
 
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -167,4 +167,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_EXPRESSIONS_HAS_ATTR_HPP_INCLUDED_
+#endif // BOOST_LOG_EXPRESSIONS_PREDICATES_HAS_ATTR_HPP_INCLUDED_

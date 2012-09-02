@@ -209,6 +209,8 @@ template< typename T, typename FallbackPolicyT >
 class value_visitor_invoker :
     private FallbackPolicyT
 {
+    typedef value_visitor_invoker< T, FallbackPolicyT > this_type;
+
 public:
     //! Attribute value types
     typedef T value_type;
@@ -221,37 +223,37 @@ public:
     struct result;
 
     template< typename VisitorT >
-    struct result< value_visitor_invoker< value_type >(attribute_name, attribute_values_view, VisitorT) > :
+    struct result< this_type(attribute_name, attribute_values_view, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
     template< typename VisitorT >
-    struct result< const value_visitor_invoker< value_type >(attribute_name, attribute_values_view, VisitorT) > :
+    struct result< const this_type(attribute_name, attribute_values_view, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
     template< typename VisitorT >
-    struct result< value_visitor_invoker< value_type >(attribute_name, record, VisitorT) > :
+    struct result< this_type(attribute_name, record, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
     template< typename VisitorT >
-    struct result< const value_visitor_invoker< value_type >(attribute_name, record, VisitorT) > :
+    struct result< const this_type(attribute_name, record, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
     template< typename VisitorT >
-    struct result< value_visitor_invoker< value_type >(attribute_value, VisitorT) > :
+    struct result< this_type(attribute_value, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
     template< typename VisitorT >
-    struct result< const value_visitor_invoker< value_type >(attribute_value, VisitorT) > :
+    struct result< const this_type(attribute_value, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
@@ -261,6 +263,13 @@ public:
      * Default constructor
      */
     BOOST_LOG_DEFAULTED_FUNCTION(value_visitor_invoker(), {})
+
+    /*!
+     * Copy constructor
+     */
+    value_visitor_invoker(value_visitor_invoker const& that) : fallback_policy(static_cast< fallback_policy const& >(that))
+    {
+    }
 
     /*!
      * Initializing constructor

@@ -21,7 +21,7 @@
 #include <boost/spirit/include/qi_as.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
-#include <boost/log/expressions/has_attr.hpp>
+#include <boost/log/expressions/predicates/has_attr.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include <boost/log/utility/string_literal.hpp>
 #include <boost/log/utility/functional/logical.hpp>

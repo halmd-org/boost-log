@@ -32,7 +32,7 @@
 #include <boost/log/expressions/filter.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/expressions/attr.hpp>
-#include <boost/log/expressions/has_attr.hpp>
+#include <boost/log/expressions/predicates/has_attr.hpp>
 #include <boost/log/core/core.hpp>
 
 #ifdef _MSC_VER

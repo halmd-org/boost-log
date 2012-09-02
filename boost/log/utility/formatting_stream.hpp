@@ -162,6 +162,19 @@ public:
         ostream_type::clear(ostream_type::badbit);
     }
 
+    /*!
+     * \returns Reference to the attached string. The string must be attached before calling this method.
+     */
+    string_type const& str()
+    {
+        flush();
+
+        string_type* storage = this->streambuf_base_type::member.storage();
+        BOOST_ASSERT(storage != NULL);
+
+        return *storage;
+    }
+
     //  Stream method overrides
     basic_formatting_ostream& flush()
     {

@@ -41,6 +41,12 @@ namespace aux {
     template< typename > struct is_char : mpl::false_ {};
     template< > struct is_char< char > : mpl::true_ {};
     template< > struct is_char< wchar_t > : mpl::true_ {};
+#if !defined(BOOST_NO_CHAR16_T) && !defined(BOOST_NO_CXX11_CHAR16_T)
+    template< > struct is_char< char16_t > : mpl::true_ {};
+#endif
+#if !defined(BOOST_NO_CHAR32_T) && !defined(BOOST_NO_CXX11_CHAR32_T)
+    template< > struct is_char< char32_t > : mpl::true_ {};
+#endif
 
     //! An auxiliary type translator to store strings by value in function objects
     template< typename ArgT >
