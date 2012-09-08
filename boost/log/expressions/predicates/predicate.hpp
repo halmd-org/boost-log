@@ -92,7 +92,7 @@ public:
     result_type operator() (ArgT const& arg) const
     {
         typedef binder2nd< predicate_type, argument_type const& > visitor_type;
-        typedef typename boost::result_of< const value_visitor_invoker< value_type, fallback_policy >(attribute_name, ArgT, visitor_type) >::type visit_result_type;
+        typedef typename boost::result_of< const value_visitor_invoker< value_type, fallback_policy >(attribute_name, ArgT const&, visitor_type) >::type visit_result_type;
 
         visit_result_type res = m_visitor_invoker(m_name, arg, visitor_type(predicate_type(), m_arg));
         if (res.second.code() == visitation_result::ok)

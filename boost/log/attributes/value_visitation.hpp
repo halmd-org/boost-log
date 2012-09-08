@@ -23,6 +23,7 @@
 #include <utility>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <boost/type_traits/remove_reference.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/eval_if.hpp>
@@ -121,12 +122,14 @@ namespace result_of {
 template< typename ValueT, typename VisitorT >
 struct visit
 {
+    //! Visitor type
+    typedef typename remove_reference< VisitorT >::type visitor_type;
     //! Attribute value types
     typedef ValueT value_type;
 
     template< typename ArgT >
     struct get_visitor_result :
-        public boost::result_of< VisitorT(ArgT) >
+        public boost::result_of< visitor_type(ArgT) >
     {
     };
 
@@ -175,14 +178,14 @@ struct forward_result
     }
 
     template< typename ArgT >
-    typename enable_if< is_void< typename boost::result_of< VisitorT(ArgT) >::type >, result_type >::type
+    typename enable_if< is_void< typename boost::result_of< VisitorT(ArgT const&) >::type >, result_type >::type
     operator() (ArgT const& arg) const
     {
         m_visitor(arg);
     }
 
     template< typename ArgT >
-    typename disable_if< is_void< typename boost::result_of< VisitorT(ArgT) >::type >, result_type >::type
+    typename disable_if< is_void< typename boost::result_of< VisitorT(ArgT const&) >::type >, result_type >::type
     operator() (ArgT const& arg) const
     {
         m_result = m_visitor(arg);
@@ -222,38 +225,62 @@ public:
     template< typename >
     struct result;
 
-    template< typename VisitorT >
-    struct result< this_type(attribute_name, attribute_values_view, VisitorT) > :
+    template< typename ThisT, typename VisitorT >
+    struct result< ThisT(attribute_name, attribute_values_view, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
-    template< typename VisitorT >
-    struct result< const this_type(attribute_name, attribute_values_view, VisitorT) > :
+    template< typename ThisT, typename VisitorT >
+    struct result< ThisT(attribute_name const&, attribute_values_view, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
-    template< typename VisitorT >
-    struct result< this_type(attribute_name, record, VisitorT) > :
+    template< typename ThisT, typename VisitorT >
+    struct result< ThisT(attribute_name, attribute_values_view const&, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
-    template< typename VisitorT >
-    struct result< const this_type(attribute_name, record, VisitorT) > :
+    template< typename ThisT, typename VisitorT >
+    struct result< ThisT(attribute_name const&, attribute_values_view const&, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
-    template< typename VisitorT >
-    struct result< this_type(attribute_value, VisitorT) > :
+    template< typename ThisT, typename VisitorT >
+    struct result< ThisT(attribute_name, record, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
-    template< typename VisitorT >
-    struct result< const this_type(attribute_value, VisitorT) > :
+    template< typename ThisT, typename VisitorT >
+    struct result< ThisT(attribute_name const&, record, VisitorT) > :
+        public result_of::visit< value_type, VisitorT >
+    {
+    };
+
+    template< typename ThisT, typename VisitorT >
+    struct result< ThisT(attribute_name, record const&, VisitorT) > :
+        public result_of::visit< value_type, VisitorT >
+    {
+    };
+
+    template< typename ThisT, typename VisitorT >
+    struct result< ThisT(attribute_name const&, record const&, VisitorT) > :
+        public result_of::visit< value_type, VisitorT >
+    {
+    };
+
+    template< typename ThisT, typename VisitorT >
+    struct result< ThisT(attribute_value, VisitorT) > :
+        public result_of::visit< value_type, VisitorT >
+    {
+    };
+
+    template< typename ThisT, typename VisitorT >
+    struct result< ThisT(attribute_value const&, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
