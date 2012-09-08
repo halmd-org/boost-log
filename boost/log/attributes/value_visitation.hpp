@@ -225,62 +225,14 @@ public:
     template< typename >
     struct result;
 
-    template< typename ThisT, typename VisitorT >
-    struct result< ThisT(attribute_name, attribute_values_view, VisitorT) > :
+    template< typename ThisT, typename AttributeNameT, typename ContainerT, typename VisitorT >
+    struct result< ThisT(AttributeNameT, ContainerT, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
 
-    template< typename ThisT, typename VisitorT >
-    struct result< ThisT(attribute_name const&, attribute_values_view, VisitorT) > :
-        public result_of::visit< value_type, VisitorT >
-    {
-    };
-
-    template< typename ThisT, typename VisitorT >
-    struct result< ThisT(attribute_name, attribute_values_view const&, VisitorT) > :
-        public result_of::visit< value_type, VisitorT >
-    {
-    };
-
-    template< typename ThisT, typename VisitorT >
-    struct result< ThisT(attribute_name const&, attribute_values_view const&, VisitorT) > :
-        public result_of::visit< value_type, VisitorT >
-    {
-    };
-
-    template< typename ThisT, typename VisitorT >
-    struct result< ThisT(attribute_name, record, VisitorT) > :
-        public result_of::visit< value_type, VisitorT >
-    {
-    };
-
-    template< typename ThisT, typename VisitorT >
-    struct result< ThisT(attribute_name const&, record, VisitorT) > :
-        public result_of::visit< value_type, VisitorT >
-    {
-    };
-
-    template< typename ThisT, typename VisitorT >
-    struct result< ThisT(attribute_name, record const&, VisitorT) > :
-        public result_of::visit< value_type, VisitorT >
-    {
-    };
-
-    template< typename ThisT, typename VisitorT >
-    struct result< ThisT(attribute_name const&, record const&, VisitorT) > :
-        public result_of::visit< value_type, VisitorT >
-    {
-    };
-
-    template< typename ThisT, typename VisitorT >
-    struct result< ThisT(attribute_value, VisitorT) > :
-        public result_of::visit< value_type, VisitorT >
-    {
-    };
-
-    template< typename ThisT, typename VisitorT >
-    struct result< ThisT(attribute_value const&, VisitorT) > :
+    template< typename ThisT, typename AttributeValueT, typename VisitorT >
+    struct result< ThisT(AttributeValueT, VisitorT) > :
         public result_of::visit< value_type, VisitorT >
     {
     };
