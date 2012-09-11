@@ -98,6 +98,11 @@ public:
     {
     }
 
+    //! Copy constructor
+    generic_attribute_output_terminal(generic_attribute_output_terminal const& that) : base_type(static_cast< base_type const& >(that)), m_left(that.m_left), m_name(that.m_name)
+    {
+    }
+
     //! Invokation operator
     template< typename ContextT >
     typename result< this_type(ContextT) >::type operator() (ContextT const& ctx)
