@@ -67,7 +67,7 @@ BOOST_LOG_OPEN_NAMESPACE
  */
 class attribute_values_view
 {
-    BOOST_COPYABLE_AND_MOVABLE(attribute_values_view)
+    BOOST_COPYABLE_AND_MOVABLE_ALT(attribute_values_view)
 
 public:
     //! Key type
@@ -255,21 +255,13 @@ public:
     BOOST_LOG_API ~attribute_values_view() BOOST_NOEXCEPT;
 
     /*!
-     * Move assignment operator
+     * Assignment operator
      */
-    attribute_values_view& operator= (BOOST_RV_REF(attribute_values_view) that) BOOST_NOEXCEPT
+    attribute_values_view& operator= (attribute_values_view that) BOOST_NOEXCEPT
     {
         this->swap(that);
         return *this;
     }
-
-    /*!
-     * Copy assignment operator
-     *
-     * \pre The original view is frozen.
-     * \post The resulting view is frozen, <tt>size() == that.size() && std::equal(begin(), end(), that.begin()) == true</tt>
-     */
-    BOOST_LOG_API attribute_values_view& operator= (BOOST_COPY_ASSIGN_REF(attribute_values_view) that);
 
     /*!
      * Swaps two views

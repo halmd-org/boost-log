@@ -140,7 +140,8 @@ public:
      */
     ~basic_formatting_ostream()
     {
-        flush();
+        if (this->streambuf_base_type::member.storage())
+            flush();
     }
 
     /*!
@@ -220,15 +221,6 @@ public:
     template< typename OtherCharT >
     typename enable_if< mpl::contains< char_types, typename boost::remove_cv< OtherCharT >::type >, basic_formatting_ostream& >::type
     operator<< (OtherCharT* p)
-    {
-        typedef typename boost::remove_cv< OtherCharT >::type other_char_type;
-        write(p, static_cast< std::streamsize >(std::char_traits< other_char_type >::length(p)));
-        return *this;
-    }
-
-    template< typename OtherCharT, unsigned int N >
-    typename enable_if< mpl::contains< char_types, typename boost::remove_cv< OtherCharT >::type >, basic_formatting_ostream& >::type
-    operator<< (OtherCharT (&p)[N])
     {
         typedef typename boost::remove_cv< OtherCharT >::type other_char_type;
         write(p, static_cast< std::streamsize >(std::char_traits< other_char_type >::length(p)));

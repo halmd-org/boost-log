@@ -449,15 +449,6 @@ BOOST_LOG_API attribute_values_view::~attribute_values_view() BOOST_NOEXCEPT
     }
 }
 
-//! Assignment
-BOOST_LOG_API attribute_values_view&
-attribute_values_view::operator= (BOOST_COPY_ASSIGN_REF(attribute_values_view) that)
-{
-    attribute_values_view that_copy = that;
-    swap(that_copy);
-    return *this;
-}
-
 //  Iterator generators
 BOOST_LOG_API attribute_values_view::const_iterator
 attribute_values_view::begin() const
