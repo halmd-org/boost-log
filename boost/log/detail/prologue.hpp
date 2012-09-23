@@ -229,7 +229,7 @@
 #   define BOOST_LOG_USE_CHAR
 #endif
 #if !defined(BOOST_LOG_WITHOUT_WCHAR_T)
-#   define BOOST_LOG_USE_CHAR
+#   define BOOST_LOG_USE_WCHAR_T
 #endif
 
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
@@ -278,21 +278,40 @@ namespace boost {
 
 // Setup namespace name
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
-#   if defined(BOOST_LOG_NO_THREADS)
-#       define BOOST_LOG_VERSION_NAMESPACE v2_st
-#   else
-#       if defined(BOOST_THREAD_PLATFORM_PTHREAD)
-#           define BOOST_LOG_VERSION_NAMESPACE v2_mt_posix
-#       elif defined(BOOST_THREAD_PLATFORM_WIN32)
-#           if defined(BOOST_LOG_USE_WINNT6_API)
-#               define BOOST_LOG_VERSION_NAMESPACE v2_mt_nt6
-#           else
-#               define BOOST_LOG_VERSION_NAMESPACE v2_mt_nt5
-#           endif // defined(BOOST_LOG_USE_WINNT6_API)
+#   if defined(BOOST_LOG_DLL)
+#       if defined(BOOST_LOG_NO_THREADS)
+#           define BOOST_LOG_VERSION_NAMESPACE v2_st
 #       else
-#           define BOOST_LOG_VERSION_NAMESPACE v2_mt
-#       endif
-#   endif // defined(BOOST_LOG_NO_THREADS)
+#           if defined(BOOST_THREAD_PLATFORM_PTHREAD)
+#               define BOOST_LOG_VERSION_NAMESPACE v2_mt_posix
+#           elif defined(BOOST_THREAD_PLATFORM_WIN32)
+#               if defined(BOOST_LOG_USE_WINNT6_API)
+#                   define BOOST_LOG_VERSION_NAMESPACE v2_mt_nt6
+#               else
+#                   define BOOST_LOG_VERSION_NAMESPACE v2_mt_nt5
+#               endif // defined(BOOST_LOG_USE_WINNT6_API)
+#           else
+#               define BOOST_LOG_VERSION_NAMESPACE v2_mt
+#           endif
+#       endif // defined(BOOST_LOG_NO_THREADS)
+#   else
+#       if defined(BOOST_LOG_NO_THREADS)
+#           define BOOST_LOG_VERSION_NAMESPACE v2s_st
+#       else
+#           if defined(BOOST_THREAD_PLATFORM_PTHREAD)
+#               define BOOST_LOG_VERSION_NAMESPACE v2s_mt_posix
+#           elif defined(BOOST_THREAD_PLATFORM_WIN32)
+#               if defined(BOOST_LOG_USE_WINNT6_API)
+#                   define BOOST_LOG_VERSION_NAMESPACE v2s_mt_nt6
+#               else
+#                   define BOOST_LOG_VERSION_NAMESPACE v2s_mt_nt5
+#               endif // defined(BOOST_LOG_USE_WINNT6_API)
+#           else
+#               define BOOST_LOG_VERSION_NAMESPACE v2s_mt
+#           endif
+#       endif // defined(BOOST_LOG_NO_THREADS)
+#   endif // defined(BOOST_LOG_DLL)
+
 
 namespace log {
 
