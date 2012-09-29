@@ -46,6 +46,12 @@ enum scope_iteration_direction
     reverse     //!< Iterate through scopes from innermost to outermost
 };
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// assignment operator could not be generated
+#pragma warning(disable: 4512)
+#endif // _MSC_VER
+
 /*!
  * \brief Named scope attribute formatter
  *
@@ -195,6 +201,10 @@ private:
         }
     }
 };
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 namespace aux {
 

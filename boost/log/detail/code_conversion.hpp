@@ -35,6 +35,12 @@ namespace BOOST_LOG_NAMESPACE {
 
 namespace aux {
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// assignment operator could not be generated
+#pragma warning(disable: 4512)
+#endif // _MSC_VER
+
 //! The stream buffer that converts wide character to narrow characters or vise versa on writing
 template<
     typename CharT,
@@ -97,6 +103,9 @@ private:
     void write(const char_type*& pBase, const char_type* pPtr);
 };
 
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 //! The function converts one string to the character type of another
 inline void code_convert(std::string const& str1, std::string& str2)
