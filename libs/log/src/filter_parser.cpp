@@ -38,7 +38,7 @@
 #include <boost/phoenix/core.hpp>
 #include <boost/phoenix/bind/bind_function_object.hpp>
 #include <boost/phoenix/operator/logical.hpp>
-#include <boost/range/iterator_range.hpp>
+#include <boost/range/iterator_range_core.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/init/filter_parser.hpp>

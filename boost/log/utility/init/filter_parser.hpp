@@ -277,7 +277,7 @@ inline void register_simple_filter_factory(expressions::attribute_keyword< Descr
 /*!
  * The function parses a filter from the sequence of characters
  *
- * \pre <tt>begin <= end</tt>, both pointers must not be NULL
+ * \pre <tt>begin <= end</tt>, both pointers must not be \c NULL
  * \param begin Pointer to the first character of the sequence
  * \param end Pointer to the after-the-last character of the sequence
  * \return A function object that can be used as a filter.
