@@ -111,6 +111,8 @@ struct string_constants< wchar_t >
     static const char_type* extended_iso_time_format() { return L"%H:%M:%S"; }
     static const char_type* default_time_format() { return L"%H:%M:%S.f"; }
 
+    static const char_type* extended_iso_time_placeholder() { return L"%T"; }
+
     static const char_type* hours_placeholder() { return L"%O"; }
     static const char_type* hours_24_leading_zero_placeholder() { return L"%H"; }
     static const char_type* hours_24_leading_space_placeholder() { return L"%k"; }
@@ -177,6 +179,7 @@ inline void add_time_placeholders(time_format_parser_callback< CharT >& callback
     typedef time_format_parser_callback< CharT > callback_type;
     typedef string_constants< CharT > constants;
 
+    syms.add(constants::extended_iso_time_placeholder(), boost::bind(&callback_type::on_extended_iso_time, boost::ref(callback)));
     syms.add(constants::hours_placeholder(), boost::bind(&callback_type::on_hours, boost::ref(callback), true));
     syms.add(constants::hours_24_leading_zero_placeholder(), boost::bind(&callback_type::on_hours, boost::ref(callback), true));
     syms.add(constants::hours_24_leading_space_placeholder(), boost::bind(&callback_type::on_hours, boost::ref(callback), false));
