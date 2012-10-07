@@ -82,6 +82,7 @@ local BOOST_LOG_COMMON_SRC =
     event.cpp
     trivial.cpp
     spirit_encoding.cpp
+    date_time_format_parser.cpp
     ;
 
 lib boost_log

@@ -276,12 +276,19 @@ struct time_format_parser_callback
 
     /*!
      * \brief The function is called when the ISO time zone placeholder is found in the format string
-     *
-     * \param extended If \c true, the time zone will be displayed in extended format
      */
-    virtual void on_iso_time_zone(bool extended)
+    virtual void on_iso_time_zone()
     {
-        const char_type placeholder[3] = { static_cast< char_type >('%'), (extended ? static_cast< char_type >('Q') : static_cast< char_type >('q')), static_cast< char_type >('\0') };
+        const char_type placeholder[3] = { static_cast< char_type >('%'), static_cast< char_type >('q'), static_cast< char_type >('\0') };
+        on_placeholder(boost::as_literal(placeholder));
+    }
+
+    /*!
+     * \brief The function is called when the extended ISO time zone placeholder is found in the format string
+     */
+    virtual void on_extended_iso_time_zone()
+    {
+        const char_type placeholder[3] = { static_cast< char_type >('%'), static_cast< char_type >('Q'), static_cast< char_type >('\0') };
         on_placeholder(boost::as_literal(placeholder));
     }
 
