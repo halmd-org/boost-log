@@ -34,6 +34,7 @@
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/keywords/facility.hpp>
 #include <boost/log/keywords/use_impl.hpp>
+#include <boost/log/keywords/ident.hpp>
 #include <boost/log/keywords/ip_version.hpp>
 
 #ifdef _MSC_VER
@@ -147,9 +148,10 @@ namespace syslog {
  * the POSIX syslog API instead of direct socket management in order to bypass
  * possible security limitations that may be in action. To do so one has to pass
  * the <tt>use_impl = native</tt> to the backend constructor. Note, however,
- * that in that case you will only have one chance to specify syslog facility - on
- * the first native syslog backend construction. Other native syslog backends will
- * ignore this parameter. Obviously, the \c set_local_address and \c set_target_address
+ * that in that case you will only have one chance to specify syslog facility and
+ * process identification string - on the first native syslog backend construction.
+ * Other native syslog backends will ignore these parameters.
+ * Obviously, the \c set_local_address and \c set_target_address
  * methods have no effect for native backends. Using <tt>use_impl = native</tt>
  * on platforms with no native support for POSIX syslog API will have no effect.
  */
@@ -195,6 +197,7 @@ public:
      *                                             RFC3164 protocol specification. This is the default.
      * \li \c ip_version - Specifies IP protocol version to use, in case if socket-based implementation
      *                     is used. Can be either \c v4 (the default one) or \c v6.
+     * \li \c ident - Process identification string. This parameter is only supported by native syslog implementation.
      */
 #ifndef BOOST_LOG_DOXYGEN_PASS
     BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_CALL(syslog_backend, construct)
@@ -275,10 +278,11 @@ private:
 #else
             args[keywords::use_impl | syslog::native],
 #endif
-            args[keywords::ip_version | v4]);
+            args[keywords::ip_version | v4],
+            args[keywords::ident | std::string()]);
     }
     BOOST_LOG_API void construct(
-        syslog::facility facility, syslog::impl_types use_impl, ip_versions ip_version);
+        syslog::facility facility, syslog::impl_types use_impl, ip_versions ip_version, std::string const& ident);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

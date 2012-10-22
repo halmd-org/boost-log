@@ -132,25 +132,25 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 #endif
 
     public:
-        native_syslog_initializer()
+        explicit native_syslog_initializer(std::string const& ident)
         {
-            ::openlog(NULL, 0, LOG_USER);
+            ::openlog((ident.empty() ? static_cast< const char* >(NULL) : ident.c_str()), 0, LOG_USER);
         }
         ~native_syslog_initializer()
         {
             ::closelog();
         }
 
-        static shared_ptr< native_syslog_initializer > get_instance()
+        static shared_ptr< native_syslog_initializer > get_instance(std::string const& ident)
         {
 #if !defined(BOOST_LOG_NO_THREADS)
-            lock_guard< mutex > _(mutex_holder::get());
+            lock_guard< mutex > lock(mutex_holder::get());
 #endif
             static weak_ptr< native_syslog_initializer > instance;
             shared_ptr< native_syslog_initializer > p(instance.lock());
             if (!p)
             {
-                p = boost::make_shared< native_syslog_initializer >();
+                p = boost::make_shared< native_syslog_initializer >(ident);
                 instance = p;
             }
             return p;
@@ -166,9 +166,9 @@ struct syslog_backend::implementation::native :
     const shared_ptr< native_syslog_initializer > m_pSyslogInitializer;
 
     //! Constructor
-    explicit native(syslog::facility const& fac) :
+    explicit native(syslog::facility const& fac, std::string const& ident) :
         implementation(convert_facility(fac)),
-        m_pSyslogInitializer(native_syslog_initializer::get_instance())
+        m_pSyslogInitializer(native_syslog_initializer::get_instance(ident))
     {
     }
 
@@ -472,13 +472,13 @@ BOOST_LOG_API void syslog_backend::consume(record const& rec, string_type const&
 
 
 //! The method creates the backend implementation
-BOOST_LOG_API void syslog_backend::construct(syslog::facility fac, syslog::impl_types use_impl, ip_versions ip_version)
+BOOST_LOG_API void syslog_backend::construct(syslog::facility fac, syslog::impl_types use_impl, ip_versions ip_version, std::string const& ident)
 {
 #ifdef BOOST_LOG_USE_NATIVE_SYSLOG
     if (use_impl == syslog::native)
     {
         typedef implementation::native native_impl;
-        m_pImpl = new native_impl(fac);
+        m_pImpl = new native_impl(fac, ident);
         return;
     }
 #endif // BOOST_LOG_USE_NATIVE_SYSLOG
