@@ -132,16 +132,16 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 #endif
 
     public:
-        explicit native_syslog_initializer(std::string const& ident)
+        native_syslog_initializer(std::string const& ident, int facility)
         {
-            ::openlog((ident.empty() ? static_cast< const char* >(NULL) : ident.c_str()), 0, LOG_USER);
+            ::openlog((ident.empty() ? static_cast< const char* >(NULL) : ident.c_str()), 0, facility);
         }
         ~native_syslog_initializer()
         {
             ::closelog();
         }
 
-        static shared_ptr< native_syslog_initializer > get_instance(std::string const& ident)
+        static shared_ptr< native_syslog_initializer > get_instance(std::string const& ident, int facility)
         {
 #if !defined(BOOST_LOG_NO_THREADS)
             lock_guard< mutex > lock(mutex_holder::get());
@@ -150,7 +150,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             shared_ptr< native_syslog_initializer > p(instance.lock());
             if (!p)
             {
-                p = boost::make_shared< native_syslog_initializer >(ident);
+                p = boost::make_shared< native_syslog_initializer >(ident, facility);
                 instance = p;
             }
             return p;
@@ -166,9 +166,9 @@ struct syslog_backend::implementation::native :
     const shared_ptr< native_syslog_initializer > m_pSyslogInitializer;
 
     //! Constructor
-    explicit native(syslog::facility const& fac, std::string const& ident) :
+    native(syslog::facility const& fac, std::string const& ident) :
         implementation(convert_facility(fac)),
-        m_pSyslogInitializer(native_syslog_initializer::get_instance(ident))
+        m_pSyslogInitializer(native_syslog_initializer::get_instance(ident, this->m_Facility))
     {
     }
 
