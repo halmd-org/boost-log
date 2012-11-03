@@ -2,7 +2,7 @@
     [quickbook 1.5]
     [version 2.0]
     [authors [Semashev, Andrey]]
-    [copyright 2007 - 2011 Andrey Semashev]
+    [copyright 2007 - 2012 Andrey Semashev]
     [license
         Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
@@ -30,7 +30,7 @@
 [def __boost_preprocessor__ [@http://www.boost.org/doc/libs/release/libs/preprocessor/doc/index.html Boost.Preprocessor]]
 [def __boost_bind__ [@http://www.boost.org/doc/libs/release/libs/bind/bind.html Boost.Bind]]
 [def __boost_lambda__ [@http://www.boost.org/doc/libs/release/doc/html/lambda.html Boost.Lambda]]
-[def __boost_phoenix__ [@http://www.boost.org/doc/libs/release/libs/spirit/doc/phoenix.html Boost.Phoenix]]
+[def __boost_phoenix__ [@http://www.boost.org/doc/libs/release/libs/phoenix/doc/html/index.html Boost.Phoenix]]
 [def __boost_spirit__ [@http://www.boost.org/doc/libs/release/libs/spirit/classic/index.html Boost.Spirit]]
 [def __boost_spirit2__ [@http://www.boost.org/doc/libs/release/libs/spirit/doc/html/index.html Boost.Spirit2]]
 [def __boost_optional__ [@http://www.boost.org/doc/libs/release/libs/optional/index.html Boost.Optional]]
