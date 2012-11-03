@@ -35,6 +35,7 @@
 * Attribute sets now use small memory pools to speed up element insertion/removal.
 * The header `scoped_attribute.hpp` moved from `utility` to the `attributes` directory. The header `attribute_value_extractor.hpp` in `utility` has been replaced with headers `value_extraction.hpp` and `value_visitation.hpp` in the `attributes` directory. The two new headers define the revised API of attribute value extraction and visitation, respectively. See [link log.detailed.attributes.related_components.extractors here] for more details.
 * The `current_thread_id` attribute no longer uses `boost::thread::id` type for thread identification. An internal type is used instead, the type is accessible as `current_thread_id::value_type`. The new thread ids are taken from the underlying OS API and thus more closely correlate to what may be displayed by debuggers and system diagnostic tools.
+* Added `current_process_name` attribute. The attribute generates a string with the executable name of the current process.
 
 [*Logging sources:]
 
