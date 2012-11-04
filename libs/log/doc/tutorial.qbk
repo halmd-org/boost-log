@@ -59,7 +59,7 @@ As a starting point, here is how you would initialize logginig into a file, simi
 
 [example_tutorial_file_simple]
 
-The added piece is a call to the [link log.detailed.utility.init.convenience `init_log_to_file`] function. As the name implies, the function initializes a logging sink that stores log records into a text file. The function also accepts a number of customization options, such as the rotation interval and size limits. For instance:
+The added piece is a call to the [link log.detailed.utilities.init.convenience `init_log_to_file`] function. As the name implies, the function initializes a logging sink that stores log records into a text file. The function also accepts a number of customization options, such as the rotation interval and size limits. For instance:
 
 [example_tutorial_file_advanced]
 
