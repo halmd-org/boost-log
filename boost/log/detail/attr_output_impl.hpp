@@ -157,7 +157,7 @@ struct make_output_actor< ActorT< LeftExprT >, RightT, ValueT, false >
 
     static BOOST_LOG_FORCEINLINE type make(ActorT< LeftExprT > const& left, RightT const& right)
     {
-        type res = { make_expression::make(left, right) };
+        type res = {{ make_expression::make(left, right) }};
         return res;
     }
 };
@@ -171,7 +171,7 @@ struct make_output_actor< ActorT< LeftExprT >, RightT, ValueT, true >
 
     static BOOST_LOG_FORCEINLINE type make(ActorT< LeftExprT > const& left, RightT const& right)
     {
-        type res = { expression_type(left, right.get_name(), right.get_fallback_policy()) };
+        type res = {{ expression_type(left, right.get_name(), right.get_fallback_policy()) }};
         return res;
     }
 };

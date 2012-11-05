@@ -20,7 +20,7 @@
 #define BOOST_LOG_EXPRESSIONS_FORMATTERS_DATE_TIME_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
-#include <boost/utility/date_time_format_parser.hpp>
+#include <boost/detail/date_time_format_parser.hpp>
 
 namespace boost {
 

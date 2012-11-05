@@ -143,6 +143,20 @@
 #   define BOOST_LOG_ASSUME(expr)
 #endif
 
+// The statement marking unreachable branches of code to avoid warnings
+#if defined(BOOST_CLANG)
+#   if __has_builtin(__builtin_unreachable)
+#       define BOOST_LOG_UNREACHABLE() __builtin_unreachable()
+#   endif
+#elif defined(__GNUC__)
+#   define BOOST_LOG_UNREACHABLE() __builtin_unreachable()
+#elif defined(_MSC_VER)
+#   define BOOST_LOG_UNREACHABLE() __assume(0)
+#endif
+#if !defined(BOOST_LOG_UNREACHABLE)
+#   define BOOST_LOG_UNREACHABLE()
+#endif
+
 // Some compilers support a special attribute that shows that a function won't return
 #if defined(__GNUC__) || (defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x590)
     // GCC and (supposedly) Sun Studio 12 support attribute syntax
@@ -154,6 +168,11 @@
     // The rest compilers might emit bogus warnings about missing return statements
     // in functions with non-void return types when throw_exception is used.
 #   define BOOST_LOG_NORETURN
+#endif
+
+#if (defined(__CLANG__) || defined(__GNUC__)) && !defined(__QNX__)
+// The cxxabi.h is available
+#define BOOST_LOG_HAS_CXXABI_H
 #endif
 
 #if defined(BOOST_SYMBOL_VISIBLE)

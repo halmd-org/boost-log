@@ -226,7 +226,7 @@ BOOST_LOG_FORCEINLINE attribute_actor< AttributeValueT > attr(attribute_name con
 {
     typedef attribute_actor< AttributeValueT > result_type;
     typedef typename result_type::terminal_type result_terminal;
-    typename result_type::base_type act = { result_terminal(name) };
+    typename result_type::base_type act = {{ result_terminal(name) }};
     return result_type(act);
 }
 
@@ -239,7 +239,7 @@ BOOST_LOG_FORCEINLINE attribute_actor< AttributeValueT, fallback_to_none, typena
 {
     typedef attribute_actor< AttributeValueT, fallback_to_none, typename boost::log::aux::make_tag_type< TagT >::type > result_type;
     typedef typename result_type::terminal_type result_terminal;
-    typename result_type::base_type act = { result_terminal(name) };
+    typename result_type::base_type act = {{ result_terminal(name) }};
     return result_type(act);
 }
 

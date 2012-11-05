@@ -24,14 +24,10 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 
-#if defined(__GNUC__) && !defined(__QNX__)
-#define BOOST_LOG_HAS_CXXABI
-#endif // defined(__GNUC__) && !defined(__QNX__)
-
-#ifdef BOOST_LOG_HAS_CXXABI
+#ifdef BOOST_LOG_HAS_CXXABI_H
 #include <cxxabi.h>
 #include <stdlib.h>
-#endif // BOOST_LOG_HAS_CXXABI
+#endif // BOOST_LOG_HAS_CXXABI_H
 
 namespace boost {
 
@@ -52,7 +48,7 @@ private:
     //! An inaccessible type to indicate an uninitialized state of the wrapper
     struct BOOST_LOG_VISIBLE uninitialized {};
 
-#ifdef BOOST_LOG_HAS_CXXABI
+#ifdef BOOST_LOG_HAS_CXXABI_H
     //! A simple scope guard for automatic memory free
     struct auto_free
     {
@@ -61,7 +57,7 @@ private:
     private:
         void* p_;
     };
-#endif // BOOST_LOG_HAS_CXXABI
+#endif // BOOST_LOG_HAS_CXXABI_H
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
@@ -125,7 +121,7 @@ public:
     {
         if (!this->operator!())
         {
-#ifdef BOOST_LOG_HAS_CXXABI
+#ifdef BOOST_LOG_HAS_CXXABI_H
             // GCC returns decorated type name, will need to demangle it using ABI
             int status = 0;
             size_t size = 0;

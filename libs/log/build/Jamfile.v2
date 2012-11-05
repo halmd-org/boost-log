@@ -83,6 +83,7 @@ local BOOST_LOG_COMMON_SRC =
     trivial.cpp
     spirit_encoding.cpp
     date_time_format_parser.cpp
+    unhandled_exception_count.cpp
     ;
 
 lib boost_log

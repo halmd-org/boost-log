@@ -23,7 +23,7 @@
 #include <boost/spirit/include/qi_eoi.hpp>
 #include <boost/spirit/include/qi_symbols.hpp>
 #include <boost/range/iterator_range_core.hpp>
-#include <boost/log/utility/date_time_format_parser.hpp>
+#include <boost/log/detail/date_time_format_parser.hpp>
 #include <boost/log/utility/functional/as_action.hpp>
 #include "spirit_encoding.hpp"
 
@@ -32,6 +32,8 @@ namespace qi = boost::spirit::qi;
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
+
+namespace aux {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
@@ -291,6 +293,8 @@ template BOOST_LOG_API
 void parse_date_time_format(const wchar_t* begin, const wchar_t* end, date_time_format_parser_callback< wchar_t >& callback);
 
 #endif // BOOST_LOG_USE_WCHAR_T
+
+} // namespace aux
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 

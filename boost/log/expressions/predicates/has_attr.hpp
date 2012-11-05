@@ -134,7 +134,7 @@ template< typename AttributeValueT >
 BOOST_LOG_FORCEINLINE phoenix::actor< terminal< unary_adapter< has_attribute< AttributeValueT > > > > has_attr(attribute_name const& name)
 {
     typedef terminal< unary_adapter< has_attribute< AttributeValueT > > > terminal_type;
-    phoenix::actor< terminal_type > act = { terminal_type(name) };
+    phoenix::actor< terminal_type > act = {{ terminal_type(name) }};
     return act;
 }
 
@@ -145,7 +145,7 @@ BOOST_LOG_FORCEINLINE phoenix::actor< terminal< unary_adapter< has_attribute< At
 BOOST_LOG_FORCEINLINE phoenix::actor< terminal< unary_adapter< has_attribute< void > > > > has_attr(attribute_name const& name)
 {
     typedef terminal< unary_adapter< has_attribute< void > > > terminal_type;
-    phoenix::actor< terminal_type > act = { terminal_type(name) };
+    phoenix::actor< terminal_type > act = {{ terminal_type(name) }};
     return act;
 }
 
@@ -157,7 +157,7 @@ template< typename DescriptorT, template< typename > class ActorT >
 BOOST_LOG_FORCEINLINE phoenix::actor< terminal< unary_adapter< has_attribute< typename DescriptorT::value_type > > > > has_attr(attribute_keyword< DescriptorT, ActorT > const&)
 {
     typedef terminal< unary_adapter< has_attribute< typename DescriptorT::value_type > > > terminal_type;
-    phoenix::actor< terminal_type > act = { terminal_type(DescriptorT::get_name()) };
+    phoenix::actor< terminal_type > act = {{ terminal_type(DescriptorT::get_name()) }};
     return act;
 }
 

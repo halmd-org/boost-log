@@ -16,8 +16,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#ifndef BOOST_LOG_UTILITY_DATE_TIME_FORMAT_PARSER_HPP_INCLUDED_
-#define BOOST_LOG_UTILITY_DATE_TIME_FORMAT_PARSER_HPP_INCLUDED_
+#ifndef BOOST_LOG_DETAIL_DATE_TIME_FORMAT_PARSER_HPP_INCLUDED_
+#define BOOST_LOG_DETAIL_DATE_TIME_FORMAT_PARSER_HPP_INCLUDED_
 
 #include <string>
 #include <boost/range/as_literal.hpp>
@@ -27,6 +27,8 @@
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
+
+namespace aux {
 
 /*!
  * This is the interface the parser will use to notify the caller about various components of date in the format string.
@@ -472,8 +474,10 @@ inline void parse_date_time_format(const CharT* str, date_time_format_parser_cal
     return parse_date_time_format(str, str + std::char_traits< CharT >::length(str), callback);
 }
 
+} // namespace aux
+
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_UTILITY_DATE_TIME_FORMAT_PARSER_HPP_INCLUDED_
+#endif // BOOST_LOG_DETAIL_DATE_TIME_FORMAT_PARSER_HPP_INCLUDED_

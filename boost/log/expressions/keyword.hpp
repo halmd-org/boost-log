@@ -69,7 +69,7 @@ struct attribute_keyword
     static or_none_result_type or_none()
     {
         typedef typename or_none_result_type::terminal_type result_terminal;
-        typename or_none_result_type::base_type act = { result_terminal(get_name()) };
+        typename or_none_result_type::base_type act = {{ result_terminal(get_name()) }};
         return or_none_result_type(act);
     }
 
@@ -85,7 +85,7 @@ struct attribute_keyword
     static or_throw_result_type or_throw()
     {
         typedef typename or_throw_result_type::terminal_type result_terminal;
-        typename or_throw_result_type::base_type act = { result_terminal(get_name()) };
+        typename or_throw_result_type::base_type act = {{ result_terminal(get_name()) }};
         return or_throw_result_type(act);
     }
 
@@ -105,7 +105,7 @@ struct attribute_keyword
             ActorT
         > or_default_result_type;
         typedef typename or_default_result_type::terminal_type result_terminal;
-        typename or_default_result_type::base_type act = { result_terminal(get_name(), def_val) };
+        typename or_default_result_type::base_type act = {{ result_terminal(get_name(), def_val) }};
         return or_default_result_type(act);
     }
 };

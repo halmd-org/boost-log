@@ -20,12 +20,13 @@
 #ifndef BOOST_LOG_SOURCES_RECORD_OSTREAM_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_RECORD_OSTREAM_HPP_INCLUDED_
 
-#include <new>
 #include <string>
 #include <ostream>
+#include <boost/move/move.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/native_typeof.hpp>
+#include <boost/log/detail/unhandled_exception_count.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
@@ -208,6 +209,8 @@ struct stream_provider
 template< typename LoggerT >
 class record_pump
 {
+    BOOST_MOVABLE_BUT_NOT_COPYABLE(record_pump)
+
 private:
     //! Logger type
     typedef LoggerT logger_type;
@@ -232,21 +235,25 @@ private:
 
 protected:
     //! A reference to the logger
-    mutable logger_type* m_pLogger;
+    logger_type* m_pLogger;
     //! Stream compound
-    mutable stream_compound* m_pStreamCompound;
+    stream_compound* m_pStreamCompound;
+    //! Exception state
+    const unsigned int m_ExceptionCount;
 
 public:
     //! Constructor
     explicit record_pump(logger_type& lg, record const& rec) :
         m_pLogger(boost::addressof(lg)),
-        m_pStreamCompound(stream_provider_type::allocate_compound(rec))
+        m_pStreamCompound(stream_provider_type::allocate_compound(rec)),
+        m_ExceptionCount(unhandled_exception_count())
     {
     }
-    //! Copy constructor (implemented as move)
-    record_pump(record_pump const& that) :
+    //! Move constructor
+    record_pump(BOOST_RV_REF(record_pump) that) :
         m_pLogger(that.m_pLogger),
-        m_pStreamCompound(that.m_pStreamCompound)
+        m_pStreamCompound(that.m_pStreamCompound),
+        m_ExceptionCount(that.m_ExceptionCount)
     {
         that.m_pLogger = 0;
         that.m_pStreamCompound = 0;
@@ -257,7 +264,8 @@ public:
         if (m_pLogger)
         {
             auto_release cleanup(m_pStreamCompound); // destructor doesn't throw
-            if (!std::uncaught_exception())
+            // Only push the record if no exception has been thrown in the streaming expression (if possible)
+            if (m_ExceptionCount >= unhandled_exception_count())
                 m_pLogger->push_record(m_pStreamCompound->stream.get_record());
         }
     }
@@ -268,9 +276,6 @@ public:
         BOOST_ASSERT(m_pStreamCompound != 0);
         return m_pStreamCompound->stream;
     }
-
-    //! Closed assignment
-    BOOST_LOG_DELETED_FUNCTION(record_pump& operator= (record_pump const&))
 };
 
 template< typename LoggerT >

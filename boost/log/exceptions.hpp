@@ -36,7 +36,23 @@
 namespace boost {
 
 // Forward-declaration of an exception base class from Boost.Exception
-class BOOST_LOG_VISIBLE exception;
+#if defined(__GNUC__)
+#   if (__GNUC__ == 4 && __GNUC_MINOR__ >= 1) || (__GNUC__ > 4)
+#       pragma GCC visibility push (default)
+
+class exception;
+
+#       pragma GCC visibility pop
+#   else
+
+class exception;
+
+#   endif
+#else
+
+class BOOS_LOG_VISIBLE exception;
+
+#endif
 
 BOOST_LOG_OPEN_NAMESPACE
 
