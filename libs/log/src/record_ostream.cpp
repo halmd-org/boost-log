@@ -49,7 +49,7 @@ BOOST_LOG_API void basic_record_ostream< CharT >::init_stream()
 }
 //! The function resets the stream into a detached (default initialized) state
 template< typename CharT >
-BOOST_LOG_API void basic_record_ostream< CharT >::detach_from_record()
+BOOST_LOG_API void basic_record_ostream< CharT >::detach_from_record() BOOST_NOEXCEPT
 {
     if (!!m_Record)
     {
@@ -146,7 +146,7 @@ stream_provider< CharT >::allocate_compound(record const& rec)
 
 //! The method releases a compound
 template< typename CharT >
-BOOST_LOG_API void stream_provider< CharT >::release_compound(stream_compound* compound) /* throw() */
+BOOST_LOG_API void stream_provider< CharT >::release_compound(stream_compound* compound) BOOST_NOEXCEPT
 {
     stream_compound_pool< char_type >& pool = stream_compound_pool< char_type >::get();
     compound->next = pool.m_Top;

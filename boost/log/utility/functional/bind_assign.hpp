@@ -21,35 +21,28 @@
 #define BOOST_LOG_UTILITY_FUNCTIONAL_BIND_ASSIGN_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/utility/functional/bind.hpp>
 
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
-//! The function object that assigns its operand to the bound value
-template< typename AssigneeT >
+//! The function object that assigns its second operand to the first one
 struct assign_fun
 {
     typedef void result_type;
 
-    explicit assign_fun(AssigneeT& assignee) : m_Assignee(assignee)
+    template< typename LeftT, typename RightT >
+    void operator() (LeftT& assignee, RightT const& val) const
     {
+        assignee = val;
     }
-
-    template< typename T >
-    void operator() (T const& val) const
-    {
-        m_Assignee = val;
-    }
-
-private:
-    AssigneeT& m_Assignee;
 };
 
 template< typename AssigneeT >
-BOOST_LOG_FORCEINLINE assign_fun< AssigneeT > bind_assign(AssigneeT& assignee)
+BOOST_LOG_FORCEINLINE binder1st< assign_fun, AssigneeT& > bind_assign(AssigneeT& assignee)
 {
-    return assign_fun< AssigneeT >(assignee);
+    return binder1st< assign_fun, AssigneeT& >(assign_fun(), assignee);
 }
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log

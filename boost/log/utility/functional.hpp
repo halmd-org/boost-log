@@ -29,6 +29,7 @@
 #include <boost/log/utility/functional/nop.hpp>
 #include <boost/log/utility/functional/bind_assign.hpp>
 #include <boost/log/utility/functional/bind_output.hpp>
+#include <boost/log/utility/functional/bind_to_log.hpp>
 #include <boost/log/utility/functional/bind.hpp>
 #include <boost/log/utility/functional/fun_ref.hpp>
 #include <boost/log/utility/functional/as_action.hpp>

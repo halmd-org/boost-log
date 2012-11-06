@@ -21,7 +21,6 @@
 
 #include <cstddef>
 #include <iosfwd>
-#include <boost/type.hpp>
 #include <boost/assert.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/eval_if.hpp>
@@ -42,12 +41,13 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/detail/value_ref_visitation.hpp>
-#include <boost/log/detail/make_tag_type.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/formatting_stream_fwd.hpp>
 #include <boost/log/utility/functional/logical.hpp>
 #include <boost/log/utility/functional/bind.hpp>
 #include <boost/log/utility/functional/bind_output.hpp>
+#include <boost/log/utility/functional/bind_to_log.hpp>
+#include <boost/log/utility/manipulators/to_log.hpp>
 #include <boost/log/attributes/value_ref_fwd.hpp>
 
 namespace boost {
@@ -77,27 +77,6 @@ private:
     result_type m_def_val;
 };
 
-//! The function object invokes \c tolog function for the argument
-template< typename StreamT, typename TagT >
-struct to_log_fun
-{
-    typedef void result_type;
-    typedef typename make_tag_type< TagT >::type tag_type;
-
-    explicit to_log_fun(StreamT& stream) : m_stream(stream)
-    {
-    }
-
-    template< typename ArgT >
-    result_type operator() (ArgT const& arg) const
-    {
-        to_log(m_stream, arg, empty_arg_list(), tag_type());
-    }
-
-private:
-    StreamT& m_stream;
-};
-
 //! Attribute value reference implementation for a single type case
 template< typename T, typename TagT >
 class singular_ref
@@ -106,7 +85,7 @@ public:
     //! Referenced value type
     typedef T value_type;
     //! Tag type
-    typedef typename make_tag_type< TagT >::type tag_type;
+    typedef TagT tag_type;
 
 protected:
     //! The metafunction tests if the type is compatible with the reference wrapper
@@ -253,7 +232,7 @@ public:
     //! Referenced value type
     typedef T value_type;
     //! Tag type
-    typedef typename make_tag_type< TagT >::type tag_type;
+    typedef TagT tag_type;
 
 protected:
     //! The metafunction tests if the type is compatible with the reference wrapper
@@ -484,7 +463,7 @@ inline void swap(value_ref< T, TagT >& left, value_ref< T, TagT >& right)
 template< typename CharT, typename TraitsT, typename T, typename TagT >
 inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< CharT, TraitsT >& strm, value_ref< T, TagT > const& val)
 {
-    val.apply_visitor(output_fun< std::basic_ostream< CharT, TraitsT > >(strm));
+    val.apply_visitor(boost::log::bind_output(strm));
     return strm;
 }
 
@@ -492,7 +471,7 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< Cha
 template< typename CharT, typename TraitsT, typename AllocatorT, typename T, typename TagT >
 inline basic_formatting_ostream< CharT, TraitsT, AllocatorT >& operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >& strm, value_ref< T, TagT > const& val)
 {
-    val.apply_visitor(aux::to_log_fun< basic_formatting_ostream< CharT, TraitsT, AllocatorT >, TagT >(strm));
+    val.apply_visitor(boost::log::bind_to_log< TagT >(strm));
     return strm;
 }
 

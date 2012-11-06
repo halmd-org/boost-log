@@ -37,42 +37,6 @@ template<
 >
 class basic_formatting_ostream;
 
-/*!
- * The function puts an object to the stream
- */
-template<
-    typename CharT,
-    typename TraitsT,
-    typename AllocatorT,
-    typename T,
-    typename ArgsT,
-    typename TagT
->
-void to_log(basic_formatting_ostream< CharT, TraitsT, AllocatorT >& stream, T const& value, ArgsT const& args, TagT const& tag);
-
-/*!
- * The function puts an object to the stream
- */
-template<
-    typename CharT,
-    typename TraitsT,
-    typename AllocatorT,
-    typename T,
-    typename ArgsT
->
-void to_log(basic_formatting_ostream< CharT, TraitsT, AllocatorT >& stream, T const& value, ArgsT const& args);
-
-/*!
- * The function puts an object to the stream
- */
-template<
-    typename CharT,
-    typename TraitsT,
-    typename AllocatorT,
-    typename T
->
-void to_log(basic_formatting_ostream< CharT, TraitsT, AllocatorT >& stream, T const& value);
-
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost

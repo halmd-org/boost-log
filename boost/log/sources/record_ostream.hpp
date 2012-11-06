@@ -96,7 +96,7 @@ public:
     /*!
      * Destructor. Destroys the record, releases any sinks and attribute values that were involved in processing this record.
      */
-    ~basic_record_ostream()
+    ~basic_record_ostream() BOOST_NOEXCEPT
     {
         detach_from_record();
     }
@@ -145,7 +145,7 @@ public:
     }
 
     //! The function resets the stream into a detached (default initialized) state
-    BOOST_LOG_API void detach_from_record();
+    BOOST_LOG_API void detach_from_record() BOOST_NOEXCEPT;
 
 private:
     //! The function initializes the stream and the stream buffer
@@ -188,7 +188,7 @@ struct stream_provider
     //! The method returns an allocated stream compound
     BOOST_LOG_API static stream_compound* allocate_compound(record const& rec);
     //! The method releases a compound
-    BOOST_LOG_API static void release_compound(stream_compound* compound) /* throw() */;
+    BOOST_LOG_API static void release_compound(stream_compound* compound) BOOST_NOEXCEPT;
 
     //  Non-constructible, non-copyable, non-assignable
     BOOST_LOG_DELETED_FUNCTION(stream_provider())
@@ -229,8 +229,8 @@ private:
         stream_compound* m_pCompound;
 
     public:
-        explicit auto_release(stream_compound* p) : m_pCompound(p) {}
-        ~auto_release() { stream_provider_type::release_compound(m_pCompound); }
+        explicit auto_release(stream_compound* p) BOOST_NOEXCEPT : m_pCompound(p) {}
+        ~auto_release() BOOST_NOEXCEPT { stream_provider_type::release_compound(m_pCompound); }
     };
 
 protected:
@@ -250,7 +250,7 @@ public:
     {
     }
     //! Move constructor
-    record_pump(BOOST_RV_REF(record_pump) that) :
+    record_pump(BOOST_RV_REF(record_pump) that) BOOST_NOEXCEPT :
         m_pLogger(that.m_pLogger),
         m_pStreamCompound(that.m_pStreamCompound),
         m_ExceptionCount(that.m_ExceptionCount)

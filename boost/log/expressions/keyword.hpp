@@ -20,7 +20,6 @@
 #define BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_
 
 #include <boost/ref.hpp>
-#include <boost/type.hpp>
 #include <boost/proto/make_expr.hpp>
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/phoenix/core/environment.hpp>
@@ -61,7 +60,7 @@ struct attribute_keyword
     typedef attribute_actor<
         value_type,
         fallback_to_none,
-        boost::type< descriptor_type >,
+        descriptor_type,
         ActorT
     > or_none_result_type;
 
@@ -77,7 +76,7 @@ struct attribute_keyword
     typedef attribute_actor<
         value_type,
         fallback_to_throw,
-        boost::type< descriptor_type >,
+        descriptor_type,
         ActorT
     > or_throw_result_type;
 
@@ -94,14 +93,14 @@ struct attribute_keyword
     static attribute_actor<
         value_type,
         fallback_to_default< DefaultT >,
-        boost::type< descriptor_type >,
+        descriptor_type,
         ActorT
     > or_default(DefaultT const& def_val)
     {
         typedef attribute_actor<
             value_type,
             fallback_to_default< DefaultT >,
-            boost::type< descriptor_type >,
+            descriptor_type,
             ActorT
         > or_default_result_type;
         typedef typename or_default_result_type::terminal_type result_terminal;

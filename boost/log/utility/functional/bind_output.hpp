@@ -21,35 +21,28 @@
 #define BOOST_LOG_UTILITY_FUNCTIONAL_BIND_OUTPUT_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/utility/functional/bind.hpp>
 
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
-//! The function object that outputs its operand to the bound stream
-template< typename StreamT >
+//! The function object that outputs its second operand to the first one
 struct output_fun
 {
     typedef void result_type;
 
-    explicit output_fun(StreamT& strm) : m_Stream(strm)
+    template< typename StreamT, typename T >
+    void operator() (StreamT& strm, T const& val) const
     {
+        strm << val;
     }
-
-    template< typename T >
-    void operator() (T const& val) const
-    {
-        m_Stream << val;
-    }
-
-private:
-    StreamT& m_Stream;
 };
 
 template< typename StreamT >
-BOOST_LOG_FORCEINLINE output_fun< StreamT > bind_output(StreamT& strm)
+BOOST_LOG_FORCEINLINE binder1st< output_fun, StreamT& > bind_output(StreamT& strm)
 {
-    return output_fun< StreamT >(strm);
+    return binder1st< output_fun, StreamT& >(output_fun(), strm);
 }
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log

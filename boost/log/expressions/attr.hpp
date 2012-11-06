@@ -23,7 +23,6 @@
 #include <boost/phoenix/core/terminal_fwd.hpp>
 #include <boost/phoenix/core/is_nullary.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/make_tag_type.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/expressions/terminal.hpp>
 #include <boost/log/expressions/attr_fwd.hpp>
@@ -191,7 +190,7 @@ public:
     or_none_result_type or_none() const
     {
         typedef typename or_none_result_type::terminal_type result_terminal;
-        base_type act = { result_terminal(get_name()) };
+        base_type act = {{ result_terminal(get_name()) }};
         return or_none_result_type(act);
     }
 
@@ -202,7 +201,7 @@ public:
     or_throw_result_type or_throw() const
     {
         typedef typename or_throw_result_type::terminal_type result_terminal;
-        base_type act = { result_terminal(get_name()) };
+        base_type act = {{ result_terminal(get_name()) }};
         return or_throw_result_type(act);
     }
 
@@ -212,7 +211,7 @@ public:
     {
         typedef attribute_actor< value_type, fallback_to_default< DefaultT >, tag_type, ActorT > or_default_result_type;
         typedef typename or_default_result_type::terminal_type result_terminal;
-        base_type act = { result_terminal(get_name(), def_val) };
+        base_type act = {{ result_terminal(get_name(), def_val) }};
         return or_default_result_type(act);
     }
 };
@@ -235,9 +234,9 @@ BOOST_LOG_FORCEINLINE attribute_actor< AttributeValueT > attr(attribute_name con
  * with the specified name and type.
  */
 template< typename AttributeValueT, typename TagT >
-BOOST_LOG_FORCEINLINE attribute_actor< AttributeValueT, fallback_to_none, typename boost::log::aux::make_tag_type< TagT >::type > attr(attribute_name const& name)
+BOOST_LOG_FORCEINLINE attribute_actor< AttributeValueT, fallback_to_none, TagT > attr(attribute_name const& name)
 {
-    typedef attribute_actor< AttributeValueT, fallback_to_none, typename boost::log::aux::make_tag_type< TagT >::type > result_type;
+    typedef attribute_actor< AttributeValueT, fallback_to_none, TagT > result_type;
     typedef typename result_type::terminal_type result_terminal;
     typename result_type::base_type act = {{ result_terminal(name) }};
     return result_type(act);

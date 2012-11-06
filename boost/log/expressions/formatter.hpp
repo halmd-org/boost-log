@@ -67,7 +67,7 @@ private:
 
         result_type operator() (record const& rec, stream_type& strm) const
         {
-            boost::log::visit< expressions::tag::message::value_type >(m_MessageName, rec, output_fun< stream_type >(strm));
+            boost::log::visit< expressions::tag::message::value_type >(m_MessageName, rec, boost::log::bind_output(strm));
         }
 
     private:
