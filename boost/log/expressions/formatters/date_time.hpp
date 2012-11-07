@@ -37,7 +37,7 @@ namespace expressions {
 
 namespace aux {
 
-template< typename T, typename CharT >
+template< typename T, typename CharT, typename VoidT = void >
 struct date_time_formatter_generator_traits;
 
 template< typename T, typename FallbackPolicyT, typename CharT >

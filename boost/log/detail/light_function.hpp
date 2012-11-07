@@ -113,6 +113,14 @@ private:
         {
         }
 
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+        explicit implementation(FunT&& fun) :
+            implementation_base(&implementation::invoke_impl, &implementation::clone_impl, &implementation::destroy_impl),
+            m_Function(fun)
+        {
+        }
+#endif // !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
         static void destroy_impl(implementation_base* self)
         {
             delete static_cast< implementation* >(self);
@@ -148,14 +156,18 @@ public:
     }
 #if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun)
+    BOOST_LOG_LWFUNCTION_NAME(FunT&& fun)
+        : m_pImpl(new implementation< FunT >(boost::forward< FunT >(fun)))
+    {
+    }
 #else
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME(FunT const& fun, typename disable_if< move_detail::is_rv< FunT >, int >::type = 0)
-#endif
         : m_pImpl(new implementation< FunT >(fun))
     {
     }
+#endif
+
     //! Constructor from NULL
 #if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
     BOOST_CONSTEXPR BOOST_LOG_LWFUNCTION_NAME(std::nullptr_t) BOOST_NOEXCEPT
@@ -199,17 +211,22 @@ public:
     }
 #if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME& operator= (FunT const& fun)
+    BOOST_LOG_LWFUNCTION_NAME& operator= (FunT&& fun)
+    {
+        BOOST_LOG_LWFUNCTION_NAME tmp(boost::forward< FunT >(fun));
+        this->swap(tmp);
+        return *this;
+    }
 #else
     template< typename FunT >
     typename disable_if< is_same< typename remove_cv< FunT >::type, this_type >, this_type& >::type
     operator= (FunT const& fun)
-#endif
     {
         BOOST_LOG_LWFUNCTION_NAME tmp(fun);
         this->swap(tmp);
         return *this;
     }
+#endif
 
     result_type operator() (BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, arg)) const
     {
@@ -287,6 +304,14 @@ private:
         {
         }
 
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+        explicit implementation(FunT&& fun) :
+            implementation_base(&implementation::invoke_impl, &implementation::clone_impl, &implementation::destroy_impl),
+            m_Function(fun)
+        {
+        }
+#endif // !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
         static void destroy_impl(implementation_base* self)
         {
             delete static_cast< implementation* >(self);
@@ -322,14 +347,18 @@ public:
     }
 #if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun)
+    BOOST_LOG_LWFUNCTION_NAME(FunT&& fun)
+        : m_pImpl(new implementation< FunT >(boost::forward< FunT >(fun)))
+    {
+    }
 #else
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME(FunT const& fun, typename disable_if< move_detail::is_rv< FunT >, int >::type = 0)
-#endif
         : m_pImpl(new implementation< FunT >(fun))
     {
     }
+#endif
+
     //! Constructor from NULL
 #if !defined(BOOST_NO_NULLPTR) && !defined(BOOST_NO_CXX11_NULLPTR)
     BOOST_CONSTEXPR BOOST_LOG_LWFUNCTION_NAME(std::nullptr_t) BOOST_NOEXCEPT
@@ -373,17 +402,22 @@ public:
     }
 #if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME& operator= (FunT const& fun)
+    BOOST_LOG_LWFUNCTION_NAME& operator= (FunT&& fun)
+    {
+        BOOST_LOG_LWFUNCTION_NAME tmp(boost::forward< FunT >(fun));
+        this->swap(tmp);
+        return *this;
+    }
 #else
     template< typename FunT >
     typename disable_if< is_same< typename remove_cv< FunT >::type, this_type >, this_type& >::type
     operator= (FunT const& fun)
-#endif
     {
         BOOST_LOG_LWFUNCTION_NAME tmp(fun);
         this->swap(tmp);
         return *this;
     }
+#endif
 
     result_type operator() (BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, arg)) const
     {
