@@ -29,10 +29,12 @@
 #include <boost/preprocessor/repetition/enum_trailing_binary_params.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/type_traits/remove_cv.hpp>
 #if defined(BOOST_NO_RVALUE_REFERENCES) || defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/type_traits/remove_cv.hpp>
+#else
+#include <boost/type_traits/remove_reference.hpp>
 #endif
 #if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
 #include <boost/assert.hpp>
@@ -157,7 +159,7 @@ public:
 #if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME(FunT&& fun)
-        : m_pImpl(new implementation< FunT >(boost::forward< FunT >(fun)))
+        : m_pImpl(new implementation< typename remove_cv< typename remove_reference< FunT >::type >::type >(boost::forward< FunT >(fun)))
     {
     }
 #else
@@ -348,7 +350,7 @@ public:
 #if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME(FunT&& fun)
-        : m_pImpl(new implementation< FunT >(boost::forward< FunT >(fun)))
+        : m_pImpl(new implementation< typename remove_cv< typename remove_reference< FunT >::type >::type >(boost::forward< FunT >(fun)))
     {
     }
 #else
