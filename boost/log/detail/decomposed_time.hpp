@@ -58,6 +58,11 @@ struct decomposed_time
     {
     }
 
+    decomposed_time(uint32_t y, uint32_t mo, uint32_t d, uint32_t h, uint32_t mi, uint32_t s, uint32_t ss = 0, bool neg = false) :
+        year(y), month(mo), day(d), hours(h), minutes(mi), seconds(s), subseconds(ss), negative(neg)
+    {
+    }
+
     unsigned int week_day() const
     {
         unsigned int a = (14u - month) / 12u;
@@ -149,15 +154,15 @@ public:
     }
 };
 
-template< typename FinalT, typename CharT >
+template< typename FormatterT, typename CharT >
 class decomposed_time_formatter_builder :
     public date_time_format_parser_callback< CharT >
 {
 public:
     typedef date_time_format_parser_callback< CharT > base_type;
     typedef typename base_type::char_type char_type;
-    typedef FinalT value_type;
-    typedef date_time_formatter< value_type, char_type > formatter_type;
+    typedef FormatterT formatter_type;
+    typedef typename formatter_type::value_type value_type;
     typedef typename formatter_type::stream_type stream_type;
     typedef typename stream_type::string_type string_type;
     typedef typename stream_type::streambuf_type streambuf_type;
@@ -292,12 +297,11 @@ private:
     };
 
 protected:
-    formatter_type m_formatter;
+    formatter_type& m_formatter;
 
 public:
-    formatter_type& get_formatter()
+    explicit decomposed_time_formatter_builder(formatter_type& fmt) : m_formatter(fmt)
     {
-        return m_formatter;
     }
 
     void on_literal(iterator_range< const char_type* > const& lit)

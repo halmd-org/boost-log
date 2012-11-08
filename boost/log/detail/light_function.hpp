@@ -158,14 +158,19 @@ public:
     }
 #if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME(FunT&& fun)
-        : m_pImpl(new implementation< typename remove_cv< typename remove_reference< FunT >::type >::type >(boost::forward< FunT >(fun)))
+    BOOST_LOG_LWFUNCTION_NAME(FunT&& fun) :
+        m_pImpl(new implementation< typename remove_cv< typename remove_reference< FunT >::type >::type >(boost::forward< FunT >(fun)))
     {
     }
 #else
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun, typename disable_if< move_detail::is_rv< FunT >, int >::type = 0)
-        : m_pImpl(new implementation< FunT >(fun))
+    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun, typename disable_if< move_detail::is_rv< FunT >, int >::type = 0) :
+        m_pImpl(new implementation< FunT >(fun))
+    {
+    }
+    template< typename FunT >
+    BOOST_LOG_LWFUNCTION_NAME(rv< FunT > const& fun) :
+        m_pImpl(new implementation< typename remove_cv< FunT >::type >(fun))
     {
     }
 #endif
@@ -349,14 +354,19 @@ public:
     }
 #if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME(FunT&& fun)
-        : m_pImpl(new implementation< typename remove_cv< typename remove_reference< FunT >::type >::type >(boost::forward< FunT >(fun)))
+    BOOST_LOG_LWFUNCTION_NAME(FunT&& fun) :
+        m_pImpl(new implementation< typename remove_cv< typename remove_reference< FunT >::type >::type >(boost::forward< FunT >(fun)))
     {
     }
 #else
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun, typename disable_if< move_detail::is_rv< FunT >, int >::type = 0)
-        : m_pImpl(new implementation< FunT >(fun))
+    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun, typename disable_if< move_detail::is_rv< FunT >, int >::type = 0) :
+        m_pImpl(new implementation< FunT >(fun))
+    {
+    }
+    template< typename FunT >
+    BOOST_LOG_LWFUNCTION_NAME(rv< FunT > const& fun) :
+        m_pImpl(new implementation< typename remove_cv< FunT >::type >(fun))
     {
     }
 #endif
