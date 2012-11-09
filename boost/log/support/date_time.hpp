@@ -28,13 +28,8 @@
 #include <boost/move/move.hpp>
 #include <boost/date_time/time.hpp>
 #include <boost/date_time/date.hpp>
-#include <boost/date_time/period.hpp>
-#include <boost/date_time/time_facet.hpp>
-#include <boost/date_time/date_facet.hpp>
-#include <boost/date_time/compiler_config.hpp>
-#include <boost/date_time/gregorian/conversion.hpp>
-#include <boost/date_time/local_time/conversion.hpp>
-#include <boost/date_time/posix_time/conversion.hpp>
+#include <boost/date_time/gregorian/gregorian_types.hpp>
+#include <boost/date_time/local_time/local_time_types.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/date_time_format_parser.hpp>
@@ -61,35 +56,75 @@ struct decomposed_time_wrapper :
     typedef T value_type;
     value_type m_time;
 
-    BOOST_LOG_DEFAULTED_FUNCTION(decomposed_ptime(), {})
-    explicit decomposed_time_wrapper(value_type const& t) : m_time(t)
+    BOOST_LOG_DEFAULTED_FUNCTION(decomposed_time_wrapper(), {})
+
+    explicit decomposed_time_wrapper(value_type const& time) : m_time(time)
     {
-        typedef typename value_type::date_time date_time;
-        date_time d = t.date();
-        this->year = d.year();
-        this->month = d.month();
-        this->day = d.day();
-
-        typedef typename value_type::time_duration_type time_duration_type;
-        time_duration_type dur = t.time_of_day();
-        this->hours = dur.hours();
-        this->minutes = dur.minutes();
-        this->seconds = dur.seconds();
-
-        typedef typename time_duration_type::traits_type traits_type;
-        enum
-        {
-            adjustment_ratio = (traits_type::ticks_per_second > base_type::subseconds_per_second ?
-                traits_type::ticks_per_second / base_type::subseconds_per_second :
-                base_type::subseconds_per_second / traits_type::ticks_per_second)
-        };
-        uint64_t frac = dur.fractional_seconds();
-        this->subseconds = (traits_type::ticks_per_second > base_type::subseconds_per_second ? frac / adjustment_ratio : frac * adjustment_ratio);
     }
 };
 
+template< typename DateT, typename CalendarT, typename DurationT, typename ValueT >
+inline void decompose_date(date_time::date< DateT, CalendarT, DurationT > const& d, decomposed_time_wrapper< ValueT >& v)
+{
+    typedef typename date_time::date< DateT, CalendarT, DurationT >::ymd_type ymd_type;
+    ymd_type ymd = d.year_month_day();
+    v.year = ymd.year;
+    v.month = ymd.month;
+    v.day = ymd.day;
+}
+
+template< typename T, typename RepT, typename ValueT >
+inline void decompose_time_of_day(date_time::time_duration< T, RepT > const& tod, decomposed_time_wrapper< ValueT >& v)
+{
+    v.hours = tod.hours();
+    v.minutes = tod.minutes();
+    v.seconds = tod.seconds();
+
+    typedef date_time::time_duration< T, RepT > time_duration_type;
+    typedef typename time_duration_type::traits_type traits_type;
+    enum
+    {
+        adjustment_ratio = (traits_type::ticks_per_second > boost::log::aux::decomposed_time::subseconds_per_second ?
+            traits_type::ticks_per_second / boost::log::aux::decomposed_time::subseconds_per_second :
+            boost::log::aux::decomposed_time::subseconds_per_second / traits_type::ticks_per_second)
+    };
+    uint64_t frac = tod.fractional_seconds();
+    v.subseconds = (traits_type::ticks_per_second > boost::log::aux::decomposed_time::subseconds_per_second ? frac / adjustment_ratio : frac * adjustment_ratio);
+}
+
+template< typename T, typename RepT, typename ValueT >
+inline void decompose_time_duration(date_time::time_duration< T, RepT > const& dur, decomposed_time_wrapper< ValueT >& v)
+{
+    if (dur.is_negative())
+    {
+        v.negative = true;
+        (decompose_time_of_day)(-dur, v);
+    }
+    else
+        (decompose_time_of_day)(dur, v);
+}
+
+template< typename RepT, typename ValueT >
+inline void decompose_date_duration(date_time::date_duration< RepT > const& dur, decomposed_time_wrapper< ValueT >& v)
+{
+    if (dur.is_negative())
+    {
+        v.negative = true;
+        v.day = (-dur).days();
+    }
+    else
+        v.day = dur.days();
+}
+
+template< typename TimeT, typename TimeSystemT, typename ValueT >
+inline void decompose_time(date_time::base_time< TimeT, TimeSystemT > const& t, decomposed_time_wrapper< ValueT >& v)
+{
+    (decompose_date)(t.date(), v);
+    (decompose_time_of_day)(t.time_of_day(), v);
+}
+
 template< typename TimeT, typename CharT >
-struct date_time_formatter_generator_traits_base
+struct date_time_formatter_generator_traits_impl
 {
     //! Character type
     typedef CharT char_type;
@@ -135,7 +170,11 @@ struct date_time_formatter_generator_traits_base
             else if (value.is_neg_infinity())
                 strm << "-infinity";
             else
-                base_type::operator() (strm, decomposed_time_wrapper< value_type >(value));
+            {
+                decomposed_time_wrapper< value_type > val(value);
+                (decompose_time)(value, val);
+                base_type::operator() (strm, val);
+            }
         }
     };
 
@@ -151,21 +190,13 @@ struct date_time_formatter_generator_traits_base
 
 template< typename CharT, typename VoidT >
 struct date_time_formatter_generator_traits< posix_time::ptime, CharT, VoidT > :
-    public date_time_formatter_generator_traits_base< posix_time::ptime, CharT >
-{
-};
-
-template< typename TimeT, typename TimeSystemT, typename CharT, typename VoidT >
-struct date_time_formatter_generator_traits< date_time::base_time< TimeT, TimeSystemT >, CharT, VoidT > :
-    public date_time_formatter_generator_traits_base< date_time::base_time< TimeT, TimeSystemT >, CharT >
+    public date_time_formatter_generator_traits_impl< posix_time::ptime, CharT >
 {
 };
 
 template< typename TimeT, typename TimeZoneT, typename CharT, typename VoidT >
 struct date_time_formatter_generator_traits< local_time::local_date_time_base< TimeT, TimeZoneT >, CharT, VoidT >
 {
-    typedef date_time_formatter_generator_traits< TimeT, CharT, VoidT > underlying_traits;
-
     //! Character type
     typedef CharT char_type;
     //! String type
@@ -173,19 +204,16 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
     //! Formatting stream type
     typedef basic_formatting_stream< char_type > stream_type;
     //! Value type
-    typedef TimeT value_type;
+    typedef local_time::local_date_time_base< TimeT, TimeZoneT > value_type;
 
     //! Formatter function
     typedef boost::log::aux::light_function2< void, stream_type&, value_type const& > formatter_function_type;
 
     //! Formatter implementation
     class formatter :
-        public underlying_traits::formatter
+        public boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type >
     {
         BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
-
-    private:
-        typedef typename underlying_traits::formatter base_type;
 
     public:
         typedef typename base_type::result_type result_type;
@@ -203,7 +231,127 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
 
         result_type operator() (stream_type& strm, value_type const& value) const
         {
-            base_type::operator() (strm, value.local_time());
+            if (value.is_not_a_date_time())
+                strm << "not-a-date-time";
+            else if (value.is_pos_infinity())
+                strm << "+infinity";
+            else if (value.is_neg_infinity())
+                strm << "-infinity";
+            else
+            {
+                decomposed_time_wrapper< value_type > val(value);
+                (decompose_time)(value.local_time(), val);
+                base_type::operator() (strm, val);
+            }
+        }
+    };
+
+    class formatter_builder :
+        public boost::log::aux::decomposed_time_formatter_builder< formatter, char_type >
+    {
+    private:
+        typedef boost::log::aux::decomposed_time_formatter_builder< formatter, char_type > base_type;
+
+        struct iso_time_zone_formatter
+        {
+            typedef void result_type;
+
+            result_type operator() (stream_type& strm, decomposed_time_wrapper< value_type > const& value) const
+            {
+                strm << value.m_time.zone_abbrev(true);
+                strm.flush();
+            }
+        };
+
+        struct extended_iso_time_zone_formatter
+        {
+            typedef void result_type;
+
+            result_type operator() (stream_type& strm, decomposed_time_wrapper< value_type > const& value) const
+            {
+                strm << value.m_time.zone_name(true);
+                strm.flush();
+            }
+        };
+
+    public:
+        explicit formatter_builder(formatter& fmt) : base_type(fmt)
+        {
+        }
+
+        void on_iso_time_zone()
+        {
+            this->m_formatter.add_formatter(iso_time_zone_formatter());
+        }
+
+        void on_extended_iso_time_zone()
+        {
+            this->m_formatter.add_formatter(extended_iso_time_zone_formatter());
+        }
+    };
+
+    //! The function parses format string and constructs formatter function
+    static formatter_function_type parse(string_type const& format)
+    {
+        formatter fmt;
+        formatter_builder builder(fmt);
+        boost::log::aux::parse_date_time_format(format, builder);
+        return formatter_function_type(boost::move(fmt));
+    }
+};
+
+template< typename DateT, typename CharT >
+struct date_formatter_generator_traits_impl
+{
+    //! Character type
+    typedef CharT char_type;
+    //! String type
+    typedef std::basic_string< char_type > string_type;
+    //! Formatting stream type
+    typedef basic_formatting_stream< char_type > stream_type;
+    //! Value type
+    typedef DateT value_type;
+
+    //! Formatter function
+    typedef boost::log::aux::light_function2< void, stream_type&, value_type const& > formatter_function_type;
+
+    //! Formatter implementation
+    class formatter :
+        public boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type >
+    {
+        BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
+
+    private:
+        typedef boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type > base_type;
+
+    public:
+        typedef typename base_type::result_type result_type;
+
+    public:
+        BOOST_LOG_DEFAULTED_FUNCTION(formatter(), {})
+        formatter(formatter const& that) : base_type(static_cast< base_type const& >(that)) {}
+        formatter(BOOST_RV_REF(formatter) that) { this->swap(that); }
+
+        formatter& operator= (formatter that)
+        {
+            this->swap(that);
+            return *this;
+        }
+
+        result_type operator() (stream_type& strm, value_type const& value) const
+        {
+            if (value.is_not_a_date())
+                strm << "not-a-date-time";
+            else if (value.is_pos_infinity())
+                strm << "+infinity";
+            else if (value.is_neg_infinity())
+                strm << "-infinity";
+            else
+            {
+                decomposed_time_wrapper< value_type > val(value);
+                (decompose_date)(value, val);
+                base_type::operator() (strm, val);
+            }
         }
     };
 
@@ -212,9 +360,181 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
     {
         formatter fmt;
         boost::log::aux::decomposed_time_formatter_builder< formatter, char_type > builder(fmt);
-        boost::log::aux::parse_date_time_format(format, builder);
+        boost::log::aux::parse_date_format(format, builder);
         return formatter_function_type(boost::move(fmt));
     }
+};
+
+template< typename CharT, typename VoidT >
+struct date_time_formatter_generator_traits< gregorian::date, CharT, VoidT > :
+    public date_formatter_generator_traits_impl< gregorian::date, CharT >
+{
+};
+
+template< typename TimeDurationT, typename CharT >
+struct time_duration_formatter_generator_traits_impl
+{
+    //! Character type
+    typedef CharT char_type;
+    //! String type
+    typedef std::basic_string< char_type > string_type;
+    //! Formatting stream type
+    typedef basic_formatting_stream< char_type > stream_type;
+    //! Value type
+    typedef TimeDurationT value_type;
+
+    //! Formatter function
+    typedef boost::log::aux::light_function2< void, stream_type&, value_type const& > formatter_function_type;
+
+    //! Formatter implementation
+    class formatter :
+        public boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type >
+    {
+        BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
+
+    private:
+        typedef boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type > base_type;
+
+    public:
+        typedef typename base_type::result_type result_type;
+
+    public:
+        BOOST_LOG_DEFAULTED_FUNCTION(formatter(), {})
+        formatter(formatter const& that) : base_type(static_cast< base_type const& >(that)) {}
+        formatter(BOOST_RV_REF(formatter) that) { this->swap(that); }
+
+        formatter& operator= (formatter that)
+        {
+            this->swap(that);
+            return *this;
+        }
+
+        result_type operator() (stream_type& strm, value_type const& value) const
+        {
+            if (value.is_not_a_date_time())
+                strm << "not-a-date-time";
+            else if (value.is_pos_infinity())
+                strm << "+infinity";
+            else if (value.is_neg_infinity())
+                strm << "-infinity";
+            else
+            {
+                decomposed_time_wrapper< value_type > val(value);
+                (decompose_time_duration)(value, val);
+                base_type::operator() (strm, val);
+            }
+        }
+    };
+
+    //! The function parses format string and constructs formatter function
+    static formatter_function_type parse(string_type const& format)
+    {
+        formatter fmt;
+        boost::log::aux::decomposed_time_formatter_builder< formatter, char_type > builder(fmt);
+        boost::log::aux::parse_time_format(format, builder);
+        return formatter_function_type(boost::move(fmt));
+    }
+};
+
+template< typename CharT, typename VoidT >
+struct date_time_formatter_generator_traits< posix_time::time_duration, CharT, VoidT > :
+    public time_duration_formatter_generator_traits_impl< posix_time::time_duration, CharT >
+{
+};
+
+template< typename CharT, typename VoidT >
+struct date_time_formatter_generator_traits< posix_time::hours, CharT, VoidT > :
+    public time_duration_formatter_generator_traits_impl< posix_time::hours, CharT >
+{
+};
+
+template< typename CharT, typename VoidT >
+struct date_time_formatter_generator_traits< posix_time::minutes, CharT, VoidT > :
+    public time_duration_formatter_generator_traits_impl< posix_time::minutes, CharT >
+{
+};
+
+template< typename CharT, typename VoidT >
+struct date_time_formatter_generator_traits< posix_time::seconds, CharT, VoidT > :
+    public time_duration_formatter_generator_traits_impl< posix_time::seconds, CharT >
+{
+};
+
+template< typename BaseDurationT, uint64_t FracOfSecondV, typename CharT, typename VoidT >
+struct date_time_formatter_generator_traits< date_time::subsecond_duration< BaseDurationT, FracOfSecondV >, CharT, VoidT > :
+    public time_duration_formatter_generator_traits_impl< date_time::subsecond_duration< BaseDurationT, FracOfSecondV >, CharT >
+{
+};
+
+template< typename DateDurationT, typename CharT >
+struct date_duration_formatter_generator_traits_impl
+{
+    //! Character type
+    typedef CharT char_type;
+    //! String type
+    typedef std::basic_string< char_type > string_type;
+    //! Formatting stream type
+    typedef basic_formatting_stream< char_type > stream_type;
+    //! Value type
+    typedef DateDurationT value_type;
+
+    //! Formatter function
+    typedef boost::log::aux::light_function2< void, stream_type&, value_type const& > formatter_function_type;
+
+    //! Formatter implementation
+    class formatter :
+        public boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type >
+    {
+        BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
+
+    private:
+        typedef boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type > base_type;
+
+    public:
+        typedef typename base_type::result_type result_type;
+
+    public:
+        BOOST_LOG_DEFAULTED_FUNCTION(formatter(), {})
+        formatter(formatter const& that) : base_type(static_cast< base_type const& >(that)) {}
+        formatter(BOOST_RV_REF(formatter) that) { this->swap(that); }
+
+        formatter& operator= (formatter that)
+        {
+            this->swap(that);
+            return *this;
+        }
+
+        result_type operator() (stream_type& strm, value_type const& value) const
+        {
+            if (value.is_not_a_date())
+                strm << "not-a-date-time";
+            else if (value.is_pos_infinity())
+                strm << "+infinity";
+            else if (value.is_neg_infinity())
+                strm << "-infinity";
+            else
+            {
+                decomposed_time_wrapper< value_type > val(value);
+                (decompose_date_duration)(value, val);
+                base_type::operator() (strm, val);
+            }
+        }
+    };
+
+    //! The function parses format string and constructs formatter function
+    static formatter_function_type parse(string_type const& format)
+    {
+        formatter fmt;
+        boost::log::aux::decomposed_time_formatter_builder< formatter, char_type > builder(fmt);
+        boost::log::aux::parse_date_format(format, builder);
+        return formatter_function_type(boost::move(fmt));
+    }
+};
+
+template< typename CharT, typename VoidT >
+struct date_time_formatter_generator_traits< gregorian::date_duration, CharT, VoidT > :
+    public date_formatter_generator_traits_impl< gregorian::date_duration, CharT >
+{
 };
 
 } // namespace aux
