@@ -35,6 +35,7 @@
 #include <boost/log/detail/date_time_format_parser.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/decomposed_time.hpp>
+#include <boost/log/detail/date_time_fmt_gen_traits_fwd.hpp>
 #include <boost/log/utility/formatting_stream.hpp>
 
 namespace boost {
@@ -45,43 +46,26 @@ namespace expressions {
 
 namespace aux {
 
-template< typename T, typename CharT, typename VoidT = void >
-struct date_time_formatter_generator_traits;
+namespace date_time_support {
 
-template< typename T >
-struct decomposed_time_wrapper :
-    public boost::log::aux::decomposed_time
+template< typename DateT, typename ValueT >
+inline void decompose_date(DateT const& d, boost::log::aux::decomposed_time_wrapper< ValueT >& v)
 {
-    typedef boost::log::aux::decomposed_time base_type;
-    typedef T value_type;
-    value_type m_time;
-
-    BOOST_LOG_DEFAULTED_FUNCTION(decomposed_time_wrapper(), {})
-
-    explicit decomposed_time_wrapper(value_type const& time) : m_time(time)
-    {
-    }
-};
-
-template< typename DateT, typename CalendarT, typename DurationT, typename ValueT >
-inline void decompose_date(date_time::date< DateT, CalendarT, DurationT > const& d, decomposed_time_wrapper< ValueT >& v)
-{
-    typedef typename date_time::date< DateT, CalendarT, DurationT >::ymd_type ymd_type;
+    typedef typename DateT::ymd_type ymd_type;
     ymd_type ymd = d.year_month_day();
     v.year = ymd.year;
     v.month = ymd.month;
     v.day = ymd.day;
 }
 
-template< typename T, typename RepT, typename ValueT >
-inline void decompose_time_of_day(date_time::time_duration< T, RepT > const& tod, decomposed_time_wrapper< ValueT >& v)
+template< typename TimeDurationT, typename ValueT >
+inline void decompose_time_of_day(TimeDurationT const& tod, boost::log::aux::decomposed_time_wrapper< ValueT >& v)
 {
     v.hours = tod.hours();
     v.minutes = tod.minutes();
     v.seconds = tod.seconds();
 
-    typedef date_time::time_duration< T, RepT > time_duration_type;
-    typedef typename time_duration_type::traits_type traits_type;
+    typedef typename TimeDurationT::traits_type traits_type;
     enum
     {
         adjustment_ratio = (traits_type::ticks_per_second > boost::log::aux::decomposed_time::subseconds_per_second ?
@@ -92,8 +76,8 @@ inline void decompose_time_of_day(date_time::time_duration< T, RepT > const& tod
     v.subseconds = (traits_type::ticks_per_second > boost::log::aux::decomposed_time::subseconds_per_second ? frac / adjustment_ratio : frac * adjustment_ratio);
 }
 
-template< typename T, typename RepT, typename ValueT >
-inline void decompose_time_duration(date_time::time_duration< T, RepT > const& dur, decomposed_time_wrapper< ValueT >& v)
+template< typename TimeDurationT, typename ValueT >
+inline void decompose_time_duration(TimeDurationT const& dur, boost::log::aux::decomposed_time_wrapper< ValueT >& v)
 {
     if (dur.is_negative())
     {
@@ -104,8 +88,8 @@ inline void decompose_time_duration(date_time::time_duration< T, RepT > const& d
         (decompose_time_of_day)(dur, v);
 }
 
-template< typename RepT, typename ValueT >
-inline void decompose_date_duration(date_time::date_duration< RepT > const& dur, decomposed_time_wrapper< ValueT >& v)
+template< typename DateDurationT, typename ValueT >
+inline void decompose_date_duration(DateDurationT const& dur, boost::log::aux::decomposed_time_wrapper< ValueT >& v)
 {
     if (dur.is_negative())
     {
@@ -116,12 +100,14 @@ inline void decompose_date_duration(date_time::date_duration< RepT > const& dur,
         v.day = dur.days();
 }
 
-template< typename TimeT, typename TimeSystemT, typename ValueT >
-inline void decompose_time(date_time::base_time< TimeT, TimeSystemT > const& t, decomposed_time_wrapper< ValueT >& v)
+template< typename TimeT, typename ValueT >
+inline void decompose_time(TimeT const& t, boost::log::aux::decomposed_time_wrapper< ValueT >& v)
 {
     (decompose_date)(t.date(), v);
     (decompose_time_of_day)(t.time_of_day(), v);
 }
+
+} // namespace date_time_support
 
 template< typename TimeT, typename CharT >
 struct date_time_formatter_generator_traits_impl
@@ -131,7 +117,7 @@ struct date_time_formatter_generator_traits_impl
     //! String type
     typedef std::basic_string< char_type > string_type;
     //! Formatting stream type
-    typedef basic_formatting_stream< char_type > stream_type;
+    typedef basic_formatting_ostream< char_type > stream_type;
     //! Value type
     typedef TimeT value_type;
 
@@ -140,12 +126,12 @@ struct date_time_formatter_generator_traits_impl
 
     //! Formatter implementation
     class formatter :
-        public boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type >
+        public boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type >
     {
         BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
 
     private:
-        typedef boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type > base_type;
+        typedef boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type > base_type;
 
     public:
         typedef typename base_type::result_type result_type;
@@ -171,8 +157,8 @@ struct date_time_formatter_generator_traits_impl
                 strm << "-infinity";
             else
             {
-                decomposed_time_wrapper< value_type > val(value);
-                (decompose_time)(value, val);
+                boost::log::aux::decomposed_time_wrapper< value_type > val(value);
+                date_time_support::decompose_time(value, val);
                 base_type::operator() (strm, val);
             }
         }
@@ -202,7 +188,7 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
     //! String type
     typedef std::basic_string< char_type > string_type;
     //! Formatting stream type
-    typedef basic_formatting_stream< char_type > stream_type;
+    typedef basic_formatting_ostream< char_type > stream_type;
     //! Value type
     typedef local_time::local_date_time_base< TimeT, TimeZoneT > value_type;
 
@@ -211,8 +197,10 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
 
     //! Formatter implementation
     class formatter :
-        public boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type >
+        public boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type >
     {
+        typedef boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type > base_type;
+
         BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
 
     public:
@@ -239,8 +227,8 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
                 strm << "-infinity";
             else
             {
-                decomposed_time_wrapper< value_type > val(value);
-                (decompose_time)(value.local_time(), val);
+                boost::log::aux::decomposed_time_wrapper< value_type > val(value);
+                date_time_support::decompose_time(value.local_time(), val);
                 base_type::operator() (strm, val);
             }
         }
@@ -256,7 +244,7 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
         {
             typedef void result_type;
 
-            result_type operator() (stream_type& strm, decomposed_time_wrapper< value_type > const& value) const
+            result_type operator() (stream_type& strm, boost::log::aux::decomposed_time_wrapper< value_type > const& value) const
             {
                 strm << value.m_time.zone_abbrev(true);
                 strm.flush();
@@ -267,7 +255,7 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
         {
             typedef void result_type;
 
-            result_type operator() (stream_type& strm, decomposed_time_wrapper< value_type > const& value) const
+            result_type operator() (stream_type& strm, boost::log::aux::decomposed_time_wrapper< value_type > const& value) const
             {
                 strm << value.m_time.zone_name(true);
                 strm.flush();
@@ -308,7 +296,7 @@ struct date_formatter_generator_traits_impl
     //! String type
     typedef std::basic_string< char_type > string_type;
     //! Formatting stream type
-    typedef basic_formatting_stream< char_type > stream_type;
+    typedef basic_formatting_ostream< char_type > stream_type;
     //! Value type
     typedef DateT value_type;
 
@@ -317,12 +305,12 @@ struct date_formatter_generator_traits_impl
 
     //! Formatter implementation
     class formatter :
-        public boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type >
+        public boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type >
     {
         BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
 
     private:
-        typedef boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type > base_type;
+        typedef boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type > base_type;
 
     public:
         typedef typename base_type::result_type result_type;
@@ -348,8 +336,8 @@ struct date_formatter_generator_traits_impl
                 strm << "-infinity";
             else
             {
-                decomposed_time_wrapper< value_type > val(value);
-                (decompose_date)(value, val);
+                boost::log::aux::decomposed_time_wrapper< value_type > val(value);
+                date_time_support::decompose_date(value, val);
                 base_type::operator() (strm, val);
             }
         }
@@ -379,7 +367,7 @@ struct time_duration_formatter_generator_traits_impl
     //! String type
     typedef std::basic_string< char_type > string_type;
     //! Formatting stream type
-    typedef basic_formatting_stream< char_type > stream_type;
+    typedef basic_formatting_ostream< char_type > stream_type;
     //! Value type
     typedef TimeDurationT value_type;
 
@@ -388,12 +376,12 @@ struct time_duration_formatter_generator_traits_impl
 
     //! Formatter implementation
     class formatter :
-        public boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type >
+        public boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type >
     {
         BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
 
     private:
-        typedef boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type > base_type;
+        typedef boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type > base_type;
 
     public:
         typedef typename base_type::result_type result_type;
@@ -419,8 +407,8 @@ struct time_duration_formatter_generator_traits_impl
                 strm << "-infinity";
             else
             {
-                decomposed_time_wrapper< value_type > val(value);
-                (decompose_time_duration)(value, val);
+                boost::log::aux::decomposed_time_wrapper< value_type > val(value);
+                date_time_support::decompose_time_duration(value, val);
                 base_type::operator() (strm, val);
             }
         }
@@ -474,7 +462,7 @@ struct date_duration_formatter_generator_traits_impl
     //! String type
     typedef std::basic_string< char_type > string_type;
     //! Formatting stream type
-    typedef basic_formatting_stream< char_type > stream_type;
+    typedef basic_formatting_ostream< char_type > stream_type;
     //! Value type
     typedef DateDurationT value_type;
 
@@ -483,12 +471,12 @@ struct date_duration_formatter_generator_traits_impl
 
     //! Formatter implementation
     class formatter :
-        public boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type >
+        public boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type >
     {
         BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
 
     private:
-        typedef boost::log::aux::date_time_formatter< decomposed_time_wrapper< value_type >, char_type > base_type;
+        typedef boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type > base_type;
 
     public:
         typedef typename base_type::result_type result_type;
@@ -514,8 +502,8 @@ struct date_duration_formatter_generator_traits_impl
                 strm << "-infinity";
             else
             {
-                decomposed_time_wrapper< value_type > val(value);
-                (decompose_date_duration)(value, val);
+                boost::log::aux::decomposed_time_wrapper< value_type > val(value);
+                date_time_support::decompose_date_duration(value, val);
                 base_type::operator() (strm, val);
             }
         }

@@ -33,6 +33,7 @@
 #if defined(BOOST_NO_RVALUE_REFERENCES) || defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <boost/mpl/or.hpp>
 #else
 #include <boost/type_traits/remove_reference.hpp>
 #endif
@@ -106,18 +107,20 @@ private:
     class implementation :
         public implementation_base
     {
+        typedef implementation< FunT > this_type;
+
         FunT m_Function;
 
     public:
         explicit implementation(FunT const& fun) :
-            implementation_base(&implementation::invoke_impl, &implementation::clone_impl, &implementation::destroy_impl),
+            implementation_base(&this_type::invoke_impl, &this_type::clone_impl, &this_type::destroy_impl),
             m_Function(fun)
         {
         }
 
 #if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
         explicit implementation(FunT&& fun) :
-            implementation_base(&implementation::invoke_impl, &implementation::clone_impl, &implementation::destroy_impl),
+            implementation_base(&this_type::invoke_impl, &this_type::clone_impl, &this_type::destroy_impl),
             m_Function(fun)
         {
         }
@@ -151,11 +154,19 @@ public:
         else
             m_pImpl = NULL;
     }
+
     BOOST_LOG_LWFUNCTION_NAME(BOOST_RV_REF(this_type) that) BOOST_NOEXCEPT
     {
         m_pImpl = that.m_pImpl;
         that.m_pImpl = NULL;
     }
+
+    BOOST_LOG_LWFUNCTION_NAME(BOOST_RV_REF(const this_type) that) BOOST_NOEXCEPT
+    {
+        m_pImpl = that.m_pImpl;
+        ((this_type&)that).m_pImpl = NULL;
+    }
+
 #if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME(FunT&& fun) :
@@ -164,12 +175,12 @@ public:
     }
 #else
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun, typename disable_if< move_detail::is_rv< FunT >, int >::type = 0) :
+    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun, typename disable_if< mpl::or_< move_detail::is_rv< FunT >, is_same< FunT, this_type > >, int >::type = 0) :
         m_pImpl(new implementation< FunT >(fun))
     {
     }
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME(rv< FunT > const& fun) :
+    BOOST_LOG_LWFUNCTION_NAME(rv< FunT > const& fun, typename disable_if< is_same< typename remove_cv< FunT >::type, this_type >, int >::type = 0) :
         m_pImpl(new implementation< typename remove_cv< FunT >::type >(fun))
     {
     }
@@ -226,7 +237,7 @@ public:
     }
 #else
     template< typename FunT >
-    typename disable_if< is_same< typename remove_cv< FunT >::type, this_type >, this_type& >::type
+    typename disable_if< mpl::or_< move_detail::is_rv< FunT >, is_same< FunT, this_type > >, this_type& >::type
     operator= (FunT const& fun)
     {
         BOOST_LOG_LWFUNCTION_NAME tmp(fun);
@@ -302,18 +313,20 @@ private:
     class implementation :
         public implementation_base
     {
+        typedef implementation< FunT > this_type;
+
         FunT m_Function;
 
     public:
         explicit implementation(FunT const& fun) :
-            implementation_base(&implementation::invoke_impl, &implementation::clone_impl, &implementation::destroy_impl),
+            implementation_base(&this_type::invoke_impl, &this_type::clone_impl, &this_type::destroy_impl),
             m_Function(fun)
         {
         }
 
 #if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
         explicit implementation(FunT&& fun) :
-            implementation_base(&implementation::invoke_impl, &implementation::clone_impl, &implementation::destroy_impl),
+            implementation_base(&this_type::invoke_impl, &this_type::clone_impl, &this_type::destroy_impl),
             m_Function(fun)
         {
         }
@@ -352,6 +365,13 @@ public:
         m_pImpl = that.m_pImpl;
         that.m_pImpl = NULL;
     }
+
+    BOOST_LOG_LWFUNCTION_NAME(BOOST_RV_REF(const this_type) that) BOOST_NOEXCEPT
+    {
+        m_pImpl = that.m_pImpl;
+        ((this_type&)that).m_pImpl = NULL;
+    }
+
 #if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template< typename FunT >
     BOOST_LOG_LWFUNCTION_NAME(FunT&& fun) :
@@ -360,12 +380,12 @@ public:
     }
 #else
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun, typename disable_if< move_detail::is_rv< FunT >, int >::type = 0) :
+    BOOST_LOG_LWFUNCTION_NAME(FunT const& fun, typename disable_if< mpl::or_< move_detail::is_rv< FunT >, is_same< FunT, this_type > >, int >::type = 0) :
         m_pImpl(new implementation< FunT >(fun))
     {
     }
     template< typename FunT >
-    BOOST_LOG_LWFUNCTION_NAME(rv< FunT > const& fun) :
+    BOOST_LOG_LWFUNCTION_NAME(rv< FunT > const& fun, typename disable_if< is_same< typename remove_cv< FunT >::type, this_type >, int >::type = 0) :
         m_pImpl(new implementation< typename remove_cv< FunT >::type >(fun))
     {
     }
@@ -422,7 +442,7 @@ public:
     }
 #else
     template< typename FunT >
-    typename disable_if< is_same< typename remove_cv< FunT >::type, this_type >, this_type& >::type
+    typename disable_if< mpl::or_< move_detail::is_rv< FunT >, is_same< FunT, this_type > >, this_type& >::type
     operator= (FunT const& fun)
     {
         BOOST_LOG_LWFUNCTION_NAME tmp(fun);

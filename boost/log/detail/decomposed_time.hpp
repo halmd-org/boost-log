@@ -23,12 +23,9 @@
 #include <ctime>
 #include <string>
 #include <vector>
-#include <limits>
 #include <locale>
 #include <boost/cstdint.hpp>
 #include <boost/move/move.hpp>
-#include <boost/spirit/include/generate.hpp>
-#include <boost/spirit/include/karma_uint.hpp>
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/date_time_format_parser.hpp>
@@ -95,6 +92,21 @@ inline std::tm to_tm(decomposed_time const& t)
     return res;
 }
 
+template< typename T >
+struct decomposed_time_wrapper :
+    public boost::log::aux::decomposed_time
+{
+    typedef boost::log::aux::decomposed_time base_type;
+    typedef T value_type;
+    value_type m_time;
+
+    BOOST_LOG_DEFAULTED_FUNCTION(decomposed_time_wrapper(), {})
+
+    explicit decomposed_time_wrapper(value_type const& time) : m_time(time)
+    {
+    }
+};
+
 template< typename T, typename CharT >
 class date_time_formatter
 {
@@ -144,7 +156,7 @@ public:
     template< typename FunT >
     void add_formatter(FunT const& fun)
     {
-        m_formatters.push_back(fun);
+        m_formatters.push_back(formatter_type(fun));
     }
 #endif
 
@@ -153,6 +165,9 @@ public:
         m_formatters.swap(that.m_formatters);
     }
 };
+
+template< typename CharT >
+BOOST_LOG_API void put_integer(std::basic_string< CharT >& str, uint32_t value, unsigned int width, CharT fill_char);
 
 template< typename FormatterT, typename CharT >
 class decomposed_time_formatter_builder :
@@ -186,44 +201,26 @@ private:
         string_type m_literal;
     };
 
-    struct integer_formatter_base
-    {
-        static void put(string_type& str, uint32_t value, unsigned int width, char_type fill_char)
-        {
-            char_type buf[std::numeric_limits< uint32_t >::digits10 + 2];
-            char_type* p = buf;
-
-            typedef spirit::karma::uint_generator< uint32_t, 10 > uint_gen;
-            spirit::karma::generate(p, uint_gen(), value);
-            const std::size_t len = p - buf;
-            if (len < width)
-                str.insert(str.end(), width - len, fill_char);
-            str.append(buf, p);
-        }
-    };
-
     template< uint32_t decomposed_time::*MemberV, unsigned int WidthV, char_type FillCharV >
-    struct integer_formatter :
-        public integer_formatter_base
+    struct integer_formatter
     {
         typedef void result_type;
 
         result_type operator() (stream_type& strm, value_type const& value) const
         {
             string_type& str = *static_cast< streambuf_type* >(strm.rdbuf())->storage();
-            integer_formatter_base::put(str, static_cast< decomposed_time const& >(value).*MemberV, WidthV, FillCharV);
+            (put_integer)(str, static_cast< decomposed_time const& >(value).*MemberV, WidthV, FillCharV);
         }
     };
 
-    struct short_year_formatter :
-        public integer_formatter_base
+    struct short_year_formatter
     {
         typedef void result_type;
 
         result_type operator() (stream_type& strm, value_type const& value) const
         {
             string_type& str = *static_cast< streambuf_type* >(strm.rdbuf())->storage();
-            integer_formatter_base::put(str, static_cast< decomposed_time const& >(value).year % 100u, 2, '0');
+            (put_integer)(str, static_cast< decomposed_time const& >(value).year % 100u, 2, '0');
         }
     };
 
@@ -242,28 +239,26 @@ private:
         }
     };
 
-    struct numeric_week_day_formatter :
-        public integer_formatter_base
+    struct numeric_week_day_formatter
     {
         typedef void result_type;
 
         result_type operator() (stream_type& strm, value_type const& value) const
         {
             string_type& str = *static_cast< streambuf_type* >(strm.rdbuf())->storage();
-            integer_formatter_base::put(str, static_cast< decomposed_time const& >(value).week_day(), 1, '0');
+            (put_integer)(str, static_cast< decomposed_time const& >(value).week_day(), 1, '0');
         }
     };
 
     template< char_type FillCharV >
-    struct hours_12_formatter :
-        public integer_formatter_base
+    struct hours_12_formatter
     {
         typedef void result_type;
 
         result_type operator() (stream_type& strm, value_type const& value) const
         {
             string_type& str = *static_cast< streambuf_type* >(strm.rdbuf())->storage();
-            integer_formatter_base::put(str, (static_cast< decomposed_time const& >(value).hours % 12u) + 1u, 2, FillCharV);
+            (put_integer)(str, (static_cast< decomposed_time const& >(value).hours % 12u) + 1u, 2, FillCharV);
         }
     };
 
@@ -289,6 +284,7 @@ private:
 
         result_type operator() (stream_type& strm, value_type const& value) const
         {
+            string_type& str = *static_cast< streambuf_type* >(strm.rdbuf())->storage();
             if (static_cast< decomposed_time const& >(value).negative)
                 str.push_back('-');
             else if (DisplayPositiveV)

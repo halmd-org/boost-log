@@ -57,8 +57,7 @@ namespace aux {
     class scoped_logger_attribute :
         public attribute_scope_guard
     {
-        typedef scoped_logger_attribute this_type;
-        BOOST_MOVABLE_BUT_NOT_COPYABLE(this_type)
+        BOOST_MOVABLE_BUT_NOT_COPYABLE(scoped_logger_attribute)
 
     private:
         //! Logger type

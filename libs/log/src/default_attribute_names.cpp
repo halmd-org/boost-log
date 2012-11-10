@@ -43,12 +43,20 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         const attribute_name severity;
         const attribute_name channel;
         const attribute_name message;
+        const attribute_name line_id;
+        const attribute_name timestamp;
+        const attribute_name process_id;
+        const attribute_name thread_id;
 
     private:
         names() :
             severity("Severity"),
             channel("Channel"),
-            message("Message")
+            message("Message"),
+            line_id("LineID"),
+            timestamp("TimeStamp"),
+            process_id("ProcessID"),
+            thread_id("ThreadID")
         {
         }
 
@@ -79,6 +87,26 @@ BOOST_LOG_API attribute_name channel()
 BOOST_LOG_API attribute_name message()
 {
     return names::get().message;
+}
+
+BOOST_LOG_API attribute_name line_id()
+{
+    return names::get().line_id;
+}
+
+BOOST_LOG_API attribute_name timestamp()
+{
+    return names::get().timestamp;
+}
+
+BOOST_LOG_API attribute_name process_id()
+{
+    return names::get().process_id;
+}
+
+BOOST_LOG_API attribute_name thread_id()
+{
+    return names::get().thread_id;
 }
 
 } // namespace default_attribute_names

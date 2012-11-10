@@ -74,7 +74,7 @@ shared_ptr<
     aux::setup_formatter(*pSink, args,
         typename is_void< typename parameter::binding< ArgsT, keywords::tag::format, void >::type >::type());
 
-    basic_core< CharT >::get()->add_sink(pSink);
+    core::get()->add_sink(pSink);
 
     return pSink;
 }

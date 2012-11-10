@@ -67,14 +67,10 @@ inline shared_ptr< sinks::file::collector > setup_file_collector(ArgsT const& ar
 }
 
 //! The function constructs the sink and adds it to the core
-template< typename CharT, typename ArgsT >
-shared_ptr<
-    BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL<
-        sinks::basic_text_file_backend< CharT >
-    >
-> init_log_to_file(ArgsT const& args)
+template< typename ArgsT >
+shared_ptr< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< sinks::text_file_backend > > init_log_to_file(ArgsT const& args)
 {
-    typedef sinks::basic_text_file_backend< CharT > backend_t;
+    typedef sinks::text_file_backend backend_t;
     shared_ptr< backend_t > pBackend = boost::make_shared< backend_t >(args);
 
     shared_ptr< sinks::file::collector > pCollector = aux::setup_file_collector(args,
@@ -94,7 +90,7 @@ shared_ptr<
     aux::setup_formatter(*pSink, args,
         typename is_void< typename parameter::binding< ArgsT, keywords::tag::format, void >::type >::type());
 
-    basic_core< CharT >::get()->add_sink(pSink);
+    core::get()->add_sink(pSink);
 
     return pSink;
 }
@@ -117,14 +113,10 @@ wrap_file_name(T const& arg, mpl::false_)
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
 #define BOOST_LOG_INIT_LOG_TO_FILE_INTERNAL(z, n, data)\
-    template< typename CharT, BOOST_PP_ENUM_PARAMS(n, typename T) >\
-    inline shared_ptr<\
-        BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL<\
-            sinks::basic_text_file_backend< CharT >\
-        >\
-    > init_log_to_file(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg))\
+    template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
+    inline shared_ptr< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< sinks::text_file_backend > > init_log_to_file(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg))\
     {\
-        return aux::init_log_to_file< CharT >((\
+        return aux::init_log_to_file((\
             aux::wrap_file_name(arg0, typename parameter::aux::is_named_argument< T0 >::type())\
             BOOST_PP_COMMA_IF(BOOST_PP_GREATER(n, 1))\
             BOOST_PP_ENUM_SHIFTED_PARAMS(n, arg)\
@@ -134,44 +126,6 @@ wrap_file_name(T const& arg, mpl::false_)
 BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_PARAMETER_ARGS, BOOST_LOG_INIT_LOG_TO_FILE_INTERNAL, ~)
 
 #undef BOOST_LOG_INIT_LOG_TO_FILE_INTERNAL
-
-#if defined(BOOST_LOG_USE_CHAR)
-
-#define BOOST_LOG_INIT_LOG_TO_FILE_INTERNAL(z, n, data)\
-    template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
-    inline shared_ptr<\
-        BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL<\
-            sinks::text_file_backend\
-        >\
-    > init_log_to_file(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg))\
-    {\
-        return init_log_to_file< char >(BOOST_PP_ENUM_PARAMS(n, arg));\
-    }
-
-BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_PARAMETER_ARGS, BOOST_LOG_INIT_LOG_TO_FILE_INTERNAL, ~)
-
-#undef BOOST_LOG_INIT_LOG_TO_FILE_INTERNAL
-
-#endif // defined(BOOST_LOG_USE_CHAR)
-
-#if defined(BOOST_LOG_USE_WCHAR_T)
-
-#define BOOST_LOG_INIT_LOG_TO_FILE_INTERNAL(z, n, data)\
-    template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
-    inline shared_ptr<\
-        BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL<\
-            sinks::wtext_file_backend\
-        >\
-    > winit_log_to_file(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg))\
-    {\
-        return init_log_to_file< wchar_t >(BOOST_PP_ENUM_PARAMS(n, arg));\
-    }
-
-BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_PARAMETER_ARGS, BOOST_LOG_INIT_LOG_TO_FILE_INTERNAL, ~)
-
-#undef BOOST_LOG_INIT_LOG_TO_FILE_INTERNAL
-
-#endif // defined(BOOST_LOG_USE_WCHAR_T)
 
 #else // BOOST_LOG_DOXYGEN_PASS
 
@@ -195,34 +149,8 @@ BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_PARAMETER_ARGS, BOOST_LOG_INIT_LOG_TO_F
  *                           or a formatter lambda expression (either streaming or Boost.Format-like notation).
  * \return Pointer to the constructed sink.
  */
-template< typename CharT, typename... ArgsT >
-shared_ptr<
-    BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL<
-        sinks::basic_text_file_backend< CharT >
-    >
-> init_log_to_file(ArgsT... const& args);
-
-/*!
- * Equivalent to <tt>init_log_to_file< char >(args...);</tt>
- *
- * \overload
- */
 template< typename... ArgsT >
-shared_ptr<
-    BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL<
-        sinks::text_file_backend
-    >
-> init_log_to_file(ArgsT... const& args);
-
-/*!
- * Equivalent to <tt>init_log_to_file< wchar_t >(args...);</tt>
- */
-template< typename... ArgsT >
-shared_ptr<
-    BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL<
-        sinks::wtext_file_backend
-    >
-> winit_log_to_file(ArgsT... const& args);
+shared_ptr< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< sinks::text_file_backend > > init_log_to_file(ArgsT... const& args);
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 

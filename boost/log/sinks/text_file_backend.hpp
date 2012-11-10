@@ -504,6 +504,11 @@ public:
      */
     BOOST_LOG_API void flush();
 
+    /*!
+     * The method rotates the file
+     */
+    BOOST_LOG_API void rotate_file();
+
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
     //! Constructor implementation
@@ -527,9 +532,6 @@ private:
 
     //! The method sets file name mask
     BOOST_LOG_API void set_file_name_pattern_internal(filesystem::path const& pattern);
-
-    //! The method rotates the file
-    BOOST_LOG_API void rotate_file();
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

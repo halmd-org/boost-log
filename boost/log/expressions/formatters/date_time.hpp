@@ -24,6 +24,7 @@
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/detail/light_function.hpp>
+#include <boost/log/detail/date_time_fmt_gen_traits_fwd.hpp>
 #include <boost/log/expressions/attr_fwd.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/expressions/output_manip_terminal.hpp>
@@ -36,9 +37,6 @@ BOOST_LOG_OPEN_NAMESPACE
 namespace expressions {
 
 namespace aux {
-
-template< typename T, typename CharT, typename VoidT = void >
-struct date_time_formatter_generator_traits;
 
 template< typename T, typename FallbackPolicyT, typename CharT >
 class fmt_date_time_gen :
@@ -54,7 +52,7 @@ public:
     //! String type
     typedef std::basic_string< char_type > string_type;
     //! Formatting stream type
-    typedef basic_formatting_stream< char_type > stream_type;
+    typedef basic_formatting_ostream< char_type > stream_type;
 
     //! Formatter function
     typedef boost::log::aux::light_function2< void, stream_type&, value_type const& > formatter_function_type;

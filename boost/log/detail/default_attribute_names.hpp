@@ -34,6 +34,10 @@ namespace default_attribute_names {
 BOOST_LOG_API attribute_name severity();
 BOOST_LOG_API attribute_name channel();
 BOOST_LOG_API attribute_name message();
+BOOST_LOG_API attribute_name line_id();
+BOOST_LOG_API attribute_name timestamp();
+BOOST_LOG_API attribute_name process_id();
+BOOST_LOG_API attribute_name thread_id();
 
 } // namespace default_attribute_names
 

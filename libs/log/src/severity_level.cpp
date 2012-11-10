@@ -13,10 +13,15 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#include <boost/cstdint.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sources/severity_feature.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_USE_COMPILER_TLS)
+#include <memory>
+#include <boost/bind.hpp>
+#include <boost/checked_delete.hpp>
+#include <boost/thread/thread.hpp> // at_thread_exit
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/thread_specific.hpp>
 #endif
@@ -31,17 +36,17 @@ namespace aux {
 
 #if defined(BOOST_LOG_NO_THREADS)
 
-static int g_Severity = 0;
+static uintmax_t g_Severity = 0;
 
 #elif defined(BOOST_LOG_USE_COMPILER_TLS)
 
-static BOOST_LOG_TLS int g_Severity = 0;
+static BOOST_LOG_TLS uintmax_t g_Severity = 0;
 
 #else
 
 //! Severity level storage class
 class severity_level_holder :
-    public boost::log::aux::lazy_singleton< severity_level_holder, boost::log::aux::thread_specific< int > >
+    public boost::log::aux::lazy_singleton< severity_level_holder, boost::log::aux::thread_specific< uintmax_t* > >
 {
 };
 
@@ -51,29 +56,26 @@ class severity_level_holder :
 #if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_USE_COMPILER_TLS)
 
 //! The method returns the severity level for the current thread
-BOOST_LOG_API int get_severity_level()
+BOOST_LOG_API uintmax_t& get_severity_level()
 {
-    return severity_level_holder::get().get();
-}
-
-//! The method sets the severity level for the current thread
-BOOST_LOG_API void set_severity_level(int level)
-{
-    severity_level_holder::get().set(level);
+    boost::log::aux::thread_specific< uintmax_t* >& tss = severity_level_holder::get();
+    uintmax_t* p = tss.get();
+    if (!p)
+    {
+        std::auto_ptr< uintmax_t > ptr(new uintmax_t(0));
+        tss.set(ptr.get());
+        p = ptr.release();
+        boost::this_thread::at_thread_exit(boost::bind(checked_deleter< uintmax_t >(), p));
+    }
+    return *p;
 }
 
 #else // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_USE_COMPILER_TLS)
 
 //! The method returns the severity level for the current thread
-BOOST_LOG_API int get_severity_level()
+BOOST_LOG_API uintmax_t& get_severity_level()
 {
     return g_Severity;
-}
-
-//! The method sets the severity level for the current thread
-BOOST_LOG_API void set_severity_level(int level)
-{
-    g_Severity = level;
 }
 
 #endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_USE_COMPILER_TLS)

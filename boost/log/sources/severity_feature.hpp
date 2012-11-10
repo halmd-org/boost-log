@@ -19,7 +19,9 @@
 #ifndef BOOST_LOG_SOURCES_SEVERITY_FEATURE_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_SEVERITY_FEATURE_HPP_INCLUDED_
 
+#include <boost/cstdint.hpp>
 #include <boost/intrusive_ptr.hpp>
+#include <boost/static_assert.hpp>
 #include <boost/move/move.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/locks.hpp>
@@ -48,10 +50,8 @@ namespace sources {
 
 namespace aux {
 
-    //! The method returns the severity level for the current thread
-    BOOST_LOG_API int get_severity_level();
-    //! The method sets the severity level for the current thread
-    BOOST_LOG_API void set_severity_level(int level);
+    //! The method returns the storage for severity level for the current thread
+    BOOST_LOG_API uintmax_t& get_severity_level();
 
     //! Severity level attribute implementation
     template< typename LevelT >
@@ -64,6 +64,7 @@ namespace aux {
     public:
         //! Stored level type
         typedef LevelT value_type;
+        BOOST_STATIC_ASSERT_MSG(sizeof(value_type) <= sizeof(uintmax_t), "Boost.Log: Unsupported severity level type, the severity level must fit into uintmax_t");
 
     protected:
         //! Factory implementation
@@ -74,11 +75,10 @@ namespace aux {
             //! The method dispatches the value to the given object
             bool dispatch(type_dispatcher& dispatcher)
             {
-                type_dispatcher::callback< value_type > callback =
-                    dispatcher.get_callback< value_type >();
+                type_dispatcher::callback< value_type > callback = dispatcher.get_callback< value_type >();
                 if (callback)
                 {
-                    callback(static_cast< value_type >(get_severity_level()));
+                    callback(reinterpret_cast< value_type const& >(get_severity_level()));
                     return true;
                 }
                 else
@@ -90,7 +90,7 @@ namespace aux {
             {
     #if !defined(BOOST_LOG_NO_THREADS)
                 return new attributes::basic_attribute_value< value_type >(
-                    static_cast< value_type >(get_severity_level()));
+                    reinterpret_cast< value_type const& >(get_severity_level()));
     #else
                 // With multithreading disabled we may safely return this here. This method will not be called anyway.
                 return this;
@@ -138,7 +138,7 @@ namespace aux {
         //! The method sets the actual level
         void set_value(value_type level)
         {
-            set_severity_level(static_cast< int >(level));
+            reinterpret_cast< value_type& >(get_severity_level()) = level;
         }
     };
 

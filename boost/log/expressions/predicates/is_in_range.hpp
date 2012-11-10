@@ -29,7 +29,7 @@
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/expressions/predicates/predicate.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
-#include <boost/log/utility/functional/is_in_range.hpp>
+#include <boost/log/utility/functional/in_range.hpp>
 
 namespace boost {
 

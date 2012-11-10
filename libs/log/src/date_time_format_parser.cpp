@@ -13,21 +13,15 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#include <boost/ref.hpp>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-#include <boost/bind/apply.hpp>
-#include <boost/spirit/include/qi_core.hpp>
-#include <boost/spirit/include/qi_char.hpp>
-#include <boost/spirit/include/qi_raw.hpp>
-#include <boost/spirit/include/qi_eoi.hpp>
-#include <boost/spirit/include/qi_symbols.hpp>
+#include <cstring>
+#include <string>
+#include <algorithm>
+#include <boost/spirit/include/karma_uint.hpp>
+#include <boost/spirit/include/karma_generate.hpp>
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/log/detail/date_time_format_parser.hpp>
-#include <boost/log/utility/functional/as_action.hpp>
-#include "spirit_encoding.hpp"
 
-namespace qi = boost::spirit::qi;
+namespace karma = boost::spirit::karma;
 
 namespace boost {
 
@@ -50,40 +44,9 @@ struct string_constants< char >
     static const char_type* iso_date_format() { return "%Y%m%d"; }
     static const char_type* extended_iso_date_format() { return "%Y-%m-%d"; }
 
-    static const char_type* short_year_placeholder() { return "%y"; }
-    static const char_type* full_year_placeholder() { return "%Y"; }
-    static const char_type* numeric_month_placeholder() { return "%m"; }
-    static const char_type* short_month_placeholder() { return "%b"; }
-    static const char_type* full_month_placeholder() { return "%B"; }
-    static const char_type* month_day_leading_zero_placeholder() { return "%d"; }
-    static const char_type* month_day_leading_space_placeholder() { return "%e"; }
-    static const char_type* numeric_week_day_placeholder() { return "%w"; }
-    static const char_type* short_week_day_placeholder() { return "%a"; }
-    static const char_type* full_week_day_placeholder() { return "%A"; }
-
     static const char_type* iso_time_format() { return "%H%M%S"; }
     static const char_type* extended_iso_time_format() { return "%H:%M:%S"; }
-    static const char_type* default_time_format() { return "%H:%M:%S.f"; }
-
-    static const char_type* extended_iso_time_placeholder() { return "%T"; }
-
-    static const char_type* hours_placeholder() { return "%O"; }
-    static const char_type* hours_24_leading_zero_placeholder() { return "%H"; }
-    static const char_type* hours_24_leading_space_placeholder() { return "%k"; }
-    static const char_type* hours_12_leading_zero_placeholder() { return "%I"; }
-    static const char_type* hours_12_leading_space_placeholder() { return "%l"; }
-    static const char_type* minutes_placeholder() { return "%M"; }
-    static const char_type* seconds_placeholder() { return "%S"; }
-    static const char_type* fractional_seconds_placeholder() { return "%f"; }
-    static const char_type* am_pm_lowercase_placeholder() { return "%P"; }
-    static const char_type* am_pm_uppercase_placeholder() { return "%p"; }
-    static const char_type* duration_minus_placeholder() { return "%-"; }
-    static const char_type* duration_sign_placeholder() { return "%+"; }
-    static const char_type* iso_timezone_placeholder() { return "%q"; }
-    static const char_type* extended_iso_timezone_placeholder() { return "%Q"; }
-
-    static const char_type* percent_placeholder() { return "%%"; }
-    static iterator_range< const char_type* > percent_string() { return boost::as_literal("%"); }
+    static const char_type* default_time_format() { return "%H:%M:%S.%f"; }
 };
 
 #endif // BOOST_LOG_USE_CHAR
@@ -98,129 +61,281 @@ struct string_constants< wchar_t >
     static const char_type* iso_date_format() { return L"%Y%m%d"; }
     static const char_type* extended_iso_date_format() { return L"%Y-%m-%d"; }
 
-    static const char_type* short_year_placeholder() { return L"%y"; }
-    static const char_type* full_year_placeholder() { return L"%Y"; }
-    static const char_type* numeric_month_placeholder() { return L"%m"; }
-    static const char_type* short_month_placeholder() { return L"%b"; }
-    static const char_type* full_month_placeholder() { return L"%B"; }
-    static const char_type* month_day_leading_zero_placeholder() { return L"%d"; }
-    static const char_type* month_day_leading_space_placeholder() { return L"%e"; }
-    static const char_type* numeric_week_day_placeholder() { return L"%w"; }
-    static const char_type* short_week_day_placeholder() { return L"%a"; }
-    static const char_type* full_week_day_placeholder() { return L"%A"; }
-
     static const char_type* iso_time_format() { return L"%H%M%S"; }
     static const char_type* extended_iso_time_format() { return L"%H:%M:%S"; }
-    static const char_type* default_time_format() { return L"%H:%M:%S.f"; }
-
-    static const char_type* extended_iso_time_placeholder() { return L"%T"; }
-
-    static const char_type* hours_placeholder() { return L"%O"; }
-    static const char_type* hours_24_leading_zero_placeholder() { return L"%H"; }
-    static const char_type* hours_24_leading_space_placeholder() { return L"%k"; }
-    static const char_type* hours_12_leading_zero_placeholder() { return L"%I"; }
-    static const char_type* hours_12_leading_space_placeholder() { return L"%l"; }
-    static const char_type* minutes_placeholder() { return L"%M"; }
-    static const char_type* seconds_placeholder() { return L"%S"; }
-    static const char_type* fractional_seconds_placeholder() { return L"%f"; }
-    static const char_type* am_pm_lowercase_placeholder() { return L"%P"; }
-    static const char_type* am_pm_uppercase_placeholder() { return L"%p"; }
-    static const char_type* duration_minus_placeholder() { return L"%-"; }
-    static const char_type* duration_sign_placeholder() { return L"%+"; }
-    static const char_type* iso_timezone_placeholder() { return L"%q"; }
-    static const char_type* extended_iso_timezone_placeholder() { return L"%Q"; }
-
-    static const char_type* percent_placeholder() { return L"%%"; }
-    static iterator_range< const char_type* > percent_string() { return boost::as_literal(L"%"); }
+    static const char_type* default_time_format() { return L"%H:%M:%S.%f"; }
 };
 
 #endif // BOOST_LOG_USE_WCHAR_T
 
-template< typename CharT >
-inline void add_predefined_date_formats(date_format_parser_callback< CharT >& callback, qi::symbols< CharT, boost::function< void () > >& syms)
-{
-    typedef date_format_parser_callback< CharT > callback_type;
-    typedef string_constants< CharT > constants;
-
-    syms.add(constants::iso_date_format(), boost::bind(&callback_type::on_iso_date, boost::ref(callback)));
-    syms.add(constants::extended_iso_date_format(), boost::bind(&callback_type::on_extended_iso_date, boost::ref(callback)));
-}
-
-template< typename CharT >
-inline void add_date_placeholders(date_format_parser_callback< CharT >& callback, qi::symbols< CharT, boost::function< void () > >& syms)
-{
-    typedef date_format_parser_callback< CharT > callback_type;
-    typedef string_constants< CharT > constants;
-
-    syms.add(constants::short_year_placeholder(), boost::bind(&callback_type::on_short_year, boost::ref(callback)));
-    syms.add(constants::full_year_placeholder(), boost::bind(&callback_type::on_full_year, boost::ref(callback)));
-    syms.add(constants::numeric_month_placeholder(), boost::bind(&callback_type::on_numeric_month, boost::ref(callback)));
-    syms.add(constants::short_month_placeholder(), boost::bind(&callback_type::on_short_month, boost::ref(callback)));
-    syms.add(constants::full_month_placeholder(), boost::bind(&callback_type::on_full_month, boost::ref(callback)));
-    syms.add(constants::month_day_leading_zero_placeholder(), boost::bind(&callback_type::on_month_day, boost::ref(callback), true));
-    syms.add(constants::month_day_leading_space_placeholder(), boost::bind(&callback_type::on_month_day, boost::ref(callback), false));
-    syms.add(constants::numeric_week_day_placeholder(), boost::bind(&callback_type::on_numeric_week_day, boost::ref(callback)));
-    syms.add(constants::short_week_day_placeholder(), boost::bind(&callback_type::on_short_week_day, boost::ref(callback)));
-    syms.add(constants::full_week_day_placeholder(), boost::bind(&callback_type::on_full_week_day, boost::ref(callback)));
-}
-
-template< typename CharT >
-inline void add_predefined_time_formats(time_format_parser_callback< CharT >& callback, qi::symbols< CharT, boost::function< void () > >& syms)
-{
-    typedef time_format_parser_callback< CharT > callback_type;
-    typedef string_constants< CharT > constants;
-
-    syms.add(constants::default_time_format(), boost::bind(&callback_type::on_default_time, boost::ref(callback)));
-    syms.add(constants::iso_time_format(), boost::bind(&callback_type::on_iso_time, boost::ref(callback)));
-    syms.add(constants::extended_iso_time_format(), boost::bind(&callback_type::on_extended_iso_time, boost::ref(callback)));
-}
-
-template< typename CharT >
-inline void add_time_placeholders(time_format_parser_callback< CharT >& callback, qi::symbols< CharT, boost::function< void () > >& syms)
-{
-    typedef time_format_parser_callback< CharT > callback_type;
-    typedef string_constants< CharT > constants;
-
-    syms.add(constants::extended_iso_time_placeholder(), boost::bind(&callback_type::on_extended_iso_time, boost::ref(callback)));
-    syms.add(constants::hours_placeholder(), boost::bind(&callback_type::on_hours, boost::ref(callback), true));
-    syms.add(constants::hours_24_leading_zero_placeholder(), boost::bind(&callback_type::on_hours, boost::ref(callback), true));
-    syms.add(constants::hours_24_leading_space_placeholder(), boost::bind(&callback_type::on_hours, boost::ref(callback), false));
-    syms.add(constants::hours_12_leading_zero_placeholder(), boost::bind(&callback_type::on_hours_12, boost::ref(callback), true));
-    syms.add(constants::hours_12_leading_space_placeholder(), boost::bind(&callback_type::on_hours_12, boost::ref(callback), false));
-    syms.add(constants::minutes_placeholder(), boost::bind(&callback_type::on_minutes, boost::ref(callback)));
-    syms.add(constants::seconds_placeholder(), boost::bind(&callback_type::on_seconds, boost::ref(callback)));
-    syms.add(constants::fractional_seconds_placeholder(), boost::bind(&callback_type::on_fractional_seconds, boost::ref(callback)));
-    syms.add(constants::am_pm_lowercase_placeholder(), boost::bind(&callback_type::on_am_pm, boost::ref(callback), false));
-    syms.add(constants::am_pm_uppercase_placeholder(), boost::bind(&callback_type::on_am_pm, boost::ref(callback), true));
-    syms.add(constants::duration_minus_placeholder(), boost::bind(&callback_type::on_duration_sign, boost::ref(callback), false));
-    syms.add(constants::duration_sign_placeholder(), boost::bind(&callback_type::on_duration_sign, boost::ref(callback), true));
-    syms.add(constants::iso_timezone_placeholder(), boost::bind(&callback_type::on_iso_time_zone, boost::ref(callback)));
-    syms.add(constants::extended_iso_timezone_placeholder(), boost::bind(&callback_type::on_extended_iso_time_zone, boost::ref(callback)));
-}
-
-template< typename CallbackT, typename CharT >
-inline void add_common_placeholders(CallbackT& callback, qi::symbols< CharT, boost::function< void () > >& syms)
+template< typename CallbackT >
+struct common_flags
 {
     typedef CallbackT callback_type;
-    typedef string_constants< CharT > constants;
+    typedef typename callback_type::char_type char_type;
+    typedef std::basic_string< char_type > string_type;
 
-    syms.add(constants::percent_placeholder(), boost::bind(&callback_type::on_literal, boost::ref(callback), constants::percent_string()));
-}
+    const char_type* parse(const char_type* begin, const char_type* end, callback_type& callback)
+    {
+        switch (begin[1])
+        {
+        case '%':
+            m_literal.push_back('%');
+            break;
 
-template< typename CharT, typename CallbackT >
-inline bool parse_format(const CharT*& begin, const CharT* end, qi::symbols< CharT, boost::function< void () > > const& syms, CallbackT& callback)
+        default:
+            flush(callback);
+            callback.on_placeholder(iterator_range< const char_type* >(begin, begin + 2));
+            break;
+        }
+
+        return begin + 2;
+    }
+
+    void add_literal(const char_type* begin, const char_type* end)
+    {
+        m_literal.append(begin, end);
+    }
+
+    void flush(callback_type& callback)
+    {
+        if (!m_literal.empty())
+        {
+            const char_type* p = m_literal.c_str();
+            callback.on_literal(iterator_range< const char_type* >(p, p + m_literal.size()));
+            m_literal.clear();
+        }
+    }
+
+private:
+    string_type m_literal;
+};
+
+template< typename BaseT >
+struct date_flags :
+    public BaseT
+{
+    typedef typename BaseT::callback_type callback_type;
+    typedef typename BaseT::char_type char_type;
+
+    const char_type* parse(const char_type* begin, const char_type* end, callback_type& callback)
+    {
+        typedef string_constants< char_type > constants;
+
+        switch (begin[1])
+        {
+        case 'Y':
+            {
+                this->flush(callback);
+
+                std::size_t len = end - begin;
+                if (len >= 8 && std::memcmp(begin, constants::extended_iso_date_format(), 8) == 0)
+                {
+                    callback.on_extended_iso_date();
+                    return begin + 8;
+                }
+                else if (len >= 6 && std::memcmp(begin, constants::iso_date_format(), 6) == 0)
+                {
+                    callback.on_iso_date();
+                    return begin + 6;
+                }
+                else
+                {
+                    callback.on_full_year();
+                }
+            }
+            break;
+
+        case 'y':
+            this->flush(callback);
+            callback.on_short_year();
+            break;
+
+        case 'm':
+            this->flush(callback);
+            callback.on_numeric_month();
+            break;
+
+        case 'B':
+            this->flush(callback);
+            callback.on_full_month();
+            break;
+
+        case 'b':
+            this->flush(callback);
+            callback.on_short_month();
+            break;
+
+        case 'd':
+            this->flush(callback);
+            callback.on_month_day(true);
+            break;
+
+        case 'e':
+            this->flush(callback);
+            callback.on_month_day(false);
+            break;
+
+        case 'w':
+            this->flush(callback);
+            callback.on_numeric_week_day();
+            break;
+
+        case 'A':
+            this->flush(callback);
+            callback.on_full_week_day();
+            break;
+
+        case 'a':
+            this->flush(callback);
+            callback.on_short_week_day();
+            break;
+
+        default:
+            return BaseT::parse(begin, end, callback);
+        }
+
+        return begin + 2;
+    }
+};
+
+template< typename BaseT >
+struct time_flags :
+    public BaseT
+{
+    typedef typename BaseT::callback_type callback_type;
+    typedef typename BaseT::char_type char_type;
+
+    const char_type* parse(const char_type* begin, const char_type* end, callback_type& callback)
+    {
+        typedef string_constants< char_type > constants;
+
+        switch (begin[1])
+        {
+        case 'O':
+        case 'H':
+            {
+                this->flush(callback);
+
+                std::size_t len = end - begin;
+                if (len >= 11 && std::memcmp(begin, constants::default_time_format(), 11) == 0)
+                {
+                    callback.on_default_time();
+                    return begin + 11;
+                }
+                else if (len >= 8 && std::memcmp(begin, constants::extended_iso_time_format(), 8) == 0)
+                {
+                    callback.on_extended_iso_time();
+                    return begin + 8;
+                }
+                else if (len >= 6 && std::memcmp(begin, constants::iso_time_format(), 6) == 0)
+                {
+                    callback.on_iso_time();
+                    return begin + 6;
+                }
+                else
+                {
+                    callback.on_hours(true);
+                }
+            }
+            break;
+
+        case 'T':
+            this->flush(callback);
+            callback.on_extended_iso_time();
+            break;
+
+        case 'k':
+            this->flush(callback);
+            callback.on_hours(false);
+            break;
+
+        case 'I':
+            this->flush(callback);
+            callback.on_hours_12(true);
+            break;
+
+        case 'l':
+            this->flush(callback);
+            callback.on_hours_12(false);
+            break;
+
+        case 'M':
+            this->flush(callback);
+            callback.on_minutes();
+            break;
+
+        case 'S':
+            this->flush(callback);
+            callback.on_minutes();
+            break;
+
+        case 'f':
+            this->flush(callback);
+            callback.on_fractional_seconds();
+            break;
+
+        case 'P':
+            this->flush(callback);
+            callback.on_am_pm(false);
+            break;
+
+        case 'p':
+            this->flush(callback);
+            callback.on_am_pm(true);
+            break;
+
+        case 'Q':
+            this->flush(callback);
+            callback.on_extended_iso_time_zone();
+            break;
+
+        case 'q':
+            this->flush(callback);
+            callback.on_iso_time_zone();
+            break;
+
+        case '-':
+            this->flush(callback);
+            callback.on_duration_sign(false);
+            break;
+
+        case '+':
+            this->flush(callback);
+            callback.on_duration_sign(true);
+            break;
+
+        default:
+            return BaseT::parse(begin, end, callback);
+        }
+
+        return begin + 2;
+    }
+};
+
+template< typename CharT, typename ParserT, typename CallbackT >
+inline void parse_format(const CharT* begin, const CharT* end, ParserT& parser, CallbackT& callback)
 {
     typedef CharT char_type;
     typedef CallbackT callback_type;
 
-    return qi::parse(begin, end,
-        *(
-            syms[boost::log::as_action(boost::apply< void >())] |
-            qi::raw[ static_cast< char_type >('%') >> qi::char_ ][boost::bind(&callback_type::on_placeholder, boost::ref(callback), _1)] |
-            qi::raw[ *(qi::char_ - static_cast< char_type >('%')) ][boost::bind(&callback_type::on_literal, boost::ref(callback), _1)] |
-            qi::raw[ static_cast< char_type >('%') >> qi::eoi ][boost::bind(&callback_type::on_literal, boost::ref(callback), _1)]
-        )
-    );
+    while (begin != end)
+    {
+        const char_type* p = std::find(begin, end, static_cast< char_type >('%'));
+        parser.add_literal(begin, p);
+
+        if ((end - p) >= 2)
+        {
+            begin = parser.parse(p, end, callback);
+        }
+        else
+        {
+            parser.add_literal(p, end); // a single '%' character at the end of the string
+            begin = end;
+        }
+    }
+
+    parser.flush(callback);
 }
 
 } // namespace
@@ -231,13 +346,8 @@ void parse_date_format(const CharT* begin, const CharT* end, date_format_parser_
 {
     typedef CharT char_type;
     typedef date_format_parser_callback< char_type > callback_type;
-
-    qi::symbols< char_type, boost::function< void () > > syms;
-    add_common_placeholders(callback, syms);
-    add_date_placeholders(callback, syms);
-    add_predefined_date_formats(callback, syms);
-
-    parse_format(begin, end, syms, callback);
+    date_flags< common_flags< callback_type > > parser;
+    parse_format(begin, end, parser, callback);
 }
 
 //! Parses the time format string and invokes the callback object
@@ -246,13 +356,8 @@ void parse_time_format(const CharT* begin, const CharT* end, time_format_parser_
 {
     typedef CharT char_type;
     typedef time_format_parser_callback< char_type > callback_type;
-
-    qi::symbols< char_type, boost::function< void () > > syms;
-    add_common_placeholders(callback, syms);
-    add_time_placeholders(callback, syms);
-    add_predefined_time_formats(callback, syms);
-
-    parse_format(begin, end, syms, callback);
+    time_flags< common_flags< callback_type > > parser;
+    parse_format(begin, end, parser, callback);
 }
 
 //! Parses the date and time format string and invokes the callback object
@@ -261,15 +366,23 @@ void parse_date_time_format(const CharT* begin, const CharT* end, date_time_form
 {
     typedef CharT char_type;
     typedef date_time_format_parser_callback< char_type > callback_type;
+    date_flags< time_flags< common_flags< callback_type > > > parser;
+    parse_format(begin, end, parser, callback);
+}
 
-    qi::symbols< char_type, boost::function< void () > > syms;
-    add_common_placeholders(callback, syms);
-    add_time_placeholders(callback, syms);
-    add_date_placeholders(callback, syms);
-    add_predefined_time_formats(callback, syms);
-    add_predefined_date_formats(callback, syms);
+template< typename CharT >
+void put_integer(std::basic_string< CharT >& str, uint32_t value, unsigned int width, CharT fill_char)
+{
+    typedef CharT char_type;
+    char_type buf[std::numeric_limits< uint32_t >::digits10 + 2];
+    char_type* p = buf;
 
-    parse_format(begin, end, syms, callback);
+    typedef karma::uint_generator< uint32_t, 10 > uint_gen;
+    karma::generate(p, uint_gen(), value);
+    const std::size_t len = p - buf;
+    if (len < width)
+        str.insert(str.end(), width - len, fill_char);
+    str.append(buf, p);
 }
 
 #ifdef BOOST_LOG_USE_CHAR
@@ -280,6 +393,8 @@ template BOOST_LOG_API
 void parse_time_format(const char* begin, const char* end, time_format_parser_callback< char >& callback);
 template BOOST_LOG_API
 void parse_date_time_format(const char* begin, const char* end, date_time_format_parser_callback< char >& callback);
+template BOOST_LOG_API
+void put_integer(std::basic_string< char >& str, uint32_t value, unsigned int width, char fill_char);
 
 #endif // BOOST_LOG_USE_CHAR
 
@@ -291,6 +406,8 @@ template BOOST_LOG_API
 void parse_time_format(const wchar_t* begin, const wchar_t* end, time_format_parser_callback< wchar_t >& callback);
 template BOOST_LOG_API
 void parse_date_time_format(const wchar_t* begin, const wchar_t* end, date_time_format_parser_callback< wchar_t >& callback);
+template BOOST_LOG_API
+void put_integer(std::basic_string< wchar_t >& str, uint32_t value, unsigned int width, wchar_t fill_char);
 
 #endif // BOOST_LOG_USE_WCHAR_T
 

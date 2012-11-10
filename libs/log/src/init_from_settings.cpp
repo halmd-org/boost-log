@@ -657,7 +657,7 @@ void register_sink_factory(
     > const& factory)
 {
     sinks_repository< CharT >& repo = sinks_repository< CharT >::get();
-    BOOST_LOG_EXPR_IF_MT(lock_guard< log::aux::light_rw_mutex > _(repo.m_Mutex);)
+    BOOST_LOG_EXPR_IF_MT(lock_guard< log::aux::light_rw_mutex > lock(repo.m_Mutex);)
     repo.m_Factories[sink_name] = factory;
 }
 

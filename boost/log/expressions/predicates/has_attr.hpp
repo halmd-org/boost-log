@@ -120,7 +120,7 @@ public:
      * \param rec A log record
      * \return \c true if the log record contains the sought attribute value, \c false otherwise
      */
-    result_type operator() (record const& rec) const
+    result_type operator() (boost::log::record const& rec) const
     {
         return operator()(rec.attribute_values());
     }
