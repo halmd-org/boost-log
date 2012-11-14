@@ -92,7 +92,8 @@ int main(int argc, char* argv[])
             << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d, %H:%M:%S.%f")
             << " [" << expr::format_date_time< attrs::timer::value_type >("Uptime", "%O:%M:%S")
             << "] <" << expr::attr< severity_level >("Severity")
-            << "> " << expr::message
+            << "> " << expr::format_named_scope("Scope", keywords::format = "%n (%f:%l)") << " "
+            << expr::message
 //        keywords::format = fmt::format("%1% [%2%] <%3%> %4%")
 //            % fmt::date_time("TimeStamp", std::nothrow)
 //            % fmt::time_duration("Uptime", std::nothrow)

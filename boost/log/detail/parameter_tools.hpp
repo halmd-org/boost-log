@@ -24,6 +24,8 @@
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
+#include <boost/preprocessor/facilities/intercept.hpp>
+#include <boost/preprocessor/arithmetic/dec.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/log/detail/prologue.hpp>
 
@@ -65,8 +67,40 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-    // Yeah, not too cute. The empty_arg_list class should really be public.
-    typedef boost::parameter::aux::empty_arg_list empty_arg_list;
+// Yeah, not too cute. The empty_arg_list class should really be public.
+typedef boost::parameter::aux::empty_arg_list empty_arg_list;
+
+#if !(defined(BOOST_NO_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES))
+
+//! The metafunction generates argument pack
+template< typename ArgT0, typename... ArgsT >
+struct make_arg_list
+{
+    typedef boost::parameter::aux::arg_list< ArgT0, typename make_arg_list< ArgsT... >::type > type;
+};
+
+template< typename ArgT0 >
+struct make_arg_list< ArgT0 >
+{
+    typedef boost::parameter::aux::arg_list< ArgT0 > type;
+};
+
+#else
+
+//! The metafunction generates argument pack
+template< typename ArgT0, BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_DEC(BOOST_LOG_MAX_PARAMETER_ARGS), typename T, = void BOOST_PP_INTERCEPT) >
+struct make_arg_list
+{
+    typedef boost::parameter::aux::arg_list< ArgT0, typename make_arg_list< BOOST_PP_ENUM_PARAMS(BOOST_PP_DEC(BOOST_LOG_MAX_PARAMETER_ARGS), T) >::type > type;
+};
+
+template< typename ArgT0 >
+struct make_arg_list< ArgT0, BOOST_PP_ENUM_PARAMS(BOOST_PP_DEC(BOOST_LOG_MAX_PARAMETER_ARGS), void BOOST_PP_INTERCEPT) >
+{
+    typedef boost::parameter::aux::arg_list< ArgT0 > type;
+};
+
+#endif
 
 } // namespace aux
 
