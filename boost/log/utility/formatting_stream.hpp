@@ -194,6 +194,11 @@ public:
         return *this;
     }
 
+    streambuf_type* rdbuf()
+    {
+        return &this->streambuf_base_type::member;
+    }
+
     basic_formatting_ostream& operator<< (ios_base_manip manip)
     {
         *static_cast< ostream_type* >(this) << manip;

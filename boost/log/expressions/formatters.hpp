@@ -21,6 +21,7 @@
 
 #include <boost/log/detail/prologue.hpp>
 
+#include <boost/log/expressions/formatters/format.hpp>
 #include <boost/log/expressions/formatters/date_time.hpp>
 #include <boost/log/expressions/formatters/named_scope.hpp>
 

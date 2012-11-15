@@ -180,7 +180,6 @@ public:
     typedef typename formatter_type::value_type value_type;
     typedef typename formatter_type::stream_type stream_type;
     typedef typename stream_type::string_type string_type;
-    typedef typename stream_type::streambuf_type streambuf_type;
 
 private:
     struct literal_formatter
@@ -193,7 +192,7 @@ private:
 
         result_type operator() (stream_type& strm, value_type const&) const
         {
-            string_type& str = *static_cast< streambuf_type* >(strm.rdbuf())->storage();
+            string_type& str = *strm.rdbuf()->storage();
             str.append(m_literal);
         }
 
@@ -208,7 +207,7 @@ private:
 
         result_type operator() (stream_type& strm, value_type const& value) const
         {
-            string_type& str = *static_cast< streambuf_type* >(strm.rdbuf())->storage();
+            string_type& str = *strm.rdbuf()->storage();
             (put_integer)(str, static_cast< decomposed_time const& >(value).*MemberV, WidthV, FillCharV);
         }
     };
@@ -219,7 +218,7 @@ private:
 
         result_type operator() (stream_type& strm, value_type const& value) const
         {
-            string_type& str = *static_cast< streambuf_type* >(strm.rdbuf())->storage();
+            string_type& str = *strm.rdbuf()->storage();
             (put_integer)(str, static_cast< decomposed_time const& >(value).year % 100u, 2, '0');
         }
     };
@@ -245,7 +244,7 @@ private:
 
         result_type operator() (stream_type& strm, value_type const& value) const
         {
-            string_type& str = *static_cast< streambuf_type* >(strm.rdbuf())->storage();
+            string_type& str = *strm.rdbuf()->storage();
             (put_integer)(str, static_cast< decomposed_time const& >(value).week_day(), 1, '0');
         }
     };
@@ -257,7 +256,7 @@ private:
 
         result_type operator() (stream_type& strm, value_type const& value) const
         {
-            string_type& str = *static_cast< streambuf_type* >(strm.rdbuf())->storage();
+            string_type& str = *strm.rdbuf()->storage();
             (put_integer)(str, (static_cast< decomposed_time const& >(value).hours % 12u) + 1u, 2, FillCharV);
         }
     };
@@ -272,7 +271,7 @@ private:
             static const char_type am[] = { static_cast< char_type >(UpperCaseV ? 'A' : 'a'), static_cast< char_type >(UpperCaseV ? 'M' : 'm'), static_cast< char_type >(0) };
             static const char_type pm[] = { static_cast< char_type >(UpperCaseV ? 'P' : 'p'), static_cast< char_type >(UpperCaseV ? 'M' : 'm'), static_cast< char_type >(0) };
 
-            string_type& str = *static_cast< streambuf_type* >(strm.rdbuf())->storage();
+            string_type& str = *strm.rdbuf()->storage();
             str.append(((static_cast< decomposed_time const& >(value).hours > 11) ? pm : am), 2u);
         }
     };
@@ -284,7 +283,7 @@ private:
 
         result_type operator() (stream_type& strm, value_type const& value) const
         {
-            string_type& str = *static_cast< streambuf_type* >(strm.rdbuf())->storage();
+            string_type& str = *strm.rdbuf()->storage();
             if (static_cast< decomposed_time const& >(value).negative)
                 str.push_back('-');
             else if (DisplayPositiveV)
