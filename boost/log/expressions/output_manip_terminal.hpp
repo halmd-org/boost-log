@@ -29,10 +29,10 @@
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/fusion/sequence/intrinsic/at.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/custom_terminal_spec.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/utility/functional/bind.hpp>
-#include <boost/log/expressions/terminal.hpp> // to define custom_terminal specializations
 
 namespace boost {
 
@@ -42,19 +42,19 @@ namespace expressions {
 
 //! Attribute stream output expression
 template< typename LeftT, typename T, typename FallbackPolicyT, typename ImplT >
-class output_manip_terminal :
-    private value_visitor_invoker< T, FallbackPolicyT >
+class output_manip_terminal
 {
+private:
+    //! Self type
+    typedef output_manip_terminal this_type;
+    //! Attribute value visitor invoker
+    typedef value_visitor_invoker< T, FallbackPolicyT > visitor_invoker_type;
+    //! Manipulator implementation
+    typedef ImplT impl_type;
+
 public:
     //! Internal typedef for type categorization
     typedef void _is_boost_log_terminal;
-
-    //! Self type
-    typedef output_manip_terminal this_type;
-    //! Base type
-    typedef value_visitor_invoker< T, FallbackPolicyT > base_type;
-    //! Manipulator implementation
-    typedef ImplT impl_type;
 
     //! Result type definition
     template< typename >
@@ -87,49 +87,52 @@ private:
     LeftT m_left;
     //! Attribute name
     const attribute_name m_name;
+    //! Attribute value visitor invoker
+    visitor_invoker_type m_visitor_invoker;
     //! Manipulator implementation
     impl_type m_impl;
 
 public:
     //! Initializing constructor
-    output_manip_terminal(LeftT const& left, attribute_name const& name) : base_type(), m_left(left), m_name(name), m_impl()
+    output_manip_terminal(LeftT const& left, attribute_name const& name) : m_left(left), m_name(name)
     {
     }
 
     //! Initializing constructor
-    output_manip_terminal(LeftT const& left, attribute_name const& name, impl_type const& impl) : base_type(), m_left(left), m_name(name), m_impl(impl)
+    output_manip_terminal(LeftT const& left, attribute_name const& name, impl_type const& impl) : m_left(left), m_name(name), m_impl(impl)
     {
     }
 
     //! Initializing constructor
     template< typename U >
     output_manip_terminal(LeftT const& left, attribute_name const& name, impl_type const& impl, U const& arg) :
-        base_type(arg), m_left(left), m_name(name), m_impl(impl)
+        m_left(left), m_name(name), m_visitor_invoker(arg), m_impl(impl)
     {
     }
 
     //! Copy constructor
-    output_manip_terminal(output_manip_terminal const& that) : base_type(static_cast< base_type const& >(that)), m_left(that.m_left), m_name(that.m_name), m_impl(that.m_impl)
+    output_manip_terminal(output_manip_terminal const& that) :
+        m_left(that.m_left), m_name(that.m_name), m_visitor_invoker(that.m_visitor_invoker), m_impl(that.m_impl)
     {
     }
 
     //! Invokation operator
     template< typename ContextT >
-    typename result< this_type(ContextT) >::type operator() (ContextT const& ctx)
+    typename result< this_type(ContextT const&) >::type operator() (ContextT const& ctx)
     {
-        typedef typename result< this_type(ContextT) >::type result_type;
+        typedef typename result< this_type(ContextT const&) >::type result_type;
         result_type strm = phoenix::eval(m_left, ctx);
-        base_type::operator() (m_name, fusion::at_c< 0 >(phoenix::env(ctx).args()), binder1st< impl_type&, result_type >(m_impl, strm));
+        m_visitor_invoker(m_name, fusion::at_c< 0 >(phoenix::env(ctx).args()), binder1st< impl_type&, result_type >(m_impl, strm));
         return strm;
     }
 
     //! Invokation operator
     template< typename ContextT >
-    typename result< const this_type(ContextT) >::type operator() (ContextT const& ctx) const
+    typename result< const this_type(ContextT const&) >::type operator() (ContextT const& ctx) const
     {
-        typedef typename result< const this_type(ContextT) >::type result_type;
+        typedef typename result< const this_type(ContextT const&) >::type result_type;
         result_type strm = phoenix::eval(m_left, ctx);
-        base_type::operator() (m_name, fusion::at_c< 0 >(phoenix::env(ctx).args()), binder1st< impl_type const&, result_type >(m_impl, strm));
+        m_visitor_invoker(m_name, fusion::at_c< 0 >(phoenix::env(ctx).args()), binder1st< impl_type const&, result_type >(m_impl, strm));
         return strm;
     }
 };

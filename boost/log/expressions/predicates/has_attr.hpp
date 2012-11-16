@@ -24,9 +24,8 @@
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
-#include <boost/log/expressions/terminal.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
-#include <boost/log/expressions/unary_adapter.hpp>
+#include <boost/log/expressions/unary_function_terminal.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/utility/functional/nop.hpp>
 
@@ -131,9 +130,9 @@ public:
  * presence in a log record. The node will also check that the attribute value has the specified type, if present.
  */
 template< typename AttributeValueT >
-BOOST_LOG_FORCEINLINE phoenix::actor< terminal< unary_adapter< has_attribute< AttributeValueT > > > > has_attr(attribute_name const& name)
+BOOST_LOG_FORCEINLINE phoenix::actor< unary_function_terminal< has_attribute< AttributeValueT > > > has_attr(attribute_name const& name)
 {
-    typedef terminal< unary_adapter< has_attribute< AttributeValueT > > > terminal_type;
+    typedef unary_function_terminal< has_attribute< AttributeValueT > > terminal_type;
     phoenix::actor< terminal_type > act = {{ terminal_type(name) }};
     return act;
 }
@@ -142,9 +141,9 @@ BOOST_LOG_FORCEINLINE phoenix::actor< terminal< unary_adapter< has_attribute< At
  * The function generates a terminal node in a template expression. The node will check for the attribute value
  * presence in a log record.
  */
-BOOST_LOG_FORCEINLINE phoenix::actor< terminal< unary_adapter< has_attribute< void > > > > has_attr(attribute_name const& name)
+BOOST_LOG_FORCEINLINE phoenix::actor< unary_function_terminal< has_attribute< void > > > has_attr(attribute_name const& name)
 {
-    typedef terminal< unary_adapter< has_attribute< void > > > terminal_type;
+    typedef unary_function_terminal< has_attribute< void > > terminal_type;
     phoenix::actor< terminal_type > act = {{ terminal_type(name) }};
     return act;
 }
@@ -154,9 +153,9 @@ BOOST_LOG_FORCEINLINE phoenix::actor< terminal< unary_adapter< has_attribute< vo
  * presence in a log record. The node will also check that the attribute value has the specified type, if present.
  */
 template< typename DescriptorT, template< typename > class ActorT >
-BOOST_LOG_FORCEINLINE phoenix::actor< terminal< unary_adapter< has_attribute< typename DescriptorT::value_type > > > > has_attr(attribute_keyword< DescriptorT, ActorT > const&)
+BOOST_LOG_FORCEINLINE phoenix::actor< unary_function_terminal< has_attribute< typename DescriptorT::value_type > > > has_attr(attribute_keyword< DescriptorT, ActorT > const&)
 {
-    typedef terminal< unary_adapter< has_attribute< typename DescriptorT::value_type > > > terminal_type;
+    typedef unary_function_terminal< has_attribute< typename DescriptorT::value_type > > terminal_type;
     phoenix::actor< terminal_type > act = {{ terminal_type(DescriptorT::get_name()) }};
     return act;
 }

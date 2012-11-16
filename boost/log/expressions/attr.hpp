@@ -19,16 +19,21 @@
 #ifndef BOOST_LOG_EXPRESSIONS_ATTR_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_ATTR_HPP_INCLUDED_
 
+#include <boost/mpl/bool.hpp>
+#include <boost/utility/result_of.hpp>
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/phoenix/core/terminal_fwd.hpp>
 #include <boost/phoenix/core/is_nullary.hpp>
+#include <boost/phoenix/core/environment.hpp>
 #include <boost/fusion/sequence/intrinsic/at_c.hpp>
+#include <boost/type_traits/remove_cv.hpp>
+#include <boost/type_traits/remove_reference.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/custom_terminal_spec.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/expressions/terminal.hpp>
-#include <boost/log/expressions/attr_fwd.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
+#include <boost/log/expressions/attr_fwd.hpp>
 
 namespace boost {
 
@@ -36,110 +41,111 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace expressions {
 
-namespace aux {
-
-template< typename BaseT >
-class extractor_adapter :
-    public BaseT
+/*!
+ * An attribute value extraction terminal
+ */
+template< typename T, typename FallbackPolicyT, typename TagT >
+class attribute_terminal
 {
-    //! Base function type
-    typedef BaseT base_type;
-    //! Self type
-    typedef extractor_adapter< base_type > this_type;
-
 private:
-    //! Attribute value name
-    const attribute_name m_name;
+    //! Value extractor type
+    typedef value_extractor< T, FallbackPolicyT, TagT > value_extractor_type;
+    //! Self type
+    typedef attribute_terminal< T, FallbackPolicyT, TagT > this_type;
 
 public:
+    //! Internal typedef for type categorization
+    typedef void _is_boost_log_terminal;
+
+    //! Attribute tag type
+    typedef TagT tag_type;
+    //! Attribute value type
+    typedef typename value_extractor_type::value_type value_type;
+    //! Fallback policy type
+    typedef typename value_extractor_type::fallback_policy fallback_policy;
+
     //! Function result type
     template< typename >
     struct result;
 
-    template< typename ArgsT >
-    struct result< this_type(ArgsT) > :
-        public boost::result_of< base_type(attribute_name, typename fusion::result_of::at_c< ArgsT, 0 >::type) >
+    template< typename ContextT >
+    struct result< this_type(ContextT) >
     {
+        typedef typename remove_cv<
+            typename remove_reference< typename phoenix::result_of::env< ContextT >::type >::type
+        >::type env_type;
+        typedef typename env_type::args_type args_type;
+
+        typedef typename boost::result_of< value_extractor_type(attribute_name const&, typename fusion::result_of::at_c< args_type, 0 >::type) >::type type;
     };
 
-    template< typename ArgsT >
-    struct result< const this_type(ArgsT) > :
-        public boost::result_of< const base_type(attribute_name, typename fusion::result_of::at_c< ArgsT, 0 >::type) >
+    template< typename ContextT >
+    struct result< const this_type(ContextT) >
     {
+        typedef typename remove_cv<
+            typename remove_reference< typename phoenix::result_of::env< ContextT >::type >::type
+        >::type env_type;
+        typedef typename env_type::args_type args_type;
+
+        typedef typename boost::result_of< const value_extractor_type(attribute_name const&, typename fusion::result_of::at_c< args_type, 0 >::type) >::type type;
     };
+
+private:
+    //! Attribute value name
+    const attribute_name m_name;
+    //! Attribute value extractor
+    value_extractor_type m_value_extractor;
 
 public:
-    //! Initializing constructor
-    explicit extractor_adapter(attribute_name const& name) : m_name(name)
-    {
-    }
-    //! Initializing constructor
-    template< typename ArgT1 >
-    extractor_adapter(attribute_name const& name, ArgT1 const& arg1) : base_type(arg1), m_name(name)
-    {
-    }
-    //! Initializing constructor
-    template< typename ArgT1, typename ArgT2 >
-    extractor_adapter(attribute_name const& name, ArgT1 const& arg1, ArgT2 const& arg2) : base_type(arg1, arg2), m_name(name)
+    /*!
+     * Initializing constructor
+     */
+    explicit attribute_terminal(attribute_name const& name) : m_name(name)
     {
     }
 
-    //! Returns attribute value name
+    /*!
+     * Initializing constructor
+     */
+    template< typename U >
+    attribute_terminal(attribute_name const& name, U const& arg) : m_name(name), m_value_extractor(arg)
+    {
+    }
+
+    /*!
+     * \returns Attribute value name
+     */
     attribute_name get_name() const
     {
         return m_name;
     }
 
-    //! The operator forwards the call to the base function
-    template< typename ArgsT >
-    typename boost::result_of< base_type(typename fusion::result_of::at_c< ArgsT, 0 >::type) >::type
-    operator() (ArgsT const& args)
+    /*!
+     * \returns Fallback policy
+     */
+    fallback_policy const& get_fallback_policy() const
     {
-        return base_type::operator()(m_name, fusion::at_c< 0 >(args));
+        return m_value_extractor.get_fallback_policy();
     }
 
-    //! The operator forwards the call to the base function
-    template< typename ArgsT >
-    typename boost::result_of< const base_type(typename fusion::result_of::at_c< ArgsT, 0 >::type) >::type
-    operator() (ArgsT const& args) const
+    /*!
+     * The operator extracts attribute value
+     */
+    template< typename ContextT >
+    typename result< this_type(ContextT const&) >::type
+    operator() (ContextT const& ctx)
     {
-        return base_type::operator()(m_name, fusion::at_c< 0 >(args));
-    }
-};
-
-} // namespace aux
-
-/*!
- * An attribute value extraction terminal
- */
-template< typename T, typename FallbackPolicyT, typename TagT >
-class attribute_terminal :
-    public terminal<
-        aux::extractor_adapter<
-            value_extractor< T, FallbackPolicyT, TagT >
-        >
-    >
-{
-public:
-    //! Attribute tag type
-    typedef TagT tag_type;
-    //! Attribute value extractor
-    typedef value_extractor< T, FallbackPolicyT, tag_type > extractor_type;
-    //! Base terminal type
-    typedef terminal< aux::extractor_adapter< extractor_type > > terminal_type;
-    //! Attribute value type
-    typedef typename extractor_type::value_type value_type;
-
-public:
-    //! Initializing constructor
-    explicit attribute_terminal(attribute_name const& name) : terminal_type(name)
-    {
+        return m_value_extractor(m_name, fusion::at_c< 0 >(phoenix::env(ctx).args()));
     }
 
-    //! Initializing constructor
-    template< typename U >
-    attribute_terminal(attribute_name const& name, U const& arg) : terminal_type(name, arg)
+    /*!
+     * The operator extracts attribute value
+     */
+    template< typename ContextT >
+    typename result< const this_type(ContextT const&) >::type
+    operator() (ContextT const& ctx) const
     {
+        return m_value_extractor(m_name, fusion::at_c< 0 >(phoenix::env(ctx).args()));
     }
 };
 

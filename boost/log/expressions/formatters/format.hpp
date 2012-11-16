@@ -28,7 +28,7 @@
 #include <boost/fusion/sequence/intrinsic/at_c.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/format.hpp>
-#include <boost/log/expressions/terminal.hpp> // for Boost.Phoenix specializations
+#include <boost/log/detail/custom_terminal_spec.hpp>
 
 namespace boost {
 

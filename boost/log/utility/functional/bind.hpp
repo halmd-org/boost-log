@@ -21,7 +21,6 @@
 #define BOOST_LOG_UTILITY_FUNCTIONAL_BIND_HPP_INCLUDED_
 
 #include <boost/type_traits/remove_cv.hpp>
-#include <boost/type_traits/remove_reference.hpp>
 #include <boost/log/detail/prologue.hpp>
 
 namespace boost {
@@ -46,32 +45,62 @@ struct make_arg_type< T& >
 
 //! First argument binder
 template< typename FunT, typename FirstArgT >
-struct binder1st
+struct binder1st :
+    private FunT
 {
-    typedef typename remove_cv< typename remove_reference< FunT >::type >::type::result_type result_type;
+    typedef typename FunT::result_type result_type;
 
-    binder1st(FunT fun, typename aux::make_arg_type< FirstArgT >::type arg) : m_Fun(fun), m_Arg(arg) {}
+    binder1st(FunT const& fun, typename aux::make_arg_type< FirstArgT >::type arg) : FunT(fun), m_arg(arg) {}
 
     result_type operator() () const
     {
-        return m_Fun(m_Arg);
+        return FunT::operator()(m_arg);
     }
 
     template< typename T0 >
     result_type operator() (T0 const& arg0) const
     {
-        return m_Fun(m_Arg, arg0);
+        return FunT::operator()(m_arg, arg0);
     }
 
     template< typename T0, typename T1 >
     result_type operator() (T0 const& arg0, T1 const& arg1) const
     {
-        return m_Fun(m_Arg, arg0, arg1);
+        return FunT::operator()(m_arg, arg0, arg1);
     }
 
 private:
-    FunT m_Fun;
-    FirstArgT m_Arg;
+    FirstArgT m_arg;
+};
+
+//! First argument binder
+template< typename FunT, typename FirstArgT >
+struct binder1st< FunT&, FirstArgT >
+{
+    typedef typename remove_cv< FunT >::type::result_type result_type;
+
+    binder1st(FunT& fun, typename aux::make_arg_type< FirstArgT >::type arg) : m_fun(fun), m_arg(arg) {}
+
+    result_type operator() () const
+    {
+        return m_fun(m_arg);
+    }
+
+    template< typename T0 >
+    result_type operator() (T0 const& arg0) const
+    {
+        return m_fun(m_arg, arg0);
+    }
+
+    template< typename T0, typename T1 >
+    result_type operator() (T0 const& arg0, T1 const& arg1) const
+    {
+        return m_fun(m_arg, arg0, arg1);
+    }
+
+private:
+    FunT& m_fun;
+    FirstArgT m_arg;
 };
 
 template< typename FunT, typename FirstArgT >
@@ -88,27 +117,52 @@ BOOST_LOG_FORCEINLINE binder1st< FunT, FirstArgT > bind1st(FunT fun, FirstArgT& 
 
 //! Second argument binder
 template< typename FunT, typename SecondArgT >
-struct binder2nd
+struct binder2nd :
+    private FunT
 {
-    typedef typename remove_cv< typename remove_reference< FunT >::type >::type::result_type result_type;
+    typedef typename FunT::result_type result_type;
 
-    binder2nd(FunT fun, typename aux::make_arg_type< SecondArgT >::type arg) : m_Fun(fun), m_Arg(arg) {}
+    binder2nd(FunT const& fun, typename aux::make_arg_type< SecondArgT >::type arg) : FunT(fun), m_arg(arg) {}
 
     template< typename T >
     result_type operator() (T const& arg) const
     {
-        return m_Fun(arg, m_Arg);
+        return FunT::operator()(arg, m_arg);
     }
 
     template< typename T0, typename T1 >
     result_type operator() (T0 const& arg0, T1 const& arg1) const
     {
-        return m_Fun(arg0, m_Arg, arg1);
+        return FunT::operator()(arg0, m_arg, arg1);
     }
 
 private:
-    FunT m_Fun;
-    SecondArgT m_Arg;
+    SecondArgT m_arg;
+};
+
+//! Second argument binder
+template< typename FunT, typename SecondArgT >
+struct binder2nd< FunT&, SecondArgT >
+{
+    typedef typename remove_cv< FunT >::type::result_type result_type;
+
+    binder2nd(FunT& fun, typename aux::make_arg_type< SecondArgT >::type arg) : m_fun(fun), m_arg(arg) {}
+
+    template< typename T >
+    result_type operator() (T const& arg) const
+    {
+        return m_fun(arg, m_arg);
+    }
+
+    template< typename T0, typename T1 >
+    result_type operator() (T0 const& arg0, T1 const& arg1) const
+    {
+        return m_fun(arg0, m_arg, arg1);
+    }
+
+private:
+    FunT& m_fun;
+    SecondArgT m_arg;
 };
 
 template< typename FunT, typename SecondArgT >
@@ -125,21 +179,40 @@ BOOST_LOG_FORCEINLINE binder2nd< FunT, SecondArgT > bind2nd(FunT fun, SecondArgT
 
 //! Third argument binder
 template< typename FunT, typename ThirdArgT >
-struct binder3rd
+struct binder3rd :
+    private FunT
 {
-    typedef typename remove_cv< typename remove_reference< FunT >::type >::type::result_type result_type;
+    typedef typename FunT::result_type result_type;
 
-    binder3rd(FunT fun, typename aux::make_arg_type< ThirdArgT >::type arg) : m_Fun(fun), m_Arg(arg) {}
+    binder3rd(FunT const& fun, typename aux::make_arg_type< ThirdArgT >::type arg) : FunT(fun), m_arg(arg) {}
 
     template< typename T0, typename T1 >
     result_type operator() (T0 const& arg0, T1 const& arg1) const
     {
-        return m_Fun(arg0, arg1, m_Arg);
+        return FunT::operator()(arg0, arg1, m_arg);
     }
 
 private:
-    FunT m_Fun;
-    ThirdArgT m_Arg;
+    ThirdArgT m_arg;
+};
+
+//! Third argument binder
+template< typename FunT, typename ThirdArgT >
+struct binder3rd< FunT&, ThirdArgT >
+{
+    typedef typename remove_cv< FunT >::type::result_type result_type;
+
+    binder3rd(FunT& fun, typename aux::make_arg_type< ThirdArgT >::type arg) : m_fun(fun), m_arg(arg) {}
+
+    template< typename T0, typename T1 >
+    result_type operator() (T0 const& arg0, T1 const& arg1) const
+    {
+        return m_fun(arg0, arg1, m_arg);
+    }
+
+private:
+    FunT& m_fun;
+    ThirdArgT m_arg;
 };
 
 template< typename FunT, typename ThirdArgT >

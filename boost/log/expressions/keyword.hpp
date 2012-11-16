@@ -29,7 +29,7 @@
 #include <boost/preprocessor/facilities/identity.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/expressions/terminal.hpp>
+#include <boost/log/detail/custom_terminal_spec.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/expressions/is_keyword_descriptor.hpp>
 #include <boost/log/expressions/attr.hpp>
