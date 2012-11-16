@@ -315,14 +315,18 @@ public:
 
 //! Stream output operator
 template< typename CharT, typename TraitsT >
-inline std::basic_ostream< CharT, TraitsT >& operator<< (
-    std::basic_ostream< CharT, TraitsT >& strm, named_scope_list const& sl)
+inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< CharT, TraitsT >& strm, named_scope_list const& sl)
 {
-    named_scope_list::const_iterator it = sl.begin(), end = sl.end();
-    if (it != end)
-        strm << (it++)->scope_name.c_str();
-    for (; it != end; ++it)
-        strm << "->" << it->scope_name.c_str();
+    if (strm.good())
+    {
+        named_scope_list::const_iterator it = sl.begin(), end = sl.end();
+        if (it != end)
+        {
+            strm << it->scope_name.c_str();
+            for (++it; it != end; ++it)
+                strm << "->" << it->scope_name.c_str();
+        }
+    }
     return strm;
 }
 

@@ -82,6 +82,7 @@ local BOOST_LOG_COMMON_SRC =
     event.cpp
     trivial.cpp
     spirit_encoding.cpp
+    format_parser.cpp
     date_time_format_parser.cpp
     named_scope_format_parser.cpp
     unhandled_exception_count.cpp

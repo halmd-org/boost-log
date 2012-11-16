@@ -66,7 +66,7 @@ BOOST_LOG_API void attach_attribute_name_info(exception& e, attribute_name const
 /*!
  * \brief Base class for runtime exceptions from the logging library
  *
- * Exceptions derived from this class indicate problema that may not directly
+ * Exceptions derived from this class indicate a problem that may not directly
  * be caused by the user's code that interacts with the library, such as
  * errors caused by input data.
  */

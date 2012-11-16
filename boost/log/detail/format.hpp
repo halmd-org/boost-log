@@ -33,6 +33,7 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
+//! An element (either literal or placeholder) of the format string
 struct format_element
 {
     //! Argument placeholder number or -1 if it's not a placeholder (i.e. a literal)
@@ -43,11 +44,31 @@ struct format_element
     format_element() : arg_number(0), literal_start_pos(0), literal_len(0)
     {
     }
+
+    static format_element literal(unsigned int start_pos, unsigned int len)
+    {
+        format_element el;
+        el.arg_number = -1;
+        el.literal_start_pos = start_pos;
+        el.literal_len = len;
+        return el;
+    }
+
+    static format_element positional_argument(unsigned int arg_n)
+    {
+        format_element el;
+        el.arg_number = arg_n;
+        return el;
+    }
 };
 
+//! Parsed format string description
 template< typename CharT >
 struct format_description
 {
+    BOOST_COPYABLE_AND_MOVABLE_ALT(format_description)
+
+public:
     //! Character type
     typedef CharT char_type;
     //! String type
@@ -60,17 +81,34 @@ struct format_description
     string_type literal_chars;
     //! Format element descriptors
     format_element_list format_elements;
+
+    BOOST_LOG_DEFAULTED_FUNCTION(format_description(), {})
+    format_description(format_description const& that) : literal_chars(that.literal_chars), format_elements(that.format_elements) {}
+    format_description(BOOST_RV_REF(format_description) that)
+    {
+        literal_chars.swap(that.literal_chars);
+        format_elements.swap(that.format_elements);
+    }
+    format_description& operator= (format_description that)
+    {
+        literal_chars.swap(that.literal_chars);
+        format_elements.swap(that.format_elements);
+        return *this;
+    }
 };
 
+//! Parses format string
 template< typename CharT >
 BOOST_LOG_API format_description< CharT > parse_format(const CharT* begin, const CharT* end);
 
+//! Parses format string
 template< typename CharT >
 BOOST_LOG_FORCEINLINE format_description< CharT > parse_format(const CharT* begin)
 {
     return parse_format(begin, begin + std::char_traits< CharT >::length(begin));
 }
 
+//! Parses format string
 template< typename CharT, typename TraitsT, typename AllocatorT >
 BOOST_LOG_FORCEINLINE format_description< CharT > parse_format(std::basic_string< CharT, TraitsT, AllocatorT > const& fmt)
 {
@@ -78,6 +116,7 @@ BOOST_LOG_FORCEINLINE format_description< CharT > parse_format(std::basic_string
     return parse_format(begin, begin + fmt.size());
 }
 
+//! Formatter object
 template< typename CharT >
 class basic_format
 {
@@ -91,6 +130,7 @@ public:
     //! Format description type
     typedef format_description< char_type > format_description_type;
 
+    //! The pump receives arguments and formats them into strings. At destruction the pump composes the final string in the attached stream.
     class pump;
     friend class pump;
 
@@ -179,7 +219,7 @@ private:
         {
             if (it->arg_number >= 0)
             {
-                if (it->arg_number >= m_formatting_params.size())
+                if (static_cast< unsigned int >(it->arg_number) >= m_formatting_params.size())
                     m_formatting_params.resize(it->arg_number + 1);
                 m_formatting_params[it->arg_number].element_idx = it - m_format.format_elements.begin();
             }
@@ -187,6 +227,7 @@ private:
     }
 };
 
+//! The pump receives arguments and formats them into strings. At destruction the pump composes the final string in the attached stream.
 template< typename CharT >
 class basic_format< CharT >::pump
 {
@@ -201,7 +242,7 @@ private:
         }
         ~scoped_storage()
         {
-            strm.attach(m_storage_backup);
+            m_stream.attach(m_storage_backup);
         }
 
     private:
@@ -218,32 +259,43 @@ private:
     const unsigned int m_exception_count;
 
 public:
+    //! Initializing constructor
     pump(basic_format& owner, stream_type& strm) BOOST_NOEXCEPT : m_owner(&owner), m_stream(&strm), m_exception_count(unhandled_exception_count())
     {
     }
 
+    //! Move constructor
     pump(BOOST_RV_REF(pump) that) BOOST_NOEXCEPT : m_owner(that.m_owner), m_stream(that.m_stream), m_exception_count(that.m_exception_count)
     {
         that.m_owner = NULL;
         that.m_stream = NULL;
     }
 
+    //! Destructor
     ~pump()
     {
         if (m_owner)
         {
+            // Whether or not the destructor is called because of an exception, the format object has to be cleared
             boost::log::aux::cleanup_guard< basic_format< char_type > > cleanup1(*m_owner);
 
-            if (m_stream && m_exception_count >= unhandled_exception_count())
+            BOOST_ASSERT(m_stream != NULL);
+            if (m_exception_count >= unhandled_exception_count())
             {
+                // Compose the final string in the stream buffer
                 m_stream->flush();
                 m_owner->compose(*m_stream->rdbuf()->storage());
             }
         }
     }
 
+    /*!
+     * Puts an argument to the formatter. Note the pump has to be returned by value and not by reference in order this to
+     * work with Boost.Phoenix expressions. Otherwise the pump that is returned from \c basic_format::make_pump is
+     * destroyed after the first call to \c operator%, and the returned reference becomes dangling.
+     */
     template< typename T >
-    pump& operator% (T const& val)
+    pump operator% (T const& val)
     {
         BOOST_ASSERT_MSG(m_owner != NULL && m_stream != NULL, "Boost.Log: This basic_format::pump has already been moved from");
 
@@ -257,15 +309,7 @@ public:
             ++m_owner->m_current_idx;
         }
 
-        return *this;
-    }
-
-    // This operator is used if the formatter is output to the stream
-    friend stream_type& operator<< (stream_type& strm, pump p)
-    {
-        // The output will be done in the pump destructor, nothing to be done here
-        p.m_stream = &strm;
-        return strm;
+        return boost::move(*this);
     }
 };
 
