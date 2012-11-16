@@ -16,7 +16,6 @@
 #ifndef BOOST_LOG_DETAIL_FORMAT_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_FORMAT_HPP_INCLUDED_
 
-#include <memory>
 #include <string>
 #include <vector>
 #include <iosfwd>
@@ -83,12 +82,17 @@ public:
     format_element_list format_elements;
 
     BOOST_LOG_DEFAULTED_FUNCTION(format_description(), {})
-    format_description(format_description const& that) : literal_chars(that.literal_chars), format_elements(that.format_elements) {}
+
+    format_description(format_description const& that) : literal_chars(that.literal_chars), format_elements(that.format_elements)
+    {
+    }
+
     format_description(BOOST_RV_REF(format_description) that)
     {
         literal_chars.swap(that.literal_chars);
         format_elements.swap(that.format_elements);
     }
+
     format_description& operator= (format_description that)
     {
         literal_chars.swap(that.literal_chars);
@@ -135,6 +139,7 @@ public:
     friend class pump;
 
 private:
+    //! Formatting params for a single placeholder in the format string
     struct formatting_params
     {
         //! Formatting element index in the format description
@@ -167,7 +172,7 @@ public:
     }
 
     //! Clears all formatted strings and resets the current formatting position
-    void clear()
+    void clear() BOOST_NOEXCEPT
     {
         for (typename formatting_params_list::iterator it = m_formatting_params.begin(), end = m_formatting_params.end(); it != end; ++it)
         {
@@ -177,7 +182,7 @@ public:
     }
 
     //! Creates a pump that will receive all format arguments and put the formatted string into the stream
-    pump make_pump(stream_type& strm)
+    pump make_pump(stream_type& strm) BOOST_NOEXCEPT
     {
         return pump(*this, strm);
     }
@@ -234,6 +239,7 @@ class basic_format< CharT >::pump
     BOOST_MOVABLE_BUT_NOT_COPYABLE(pump)
 
 private:
+    //! The guard temporarily replaces storage string in the specified stream
     struct scoped_storage
     {
         scoped_storage(stream_type& strm, string_type& storage) : m_stream(strm), m_storage_backup(*strm.rdbuf()->storage())
