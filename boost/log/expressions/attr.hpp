@@ -163,10 +163,11 @@ public:
     typedef FallbackPolicyT fallback_policy;
     //! Base terminal type
     typedef attribute_terminal< T, fallback_policy, tag_type > terminal_type;
-    //! Base actor type
-    typedef ActorT< terminal_type > base_type;
     //! Attribute value type
     typedef typename terminal_type::value_type value_type;
+
+    //! Base actor type
+    typedef ActorT< terminal_type > base_type;
 
 public:
     //! Initializing constructor

@@ -330,7 +330,8 @@ inline void parse_format(const CharT* begin, const CharT* end, ParserT& parser, 
         }
         else
         {
-            parser.add_literal(p, end); // a single '%' character at the end of the string
+            if (p != end)
+                parser.add_literal(p, end); // a single '%' character at the end of the string
             begin = end;
         }
     }

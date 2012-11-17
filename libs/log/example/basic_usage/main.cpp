@@ -28,6 +28,7 @@
 #include <boost/log/utility/init/common_attributes.hpp>
 
 #include <boost/log/attributes/timer.hpp>
+#include <boost/log/attributes/named_scope.hpp>
 
 #include <boost/log/sources/logger.hpp>
 
@@ -91,18 +92,24 @@ int main(int argc, char* argv[])
         keywords::format = expr::stream
             << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d, %H:%M:%S.%f")
             << " [" << expr::format_date_time< attrs::timer::value_type >("Uptime", "%O:%M:%S")
+            << "] [" << expr::format_named_scope("Scope", keywords::format = "%n (%f:%l)")
             << "] <" << expr::attr< severity_level >("Severity")
-            << "> " << expr::format_named_scope("Scope", keywords::format = "%n (%f:%l)") << " "
-            << expr::message
-//        keywords::format = fmt::format("%1% [%2%] <%3%> %4%")
-//            % fmt::date_time("TimeStamp", std::nothrow)
-//            % fmt::time_duration("Uptime", std::nothrow)
-//            % fmt::attr< severity_level >("Severity", std::nothrow)
-//            % fmt::message()
+            << "> " << expr::message
+/*
+        keywords::format = expr::format("%1% [%2%] [%3%] <%4%> %5%")
+            % expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d, %H:%M:%S.%f")
+            % expr::format_date_time< attrs::timer::value_type >("Uptime", "%O:%M:%S")
+            % expr::format_named_scope("Scope", keywords::format = "%n (%f:%l)")
+            % expr::attr< severity_level >("Severity")
+            % expr::message
+*/
     );
 
     // Also let's add some commonly used attributes, like timestamp and record counter.
     logging::add_common_attributes();
+    logging::core::get()->add_thread_attribute("Scope", attrs::named_scope());
+
+    BOOST_LOG_FUNCTION();
 
     // Now our logs will be written both to the console and to the file.
     // Let's do a quick test and output something. We have to create a logger for this.

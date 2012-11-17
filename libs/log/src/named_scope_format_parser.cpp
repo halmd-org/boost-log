@@ -203,7 +203,8 @@ parse_named_scope_format(const CharT* begin, const CharT* end)
         }
         else
         {
-            literal.push_back(static_cast< char_type >('%')); // a single '%' character at the end of the string
+            if (p != end)
+                literal.push_back(static_cast< char_type >('%')); // a single '%' character at the end of the string
             begin = end;
         }
     }

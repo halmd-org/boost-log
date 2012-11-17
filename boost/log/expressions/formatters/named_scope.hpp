@@ -20,21 +20,30 @@
 #include <utility>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_same.hpp>
+#include <boost/move/move.hpp>
 #include <boost/parameter/binding.hpp>
 #include <boost/preprocessor/iteration/iterate.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
+#include <boost/phoenix/core/actor.hpp>
+#include <boost/phoenix/core/terminal_fwd.hpp>
+#include <boost/phoenix/core/is_nullary.hpp>
+#include <boost/phoenix/core/environment.hpp>
+#include <boost/fusion/sequence/intrinsic/at_c.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/attributes/named_scope.hpp>
+#include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
+#include <boost/log/detail/custom_terminal_spec.hpp>
 #include <boost/log/expressions/attr_fwd.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/expressions/output_manip_terminal.hpp>
-#include <boost/log/utility/formatting_stream_fwd.hpp>
+#include <boost/log/utility/formatting_stream.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
+#include <boost/log/utility/functional/bind.hpp>
 #include <boost/log/keywords/format.hpp>
 #include <boost/log/keywords/delimiter.hpp>
 #include <boost/log/keywords/depth.hpp>
@@ -204,11 +213,18 @@ private:
     }
 };
 
+} // namespace aux
+
+/*!
+ * Named scope formatter terminal.
+ */
 template< typename FallbackPolicyT, typename CharT >
-class fmt_named_scope_gen :
-    private FallbackPolicyT
+class format_named_scope_terminal
 {
 public:
+    //! Internal typedef for type categorization
+    typedef void _is_boost_log_terminal;
+
     //! Attribute value type
     typedef attributes::named_scope::value_type value_type;
     //! Fallback policy
@@ -219,25 +235,34 @@ public:
     typedef std::basic_string< char_type > string_type;
     //! Formatting stream type
     typedef basic_formatting_ostream< char_type > stream_type;
-
     //! Formatter function
-    typedef fmt_named_scope_impl< char_type > formatter_function_type;
+    typedef aux::fmt_named_scope_impl< char_type > formatter_function_type;
+
+    //! Function result type
+    typedef string_type result_type;
+
+private:
+    //! Attribute value visitor invoker
+    typedef value_visitor_invoker< value_type, fallback_policy > visitor_invoker_type;
 
 private:
     //! Attribute name
     attribute_name m_name;
-    //! Formattr function
+    //! Formatter function
     formatter_function_type m_formatter;
+    //! Attribute value visitor invoker
+    visitor_invoker_type m_visitor_invoker;
 
 public:
     //! Initializing constructor
     template< typename FormatT >
-    fmt_named_scope_gen(attribute_name const& name, fallback_policy const& fallback, FormatT const& element_format, string_type const& delimiter, value_type::size_type depth, scope_iteration_direction direction) :
-        fallback_policy(fallback), m_name(name), m_formatter((parse_named_scope_format)(element_format), delimiter, depth, direction)
+    format_named_scope_terminal(attribute_name const& name, fallback_policy const& fallback, FormatT const& element_format, string_type const& delimiter, value_type::size_type depth, scope_iteration_direction direction) :
+        m_name(name), m_formatter(aux::parse_named_scope_format(element_format), delimiter, depth, direction), m_visitor_invoker(fallback)
     {
     }
     //! Copy constructor
-    fmt_named_scope_gen(fmt_named_scope_gen const& that) : fallback_policy(static_cast< fallback_policy const& >(that)), m_name(that.m_name), m_formatter(that.m_formatter)
+    format_named_scope_terminal(format_named_scope_terminal const& that) :
+        m_name(that.m_name), m_formatter(that.m_formatter), m_visitor_invoker(that.m_visitor_invoker)
     {
     }
 
@@ -250,7 +275,7 @@ public:
     //! Returns fallback policy
     fallback_policy const& get_fallback_policy() const
     {
-        return static_cast< fallback_policy const& >(*this);
+        return m_visitor_invoker.get_fallback_policy();
     }
 
     //! Retruns formatter function
@@ -258,14 +283,89 @@ public:
     {
         return m_formatter;
     }
+
+    //! Invokation operator
+    template< typename ContextT >
+    result_type operator() (ContextT const& ctx)
+    {
+        string_type str;
+        stream_type strm(str);
+        m_visitor_invoker(m_name, fusion::at_c< 0 >(phoenix::env(ctx).args()), binder1st< formatter_function_type&, stream_type& >(m_formatter, strm));
+        strm.flush();
+        return boost::move(str);
+    }
+
+    //! Invokation operator
+    template< typename ContextT >
+    result_type operator() (ContextT const& ctx) const
+    {
+        string_type str;
+        stream_type strm(str);
+        m_visitor_invoker(m_name, fusion::at_c< 0 >(phoenix::env(ctx).args()), binder1st< formatter_function_type const&, stream_type& >(m_formatter, strm));
+        strm.flush();
+        return boost::move(str);
+    }
+};
+
+/*!
+ * Named scope formatter actor.
+ */
+template< typename FallbackPolicyT, typename CharT, template< typename > class ActorT = phoenix::actor >
+class format_named_scope_actor :
+    public ActorT< format_named_scope_terminal< FallbackPolicyT, CharT > >
+{
+public:
+    //! Character type
+    typedef CharT char_type;
+    //! Fallback policy
+    typedef FallbackPolicyT fallback_policy;
+    //! Base terminal type
+    typedef format_named_scope_terminal< fallback_policy, char_type > terminal_type;
+    //! Attribute value type
+    typedef typename terminal_type::value_type value_type;
+    //! Formatter function
+    typedef typename terminal_type::formatter_function_type formatter_function_type;
+
+    //! Base actor type
+    typedef ActorT< terminal_type > base_type;
+
+public:
+    //! Initializing constructor
+    explicit format_named_scope_actor(base_type const& act) : base_type(act)
+    {
+    }
+
+    /*!
+     * \returns The attribute name
+     */
+    attribute_name get_name() const
+    {
+        return this->proto_expr_.child0.get_name();
+    }
+
+    /*!
+     * \returns Fallback policy
+     */
+    fallback_policy const& get_fallback_policy() const
+    {
+        return this->proto_expr_.child0.get_fallback_policy();
+    }
+
+    /*!
+     * \retruns Formatter function
+     */
+    formatter_function_type const& get_formatter_function() const
+    {
+        return this->proto_expr_.child0.get_formatter_function();
+    }
 };
 
 #define BOOST_LOG_AUX_OVERLOAD(left_ref, right_ref)\
     template< typename LeftExprT, typename FallbackPolicyT, typename CharT >\
-    BOOST_LOG_FORCEINLINE phoenix::actor< output_manip_terminal< phoenix::actor< LeftExprT >, attributes::named_scope::value_type, FallbackPolicyT, fmt_named_scope_impl< CharT > > >\
-    operator<< (phoenix::actor< LeftExprT > left_ref left, fmt_named_scope_gen< FallbackPolicyT, CharT > right_ref right)\
+    BOOST_LOG_FORCEINLINE phoenix::actor< output_manip_terminal< phoenix::actor< LeftExprT >, attributes::named_scope::value_type, FallbackPolicyT, typename format_named_scope_actor< FallbackPolicyT, CharT >::formatter_function_type > >\
+    operator<< (phoenix::actor< LeftExprT > left_ref left, format_named_scope_actor< FallbackPolicyT, CharT > right_ref right)\
     {\
-        typedef output_manip_terminal< phoenix::actor< LeftExprT >, attributes::named_scope::value_type, FallbackPolicyT, fmt_named_scope_impl< CharT > > terminal_type;\
+        typedef output_manip_terminal< phoenix::actor< LeftExprT >, attributes::named_scope::value_type, FallbackPolicyT, typename format_named_scope_actor< FallbackPolicyT, CharT >::formatter_function_type > terminal_type;\
         phoenix::actor< terminal_type > actor = {{ terminal_type(left, right.get_name(), right.get_formatter_function(), right.get_fallback_policy()) }};\
         return actor;\
     }
@@ -273,6 +373,8 @@ public:
 #include <boost/log/detail/generate_overloads.hpp>
 
 #undef BOOST_LOG_AUX_OVERLOAD
+
+namespace aux {
 
 //! Auxiliary traits to detect character type from a string
 template< typename T >
@@ -359,21 +461,26 @@ struct default_scope_delimiter< wchar_t >
 };
 #endif
 
-template< typename CharT, typename FallbackPolicyT, typename ArgsT >
-BOOST_LOG_FORCEINLINE fmt_named_scope_gen< FallbackPolicyT, CharT > format_named_scope(attribute_name const& name, FallbackPolicyT const& fallback, ArgsT const& args)
+template< typename CharT, template< typename > class ActorT, typename FallbackPolicyT, typename ArgsT >
+BOOST_LOG_FORCEINLINE format_named_scope_actor< FallbackPolicyT, CharT, ActorT > format_named_scope(attribute_name const& name, FallbackPolicyT const& fallback, ArgsT const& args)
 {
-    typedef fmt_named_scope_gen< FallbackPolicyT, CharT > result_type;
+    typedef format_named_scope_actor< FallbackPolicyT, CharT, ActorT > actor_type;
+    typedef typename actor_type::terminal_type terminal_type;
     scope_iteration_direction dir = args[keywords::iteration | expressions::forward];
     const CharT* default_delimiter = (dir == expressions::forward ? default_scope_delimiter< CharT >::forward() : default_scope_delimiter< CharT >::reverse());
-    return result_type
-    (
-        name,
-        fallback,
-        args[keywords::format],
-        args[keywords::delimiter | default_delimiter],
-        args[keywords::depth | static_cast< attributes::named_scope::value_type::size_type >(0)],
-        dir
-    );
+    typename actor_type::base_type act =
+    {{
+         terminal_type
+         (
+             name,
+             fallback,
+             args[keywords::format],
+             args[keywords::delimiter | default_delimiter],
+             args[keywords::depth | static_cast< attributes::named_scope::value_type::size_type >(0)],
+             dir
+         )
+    }};
+    return actor_type(act);
 }
 
 } // namespace aux
@@ -386,9 +493,12 @@ BOOST_LOG_FORCEINLINE fmt_named_scope_gen< FallbackPolicyT, CharT > format_named
  * \param element_format Format string for a single named scope
  */
 template< typename CharT >
-BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen< fallback_to_none, CharT > format_named_scope(attribute_name const& name, const CharT* element_format)
+BOOST_LOG_FORCEINLINE format_named_scope_actor< fallback_to_none, CharT > format_named_scope(attribute_name const& name, const CharT* element_format)
 {
-    return aux::fmt_named_scope_gen< fallback_to_none, CharT >(name, fallback_to_none(), element_format);
+    typedef format_named_scope_actor< fallback_to_none, CharT > actor_type;
+    typedef typename actor_type::terminal_type terminal_type;
+    typename actor_type::base_type act = {{ terminal_type(name, fallback_to_none(), element_format) }};
+    return actor_type(act);
 }
 
 /*!
@@ -399,9 +509,12 @@ BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen< fallback_to_none, CharT > format
  * \param element_format Format string for a single named scope
  */
 template< typename CharT >
-BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen< fallback_to_none, CharT > format_named_scope(attribute_name const& name, std::basic_string< CharT > const& element_format)
+BOOST_LOG_FORCEINLINE format_named_scope_actor< fallback_to_none, CharT > format_named_scope(attribute_name const& name, std::basic_string< CharT > const& element_format)
 {
-    return aux::fmt_named_scope_gen< fallback_to_none, CharT >(name, fallback_to_none(), element_format);
+    typedef format_named_scope_actor< fallback_to_none, CharT > actor_type;
+    typedef typename actor_type::terminal_type terminal_type;
+    typename actor_type::base_type act = {{ terminal_type(name, fallback_to_none(), element_format) }};
+    return actor_type(act);
 }
 
 /*!
@@ -412,12 +525,16 @@ BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen< fallback_to_none, CharT > format
  * \param element_format Format string for a single named scope
  */
 template< typename DescriptorT, template< typename > class ActorT, typename CharT >
-BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen< fallback_to_none, CharT >
+BOOST_LOG_FORCEINLINE format_named_scope_actor< fallback_to_none, CharT, ActorT >
 format_named_scope(attribute_keyword< DescriptorT, ActorT > const& keyword, const CharT* element_format)
 {
     BOOST_STATIC_ASSERT_MSG((is_same< typename DescriptorT::value_type, attributes::named_scope::value_type >::value),\
         "Boost.Log: Named scope formatter only accepts attribute values of type attributes::named_scope::value_type.");
-    return aux::fmt_named_scope_gen< fallback_to_none, CharT >(keyword.get_name(), fallback_to_none(), element_format);
+
+    typedef format_named_scope_actor< fallback_to_none, CharT, ActorT > actor_type;
+    typedef typename actor_type::terminal_type terminal_type;
+    typename actor_type::base_type act = {{ terminal_type(keyword.get_name(), fallback_to_none(), element_format) }};
+    return actor_type(act);
 }
 
 /*!
@@ -428,12 +545,16 @@ format_named_scope(attribute_keyword< DescriptorT, ActorT > const& keyword, cons
  * \param element_format Format string for a single named scope
  */
 template< typename DescriptorT, template< typename > class ActorT, typename CharT >
-BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen< fallback_to_none, CharT >
+BOOST_LOG_FORCEINLINE format_named_scope_actor< fallback_to_none, CharT, ActorT >
 format_named_scope(attribute_keyword< DescriptorT, ActorT > const& keyword, std::basic_string< CharT > const& element_format)
 {
     BOOST_STATIC_ASSERT_MSG((is_same< typename DescriptorT::value_type, attributes::named_scope::value_type >::value),\
         "Boost.Log: Named scope formatter only accepts attribute values of type attributes::named_scope::value_type.");
-    return aux::fmt_named_scope_gen< fallback_to_none, CharT >(keyword.get_name(), fallback_to_none(), element_format);
+
+    typedef format_named_scope_actor< fallback_to_none, CharT, ActorT > actor_type;
+    typedef typename actor_type::terminal_type terminal_type;
+    typename actor_type::base_type act = {{ terminal_type(keyword.get_name(), fallback_to_none(), element_format) }};
+    return actor_type(act);
 }
 
 /*!
@@ -444,12 +565,16 @@ format_named_scope(attribute_keyword< DescriptorT, ActorT > const& keyword, std:
  * \param element_format Format string for a single named scope
  */
 template< typename T, typename FallbackPolicyT, typename TagT, template< typename > class ActorT, typename CharT >
-BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen< FallbackPolicyT, CharT >
+BOOST_LOG_FORCEINLINE format_named_scope_actor< FallbackPolicyT, CharT, ActorT >
 format_named_scope(attribute_actor< T, FallbackPolicyT, TagT, ActorT > const& placeholder, const CharT* element_format)
 {
     BOOST_STATIC_ASSERT_MSG((is_same< T, attributes::named_scope::value_type >::value),\
         "Boost.Log: Named scope formatter only accepts attribute values of type attributes::named_scope::value_type.");
-    return aux::fmt_named_scope_gen< FallbackPolicyT, CharT >(placeholder.get_name(), placeholder.get_fallback_policy(), element_format);
+
+    typedef format_named_scope_actor< FallbackPolicyT, CharT, ActorT > actor_type;
+    typedef typename actor_type::terminal_type terminal_type;
+    typename actor_type::base_type act = {{ terminal_type(placeholder.get_name(), placeholder.get_fallback_policy(), element_format) }};
+    return actor_type(act);
 }
 
 /*!
@@ -460,12 +585,16 @@ format_named_scope(attribute_actor< T, FallbackPolicyT, TagT, ActorT > const& pl
  * \param element_format Format string for a single named scope
  */
 template< typename T, typename FallbackPolicyT, typename TagT, template< typename > class ActorT, typename CharT >
-BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen< FallbackPolicyT, CharT >
+BOOST_LOG_FORCEINLINE format_named_scope_actor< FallbackPolicyT, CharT, ActorT >
 format_named_scope(attribute_actor< T, FallbackPolicyT, TagT, ActorT > const& placeholder, std::basic_string< CharT > const& element_format)
 {
     BOOST_STATIC_ASSERT_MSG((is_same< T, attributes::named_scope::value_type >::value),\
         "Boost.Log: Named scope formatter only accepts attribute values of type attributes::named_scope::value_type.");
-    return aux::fmt_named_scope_gen< FallbackPolicyT, CharT >(placeholder.get_name(), placeholder.get_fallback_policy(), element_format);
+
+    typedef format_named_scope_actor< FallbackPolicyT, CharT, ActorT > actor_type;
+    typedef typename actor_type::terminal_type terminal_type;
+    typename actor_type::base_type act = {{ terminal_type(placeholder.get_name(), placeholder.get_fallback_policy(), element_format) }};
+    return actor_type(act);
 }
 
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
@@ -502,6 +631,24 @@ unspecified format_named_scope(attribute_actor< T, FallbackPolicyT, TagT, ActorT
 } // namespace expressions
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
+namespace phoenix {
+
+namespace result_of {
+
+template< typename FallbackPolicyT, typename CharT >
+struct is_nullary< custom_terminal< boost::log::expressions::format_named_scope_terminal< FallbackPolicyT, CharT > > > :
+    public mpl::false_
+{
+};
+
+} // namespace result_of
+
+} // namespace phoenix
+
+#endif
 
 } // namespace boost
 

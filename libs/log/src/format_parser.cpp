@@ -114,7 +114,8 @@ format_description< CharT > parse_format(const CharT* begin, const CharT* end)
         }
         else
         {
-            descr.literal_chars.push_back(static_cast< char_type >('%')); // a single '%' character at the end of the string
+            if (p != end)
+                descr.literal_chars.push_back(static_cast< char_type >('%')); // a single '%' character at the end of the string
             begin = end;
         }
     }

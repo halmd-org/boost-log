@@ -6,7 +6,7 @@
  */
 
 template< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT) >
-BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen<
+BOOST_LOG_FORCEINLINE format_named_scope_actor<
     fallback_to_none,
     typename aux::deduce_char_type<
         typename parameter::binding<
@@ -24,11 +24,11 @@ BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen<
             void
         >::type
     >::type char_type;
-    return aux::format_named_scope< char_type >(name, fallback_to_none(), (BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg)));
+    return aux::format_named_scope< char_type, phoenix::actor >(name, fallback_to_none(), (BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg)));
 }
 
 template< typename DescriptorT, template< typename > class ActorT, BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT) >
-BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen<
+BOOST_LOG_FORCEINLINE format_named_scope_actor<
     fallback_to_none,
     typename aux::deduce_char_type<
         typename parameter::binding<
@@ -36,7 +36,8 @@ BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen<
             keywords::tag::format,
             void
         >::type
-    >::type
+    >::type,
+    ActorT
 >
 format_named_scope(attribute_keyword< DescriptorT, ActorT > const& keyword, BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, const& arg))
 {
@@ -50,11 +51,11 @@ format_named_scope(attribute_keyword< DescriptorT, ActorT > const& keyword, BOOS
             void
         >::type
     >::type char_type;
-    return aux::format_named_scope< char_type >(keyword.get_name(), fallback_to_none(), (BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg)));
+    return aux::format_named_scope< char_type, ActorT >(keyword.get_name(), fallback_to_none(), (BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg)));
 }
 
 template< typename T, typename FallbackPolicyT, typename TagT, template< typename > class ActorT, BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT) >
-BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen<
+BOOST_LOG_FORCEINLINE format_named_scope_actor<
     FallbackPolicyT,
     typename aux::deduce_char_type<
         typename parameter::binding<
@@ -62,7 +63,8 @@ BOOST_LOG_FORCEINLINE aux::fmt_named_scope_gen<
             keywords::tag::format,
             void
         >::type
-    >::type
+    >::type,
+    ActorT
 >
 format_named_scope(attribute_actor< T, FallbackPolicyT, TagT, ActorT > const& placeholder, BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, const& arg))
 {
@@ -76,5 +78,5 @@ format_named_scope(attribute_actor< T, FallbackPolicyT, TagT, ActorT > const& pl
             void
         >::type
     >::type char_type;
-    return aux::format_named_scope< char_type >(placeholder.get_name(), placeholder.get_fallback_policy(), (BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg)));
+    return aux::format_named_scope< char_type, ActorT >(placeholder.get_name(), placeholder.get_fallback_policy(), (BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg)));
 }
