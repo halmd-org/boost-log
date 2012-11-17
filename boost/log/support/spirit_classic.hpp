@@ -12,16 +12,16 @@
  * This header enables Boost.Spirit (classic) support for Boost.Log.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SUPPORT_SPIRIT_CLASSIC_HPP_INCLUDED_
 #define BOOST_LOG_SUPPORT_SPIRIT_CLASSIC_HPP_INCLUDED_
 
 #include <boost/mpl/bool.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/functional/matches.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
 /*

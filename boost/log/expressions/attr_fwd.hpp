@@ -12,15 +12,15 @@
  * The header contains forward declaration of a generic attribute placeholder in template expressions.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_EXPRESSIONS_ATTR_FWD_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_ATTR_FWD_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/fallback_policy_fwd.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

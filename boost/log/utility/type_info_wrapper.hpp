@@ -12,10 +12,6 @@
  * The header contains implementation of a type information wrapper.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_TYPE_INFO_WRAPPER_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_TYPE_INFO_WRAPPER_HPP_INCLUDED_
 
@@ -28,6 +24,10 @@
 #include <cxxabi.h>
 #include <stdlib.h>
 #endif // BOOST_LOG_HAS_CXXABI_H
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

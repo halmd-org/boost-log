@@ -12,10 +12,6 @@
  * The header contains implementation of an attrubute value reference wrapper.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_ATTRIBUTES_VALUE_REF_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_VALUE_REF_HPP_INCLUDED_
 
@@ -49,6 +45,10 @@
 #include <boost/log/utility/functional/bind_to_log.hpp>
 #include <boost/log/utility/manipulators/to_log.hpp>
 #include <boost/log/attributes/value_ref_fwd.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

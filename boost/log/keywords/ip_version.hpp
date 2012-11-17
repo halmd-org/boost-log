@@ -12,15 +12,15 @@
  * The header contains the \c ip_version keyword declaration.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_KEYWORDS_IP_VERSION_HPP_INCLUDED_
 #define BOOST_LOG_KEYWORDS_IP_VERSION_HPP_INCLUDED_
 
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
@@ -28,8 +28,8 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace keywords {
 
-    //! The keyword is used to indicate which version of IP protocol to use
-    BOOST_PARAMETER_KEYWORD(tag, ip_version)
+//! The keyword is used to indicate which version of IP protocol to use
+BOOST_PARAMETER_KEYWORD(tag, ip_version)
 
 } // namespace keywords
 

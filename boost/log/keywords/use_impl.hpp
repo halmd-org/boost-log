@@ -12,15 +12,15 @@
  * The header contains the \c use_impl keyword declaration.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_KEYWORDS_USE_IMPL_HPP_INCLUDED_
 #define BOOST_LOG_KEYWORDS_USE_IMPL_HPP_INCLUDED_
 
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
@@ -28,8 +28,8 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace keywords {
 
-    //! The keyword is used to pass the type of backend implementation to use
-    BOOST_PARAMETER_KEYWORD(tag, use_impl)
+//! The keyword is used to pass the type of backend implementation to use
+BOOST_PARAMETER_KEYWORD(tag, use_impl)
 
 } // namespace keywords
 

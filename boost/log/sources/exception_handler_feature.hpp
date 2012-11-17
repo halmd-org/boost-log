@@ -12,10 +12,6 @@
  * The header contains implementation of an exception handler support feature.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SOURCES_EXCEPTION_HANDLER_FEATURE_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_EXCEPTION_HANDLER_FEATURE_HPP_INCLUDED_
 
@@ -29,6 +25,10 @@
 #include <boost/log/utility/strictest_lock.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/exceptions.hpp>
+#endif
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
 #endif
 
 #ifdef _MSC_VER

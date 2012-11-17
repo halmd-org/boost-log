@@ -12,10 +12,6 @@
  * This header contains definition of the attribute set container.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_ATTRIBUTE_SET_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTE_SET_HPP_INCLUDED_
 
@@ -27,6 +23,10 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

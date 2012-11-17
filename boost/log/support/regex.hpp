@@ -12,10 +12,6 @@
  * This header enables Boost.Regex support for Boost.Log.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SUPPORT_REGEX_HPP_INCLUDED_
 #define BOOST_LOG_SUPPORT_REGEX_HPP_INCLUDED_
 
@@ -23,6 +19,10 @@
 #include <boost/mpl/bool.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/functional/matches.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

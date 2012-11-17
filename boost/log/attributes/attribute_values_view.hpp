@@ -14,10 +14,6 @@
  * values.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_ATTRIBUTE_VALUES_VIEW_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTE_VALUES_VIEW_HPP_INCLUDED_
 
@@ -31,6 +27,10 @@
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

@@ -12,10 +12,6 @@
  * This header contains a reference counter class for \c intrusive_ptr.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_INTRUSIVE_REF_COUNTER_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_INTRUSIVE_REF_COUNTER_HPP_INCLUDED_
 
@@ -24,6 +20,10 @@
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/detail/atomic_count.hpp>
 #endif // BOOST_LOG_NO_THREADS
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

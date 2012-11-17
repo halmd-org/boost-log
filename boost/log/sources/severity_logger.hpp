@@ -12,10 +12,6 @@
  * The header contains implementation of a logger with severity level support.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SOURCES_SEVERITY_LOGGER_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_SEVERITY_LOGGER_HPP_INCLUDED_
 
@@ -28,6 +24,10 @@
 #include <boost/log/sources/threading_models.hpp>
 #include <boost/log/sources/severity_feature.hpp>
 #include <boost/log/keywords/severity.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

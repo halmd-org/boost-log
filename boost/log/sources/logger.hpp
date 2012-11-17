@@ -12,10 +12,6 @@
  * The header contains implementation of a simplistic logger with no features.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SOURCES_LOGGER_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_LOGGER_HPP_INCLUDED_
 
@@ -26,6 +22,10 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/detail/light_rw_mutex.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)

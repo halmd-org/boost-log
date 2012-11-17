@@ -12,23 +12,23 @@
  * The header contains a formatter function object definition.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_EXPRESSIONS_FORMATTER_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_FORMATTER_HPP_INCLUDED_
 
 #include <boost/move/move.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/light_function.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
-#include <boost/log/detail/light_function.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/utility/formatting_stream.hpp>
 #include <boost/log/utility/functional/bind_output.hpp>
 #include <boost/log/expressions/message.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

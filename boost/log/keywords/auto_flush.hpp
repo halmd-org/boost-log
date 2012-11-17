@@ -12,15 +12,15 @@
  * The header contains the \c auto_flush keyword declaration.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_KEYWORDS_AUTO_FLUSH_HPP_INCLUDED_
 #define BOOST_LOG_KEYWORDS_AUTO_FLUSH_HPP_INCLUDED_
 
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
@@ -28,8 +28,8 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace keywords {
 
-    //! The keyword for passing auto flush flag to a sink backend initialization
-    BOOST_PARAMETER_KEYWORD(tag, auto_flush)
+//! The keyword for passing auto flush flag to a sink backend initialization
+BOOST_PARAMETER_KEYWORD(tag, auto_flush)
 
 } // namespace keywords
 

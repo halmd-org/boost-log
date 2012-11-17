@@ -13,10 +13,6 @@
  * allows to select a lock with the strictest access requirements.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_STRICTEST_LOCK_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_STRICTEST_LOCK_HPP_INCLUDED_
 
@@ -32,6 +28,10 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/pp_identity.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifndef BOOST_LOG_STRICTEST_LOCK_LIMIT
 /*!

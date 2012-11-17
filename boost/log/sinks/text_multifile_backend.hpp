@@ -12,10 +12,6 @@
  * The header contains implementation of a text multi-file sink backend.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_TEXT_MULTIFILE_BACKEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_TEXT_MULTIFILE_BACKEND_HPP_INCLUDED_
 
@@ -32,6 +28,10 @@
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/utility/formatting_stream.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)

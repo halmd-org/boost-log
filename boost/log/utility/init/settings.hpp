@@ -12,10 +12,6 @@
  * The header contains definition of the library settings container.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_INIT_SETTINGS_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_INIT_SETTINGS_HPP_INCLUDED_
 
@@ -33,6 +29,10 @@
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #if !defined(BOOST_LOG_TYPEOF)
 #include <boost/utility/enable_if.hpp>
+#endif
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
 #endif
 
 #ifdef _MSC_VER

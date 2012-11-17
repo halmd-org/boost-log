@@ -12,15 +12,15 @@
  * The header contains the \c ordering_window keyword declaration.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_KEYWORDS_ORDERING_WINDOW_HPP_INCLUDED_
 #define BOOST_LOG_KEYWORDS_ORDERING_WINDOW_HPP_INCLUDED_
 
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
@@ -28,8 +28,8 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace keywords {
 
-    //! The keyword allows to pass the ordering window to sink frontends
-    BOOST_PARAMETER_KEYWORD(tag, ordering_window)
+//! The keyword allows to pass the ordering window to sink frontends
+BOOST_PARAMETER_KEYWORD(tag, ordering_window)
 
 } // namespace keywords
 

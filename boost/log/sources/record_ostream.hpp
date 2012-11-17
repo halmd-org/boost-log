@@ -13,10 +13,6 @@
  * record message with a streaming expression.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SOURCES_RECORD_OSTREAM_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_RECORD_OSTREAM_HPP_INCLUDED_
 
@@ -31,6 +27,10 @@
 #include <boost/log/utility/unique_identifier_name.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/formatting_stream.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)

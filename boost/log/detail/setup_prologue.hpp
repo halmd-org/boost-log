@@ -14,14 +14,14 @@
  *         internal configuration macros are defined.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_DETAIL_SETUP_PROLOGUE_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_SETUP_PROLOGUE_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #if !defined(BOOST_LOG_SETUP_BUILDING_THE_LIB)
 

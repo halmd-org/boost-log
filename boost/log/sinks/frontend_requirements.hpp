@@ -14,10 +14,6 @@
  * be used with an incompatible frontend.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_FRONTEND_REQUIREMENTS_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_FRONTEND_REQUIREMENTS_HPP_INCLUDED_
 
@@ -30,6 +26,10 @@
 #include <boost/preprocessor/repetition/enum_params_with_a_default.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifndef BOOST_LOG_COMBINE_REQUIREMENTS_LIMIT
 //! The macro specifies the maximum number of requirements that can be combined with the \c combine_requirements metafunction

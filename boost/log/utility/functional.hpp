@@ -12,12 +12,10 @@
  * This header includes all functional helpers.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_FUNCTIONAL_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_FUNCTIONAL_HPP_INCLUDED_
+
+#include <boost/log/detail/prologue.hpp>
 
 #include <boost/log/utility/functional/logical.hpp>
 #include <boost/log/utility/functional/in_range.hpp>
@@ -33,5 +31,9 @@
 #include <boost/log/utility/functional/bind.hpp>
 #include <boost/log/utility/functional/fun_ref.hpp>
 #include <boost/log/utility/functional/as_action.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #endif // BOOST_LOG_UTILITY_FUNCTIONAL_HPP_INCLUDED_

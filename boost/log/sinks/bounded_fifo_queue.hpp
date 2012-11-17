@@ -13,14 +13,14 @@
  * the asynchronous sink frontend.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_BOUNDED_FIFO_QUEUE_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_BOUNDED_FIFO_QUEUE_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #if defined(BOOST_LOG_NO_THREADS)
 #error Boost.Log: This header content is only supported in multithreaded environment

@@ -13,10 +13,6 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED_
 
@@ -37,6 +33,10 @@
 #include <boost/function_types/function_arity.hpp>
 #include <boost/function_types/parameter_types.hpp>
 #include <boost/function_types/is_nonmember_callable_builtin.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

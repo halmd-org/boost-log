@@ -12,16 +12,16 @@
  * This header contains a predicate for checking if the provided value is within a half-open range.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_FUNCTIONAL_IN_RANGE_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_FUNCTIONAL_IN_RANGE_HPP_INCLUDED_
 
 #include <utility>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/functional/logical.hpp> // make_common_integral_type
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

@@ -13,15 +13,15 @@
  * This is a lightweight alternative to what Boost.Phoenix and Boost.Bind provides.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_FUNCTIONAL_BIND_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_FUNCTIONAL_BIND_HPP_INCLUDED_
 
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

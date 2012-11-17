@@ -12,15 +12,15 @@
  * The header contains the \c rotation_size keyword declaration.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_KEYWORDS_ROTATION_SIZE_HPP_INCLUDED_
 #define BOOST_LOG_KEYWORDS_ROTATION_SIZE_HPP_INCLUDED_
 
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
@@ -28,8 +28,8 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace keywords {
 
-    //! The keyword allows to pass maximum log file size to the file sink
-    BOOST_PARAMETER_KEYWORD(tag, rotation_size)
+//! The keyword allows to pass maximum log file size to the file sink
+BOOST_PARAMETER_KEYWORD(tag, rotation_size)
 
 } // namespace keywords
 

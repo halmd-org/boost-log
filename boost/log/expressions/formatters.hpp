@@ -12,10 +12,6 @@
  * The header includes all template expression formatters.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_EXPRESSIONS_FORMATTERS_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_FORMATTERS_HPP_INCLUDED_
 
@@ -24,5 +20,9 @@
 #include <boost/log/expressions/formatters/format.hpp>
 #include <boost/log/expressions/formatters/date_time.hpp>
 #include <boost/log/expressions/formatters/named_scope.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #endif // BOOST_LOG_EXPRESSIONS_FORMATTERS_HPP_INCLUDED_

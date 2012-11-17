@@ -12,10 +12,6 @@
  * This header contains ordering predicates for logging records.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_RECORD_ORDERING_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_RECORD_ORDERING_HPP_INCLUDED_
 
@@ -29,6 +25,10 @@
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/functional/logical.hpp>
 #include <boost/log/functional/nop.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

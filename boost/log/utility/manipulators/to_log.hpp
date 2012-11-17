@@ -12,16 +12,16 @@
  * This header contains the \c to_log output manipulator.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_MANIPULATORS_TO_LOG_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_MANIPULATORS_TO_LOG_HPP_INCLUDED_
 
 #include <iosfwd>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/formatting_stream_fwd.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

@@ -18,10 +18,6 @@
  *       in order to avoid warnings from the compiler.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_FUNCTIONAL_LOGICAL_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_FUNCTIONAL_LOGICAL_HPP_INCLUDED_
 
@@ -31,6 +27,10 @@
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/type_traits/is_unsigned.hpp>
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

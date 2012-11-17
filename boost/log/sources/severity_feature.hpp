@@ -12,10 +12,6 @@
  * The header contains implementation of a severity level support feature.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SOURCES_SEVERITY_FEATURE_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_SEVERITY_FEATURE_HPP_INCLUDED_
 
@@ -33,6 +29,10 @@
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 #include <boost/log/keywords/severity.hpp>
 #include <boost/log/core/record.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)

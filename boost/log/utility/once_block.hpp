@@ -12,15 +12,15 @@
  * \brief  The header defines classes and macros for once-blocks.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_ONCE_BLOCK_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_ONCE_BLOCK_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifndef BOOST_LOG_NO_THREADS
 

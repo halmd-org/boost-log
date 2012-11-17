@@ -12,10 +12,6 @@
  * The header contains implementation of a base class for sink frontends.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_BASIC_SINK_FRONTEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_BASIC_SINK_FRONTEND_HPP_INCLUDED_
 
@@ -38,6 +34,10 @@
 #include <boost/log/detail/light_rw_mutex.hpp>
 #include <boost/concept_check.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)

@@ -12,10 +12,6 @@
  * The header contains definition of fallback policies when attribute value visitation or extraction fails.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_ATTRIBUTES_FALLBACK_POLICY_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_FALLBACK_POLICY_HPP_INCLUDED_
 
@@ -25,6 +21,10 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/attributes/fallback_policy_fwd.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

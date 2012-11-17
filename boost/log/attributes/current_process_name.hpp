@@ -12,10 +12,6 @@
  * The header contains implementation of a current process name attribute
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_ATTRIBUTES_CURRENT_PROCESS_NAME_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_CURRENT_PROCESS_NAME_HPP_INCLUDED_
 
@@ -23,6 +19,10 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

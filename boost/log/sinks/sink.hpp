@@ -13,10 +13,6 @@
  * logging core to feed log records to sinks.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_SINK_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_SINK_HPP_INCLUDED_
 
@@ -25,6 +21,10 @@
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_values_view.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)

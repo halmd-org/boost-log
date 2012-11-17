@@ -12,10 +12,6 @@
  * This header includes other Boost.Log headers with all filters.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_FILTERS_HPP_INCLUDED_
 #define BOOST_LOG_FILTERS_HPP_INCLUDED_
 
@@ -24,5 +20,9 @@
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/filters/has_attr.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #endif // BOOST_LOG_FILTERS_HPP_INCLUDED_

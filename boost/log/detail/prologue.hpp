@@ -14,10 +14,6 @@
  *         internal configuration macros are defined.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_DETAIL_PROLOGUE_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_PROLOGUE_HPP_INCLUDED_
 
@@ -46,6 +42,14 @@
 #   ifndef BOOST_LOG_WITHOUT_EVENT_LOG
 #       define BOOST_LOG_WITHOUT_EVENT_LOG
 #   endif
+#endif
+
+#if (defined(_MSC_VER) && (_MSC_VER >= 1020)) || defined(__GNUC__) || defined(BOOST_CLANG) || defined(BOOST_INTEL) || defined(__COMO__) || defined(__DMC__)
+#   define BOOST_LOG_HAS_PRAGMA_ONCE
+#endif
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
 #endif
 
 #if defined(BOOST_MSVC)

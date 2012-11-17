@@ -12,10 +12,6 @@
  * The header contains definition of facilities to define scoped attributes.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_ATTRIBUTES_SCOPED_ATTRIBUTE_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_SCOPED_ATTRIBUTE_HPP_INCLUDED_
 
@@ -34,16 +30,20 @@
 #include <boost/log/utility/unused_variable.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
 
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-    //! A base class for all scoped attribute guards
-    class attribute_scope_guard
-    {
-    };
+//! A base class for all scoped attribute guards
+class attribute_scope_guard
+{
+};
 
 } // namespace aux
 
@@ -52,52 +52,52 @@ typedef aux::attribute_scope_guard const& scoped_attribute;
 
 namespace aux {
 
-    //! A scoped logger attribute guard
-    template< typename LoggerT >
-    class scoped_logger_attribute :
-        public attribute_scope_guard
+//! A scoped logger attribute guard
+template< typename LoggerT >
+class scoped_logger_attribute :
+    public attribute_scope_guard
+{
+    BOOST_MOVABLE_BUT_NOT_COPYABLE(scoped_logger_attribute)
+
+private:
+    //! Logger type
+    typedef LoggerT logger_type;
+
+private:
+    //! A reference to the logger
+    logger_type* m_pLogger;
+    //! An iterator to the added attribute
+    attribute_set::iterator m_itAttribute;
+
+public:
+    //! Constructor
+    scoped_logger_attribute(logger_type& l, attribute_name const& name, attribute const& attr) :
+        m_pLogger(boost::addressof(l))
     {
-        BOOST_MOVABLE_BUT_NOT_COPYABLE(scoped_logger_attribute)
+        std::pair<
+            attribute_set::iterator,
+            bool
+        > res = l.add_attribute(name, attr);
+        if (res.second)
+            m_itAttribute = res.first;
+        else
+            m_pLogger = 0; // if there already is a same-named attribute, don't register anything
+    }
+    //! Move constructor
+    scoped_logger_attribute(BOOST_RV_REF(scoped_logger_attribute) that) :
+        m_pLogger(that.m_pLogger),
+        m_itAttribute(that.m_itAttribute)
+    {
+        that.m_pLogger = 0;
+    }
 
-    private:
-        //! Logger type
-        typedef LoggerT logger_type;
-
-    private:
-        //! A reference to the logger
-        logger_type* m_pLogger;
-        //! An iterator to the added attribute
-        attribute_set::iterator m_itAttribute;
-
-    public:
-        //! Constructor
-        scoped_logger_attribute(logger_type& l, attribute_name const& name, attribute const& attr) :
-            m_pLogger(boost::addressof(l))
-        {
-            std::pair<
-                attribute_set::iterator,
-                bool
-            > res = l.add_attribute(name, attr);
-            if (res.second)
-                m_itAttribute = res.first;
-            else
-                m_pLogger = 0; // if there already is a same-named attribute, don't register anything
-        }
-        //! Move constructor
-        scoped_logger_attribute(BOOST_RV_REF(scoped_logger_attribute) that) :
-            m_pLogger(that.m_pLogger),
-            m_itAttribute(that.m_itAttribute)
-        {
-            that.m_pLogger = 0;
-        }
-
-        //! Destructor
-        ~scoped_logger_attribute()
-        {
-            if (m_pLogger)
-                m_pLogger->remove_attribute(m_itAttribute);
-        }
-    };
+    //! Destructor
+    ~scoped_logger_attribute()
+    {
+        if (m_pLogger)
+            m_pLogger->remove_attribute(m_itAttribute);
+    }
+};
 
 } // namespace aux
 
@@ -155,45 +155,45 @@ BOOST_LOG_FORCEINLINE aux::scoped_logger_attribute< LoggerT > add_scoped_logger_
 
 namespace aux {
 
-    //! A scoped thread-specific attribute guard
-    class scoped_thread_attribute :
-        public attribute_scope_guard
+//! A scoped thread-specific attribute guard
+class scoped_thread_attribute :
+    public attribute_scope_guard
+{
+    BOOST_MOVABLE_BUT_NOT_COPYABLE(scoped_thread_attribute)
+
+private:
+    //! A pointer to the logging core
+    core_ptr m_pCore;
+    //! An iterator to the added attribute
+    attribute_set::iterator m_itAttribute;
+
+public:
+    //! Constructor
+    scoped_thread_attribute(attribute_name const& name, attribute const& attr) :
+        m_pCore(core::get())
     {
-        BOOST_MOVABLE_BUT_NOT_COPYABLE(scoped_thread_attribute)
+        std::pair<
+            attribute_set::iterator,
+            bool
+        > res = m_pCore->add_thread_attribute(name, attr);
+        if (res.second)
+            m_itAttribute = res.first;
+        else
+            m_pCore.reset(); // if there already is a same-named attribute, don't register anything
+    }
+    //! Move constructor
+    scoped_thread_attribute(BOOST_RV_REF(scoped_thread_attribute) that) : m_itAttribute(that.m_itAttribute)
+    {
+        m_pCore.swap(that.m_pCore);
+    }
 
-    private:
-        //! A pointer to the logging core
-        core_ptr m_pCore;
-        //! An iterator to the added attribute
-        attribute_set::iterator m_itAttribute;
-
-    public:
-        //! Constructor
-        scoped_thread_attribute(attribute_name const& name, attribute const& attr) :
-            m_pCore(core::get())
-        {
-            std::pair<
-                attribute_set::iterator,
-                bool
-            > res = m_pCore->add_thread_attribute(name, attr);
-            if (res.second)
-                m_itAttribute = res.first;
-            else
-                m_pCore.reset(); // if there already is a same-named attribute, don't register anything
-        }
-        //! Move constructor
-        scoped_thread_attribute(BOOST_RV_REF(scoped_thread_attribute) that) : m_itAttribute(that.m_itAttribute)
-        {
-            m_pCore.swap(that.m_pCore);
-        }
-
-        //! Destructor
-        ~scoped_thread_attribute()
-        {
-            if (!!m_pCore)
-                m_pCore->remove_thread_attribute(m_itAttribute);
-        }
-    };
+    //! Destructor
+    ~scoped_thread_attribute()
+    {
+        if (!!m_pCore)
+            m_pCore->remove_thread_attribute(m_itAttribute);
+    }
+};
 
 } // namespace aux
 

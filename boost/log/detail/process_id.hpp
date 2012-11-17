@@ -13,10 +13,6 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_DETAIL_PROCESS_ID_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_PROCESS_ID_HPP_INCLUDED_
 
@@ -24,29 +20,33 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/id.hpp>
 
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-    //! The process id descriptor
-    struct process
-    {
-        typedef unsigned long native_type;
-        typedef boost::log::aux::id< process > id;
-    };
+//! The process id descriptor
+struct process
+{
+    typedef unsigned long native_type;
+    typedef boost::log::aux::id< process > id;
+};
 
-    namespace this_process {
+namespace this_process {
 
-        //! The function returns current process identifier
-        BOOST_LOG_API process::id get_id();
+//! The function returns current process identifier
+BOOST_LOG_API process::id get_id();
 
-    } // namespace this_process
+} // namespace this_process
 
-    template< typename CharT, typename TraitsT >
-    BOOST_LOG_API std::basic_ostream< CharT, TraitsT >&
-    operator<< (std::basic_ostream< CharT, TraitsT >& strm, process::id const& pid);
+template< typename CharT, typename TraitsT >
+BOOST_LOG_API std::basic_ostream< CharT, TraitsT >&
+operator<< (std::basic_ostream< CharT, TraitsT >& strm, process::id const& pid);
 
 } // namespace aux
 

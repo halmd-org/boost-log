@@ -12,10 +12,6 @@
  * This header enables Boost.DateTime support for Boost.Log.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SUPPORT_DATE_TIME_HPP_INCLUDED_
 #define BOOST_LOG_SUPPORT_DATE_TIME_HPP_INCLUDED_
 
@@ -37,6 +33,10 @@
 #include <boost/log/detail/decomposed_time.hpp>
 #include <boost/log/detail/date_time_fmt_gen_traits_fwd.hpp>
 #include <boost/log/utility/formatting_stream.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

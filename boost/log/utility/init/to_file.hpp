@@ -12,10 +12,6 @@
  * The header contains implementation of convenience functions for enabling logging to a file.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_INIT_TO_FILE_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_INIT_TO_FILE_HPP_INCLUDED_
 
@@ -39,6 +35,10 @@
 #endif
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/keywords/scan_method.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 //! \cond
 #ifndef BOOST_LOG_NO_THREADS

@@ -13,10 +13,6 @@
  * at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_DETAIL_EMBEDDED_STRING_TYPE_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_EMBEDDED_STRING_TYPE_HPP_INCLUDED_
 
@@ -31,6 +27,10 @@
 #include <boost/type_traits/remove_extent.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

@@ -12,15 +12,15 @@
  * The header contains definition of a features list class template.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SOURCES_FEATURES_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_FEATURES_HPP_INCLUDED_
 
 #include <boost/mpl/lambda.hpp>
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #if defined(BOOST_NO_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 

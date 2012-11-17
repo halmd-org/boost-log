@@ -13,10 +13,6 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_DEFAULT_SINK_HPP_INCLUDED_
 #define BOOST_LOG_DEFAULT_SINK_HPP_INCLUDED_
 
@@ -30,6 +26,10 @@
 #include <boost/log/trivial.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/mutex.hpp>
+#endif
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
 #endif
 
 namespace boost {

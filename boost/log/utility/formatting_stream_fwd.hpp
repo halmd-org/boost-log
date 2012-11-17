@@ -12,16 +12,16 @@
  * The header contains forward declaration of a string stream used for log record formatting.
  */
 
-#if defined(_MSC_VER) && _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_FORMATTING_STREAM_FWD_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_FORMATTING_STREAM_FWD_HPP_INCLUDED_
 
 #include <string>
 #include <memory>
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

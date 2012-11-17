@@ -12,10 +12,6 @@
  * The header contains a generic log record formatter function.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_EXPRESSIONS_FORMATTERS_FORMAT_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_FORMATTERS_FORMAT_HPP_INCLUDED_
 
@@ -29,6 +25,10 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/format.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

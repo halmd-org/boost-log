@@ -12,10 +12,6 @@
  * This header enables Boost.Spirit.Qi support for Boost.Log.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SUPPORT_SPIRIT_QI_HPP_INCLUDED_
 #define BOOST_LOG_SUPPORT_SPIRIT_QI_HPP_INCLUDED_
 
@@ -24,6 +20,10 @@
 #include <boost/spirit/include/qi_parse.hpp>
 #include <boost/spirit/include/qi_domain.hpp>
 #include <boost/spirit/include/support_component.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

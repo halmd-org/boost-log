@@ -12,10 +12,6 @@
  * The header contains implementation of a \c matches predicate in template expressions.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_EXPRESSIONS_PREDICATES_MATCHES_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_PREDICATES_MATCHES_HPP_INCLUDED_
 
@@ -28,6 +24,10 @@
 #include <boost/log/expressions/predicates/predicate.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/utility/functional/matches.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

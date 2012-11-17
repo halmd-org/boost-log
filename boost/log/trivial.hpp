@@ -12,10 +12,6 @@
  * This header defines tools for trivial logging support
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_TRIVIAL_HPP_INCLUDED_
 #define BOOST_LOG_TRIVIAL_HPP_INCLUDED_
 
@@ -24,6 +20,10 @@
 #include <boost/log/keywords/severity.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)

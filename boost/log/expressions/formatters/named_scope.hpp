@@ -12,10 +12,6 @@
  * The header contains a formatter function for named scope attribute values.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_EXPRESSIONS_FORMATTERS_NAMED_SCOPE_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_FORMATTERS_NAMED_SCOPE_HPP_INCLUDED_
 
@@ -43,6 +39,10 @@
 #include <boost/log/keywords/delimiter.hpp>
 #include <boost/log/keywords/depth.hpp>
 #include <boost/log/keywords/iteration.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

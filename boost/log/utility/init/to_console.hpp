@@ -12,10 +12,6 @@
  * The header contains implementation of convenience functions for enabling logging to console.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_INIT_TO_CONSOLE_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_INIT_TO_CONSOLE_HPP_INCLUDED_
 
@@ -34,6 +30,10 @@
 #include <boost/log/keywords/format.hpp>
 #include <boost/log/keywords/filter.hpp>
 #include <boost/log/keywords/auto_flush.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 //! \cond
 #ifndef BOOST_LOG_NO_THREADS

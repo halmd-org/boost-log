@@ -14,10 +14,6 @@
  * on a function callee.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SOURCES_THREADING_MODELS_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_THREADING_MODELS_HPP_INCLUDED_
 
@@ -25,6 +21,10 @@
 #include <boost/log/detail/locks.hpp> // is_mutex_type
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/mpl/bool.hpp>
+#endif
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
 #endif
 
 #ifdef _MSC_VER

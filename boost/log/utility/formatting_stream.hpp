@@ -12,10 +12,6 @@
  * The header contains implementation of a string stream used for log record formatting.
  */
 
-#if defined(_MSC_VER) && _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_FORMATTING_STREAM_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_FORMATTING_STREAM_HPP_INCLUDED_
 
@@ -37,6 +33,10 @@
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
 #include <boost/log/utility/formatting_stream_fwd.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)

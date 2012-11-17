@@ -12,10 +12,6 @@
  * The header contains implementation of convenience functions for registering commonly used attributes.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_INIT_COMMON_ATTRIBUTES_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_INIT_COMMON_ATTRIBUTES_HPP_INCLUDED_
 
@@ -29,6 +25,10 @@
 #include <boost/log/attributes/current_thread_id.hpp>
 #endif
 #include <boost/log/detail/default_attribute_names.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

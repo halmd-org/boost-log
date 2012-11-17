@@ -12,10 +12,6 @@
  * The header contains declaration of an unlocked sink frontend.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_UNLOCKED_FRONTEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_UNLOCKED_FRONTEND_HPP_INCLUDED_
 
@@ -27,6 +23,10 @@
 #include <boost/log/detail/fake_mutex.hpp>
 #include <boost/log/sinks/basic_sink_frontend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)

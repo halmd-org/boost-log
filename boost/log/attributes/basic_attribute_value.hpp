@@ -12,10 +12,6 @@
  * The header contains an implementation of an attribute value base class.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_ATTRIBUTES_BASIC_ATTRIBUTE_VALUE_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_BASIC_ATTRIBUTE_VALUE_HPP_INCLUDED_
 
@@ -23,6 +19,10 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

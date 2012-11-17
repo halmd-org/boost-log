@@ -12,10 +12,6 @@
  * The header contains implementation of a compile-time type dispatcher.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_STATIC_TYPE_DISPATCHER_HPP_INCLUDED_
 #define BOOST_LOG_STATIC_TYPE_DISPATCHER_HPP_INCLUDED_
 
@@ -37,6 +33,10 @@
 #include <boost/log/utility/once_block.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

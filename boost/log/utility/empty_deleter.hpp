@@ -16,14 +16,14 @@
  * deleted (i.e. a variable on the stack or some global singleton, like <tt>std::cout</tt>).
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_EMPTY_DELETER_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_EMPTY_DELETER_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

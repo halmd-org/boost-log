@@ -12,10 +12,6 @@
  * The header contains definition of standard types supported by the library by default.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_STANDARD_TYPES_HPP_INCLUDED_
 #define BOOST_LOG_STANDARD_TYPES_HPP_INCLUDED_
 
@@ -25,6 +21,10 @@
 #include <boost/mpl/back_inserter.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

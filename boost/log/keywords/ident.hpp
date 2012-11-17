@@ -12,15 +12,15 @@
  * The header contains the \c ident keyword declaration.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_KEYWORDS_IDENT_HPP_INCLUDED_
 #define BOOST_LOG_KEYWORDS_IDENT_HPP_INCLUDED_
 
 #include <boost/parameter/keyword.hpp>
 #include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
@@ -28,8 +28,8 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace keywords {
 
-    //! The keyword for passing process identification string to the \c openlog call
-    BOOST_PARAMETER_KEYWORD(tag, ident)
+//! The keyword for passing process identification string to the \c openlog call
+BOOST_PARAMETER_KEYWORD(tag, ident)
 
 } // namespace keywords
 

@@ -12,10 +12,6 @@
  * The header contains definition of generic type dispatcher interfaces.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_TYPE_DISPATCHER_HPP_INCLUDED_
 #define BOOST_LOG_TYPE_DISPATCHER_HPP_INCLUDED_
 
@@ -24,6 +20,10 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/visible_type.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
