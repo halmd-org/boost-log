@@ -13,12 +13,18 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  *
  * The header provides forward declarations of Boost.ASIO that are required for the user's
- * code to compile with Boost.Log. The forward declarations allow not to include the major
+ * code to compile with Boost.Log. The forward declarations allow to avoid including the major
  * part of Boost.ASIO and system headers into user's code.
  */
 
 #ifndef BOOST_LOG_DETAIL_ASIO_FWD_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_ASIO_FWD_HPP_INCLUDED_
+
+#include <boost/log/detail/prologue.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 

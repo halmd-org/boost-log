@@ -46,7 +46,7 @@ class output_manip_terminal
 {
 private:
     //! Self type
-    typedef output_manip_terminal this_type;
+    typedef output_manip_terminal< LeftT, T, FallbackPolicyT, ImplT > this_type;
     //! Attribute value visitor invoker
     typedef value_visitor_invoker< T, FallbackPolicyT > visitor_invoker_type;
     //! Manipulator implementation

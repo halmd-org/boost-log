@@ -38,6 +38,7 @@
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
+#include <boost/log/detail/deduce_char_type.hpp>
 #include <boost/log/expressions/attr_fwd.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/expressions/output_manip_terminal.hpp>
@@ -375,70 +376,6 @@ public:
 #undef BOOST_LOG_AUX_OVERLOAD
 
 namespace aux {
-
-//! Auxiliary traits to detect character type from a string
-template< typename T >
-struct deduce_char_type;
-
-template< typename CharT, typename TraitsT, typename AllocatorT >
-struct deduce_char_type< std::basic_string< CharT, TraitsT, AllocatorT > >
-{
-    typedef CharT type;
-};
-
-template< typename CharT, typename TraitsT >
-struct deduce_char_type< basic_string_literal< CharT, TraitsT > >
-{
-    typedef CharT type;
-};
-
-template< >
-struct deduce_char_type< const char* >
-{
-    typedef char type;
-};
-
-template< >
-struct deduce_char_type< char* >
-{
-    typedef char type;
-};
-
-template< unsigned int CountV >
-struct deduce_char_type< const char(&)[CountV] >
-{
-    typedef char type;
-};
-
-template< unsigned int CountV >
-struct deduce_char_type< char(&)[CountV] >
-{
-    typedef char type;
-};
-
-template< >
-struct deduce_char_type< const wchar_t* >
-{
-    typedef wchar_t type;
-};
-
-template< >
-struct deduce_char_type< wchar_t* >
-{
-    typedef wchar_t type;
-};
-
-template< unsigned int CountV >
-struct deduce_char_type< const wchar_t(&)[CountV] >
-{
-    typedef wchar_t type;
-};
-
-template< unsigned int CountV >
-struct deduce_char_type< wchar_t(&)[CountV] >
-{
-    typedef wchar_t type;
-};
 
 //! Auxiliary traits to acquire correct default delimiter depending on the character type
 template< typename CharT >

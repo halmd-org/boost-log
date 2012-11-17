@@ -8,7 +8,7 @@
 template< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT) >
 BOOST_LOG_FORCEINLINE format_named_scope_actor<
     fallback_to_none,
-    typename aux::deduce_char_type<
+    typename boost::log::aux::deduce_char_type<
         typename parameter::binding<
             typename boost::log::aux::make_arg_list< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), ArgT) >::type,
             keywords::tag::format,
@@ -17,7 +17,7 @@ BOOST_LOG_FORCEINLINE format_named_scope_actor<
     >::type
 > format_named_scope(attribute_name const& name, BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, const& arg))
 {
-    typedef typename aux::deduce_char_type<
+    typedef typename boost::log::aux::deduce_char_type<
         typename parameter::binding<
             typename boost::log::aux::make_arg_list< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), ArgT) >::type,
             keywords::tag::format,
@@ -30,7 +30,7 @@ BOOST_LOG_FORCEINLINE format_named_scope_actor<
 template< typename DescriptorT, template< typename > class ActorT, BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT) >
 BOOST_LOG_FORCEINLINE format_named_scope_actor<
     fallback_to_none,
-    typename aux::deduce_char_type<
+    typename boost::log::aux::deduce_char_type<
         typename parameter::binding<
             typename boost::log::aux::make_arg_list< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), ArgT) >::type,
             keywords::tag::format,
@@ -44,7 +44,7 @@ format_named_scope(attribute_keyword< DescriptorT, ActorT > const& keyword, BOOS
     BOOST_STATIC_ASSERT_MSG((is_same< typename DescriptorT::value_type, attributes::named_scope::value_type >::value),\
         "Boost.Log: Named scope formatter only accepts attribute values of type attributes::named_scope::value_type.");
 
-    typedef typename aux::deduce_char_type<
+    typedef typename boost::log::aux::deduce_char_type<
         typename parameter::binding<
             typename boost::log::aux::make_arg_list< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), ArgT) >::type,
             keywords::tag::format,
@@ -57,7 +57,7 @@ format_named_scope(attribute_keyword< DescriptorT, ActorT > const& keyword, BOOS
 template< typename T, typename FallbackPolicyT, typename TagT, template< typename > class ActorT, BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT) >
 BOOST_LOG_FORCEINLINE format_named_scope_actor<
     FallbackPolicyT,
-    typename aux::deduce_char_type<
+    typename boost::log::aux::deduce_char_type<
         typename parameter::binding<
             typename boost::log::aux::make_arg_list< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), ArgT) >::type,
             keywords::tag::format,
@@ -71,7 +71,7 @@ format_named_scope(attribute_actor< T, FallbackPolicyT, TagT, ActorT > const& pl
     BOOST_STATIC_ASSERT_MSG((is_same< T, attributes::named_scope::value_type >::value),\
         "Boost.Log: Named scope formatter only accepts attribute values of type attributes::named_scope::value_type.");
 
-    typedef typename aux::deduce_char_type<
+    typedef typename boost::log::aux::deduce_char_type<
         typename parameter::binding<
             typename boost::log::aux::make_arg_list< BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), ArgT) >::type,
             keywords::tag::format,

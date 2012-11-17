@@ -26,6 +26,10 @@
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/utility/formatting_stream.hpp>
 
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE

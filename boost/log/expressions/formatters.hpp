@@ -18,8 +18,11 @@
 #include <boost/log/detail/prologue.hpp>
 
 #include <boost/log/expressions/formatters/format.hpp>
+
 #include <boost/log/expressions/formatters/date_time.hpp>
 #include <boost/log/expressions/formatters/named_scope.hpp>
+
+#include <boost/log/expressions/formatters/char_decorator.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
