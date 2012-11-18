@@ -21,7 +21,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/expressions/attr.hpp>
 #include <boost/log/utility/functional/bind_to_log.hpp>
-#include <boost/log/expressions/output_manip_terminal.hpp>
+#include <boost/log/expressions/attr_output_terminal.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -39,7 +39,7 @@ template< typename LeftT, typename T, typename FallbackPolicyT, typename TagT >
 struct make_output_expression
 {
     //! Resulting expression
-    typedef output_manip_terminal< LeftT, T, FallbackPolicyT, to_log_fun< TagT > > type;
+    typedef attribute_output_terminal< LeftT, T, FallbackPolicyT, to_log_fun< TagT > > type;
 
     //! Creates the output expression
     template< typename RightT >
@@ -74,7 +74,7 @@ struct make_output_actor< ActorT< LeftExprT >, RightT, ValueT, false >
 template< template< typename > class ActorT, typename LeftExprT, typename RightT, typename ValueT >
 struct make_output_actor< ActorT< LeftExprT >, RightT, ValueT, true >
 {
-    typedef output_manip_terminal< ActorT< LeftExprT >, ValueT, typename RightT::fallback_policy, to_log_fun< typename RightT::tag_type > > expression_type;
+    typedef attribute_output_terminal< ActorT< LeftExprT >, ValueT, typename RightT::fallback_policy, to_log_fun< typename RightT::tag_type > > expression_type;
 
     typedef ActorT< expression_type > type;
 

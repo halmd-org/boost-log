@@ -5,15 +5,15 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   output_manip_terminal.hpp
+ * \file   attribute_output_terminal.hpp
  * \author Andrey Semashev
  * \date   06.11.2012
  *
  * The header contains implementation of a generic output manipulator in template expressions.
  */
 
-#ifndef BOOST_LOG_EXPRESSIONS_OUTPUT_MANIP_TERMINAL_HPP_INCLUDED_
-#define BOOST_LOG_EXPRESSIONS_OUTPUT_MANIP_TERMINAL_HPP_INCLUDED_
+#ifndef BOOST_LOG_EXPRESSIONS_ATTR_OUTPUT_TERMINAL_HPP_INCLUDED_
+#define BOOST_LOG_EXPRESSIONS_ATTR_OUTPUT_TERMINAL_HPP_INCLUDED_
 
 #include <boost/mpl/bool.hpp>
 #include <boost/phoenix/core/actor.hpp>
@@ -42,11 +42,11 @@ namespace expressions {
 
 //! Attribute stream output expression
 template< typename LeftT, typename T, typename FallbackPolicyT, typename ImplT >
-class output_manip_terminal
+class attribute_output_terminal
 {
 private:
     //! Self type
-    typedef output_manip_terminal< LeftT, T, FallbackPolicyT, ImplT > this_type;
+    typedef attribute_output_terminal< LeftT, T, FallbackPolicyT, ImplT > this_type;
     //! Attribute value visitor invoker
     typedef value_visitor_invoker< T, FallbackPolicyT > visitor_invoker_type;
     //! Manipulator implementation
@@ -94,24 +94,24 @@ private:
 
 public:
     //! Initializing constructor
-    output_manip_terminal(LeftT const& left, attribute_name const& name) : m_left(left), m_name(name)
+    attribute_output_terminal(LeftT const& left, attribute_name const& name) : m_left(left), m_name(name)
     {
     }
 
     //! Initializing constructor
-    output_manip_terminal(LeftT const& left, attribute_name const& name, impl_type const& impl) : m_left(left), m_name(name), m_impl(impl)
+    attribute_output_terminal(LeftT const& left, attribute_name const& name, impl_type const& impl) : m_left(left), m_name(name), m_impl(impl)
     {
     }
 
     //! Initializing constructor
     template< typename U >
-    output_manip_terminal(LeftT const& left, attribute_name const& name, impl_type const& impl, U const& arg) :
+    attribute_output_terminal(LeftT const& left, attribute_name const& name, impl_type const& impl, U const& arg) :
         m_left(left), m_name(name), m_visitor_invoker(arg), m_impl(impl)
     {
     }
 
     //! Copy constructor
-    output_manip_terminal(output_manip_terminal const& that) :
+    attribute_output_terminal(attribute_output_terminal const& that) :
         m_left(that.m_left), m_name(that.m_name), m_visitor_invoker(that.m_visitor_invoker), m_impl(that.m_impl)
     {
     }
@@ -148,7 +148,7 @@ namespace phoenix {
 namespace result_of {
 
 template< typename LeftT, typename T, typename FallbackPolicyT, typename ImplT >
-struct is_nullary< custom_terminal< boost::log::expressions::output_manip_terminal< LeftT, T, FallbackPolicyT, ImplT > > > :
+struct is_nullary< custom_terminal< boost::log::expressions::attribute_output_terminal< LeftT, T, FallbackPolicyT, ImplT > > > :
     public mpl::false_
 {
 };
@@ -161,4 +161,4 @@ struct is_nullary< custom_terminal< boost::log::expressions::output_manip_termin
 
 } // namespace boost
 
-#endif // BOOST_LOG_EXPRESSIONS_OUTPUT_MANIP_TERMINAL_HPP_INCLUDED_
+#endif // BOOST_LOG_EXPRESSIONS_ATTR_OUTPUT_TERMINAL_HPP_INCLUDED_
