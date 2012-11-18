@@ -20,7 +20,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/core/record.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -63,7 +63,7 @@ public:
      *
      * \param attributes A set of attribute values of a logging record
      */
-    virtual bool will_consume(attribute_values_view const& attributes) = 0;
+    virtual bool will_consume(attribute_value_set const& attributes) = 0;
 
     /*!
      * The method puts logging record to the sink

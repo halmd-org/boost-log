@@ -19,7 +19,7 @@
 #include <boost/move/move.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/detail/atomic_count.hpp>
@@ -71,14 +71,14 @@ private:
 #endif // BOOST_LOG_NO_THREADS
 
         //! Attribute values view
-        attribute_values_view m_attribute_values;
+        attribute_value_set m_attribute_values;
         //! Pointer to the private implemntation
         private_data* m_private;
         //! Shows if the record has already been detached from thread
         bool m_detached;
 
         //! Constructor from the attribute sets
-        explicit public_data(BOOST_RV_REF(attribute_values_view) values) :
+        explicit public_data(BOOST_RV_REF(attribute_value_set) values) :
             m_ref_counter(0),
             m_attribute_values(values),
             m_private(NULL),
@@ -86,7 +86,7 @@ private:
         {
         }
         //! Constructor from the attribute sets
-        explicit public_data(attribute_values_view const& values) :
+        explicit public_data(attribute_value_set const& values) :
             m_ref_counter(0),
             m_attribute_values(values),
             m_private(NULL),
@@ -159,7 +159,7 @@ public:
      *
      * \pre <tt>!!*this</tt>
      */
-    attribute_values_view const& attribute_values() const BOOST_NOEXCEPT
+    attribute_value_set const& attribute_values() const BOOST_NOEXCEPT
     {
         return m_impl->m_attribute_values;
     }

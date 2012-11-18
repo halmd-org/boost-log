@@ -27,7 +27,7 @@
 #include <boost/move/move.hpp>
 #include <boost/log/core/core.hpp>
 #include <boost/log/sinks/sink.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/detail/singleton.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/tss.hpp>
@@ -154,13 +154,13 @@ BOOST_LOG_API void record::detach_from_thread()
 {
     if (!m_impl->m_detached)
     {
-        attribute_values_view::const_iterator
+        attribute_value_set::const_iterator
             it = m_impl->m_attribute_values.begin(),
             end = m_impl->m_attribute_values.end();
         for (; it != end; ++it)
         {
             // Yep, a bit hackish. I'll need a better backdoor to do it gracefully.
-            const_cast< attribute_values_view::mapped_type& >(it->second).detach_from_thread();
+            const_cast< attribute_value_set::mapped_type& >(it->second).detach_from_thread();
         }
 
         m_impl->m_detached = true;
@@ -245,7 +245,7 @@ public:
     }
 
     //! Invokes sink-specific filter and adds the sink to the record if the filter passes the log record
-    void apply_sink_filter(shared_ptr< sinks::sink > const& sink, record_private_data*& rec_impl, attribute_values_view const& attr_values, uint32_t remaining_capacity)
+    void apply_sink_filter(shared_ptr< sinks::sink > const& sink, record_private_data*& rec_impl, attribute_value_set const& attr_values, uint32_t remaining_capacity)
     {
         try
         {
@@ -508,7 +508,7 @@ record core::open_record(attribute_set const& source_attributes)
         if (m_impl->m_enabled)
         {
             // Compose a view of attribute values (unfrozen, yet)
-            attribute_values_view attr_values(source_attributes, tsd->m_thread_attributes, m_impl->m_global_attributes);
+            attribute_value_set attr_values(source_attributes, tsd->m_thread_attributes, m_impl->m_global_attributes);
 
             if (m_impl->m_filter(attr_values))
             {

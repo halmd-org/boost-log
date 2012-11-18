@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   attribute_values_view.cpp
+ * \file   attribute_value_set.cpp
  * \author Andrey Semashev
  * \date   19.04.2007
  *
@@ -22,7 +22,7 @@
 #include <boost/intrusive/derivation_value_traits.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include "alignment_gap_between.hpp"
 #include "attribute_set_impl.hpp"
 #include "stateless_allocator.hpp"
@@ -31,13 +31,13 @@ namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
-BOOST_LOG_FORCEINLINE attribute_values_view::node_base::node_base() :
+BOOST_LOG_FORCEINLINE attribute_value_set::node_base::node_base() :
     m_pPrev(NULL),
     m_pNext(NULL)
 {
 }
 
-BOOST_LOG_FORCEINLINE attribute_values_view::node::node(key_type const& key, mapped_type& data, bool dynamic) :
+BOOST_LOG_FORCEINLINE attribute_value_set::node::node(key_type const& key, mapped_type& data, bool dynamic) :
     node_base(),
     m_Value(key, mapped_type()),
     m_DynamicallyAllocated(dynamic)
@@ -46,7 +46,7 @@ BOOST_LOG_FORCEINLINE attribute_values_view::node::node(key_type const& key, map
 }
 
 //! Container implementation
-struct attribute_values_view::implementation
+struct attribute_value_set::implementation
 {
 public:
     typedef key_type::id_type id_type;
@@ -407,16 +407,16 @@ private:
 #pragma warning(disable: 4355)
 #endif
 
-//! The constructor creates an empty view
-BOOST_LOG_API attribute_values_view::attribute_values_view(
+//! The constructor creates an empty set
+BOOST_LOG_API attribute_value_set::attribute_value_set(
     size_type reserve_count
 ) :
     m_pImpl(implementation::create(reserve_count))
 {
 }
 
-//! The constructor adopts three attribute sets to the view
-BOOST_LOG_API attribute_values_view::attribute_values_view(
+//! The constructor adopts three attribute sets to the set
+BOOST_LOG_API attribute_value_set::attribute_value_set(
     attribute_set_type const& source_attrs,
     attribute_set_type const& thread_attrs,
     attribute_set_type const& global_attrs,
@@ -427,7 +427,7 @@ BOOST_LOG_API attribute_values_view::attribute_values_view(
 }
 
 //! Copy constructor
-BOOST_LOG_API attribute_values_view::attribute_values_view(attribute_values_view const& that)
+BOOST_LOG_API attribute_value_set::attribute_value_set(attribute_value_set const& that)
 {
     if (that.m_pImpl)
         m_pImpl = implementation::copy(that.m_pImpl);
@@ -440,7 +440,7 @@ BOOST_LOG_API attribute_values_view::attribute_values_view(attribute_values_view
 #endif
 
 //! Destructor
-BOOST_LOG_API attribute_values_view::~attribute_values_view() BOOST_NOEXCEPT
+BOOST_LOG_API attribute_value_set::~attribute_value_set() BOOST_NOEXCEPT
 {
     if (m_pImpl)
     {
@@ -450,41 +450,41 @@ BOOST_LOG_API attribute_values_view::~attribute_values_view() BOOST_NOEXCEPT
 }
 
 //  Iterator generators
-BOOST_LOG_API attribute_values_view::const_iterator
-attribute_values_view::begin() const
+BOOST_LOG_API attribute_value_set::const_iterator
+attribute_value_set::begin() const
 {
-    return const_iterator(m_pImpl->begin(), const_cast< attribute_values_view* >(this));
+    return const_iterator(m_pImpl->begin(), const_cast< attribute_value_set* >(this));
 }
 
-BOOST_LOG_API attribute_values_view::const_iterator
-attribute_values_view::end() const
+BOOST_LOG_API attribute_value_set::const_iterator
+attribute_value_set::end() const
 {
-    return const_iterator(m_pImpl->end(), const_cast< attribute_values_view* >(this));
+    return const_iterator(m_pImpl->end(), const_cast< attribute_value_set* >(this));
 }
 
 //! The method returns number of elements in the container
-BOOST_LOG_API attribute_values_view::size_type
-attribute_values_view::size() const
+BOOST_LOG_API attribute_value_set::size_type
+attribute_value_set::size() const
 {
     return m_pImpl->size();
 }
 
 //! Internal lookup implementation
-BOOST_LOG_API attribute_values_view::const_iterator
-attribute_values_view::find(key_type key) const
+BOOST_LOG_API attribute_value_set::const_iterator
+attribute_value_set::find(key_type key) const
 {
-    return const_iterator(m_pImpl->find(key), const_cast< attribute_values_view* >(this));
+    return const_iterator(m_pImpl->find(key), const_cast< attribute_value_set* >(this));
 }
 
-//! The method acquires values of all adopted attributes. Users don't need to call it, since will always get an already frozen view.
-BOOST_LOG_API void attribute_values_view::freeze()
+//! The method acquires values of all adopted attributes. Users don't need to call it, since will always get an already frozen set.
+BOOST_LOG_API void attribute_value_set::freeze()
 {
     m_pImpl->freeze();
 }
 
-//! Inserts an element into the view
-BOOST_LOG_API std::pair< attribute_values_view::const_iterator, bool >
-attribute_values_view::insert(key_type key, mapped_type const& mapped)
+//! Inserts an element into the set
+BOOST_LOG_API std::pair< attribute_value_set::const_iterator, bool >
+attribute_value_set::insert(key_type key, mapped_type const& mapped)
 {
     std::pair< node*, bool > res = m_pImpl->insert(key, mapped);
     return std::pair< const_iterator, bool >(const_iterator(res.first, this), res.second);

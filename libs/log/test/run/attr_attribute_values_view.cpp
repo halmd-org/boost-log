@@ -25,7 +25,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 #include "char_definitions.hpp"

@@ -21,7 +21,7 @@
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include "char_definitions.hpp"
 
 namespace mpl = boost::mpl;

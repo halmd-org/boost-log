@@ -26,7 +26,7 @@
 
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/core/record.hpp>
 
 #ifdef _MSC_VER
@@ -71,7 +71,7 @@ public:
     class debugger_presence_filter
     {
     public:
-        BOOST_LOG_API bool operator() (attribute_values_view const& values) const;
+        BOOST_LOG_API bool operator() (attribute_value_set const& values) const;
     };
 
 #endif // BOOST_LOG_DOXYGEN_PASS

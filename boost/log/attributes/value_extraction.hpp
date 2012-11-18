@@ -32,7 +32,7 @@
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/attributes/value_ref.hpp>
 #include <boost/log/attributes/value_extraction_fwd.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
@@ -223,11 +223,11 @@ public:
      * \param attrs A set of attribute values in which to look for the specified attribute value.
      * \return The extracted value, if extraction succeeded, an empty value otherwise.
      */
-    result_type operator() (attribute_name const& name, attribute_values_view const& attrs) const
+    result_type operator() (attribute_name const& name, attribute_value_set const& attrs) const
     {
         try
         {
-            attribute_values_view::const_iterator it = attrs.find(name);
+            attribute_value_set::const_iterator it = attrs.find(name);
             if (it != attrs.end())
                 return operator() (it->second);
             else
@@ -279,7 +279,7 @@ public:
  * \return A \c value_ref that refers to the extracted value, if found. An empty value otherwise.
  */
 template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
-inline typename result_of::extract< T, TagT >::type extract(attribute_name const& name, attribute_values_view const& attrs)
+inline typename result_of::extract< T, TagT >::type extract(attribute_name const& name, attribute_value_set const& attrs)
 {
     value_extractor< T, fallback_to_none, TagT > extractor;
     return extractor(name, attrs);
@@ -324,7 +324,7 @@ inline typename result_of::extract< T, TagT >::type extract(attribute_value cons
  * \throws An exception is thrown if the requested value cannot be extracted.
  */
 template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
-inline typename result_of::extract_or_throw< T, TagT >::type extract_or_throw(attribute_name const& name, attribute_values_view const& attrs)
+inline typename result_of::extract_or_throw< T, TagT >::type extract_or_throw(attribute_name const& name, attribute_value_set const& attrs)
 {
     value_extractor< T, fallback_to_throw, TagT > extractor;
     return aux::unwrap_value_ref(extractor(name, attrs));
@@ -375,7 +375,7 @@ inline typename result_of::extract_or_throw< T, TagT >::type extract_or_throw(at
  */
 template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT, typename DefaultT >
 inline typename result_of::extract_or_default< T, DefaultT, TagT >::type extract_or_default(
-    attribute_name const& name, attribute_values_view const& attrs, DefaultT const& def_val)
+    attribute_name const& name, attribute_value_set const& attrs, DefaultT const& def_val)
 {
     typedef typename result_of::extract_or_default< T, DefaultT >::extracted_type extracted_type;
     value_extractor< extracted_type, fallback_to_default< DefaultT const& >, TagT > extractor(def_val);
@@ -427,7 +427,7 @@ inline typename result_of::extract_or_default< T, DefaultT, TagT >::type extract
 #if defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
 
 template< typename T >
-inline typename result_of::extract< T >::type extract(attribute_name const& name, attribute_values_view const& attrs)
+inline typename result_of::extract< T >::type extract(attribute_name const& name, attribute_value_set const& attrs)
 {
     value_extractor< T, fallback_to_none > extractor;
     return extractor(name, attrs);
@@ -448,7 +448,7 @@ inline typename result_of::extract< T >::type extract(attribute_value const& val
 }
 
 template< typename T >
-inline typename result_of::extract_or_throw< T >::type extract_or_throw(attribute_name const& name, attribute_values_view const& attrs)
+inline typename result_of::extract_or_throw< T >::type extract_or_throw(attribute_name const& name, attribute_value_set const& attrs)
 {
     value_extractor< T, fallback_to_throw > extractor;
     return aux::unwrap_value_ref(extractor(name, attrs));
@@ -470,7 +470,7 @@ inline typename result_of::extract_or_throw< T >::type extract_or_throw(attribut
 
 template< typename T, typename DefaultT >
 inline typename result_of::extract_or_default< T, DefaultT >::type extract_or_default(
-    attribute_name const& name, attribute_values_view const& attrs, DefaultT const& def_val)
+    attribute_name const& name, attribute_value_set const& attrs, DefaultT const& def_val)
 {
     typedef typename result_of::extract_or_default< T, DefaultT >::extracted_type extracted_type;
     value_extractor< extracted_type, fallback_to_default< DefaultT const& > > extractor(def_val);

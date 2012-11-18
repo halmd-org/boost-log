@@ -34,7 +34,7 @@
 #include <boost/log/filters/basic_filters.hpp>
 #include <boost/log/filters/exception_policies.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

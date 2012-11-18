@@ -23,7 +23,7 @@
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/expressions/filter.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

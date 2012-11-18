@@ -39,8 +39,8 @@ BOOST_LOG_API void basic_record_ostream< CharT >::init_stream()
         attribute_value value(p);
 
         // This may fail if the record already has Message attribute
-        std::pair< attribute_values_view::const_iterator, bool > res =
-            const_cast< attribute_values_view& >(m_Record.attribute_values()).insert(expressions::tag::message::get_name(), value);
+        std::pair< attribute_value_set::const_iterator, bool > res =
+            const_cast< attribute_value_set& >(m_Record.attribute_values()).insert(expressions::tag::message::get_name(), value);
         if (!res.second)
             const_cast< attribute_value& >(res.first->second).swap(value);
 

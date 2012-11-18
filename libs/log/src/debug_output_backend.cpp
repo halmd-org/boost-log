@@ -43,7 +43,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 } // namespace
 
 template< typename CharT >
-BOOST_LOG_API bool basic_debug_output_backend< CharT >::debugger_presence_filter::operator() (attribute_values_view const&) const
+BOOST_LOG_API bool basic_debug_output_backend< CharT >::debugger_presence_filter::operator() (attribute_value_set const&) const
 {
     return (IsDebuggerPresent() != FALSE);
 }

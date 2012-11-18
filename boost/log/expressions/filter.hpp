@@ -18,7 +18,7 @@
 #include <boost/move/move.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/detail/light_function.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
@@ -42,13 +42,13 @@ public:
 
 private:
     //! Filter function type
-    typedef boost::log::aux::light_function1< bool, attribute_values_view const& > filter_type;
+    typedef boost::log::aux::light_function1< bool, attribute_value_set const& > filter_type;
 
     //! Default filter, always returns \c true
     struct default_filter
     {
         typedef bool result_type;
-        result_type operator() (attribute_values_view const&) const { return true; }
+        result_type operator() (attribute_value_set const&) const { return true; }
     };
 
 private:
@@ -127,7 +127,7 @@ public:
      * \param values Attribute values of the log record.
      * \return \c true if the log record passes the filter, \c false otherwise.
      */
-    result_type operator() (attribute_values_view const& values) const
+    result_type operator() (attribute_value_set const& values) const
     {
         return m_Filter(values);
     }

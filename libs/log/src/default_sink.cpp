@@ -177,7 +177,7 @@ default_sink::~default_sink()
 {
 }
 
-bool default_sink::will_consume(attribute_values_view const&)
+bool default_sink::will_consume(attribute_value_set const&)
 {
     return true;
 }

@@ -24,7 +24,7 @@
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/expressions/filter.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/expressions/attr.hpp>

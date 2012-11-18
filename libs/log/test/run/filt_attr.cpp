@@ -23,7 +23,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/filters/attr.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include <boost/log/support/regex.hpp>

@@ -19,7 +19,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/expressions/unary_function_terminal.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
@@ -108,7 +108,7 @@ public:
      * \param attrs A set of attribute values
      * \return \c true if the log record contains the sought attribute value, \c false otherwise
      */
-    result_type operator() (attribute_values_view const& attrs) const
+    result_type operator() (attribute_value_set const& attrs) const
     {
         return attrs.find(m_name) != attrs.end();
     }

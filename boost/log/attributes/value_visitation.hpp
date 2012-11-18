@@ -45,7 +45,7 @@
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/attributes/value_visitation_fwd.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
@@ -346,11 +346,11 @@ public:
      */
     template< typename VisitorT >
     typename result_of::visit< value_type, VisitorT >::type
-    operator() (attribute_name const& name, attribute_values_view const& attrs, VisitorT visitor) const
+    operator() (attribute_name const& name, attribute_value_set const& attrs, VisitorT visitor) const
     {
         try
         {
-            attribute_values_view::const_iterator it = attrs.find(name);
+            attribute_value_set::const_iterator it = attrs.find(name);
             if (it != attrs.end())
                 return operator() (it->second, visitor);
             else
@@ -403,7 +403,7 @@ public:
  */
 template< typename T, typename VisitorT >
 typename result_of::visit< T, VisitorT >::type
-visit(attribute_name const& name, attribute_values_view const& attrs, VisitorT visitor);
+visit(attribute_name const& name, attribute_value_set const& attrs, VisitorT visitor);
 
 /*!
  * The function applies a visitor to an attribute value from the view. The user has to explicitly specify the
@@ -434,7 +434,7 @@ visit(attribute_value const& value, VisitorT visitor);
 
 template< typename T, typename VisitorT >
 inline typename result_of::visit< T, VisitorT >::type
-visit(attribute_name const& name, attribute_values_view const& attrs, VisitorT visitor)
+visit(attribute_name const& name, attribute_value_set const& attrs, VisitorT visitor)
 {
     value_visitor_invoker< T > invoker;
     return invoker(name, attrs, visitor);

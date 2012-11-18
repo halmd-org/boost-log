@@ -31,7 +31,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/keywords/message_file.hpp>
 #include <boost/log/keywords/log_name.hpp>
 #include <boost/log/keywords/log_source.hpp>

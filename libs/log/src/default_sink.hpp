@@ -56,7 +56,7 @@ private:
 public:
     default_sink();
     ~default_sink();
-    bool will_consume(attribute_values_view const&);
+    bool will_consume(attribute_value_set const&);
     void consume(record const& rec);
     void flush();
 };

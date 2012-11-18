@@ -5,17 +5,17 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   attribute_values_view.hpp
+ * \file   attribute_value_set.hpp
  * \author Andrey Semashev
  * \date   21.04.2007
  *
- * This header file contains definition of attribute values view. The view is constructed from
+ * This header file contains definition of attribute value set. The set is constructed from
  * three attribute sets (global, thread-specific and source-specific) and contains attribute
  * values.
  */
 
-#ifndef BOOST_LOG_ATTRIBUTE_VALUES_VIEW_HPP_INCLUDED_
-#define BOOST_LOG_ATTRIBUTE_VALUES_VIEW_HPP_INCLUDED_
+#ifndef BOOST_LOG_ATTRIBUTE_VALUE_SET_HPP_INCLUDED_
+#define BOOST_LOG_ATTRIBUTE_VALUE_SET_HPP_INCLUDED_
 
 #include <cstddef>
 #include <utility>
@@ -37,19 +37,19 @@ namespace boost {
 BOOST_LOG_OPEN_NAMESPACE
 
 /*!
- * \brief A view of attribute values
+ * \brief A set of attribute values
  *
- * Attribute values view is an associative container with attribute name as a key and
+ * The set of attribute values is an associative container with attribute name as a key and
  * a pointer to attribute value object as a mapped type. This is a collection of elements with unique
- * keys, that is, there can be only one attribute value with a given name in a view. With respect to
- * read-only capabilities, the view interface is close to \c std::unordered_map.
+ * keys, that is, there can be only one attribute value with a given name in the set. With respect to
+ * read-only capabilities, the set interface is close to \c std::unordered_map.
  *
- * The view is designed to be only capable of adding elements to it. Once added, the attribute value
- * cannot be removed from the view.
+ * The set is designed to be only capable of adding elements to it. Once added, the attribute value
+ * cannot be removed from the set.
  *
- * An instance of attribute values view can be constructed from three attribute sets. The constructor attempts to
- * accommodate values all attributes from the sets. The situation when a same-named attribute is found
- * in more than one attribute set is possible. This problem is solved on construction of the view: the three
+ * An instance of attribute value set can be constructed from three attribute sets. The constructor attempts to
+ * accommodate values of all attributes from the sets. The situation when a same-named attribute is found
+ * in more than one attribute set is possible. This problem is solved on construction of the value set: the three
  * attribute sets have different priorities when it comes to solving conflicts.
  *
  * From the library perspective the three source attribute sets are global, thread-specific and source-specific
@@ -58,16 +58,16 @@ BOOST_LOG_OPEN_NAMESPACE
  *
  * For sake of performance, the attribute values are not immediately acquired from attribute sets at construction.
  * Instead, on-demand acquisition is performed either on iterator dereferencing or on call to the \c freeze method.
- * Once acquired, the attribute value stays within the view until its destruction. This nuance does not affect
- * other view properties, such as size or lookup ability. The logging core automatically freezes the view
- * at the right point, so users should not be bothered unless they manually create attribute value views.
+ * Once acquired, the attribute value stays within the set until its destruction. This nuance does not affect
+ * other set properties, such as size or lookup ability. The logging core automatically freezes the set
+ * at the right point, so users should not be bothered unless they manually create attribute value sets.
  *
- * \note The attribute sets that were used for the view construction must not be modified or destroyed
- *       until the view is frozen. Otherwise the behavior is undefined.
+ * \note The attribute sets that were used for the value set construction must not be modified or destroyed
+ *       until the value set is frozen. Otherwise the behavior is undefined.
  */
-class attribute_values_view
+class attribute_value_set
 {
-    BOOST_COPYABLE_AND_MOVABLE_ALT(attribute_values_view)
+    BOOST_COPYABLE_AND_MOVABLE_ALT(attribute_value_set)
 
 public:
     //! Key type
@@ -128,16 +128,16 @@ public:
     {
     public:
         //  Standard typedefs
-        typedef attribute_values_view::difference_type difference_type;
-        typedef attribute_values_view::value_type value_type;
-        typedef attribute_values_view::const_reference reference;
-        typedef attribute_values_view::const_pointer pointer;
+        typedef attribute_value_set::difference_type difference_type;
+        typedef attribute_value_set::value_type value_type;
+        typedef attribute_value_set::const_reference reference;
+        typedef attribute_value_set::const_pointer pointer;
         typedef std::bidirectional_iterator_tag iterator_category;
 
     public:
         //  Constructors
         BOOST_CONSTEXPR const_iterator() : m_pNode(NULL), m_pContainer(NULL) {}
-        explicit const_iterator(node_base* n, attribute_values_view* cont) BOOST_NOEXCEPT :
+        explicit const_iterator(node_base* n, attribute_value_set* cont) BOOST_NOEXCEPT :
             m_pNode(n),
             m_pContainer(cont)
         {
@@ -187,7 +187,7 @@ public:
 
     private:
         node_base* m_pNode;
-        attribute_values_view* m_pContainer;
+        attribute_value_set* m_pContainer;
     };
 
 #else
@@ -207,35 +207,35 @@ public:
     /*!
      * Default constructor
      *
-     * The constructor creates an empty view which can be filled later by subsequent
+     * The constructor creates an empty set which can be filled later by subsequent
      * calls of \c insert method. Optionally, the amount of storage reserved for elements
      * to be inserted may be passed to the constructor.
-     * The constructed view is frozen.
+     * The constructed set is frozen.
      *
      * \param reserve_count Number of elements to reserve space for.
      */
-    BOOST_LOG_API explicit attribute_values_view(size_type reserve_count = 1);
+    BOOST_LOG_API explicit attribute_value_set(size_type reserve_count = 1);
 
     /*!
      * Move constructor
      */
-    attribute_values_view(BOOST_RV_REF(attribute_values_view) that) BOOST_NOEXCEPT : m_pImpl(that.m_pImpl)
+    attribute_value_set(BOOST_RV_REF(attribute_value_set) that) BOOST_NOEXCEPT : m_pImpl(that.m_pImpl)
     {
         that.m_pImpl = NULL;
     }
 
     /*!
-     * The constructor adopts three attribute sets into the view.
+     * The constructor adopts three attribute sets into the value set.
      * The \a source_attrs attributes have the greatest preference when a same-named
      * attribute is found in several sets, \a global_attrs has the least.
-     * The constructed view is not frozen.
+     * The constructed set is not frozen.
      *
      * \param source_attrs A set of source-specific attributes.
      * \param thread_attrs A set of thread-specific attributes.
      * \param global_attrs A set of global attributes.
      * \param reserve_count Amount of elements to reserve space for, in addition to the elements in the three attribute sets provided.
      */
-    BOOST_LOG_API attribute_values_view(
+    BOOST_LOG_API attribute_value_set(
         attribute_set_type const& source_attrs,
         attribute_set_type const& thread_attrs,
         attribute_set_type const& global_attrs,
@@ -244,31 +244,31 @@ public:
     /*!
      * Copy constructor.
      *
-     * \pre The original view is frozen.
-     * \post The constructed view is frozen, <tt>std::equal(begin(), end(), that.begin()) == true</tt>
+     * \pre The original set is frozen.
+     * \post The constructed set is frozen, <tt>std::equal(begin(), end(), that.begin()) == true</tt>
      */
-    BOOST_LOG_API attribute_values_view(attribute_values_view const& that);
+    BOOST_LOG_API attribute_value_set(attribute_value_set const& that);
 
     /*!
      * Destructor. Releases all referenced attribute values.
      */
-    BOOST_LOG_API ~attribute_values_view() BOOST_NOEXCEPT;
+    BOOST_LOG_API ~attribute_value_set() BOOST_NOEXCEPT;
 
     /*!
      * Assignment operator
      */
-    attribute_values_view& operator= (attribute_values_view that) BOOST_NOEXCEPT
+    attribute_value_set& operator= (attribute_value_set that) BOOST_NOEXCEPT
     {
         this->swap(that);
         return *this;
     }
 
     /*!
-     * Swaps two views
+     * Swaps two sets
      *
      * \b Throws: Nothing.
      */
-    void swap(attribute_values_view& that) BOOST_NOEXCEPT
+    void swap(attribute_value_set& that) BOOST_NOEXCEPT
     {
         register implementation* const p = m_pImpl;
         m_pImpl = that.m_pImpl;
@@ -276,16 +276,16 @@ public:
     }
 
     /*!
-     * \return Iterator to the first element of the view.
+     * \return Iterator to the first element of the set.
      */
     BOOST_LOG_API const_iterator begin() const;
     /*!
-     * \return Iterator to the after-the-last element of the view.
+     * \return Iterator to the after-the-last element of the set.
      */
     BOOST_LOG_API const_iterator end() const;
 
     /*!
-     * \return Number of elements in the view.
+     * \return Number of elements in the set.
      */
     BOOST_LOG_API size_type size() const;
     /*!
@@ -336,7 +336,7 @@ public:
     }
 
     /*!
-     * The method counts the number of the attribute value occurrences in the view. Since there can be only one
+     * The method counts the number of the attribute value occurrences in the set. Since there can be only one
      * attribute value with a particular key, the method always return 0 or 1.
      *
      * \param key Attribute name.
@@ -347,33 +347,33 @@ public:
     /*!
      * The method acquires values of all adopted attributes.
      *
-     * \post The view is frozen.
+     * \post The set is frozen.
      */
     BOOST_LOG_API void freeze();
 
     /*!
-     * Inserts an element into the view. The complexity of the operation is amortized constant.
+     * Inserts an element into the set. The complexity of the operation is amortized constant.
      *
-     * \pre The view is frozen.
+     * \pre The set is frozen.
      *
      * \param key The attribute name.
      * \param mapped The attribute value.
      *
      * \returns An iterator to the inserted element and \c true if insertion succeeded. Otherwise,
-     *          if the view already contains a same-named attribute value, iterator to the
+     *          if the set already contains a same-named attribute value, iterator to the
      *          existing element and \c false.
      */
     BOOST_LOG_API std::pair< const_iterator, bool > insert(key_type key, mapped_type const& mapped);
 
     /*!
-     * Inserts an element into the view. The complexity of the operation is amortized constant.
+     * Inserts an element into the set. The complexity of the operation is amortized constant.
      *
-     * \pre The view is frozen.
+     * \pre The set is frozen.
      *
      * \param value The attribute name and value.
      *
      * \returns An iterator to the inserted element and \c true if insertion succeeded. Otherwise,
-     *          if the view already contains a same-named attribute value, iterator to the
+     *          if the set already contains a same-named attribute value, iterator to the
      *          existing element and \c false.
      */
     std::pair< const_iterator, bool > insert(const_reference value) { return this->insert(value.first, value.second); }
@@ -381,7 +381,7 @@ public:
     /*!
      * Mass insertion method. The complexity of the operation is linear to the number of elements inserted.
      *
-     * \pre The view is frozen.
+     * \pre The set is frozen.
      *
      * \param begin A forward iterator that points to the first element to be inserted.
      * \param end A forward iterator that points to the after-the-last element to be inserted.
@@ -398,7 +398,7 @@ public:
      * The complexity of the operation is linear to the number of elements inserted times the complexity
      * of filling the \a out iterator.
      *
-     * \pre The view is frozen.
+     * \pre The set is frozen.
      *
      * \param begin A forward iterator that points to the first element to be inserted.
      * \param end A forward iterator that points to the after-the-last element to be inserted.
@@ -415,7 +415,7 @@ public:
 /*!
  * Free swap overload
  */
-inline void swap(attribute_values_view& left, attribute_values_view& right) BOOST_NOEXCEPT
+inline void swap(attribute_value_set& left, attribute_value_set& right) BOOST_NOEXCEPT
 {
     left.swap(right);
 }
@@ -424,4 +424,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_ATTRIBUTE_VALUES_VIEW_HPP_INCLUDED_
+#endif // BOOST_LOG_ATTRIBUTE_VALUE_SET_HPP_INCLUDED_

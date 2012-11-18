@@ -32,7 +32,7 @@ namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
-class attribute_values_view;
+class attribute_value_set;
 
 /*!
  * \brief An attribute set class.
@@ -48,7 +48,7 @@ class attribute_set
 {
     BOOST_COPYABLE_AND_MOVABLE_ALT(attribute_set)
 
-    friend class attribute_values_view;
+    friend class attribute_value_set;
 
 public:
     //! Key type

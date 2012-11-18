@@ -31,7 +31,7 @@
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/syslog_constants.hpp>
 #include <boost/log/sinks/attribute_mapping.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/keywords/facility.hpp>
 #include <boost/log/keywords/use_impl.hpp>
 #include <boost/log/keywords/ident.hpp>

@@ -23,7 +23,7 @@
 #include <boost/log/core/core.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/filters/has_attr.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/core/record.hpp>

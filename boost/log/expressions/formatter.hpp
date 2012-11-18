@@ -19,7 +19,7 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/light_function.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/utility/formatting_stream.hpp>

@@ -20,7 +20,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/core/record.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
