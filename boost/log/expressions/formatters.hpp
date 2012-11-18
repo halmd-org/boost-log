@@ -23,6 +23,9 @@
 #include <boost/log/expressions/formatters/named_scope.hpp>
 
 #include <boost/log/expressions/formatters/char_decorator.hpp>
+#include <boost/log/expressions/formatters/xml_decorator.hpp>
+#include <boost/log/expressions/formatters/csv_decorator.hpp>
+#include <boost/log/expressions/formatters/c_decorator.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

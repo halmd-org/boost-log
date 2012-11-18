@@ -17,19 +17,23 @@
 
 #include <vector>
 #include <string>
-#include <utility>
+#include <iterator>
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/range/begin.hpp>
 #include <boost/range/end.hpp>
+#include <boost/range/size.hpp>
 #include <boost/range/const_iterator.hpp>
 #include <boost/range/value_type.hpp>
+#include <boost/move/move.hpp>
+#include <boost/utility/addressof.hpp>
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/phoenix/core/meta_grammar.hpp>
 #include <boost/phoenix/core/terminal_fwd.hpp>
 #include <boost/phoenix/core/is_nullary.hpp>
 #include <boost/phoenix/core/environment.hpp>
+#include <boost/phoenix/support/vector.hpp>
 #include <boost/fusion/sequence/intrinsic/at_c.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/remove_cv.hpp>
@@ -37,6 +41,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
 #include <boost/log/detail/deduce_char_type.hpp>
+#include <boost/log/utility/formatting_stream.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -50,48 +55,107 @@ namespace expressions {
 
 namespace aux {
 
+template< typename RangeT >
+struct string_const_iterator : range_const_iterator< RangeT > {};
+template< >
+struct string_const_iterator< char* > { typedef char* type; };
+template< >
+struct string_const_iterator< const char* > { typedef const char* type; };
+template< >
+struct string_const_iterator< wchar_t* > { typedef wchar_t* type; };
+template< >
+struct string_const_iterator< const wchar_t* > { typedef const wchar_t* type; };
+
+} // namespace aux
+
+/*!
+ * A simple character decorator implementation. This implementation replaces string patterns in the source string with
+ * the fixed replacements. Source patterns and replacements can be specified at the object construction.
+ */
 template< typename CharT >
-class char_decorator_base
+class pattern_replacer
 {
 public:
+    //! Result type
+    typedef void result_type;
+
     //! Character type
     typedef CharT char_type;
     //! String type
     typedef std::basic_string< char_type > string_type;
 
 private:
+    //! Lengths of source pattern and replacement
+    struct string_lengths
+    {
+        unsigned int from_len, to_len;
+    };
+
     //! List of the decorations to apply
-    typedef std::vector< std::pair< string_type, string_type > > decorations_list;
+    typedef std::vector< string_lengths > string_lengths_list;
 
 private:
+    //! Characters of the interleaved source patterns and replacements
+    string_type m_decoration_chars;
     //! List of the decorations to apply
-    decorations_list m_decorations;
+    string_lengths_list m_string_lengths;
 
 public:
     /*!
-     * Initializing constructor. Creates decorator of the \a fmt formatter with the specified \a decorations.
+     * Initializing constructor. Creates a pattern replacer with the specified \a decorations.
+     * The provided decorations must be a sequence of \c std::pair of strings. The first element
+     * of each pair is the source pattern, and the second one is the corresponding replacement.
      */
     template< typename RangeT >
-    explicit char_decorator_base(RangeT const& decorations) :
-        m_decorations(begin(decorations), end(decorations))
+    explicit pattern_replacer(RangeT const& decorations)
     {
+        typedef typename range_const_iterator< RangeT >::type iterator;
+        for (iterator it = decorations.begin(), end = decorations.end(); it != end; ++it)
+        {
+            string_lengths lens;
+            {
+                typedef typename aux::string_const_iterator< typename range_value< RangeT >::type::first_type >::type first_iterator;
+                first_iterator b = string_begin(it->first), e = string_end(it->first);
+                lens.from_len = std::distance(b, e);
+                m_decoration_chars.append(b, e);
+            }
+            {
+                typedef typename aux::string_const_iterator< typename range_value< RangeT >::type::second_type >::type second_iterator;
+                second_iterator b = string_begin(it->second), e = string_end(it->second);
+                lens.to_len = std::distance(b, e);
+                m_decoration_chars.append(b, e);
+            }
+            m_string_lengths.push_back(lens);
+        }
     }
     /*!
-     * Initializing constructor. Creates decorator of the \a fmt formatter with decorations specified
+     * Initializing constructor. Creates a pattern replacer with decorations specified
      * in form of two same-sized string sequences. Each <tt>i</tt>'th decoration will be
      * <tt>from[i]</tt> -> <tt>to[i]</tt>.
      */
     template< typename FromRangeT, typename ToRangeT >
-    char_decorator_base(FromRangeT const& from, ToRangeT const& to)
+    pattern_replacer(FromRangeT const& from, ToRangeT const& to)
     {
-        typedef typename decorations_list::value_type value_type;
         typedef typename range_const_iterator< FromRangeT >::type iterator1;
         typedef typename range_const_iterator< ToRangeT >::type iterator2;
         iterator1 it1 = begin(from), end1 = end(from);
         iterator2 it2 = begin(to), end2 = end(to);
         for (; it1 != end1 && it2 != end2; ++it1, ++it2)
         {
-            m_decorations.push_back(value_type(*it1, *it2));
+            string_lengths lens;
+            {
+                typedef typename aux::string_const_iterator< typename range_value< FromRangeT >::type >::type from_iterator;
+                from_iterator b = string_begin(*it1), e = string_end(*it1);
+                lens.from_len = std::distance(b, e);
+                m_decoration_chars.append(b, e);
+            }
+            {
+                typedef typename aux::string_const_iterator< typename range_value< ToRangeT >::type >::type to_iterator;
+                to_iterator b = string_begin(*it2), e = string_end(*it2);
+                lens.to_len = std::distance(b, e);
+                m_decoration_chars.append(b, e);
+            }
+            m_string_lengths.push_back(lens);
         }
 
         // Both sequences should be of the same size
@@ -99,24 +163,181 @@ public:
         BOOST_ASSERT(it2 == end2);
     }
     //! Copy constructor
-    char_decorator_base(char_decorator_base const& that) : m_decorations(that.m_decorations)
+    pattern_replacer(pattern_replacer const& that) : m_decoration_chars(that.m_decoration_chars), m_string_lengths(that.m_string_lengths)
     {
     }
 
-protected:
-    //! Applies string replacements
-    void apply_decorations(string_type& str, typename string_type::size_type start_pos) const
+    //! Applies string replacements starting from the specified position
+    result_type operator() (string_type& str, typename string_type::size_type start_pos = 0) const
     {
         typedef typename string_type::size_type size_type;
 
-        for (typename decorations_list::const_iterator it = m_decorations.begin(), end = m_decorations.end(); it != end; ++it)
+        const char_type* from_chars = m_decoration_chars.c_str();
+        for (typename string_lengths_list::const_iterator it = m_string_lengths.begin(), end = m_string_lengths.end(); it != end; ++it)
         {
-            for (size_type pos = str.find(it->first, start_pos); pos != string_type::npos; pos = str.find(it->first, pos))
+            const unsigned int from_len = it->from_len, to_len = it->to_len;
+            const char_type* const to_chars = from_chars + from_len;
+            for (size_type pos = str.find(from_chars, start_pos, from_len); pos != string_type::npos; pos = str.find(from_chars, pos, from_len))
             {
-                str.replace(pos, it->first.size(), it->second);
-                pos += it->second.size();
+                str.replace(pos, from_len, to_chars, to_len);
+                pos += to_len;
             }
+            from_chars = to_chars + to_len;
         }
+    }
+
+private:
+    static char_type* string_begin(char_type* p)
+    {
+        return p;
+    }
+    static const char_type* string_begin(const char_type* p)
+    {
+        return p;
+    }
+    template< typename RangeT >
+    static typename range_const_iterator< RangeT >::type string_begin(RangeT const& r)
+    {
+        return begin(r);
+    }
+
+    static char_type* string_end(char_type* p)
+    {
+        while (*p)
+            ++p;
+        return p;
+    }
+    static const char_type* string_end(const char_type* p)
+    {
+        while (*p)
+            ++p;
+        return p;
+    }
+    template< typename RangeT >
+    static typename range_const_iterator< RangeT >::type string_end(RangeT const& r)
+    {
+        return end(r);
+    }
+};
+
+namespace aux {
+
+//! Character decorator stream output terminal
+template< typename LeftT, typename SubactorT, typename ImplT >
+class char_decorator_output_terminal
+{
+private:
+    //! Self type
+    typedef char_decorator_output_terminal< LeftT, SubactorT, ImplT > this_type;
+
+public:
+    //! Internal typedef for type categorization
+    typedef void _is_boost_log_terminal;
+
+    //! Implementation type
+    typedef ImplT impl_type;
+
+    //! Character type
+    typedef typename impl_type::char_type char_type;
+    //! String type
+    typedef typename impl_type::string_type string_type;
+    //! Adopted actor type
+    typedef SubactorT subactor_type;
+
+    //! Result type definition
+    template< typename >
+    struct result;
+
+    template< typename ContextT >
+    struct result< this_type(ContextT) >
+    {
+        typedef typename remove_cv< typename remove_reference< ContextT >::type >::type context_type;
+        typedef typename phoenix::evaluator::impl<
+            typename LeftT::proto_base_expr&,
+            context_type,
+            phoenix::unused
+        >::result_type type;
+    };
+
+    template< typename ContextT >
+    struct result< const this_type(ContextT) >
+    {
+        typedef typename remove_cv< typename remove_reference< ContextT >::type >::type context_type;
+        typedef typename phoenix::evaluator::impl<
+            typename LeftT::proto_base_expr const&,
+            context_type,
+            phoenix::unused
+        >::result_type type;
+    };
+
+private:
+    //! Left argument actor
+    LeftT m_left;
+    //! Adopted formatter actor
+    subactor_type m_subactor;
+    //! Implementation type
+    impl_type m_impl;
+
+public:
+    /*!
+     * Initializing constructor. Creates decorator of the \a fmt formatter with the specified \a decorations.
+     */
+    char_decorator_output_terminal(LeftT const& left, subactor_type const& sub, impl_type const& impl) :
+        m_left(left), m_subactor(sub), m_impl(impl)
+    {
+    }
+    /*!
+     * Copy constructor
+     */
+    char_decorator_output_terminal(char_decorator_output_terminal const& that) :
+        m_left(that.m_left), m_subactor(that.m_subactor), m_impl(that.m_impl)
+    {
+    }
+
+    /*!
+     * Invokation operator
+     */
+    template< typename ContextT >
+    typename result< this_type(ContextT const&) >::type operator() (ContextT const& ctx)
+    {
+        // Flush the stream and keep the current write position in the target string
+        typedef typename result< this_type(ContextT const&) >::type result_type;
+        result_type strm = phoenix::eval(m_left, ctx);
+        strm.flush();
+        typename string_type::size_type const start_pos = strm.rdbuf()->storage()->size();
+
+        // Invoke the adopted formatter
+        typedef typename result< this_type(ContextT const&) >::type result_type;
+        phoenix::eval(m_subactor, ctx);
+
+        // Flush the buffered characters and apply decorations
+        strm.flush();
+        m_impl(*strm.rdbuf()->storage(), start_pos);
+
+        return strm;
+    }
+
+    /*!
+     * Invokation operator
+     */
+    template< typename ContextT >
+    typename result< const this_type(ContextT const&) >::type operator() (ContextT const& ctx) const
+    {
+        // Flush the stream and keep the current write position in the target string
+        typedef typename result< const this_type(ContextT const&) >::type result_type;
+        result_type strm = phoenix::eval(m_left, ctx);
+        strm.flush();
+        typename string_type::size_type const start_pos = strm.rdbuf()->storage()->size();
+
+        // Invoke the adopted formatter
+        typedef typename result< const this_type(ContextT const&) >::type result_type;
+        phoenix::eval(m_subactor, ctx);
+
+        // Flush the buffered characters and apply decorations
+        strm.flush();
+        m_impl(*strm.rdbuf()->storage(), start_pos);
+
+        return strm;
     }
 };
 
@@ -133,137 +354,174 @@ protected:
  * The \c char_decorator_terminal class is a formatter itself, so it can be used to construct
  * more complex formatters, including nesting decorators.
  */
-template< typename SubactorT, typename CharT >
-class char_decorator_terminal :
-    public aux::char_decorator_base< CharT >
+template< typename SubactorT, typename ImplT >
+class char_decorator_terminal
 {
 private:
     //! Self type
-    typedef char_decorator_terminal< SubactorT, CharT > this_type;
-    //! Base type
-    typedef aux::char_decorator_base< CharT > base_type;
+    typedef char_decorator_terminal< SubactorT, ImplT > this_type;
 
 public:
     //! Internal typedef for type categorization
     typedef void _is_boost_log_terminal;
 
+    //! Implementation type
+    typedef ImplT impl_type;
     //! Character type
-    typedef typename base_type::char_type char_type;
+    typedef typename impl_type::char_type char_type;
     //! String type
-    typedef typename base_type::string_type string_type;
+    typedef typename impl_type::string_type string_type;
+    //! Stream type
+    typedef basic_formatting_ostream< char_type > stream_type;
     //! Adopted actor type
     typedef SubactorT subactor_type;
 
     //! Result type definition
-    template< typename >
-    struct result;
-
-    template< typename ContextT >
-    struct result< this_type(ContextT) >
-    {
-        typedef typename remove_cv< typename remove_reference< ContextT >::type >::type context_type;
-        typedef typename phoenix::evaluator::impl<
-            typename subactor_type::proto_base_expr&,
-            context_type,
-            phoenix::unused
-        >::result_type type;
-    };
-
-    template< typename ContextT >
-    struct result< const this_type(ContextT) >
-    {
-        typedef typename remove_cv< typename remove_reference< ContextT >::type >::type context_type;
-        typedef typename phoenix::evaluator::impl<
-            typename subactor_type::proto_base_expr const&,
-            context_type,
-            phoenix::unused
-        >::result_type type;
-    };
+    typedef string_type result_type;
 
 private:
     //! Adopted formatter actor
     subactor_type m_subactor;
+    //! Implementation
+    impl_type m_impl;
 
 public:
     /*!
-     * Initializing constructor. Creates decorator of the \a fmt formatter with the specified \a decorations.
+     * Initializing constructor.
      */
-    template< typename RangeT >
-    char_decorator_terminal(subactor_type const& sub, RangeT const& decorations) : base_type(decorations), m_subactor(sub)
-    {
-    }
-    /*!
-     * Initializing constructor. Creates decorator of the \a fmt formatter with decorations specified
-     * in form of two same-sized string sequences. Each <tt>i</tt>'th decoration will be
-     * <tt>from[i]</tt> -> <tt>to[i]</tt>.
-     */
-    template< typename FromRangeT, typename ToRangeT >
-    char_decorator_terminal(subactor_type const& sub, FromRangeT const& from, ToRangeT const& to) : base_type(from, to), m_subactor(sub)
+    char_decorator_terminal(subactor_type const& sub, impl_type const& impl) : m_subactor(sub), m_impl(impl)
     {
     }
     /*!
      * Copy constructor
      */
-    char_decorator_terminal(char_decorator_terminal const& that) : base_type(static_cast< base_type const& >(that)), m_subactor(that.m_subactor)
+    char_decorator_terminal(char_decorator_terminal const& that) : m_subactor(that.m_subactor), m_impl(that.m_impl)
     {
+    }
+
+    /*!
+     * \returns Adopted subactor
+     */
+    subactor_type const& get_subactor() const
+    {
+        return m_subactor;
+    }
+
+    /*!
+     * \returns Implementation
+     */
+    impl_type const& get_impl() const
+    {
+        return m_impl;
     }
 
     /*!
      * Invokation operator
      */
     template< typename ContextT >
-    typename result< this_type(ContextT const&) >::type operator() (ContextT const& ctx)
+    result_type operator() (ContextT const& ctx)
     {
-        // Flush the stream and keep the current write position in the target string
-        typedef typename remove_cv<
-            typename remove_reference< typename phoenix::result_of::env< ContextT const& >::type >::type
-        >::type env_type;
-        typedef typename env_type::args_type args_type;
-        typedef typename fusion::result_of::at_c< args_type, 1 >::type stream_arg_type;
-
-        stream_arg_type strm = fusion::at_c< 1 >(phoenix::env(ctx).args());
-        strm.flush();
-        typename string_type::size_type const start_pos = strm.rdbuf()->storage()->size();
+        string_type str;
+        stream_type strm(str);
 
         // Invoke the adopted formatter
-        typedef typename result< this_type(ContextT const&) >::type result_type;
-        result_type res = phoenix::eval(m_subactor, ctx);
+        typedef phoenix::vector3<
+            subactor_type*,
+            typename fusion::result_of::at_c<
+                typename remove_cv<
+                    typename remove_reference<
+                        typename phoenix::result_of::env< ContextT const& >::type
+                    >::type
+                >::type::args_type,
+                0
+            >::type,
+            stream_type&
+        > env_type;
+        env_type env = { boost::addressof(m_subactor), fusion::at_c< 0 >(phoenix::env(ctx).args()), strm };
+        phoenix::eval(m_subactor, phoenix::make_context(env, phoenix::actions(ctx)));
 
         // Flush the buffered characters and apply decorations
         strm.flush();
-        this->apply_decorations(*strm.rdbuf()->storage(), start_pos);
+        m_impl(*strm.rdbuf()->storage());
 
-        return res;
+        return boost::move(str);
     }
 
     /*!
      * Invokation operator
      */
     template< typename ContextT >
-    typename result< const this_type(ContextT const&) >::type operator() (ContextT const& ctx) const
+    result_type operator() (ContextT const& ctx) const
     {
-        // Flush the stream and keep the current write position in the target string
-        typedef typename remove_cv<
-            typename remove_reference< typename phoenix::result_of::env< ContextT const& >::type >::type
-        >::type env_type;
-        typedef typename env_type::args_type args_type;
-        typedef typename fusion::result_of::at_c< args_type, 1 >::type stream_arg_type;
-
-        stream_arg_type strm = fusion::at_c< 1 >(phoenix::env(ctx).args());
-        strm.flush();
-        typename string_type::size_type const start_pos = strm.rdbuf()->storage()->size();
+        string_type str;
+        stream_type strm(str);
 
         // Invoke the adopted formatter
-        typedef typename result< const this_type(ContextT const&) >::type result_type;
-        result_type res = phoenix::eval(m_subactor, ctx);
+        typedef phoenix::vector3<
+            const subactor_type*,
+            typename fusion::result_of::at_c<
+                typename remove_cv<
+                    typename remove_reference<
+                        typename phoenix::result_of::env< ContextT const& >::type
+                    >::type
+                >::type::args_type,
+                0
+            >::type,
+            stream_type&
+        > env_type;
+        env_type env = { boost::addressof(m_subactor), fusion::at_c< 0 >(phoenix::env(ctx).args()), strm };
+        phoenix::eval(m_subactor, phoenix::make_context(env, phoenix::actions(ctx)));
 
         // Flush the buffered characters and apply decorations
         strm.flush();
-        this->apply_decorations(*strm.rdbuf()->storage(), start_pos);
+        m_impl(*strm.rdbuf()->storage());
 
-        return res;
+        return boost::move(str);
     }
 };
+
+/*!
+ * Character decorator actor
+ */
+template< typename SubactorT, typename ImplT, template< typename > class ActorT = phoenix::actor >
+class char_decorator_actor :
+    public ActorT< char_decorator_terminal< SubactorT, ImplT > >
+{
+public:
+    //! Base terminal type
+    typedef char_decorator_terminal< SubactorT, ImplT > terminal_type;
+    //! Character type
+    typedef typename terminal_type::char_type char_type;
+
+    //! Base actor type
+    typedef ActorT< terminal_type > base_type;
+
+public:
+    //! Initializing constructor
+    explicit char_decorator_actor(base_type const& act) : base_type(act)
+    {
+    }
+
+    //! Returns reference to the terminal
+    terminal_type const& get_terminal() const
+    {
+        return this->proto_expr_.child0;
+    }
+};
+
+#define BOOST_LOG_AUX_OVERLOAD(left_ref, right_ref)\
+    template< typename LeftExprT, typename SubactorT, typename ImplT, template< typename > class ActorT >\
+    BOOST_LOG_FORCEINLINE phoenix::actor< aux::char_decorator_output_terminal< phoenix::actor< LeftExprT >, SubactorT, ImplT > >\
+    operator<< (phoenix::actor< LeftExprT > left_ref left, char_decorator_actor< SubactorT, ImplT, ActorT > right_ref right)\
+    {\
+        typedef aux::char_decorator_output_terminal< phoenix::actor< LeftExprT >, SubactorT, ImplT > terminal_type;\
+        phoenix::actor< terminal_type > actor = {{ terminal_type(left, right.get_terminal().get_subactor(), right.get_terminal().get_impl()) }};\
+        return actor;\
+    }
+
+#include <boost/log/detail/generate_overloads.hpp>
+
+#undef BOOST_LOG_AUX_OVERLOAD
 
 namespace aux {
 
@@ -280,11 +538,13 @@ public:
     }
 
     template< typename SubactorT >
-    BOOST_LOG_FORCEINLINE phoenix::actor< char_decorator_terminal< SubactorT, char_type > > operator[] (SubactorT const& subactor) const
+    BOOST_LOG_FORCEINLINE char_decorator_actor< SubactorT, pattern_replacer< char_type > > operator[] (SubactorT const& subactor) const
     {
-        typedef char_decorator_terminal< SubactorT, char_type > terminal_type;
-        phoenix::actor< terminal_type > act = {{ terminal_type(subactor, m_decorations) }};
-        return act;
+        typedef pattern_replacer< char_type > replacer_type;
+        typedef char_decorator_actor< SubactorT, replacer_type > result_type;
+        typedef typename result_type::terminal_type terminal_type;
+        typename result_type::base_type act = {{ terminal_type(subactor, replacer_type(m_decorations)) }};
+        return result_type(act);
     }
 };
 
@@ -304,11 +564,13 @@ public:
     }
 
     template< typename SubactorT >
-    BOOST_LOG_FORCEINLINE phoenix::actor< char_decorator_terminal< SubactorT, from_char_type > > operator[] (SubactorT const& subactor) const
+    BOOST_LOG_FORCEINLINE char_decorator_actor< SubactorT, pattern_replacer< from_char_type > > operator[] (SubactorT const& subactor) const
     {
-        typedef char_decorator_terminal< SubactorT, from_char_type > terminal_type;
-        phoenix::actor< terminal_type > act = {{ terminal_type(subactor, m_from, m_to) }};
-        return act;
+        typedef pattern_replacer< from_char_type > replacer_type;
+        typedef char_decorator_actor< SubactorT, replacer_type > result_type;
+        typedef typename result_type::terminal_type terminal_type;
+        typename result_type::base_type act = {{ terminal_type(subactor, replacer_type(m_from, m_to)) }};
+        return result_type(act);
     }
 };
 
@@ -322,7 +584,7 @@ public:
  *                    substring occurrence in the output will be replaced with <tt>decorations[i].second</tt>.
  */
 template< typename RangeT >
-BOOST_LOG_FORCEINLINE aux::char_decorator_gen1< RangeT > char_dec(RangeT const& decorations)
+BOOST_LOG_FORCEINLINE aux::char_decorator_gen1< RangeT > char_decor(RangeT const& decorations)
 {
     return aux::char_decorator_gen1< RangeT >(decorations);
 }
@@ -338,7 +600,7 @@ BOOST_LOG_FORCEINLINE aux::char_decorator_gen1< RangeT > char_dec(RangeT const& 
  *       substring occurrence in the output will be replaced with <tt>to[i]</tt>.
  */
 template< typename FromRangeT, typename ToRangeT >
-BOOST_LOG_FORCEINLINE aux::char_decorator_gen2< FromRangeT, ToRangeT > char_dec(FromRangeT const& from, ToRangeT const& to)
+BOOST_LOG_FORCEINLINE aux::char_decorator_gen2< FromRangeT, ToRangeT > char_decor(FromRangeT const& from, ToRangeT const& to)
 {
     return aux::char_decorator_gen2< FromRangeT, ToRangeT >(from, to);
 }
@@ -353,8 +615,14 @@ namespace phoenix {
 
 namespace result_of {
 
-template< typename SubactorT, typename CharT >
-struct is_nullary< custom_terminal< boost::log::expressions::char_decorator_terminal< SubactorT, CharT > > > :
+template< typename SubactorT, typename ImplT >
+struct is_nullary< custom_terminal< boost::log::expressions::char_decorator_terminal< SubactorT, ImplT > > > :
+    public mpl::false_
+{
+};
+
+template< typename LeftT, typename SubactorT, typename ImplT >
+struct is_nullary< custom_terminal< boost::log::expressions::aux::char_decorator_output_terminal< LeftT, SubactorT, ImplT > > > :
     public mpl::false_
 {
 };

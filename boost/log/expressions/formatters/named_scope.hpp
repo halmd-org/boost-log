@@ -101,7 +101,7 @@ parse_named_scope_format(basic_string_literal< CharT, TraitsT > const& format)
 }
 
 template< typename CharT >
-class fmt_named_scope_impl
+class format_named_scope_impl
 {
 public:
     //! Function result type
@@ -130,7 +130,7 @@ private:
 
 public:
     //! Initializing constructor
-    fmt_named_scope_impl(element_formatter_type const& element_formatter, string_type const& delimiter, value_type::size_type depth, scope_iteration_direction direction) :
+    format_named_scope_impl(element_formatter_type const& element_formatter, string_type const& delimiter, value_type::size_type depth, scope_iteration_direction direction) :
         m_element_formatter(element_formatter),
         m_delimiter(delimiter),
         m_depth(depth),
@@ -138,7 +138,7 @@ public:
     {
     }
     //! Copy constructor
-    fmt_named_scope_impl(fmt_named_scope_impl const& that) :
+    format_named_scope_impl(format_named_scope_impl const& that) :
         m_element_formatter(that.m_element_formatter),
         m_delimiter(that.m_delimiter),
         m_depth(that.m_depth),
@@ -237,7 +237,7 @@ public:
     //! Formatting stream type
     typedef basic_formatting_ostream< char_type > stream_type;
     //! Formatter function
-    typedef aux::fmt_named_scope_impl< char_type > formatter_function_type;
+    typedef aux::format_named_scope_impl< char_type > formatter_function_type;
 
     //! Function result type
     typedef string_type result_type;
