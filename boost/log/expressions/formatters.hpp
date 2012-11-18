@@ -27,6 +27,8 @@
 #include <boost/log/expressions/formatters/csv_decorator.hpp>
 #include <boost/log/expressions/formatters/c_decorator.hpp>
 
+#include <boost/log/expressions/formatters/if.hpp>
+
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
 #endif
