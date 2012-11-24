@@ -21,7 +21,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/expressions/attr.hpp>
 #include <boost/log/utility/functional/bind_to_log.hpp>
-#include <boost/log/expressions/attr_output_terminal.hpp>
+#include <boost/log/detail/attr_output_terminal.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

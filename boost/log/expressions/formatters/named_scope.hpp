@@ -39,9 +39,9 @@
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
 #include <boost/log/detail/deduce_char_type.hpp>
+#include <boost/log/detail/attr_output_terminal.hpp>
 #include <boost/log/expressions/attr_fwd.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
-#include <boost/log/expressions/attr_output_terminal.hpp>
 #include <boost/log/utility/formatting_stream.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
 #include <boost/log/utility/functional/bind.hpp>
@@ -363,10 +363,10 @@ public:
 
 #define BOOST_LOG_AUX_OVERLOAD(left_ref, right_ref)\
     template< typename LeftExprT, typename FallbackPolicyT, typename CharT >\
-    BOOST_LOG_FORCEINLINE phoenix::actor< attribute_output_terminal< phoenix::actor< LeftExprT >, attributes::named_scope::value_type, FallbackPolicyT, typename format_named_scope_actor< FallbackPolicyT, CharT >::formatter_function_type > >\
+    BOOST_LOG_FORCEINLINE phoenix::actor< aux::attribute_output_terminal< phoenix::actor< LeftExprT >, attributes::named_scope::value_type, FallbackPolicyT, typename format_named_scope_actor< FallbackPolicyT, CharT >::formatter_function_type > >\
     operator<< (phoenix::actor< LeftExprT > left_ref left, format_named_scope_actor< FallbackPolicyT, CharT > right_ref right)\
     {\
-        typedef attribute_output_terminal< phoenix::actor< LeftExprT >, attributes::named_scope::value_type, FallbackPolicyT, typename format_named_scope_actor< FallbackPolicyT, CharT >::formatter_function_type > terminal_type;\
+        typedef aux::attribute_output_terminal< phoenix::actor< LeftExprT >, attributes::named_scope::value_type, FallbackPolicyT, typename format_named_scope_actor< FallbackPolicyT, CharT >::formatter_function_type > terminal_type;\
         phoenix::actor< terminal_type > actor = {{ terminal_type(left, right.get_name(), right.get_formatter_function(), right.get_fallback_policy()) }};\
         return actor;\
     }

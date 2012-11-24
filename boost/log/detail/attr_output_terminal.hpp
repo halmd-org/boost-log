@@ -12,8 +12,8 @@
  * The header contains implementation of a generic output manipulator in template expressions.
  */
 
-#ifndef BOOST_LOG_EXPRESSIONS_ATTR_OUTPUT_TERMINAL_HPP_INCLUDED_
-#define BOOST_LOG_EXPRESSIONS_ATTR_OUTPUT_TERMINAL_HPP_INCLUDED_
+#ifndef BOOST_LOG_DETAIL_ATTR_OUTPUT_TERMINAL_HPP_INCLUDED_
+#define BOOST_LOG_DETAIL_ATTR_OUTPUT_TERMINAL_HPP_INCLUDED_
 
 #include <boost/mpl/bool.hpp>
 #include <boost/phoenix/core/actor.hpp>
@@ -39,6 +39,8 @@ namespace boost {
 BOOST_LOG_OPEN_NAMESPACE
 
 namespace expressions {
+
+namespace aux {
 
 //! Attribute stream output expression
 template< typename LeftT, typename T, typename FallbackPolicyT, typename ImplT >
@@ -137,6 +139,8 @@ public:
     }
 };
 
+} // namespace aux
+
 } // namespace expressions
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
@@ -148,7 +152,7 @@ namespace phoenix {
 namespace result_of {
 
 template< typename LeftT, typename T, typename FallbackPolicyT, typename ImplT >
-struct is_nullary< custom_terminal< boost::log::expressions::attribute_output_terminal< LeftT, T, FallbackPolicyT, ImplT > > > :
+struct is_nullary< custom_terminal< boost::log::expressions::aux::attribute_output_terminal< LeftT, T, FallbackPolicyT, ImplT > > > :
     public mpl::false_
 {
 };
@@ -161,4 +165,4 @@ struct is_nullary< custom_terminal< boost::log::expressions::attribute_output_te
 
 } // namespace boost
 
-#endif // BOOST_LOG_EXPRESSIONS_ATTR_OUTPUT_TERMINAL_HPP_INCLUDED_
+#endif // BOOST_LOG_DETAIL_ATTR_OUTPUT_TERMINAL_HPP_INCLUDED_

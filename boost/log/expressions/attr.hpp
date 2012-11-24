@@ -198,7 +198,7 @@ public:
     or_none_result_type or_none() const
     {
         typedef typename or_none_result_type::terminal_type result_terminal;
-        base_type act = {{ result_terminal(get_name()) }};
+        typename or_none_result_type::base_type act = {{ result_terminal(get_name()) }};
         return or_none_result_type(act);
     }
 
@@ -209,7 +209,7 @@ public:
     or_throw_result_type or_throw() const
     {
         typedef typename or_throw_result_type::terminal_type result_terminal;
-        base_type act = {{ result_terminal(get_name()) }};
+        typename or_throw_result_type::base_type act = {{ result_terminal(get_name()) }};
         return or_throw_result_type(act);
     }
 
@@ -219,7 +219,7 @@ public:
     {
         typedef attribute_actor< value_type, fallback_to_default< DefaultT >, tag_type, ActorT > or_default_result_type;
         typedef typename or_default_result_type::terminal_type result_terminal;
-        base_type act = {{ result_terminal(get_name(), def_val) }};
+        typename or_default_result_type::base_type act = {{ result_terminal(get_name(), def_val) }};
         return or_default_result_type(act);
     }
 };
