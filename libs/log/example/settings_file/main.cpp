@@ -24,7 +24,7 @@
 
 #include <boost/log/common.hpp>
 #include <boost/log/attributes.hpp>
-#include <boost/log/utility/init/from_stream.hpp>
+#include <boost/log/utility/setup/from_stream.hpp>
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;

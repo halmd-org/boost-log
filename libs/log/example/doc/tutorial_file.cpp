@@ -9,8 +9,8 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/filters.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/utility/init/to_file.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 
@@ -25,7 +25,7 @@ namespace keywords = boost::log::keywords;
 //[ example_tutorial_file_simple
 void init()
 {
-    logging::init_log_to_file("sample.log");
+    logging::add_file_log("sample.log");
     logging::core::get()->set_filter
     (
         flt::attr< logging::trivial::severity_level >("Severity") >= logging::trivial::info
@@ -37,7 +37,7 @@ void init()
 //[ example_tutorial_file_advanced_no_callouts
 void init()
 {
-    logging::init_log_to_file
+    logging::add_file_log
     (
         keywords::file_name = "sample_%N.log",
         keywords::rotation_size = 10 * 1024 * 1024,
@@ -57,7 +57,7 @@ void init()
 //[ example_tutorial_file_advanced
 void init()
 {
-    logging::init_log_to_file
+    logging::add_file_log
     (
         keywords::file_name = "sample_%N.log",                                        /*< file name pattern >*/
         keywords::rotation_size = 10 * 1024 * 1024,                                   /*< rotate files every 10 MiB... >*/

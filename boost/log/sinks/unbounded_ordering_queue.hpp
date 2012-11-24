@@ -204,7 +204,7 @@ protected:
         {
             const boost::log::aux::timestamp now = boost::log::aux::get_timestamp();
             enqueued_record const& elem = m_queue.top();
-            if ((now - elem.m_timestamp).milliseconds() >= m_ordering_window)
+            if (static_cast< uint64_t >((now - elem.m_timestamp).milliseconds()) >= m_ordering_window)
             {
                 // We got a new element
                 rec = elem.m_record;

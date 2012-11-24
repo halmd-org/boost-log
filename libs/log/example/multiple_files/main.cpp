@@ -23,11 +23,10 @@
 #include <iostream>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/thread.hpp>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <boost/log/common.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
@@ -37,7 +36,7 @@ namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
 namespace sinks = boost::log::sinks;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace keywords = boost::log::keywords;
 
 using boost::shared_ptr;
@@ -70,16 +69,17 @@ int main(int argc, char* argv[])
         shared_ptr< file_sink > sink(new file_sink);
 
         // Set up how the file names will be generated
-        sink->locked_backend()->set_file_name_composer(
-            fmt::stream << "logs/" << fmt::attr< boost::thread::id >("ThreadID") << ".log");
+        sink->locked_backend()->set_file_name_composer(sinks::file::as_file_name_composer(
+            expr::stream << "logs/" << expr::attr< boost::thread::id >("ThreadID") << ".log"));
 
         // Set the log record formatter
-        sink->set_formatter(
-            fmt::format("%1%: [%2%] - %3%")
-                % fmt::attr< unsigned int >("RecordID")
-                % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
-                % fmt::message()
-            );
+        sink->set_formatter
+        (
+            expr::format("%1%: [%2%] - %3%")
+                % expr::attr< unsigned int >("RecordID")
+                % expr::attr< boost::posix_time::ptime >("TimeStamp")
+                % expr::smessage
+        );
 
         // Add it to the core
         logging::core::get()->add_sink(sink);

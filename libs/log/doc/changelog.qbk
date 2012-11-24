@@ -59,6 +59,8 @@
 
 * Filters and formatters were rewritten. The new implementation is based on __boost_phoenix__ and resides in the `expressions` namespace. Attribute placeholders are now interoperable with other template expressions based on __boost_phoenix__.
 * The library now supports defining keywords for attributes. Keywords can be used in template expressions instead of attribute placeholders and also as a key in container lookups.
+* Date and time formatter implementation is not based on __boost_date_time__ facets anymore. The new implementation improves formatting performance.
+* Named scope formatter now supports scope format specification. The scope format can include the scope name, as well as file name and line number.
 
 [*Documentation changes:]
 

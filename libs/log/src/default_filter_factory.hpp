@@ -16,7 +16,7 @@
 #ifndef BOOST_DEFAULT_FILTER_FACTORY_HPP_INCLUDED_
 #define BOOST_DEFAULT_FILTER_FACTORY_HPP_INCLUDED_
 
-#include <boost/log/utility/init/filter_parser.hpp>
+#include <boost/log/utility/setup/filter_parser.hpp>
 
 namespace boost {
 

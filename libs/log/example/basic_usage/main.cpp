@@ -23,9 +23,9 @@
 #include <boost/log/common.hpp>
 #include <boost/log/expressions.hpp>
 
-#include <boost/log/utility/init/to_file.hpp>
-#include <boost/log/utility/init/to_console.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 
 #include <boost/log/attributes/timer.hpp>
 #include <boost/log/attributes/named_scope.hpp>
@@ -33,9 +33,6 @@
 #include <boost/log/sources/logger.hpp>
 
 #include <boost/log/support/date_time.hpp>
-
-#include <boost/phoenix/core.hpp>
-#include <boost/phoenix/operator.hpp>
 
 namespace logging = boost::log;
 namespace sinks = boost::log::sinks;
@@ -82,10 +79,10 @@ int main(int argc, char* argv[])
 
     // The first thing we have to do to get using the library is
     // to set up the logging sinks - i.e. where the logs will be written to.
-    logging::init_log_to_console(std::clog, keywords::format = "%TimeStamp%: %_%");
+    logging::add_console_log(std::clog, keywords::format = "%TimeStamp%: %_%");
 
     // One can also use lambda expressions to setup filters and formatters
-    logging::init_log_to_file
+    logging::add_file_log
     (
         "sample.log",
         keywords::filter = expr::attr< severity_level >("Severity") >= warning,

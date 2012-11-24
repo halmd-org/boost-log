@@ -13,14 +13,16 @@
  * add support for custom formatters.
  */
 
-#ifndef BOOST_LOG_UTILITY_INIT_FORMATTER_PARSER_HPP_INCLUDED_
-#define BOOST_LOG_UTILITY_INIT_FORMATTER_PARSER_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_SETUP_FORMATTER_PARSER_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_SETUP_FORMATTER_PARSER_HPP_INCLUDED_
 
 #include <iosfwd>
 #include <map>
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_base_and_derived.hpp>
 #include <boost/log/detail/setup_prologue.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/core/record.hpp>
@@ -130,6 +132,26 @@ BOOST_LOG_SETUP_API void register_formatter_factory(
     attribute_name const& attr_name, shared_ptr< formatter_factory< CharT > > const& factory);
 
 /*!
+ * \brief The function registers a user-defined formatter factory
+ *
+ * The function registers a user-defined formatter factory. The registered factory function will be
+ * called when the formatter parser detects the specified attribute name in the formatter string.
+ *
+ * \pre <tt>!!attr_name && !!factory</tt>.
+ *
+ * \param attr_name Attribute name
+ * \param factory Pointer to the formatter factory
+ */
+template< typename FactoryT >
+inline typename enable_if<
+    is_base_and_derived< formatter_factory< typename FactoryT::char_type >, FactoryT >
+>::type register_formatter_factory(attribute_name const& attr_name, shared_ptr< FactoryT > const& factory)
+{
+    typedef formatter_factory< typename FactoryT::char_type > factory_base;
+    register_formatter_factory(attr_name, boost::static_pointer_cast< factory_base >(factory));
+}
+
+/*!
  * \brief The function registers a simple formatter factory
  *
  * The function registers a simple formatter factory. The registered factory will generate formatters
@@ -200,4 +222,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_UTILITY_INIT_FORMATTER_PARSER_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_SETUP_FORMATTER_PARSER_HPP_INCLUDED_

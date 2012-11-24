@@ -37,8 +37,12 @@ template<
 >
 class basic_formatting_ostream;
 
+#ifdef BOOST_LOG_USE_CHAR
 typedef basic_formatting_ostream< char > formatting_ostream;
+#endif
+#ifdef BOOST_LOG_USE_WCHAR_T
 typedef basic_formatting_ostream< wchar_t > wformatting_ostream;
+#endif
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 

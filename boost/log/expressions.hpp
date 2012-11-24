@@ -29,6 +29,9 @@
 #include <boost/log/expressions/filter.hpp>
 #include <boost/log/expressions/formatter.hpp>
 
+// Boost.Phoenix operators are likely to be used with Boost.Log expression nodes anyway
+#include <boost/phoenix/operator.hpp>
+
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
 #endif

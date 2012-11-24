@@ -5,15 +5,15 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   to_console.hpp
+ * \file   console.hpp
  * \author Andrey Semashev
  * \date   16.05.2008
  *
  * The header contains implementation of convenience functions for enabling logging to console.
  */
 
-#ifndef BOOST_LOG_UTILITY_INIT_TO_CONSOLE_HPP_INCLUDED_
-#define BOOST_LOG_UTILITY_INIT_TO_CONSOLE_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_SETUP_CONSOLE_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_SETUP_CONSOLE_HPP_INCLUDED_
 
 #include <iostream>
 #include <boost/shared_ptr.hpp>
@@ -55,7 +55,7 @@ shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL<
         sinks::basic_text_ostream_backend< CharT >
     >
-> init_log_to_console(std::basic_ostream< CharT >& strm, ArgsT const& args)
+> add_console_log(std::basic_ostream< CharT >& strm, ArgsT const& args)
 {
     shared_ptr< std::basic_ostream< CharT > > pStream(&strm, empty_deleter());
 
@@ -107,9 +107,9 @@ inline shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL<
         sinks::basic_text_ostream_backend< CharT >
     >
-> init_log_to_console()
+> add_console_log()
 {
-    return aux::init_log_to_console(
+    return aux::add_console_log(
         aux::default_console_stream< CharT >::get(), keywords::auto_flush = false);
 }
 
@@ -119,9 +119,9 @@ inline shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL<
         sinks::basic_text_ostream_backend< CharT >
     >
-> init_log_to_console(std::basic_ostream< CharT >& strm)
+> add_console_log(std::basic_ostream< CharT >& strm)
 {
-    return aux::init_log_to_console(strm, keywords::auto_flush = false);
+    return aux::add_console_log(strm, keywords::auto_flush = false);
 }
 
 template< typename CharT, typename ArgT1 >
@@ -129,9 +129,9 @@ inline shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL<
         sinks::basic_text_ostream_backend< CharT >
     >
-> init_log_to_console(std::basic_ostream< CharT >& strm, ArgT1 const& arg1)
+> add_console_log(std::basic_ostream< CharT >& strm, ArgT1 const& arg1)
 {
-    return aux::init_log_to_console(strm, arg1);
+    return aux::add_console_log(strm, arg1);
 }
 
 template< typename CharT, typename ArgT1, typename ArgT2 >
@@ -139,9 +139,9 @@ inline shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL<
         sinks::basic_text_ostream_backend< CharT >
     >
-> init_log_to_console(std::basic_ostream< CharT >& strm, ArgT1 const& arg1, ArgT2 const& arg2)
+> add_console_log(std::basic_ostream< CharT >& strm, ArgT1 const& arg1, ArgT2 const& arg2)
 {
-    return aux::init_log_to_console(strm, (arg1, arg2));
+    return aux::add_console_log(strm, (arg1, arg2));
 }
 
 template< typename CharT, typename ArgT1, typename ArgT2, typename ArgT3 >
@@ -149,9 +149,9 @@ inline shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL<
         sinks::basic_text_ostream_backend< CharT >
     >
-> init_log_to_console(std::basic_ostream< CharT >& strm, ArgT1 const& arg1, ArgT2 const& arg2, ArgT3 const& arg3)
+> add_console_log(std::basic_ostream< CharT >& strm, ArgT1 const& arg1, ArgT2 const& arg2, ArgT3 const& arg3)
 {
-    return aux::init_log_to_console(strm, (arg1, arg2, arg3));
+    return aux::add_console_log(strm, (arg1, arg2, arg3));
 }
 
 #else // BOOST_LOG_DOXYGEN_PASS
@@ -175,10 +175,10 @@ shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL<
         sinks::basic_text_ostream_backend< CharT >
     >
-> init_log_to_console(std::basic_ostream< CharT >& strm, ArgsT... const& args);
+> add_console_log(std::basic_ostream< CharT >& strm, ArgsT... const& args);
 
 /*!
- * Equivalent to: <tt>init_log_to_console(std::clog);</tt> or <tt>init_log_to_console(std::wclog);</tt>,
+ * Equivalent to: <tt>add_console_log(std::clog);</tt> or <tt>add_console_log(std::wclog);</tt>,
  * depending on the \c CharT type.
  *
  * \overload
@@ -188,7 +188,7 @@ shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL<
         sinks::basic_text_ostream_backend< CharT >
     >
-> init_log_to_console(ArgsT... const& args);
+> add_console_log(ArgsT... const& args);
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
@@ -205,9 +205,9 @@ inline shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL<
         sinks::text_ostream_backend
     >
-> init_log_to_console()
+> add_console_log()
 {
-    return init_log_to_console(std::clog);
+    return add_console_log(std::clog);
 }
 
 #endif // BOOST_LOG_USE_CHAR
@@ -225,7 +225,7 @@ inline shared_ptr<
     >
 > winit_log_to_console()
 {
-    return init_log_to_console(std::wclog);
+    return add_console_log(std::wclog);
 }
 
 #endif // BOOST_LOG_USE_WCHAR_T
@@ -236,4 +236,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #undef BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL
 
-#endif // BOOST_LOG_UTILITY_INIT_TO_CONSOLE_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_SETUP_CONSOLE_HPP_INCLUDED_

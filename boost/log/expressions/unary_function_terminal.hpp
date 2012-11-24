@@ -96,6 +96,9 @@ public:
     //! Initializing constructor
     template< typename ArgT1, typename ArgT2 >
     unary_function_terminal(ArgT1 const& arg1, ArgT2 const& arg2) : m_fun(arg1, arg2) {}
+    //! Initializing constructor
+    template< typename ArgT1, typename ArgT2, typename ArgT3 >
+    unary_function_terminal(ArgT1 const& arg1, ArgT2 const& arg2, ArgT3 const& arg3) : m_fun(arg1, arg2, arg3) {}
 
     //! The operator forwards the call to the base function
     template< typename ContextT >

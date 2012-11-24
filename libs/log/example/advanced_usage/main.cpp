@@ -22,18 +22,18 @@
 #include <iostream>
 #include <fstream>
 #include <boost/shared_ptr.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/common.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
+#include <boost/log/support/date_time.hpp>
 
 namespace logging = boost::log;
-namespace fmt = boost::log::formatters;
-namespace flt = boost::log::filters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
@@ -53,8 +53,7 @@ enum severity_level
 
 // The formatting logic for the severity level
 template< typename CharT, typename TraitsT >
-inline std::basic_ostream< CharT, TraitsT >& operator<< (
-    std::basic_ostream< CharT, TraitsT >& strm, severity_level lvl)
+inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< CharT, TraitsT >& strm, severity_level lvl)
 {
     static const char* const str[] =
     {
@@ -137,15 +136,15 @@ int main(int argc, char* argv[])
     // Each logging record may have a number of attributes in addition to the
     // message body itself. By setting up formatter we define which of them
     // will be written to log and in what way they will look there.
-    pSink->set_formatter(fmt::stream
-        << fmt::attr("RecordID") // First an attribute "RecordID" is written to the log
-        << " [" << fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f")
-        << "] [" << fmt::attr< severity_level >("Severity", std::nothrow)
-        << "] [" << fmt::time_duration< boost::posix_time::time_duration >("Uptime")
+    pSink->set_formatter(expr::stream
+        << expr::attr< unsigned int >("RecordID") // First an attribute "RecordID" is written to the log
+        << " [" << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f")
+        << "] [" << expr::attr< severity_level >("Severity")
+        << "] [" << expr::attr< boost::posix_time::time_duration >("Uptime")
         << "] [" // then this delimiter separates it from the rest of the line
-        << fmt::if_(flt::has_attr("Tag"))
+        << expr::if_(expr::has_attr("Tag"))
            [
-               fmt::stream << fmt::attr< std::string >("Tag") // then goes another attribute named "Tag"
+               expr::stream << expr::attr< std::string >("Tag") // then goes another attribute named "Tag"
                                                // Note here we explicitly stated that its type
                                                // should be std::string. We could omit it just
                                                // like we did it with the "RecordID", but in this case
@@ -165,19 +164,19 @@ int main(int argc, char* argv[])
                                                // of the supported out-of-the-box types).
                 << "] [" // yet another delimiter
            ]
-        << fmt::named_scope("Scope", keywords::iteration = fmt::reverse) << "] "
-        << fmt::message()); // here goes the log record text
+        << expr::format_named_scope("Scope", keywords::format = "%n", keywords::iteration = expr::reverse) << "] "
+        << expr::smessage); // here goes the log record text
 
 /*
     // There is an alternative way of specifying formatters
     pSink->set_formatter(
-        fmt::format("%1% @ %2% [%3%] >%4%< Scope: %5%: %6%")
-            % fmt::attr("RecordID")
-            % fmt::date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f")
-            % fmt::time_duration< boost::posix_time::time_duration >("Uptime")
-            % fmt::attr< std::string >("Tag")
-            % fmt::named_scope("Scope", keywords::iteration = fmt::reverse, keywords::depth = 2)
-            % fmt::message());
+        expr::format("%1% @ %2% [%3%] >%4%< Scope: %5%: %6%")
+            % expr::attr< unsigned int >("RecordID")
+            % expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%d.%m.%Y %H:%M:%S.%f")
+            % expr::attr< boost::posix_time::time_duration >("Uptime")
+            % expr::attr< std::string >("Tag")
+            % expr::format_named_scope("Scope", keywords::format = "%n", keywords::iteration = expr::reverse, keywords::depth = 2)
+            % expr::smessage);
 */
 
     // Now the sink will output in the following format:
@@ -249,8 +248,8 @@ int main(int argc, char* argv[])
     // Now we can set the filter. A filter is essentially a functor that returns
     // boolean value that tells whether to write the record or not.
     pSink->set_filter(
-        flt::attr< severity_level >("Severity", std::nothrow) >= warning // Write all records with "warning" severity or higher
-        || flt::attr< std::string >("Tag", std::nothrow).begins_with("IMPORTANT")); // ...or specifically tagged
+        expr::attr< severity_level >("Severity").or_default(normal) >= warning // Write all records with "warning" severity or higher
+        || expr::begins_with(expr::attr< std::string >("Tag").or_default(std::string()), "IMPORTANT")); // ...or specifically tagged
 
     // The "attr" placeholder here acts pretty much like the "attr" placeholder in formatters, except
     // that it requires the attribute type (or types in MPL-sequence) to be specified.

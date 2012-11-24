@@ -35,7 +35,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/exceptions.hpp>
-#include <boost/log/utility/init/settings_parser.hpp>
+#include <boost/log/utility/setup/settings_parser.hpp>
 #include "parser_utils.hpp"
 #include "spirit_encoding.hpp"
 

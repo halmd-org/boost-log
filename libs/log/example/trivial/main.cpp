@@ -17,7 +17,7 @@
 
 #include <boost/log/trivial.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
+#include <boost/log/expressions.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -29,12 +29,12 @@ int main(int argc, char* argv[])
     BOOST_LOG_TRIVIAL(error) << "An error severity message";
     BOOST_LOG_TRIVIAL(fatal) << "A fatal severity message";
 
-    // Filtering may also be applied
+    // Filtering can also be applied
     using namespace boost::log;
 
     core::get()->set_filter
     (
-        filters::attr< trivial::severity_level >("Severity") >= trivial::info
+        expressions::attr< trivial::severity_level >("Severity") >= trivial::info
     );
 
     // Now the first two lines will not pass the filter

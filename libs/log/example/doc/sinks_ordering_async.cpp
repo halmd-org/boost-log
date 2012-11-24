@@ -21,7 +21,7 @@
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
 #include <boost/log/utility/record_ordering.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;

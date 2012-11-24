@@ -55,9 +55,9 @@
 #include <boost/log/expressions/filter.hpp>
 #include <boost/log/expressions/formatter.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
-#include <boost/log/utility/init/from_settings.hpp>
-#include <boost/log/utility/init/filter_parser.hpp>
-#include <boost/log/utility/init/formatter_parser.hpp>
+#include <boost/log/utility/setup/from_settings.hpp>
+#include <boost/log/utility/setup/filter_parser.hpp>
+#include <boost/log/utility/setup/formatter_parser.hpp>
 #include <boost/log/utility/functional/bind_assign.hpp>
 #include <boost/log/utility/functional/as_action.hpp>
 #if !defined(BOOST_LOG_NO_ASIO)

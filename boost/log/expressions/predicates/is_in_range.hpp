@@ -87,7 +87,7 @@ BOOST_LOG_FORCEINLINE ActorT< unary_function_terminal< attribute_is_in_range< T,
 is_in_range(attribute_actor< T, FallbackPolicyT, TagT, ActorT > const& attr, BoundaryT const& least, BoundaryT const& most)
 {
     typedef unary_function_terminal< attribute_is_in_range< T, BoundaryT, FallbackPolicyT > > terminal_type;
-    ActorT< terminal_type > act = { terminal_type(attr.get_name(), std::make_pair(least, most), attr.get_fallback_policy()) };
+    ActorT< terminal_type > act = {{ terminal_type(attr.get_name(), std::make_pair(least, most), attr.get_fallback_policy()) }};
     return act;
 }
 
@@ -100,7 +100,7 @@ BOOST_LOG_FORCEINLINE ActorT< unary_function_terminal< attribute_is_in_range< ty
 is_in_range(attribute_keyword< DescriptorT, ActorT > const&, BoundaryT const& least, BoundaryT const& most)
 {
     typedef unary_function_terminal< attribute_is_in_range< typename DescriptorT::value_type, BoundaryT > > terminal_type;
-    ActorT< terminal_type > act = { terminal_type(DescriptorT::get_name(), std::make_pair(least, most)) };
+    ActorT< terminal_type > act = {{ terminal_type(DescriptorT::get_name(), std::make_pair(least, most)) }};
     return act;
 }
 
@@ -113,7 +113,7 @@ BOOST_LOG_FORCEINLINE phoenix::actor< unary_function_terminal< attribute_is_in_r
 is_in_range(attribute_name const& name, BoundaryT const& least, BoundaryT const& most)
 {
     typedef unary_function_terminal< attribute_is_in_range< T, BoundaryT > > terminal_type;
-    phoenix::actor< terminal_type > act = { terminal_type(name, std::make_pair(least, most)) };
+    phoenix::actor< terminal_type > act = {{ terminal_type(name, std::make_pair(least, most)) }};
     return act;
 }
 

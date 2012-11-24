@@ -5,15 +5,15 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   to_file.hpp
+ * \file   file.hpp
  * \author Andrey Semashev
  * \date   16.05.2008
  *
  * The header contains implementation of convenience functions for enabling logging to a file.
  */
 
-#ifndef BOOST_LOG_UTILITY_INIT_TO_FILE_HPP_INCLUDED_
-#define BOOST_LOG_UTILITY_INIT_TO_FILE_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_SETUP_FILE_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_SETUP_FILE_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
@@ -68,7 +68,7 @@ inline shared_ptr< sinks::file::collector > setup_file_collector(ArgsT const& ar
 
 //! The function constructs the sink and adds it to the core
 template< typename ArgsT >
-shared_ptr< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< sinks::text_file_backend > > init_log_to_file(ArgsT const& args)
+shared_ptr< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< sinks::text_file_backend > > add_file_log(ArgsT const& args)
 {
     typedef sinks::text_file_backend backend_t;
     shared_ptr< backend_t > pBackend = boost::make_shared< backend_t >(args);
@@ -114,9 +114,9 @@ wrap_file_name(T const& arg, mpl::false_)
 
 #define BOOST_LOG_INIT_LOG_TO_FILE_INTERNAL(z, n, data)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
-    inline shared_ptr< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< sinks::text_file_backend > > init_log_to_file(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg))\
+    inline shared_ptr< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< sinks::text_file_backend > > add_file_log(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg))\
     {\
-        return aux::init_log_to_file((\
+        return aux::add_file_log((\
             aux::wrap_file_name(arg0, typename parameter::aux::is_named_argument< T0 >::type())\
             BOOST_PP_COMMA_IF(BOOST_PP_GREATER(n, 1))\
             BOOST_PP_ENUM_SHIFTED_PARAMS(n, arg)\
@@ -150,7 +150,7 @@ BOOST_PP_REPEAT_FROM_TO(1, BOOST_LOG_MAX_PARAMETER_ARGS, BOOST_LOG_INIT_LOG_TO_F
  * \return Pointer to the constructed sink.
  */
 template< typename... ArgsT >
-shared_ptr< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< sinks::text_file_backend > > init_log_to_file(ArgsT... const& args);
+shared_ptr< BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL< sinks::text_file_backend > > add_file_log(ArgsT... const& args);
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
@@ -160,4 +160,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #undef BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL
 
-#endif // BOOST_LOG_UTILITY_INIT_TO_FILE_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_SETUP_FILE_HPP_INCLUDED_

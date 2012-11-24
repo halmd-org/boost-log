@@ -13,15 +13,15 @@
  * settings.
  */
 
-#ifndef BOOST_LOG_UTILITY_INIT_FROM_SETTINGS_HPP_INCLUDED_
-#define BOOST_LOG_UTILITY_INIT_FROM_SETTINGS_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_SETUP_FROM_SETTINGS_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_SETUP_FROM_SETTINGS_HPP_INCLUDED_
 
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/log/detail/setup_prologue.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/sinks/sink.hpp>
-#include <boost/log/utility/init/settings.hpp>
+#include <boost/log/utility/setup/settings.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -111,4 +111,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_UTILITY_INIT_FROM_SETTINGS_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_SETUP_FROM_SETTINGS_HPP_INCLUDED_

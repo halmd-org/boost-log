@@ -8,8 +8,8 @@
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
-#include <boost/log/utility/init/to_file.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
@@ -40,7 +40,7 @@ void logging_function2()
 
 int main(int, char*[])
 {
-    logging::init_log_to_file("sample.log");
+    logging::add_file_log("sample.log");
     logging::add_common_attributes();
 
     logging_function1();

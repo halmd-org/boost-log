@@ -41,7 +41,7 @@
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/exceptions.hpp>
-#include <boost/log/utility/init/filter_parser.hpp>
+#include <boost/log/utility/setup/filter_parser.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>

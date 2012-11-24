@@ -115,14 +115,14 @@ template< typename T >
 inline function<
     typename remove_cv<
         typename remove_reference<
-            typename result_of< T() >::type
+            typename boost::result_of< T() >::type
         >::type
     >::type
 > make_function(T const& fun)
 {
     typedef typename remove_cv<
         typename remove_reference<
-            typename result_of< T() >::type
+            typename boost::result_of< T() >::type
         >::type
     >::type result_type;
 

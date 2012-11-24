@@ -26,8 +26,8 @@
 #include <boost/log/core/core.hpp>
 #include <boost/log/expressions/filter.hpp>
 #include <boost/log/expressions/formatter.hpp>
-#include <boost/log/utility/init/filter_parser.hpp>
-#include <boost/log/utility/init/formatter_parser.hpp>
+#include <boost/log/utility/setup/filter_parser.hpp>
+#include <boost/log/utility/setup/formatter_parser.hpp>
 #include <boost/log/keywords/filter.hpp>
 #include <boost/log/keywords/format.hpp>
 

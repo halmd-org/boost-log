@@ -5,19 +5,19 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   settings_parser.hpp
+ * \file   from_stream.hpp
  * \author Andrey Semashev
- * \date   20.07.2012
+ * \date   22.03.2008
  *
- * The header contains definition of a settings parser function.
+ * The header contains definition of facilities that allows to initialize the library from a
+ * settings file.
  */
 
-#ifndef BOOST_LOG_UTILITY_INIT_SETTINGS_PARSER_HPP_INCLUDED_
-#define BOOST_LOG_UTILITY_INIT_SETTINGS_PARSER_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_SETUP_FROM_STREAM_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_SETUP_FROM_STREAM_HPP_INCLUDED_
 
 #include <iosfwd>
 #include <boost/log/detail/setup_prologue.hpp>
-#include <boost/log/utility/init/settings.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -36,14 +36,14 @@ namespace boost {
 BOOST_LOG_OPEN_NAMESPACE
 
 /*!
- * The function parses library settings from an input stream
+ * The function initializes the logging library from a stream containing logging settings
  *
  * \param strm Stream, that provides library settings
  *
  * \b Throws: An <tt>std::exception</tt>-based exception if the read data cannot be interpreted as the library settings
  */
 template< typename CharT >
-BOOST_LOG_SETUP_API basic_settings< CharT > parse_settings(std::basic_istream< CharT >& strm);
+BOOST_LOG_SETUP_API void init_from_stream(std::basic_istream< CharT >& strm);
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
@@ -53,4 +53,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_UTILITY_INIT_SETTINGS_PARSER_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_SETUP_FROM_STREAM_HPP_INCLUDED_

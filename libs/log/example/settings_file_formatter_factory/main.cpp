@@ -21,14 +21,15 @@
 #include <stdexcept>
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/common.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
-#include <boost/log/utility/init/from_stream.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
-#include <boost/log/utility/init/formatter_parser.hpp>
+#include <boost/log/utility/setup/from_stream.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/utility/setup/formatter_parser.hpp>
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
@@ -49,26 +50,26 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(test_lg, src::severity_logger< >)
 struct scope_list_formatter
 {
     typedef void result_type;
-    typedef attrs::basic_named_scope< char >::value_type scope_stack;
+    typedef attrs::named_scope::value_type scope_stack;
 
-    explicit scope_list_formatter(std::string const& name) :
+    explicit scope_list_formatter(logging::attribute_name const& name) :
         name_(name)
     {
     }
-    void operator()(std::ostream& strm, logging::record const& rec) const
+    void operator()(logging::record const& rec, logging::formatting_ostream& strm) const
     {
         // We need to acquire the attribute value from the log record
         logging::visit< scope_stack >
         (
             name_,
             rec.attribute_values(),
-            boost::bind(&scope_list_formatter::format, boost::ref(strm), _1)
+            boost::bind(&scope_list_formatter::format, _1, boost::ref(strm))
         );
     }
 
 private:
     //! This is where our custom formatting takes place
-    static void format(std::ostream& strm, scope_stack const& scopes)
+    static void format(scope_stack const& scopes, logging::formatting_ostream& strm)
     {
         scope_stack::const_iterator it = scopes.begin(), end = scopes.end();
         for (; it != end; ++it)
@@ -78,26 +79,29 @@ private:
     }
 
 private:
-    std::string name_;
+    logging::attribute_name name_;
 };
 
-typedef logging::formatter_types< char > types;
-
-/*!
- * This function creates a formatter for the MyScopes attribute.
- * It effectively associates the attribute with the scope_list_formatter class
- */
-types::formatter_type my_scopes_formatter_factory(
-    types::string_type const& attr_name, types::formatter_factory_args const& args)
+class my_scopes_formatter_factory :
+    public logging::formatter_factory< char >
 {
-    return types::formatter_type(scope_list_formatter(attr_name));
-}
+public:
+    /*!
+     * This function creates a formatter for the MyScopes attribute.
+     * It effectively associates the attribute with the scope_list_formatter class
+     */
+    formatter_type create_formatter(
+        logging::attribute_name const& attr_name, args_map const& args)
+    {
+        return formatter_type(scope_list_formatter(attr_name));
+    }
+};
 
 //! The function initializes the logging library
 void init_logging()
 {
     // First thing - register the custom formatter for MyScopes
-    logging::register_formatter_factory("MyScopes", &my_scopes_formatter_factory);
+    logging::register_formatter_factory("MyScopes", boost::make_shared< my_scopes_formatter_factory >());
 
     // Then load the settings from the file
     std::ifstream settings("settings.txt");

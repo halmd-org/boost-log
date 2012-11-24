@@ -56,7 +56,7 @@
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
 #include <boost/log/utility/functional/nop.hpp>
-#include <boost/log/utility/init/formatter_parser.hpp>
+#include <boost/log/utility/setup/formatter_parser.hpp>
 #include <boost/log/utility/type_dispatch/standard_types.hpp>
 #include <boost/log/utility/type_dispatch/date_time_types.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)

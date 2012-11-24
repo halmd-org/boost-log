@@ -12,8 +12,8 @@
  * The header contains definition of the library settings container.
  */
 
-#ifndef BOOST_LOG_UTILITY_INIT_SETTINGS_HPP_INCLUDED_
-#define BOOST_LOG_UTILITY_INIT_SETTINGS_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_SETUP_SETTINGS_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_SETUP_SETTINGS_HPP_INCLUDED_
 
 #include <cstddef>
 #include <string>
@@ -653,4 +653,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_UTILITY_INIT_SETTINGS_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_SETUP_SETTINGS_HPP_INCLUDED_

@@ -9,8 +9,8 @@
 #include <boost/log/formatters.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/utility/init/to_file.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
@@ -20,7 +20,7 @@ namespace keywords = boost::log::keywords;
 //[ example_tutorial_formatters_stream
 void init()
 {
-    logging::init_log_to_file
+    logging::add_file_log
     (
         keywords::file_name = "sample_%N.log",
         // This makes the sink to write log records that look like this:

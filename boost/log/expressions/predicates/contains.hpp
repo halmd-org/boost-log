@@ -87,7 +87,7 @@ BOOST_LOG_FORCEINLINE ActorT< unary_function_terminal< attribute_contains< T, ty
 contains(attribute_actor< T, FallbackPolicyT, TagT, ActorT > const& attr, SubstringT const& substring)
 {
     typedef unary_function_terminal< attribute_contains< T, typename boost::log::aux::make_embedded_string_type< SubstringT >::type, FallbackPolicyT > > terminal_type;
-    ActorT< terminal_type > act = { terminal_type(attr.get_name(), substring, attr.get_fallback_policy()) };
+    ActorT< terminal_type > act = {{ terminal_type(attr.get_name(), substring, attr.get_fallback_policy()) }};
     return act;
 }
 
@@ -100,7 +100,7 @@ BOOST_LOG_FORCEINLINE ActorT< unary_function_terminal< attribute_contains< typen
 contains(attribute_keyword< DescriptorT, ActorT > const&, SubstringT const& substring)
 {
     typedef unary_function_terminal< attribute_contains< typename DescriptorT::value_type, typename boost::log::aux::make_embedded_string_type< SubstringT >::type > > terminal_type;
-    ActorT< terminal_type > act = { terminal_type(DescriptorT::get_name(), substring) };
+    ActorT< terminal_type > act = {{ terminal_type(DescriptorT::get_name(), substring) }};
     return act;
 }
 
@@ -113,7 +113,7 @@ BOOST_LOG_FORCEINLINE phoenix::actor< unary_function_terminal< attribute_contain
 contains(attribute_name const& name, SubstringT const& substring)
 {
     typedef unary_function_terminal< attribute_contains< T, typename boost::log::aux::make_embedded_string_type< SubstringT >::type > > terminal_type;
-    phoenix::actor< terminal_type > act = { terminal_type(name, substring) };
+    phoenix::actor< terminal_type > act = {{ terminal_type(name, substring) }};
     return act;
 }
 

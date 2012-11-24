@@ -23,8 +23,8 @@
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
-#include <boost/log/functional/logical.hpp>
-#include <boost/log/functional/nop.hpp>
+#include <boost/log/utility/functional/logical.hpp>
+#include <boost/log/utility/functional/nop.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

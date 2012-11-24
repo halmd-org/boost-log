@@ -12,14 +12,16 @@
  * The header contains definition of a filter parser function.
  */
 
-#ifndef BOOST_LOG_UTILITY_INIT_FILTER_PARSER_HPP_INCLUDED_
-#define BOOST_LOG_UTILITY_INIT_FILTER_PARSER_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_SETUP_FILTER_PARSER_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_SETUP_FILTER_PARSER_HPP_INCLUDED_
 
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/phoenix/operator/comparison.hpp>
+#include <boost/type_traits/is_base_and_derived.hpp>
+#include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/setup_prologue.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/exceptions.hpp>
@@ -239,6 +241,23 @@ BOOST_LOG_SETUP_API void register_filter_factory(
     attribute_name const& name, shared_ptr< filter_factory< CharT > > const& factory);
 
 /*!
+ * The function registers a filter factory object for the specified attribute name. The factory will be
+ * used to construct a filter during parsing the filter string.
+ *
+ * \pre <tt>name != NULL && factory != NULL</tt>, <tt>name</tt> points to a zero-terminated string
+ * \param name Attribute name to associate the factory with
+ * \param factory The filter factory
+ */
+template< typename FactoryT >
+inline typename enable_if<
+    is_base_and_derived< filter_factory< typename FactoryT::char_type >, FactoryT >
+>::type register_filter_factory(attribute_name const& name, shared_ptr< FactoryT > const& factory)
+{
+    typedef filter_factory< typename FactoryT::char_type > factory_base;
+    register_filter_factory(name, boost::static_pointer_cast< factory_base >(factory));
+}
+
+/*!
  * The function registers a simple filter factory object for the specified attribute name. The factory will
  * support attribute values of type \c AttributeValueT, which must support all relation operations, such as
  * equality comparison and less/greater ordering, and also extraction from stream.
@@ -333,4 +352,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_UTILITY_INIT_FILTER_PARSER_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_SETUP_FILTER_PARSER_HPP_INCLUDED_

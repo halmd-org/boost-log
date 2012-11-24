@@ -8,8 +8,8 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/utility/init/to_file.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
@@ -18,7 +18,7 @@ namespace keywords = boost::log::keywords;
 //[ example_tutorial_formatters_string
 void init()
 {
-    logging::init_log_to_file
+    logging::add_file_log
     (
         keywords::file_name = "sample_%N.log",
         keywords::format = "[%TimeStamp%]: %_%"

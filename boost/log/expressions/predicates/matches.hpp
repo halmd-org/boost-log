@@ -86,7 +86,7 @@ BOOST_LOG_FORCEINLINE ActorT< unary_function_terminal< attribute_matches< T, Reg
 matches(attribute_actor< T, FallbackPolicyT, TagT, ActorT > const& attr, RegexT const& rex)
 {
     typedef unary_function_terminal< attribute_matches< T, RegexT, FallbackPolicyT > > terminal_type;
-    ActorT< terminal_type > act = { terminal_type(attr.get_name(), rex, attr.get_fallback_policy()) };
+    ActorT< terminal_type > act = {{ terminal_type(attr.get_name(), rex, attr.get_fallback_policy()) }};
     return act;
 }
 
@@ -99,7 +99,7 @@ BOOST_LOG_FORCEINLINE ActorT< unary_function_terminal< attribute_matches< typena
 matches(attribute_keyword< DescriptorT, ActorT > const&, RegexT const& rex)
 {
     typedef unary_function_terminal< attribute_matches< typename DescriptorT::value_type, RegexT > > terminal_type;
-    ActorT< terminal_type > act = { terminal_type(DescriptorT::get_name(), rex) };
+    ActorT< terminal_type > act = {{ terminal_type(DescriptorT::get_name(), rex) }};
     return act;
 }
 
@@ -112,7 +112,7 @@ BOOST_LOG_FORCEINLINE phoenix::actor< unary_function_terminal< attribute_matches
 matches(attribute_name const& name, RegexT const& rex)
 {
     typedef unary_function_terminal< attribute_matches< T, RegexT > > terminal_type;
-    phoenix::actor< terminal_type > act = { terminal_type(name, rex) };
+    phoenix::actor< terminal_type > act = {{ terminal_type(name, rex) }};
     return act;
 }
 
