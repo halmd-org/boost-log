@@ -61,6 +61,7 @@
 * The library now supports defining keywords for attributes. Keywords can be used in template expressions instead of attribute placeholders and also as a key in container lookups.
 * Date and time formatter implementation is not based on __boost_date_time__ facets anymore. The new implementation improves formatting performance.
 * Named scope formatter now supports scope format specification. The scope format can include the scope name, as well as file name and line number.
+* Added a new channel severity filter. The filter allows to setup severity thresholds for different channels. The filter checks log record severity level against the threshold corresponding to the channel the record belongs to.
 
 [*Documentation changes:]
 

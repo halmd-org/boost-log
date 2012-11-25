@@ -24,6 +24,8 @@
 #include <boost/log/expressions/predicates/matches.hpp>
 #include <boost/log/expressions/predicates/is_in_range.hpp>
 
+#include <boost/log/expressions/predicates/channel_severity_filter.hpp>
+
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
 #endif
