@@ -16,9 +16,13 @@
 #define BOOST_LOG_ATTRIBUTES_BASIC_ATTRIBUTE_VALUE_HPP_INCLUDED_
 
 #include <boost/move/move.hpp>
+#include <boost/type_traits/remove_cv.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#include <boost/type_traits/remove_reference.hpp>
+#endif
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -47,24 +51,31 @@ public:
 
 private:
     //! Attribute value
-    value_type m_Value;
+    const value_type m_value;
 
 public:
     /*!
      * Constructor with initialization of the stored value
      */
-    explicit basic_attribute_value(value_type const& v) : m_Value(v) {}
+    explicit basic_attribute_value(value_type const& v) : m_value(v) {}
     /*!
      * Constructor with initialization of the stored value
      */
-    explicit basic_attribute_value(BOOST_RV_REF(value_type) v) : m_Value(boost::move(v)) {}
+    explicit basic_attribute_value(BOOST_RV_REF(value_type) v) : m_value(v) {}
 
+    /*!
+     * Attribute value dispatching method.
+     *
+     * \param dispatcher The dispatcher that receives the stored value
+     *
+     * \return \c true if the value has been dispatched, \c false otherwise
+     */
     virtual bool dispatch(type_dispatcher& dispatcher)
     {
         type_dispatcher::callback< value_type > callback = dispatcher.get_callback< value_type >();
         if (callback)
         {
-            callback(m_Value);
+            callback(m_value);
             return true;
         }
         else
@@ -79,17 +90,38 @@ public:
     /*!
      * \return Reference to the contained value.
      */
-    value_type const& get() const { return m_Value; }
+    value_type const& get() const { return m_value; }
 };
 
 /*!
  * The function creates an attribute value from the specified object.
  */
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
 template< typename T >
-inline attribute_value make_attribute_value(BOOST_FWD_REF(T) v)
+inline attribute_value make_attribute_value(T&& v)
 {
-    return attribute_value(new basic_attribute_value< T >(boost::forward< T >(v)));
+    typedef typename remove_cv< typename remove_reference< T >::type >::type value_type;
+    return attribute_value(new basic_attribute_value< value_type >(boost::forward< T >(v)));
 }
+
+#else // !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
+template< typename T >
+inline attribute_value make_attribute_value(T const& v)
+{
+    typedef typename remove_cv< T >::type value_type;
+    return attribute_value(new basic_attribute_value< value_type >(v));
+}
+
+template< typename T >
+inline attribute_value make_attribute_value(rv< T > const& v)
+{
+    typedef typename remove_cv< T >::type value_type;
+    return attribute_value(new basic_attribute_value< value_type >(v));
+}
+
+#endif // !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 } // namespace attributes
 

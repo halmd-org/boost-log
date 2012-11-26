@@ -81,13 +81,13 @@ public:
     BOOST_LOG_DEFAULTED_FUNCTION(basic_record_ostream(), {})
 
     /*!
-     * Conversion from a record object. Adopts the record referenced by the object.
+     * Constructor from a record object. Adopts the record referenced by the object.
      *
      * \pre The handle, if valid, have been issued by the logging core with the same character type as the record being constructed.
      * \post <tt>this->handle() == rec</tt>
      * \param rec The record handle being adopted
      */
-    basic_record_ostream(record const& rec) :
+    explicit basic_record_ostream(record const& rec) :
         m_Record(rec)
     {
         init_stream();
@@ -115,9 +115,20 @@ public:
      * \return \c false, if stream is valid and ready for formatting, \c true, if the stream is not valid. The latter also applies to
      *         the case when the stream is not attached to a log record.
      */
-    bool operator! () const
+    bool operator! () const BOOST_NOEXCEPT
     {
         return (!m_Record || base_type::fail());
+    }
+
+    /*!
+     * Flushes internal buffers to complete all pending formatting operations and returns the aggregated log record
+     *
+     * \return The aggregated record object
+     */
+    record& get_record()
+    {
+        this->flush();
+        return m_Record;
     }
 
     /*!
@@ -259,7 +270,7 @@ public:
         that.m_pStreamCompound = 0;
     }
     //! Destructor. Pushes the composed message to log.
-    ~record_pump()
+    ~record_pump() BOOST_NOEXCEPT_IF(false)
     {
         if (m_pLogger)
         {
@@ -271,7 +282,7 @@ public:
     }
 
     //! Returns the stream to be used for message text formatting
-    basic_record_ostream< char_type >& stream() const
+    basic_record_ostream< char_type >& stream() const BOOST_NOEXCEPT
     {
         BOOST_ASSERT(m_pStreamCompound != 0);
         return m_pStreamCompound->stream;

@@ -17,6 +17,8 @@
 
 #include <boost/log/detail/prologue.hpp>
 
+#include <boost/log/utility/manipulators/add_attr.hpp>
+
 #include <boost/log/utility/manipulators/to_log.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

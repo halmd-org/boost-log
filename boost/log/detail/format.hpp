@@ -282,7 +282,7 @@ public:
     }
 
     //! Destructor
-    ~pump()
+    ~pump() BOOST_NOEXCEPT_IF(false)
     {
         if (m_owner)
         {

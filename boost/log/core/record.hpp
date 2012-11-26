@@ -159,6 +159,16 @@ public:
      *
      * \pre <tt>!!*this</tt>
      */
+    attribute_value_set& attribute_values() BOOST_NOEXCEPT
+    {
+        return m_impl->m_attribute_values;
+    }
+
+    /*!
+     * \return A reference to the set of attribute values attached to this record
+     *
+     * \pre <tt>!!*this</tt>
+     */
     attribute_value_set const& attribute_values() const BOOST_NOEXCEPT
     {
         return m_impl->m_attribute_values;
