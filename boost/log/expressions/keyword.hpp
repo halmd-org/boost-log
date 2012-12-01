@@ -15,6 +15,7 @@
 #ifndef BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_
 
+#include <boost/ref.hpp>
 #include <boost/proto/extends.hpp>
 #include <boost/proto/make_expr.hpp>
 #include <boost/phoenix/core/actor.hpp>
@@ -49,11 +50,11 @@ struct attribute_keyword
 {
     //! Self type
     typedef attribute_keyword this_type;
-
-    BOOST_PROTO_BASIC_EXTENDS(typename proto::terminal< DescriptorT >::type, this_type, phoenix::phoenix_domain)
-
     //! Attribute descriptor type
     typedef DescriptorT descriptor_type;
+
+    BOOST_PROTO_BASIC_EXTENDS(typename proto::terminal< descriptor_type >::type, this_type, phoenix::phoenix_domain)
+
     //! Attribute value type
     typedef typename descriptor_type::value_type value_type;
 
