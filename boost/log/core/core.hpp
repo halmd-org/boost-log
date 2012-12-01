@@ -17,6 +17,7 @@
 
 #include <utility>
 #include <boost/shared_ptr.hpp>
+#include <boost/move/move.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/core/record.hpp>
@@ -62,7 +63,7 @@ typedef shared_ptr< core > core_ptr;
  *
  * The logging core is a singleton. Users can acquire the core instance by calling the static method <tt>get</tt>.
  */
-class BOOST_LOG_API core
+class core
 {
 public:
     //! Exception handler function type
@@ -91,7 +92,7 @@ public:
     /*!
      * \return The method returns a pointer to the logging core singleton instance.
      */
-    static core_ptr get();
+    BOOST_LOG_API static core_ptr get();
 
     /*!
      * The method enables or disables logging.
@@ -109,22 +110,22 @@ public:
      * \param enabled The actual flag of logging activity.
      * \return The previous value of enabled/disabled logging flag
      */
-    bool set_logging_enabled(bool enabled = true);
+    BOOST_LOG_API bool set_logging_enabled(bool enabled = true);
     /*!
      * The method allows to detect if logging is enabled. See the comment for \c set_logging_enabled.
      */
-    bool get_logging_enabled() const;
+    BOOST_LOG_API bool get_logging_enabled() const;
 
     /*!
      * The method sets the global logging filter. The filter is applied to every log record that is processed.
      *
      * \param filter The filter function object to be installed.
      */
-    void set_filter(filter const& filter);
+    BOOST_LOG_API void set_filter(filter const& filter);
     /*!
      * The method removes the global logging filter. All log records are passed to sinks without global filtering applied.
      */
-    void reset_filter();
+    BOOST_LOG_API void reset_filter();
 
     /*!
      * The method adds a new sink. The sink is included into logging process immediately after being added and until being removed.
@@ -132,18 +133,18 @@ public:
      *
      * \param s The sink to be registered.
      */
-    void add_sink(shared_ptr< sinks::sink > const& s);
+    BOOST_LOG_API void add_sink(shared_ptr< sinks::sink > const& s);
     /*!
      * The method removes the sink from the output. The sink will not receive any log records after removal.
      * The call has no effect if the sink is not registered.
      *
      * \param s The sink to be unregistered.
      */
-    void remove_sink(shared_ptr< sinks::sink > const& s);
+    BOOST_LOG_API void remove_sink(shared_ptr< sinks::sink > const& s);
     /*!
      * The method removes all registered sinks from the output. The sinks will not receive any log records after removal.
      */
-    void remove_all_sinks();
+    BOOST_LOG_API void remove_all_sinks();
 
     /*!
      * The method performs flush on all registered sinks.
@@ -151,7 +152,7 @@ public:
      * \note This method may take long time to complete as it may block until all sinks manage to process all buffered log records.
      *       The call will also block all logging attempts until the operation completes.
      */
-    void flush();
+    BOOST_LOG_API void flush();
 
     /*!
      * The method adds an attribute to the global attribute set. The attribute will be implicitly added to every log record.
@@ -162,7 +163,7 @@ public:
      *         attribute. Otherwise the attribute was not added and the first member points to the attribute that prevents
      *         addition.
      */
-    std::pair< attribute_set::iterator, bool > add_global_attribute(attribute_name const& name, attribute const& attr);
+    BOOST_LOG_API std::pair< attribute_set::iterator, bool > add_global_attribute(attribute_name const& name, attribute const& attr);
     /*!
      * The method removes an attribute from the global attribute set.
      *
@@ -171,12 +172,12 @@ public:
      *
      * \param it Iterator to the previously added attribute.
      */
-    void remove_global_attribute(attribute_set::iterator it);
+    BOOST_LOG_API void remove_global_attribute(attribute_set::iterator it);
 
     /*!
      * The method returns a copy of the complete set of currently registered global attributes.
      */
-    attribute_set get_global_attributes() const;
+    BOOST_LOG_API attribute_set get_global_attributes() const;
     /*!
      * The method replaces the complete set of currently registered global attributes with the provided set.
      *
@@ -185,7 +186,7 @@ public:
      *
      * \param attrs The set of attributes to be installed.
      */
-    void set_global_attributes(attribute_set const& attrs);
+    BOOST_LOG_API void set_global_attributes(attribute_set const& attrs);
 
     /*!
      * The method adds an attribute to the thread-specific attribute set. The attribute will be implicitly added to
@@ -200,7 +201,7 @@ public:
      *         attribute. Otherwise the attribute was not added and the first member points to the attribute that prevents
      *         addition.
      */
-    std::pair< attribute_set::iterator, bool > add_thread_attribute(attribute_name const& name, attribute const& attr);
+    BOOST_LOG_API std::pair< attribute_set::iterator, bool > add_thread_attribute(attribute_name const& name, attribute const& attr);
     /*!
      * The method removes an attribute from the thread-specific attribute set.
      *
@@ -209,12 +210,12 @@ public:
      *
      * \param it Iterator to the previously added attribute.
      */
-    void remove_thread_attribute(attribute_set::iterator it);
+    BOOST_LOG_API void remove_thread_attribute(attribute_set::iterator it);
 
     /*!
      * The method returns a copy of the complete set of currently registered thread-specific attributes.
      */
-    attribute_set get_thread_attributes() const;
+    BOOST_LOG_API attribute_set get_thread_attributes() const;
     /*!
      * The method replaces the complete set of currently registered thread-specific attributes with the provided set.
      *
@@ -223,7 +224,7 @@ public:
      *
      * \param attrs The set of attributes to be installed.
      */
-    void set_thread_attributes(attribute_set const& attrs);
+    BOOST_LOG_API void set_thread_attributes(attribute_set const& attrs);
 
     /*!
      * The method sets exception handler function. The function will be called with no arguments
@@ -239,25 +240,64 @@ public:
      * \note The exception handler can be invoked in several threads concurrently.
      *       Thread interruptions are not affected by exception handlers.
      */
-    void set_exception_handler(exception_handler_type const& handler);
+    BOOST_LOG_API void set_exception_handler(exception_handler_type const& handler);
 
     /*!
      * The method attempts to open a new record to be written. While attempting to open a log record all filtering is applied.
-     * A successfully opened record may be pushed further to sinks by calling the \c push_record method or simply destroyed by
-     * destroying the returned handle.
+     * A successfully opened record can be pushed further to sinks by calling the \c push_record method or simply destroyed by
+     * destroying the returned object.
      *
      * More than one open records are allowed, such records exist independently. All attribute values are acquired during opening
      * the record and do not interact between records.
      *
-     * The returned record handles may be copied, however, they must not be passed between different threads.
+     * The returned records can be copied, however, they must not be passed between different threads.
      *
      * \param source_attributes The set of source-specific attributes to be attached to the record to be opened.
      * \return A valid log record if the record is opened, an invalid record object if not (e.g. because it didn't pass filtering).
      *
      * \b Throws: If an exception handler is installed, only throws if the handler throws. Otherwise may
-     *            throw if one of the sinks throws, or some system resource limitation has been reached.
+     *            throw if one of the sinks throws, or some system resource limitation is reached.
      */
-    record open_record(attribute_set const& source_attributes);
+    BOOST_LOG_API record open_record(attribute_set const& source_attributes);
+    /*!
+     * The method attempts to open a new record to be written. While attempting to open a log record all filtering is applied.
+     * A successfully opened record can be pushed further to sinks by calling the \c push_record method or simply destroyed by
+     * destroying the returned object.
+     *
+     * More than one open records are allowed, such records exist independently. All attribute values are acquired during opening
+     * the record and do not interact between records.
+     *
+     * The returned records can be copied, however, they must not be passed between different threads.
+     *
+     * \param source_attributes The set of source-specific attribute values to be attached to the record to be opened.
+     * \return A valid log record if the record is opened, an invalid record object if not (e.g. because it didn't pass filtering).
+     *
+     * \b Throws: If an exception handler is installed, only throws if the handler throws. Otherwise may
+     *            throw if one of the sinks throws, or some system resource limitation is reached.
+     */
+    BOOST_LOG_API record open_record(attribute_value_set const& source_attributes);
+    /*!
+     * The method attempts to open a new record to be written. While attempting to open a log record all filtering is applied.
+     * A successfully opened record can be pushed further to sinks by calling the \c push_record method or simply destroyed by
+     * destroying the returned object.
+     *
+     * More than one open records are allowed, such records exist independently. All attribute values are acquired during opening
+     * the record and do not interact between records.
+     *
+     * The returned records can be copied, however, they must not be passed between different threads.
+     *
+     * \param source_attributes The set of source-specific attribute values to be attached to the record to be opened. The contents
+     *                          of this container are unspecified after this call.
+     * \return A valid log record if the record is opened, an invalid record object if not (e.g. because it didn't pass filtering).
+     *
+     * \b Throws: If an exception handler is installed, only throws if the handler throws. Otherwise may
+     *            throw if one of the sinks throws, or some system resource limitation is reached.
+     */
+    BOOST_LOG_FORCEINLINE record open_record(BOOST_RV_REF(attribute_value_set) source_attributes)
+    {
+        return open_record_move(static_cast< attribute_value_set& >(source_attributes));
+    }
+
     /*!
      * The method pushes the record to sinks.
      *
@@ -267,10 +307,16 @@ public:
      * \b Throws: If an exception handler is installed, only throws if the handler throws. Otherwise may
      *            throw if one of the sinks throws.
      */
-    void push_record(record const& rec);
+    BOOST_LOG_API void push_record(record const& rec);
 
     BOOST_LOG_DELETED_FUNCTION(core(core const&))
     BOOST_LOG_DELETED_FUNCTION(core& operator= (core const&))
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+private:
+    //! Opens log record. This function is mostly needed to maintain ABI stable between C++03 and C++11.
+    BOOST_LOG_API record open_record_move(attribute_value_set& source_attributes);
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log

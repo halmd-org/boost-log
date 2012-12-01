@@ -52,7 +52,7 @@ public:
     typedef key_type::id_type id_type;
 
 private:
-    typedef attribute_set_type::implementation attribute_set_impl_type;
+    typedef attribute_set::implementation attribute_set_impl_type;
     typedef boost::log::aux::stateless_allocator< char > stateless_allocator;
 
     //! Node base class traits for the intrusive list
@@ -175,9 +175,9 @@ private:
 public:
     //! The function allocates memory and creates the object
     static implementation* create(
-        attribute_set_type const& source_attrs,
-        attribute_set_type const& thread_attrs,
-        attribute_set_type const& global_attrs,
+        attribute_set const& source_attrs,
+        attribute_set const& thread_attrs,
+        attribute_set const& global_attrs,
         size_type reserve_count)
     {
         return create(
@@ -185,6 +185,36 @@ public:
             source_attrs.m_pImpl,
             thread_attrs.m_pImpl,
             global_attrs.m_pImpl);
+    }
+
+    //! The function allocates memory and creates the object
+    static implementation* create(
+        attribute_value_set const& source_attrs,
+        attribute_set const& thread_attrs,
+        attribute_set const& global_attrs,
+        size_type reserve_count)
+    {
+        implementation* p = create(
+            source_attrs.m_pImpl->size() + thread_attrs.m_pImpl->size() + global_attrs.m_pImpl->size() + reserve_count,
+            NULL,
+            thread_attrs.m_pImpl,
+            global_attrs.m_pImpl);
+        p->copy_nodes_from(source_attrs.m_pImpl);
+        return p;
+    }
+
+    //! The function allocates memory and creates the object
+    static implementation* create(
+        BOOST_RV_REF(attribute_value_set) source_attrs,
+        attribute_set const& thread_attrs,
+        attribute_set const& global_attrs,
+        size_type reserve_count)
+    {
+        implementation* p = source_attrs.m_pImpl;
+        source_attrs.m_pImpl = NULL;
+        p->m_pThreadAttributes = thread_attrs.m_pImpl;
+        p->m_pGlobalAttributes = global_attrs.m_pImpl;
+        return p;
     }
 
     //! The function allocates memory and creates the object
@@ -200,21 +230,7 @@ public:
         implementation* p = create(that->size(), NULL, NULL, NULL);
 
         // Copy all elements
-        node_list::iterator it = that->m_Nodes.begin(), end = that->m_Nodes.end();
-        for (; it != end; ++it)
-        {
-            node* n = p->m_pEnd++;
-            mapped_type data = it->m_Value.second;
-            new (n) node(it->m_Value.first, data, false);
-            p->m_Nodes.push_back(*n);
-
-            // Since nodes within buckets are ordered, we can simply append the node to the end of the bucket
-            bucket& b = p->get_bucket(n->m_Value.first.id());
-            if (b.first == NULL)
-                b.first = b.last = n;
-            else
-                b.last = n;
-        }
+        p->copy_nodes_from(that);
 
         return p;
     }
@@ -261,11 +277,8 @@ public:
                 return p;
         }
 
-        // Element not found, try to acquire the value from attribute sets, if not frozen yet
-        if (m_pSourceAttributes)
-            return freeze_node(key, b, p);
-        else
-            return m_Nodes.end().pointed_node();
+        // Element not found, try to acquire the value from attribute sets
+        return freeze_node(key, b, p);
     }
 
     //! Freezes all elements of the container
@@ -274,9 +287,17 @@ public:
         if (m_pSourceAttributes)
         {
             freeze_nodes_from(m_pSourceAttributes);
+            m_pSourceAttributes = NULL;
+        }
+        if (m_pThreadAttributes)
+        {
             freeze_nodes_from(m_pThreadAttributes);
+            m_pThreadAttributes = NULL;
+        }
+        if (m_pGlobalAttributes)
+        {
             freeze_nodes_from(m_pGlobalAttributes);
-            m_pSourceAttributes = m_pThreadAttributes = m_pGlobalAttributes = NULL;
+            m_pGlobalAttributes = NULL;
         }
     }
 
@@ -322,23 +343,39 @@ private:
     //! Acquires the attribute value from the attribute sets
     node_base* freeze_node(key_type key, bucket& b, node* where)
     {
-        attribute_set_type::iterator it = m_pSourceAttributes->find(key);
-        if (it == m_pSourceAttributes->end())
+        attribute_set::iterator it;
+        if (m_pSourceAttributes)
         {
-            it = m_pThreadAttributes->find(key);
-            if (it == m_pThreadAttributes->end())
+            it = m_pSourceAttributes->find(key);
+            if (it != m_pSourceAttributes->end())
             {
-                it = m_pGlobalAttributes->find(key);
-                if (it == m_pGlobalAttributes->end())
-                {
-                    // The attribute is not found
-                    return m_Nodes.end().pointed_node();
-                }
+                // The attribute is found, acquiring the value
+                return insert_node(key, b, where, it->second.get_value());
             }
         }
 
-        // The attribute is found, acquiring the value
-        return insert_node(key, b, where, it->second.get_value());
+        if (m_pThreadAttributes)
+        {
+            it = m_pThreadAttributes->find(key);
+            if (it != m_pThreadAttributes->end())
+            {
+                // The attribute is found, acquiring the value
+                return insert_node(key, b, where, it->second.get_value());
+            }
+        }
+
+        if (m_pGlobalAttributes)
+        {
+            it = m_pGlobalAttributes->find(key);
+            if (it != m_pGlobalAttributes->end())
+            {
+                // The attribute is found, acquiring the value
+                return insert_node(key, b, where, it->second.get_value());
+            }
+        }
+
+        // The attribute is not found
+        return m_Nodes.end().pointed_node();
     }
 
     //! The function inserts a node into the container
@@ -382,8 +419,7 @@ private:
     //! Acquires attribute values from the set of attributes
     void freeze_nodes_from(attribute_set_impl_type* attrs)
     {
-        attribute_set_type::const_iterator
-            it = attrs->begin(), end = attrs->end();
+        attribute_set::const_iterator it = attrs->begin(), end = attrs->end();
         for (; it != end; ++it)
         {
             key_type key = it->first;
@@ -397,6 +433,27 @@ private:
             }
 
             insert_node(key, b, p, it->second.get_value());
+        }
+    }
+
+    //! Copies nodes of the container
+    void copy_nodes_from(implementation* from)
+    {
+        // Copy all elements
+        node_list::iterator it = from->m_Nodes.begin(), end = from->m_Nodes.end();
+        for (; it != end; ++it)
+        {
+            node* n = m_pEnd++;
+            mapped_type data = it->m_Value.second;
+            new (n) node(it->m_Value.first, data, false);
+            m_Nodes.push_back(*n);
+
+            // Since nodes within buckets are ordered, we can simply append the node to the end of the bucket
+            bucket& b = get_bucket(n->m_Value.first.id());
+            if (b.first == NULL)
+                b.first = b.last = n;
+            else
+                b.last = n;
         }
     }
 };
@@ -417,13 +474,35 @@ BOOST_LOG_API attribute_value_set::attribute_value_set(
 
 //! The constructor adopts three attribute sets to the set
 BOOST_LOG_API attribute_value_set::attribute_value_set(
-    attribute_set_type const& source_attrs,
-    attribute_set_type const& thread_attrs,
-    attribute_set_type const& global_attrs,
+    attribute_set const& source_attrs,
+    attribute_set const& thread_attrs,
+    attribute_set const& global_attrs,
     size_type reserve_count
 ) :
     m_pImpl(implementation::create(source_attrs, thread_attrs, global_attrs, reserve_count))
 {
+}
+
+//! The constructor adopts three attribute sets to the set
+BOOST_LOG_API attribute_value_set::attribute_value_set(
+    attribute_value_set const& source_attrs,
+    attribute_set const& thread_attrs,
+    attribute_set const& global_attrs,
+    size_type reserve_count
+) :
+    m_pImpl(implementation::create(source_attrs, thread_attrs, global_attrs, reserve_count))
+{
+}
+
+//! The constructor adopts three attribute sets to the set
+BOOST_LOG_API void attribute_value_set::construct(
+    attribute_value_set& source_attrs,
+    attribute_set const& thread_attrs,
+    attribute_set const& global_attrs,
+    size_type reserve_count
+)
+{
+    m_pImpl = implementation::create(boost::move(source_attrs), thread_attrs, global_attrs, reserve_count);
 }
 
 //! Copy constructor

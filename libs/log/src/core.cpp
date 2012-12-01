@@ -44,7 +44,8 @@ namespace boost {
 BOOST_LOG_OPEN_NAMESPACE
 
 //! Private record data information, with core-specific structures
-struct record::private_data
+struct record::private_data :
+    public public_data
 {
     //! Underlying memory allocator
     typedef boost::log::aux::stateless_allocator< char > stateless_allocator;
@@ -61,7 +62,8 @@ private:
 
 private:
     //! Initializing constructor
-    explicit private_data(uint32_t capacity) :
+    private_data(BOOST_RV_REF(attribute_value_set) values, uint32_t capacity) :
+        public_data(values),
         m_accepting_sink_count(0),
         m_accepting_sink_capacity(capacity)
     {
@@ -69,7 +71,7 @@ private:
 
 public:
     //! Creates the object with the specified capacity
-    static private_data* create(uint32_t capacity)
+    static private_data* create(BOOST_RV_REF(attribute_value_set) values, uint32_t capacity)
     {
         stateless_allocator alloc;
         private_data* p = reinterpret_cast< private_data* >(alloc.allocate
@@ -78,12 +80,12 @@ public:
             boost::log::aux::alignment_gap_between< private_data, sink_ptr >::value +
             capacity * sizeof(sink_ptr)
         ));
-        new (p) private_data(capacity);
+        new (p) private_data(values, capacity);
         return p;
     }
 
     //! Destroys the object and frees the underlying storage
-    void destroy()
+    void destroy() BOOST_NOEXCEPT
     {
         sink_list s = get_accepting_sinks();
         for (sink_list::iterator it = s.begin(), end = s.end(); it != end; ++it)
@@ -105,7 +107,7 @@ public:
     }
 
     //! Returns iterator range with the pointers to the accepting sinks
-    sink_list get_accepting_sinks()
+    sink_list get_accepting_sinks() BOOST_NOEXCEPT
     {
         sink_ptr* p = begin();
         return sink_list(p, p + m_accepting_sink_count);
@@ -121,14 +123,14 @@ public:
     }
 
     //! Returns the number of accepting sinks
-    uint32_t accepting_sink_count() const { return m_accepting_sink_count; }
+    uint32_t accepting_sink_count() const BOOST_NOEXCEPT { return m_accepting_sink_count; }
 
     BOOST_LOG_DELETED_FUNCTION(private_data(private_data const&))
     BOOST_LOG_DELETED_FUNCTION(private_data& operator= (private_data const&))
 
 private:
     //! Returns a pointer to the first accepting sink
-    sink_ptr* begin()
+    sink_ptr* begin() BOOST_NOEXCEPT
     {
         return reinterpret_cast< sink_ptr* >
         (
@@ -140,13 +142,9 @@ private:
 };
 
 //! Destructor
-BOOST_LOG_API record::public_data::~public_data()
+BOOST_LOG_API void record::public_data::destroy(const public_data* p) BOOST_NOEXCEPT
 {
-    if (m_private)
-    {
-        m_private->destroy();
-        m_private = NULL;
-    }
+    const_cast< private_data* >(static_cast< const private_data* >(p))->destroy();
 }
 
 //! The function ensures that the log record does not depend on any thread-specific data.
@@ -198,9 +196,6 @@ public:
         attribute_set m_thread_attributes;
     };
 
-    //! Log record implementation type
-    typedef record::private_data record_private_data;
-
 public:
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
@@ -245,17 +240,20 @@ public:
     }
 
     //! Invokes sink-specific filter and adds the sink to the record if the filter passes the log record
-    void apply_sink_filter(shared_ptr< sinks::sink > const& sink, record_private_data*& rec_impl, attribute_value_set const& attr_values, uint32_t remaining_capacity)
+    void apply_sink_filter(shared_ptr< sinks::sink > const& sink, record& rec, attribute_value_set*& attr_values, uint32_t remaining_capacity)
     {
         try
         {
-            if (sink->will_consume(attr_values))
+            if (sink->will_consume(*attr_values))
             {
                 // If at least one sink accepts the record, it's time to create it
-                if (!rec_impl)
-                    rec_impl = record_private_data::create(remaining_capacity);
+                if (!rec.m_impl)
+                {
+                    rec.m_impl = record::private_data::create(boost::move(*attr_values), remaining_capacity);
+                    attr_values = &rec.m_impl->m_attribute_values;
+                }
 
-                rec_impl->push_back_accepting_sink(sink);
+                static_cast< record::private_data* >(rec.m_impl.get())->push_back_accepting_sink(sink);
             }
         }
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -268,10 +266,78 @@ public:
         {
             if (m_exception_handler.empty())
                 throw;
-
-            // Assume that the sink is incapable to receive messages now
             m_exception_handler();
         }
+    }
+
+    //! Opens a record
+    template< typename SourceAttributesT >
+    BOOST_LOG_FORCEINLINE record open_record(BOOST_FWD_REF(SourceAttributesT) source_attributes)
+    {
+        // Try a quick win first
+        if (m_enabled) try
+        {
+            thread_data* tsd = get_thread_data();
+
+            // Lock the core to be safe against any attribute or sink set modifications
+            BOOST_LOG_EXPR_IF_MT(scoped_read_lock lock(m_mutex);)
+
+            if (m_enabled)
+            {
+                // Compose a view of attribute values (unfrozen, yet)
+                attribute_value_set attr_values(boost::forward< SourceAttributesT >(source_attributes), tsd->m_thread_attributes, m_global_attributes);
+                if (m_filter(attr_values))
+                {
+                    // The global filter passed, trying the sinks
+                    record rec;
+                    attribute_value_set* values = &attr_values;
+
+                    if (!m_sinks.empty())
+                    {
+                        uint32_t remaining_capacity = m_sinks.size();
+                        sink_list::iterator it = m_sinks.begin(), end = m_sinks.end();
+                        for (; it != end; ++it, --remaining_capacity)
+                        {
+                            apply_sink_filter(*it, rec, values, remaining_capacity);
+                        }
+                    }
+                    else
+                    {
+                        // Use the default sink
+                        apply_sink_filter(m_default_sink, rec, values, 1);
+                    }
+
+                    record::private_data* rec_impl = static_cast< record::private_data* >(rec.m_impl.get());
+                    if (rec_impl && rec_impl->accepting_sink_count() == 0)
+                    {
+                        // No sinks accepted the record
+                        return record();
+                    }
+
+                    // Some sinks have accepted the record
+                    values->freeze();
+
+                    return boost::move(rec);
+                }
+            }
+        }
+    #if !defined(BOOST_LOG_NO_THREADS)
+        catch (thread_interrupted&)
+        {
+            throw;
+        }
+    #endif // !defined(BOOST_LOG_NO_THREADS)
+        catch (...)
+        {
+            // Lock the core to be safe against any attribute or sink set modifications
+            BOOST_LOG_EXPR_IF_MT(scoped_read_lock lock(m_mutex);)
+            if (m_exception_handler.empty())
+                throw;
+
+            m_exception_handler();
+        }
+
+        return record();
     }
 
     //! The method returns the current thread-specific data
@@ -337,13 +403,13 @@ core::~core()
 }
 
 //! The method returns a pointer to the logging system instance
-core_ptr core::get()
+BOOST_LOG_API core_ptr core::get()
 {
     return implementation::get();
 }
 
 //! The method enables or disables logging and returns the previous state of logging flag
-bool core::set_logging_enabled(bool enabled)
+BOOST_LOG_API bool core::set_logging_enabled(bool enabled)
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
     const bool old_value = m_impl->m_enabled;
@@ -352,7 +418,7 @@ bool core::set_logging_enabled(bool enabled)
 }
 
 //! The method allows to detect if logging is enabled
-bool core::get_logging_enabled() const
+BOOST_LOG_API bool core::get_logging_enabled() const
 {
     // Should have a read barrier here, but for performance reasons it is omitted.
     // The function should be used as a quick check and doesn't need to be reliable.
@@ -360,7 +426,7 @@ bool core::get_logging_enabled() const
 }
 
 //! The method adds a new sink
-void core::add_sink(shared_ptr< sinks::sink > const& s)
+BOOST_LOG_API void core::add_sink(shared_ptr< sinks::sink > const& s)
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
     implementation::sink_list::iterator it =
@@ -370,7 +436,7 @@ void core::add_sink(shared_ptr< sinks::sink > const& s)
 }
 
 //! The method removes the sink from the output
-void core::remove_sink(shared_ptr< sinks::sink > const& s)
+BOOST_LOG_API void core::remove_sink(shared_ptr< sinks::sink > const& s)
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
     implementation::sink_list::iterator it =
@@ -380,7 +446,7 @@ void core::remove_sink(shared_ptr< sinks::sink > const& s)
 }
 
 //! The method removes all registered sinks from the output
-void core::remove_all_sinks()
+BOOST_LOG_API void core::remove_all_sinks()
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
     m_impl->m_sinks.clear();
@@ -388,7 +454,7 @@ void core::remove_all_sinks()
 
 
 //! The method adds an attribute to the global attribute set
-std::pair< attribute_set::iterator, bool >
+BOOST_LOG_API std::pair< attribute_set::iterator, bool >
 core::add_global_attribute(attribute_name const& name, attribute const& attr)
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
@@ -396,28 +462,28 @@ core::add_global_attribute(attribute_name const& name, attribute const& attr)
 }
 
 //! The method removes an attribute from the global attribute set
-void core::remove_global_attribute(attribute_set::iterator it)
+BOOST_LOG_API void core::remove_global_attribute(attribute_set::iterator it)
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
     m_impl->m_global_attributes.erase(it);
 }
 
 //! The method returns the complete set of currently registered global attributes
-attribute_set core::get_global_attributes() const
+BOOST_LOG_API attribute_set core::get_global_attributes() const
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_read_lock lock(m_impl->m_mutex);)
     return m_impl->m_global_attributes;
 }
 
 //! The method replaces the complete set of currently registered global attributes with the provided set
-void core::set_global_attributes(attribute_set const& attrs)
+BOOST_LOG_API void core::set_global_attributes(attribute_set const& attrs)
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
     m_impl->m_global_attributes = attrs;
 }
 
 //! The method adds an attribute to the thread-specific attribute set
-std::pair< attribute_set::iterator, bool >
+BOOST_LOG_API std::pair< attribute_set::iterator, bool >
 core::add_thread_attribute(attribute_name const& name, attribute const& attr)
 {
     implementation::thread_data* p = m_impl->get_thread_data();
@@ -425,48 +491,48 @@ core::add_thread_attribute(attribute_name const& name, attribute const& attr)
 }
 
 //! The method removes an attribute from the thread-specific attribute set
-void core::remove_thread_attribute(attribute_set::iterator it)
+BOOST_LOG_API void core::remove_thread_attribute(attribute_set::iterator it)
 {
     implementation::thread_data* p = m_impl->get_thread_data();
     p->m_thread_attributes.erase(it);
 }
 
 //! The method returns the complete set of currently registered thread-specific attributes
-attribute_set core::get_thread_attributes() const
+BOOST_LOG_API attribute_set core::get_thread_attributes() const
 {
     implementation::thread_data* p = m_impl->get_thread_data();
     return p->m_thread_attributes;
 }
 //! The method replaces the complete set of currently registered thread-specific attributes with the provided set
-void core::set_thread_attributes(attribute_set const& attrs)
+BOOST_LOG_API void core::set_thread_attributes(attribute_set const& attrs)
 {
     implementation::thread_data* p = m_impl->get_thread_data();
     p->m_thread_attributes = attrs;
 }
 
 //! An internal method to set the global filter
-void core::set_filter(filter const& filter)
+BOOST_LOG_API void core::set_filter(filter const& filter)
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
     m_impl->m_filter = filter;
 }
 
 //! The method removes the global logging filter
-void core::reset_filter()
+BOOST_LOG_API void core::reset_filter()
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
     m_impl->m_filter.reset();
 }
 
 //! The method sets exception handler function
-void core::set_exception_handler(exception_handler_type const& handler)
+BOOST_LOG_API void core::set_exception_handler(exception_handler_type const& handler)
 {
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
     m_impl->m_exception_handler = handler;
 }
 
 //! The method performs flush on all registered sinks.
-void core::flush()
+BOOST_LOG_API void core::flush()
 {
     // Acquire exclusive lock to prevent any logging attempts while flushing
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
@@ -492,98 +558,31 @@ void core::flush()
     }
 }
 
-//! The method opens a new record to be written and returns true if the record was opened
-record core::open_record(attribute_set const& source_attributes)
+//! The method attempts to open a new record to be written
+BOOST_LOG_API record core::open_record(attribute_set const& source_attributes)
 {
-    record rec;
+    return m_impl->open_record(source_attributes);
+}
 
-    // Try a quick win first
-    if (m_impl->m_enabled) try
-    {
-        implementation::thread_data* tsd = m_impl->get_thread_data();
+//! The method attempts to open a new record to be written
+BOOST_LOG_API record core::open_record(attribute_value_set const& source_attributes)
+{
+    return m_impl->open_record(source_attributes);
+}
 
-        // Lock the core to be safe against any attribute or sink set modifications
-        BOOST_LOG_EXPR_IF_MT(implementation::scoped_read_lock lock(m_impl->m_mutex);)
-
-        if (m_impl->m_enabled)
-        {
-            // Compose a view of attribute values (unfrozen, yet)
-            attribute_value_set attr_values(source_attributes, tsd->m_thread_attributes, m_impl->m_global_attributes);
-
-            if (m_impl->m_filter(attr_values))
-            {
-                // The global filter passed, trying the sinks
-                implementation::record_private_data* rec_impl = NULL;
-
-                try
-                {
-                    if (!m_impl->m_sinks.empty())
-                    {
-                        uint32_t remaining_capacity = m_impl->m_sinks.size();
-                        implementation::sink_list::iterator it = m_impl->m_sinks.begin(), end = m_impl->m_sinks.end();
-                        for (; it != end; ++it, --remaining_capacity)
-                        {
-                            m_impl->apply_sink_filter(*it, rec_impl, attr_values, remaining_capacity);
-                        }
-                    }
-                    else
-                    {
-                        // Use the default sink
-                        m_impl->apply_sink_filter(m_impl->m_default_sink, rec_impl, attr_values, 1);
-                    }
-
-                    if (rec_impl)
-                    {
-                        if (rec_impl->accepting_sink_count())
-                        {
-                            // Some sinks have accepted the record
-                            attr_values.freeze();
-                            rec.m_impl = new record::public_data(boost::move(attr_values));
-                            rec.m_impl->m_private = rec_impl;
-                        }
-                        else
-                        {
-                            // There must have been an exception
-                            rec_impl->destroy();
-                        }
-                    }
-                }
-                catch (...)
-                {
-                    if (rec_impl)
-                        rec_impl->destroy();
-                    throw;
-                }
-            }
-        }
-    }
-#if !defined(BOOST_LOG_NO_THREADS)
-    catch (thread_interrupted&)
-    {
-        throw;
-    }
-#endif // !defined(BOOST_LOG_NO_THREADS)
-    catch (...)
-    {
-        // Lock the core to be safe against any attribute or sink set modifications
-        BOOST_LOG_EXPR_IF_MT(implementation::scoped_read_lock lock(m_impl->m_mutex);)
-        if (m_impl->m_exception_handler.empty())
-            throw;
-
-        m_impl->m_exception_handler();
-    }
-
-    return boost::move(rec);
+//! The method attempts to open a new record to be written.
+BOOST_LOG_API record core::open_record_move(attribute_value_set& source_attributes)
+{
+    return m_impl->open_record(boost::move(source_attributes));
 }
 
 //! The method pushes the record
-void core::push_record(record const& rec)
+BOOST_LOG_API void core::push_record(record const& rec)
 {
     try
     {
         BOOST_ASSERT(!!rec);
-        BOOST_ASSERT(rec.m_impl->m_private != NULL);
-        implementation::record_private_data* data = rec.m_impl->m_private;
+        record::private_data* data = static_cast< record::private_data* >(rec.m_impl.get());
 
         typedef std::vector< shared_ptr< sinks::sink > > accepting_sinks_t;
         accepting_sinks_t accepting_sinks(data->accepting_sink_count());
@@ -591,8 +590,8 @@ void core::push_record(record const& rec)
         register shared_ptr< sinks::sink >* end = begin;
 
         // Lock sinks that are willing to consume the record
-        implementation::record_private_data::sink_list weak_sinks = data->get_accepting_sinks();
-        implementation::record_private_data::sink_list::iterator
+        record::private_data::sink_list weak_sinks = data->get_accepting_sinks();
+        record::private_data::sink_list::iterator
             weak_it = weak_sinks.begin(),
             weak_end = weak_sinks.end();
         for (; weak_it != weak_end; ++weak_it)

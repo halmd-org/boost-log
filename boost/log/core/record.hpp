@@ -53,7 +53,6 @@ class record
 
     friend class core;
 
-public:
 #ifndef BOOST_LOG_DOXYGEN_PASS
 private:
     //! Private data
@@ -67,13 +66,11 @@ private:
 #ifndef BOOST_LOG_NO_THREADS
         mutable boost::detail::atomic_count m_ref_counter;
 #else
-        mutable unsigned long m_ref_counter;
+        mutable unsigned int m_ref_counter;
 #endif // BOOST_LOG_NO_THREADS
 
         //! Attribute values view
         attribute_value_set m_attribute_values;
-        //! Pointer to the private implemntation
-        private_data* m_private;
         //! Shows if the record has already been detached from thread
         bool m_detached;
 
@@ -81,27 +78,21 @@ private:
         explicit public_data(BOOST_RV_REF(attribute_value_set) values) :
             m_ref_counter(0),
             m_attribute_values(values),
-            m_private(NULL),
-            m_detached(false)
-        {
-        }
-        //! Constructor from the attribute sets
-        explicit public_data(attribute_value_set const& values) :
-            m_ref_counter(0),
-            m_attribute_values(values),
-            m_private(NULL),
             m_detached(false)
         {
         }
 
         //! Destructor
-        BOOST_LOG_API ~public_data();
+        BOOST_LOG_API static void destroy(const public_data* p) BOOST_NOEXCEPT;
+
+    protected:
+        ~public_data() {}
 
         BOOST_LOG_DELETED_FUNCTION(public_data(public_data const&))
         BOOST_LOG_DELETED_FUNCTION(public_data& operator= (public_data const&))
 
         friend void intrusive_ptr_add_ref(const public_data* p) { ++p->m_ref_counter; }
-        friend void intrusive_ptr_release(const public_data* p) { if (--p->m_ref_counter == 0) delete p; }
+        friend void intrusive_ptr_release(const public_data* p) { if (--p->m_ref_counter == 0) public_data::destroy(p); }
     };
 
 private:

@@ -74,8 +74,6 @@ public:
     typedef attribute_name key_type;
     //! Mapped attribute type
     typedef attribute_value mapped_type;
-    //! Corresponding attribute set type
-    typedef attribute_set attribute_set_type;
 
     //! Value type
     typedef std::pair< const key_type, mapped_type > value_type;
@@ -214,7 +212,7 @@ public:
      *
      * \param reserve_count Number of elements to reserve space for.
      */
-    BOOST_LOG_API explicit attribute_value_set(size_type reserve_count = 1);
+    BOOST_LOG_API explicit attribute_value_set(size_type reserve_count = 8);
 
     /*!
      * Move constructor
@@ -236,10 +234,51 @@ public:
      * \param reserve_count Amount of elements to reserve space for, in addition to the elements in the three attribute sets provided.
      */
     BOOST_LOG_API attribute_value_set(
-        attribute_set_type const& source_attrs,
-        attribute_set_type const& thread_attrs,
-        attribute_set_type const& global_attrs,
-        size_type reserve_count = 1);
+        attribute_set const& source_attrs,
+        attribute_set const& thread_attrs,
+        attribute_set const& global_attrs,
+        size_type reserve_count = 8);
+
+    /*!
+     * The constructor adopts three attribute sets into the value set.
+     * The \a source_attrs attributes have the greatest preference when a same-named
+     * attribute is found in several sets, \a global_attrs has the least.
+     * The constructed set is not frozen.
+     *
+     * \pre The \a source_attrs set is frozen.
+     *
+     * \param source_attrs A set of source-specific attributes.
+     * \param thread_attrs A set of thread-specific attributes.
+     * \param global_attrs A set of global attributes.
+     * \param reserve_count Amount of elements to reserve space for, in addition to the elements in the three attribute sets provided.
+     */
+    BOOST_LOG_API attribute_value_set(
+        attribute_value_set const& source_attrs,
+        attribute_set const& thread_attrs,
+        attribute_set const& global_attrs,
+        size_type reserve_count = 8);
+
+    /*!
+     * The constructor adopts three attribute sets into the value set.
+     * The \a source_attrs attributes have the greatest preference when a same-named
+     * attribute is found in several sets, \a global_attrs has the least.
+     * The constructed set is not frozen.
+     *
+     * \pre The \a source_attrs set is frozen.
+     *
+     * \param source_attrs A set of source-specific attributes.
+     * \param thread_attrs A set of thread-specific attributes.
+     * \param global_attrs A set of global attributes.
+     * \param reserve_count Amount of elements to reserve space for, in addition to the elements in the three attribute sets provided.
+     */
+    attribute_value_set(
+        BOOST_RV_REF(attribute_value_set) source_attrs,
+        attribute_set const& thread_attrs,
+        attribute_set const& global_attrs,
+        size_type reserve_count = 8) : m_pImpl(NULL)
+    {
+        construct(static_cast< attribute_value_set& >(source_attrs), thread_attrs, global_attrs, reserve_count);
+    }
 
     /*!
      * Copy constructor.
@@ -410,6 +449,16 @@ public:
         for (; begin != end; ++begin, ++out)
             *out = this->insert(*begin);
     }
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+private:
+    //! Constructs the object by moving from \a source_attrs. This function is mostly needed to maintain ABI stable between C++03 and C++11.
+    BOOST_LOG_API void construct(
+        attribute_value_set& source_attrs,
+        attribute_set const& thread_attrs,
+        attribute_set const& global_attrs,
+        size_type reserve_count);
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 /*!
