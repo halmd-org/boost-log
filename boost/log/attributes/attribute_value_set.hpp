@@ -359,7 +359,7 @@ public:
      * Alternative lookup syntax.
      *
      * \param keyword Attribute keyword.
-     * \return An \c optional with extracted attribute value if it is found, empty value otherwise.
+     * \return A \c value_ref with extracted attribute value if it is found, empty \c value_ref otherwise.
      */
     template< typename DescriptorT, template< typename > class ActorT >
     typename result_of::extract< typename expressions::attribute_keyword< DescriptorT, ActorT >::value_type >::type
