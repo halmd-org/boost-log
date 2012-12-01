@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 
     core::get()->set_filter
     (
-        expressions::attr< trivial::severity_level >("Severity") >= trivial::info
+        trivial::severity >= trivial::info
     );
 
     // Now the first two lines will not pass the filter

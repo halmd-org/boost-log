@@ -248,4 +248,8 @@ struct protoify< boost::reference_wrapper< const boost::log::expressions::attrib
 #define BOOST_LOG_ATTRIBUTE_KEYWORD(name_, keyword_, value_type_)\
     BOOST_LOG_ATTRIBUTE_KEYWORD_IMPL(tag, name_, keyword_, value_type_)
 
+#if defined(BOOST_LOG_TRIVIAL_HPP_INCLUDED_)
+#include <boost/log/detail/trivial_keyword.hpp>
+#endif
+
 #endif // BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_

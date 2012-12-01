@@ -110,4 +110,8 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #pragma warning(pop)
 #endif // _MSC_VER
 
+#if defined(BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_)
+#include <boost/log/detail/trivial_keyword.hpp>
+#endif
+
 #endif // BOOST_LOG_TRIVIAL_HPP_INCLUDED_

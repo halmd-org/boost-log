@@ -18,6 +18,10 @@
 
 #include <boost/log/detail/prologue.hpp>
 
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 namespace boost {
 
 #ifndef BOOST_LOG_NO_THREADS
