@@ -16,6 +16,7 @@
 #define BOOST_LOG_UTILITY_MANIPULATORS_ADD_ATTR_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/embedded_string_type.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/basic_attribute_value.hpp>
 #include <boost/log/sources/record_ostream.hpp>
@@ -63,7 +64,8 @@ public:
 template< typename CharT, typename T >
 inline basic_record_ostream< CharT >& operator<< (basic_record_ostream< CharT >& strm, add_attr_manip< T > const& manip)
 {
-    strm.get_record().attribute_values().insert(manip.get_name(), attributes::make_attribute_value(manip.get_value()));
+    typedef typename aux::make_embedded_string_type< T >::type value_type;
+    strm.get_record().attribute_values().insert(manip.get_name(), attributes::make_attribute_value< value_type >(manip.get_value()));
     return strm;
 }
 
