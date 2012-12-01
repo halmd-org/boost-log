@@ -15,20 +15,19 @@
 #ifndef BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_
 
-#include <boost/ref.hpp>
+#include <boost/proto/extends.hpp>
 #include <boost/proto/make_expr.hpp>
 #include <boost/phoenix/core/actor.hpp>
+#include <boost/phoenix/core/domain.hpp>
 #include <boost/phoenix/core/environment.hpp>
 #include <boost/fusion/sequence/intrinsic/at.hpp>
 #include <boost/preprocessor/cat.hpp>
-#include <boost/preprocessor/facilities/empty.hpp>
-#include <boost/preprocessor/facilities/identity.hpp>
-#include <boost/preprocessor/seq/enum.hpp>
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/expressions/is_keyword_descriptor.hpp>
 #include <boost/log/expressions/attr.hpp>
+#include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 
@@ -48,6 +47,11 @@ namespace expressions {
 template< typename DescriptorT, template< typename > class ActorT >
 struct attribute_keyword
 {
+    //! Self type
+    typedef attribute_keyword this_type;
+
+    BOOST_PROTO_BASIC_EXTENDS(typename proto::terminal< DescriptorT >::type, this_type, phoenix::phoenix_domain)
+
     //! Attribute descriptor type
     typedef DescriptorT descriptor_type;
     //! Attribute value type
@@ -180,26 +184,21 @@ struct protoify< boost::reference_wrapper< const boost::log::expressions::attrib
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
-#define BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag_ns_, name_, keyword_, attr_type_, create_decl_)\
+#define BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag_ns_, name_, keyword_, value_type_)\
     namespace tag_ns_\
     {\
         struct keyword_ :\
             public ::boost::log::expressions::keyword_descriptor\
         {\
-            typedef attr_type_ attribute_type;\
-            typedef attribute_type::value_type value_type;\
+            typedef value_type_ value_type;\
             static ::boost::log::attribute_name get_name() { return ::boost::log::attribute_name(name_); }\
-            static create_decl_() attribute_type create();\
         };\
     }\
     typedef ::boost::log::expressions::attribute_keyword< tag_ns_::keyword_ > BOOST_PP_CAT(keyword_, _type);
 
-#define BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_IMPL(tag_ns_, name_, keyword_, attr_type_, create_decl_)\
-    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag_ns_, name_, keyword_, attr_type_, create_decl_)\
+#define BOOST_LOG_ATTRIBUTE_KEYWORD_IMPL(tag_ns_, name_, keyword_, value_type_)\
+    BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag_ns_, name_, keyword_, value_type_)\
     const BOOST_PP_CAT(keyword_, _type) keyword_ = {};
-
-#define BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE_IMPL(create_decl_, keyword_ns_, keyword_)\
-    create_decl_() keyword_ns_::keyword_::attribute_type keyword_ns_::keyword_::create()
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
@@ -215,156 +214,37 @@ struct protoify< boost::reference_wrapper< const boost::log::expressions::attrib
  *   struct keyword_ :
  *     public boost::log::expressions::keyword_descriptor
  *   {
- *     typedef attr_type_ attribute_type;
- *     typedef attribute_type::value_type value_type;
+ *     typedef value_type_ value_type;
  *     static boost::log::attribute_name get_name();
- *     static create_decl_() attribute_type create();
  *   };
  * }
  *
  * typedef boost::log::expressions::attribute_keyword< tag::keyword_ > keyword_type;
  * \endcode
  *
- * The \c get_name method returns the attribute name and \c create constructs the attribute object. The \c create
- * method is only declared by this macro and must be defined elsewhere. See the \c BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE
- * macro documentation.
+ * The \c get_name method returns the attribute name.
  *
- * \note This macro only defines a type of the keyword. To also define the keyword object, use
- *       the \c BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD macro instead.
+ * \note This macro only defines the type of the keyword. To also define the keyword object, use
+ *       the \c BOOST_LOG_ATTRIBUTE_KEYWORD macro instead.
  *
  * \param name_ Attribute name string
  * \param keyword_ Keyword name
- * \param attr_type_ Attribute type
- * \param create_decl_ A preprocessor metafunction that expands to the attribute creation method declaration prefix.
- *                     Specify \c BOOST_PP_EMPTY if not needed.
+ * \param value_type_ Attribute value type
  */
-#define BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE(name_, keyword_, attr_type_, create_decl_)\
-    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag, name_, keyword_, attr_type_, create_decl_)
+#define BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE(name_, keyword_, value_type_)\
+    BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag, name_, keyword_, value_type_)
 
 /*!
  * \brief The macro declares an attribute keyword
  *
- * The macro provides definitions similar to \c BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE and addidionally
+ * The macro provides definitions similar to \c BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE and addidionally
  * defines the keyword object.
  *
  * \param name_ Attribute name string
  * \param keyword_ Keyword name
- * \param attr_type_ Attribute type
- * \param create_decl_ A preprocessor metafunction that expands to the attribute creation method declaration prefix.
- *                     Specify \c BOOST_PP_EMPTY if not needed.
+ * \param value_type_ Attribute value type
  */
-#define BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD(name_, keyword_, attr_type_, create_decl_)\
-    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_IMPL(tag, name_, keyword_, attr_type_, create_decl_)
-
-/*!
- * \brief The macro expands into the attribute creation method definition header
- *
- * The macro should be used to define the attribute creation method declared by \c BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE
- * or \c BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD macro. The macro should be used in the same namespace where the keyword
- * was declared. The attribute creation method body must immediately follow this macro. Usage example:
- *
- * \code
- * BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE(BOOST_PP_EMPTY, my_timer)
- * {
- *   return attribute_type();
- * }
- * \endcode
- *
- * \param create_decl_ A preprocessor metafunction that expands to the attribute creation method definition prefix.
- *                     Specify \c BOOST_PP_EMPTY if not needed.
- * \param keyword_ Keyword name
- */
-#define BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE(create_decl_, keyword_)\
-    BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE_IMPL(create_decl_, tag, keyword_)
-
-/*!
- * \brief The macro declares an attribute keyword type and defines an inline attribute creation method
- *
- * The attribute creation method body must immediately follow this macro, see the \c BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE
- * macro documentation.
- *
- * \param name_ Attribute name string
- * \param keyword_ Keyword name
- * \param attr_type_ Attribute type
- */
-#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE(name_, keyword_, attr_type_)\
-    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag, name_, keyword_, attr_type_, BOOST_PP_EMPTY)\
-    BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE_IMPL(BOOST_PP_IDENTITY(inline), tag, keyword_)
-
-/*!
- * \brief The macro declares an attribute keyword and defines an inline attribute creation method
- *
- * The attribute creation method body must immediately follow this macro, see the \c BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE
- * macro documentation.
- *
- * \param name_ Attribute name string
- * \param keyword_ Keyword name
- * \param attr_type_ Attribute type
- */
-#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD(name_, keyword_, attr_type_)\
-    BOOST_LOG_DECLARE_ATTRIBUTE_KEYWORD_IMPL(tag, name_, keyword_, attr_type_, BOOST_PP_EMPTY)\
-    BOOST_LOG_DEFINE_ATTRIBUTE_KEYWORD_CREATE_IMPL(BOOST_PP_IDENTITY(inline), tag, keyword_)
-
-/*!
- * \brief The macro declares an attribute keyword type and defines an inline attribute creation method
- *
- * The generated attribute creation method will default-construct the attribute.
- *
- * \param name_ Attribute name string
- * \param keyword_ Keyword name
- * \param attr_type_ Attribute type
- */
-#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE_DEFAULT(name_, keyword_, attr_type_)\
-    BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE(name_, keyword_, attr_type_)\
-    {\
-        return attribute_type();\
-    }
-
-/*!
- * \brief The macro declares an attribute keyword and defines an inline attribute creation method
- *
- * The generated attribute creation method will default-construct the attribute.
- *
- * \param name_ Attribute name string
- * \param keyword_ Keyword name
- * \param attr_type_ Attribute type
- */
-#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_DEFAULT(name_, keyword_, attr_type_)\
-    BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD(name_, keyword_, attr_type_)\
-    {\
-        return attribute_type();\
-    }
-
-/*!
- * \brief The macro declares an attribute keyword type and defines an inline attribute creation method
- *
- * The generated attribute creation method will construct the attribute with the specified arguments.
- *
- * \param name_ Attribute name string
- * \param keyword_ Keyword name
- * \param attr_type_ Attribute type
- * \param args_ A preprocessor sequence of constructor arguments for the attribute
- */
-#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE_CTOR_ARGS(name_, keyword_, attr_type_, args_)\
-    BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_TYPE(name_, keyword_, attr_type_)\
-    {\
-        return attribute_type(BOOST_PP_SEQ_ENUM(args_));\
-    }
-
-/*!
- * \brief The macro declares an attribute keyword and defines an inline attribute creation method
- *
- * The generated attribute creation method will construct the attribute with the specified arguments.
- *
- * \param name_ Attribute name string
- * \param keyword_ Keyword name
- * \param attr_type_ Attribute type
- * \param args_ A preprocessor sequence of constructor arguments for the attribute
- */
-#define BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD_CTOR_ARGS(name_, keyword_, attr_type_, args_)\
-    BOOST_LOG_INLINE_ATTRIBUTE_KEYWORD(name_, keyword_, attr_type_)\
-    {\
-        return attribute_type(BOOST_PP_SEQ_ENUM(args_));\
-    }
+#define BOOST_LOG_ATTRIBUTE_KEYWORD(name_, keyword_, value_type_)\
+    BOOST_LOG_ATTRIBUTE_KEYWORD_IMPL(tag, name_, keyword_, value_type_)
 
 #endif // BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_

@@ -17,5 +17,6 @@ build-project ./settings_file ;
 build-project ./settings_file_formatter_factory ;
 build-project ./syslog ;
 build-project ./native_syslog ;
+build-project ./keywords ;
 build-project ./trivial ;
 build-project ./doc ;
