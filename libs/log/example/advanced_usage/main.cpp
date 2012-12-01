@@ -29,6 +29,7 @@
 #include <boost/log/sinks.hpp>
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/utility/empty_deleter.hpp>
+#include <boost/log/utility/manipulators/add_attr.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/support/date_time.hpp>
 
@@ -241,6 +242,7 @@ int main(int argc, char* argv[])
 
     // And this line is not highlighted anymore
     BOOST_LOG(lg) << "Now the tag is removed";
+    BOOST_LOG(lg) << logging::add_attr("Tag", std::string("Tagged line")) << "Some lines can also be selectively tagged";
 
     // Now let's try to apply filtering to the output. Filtering is based on
     // attributes being output with the record. One of the common filtering use cases
