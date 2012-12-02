@@ -56,13 +56,11 @@ BOOST_LOG_OPEN_NAMESPACE
  * This stream type is used by the library for log record formatting. It implements the standard string stream interface
  * with a few extensions:
  *
- * \list
  * \li By default, \c bool values are formatted using alphabetical representation rather than numeric.
  * \li The stream supports writing strings of character types different from the stream character type. The stream will perform
  *     character code conversion as needed using the imbued locale.
  * \li The stream operates on an external string object rather than on the embedded one. The string can be attached or detached
  *     from the stream dynamically.
- * \endlist
  */
 template< typename CharT, typename TraitsT, typename AllocatorT >
 class basic_formatting_ostream :
@@ -121,11 +119,11 @@ public:
     }
 
     /*!
-     * Conversion from a record handle. Adopts the record referenced by the handle.
+     * Initializing constructor. Attaches the string to the constructed stream.
+     * The string will be used to store the formatted characters.
      *
-     * \pre The handle, if valid, have been issued by the logging core with the same character type as the record being constructed.
-     * \post <tt>this->handle() == rec</tt>
-     * \param rec The record handle being adopted
+     * \post <tt>!*this == false</tt>
+     * \param str The string buffer to attach.
      */
     explicit basic_formatting_ostream(string_type& str) :
         streambuf_base_type(boost::ref(str)),

@@ -293,12 +293,12 @@ inline void register_simple_filter_factory(attribute_name const& name)
  * equality comparison and less/greater ordering, and also extraction from stream.
  *
  * \pre <tt>name != NULL</tt>, <tt>name</tt> points to a zero-terminated string
- * \param name Attribute name to associate the factory with
+ * \param keyword Attribute keyword to associate the factory with
  */
 template< typename CharT, typename DescriptorT, template< typename > class ActorT >
-inline void register_simple_filter_factory(expressions::attribute_keyword< DescriptorT, ActorT > const&)
+inline void register_simple_filter_factory(expressions::attribute_keyword< DescriptorT, ActorT > const& keyword)
 {
-    register_simple_filter_factory< typename DescriptorT::value_type, CharT >(DescriptorT::get_name());
+    register_simple_filter_factory< typename DescriptorT::value_type, CharT >(keyword.get_name());
 }
 
 /*!

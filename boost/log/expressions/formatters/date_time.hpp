@@ -184,7 +184,7 @@ public:
     }
 
     /*!
-     * \retruns Formatter function
+     * \returns Formatter function
      */
     formatter_function_type const& get_formatter_function() const
     {

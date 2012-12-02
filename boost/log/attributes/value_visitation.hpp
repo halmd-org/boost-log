@@ -111,11 +111,9 @@ namespace result_of {
 /*!
  * The metafunction defines the result type of an attribute visitation. The result can be in one of the following forms:
  *
- * \list
  * \li \c visitation_result, if the visitor always returns \c void
  * \li <tt>std::pair<T, visitation_result></tt>, if the visitor always returns a value of type \c T
  * \li <tt>std::pair<variant< T1, T2... >, visitation_result></tt>, if the visitor may return different types \c Tn depending on the attribute value type
- * \endlist
  *
  * The \c visitation_result component describes whether visitation succeeded or not, see result codes within the class definition.
  */
@@ -370,7 +368,7 @@ public:
      * the value is passed to \a visitor.
      *
      * \param name Attribute value name.
-     * \param record A log record. The attribute value will be sought among those associated with the record.
+     * \param rec A log record. The attribute value will be sought among those associated with the record.
      * \param visitor A receiving function object to pass the attribute value to.
      * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
      */

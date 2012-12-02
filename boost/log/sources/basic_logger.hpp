@@ -469,7 +469,7 @@ public:
     /*!
      * The method pushes the constructed message to the logging core
      *
-     * \param record The log record with the formatted message
+     * \param rec The log record with the formatted message
      */
     void push_record(record const& rec)
     {

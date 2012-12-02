@@ -110,7 +110,7 @@ public:
      * \param name Attribute name
      * \param args Formatter arguments
      */
-    formatter_type create_formatter(attribute_name const& name, args_map const&)
+    formatter_type create_formatter(attribute_name const& name, args_map const& args)
     {
         return formatter_type(expressions::stream << expressions::attr< value_type >(name));
     }

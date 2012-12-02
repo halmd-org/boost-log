@@ -210,7 +210,15 @@ public:
     typedef std::reverse_iterator< const_iterator > const_reverse_iterator;
     typedef std::reverse_iterator< iterator > reverse_iterator;
 
-#else
+protected:
+    //! The root node of the container
+    aux::named_scope_list_node m_RootNode;
+    //! The size of the container
+    size_type m_Size;
+    //! The flag shows if the contained elements are dynamically allocated
+    bool m_fNeedToDeallocate;
+
+#else // BOOST_LOG_DOXYGEN_PASS
 
     /*!
      * A constant iterator to the sequence of scopes. Complies to bidirectional iterator requirements.
@@ -230,14 +238,6 @@ public:
     typedef implementation_defined reverse_iterator;
 
 #endif // BOOST_LOG_DOXYGEN_PASS
-
-protected:
-    //! The root node of the container
-    aux::named_scope_list_node m_RootNode;
-    //! The size of the container
-    size_type m_Size;
-    //! The flag shows if the contained elements are dynamically allocated
-    bool m_fNeedToDeallocate;
 
 public:
     /*!

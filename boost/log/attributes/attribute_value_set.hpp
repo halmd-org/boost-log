@@ -363,11 +363,11 @@ public:
      */
     template< typename DescriptorT, template< typename > class ActorT >
     typename result_of::extract< typename expressions::attribute_keyword< DescriptorT, ActorT >::value_type >::type
-    operator[] (expressions::attribute_keyword< DescriptorT, ActorT > const&) const
+    operator[] (expressions::attribute_keyword< DescriptorT, ActorT > const& keyword) const
     {
         typedef typename expressions::attribute_keyword< DescriptorT, ActorT >::value_type attr_value_type;
         typedef typename result_of::extract< attr_value_type >::type result_type;
-        const_iterator it = this->find(DescriptorT::get_name());
+        const_iterator it = this->find(keyword.get_name());
         if (it != this->end())
             return it->second.extract< attr_value_type >();
         else

@@ -247,7 +247,7 @@ public:
      * the extracted value is returned.
      *
      * \param name Attribute value name.
-     * \param record A log record. The attribute value will be sought among those associated with the record.
+     * \param rec A log record. The attribute value will be sought among those associated with the record.
      * \return The extracted value, if extraction succeeded, an empty value otherwise.
      */
     result_type operator() (attribute_name const& name, record const& rec) const
