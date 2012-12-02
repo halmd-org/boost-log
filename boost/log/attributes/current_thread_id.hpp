@@ -29,7 +29,7 @@
 #include <boost/log/detail/thread_id.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
 
 namespace boost {
 
@@ -74,7 +74,7 @@ protected:
 
         intrusive_ptr< attribute_value::impl > detach_from_thread()
         {
-            typedef basic_attribute_value< value_type > detached_value;
+            typedef attribute_value_impl< value_type > detached_value;
             return new detached_value(boost::log::aux::this_thread::get_id());
         }
 

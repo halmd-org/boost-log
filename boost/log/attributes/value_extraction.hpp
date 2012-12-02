@@ -33,9 +33,9 @@
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
-#include <boost/log/attributes/value_ref.hpp>
 #include <boost/log/attributes/value_extraction_fwd.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
+#include <boost/log/utility/value_ref.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

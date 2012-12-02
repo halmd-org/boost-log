@@ -15,7 +15,7 @@
 
 #include <boost/config.hpp>
 #include <boost/log/attributes/timer.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
 
 #if defined(BOOST_WINDOWS) && !defined(BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER)
 
@@ -104,7 +104,7 @@ public:
             }
         }
 
-        return attribute_value(new basic_attribute_value< value_type >(res));
+        return attribute_value(new attribute_value_impl< value_type >(res));
     }
 };
 
@@ -152,7 +152,7 @@ public:
 
     attribute_value get_value()
     {
-        return attribute_value(new basic_attribute_value< value_type >(
+        return attribute_value(new attribute_value_impl< value_type >(
             utc_time_traits::get_clock() - m_BaseTimePoint));
     }
 };

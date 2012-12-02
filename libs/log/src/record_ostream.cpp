@@ -17,7 +17,7 @@
 #include <locale>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/detail/singleton.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
 #include <boost/log/expressions/message.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/tss.hpp>
@@ -34,7 +34,7 @@ BOOST_LOG_API void basic_record_ostream< CharT >::init_stream()
     base_type::imbue(std::locale());
     if (!!m_Record)
     {
-        typedef attributes::basic_attribute_value< string_type > message_impl_type;
+        typedef attributes::attribute_value_impl< string_type > message_impl_type;
         intrusive_ptr< message_impl_type > p = new message_impl_type(string_type());
         attribute_value value(p);
 

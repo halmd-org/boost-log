@@ -5,15 +5,15 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   basic_attribute_value.hpp
+ * \file   attribute_value_impl.hpp
  * \author Andrey Semashev
  * \date   24.06.2007
  *
- * The header contains an implementation of an attribute value base class.
+ * The header contains an implementation of a basic attribute value implementation class.
  */
 
-#ifndef BOOST_LOG_ATTRIBUTES_BASIC_ATTRIBUTE_VALUE_HPP_INCLUDED_
-#define BOOST_LOG_ATTRIBUTES_BASIC_ATTRIBUTE_VALUE_HPP_INCLUDED_
+#ifndef BOOST_LOG_ATTRIBUTES_ATTRIBUTE_VALUE_IMPL_HPP_INCLUDED_
+#define BOOST_LOG_ATTRIBUTES_ATTRIBUTE_VALUE_IMPL_HPP_INCLUDED_
 
 #include <boost/move/move.hpp>
 #include <boost/type_traits/remove_cv.hpp>
@@ -42,7 +42,7 @@ namespace attributes {
  * The stored value can be dispatched with type dispatching mechanism.
  */
 template< typename T >
-class basic_attribute_value :
+class attribute_value_impl :
     public attribute_value::impl
 {
 public:
@@ -57,11 +57,11 @@ public:
     /*!
      * Constructor with initialization of the stored value
      */
-    explicit basic_attribute_value(value_type const& v) : m_value(v) {}
+    explicit attribute_value_impl(value_type const& v) : m_value(v) {}
     /*!
      * Constructor with initialization of the stored value
      */
-    explicit basic_attribute_value(BOOST_RV_REF(value_type) v) : m_value(v) {}
+    explicit attribute_value_impl(BOOST_RV_REF(value_type) v) : m_value(v) {}
 
     /*!
      * Attribute value dispatching method.
@@ -102,7 +102,7 @@ template< typename T >
 inline attribute_value make_attribute_value(T&& v)
 {
     typedef typename remove_cv< typename remove_reference< T >::type >::type value_type;
-    return attribute_value(new basic_attribute_value< value_type >(boost::forward< T >(v)));
+    return attribute_value(new attribute_value_impl< value_type >(boost::forward< T >(v)));
 }
 
 #else // !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
@@ -111,14 +111,14 @@ template< typename T >
 inline attribute_value make_attribute_value(T const& v)
 {
     typedef typename remove_cv< T >::type value_type;
-    return attribute_value(new basic_attribute_value< value_type >(v));
+    return attribute_value(new attribute_value_impl< value_type >(v));
 }
 
 template< typename T >
 inline attribute_value make_attribute_value(rv< T > const& v)
 {
     typedef typename remove_cv< T >::type value_type;
-    return attribute_value(new basic_attribute_value< value_type >(v));
+    return attribute_value(new attribute_value_impl< value_type >(v));
 }
 
 #endif // !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
@@ -129,4 +129,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_ATTRIBUTES_BASIC_ATTRIBUTE_VALUE_HPP_INCLUDED_
+#endif // BOOST_LOG_ATTRIBUTES_ATTRIBUTE_VALUE_IMPL_HPP_INCLUDED_

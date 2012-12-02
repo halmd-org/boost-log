@@ -19,12 +19,26 @@
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/link_mode.hpp>
 #include <boost/intrusive/derivation_value_traits.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include "attribute_set_impl.hpp"
+#include "stateless_allocator.hpp"
 
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
+
+BOOST_LOG_API void* attribute::impl::operator new (std::size_t size)
+{
+    aux::stateless_allocator< unsigned char > alloc;
+    return alloc.allocate(size);
+}
+
+BOOST_LOG_API void attribute::impl::operator delete (void* p, std::size_t size) BOOST_NOEXCEPT
+{
+    aux::stateless_allocator< unsigned char > alloc;
+    alloc.deallocate(static_cast< unsigned char* >(p), size);
+}
 
 inline attribute_set::node_base::node_base() :
     m_pPrev(NULL),

@@ -24,7 +24,7 @@
 #include <boost/log/detail/default_attribute_names.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
 #include <boost/log/utility/strictest_lock.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 #include <boost/log/keywords/severity.hpp>
@@ -89,7 +89,7 @@ namespace aux {
             intrusive_ptr< attribute_value::impl > detach_from_thread()
             {
     #if !defined(BOOST_LOG_NO_THREADS)
-                return new attributes::basic_attribute_value< value_type >(
+                return new attributes::attribute_value_impl< value_type >(
                     reinterpret_cast< value_type const& >(get_severity_level()));
     #else
                 // With multithreading disabled we may safely return this here. This method will not be called anyway.

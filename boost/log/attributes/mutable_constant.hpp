@@ -25,7 +25,7 @@
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -94,7 +94,7 @@ protected:
         typedef ScopedWriteLockT scoped_write_lock;
         BOOST_STATIC_ASSERT_MSG(!(is_void< mutex_type >::value || is_void< scoped_read_lock >::value || is_void< scoped_write_lock >::value), "Boost.Log: Mutex and both lock types either must not be void or must all be void");
         //! Attribute value wrapper
-        typedef basic_attribute_value< value_type > attr_value;
+        typedef attribute_value_impl< value_type > attr_value;
 
     private:
         //! Thread protection mutex
@@ -220,7 +220,7 @@ protected:
     {
     private:
         //! Attribute value wrapper
-        typedef basic_attribute_value< value_type > attr_value;
+        typedef attribute_value_impl< value_type > attr_value;
 
     private:
         //! The actual value

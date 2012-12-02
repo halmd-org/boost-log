@@ -9,11 +9,11 @@
  * \author Andrey Semashev
  * \date   27.07.2012
  *
- * The header contains implementation of an attrubute value reference wrapper.
+ * The header contains implementation of a value reference wrapper.
  */
 
-#ifndef BOOST_LOG_ATTRIBUTES_VALUE_REF_HPP_INCLUDED_
-#define BOOST_LOG_ATTRIBUTES_VALUE_REF_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_VALUE_REF_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_VALUE_REF_HPP_INCLUDED_
 
 #include <cstddef>
 #include <iosfwd>
@@ -44,7 +44,7 @@
 #include <boost/log/utility/functional/bind_output.hpp>
 #include <boost/log/utility/functional/bind_to_log.hpp>
 #include <boost/log/utility/manipulators/to_log.hpp>
-#include <boost/log/attributes/value_ref_fwd.hpp>
+#include <boost/log/utility/value_ref_fwd.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -597,4 +597,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_ATTRIBUTES_VALUE_REF_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_VALUE_REF_HPP_INCLUDED_

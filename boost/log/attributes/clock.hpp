@@ -19,7 +19,7 @@
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
@@ -58,7 +58,7 @@ protected:
     {
         attribute_value get_value()
         {
-            typedef basic_attribute_value< value_type > result_value;
+            typedef attribute_value_impl< value_type > result_value;
             return attribute_value(new result_value(TimeTraitsT::get_clock()));
         }
     };

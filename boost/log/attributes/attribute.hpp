@@ -15,6 +15,7 @@
 #ifndef BOOST_LOG_ATTRIBUTES_ATTRIBUTE_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_ATTRIBUTE_HPP_INCLUDED_
 
+#include <new>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/move/move.hpp>
 #include <boost/log/detail/prologue.hpp>
@@ -63,6 +64,9 @@ public:
          *         shall be used to indicate errors).
          */
         virtual attribute_value get_value() = 0;
+
+        BOOST_LOG_API static void* operator new (std::size_t size);
+        BOOST_LOG_API static void operator delete (void* p, std::size_t size) BOOST_NOEXCEPT;
     };
 
 private:

@@ -9,11 +9,11 @@
  * \author Andrey Semashev
  * \date   27.07.2012
  *
- * The header contains forward declaration of an attrubute value reference wrapper.
+ * The header contains forward declaration of a value reference wrapper.
  */
 
-#ifndef BOOST_LOG_ATTRIBUTES_VALUE_REF_FWD_HPP_INCLUDED_
-#define BOOST_LOG_ATTRIBUTES_VALUE_REF_FWD_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_VALUE_REF_FWD_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_VALUE_REF_FWD_HPP_INCLUDED_
 
 #include <boost/log/detail/prologue.hpp>
 
@@ -35,4 +35,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_ATTRIBUTES_VALUE_REF_FWD_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_VALUE_REF_FWD_HPP_INCLUDED_

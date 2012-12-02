@@ -18,7 +18,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/detail/embedded_string_type.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

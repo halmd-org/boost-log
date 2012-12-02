@@ -22,7 +22,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 #include <boost/log/utility/functional/bind_assign.hpp>
 
@@ -107,10 +107,10 @@ namespace {
 BOOST_AUTO_TEST_CASE(type_dispatching)
 {
     my_dispatcher disp;
-    logging::attribute_value p1(new attrs::basic_attribute_value< int >(10));
-    logging::attribute_value p2(new attrs::basic_attribute_value< double > (5.5));
-    logging::attribute_value p3(new attrs::basic_attribute_value< std::string >("Hello, world!"));
-    logging::attribute_value p4(new attrs::basic_attribute_value< float >(static_cast< float >(-7.2)));
+    logging::attribute_value p1(new attrs::attribute_value_impl< int >(10));
+    logging::attribute_value p2(new attrs::attribute_value_impl< double > (5.5));
+    logging::attribute_value p3(new attrs::attribute_value_impl< std::string >("Hello, world!"));
+    logging::attribute_value p4(new attrs::attribute_value_impl< float >(static_cast< float >(-7.2)));
 
     disp.set_expected(10);
     BOOST_CHECK(p1.dispatch(disp));
@@ -129,8 +129,8 @@ BOOST_AUTO_TEST_CASE(type_dispatching)
 // The test verifies that value extracition works
 BOOST_AUTO_TEST_CASE(value_extraction)
 {
-    logging::attribute_value p1(new attrs::basic_attribute_value< int >(10));
-    logging::attribute_value p2(new attrs::basic_attribute_value< double >(5.5));
+    logging::attribute_value p1(new attrs::attribute_value_impl< int >(10));
+    logging::attribute_value p2(new attrs::attribute_value_impl< double >(5.5));
 
     boost::optional< int > val1 = p1.extract< int >();
     BOOST_CHECK(!!val1);
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(value_extraction)
 // The test verifies that the detach_from_thread returns a valid pointer
 BOOST_AUTO_TEST_CASE(detaching_from_thread)
 {
-    boost::intrusive_ptr< logging::attribute_value::impl > p1(new attrs::basic_attribute_value< int >(10));
+    boost::intrusive_ptr< logging::attribute_value::impl > p1(new attrs::attribute_value_impl< int >(10));
     boost::intrusive_ptr< logging::attribute_value::impl > p2 = p1->detach_from_thread();
     BOOST_CHECK(!!p2);
 }

@@ -19,7 +19,7 @@
 #include <boost/log/detail/prologue.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -49,10 +49,10 @@ public:
 protected:
     //! Factory implementation
     class BOOST_LOG_VISIBLE impl :
-        public basic_attribute_value< value_type >
+        public attribute_value_impl< value_type >
     {
         //! Base type
-        typedef basic_attribute_value< value_type > base_type;
+        typedef attribute_value_impl< value_type > base_type;
 
     public:
         /*!
