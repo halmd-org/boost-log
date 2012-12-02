@@ -10,7 +10,7 @@
     ]
     [id log]
     [source-mode c++]
-    [last-revision $Date: 2010-06-24 16:33:45 +0400 (Чт, 24 июн 2010) $]
+    [last-revision $Date$]
 ]
 
 [c++]
@@ -41,6 +41,8 @@
 [def __boost_scope_exit__ [@http://www.boost.org/doc/libs/release/libs/scope_exit/doc/html/index.html Boost.ScopeExit]]
 [def __boost_any__ [@http://www.boost.org/doc/libs/release/doc/html/any.html Boost.Any]]
 [def __boost_asio__ [@http://www.boost.org/doc/libs/release/doc/html/boost_asio.html Boost.ASIO]]
+[def __boost_move__ [@http://www.boost.org/doc/libs/release/doc/html/move.html Boost.Move]]
+[def __boost_locale__ [@http://www.boost.org/doc/libs/release/libs/locale/doc/html/index.html Boost.Locale]]
 
 [/ Auto-generated macros that refer to Reference sections /]
 [include top_level_reference.qbk]
@@ -94,9 +96,9 @@ This library is not an official part of [@http://www.boost.org Boost libraries c
 
 Today applications grow rapidly, becoming complicated and difficult to test and debug. Most of the time applications run on a remote site, leaving the developer little chance to monitor their execution and figure out the reasons for their failure, once it should happen. Moreover, even the local debugging may become problematic if the application behavior depends heavily on asynchronous side events, such as a device feedback or another process activity.
 
-This is where logging can help. The application stores all essential information about its execution to a log, and when something goes wrong this information can be used to analyze the program's behavior and make the necessary corrections. There are other very useful applications of logging, such as gathering statistical information and highlighting events (i.e. indicating that some situation has occurred or that the application is experiencing some problems). These tasks have proved to be vital for many real-world industrial applications.
+This is where logging can help. The application stores all essential information about its execution to a log, and when something goes wrong this information can be used to analyze the program behavior and make the necessary corrections. There are other very useful applications of logging, such as gathering statistical information and highlighting events (i.e. indicating that some situation has occurred or that the application is experiencing some problems). These tasks have proved to be vital for many real-world industrial applications.
 
-This library aims to make logging significantly easier for the application developer. It provides a wide range of out-of-the-box tools, along with public interfaces for extending the library. The main goals of the library are:
+This library aims to make logging significantly easier for the application developer. It provides a wide range of out-of-the-box tools along with public interfaces for extending the library. The main goals of the library are:
 
 * Simplicity. A small example code snippet should be enough to get the feel of the library and be ready to use its basic features.
 * Extensibility. A user should be able to extend functionality of the library for collecting and storing information into logs.
@@ -119,12 +121,9 @@ To keep the code snippets in this documentation simple, the following namespace 
     namespace logging = boost::log;
     namespace sinks = boost::log::sinks;
     namespace src = boost::log::sources;
-    namespace fmt = boost::log::formatters;
-    namespace flt = boost::log::filters;
+    namespace expr = boost::log::expressions;
     namespace attrs = boost::log::attributes;
     namespace keywords = boost::log::keywords;
-
-Aside from these namespaces the library also provides `boost::log::experimental` namespace. Tools defined in this namespace, as the naming implies, are not stable and thus are not advertised for production use. However, adventurous developers are encouraged to explore fresh features that appear in that namespace. Due to lack of their stability, these instruments are not covered by this documentation.
 
 [endsect]
 
@@ -150,7 +149,7 @@ The following compilers/platforms are not supported and will likely fail to comp
 
 In order to compile the library under these compilers special preparations are needed. First, in case of MinGW or Cygwin make sure you have installed the latest GCC version. The library will most likely fail to compile with GCC 3.x.
 
-Second, at some point the library will require a Message Compiler tool (`mc.exe`), which is not available in MinGW, Cygwin and MSVC Express Edition. You have three options to settle the problem. The recommended solution is to obtain the original `mc.exe`. This tool is available in Windows SDK, which can be downloaded from the Microsoft site freely (for example, [@http://www.microsoft.com/downloads/details.aspx?FamilyID=71deb800-c591-4f97-a900-bea146e4fae1&displaylang=en here]). Also, this tool should be available in Visual Studio 2010 Express Edition. During the compilation, `mc.exe` should be accessible through one of the directories in your PATH environment variable.
+Second, at some point the library will require a Message Compiler tool (`mc.exe`), which is not available in MinGW, Cygwin and MSVC Express Edition. You have three options to settle the problem. The recommended solution is to obtain the original `mc.exe`. This tool is available in Windows SDK, which can be downloaded from the Microsoft site freely (for example, [@http://www.microsoft.com/downloads/details.aspx?FamilyID=71deb800-c591-4f97-a900-bea146e4fae1&displaylang=en here]). Also, this tool should be available in Visual Studio 2010 Express Edition. During the compilation, `mc.exe` should be accessible through one of the directories in your `PATH` environment variable.
 
 Another way is to attempt to use the `windmc.exe` tool distributed with MinGW and Cygwin, which is the analogue of the original `mc.exe`. In order to do that you will have to patch Boost.Build files (in particular, the `tools/build/v2/tools/mc.jam` file) as described in [@https://svn.boost.org/trac/boost/ticket/4111 this] ticket. After that you will be able to specify the `mc-compiler=windmc` option to bjam to build the library.
 
@@ -166,7 +165,7 @@ Furthermore, in order to compile the library the following parameters should be 
 
 [section:config Configuring and building the library]
 
-The library has a separately compiled part which should be built as described in the [@http://www.boost.org/doc/libs/release/more/getting_started/ Getting Started guide]. One thing should be noted, though. If your application consists of more than one module (e.g. an exe and one or several dll's) that use Boost.Log, the library _must_ be built as a shared object. If you have a single executable, you may build the library as a static library.
+The library has a separately compiled part which should be built as described in the [@http://www.boost.org/doc/libs/release/more/getting_started/ Getting Started guide]. One thing should be noted, though. If your application consists of more than one module (e.g. an exe and one or several dll's) that use Boost.Log, the library _must_ be built as a shared object. If you have a single executable or a single module that works with Boost.Log, you may build the library as a static library.
 
 The library supports a number of configuration macros:
 
@@ -223,11 +222,11 @@ Here are definitions of some terms that will be used widely throughout the docum
 [variablelist
     [[Log record][A single bundle of information, collected from the user's application, that is a candidate to be put into the log. In a simple case the log record will be represented as a line of text in the log file after being processed by the logging library.]]
     [[Attribute][An "attribute" is a piece of meta-information that can be used to specialize a log record. In Boost.Log attributes are represented by function objects with a specific interface, which return the actual attribute value when invoked.]]
-    [[Attribute value][Attribute values are the actual data acquired from attributes. This data is attached to the specific log record and processed by the library. Values may have different types (integers, strings and more complex, including user defined types). Some examples of attribute values: current time stamp value, file name, line number, current scope name, etc..]]
+    [[Attribute value][Attribute values are the actual data acquired from attributes. This data is attached to the specific log record and processed by the library. Values can have different types (integers, strings and more complex, including user defined types). Some examples of attribute values: current time stamp value, file name, line number, current scope name, etc..]]
     [[Log sink][A target, to which all log records are fed after being collected from the user's application. The sink defines where and how the log records are going to be stored.]]
     [[Log source][An entry point for the user's application to put log records to. In a simple case it is an object (logger) which maintains a set of attributes that will be used to form a log record upon the user's request. However, one can surely create a source that would emit log records on some third-party events (for example, by intercepting another application's console output).]]
-    [[Log filter][A predicate that takes a log record and tells whether this record should be passed through or discarded.]]
-    [[Log formatter][A function object that generates the final textual output from a log record. Some sinks, like the binary logging sink, may not need it, although almost any text-based sink would use a formatter to compose its output.]]
+    [[Log filter][A predicate that takes a log record and tells whether this record should be passed through or discarded. The predicate typically forms its decision based on the attribute values attached to the record.]]
+    [[Log formatter][A function object that generates the final textual output from a log record. Some sinks, e.g. a binary logging sink, may not need it, although almost any text-based sink would use a formatter to compose its output.]]
     [[Logging core][The global entity that maintains connections between sources and sinks and applies filters to records. It is mainly used when the logging library is initialized.]]
     [[i18n][Internationalization. The ability to manipulate wide characters.]]
     [[TLS][Thread-local storage. The concept of having a variable that has independent values for each thread that attempts to access it.]]
