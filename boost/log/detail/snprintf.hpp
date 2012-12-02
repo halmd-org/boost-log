@@ -23,6 +23,10 @@
 #include <cwchar>
 #endif // BOOST_LOG_USE_WCHAR_T
 
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
