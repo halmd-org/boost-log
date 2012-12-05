@@ -7,6 +7,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/log/core.hpp>
+#include <boost/log/expressions/predicates/is_debugger_present.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/debug_output_backend.hpp>
 #include <boost/log/sources/logger.hpp>
@@ -15,6 +16,7 @@
 #if defined(BOOST_WINDOWS)
 
 namespace logging = boost::log;
+namespace expr = boost::log::expressions;
 namespace src = boost::log::sources;
 namespace sinks = boost::log::sinks;
 
@@ -31,7 +33,7 @@ void init_logging()
 
     // Set the special filter to the frontend
     // in order to skip the sink when no debugger is available
-    sink->set_filter(sinks::debug_output_backend::debugger_presence_filter());
+    sink->set_filter(expr::is_debugger_present());
 
     core->add_sink(sink);
 }

@@ -13,7 +13,7 @@
 
 #include <boost/log/common.hpp>
 #include <boost/log/attributes.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
 
@@ -23,7 +23,7 @@ namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
 namespace sinks = boost::log::sinks;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace keywords = boost::log::keywords;
 
 //[ example_sinks_simple_event_log
@@ -43,12 +43,13 @@ void init_logging()
     // Create an event log sink
     boost::shared_ptr< sink_t > sink(new sink_t());
 
-    sink->set_formatter(
-        fmt::format("%1%: [%2%] - %3%")
-            % fmt::attr< unsigned int >("LineID")
-            % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
-            % fmt::message()
-        );
+    sink->set_formatter
+    (
+        expr::format("%1%: [%2%] - %3%")
+            % expr::attr< unsigned int >("LineID")
+            % expr::attr< boost::posix_time::ptime >("TimeStamp")
+            % expr::smessage
+    );
 
     // We'll have to map our custom levels to the event log event types
     sinks::event_log::custom_event_type_mapping< severity_level > mapping("Severity");

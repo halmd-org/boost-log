@@ -10,8 +10,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_multifile_backend.hpp>
 #include <boost/log/sources/logger.hpp>
@@ -20,8 +19,7 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace flt = boost::log::filters;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 
@@ -36,7 +34,7 @@ void init_logging()
     // Set up the file naming pattern
     backend->set_file_name_composer
     (
-        fmt::stream << "logs/" << fmt::attr< std::string >("RequestID") << ".log"
+        sinks::file::as_file_name_composer(expr::stream << "logs/" << expr::attr< std::string >("RequestID") << ".log")
     );
 
     // Wrap it into the frontend and register in the core.
@@ -47,9 +45,9 @@ void init_logging()
     // Set the formatter
     sink->set_formatter
     (
-        fmt::stream
-            << "[RequestID: " << fmt::attr< std::string >("RequestID")
-            << "] " << fmt::message()
+        expr::stream
+            << "[RequestID: " << expr::attr< std::string >("RequestID")
+            << "] " << expr::smessage
     );
 
     core->add_sink(sink);

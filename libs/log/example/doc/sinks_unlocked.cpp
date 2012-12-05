@@ -9,7 +9,7 @@
 #include <iostream>
 #include <boost/shared_ptr.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sinks/unlocked_frontend.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
@@ -18,7 +18,7 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace flt = boost::log::filters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 
@@ -53,8 +53,8 @@ void init_logging()
     core->add_sink(sink2);
 
     // You can manage filtering through the sink interface
-    sink1->set_filter(flt::attr< int >("Severity") >= 2);
-    sink2->set_filter(flt::attr< std::string >("Channel") == "net");
+    sink1->set_filter(expr::attr< int >("Severity") >= 2);
+    sink2->set_filter(expr::attr< std::string >("Channel") == "net");
 }
 //]
 

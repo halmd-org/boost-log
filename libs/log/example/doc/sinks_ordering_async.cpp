@@ -12,8 +12,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sinks/async_frontend.hpp>
 #include <boost/log/sinks/unbounded_ordering_queue.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
@@ -25,8 +24,7 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace flt = boost::log::filters;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 
@@ -63,12 +61,12 @@ boost::shared_ptr< sink_t > init_logging()
     core->add_sink(sink);
 
     // You can manage filtering and formatting through the sink interface
-    sink->set_filter(flt::attr< int >("Severity") >= 2);
+    sink->set_filter(expr::attr< int >("Severity") >= 2);
     sink->set_formatter
     (
-        fmt::stream
-            << "Level: " << fmt::attr< int >("Severity")
-            << " Message: " << fmt::message()
+        expr::stream
+            << "Level: " << expr::attr< int >("Severity")
+            << " Message: " << expr::smessage
     );
 
     // You can also manage backend in a thread-safe manner

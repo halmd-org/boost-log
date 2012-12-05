@@ -43,12 +43,6 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 } // namespace
 
 template< typename CharT >
-BOOST_LOG_API bool basic_debug_output_backend< CharT >::debugger_presence_filter::operator() (attribute_value_set const&) const
-{
-    return (IsDebuggerPresent() != FALSE);
-}
-
-template< typename CharT >
 BOOST_LOG_API basic_debug_output_backend< CharT >::basic_debug_output_backend()
 {
 }
@@ -56,13 +50,6 @@ BOOST_LOG_API basic_debug_output_backend< CharT >::basic_debug_output_backend()
 template< typename CharT >
 BOOST_LOG_API basic_debug_output_backend< CharT >::~basic_debug_output_backend()
 {
-}
-
-template< typename CharT >
-BOOST_LOG_API typename basic_debug_output_backend< CharT >::debugger_presence_filter
-basic_debug_output_backend< CharT >::get_debugger_presence_filter() const
-{
-    return debugger_presence_filter();
 }
 
 //! The method puts the formatted message to the event log

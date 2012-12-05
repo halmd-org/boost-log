@@ -10,8 +10,6 @@
 #include <iostream>
 #include <boost/shared_ptr.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp>
@@ -20,8 +18,6 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace flt = boost::log::filters;
-namespace fmt = boost::log::formatters;
 namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 

@@ -10,11 +10,10 @@
 #include <iostream>
 #include <boost/shared_ptr.hpp>
 #include <boost/lambda/lambda.hpp>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <boost/log/common.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/sources/logger.hpp>
@@ -23,7 +22,7 @@ namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
 namespace sinks = boost::log::sinks;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace keywords = boost::log::keywords;
 
 typedef sinks::synchronous_sink< sinks::text_file_backend > file_sink;
@@ -44,6 +43,16 @@ void init_file_collecting(boost::shared_ptr< file_sink > sink)
 // Complete file sink type
 typedef sinks::synchronous_sink< sinks::text_file_backend > file_sink;
 
+void write_header(sinks::text_file_backend::stream_type& file)
+{
+    file << "<?xml version=\"1.0\"?>\n<log>\n";
+}
+
+void write_footer(sinks::text_file_backend::stream_type& file)
+{
+    file << "</log>\n";
+}
+
 void init_logging()
 {
     // Create a text file sink
@@ -54,23 +63,15 @@ void init_logging()
 
     sink->set_formatter
     (
-        fmt::format("\t<record id=\"%1%\" timestamp=\"%2%\">%3%</record>")
-            % fmt::attr< unsigned int >("RecordID")
-            % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
-            % fmt::xml_dec[ fmt::message() ]            /*< the log message has to be decorated, if it contains special characters >*/
+        expr::format("\t<record id=\"%1%\" timestamp=\"%2%\">%3%</record>")
+            % expr::attr< unsigned int >("RecordID")
+            % expr::attr< boost::posix_time::ptime >("TimeStamp")
+            % expr::xml_decor[ expr::stream << expr::smessage ]            /*< the log message has to be decorated, if it contains special characters >*/
     );
 
     // Set header and footer writing functors
-    namespace bll = boost::lambda;
-
-    sink->locked_backend()->set_open_handler
-    (
-        bll::_1 << "<?xml version=\"1.0\"?>\n<log>\n"
-    );
-    sink->locked_backend()->set_close_handler
-    (
-        bll::_1 << "</log>\n"
-    );
+    sink->locked_backend()->set_open_handler(&write_header);
+    sink->locked_backend()->set_close_handler(&write_footer);
 
     // Add the sink to the core
     logging::core::get()->add_sink(sink);
@@ -95,10 +96,10 @@ void init_logging()
 
     sink->set_formatter
     (
-        fmt::format("\t<record id=\"%1%\" timestamp=\"%2%\">%3%</record>")
-            % fmt::attr< unsigned int >("RecordID")
-            % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
-            % fmt::xml_dec[ fmt::message() ]
+        expr::format("\t<record id=\"%1%\" timestamp=\"%2%\">%3%</record>")
+            % expr::attr< unsigned int >("RecordID")
+            % expr::date_time< boost::posix_time::ptime >("TimeStamp")
+            % expr::xml_decor[ expr::stream << expr::smessage ]
     );
 
     // Set header and footer writing functors

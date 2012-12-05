@@ -14,8 +14,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/severity_feature.hpp>
 #include <boost/log/sources/exception_handler_feature.hpp>
@@ -29,8 +28,7 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace flt = boost::log::filters;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
 namespace keywords = boost::log::keywords;
@@ -145,10 +143,10 @@ void init()
 
     pSink->set_formatter
     (
-        fmt::stream
-            << fmt::attr< unsigned int >("LineID")
-            << ": <" << fmt::attr< severity_level >("Severity")
-            << "> " << fmt::message()
+        expr::stream
+            << expr::attr< unsigned int >("LineID")
+            << ": <" << expr::attr< severity_level >("Severity")
+            << "> " << expr::smessage
     );
 
     logging::core::get()->add_sink(pSink);

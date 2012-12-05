@@ -65,18 +65,6 @@ public:
     typedef typename base_type::string_type string_type;
 
 public:
-#ifndef BOOST_LOG_DOXYGEN_PASS
-
-    //! A filter that checks whether the debugger is available
-    class debugger_presence_filter
-    {
-    public:
-        BOOST_LOG_API bool operator() (attribute_value_set const& values) const;
-    };
-
-#endif // BOOST_LOG_DOXYGEN_PASS
-
-public:
     /*!
      * Constructor. Initializes the sink backend.
      */
@@ -85,11 +73,6 @@ public:
      * Destructor
      */
     BOOST_LOG_API ~basic_debug_output_backend();
-
-    /*!
-     * \return A filter that checks whether the debugger is available
-     */
-    BOOST_LOG_API debugger_presence_filter get_debugger_presence_filter() const;
 
     /*!
      * The method passes the formatted message to debugger
