@@ -214,13 +214,13 @@ BOOST_AUTO_TEST_CASE(bind_support_check)
     f = phoenix::bind(predicate(present_counter, predicate_result), expr::attr< int >(data::attr2()).or_throw());
     BOOST_CHECK_THROW(f(values1), logging::runtime_error);
     f = phoenix::bind(predicate(present_counter, predicate_result), expr::attr< int >(data::attr2()));
-    BOOST_CHECK_EQUAL(f(values1), false);
+    BOOST_CHECK_EQUAL(f(values1), true);
     BOOST_CHECK_EQUAL(present_counter, 3U);
 
     f = phoenix::bind(predicate(present_counter, predicate_result), expr::attr< int >(data::attr4()).or_throw());
     BOOST_CHECK_THROW(f(values1), logging::runtime_error);
     f = phoenix::bind(predicate(present_counter, predicate_result), expr::attr< int >(data::attr4()));
-    BOOST_CHECK_EQUAL(f(values1), false);
+    BOOST_CHECK_EQUAL(f(values1), true);
     BOOST_CHECK_EQUAL(present_counter, 3U);
 }
 
