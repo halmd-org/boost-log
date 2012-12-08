@@ -13,7 +13,6 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace fmt = boost::log::formatters;
 namespace keywords = boost::log::keywords;
 
 BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(my_logger, src::logger_mt)
@@ -26,7 +25,9 @@ void logging_function1()
     logging::record rec = lg.open_record();
     if (rec)
     {
-        rec.message() = "Hello, World!";
+        logging::record_ostream strm(rec);
+        strm << "Hello, World!";
+        strm.flush();
         lg.push_record(rec);
     }
 //]

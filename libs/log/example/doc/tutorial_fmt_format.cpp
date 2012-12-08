@@ -10,7 +10,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/sources/severity_logger.hpp>
@@ -19,7 +19,7 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 
@@ -33,14 +33,14 @@ void init()
         boost::make_shared< std::ofstream >("sample.log"));
 
     // This makes the sink to write log records that look like this:
-    // 00000001: <normal> A normal severity message
-    // 00000002: <error> An error severity message
+    // 1: <normal> A normal severity message
+    // 2: <error> An error severity message
     pSink->set_formatter
     (
-        fmt::format("%1%: <%2%> %3%")
-            % fmt::attr< unsigned int >("LineID", keywords::format = "%08x")
-            % fmt::attr< logging::trivial::severity_level >("Severity")
-            % fmt::message()
+        expr::format("%1%: <%2%> %3%")
+            % expr::attr< unsigned int >("LineID")
+            % logging::trivial::severity
+            % expr::smessage
     );
 
     logging::core::get()->add_sink(pSink);

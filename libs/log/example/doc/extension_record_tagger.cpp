@@ -50,9 +50,7 @@ public:
     // Let's import some types that we will need. These imports should be public,
     // in order to allow other features that may derive from record_tagger to do the same.
     typedef typename BaseT::char_type char_type;
-    typedef typename BaseT::attribute_set_type attribute_set_type;
     typedef typename BaseT::threading_model threading_model;
-    typedef typename BaseT::record_type record_type;
 
 public:
     // Default constructor. Initializes m_Tag to an invalid value.
@@ -75,7 +73,7 @@ public:
 protected:
     // Lock-less implementation of operations
     template< typename ArgsT >
-    record_type open_record_unlocked(ArgsT const& args);
+    logging::record open_record_unlocked(ArgsT const& args);
 };
 
 // A convenience metafunction to specify the feature
@@ -108,8 +106,7 @@ record_tagger_feature< BaseT >::record_tagger_feature(ArgsT const& args) : BaseT
 //[ example_extension_record_tagger_open_record
 template< typename BaseT >
 template< typename ArgsT >
-typename record_tagger_feature< BaseT >::record_type
-record_tagger_feature< BaseT >::open_record_unlocked(ArgsT const& args)
+logging::record record_tagger_feature< BaseT >::open_record_unlocked(ArgsT const& args)
 {
     // Extract the named argument from the parameters pack
     std::string tag_value = args[my_keywords::tag | std::string()];
@@ -194,7 +191,9 @@ void manual_logging()
     logging::record rec = logger.open_record((keywords::severity = normal, my_keywords::tag = "GUI"));
     if (rec)
     {
-        rec.message() = "The user has confirmed his choice";
+        logging::record_ostream strm(rec);
+        strm << "The user has confirmed his choice";
+        strm.flush();
         logger.push_record(rec);
     }
 }

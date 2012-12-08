@@ -5,20 +5,20 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   attr_functor.cpp
+ * \file   attr_function.cpp
  * \author Andrey Semashev
  * \date   25.01.2009
  *
- * \brief  This header contains tests for the functor attribute.
+ * \brief  This header contains tests for the function attribute.
  */
 
-#define BOOST_TEST_MODULE attr_functor
+#define BOOST_TEST_MODULE attr_function
 
 #include <string>
 #include <boost/mpl/vector.hpp>
 #include <boost/utility/result_of.hpp>
 #include <boost/test/included/unit_test.hpp>
-#include <boost/log/attributes/functor.hpp>
+#include <boost/log/attributes/function.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
 namespace logging = boost::log;
@@ -110,16 +110,16 @@ BOOST_AUTO_TEST_CASE(calling)
 
     logging::attribute attr1 =
 #ifndef BOOST_NO_RESULT_OF
-        attrs::make_functor_attr(&get_attr_value);
+        attrs::make_function(&get_attr_value);
 #else
-        attrs::make_functor_attr< int >(&get_attr_value);
+        attrs::make_function< int >(&get_attr_value);
 #endif
 
     logging::attribute attr2 =
 #ifndef BOOST_NO_RESULT_OF
-        attrs::make_functor_attr(attr_value_generator(call_count));
+        attrs::make_function(attr_value_generator(call_count));
 #else
-        attrs::make_functor_attr< std::string >(attr_value_generator(call_count));
+        attrs::make_function< std::string >(attr_value_generator(call_count));
 #endif
 
     logging::attribute_value p1(attr1.get_value());

@@ -9,11 +9,12 @@
 #include <string>
 #include <ostream>
 #include <fstream>
+#include <iomanip>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/severity_logger.hpp>
@@ -25,8 +26,7 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace fmt = boost::log::formatters;
-namespace flt = boost::log::filters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
 namespace keywords = boost::log::keywords;
@@ -40,6 +40,12 @@ enum severity_level
     error,
     critical
 };
+
+BOOST_LOG_ATTRIBUTE_KEYWORD("LineID", line_id, unsigned int)
+BOOST_LOG_ATTRIBUTE_KEYWORD("Severity", severity, severity_level)
+BOOST_LOG_ATTRIBUTE_KEYWORD("Tag", tag_attr, std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD("Scope", scope, attrs::named_scope::value_type)
+BOOST_LOG_ATTRIBUTE_KEYWORD("Timeline", timeline, attrs::timer::value_type)
 
 void logging_function()
 {
@@ -115,20 +121,19 @@ void init()
 
     pSink->set_formatter
     (
-        fmt::stream
-            << fmt::attr< unsigned int >("LineID", keywords::format = "%08x")
-            << ": <" << fmt::attr< severity_level >("Severity")
-            << ">\t"
-            << "(" << fmt::named_scope("Scope") << ") "
-            << fmt::if_(flt::has_attr< std::string >("Tag"))
+        expr::stream
+            << std::hex << std::setw(8) << std::setfill('0') << line_id << std::dec << std::setfill(' ')
+            << ": <" << severity << ">\t"
+            << "(" << scope << ") "
+            << expr::if_(expr::has_attr(tag_attr))
                [
-                    fmt::stream << "[" << fmt::attr< std::string >("Tag") << "] "
+                    expr::stream << "[" << tag_attr << "] "
                ]
-            << fmt::if_(flt::has_attr("Timeline"))
+            << expr::if_(expr::has_attr(timeline))
                [
-                    fmt::stream << "[" << fmt::time_duration("Timeline") << "] "
+                    expr::stream << "[" << timeline << "] "
                ]
-            << fmt::message()
+            << expr::smessage
     );
 
     logging::core::get()->add_sink(pSink);

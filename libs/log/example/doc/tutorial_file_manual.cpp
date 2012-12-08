@@ -10,7 +10,6 @@
 #include <boost/make_shared.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
-#include <boost/log/filters.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/sources/logger.hpp>
@@ -18,7 +17,6 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace flt = boost::log::filters;
 namespace sinks = boost::log::sinks;
 
 //[ example_tutorial_file_manual

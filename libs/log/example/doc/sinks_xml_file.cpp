@@ -98,7 +98,7 @@ void init_logging()
     (
         expr::format("\t<record id=\"%1%\" timestamp=\"%2%\">%3%</record>")
             % expr::attr< unsigned int >("RecordID")
-            % expr::date_time< boost::posix_time::ptime >("TimeStamp")
+            % expr::attr< boost::posix_time::ptime >("TimeStamp")
             % expr::xml_decor[ expr::stream << expr::smessage ]
     );
 

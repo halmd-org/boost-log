@@ -5,14 +5,14 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   attr_attribute_values_view.cpp
+ * \file   attr_attribute_value_set.cpp
  * \author Andrey Semashev
  * \date   24.01.2009
  *
- * \brief  This header contains tests for the attribute values view.
+ * \brief  This header contains tests for the attribute value set.
  */
 
-#define BOOST_TEST_MODULE attr_attribute_values_view
+#define BOOST_TEST_MODULE attr_attribute_value_set
 
 #include <vector>
 #include <string>
@@ -62,11 +62,11 @@ namespace {
 } // namespace
 
 // The test checks construction and assignment
-BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
+BOOST_AUTO_TEST_CASE(construction)
 {
-    typedef logging::basic_attribute_set< CharT > attr_set;
-    typedef logging::basic_attribute_values_view< CharT > values_view;
-    typedef test_data< CharT > data;
+    typedef logging::attribute_set attr_set;
+    typedef logging::attribute_value_set attr_values;
+    typedef test_data< char > data;
 
     attrs::constant< int > attr1(10);
     attrs::constant< double > attr2(5.5);
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
         set1[data::attr2()] = attr2;
         set1[data::attr3()] = attr3;
 
-        values_view view1(set1, set2, set3);
+        attr_values view1(set1, set2, set3);
         view1.freeze();
 
         BOOST_CHECK(!view1.empty());
@@ -91,13 +91,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
         set2[data::attr2()] = attr2;
         set3[data::attr3()] = attr3;
 
-        values_view view1(set1, set2, set3);
+        attr_values view1(set1, set2, set3);
         view1.freeze();
 
         BOOST_CHECK(!view1.empty());
         BOOST_CHECK_EQUAL(view1.size(), 3UL);
 
-        values_view view2 = view1;
+        attr_values view2 = view1;
         BOOST_CHECK(!view2.empty());
         BOOST_CHECK_EQUAL(view2.size(), 3UL);
     }
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
         set1[data::attr3()] = attr3_3;
         set1[data::attr4()] = attr4_3;
 
-        values_view view1(set1, set2, set3);
+        attr_values view1(set1, set2, set3);
         view1.freeze();
 
         BOOST_CHECK(!view1.empty());
@@ -145,12 +145,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
 }
 
 // The test checks lookup methods
-BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
+BOOST_AUTO_TEST_CASE(lookup)
 {
-    typedef logging::basic_attribute_set< CharT > attr_set;
-    typedef logging::basic_attribute_values_view< CharT > values_view;
-    typedef test_data< CharT > data;
-    typedef std::basic_string< CharT > string;
+    typedef logging::attribute_set attr_set;
+    typedef logging::attribute_value_set attr_values;
+    typedef test_data< char > data;
+    typedef std::basic_string< char > string;
 
     attrs::constant< int > attr1(10);
     attrs::constant< double > attr2(5.5);
@@ -161,11 +161,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     set1[data::attr2()] = attr2;
     set1[data::attr3()] = attr3;
 
-    values_view view1(set1, set2, set3);
+    attr_values view1(set1, set2, set3);
     view1.freeze();
 
     // Traditional find methods
-    typename values_view::const_iterator it = view1.find(data::attr1());
+    attr_values::const_iterator it = view1.find(data::attr1());
     BOOST_CHECK(it != view1.end());
     BOOST_CHECK(it->first == data::attr1());
     int val1 = 0;

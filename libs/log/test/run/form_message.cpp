@@ -15,20 +15,18 @@
 #define BOOST_TEST_MODULE form_message
 
 #include <string>
-#include <sstream>
-#include <boost/function.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/formatters/message.hpp>
-#include <boost/log/formatters/stream.hpp>
+#include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/core/record.hpp>
 #include "char_definitions.hpp"
 #include "make_record.hpp"
 
 namespace logging = boost::log;
 namespace attrs = logging::attributes;
-namespace fmt = logging::formatters;
+namespace expr = logging::expressions;
 
 namespace {
 
@@ -40,7 +38,7 @@ namespace {
     struct message_test_data< char > :
         public test_data< char >
     {
-        static fmt::fmt_message< char > message() { return fmt::message(); }
+        static expr::smessage_type message() { return expr::smessage; }
     };
 #endif // BOOST_LOG_USE_CHAR
 
@@ -49,7 +47,7 @@ namespace {
     struct message_test_data< wchar_t > :
         public test_data< wchar_t >
     {
-        static fmt::fmt_message< wchar_t > message() { return fmt::wmessage(); }
+        static expr::wmessage_type message() { return expr::wmessage; }
     };
 #endif // BOOST_LOG_USE_WCHAR_T
 
@@ -58,11 +56,11 @@ namespace {
 // The test checks that message formatting work
 BOOST_AUTO_TEST_CASE_TEMPLATE(message_formatting, CharT, char_types)
 {
-    typedef logging::basic_attribute_set< CharT > attr_set;
+    typedef logging::attribute_set attr_set;
     typedef std::basic_string< CharT > string;
-    typedef std::basic_ostringstream< CharT > osstream;
-    typedef logging::basic_record< CharT > record;
-    typedef boost::function< void (osstream&, record const&) > formatter;
+    typedef logging::basic_formatting_ostream< CharT > osstream;
+    typedef logging::record record;
+    typedef logging::basic_formatter< CharT > formatter;
     typedef message_test_data< CharT > data;
 
     attrs::constant< int > attr1(10);
@@ -71,15 +69,15 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(message_formatting, CharT, char_types)
     attr_set set1;
     set1[data::attr1()] = attr1;
     set1[data::attr2()] = attr2;
+    set1[data::message().get_name()] = attrs::constant< string >(data::some_test_string());
 
     record rec = make_record(set1);
-    rec.message() = data::some_test_string();
 
     {
-        osstream strm1;
-        formatter f = fmt::stream << data::message();
-        f(strm1, rec);
-        osstream strm2;
+        string str1, str2;
+        osstream strm1(str1), strm2(str2);
+        formatter f = expr::stream << data::message();
+        f(rec, strm1);
         strm2 << data::some_test_string();
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
     }

@@ -7,17 +7,17 @@
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
-#include <boost/log/filters.hpp>
+#include <boost/log/expressions.hpp>
 
 namespace logging = boost::log;
-namespace flt = boost::log::filters;
+namespace expr = boost::log::expressions;
 
 //[ example_tutorial_trivial_with_filtering
 void init()
 {
     logging::core::get()->set_filter
     (
-        flt::attr< logging::trivial::severity_level >("Severity") >= logging::trivial::info
+        logging::trivial::severity >= logging::trivial::info
     );
 }
 

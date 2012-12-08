@@ -28,10 +28,10 @@ namespace logging = boost::log;
 namespace attrs = logging::attributes;
 
 // The test checks construction and assignment
-BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
+BOOST_AUTO_TEST_CASE(construction)
 {
-    typedef logging::basic_attribute_set< CharT > attr_set;
-    typedef test_data< CharT > data;
+    typedef logging::attribute_set attr_set;
+    typedef test_data< char > data;
 
     attrs::constant< int > attr1(10);
     attrs::constant< double > attr2(5.5);
@@ -70,11 +70,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(construction, CharT, char_types)
 }
 
 // The test checks lookup methods
-BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
+BOOST_AUTO_TEST_CASE(lookup)
 {
-    typedef logging::basic_attribute_set< CharT > attr_set;
-    typedef test_data< CharT > data;
-    typedef std::basic_string< CharT > string;
+    typedef logging::attribute_set attr_set;
+    typedef test_data< char > data;
+    typedef std::basic_string< char > string;
 
     attrs::constant< int > attr1(10);
     attrs::constant< double > attr2(5.5);
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
     set1[data::attr2()] = attr2;
 
     // Traditional find methods
-    typename attr_set::iterator it = set1.find(data::attr1());
+    attr_set::iterator it = set1.find(data::attr1());
     BOOST_CHECK(it != set1.end());
     BOOST_CHECK_EQUAL(it->second, attr1);
 
@@ -125,11 +125,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(lookup, CharT, char_types)
 }
 
 // The test checks insertion methods
-BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
+BOOST_AUTO_TEST_CASE(insertion)
 {
-    typedef logging::basic_attribute_set< CharT > attr_set;
-    typedef test_data< CharT > data;
-    typedef std::basic_string< CharT > string;
+    typedef logging::attribute_set attr_set;
+    typedef test_data< char > data;
+    typedef std::basic_string< char > string;
 
     attrs::constant< int > attr1(10);
     attrs::constant< double > attr2(5.5);
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     attr_set set1;
 
     // Traditional insert methods
-    std::pair< typename attr_set::iterator, bool > res = set1.insert(data::attr1(), attr1);
+    std::pair< attr_set::iterator, bool > res = set1.insert(data::attr1(), attr1);
     BOOST_CHECK(res.second);
     BOOST_CHECK(res.first != set1.end());
     BOOST_CHECK(res.first->first == data::attr1());
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     BOOST_CHECK(!set1.empty());
     BOOST_CHECK_EQUAL(set1.size(), 1UL);
 
-    res = set1.insert(std::make_pair(typename attr_set::key_type(data::attr2()), attr2));
+    res = set1.insert(std::make_pair(attr_set::key_type(data::attr2()), attr2));
     BOOST_CHECK(res.second);
     BOOST_CHECK(res.first != set1.end());
     BOOST_CHECK(res.first->first == data::attr2());
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
     // Insertion attempt of an attribute with the name of an already existing attribute
-    res = set1.insert(std::make_pair(typename attr_set::key_type(data::attr2()), attr3));
+    res = set1.insert(std::make_pair(attr_set::key_type(data::attr2()), attr3));
     BOOST_CHECK(!res.second);
     BOOST_CHECK(res.first != set1.end());
     BOOST_CHECK(res.first->first == data::attr2());
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     BOOST_CHECK_EQUAL(set1.size(), 2UL);
 
     // Mass insertion
-    typedef typename attr_set::key_type key_type;
+    typedef attr_set::key_type key_type;
     std::vector< std::pair< key_type, logging::attribute > > elems;
     elems.push_back(std::make_pair(key_type(data::attr2()), attr2));
     elems.push_back(std::make_pair(key_type(data::attr1()), attr1));
@@ -176,20 +176,20 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
     set2.insert(elems.begin(), elems.end());
     BOOST_CHECK(!set2.empty());
     BOOST_REQUIRE_EQUAL(set2.size(), 3UL);
-    typedef typename attr_set::mapped_type mapped_type;
+    typedef attr_set::mapped_type mapped_type;
     BOOST_CHECK_EQUAL(static_cast< mapped_type >(set2[data::attr1()]), attr1);
     BOOST_CHECK_EQUAL(static_cast< mapped_type >(set2[data::attr2()]), attr2);
     BOOST_CHECK_EQUAL(static_cast< mapped_type >(set2[data::attr3()]), attr3);
 
     // The same, but with insertion results collection
-    std::vector< std::pair< typename attr_set::iterator, bool > > results;
+    std::vector< std::pair< attr_set::iterator, bool > > results;
 
     attr_set set3;
     set3.insert(elems.begin(), elems.end(), std::back_inserter(results));
     BOOST_REQUIRE_EQUAL(results.size(), elems.size());
     BOOST_CHECK(!set3.empty());
     BOOST_REQUIRE_EQUAL(set3.size(), 3UL);
-    typename attr_set::iterator it = set3.find(data::attr1());
+    attr_set::iterator it = set3.find(data::attr1());
     BOOST_REQUIRE(it != set3.end());
     BOOST_CHECK(it->first == data::attr1());
     BOOST_CHECK_EQUAL(it->second, attr1);
@@ -232,11 +232,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(insertion, CharT, char_types)
 }
 
 // The test checks erasure methods
-BOOST_AUTO_TEST_CASE_TEMPLATE(erasure, CharT, char_types)
+BOOST_AUTO_TEST_CASE(erasure)
 {
-    typedef logging::basic_attribute_set< CharT > attr_set;
-    typedef test_data< CharT > data;
-    typedef std::basic_string< CharT > string;
+    typedef logging::attribute_set attr_set;
+    typedef test_data< char > data;
+    typedef std::basic_string< char > string;
 
     attrs::constant< int > attr1(10);
     attrs::constant< double > attr2(5.5);
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(erasure, CharT, char_types)
     set2 = set1;
     BOOST_REQUIRE_EQUAL(set2.size(), 3UL);
 
-    typename attr_set::iterator it = set2.begin();
+    attr_set::iterator it = set2.begin();
     set2.erase(++it, set2.end());
     BOOST_CHECK_EQUAL(set2.size(), 1UL);
     BOOST_CHECK_EQUAL(set2.count(data::attr1()), 1UL);

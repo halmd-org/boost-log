@@ -32,7 +32,39 @@ namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
+class attribute_set;
 class attribute_value_set;
+
+namespace aux {
+
+//! Reference proxy object to implement \c operator[]
+class attribute_set_reference_proxy
+{
+private:
+    //! Key type
+    typedef attribute_name key_type;
+    //! Mapped attribute type
+    typedef attribute mapped_type;
+
+private:
+    attribute_set* const m_pContainer;
+    const key_type m_key;
+
+public:
+    //! Constructor
+    explicit attribute_set_reference_proxy(attribute_set* pContainer, key_type const& key) BOOST_NOEXCEPT :
+        m_pContainer(pContainer),
+        m_key(key)
+    {
+    }
+
+    //! Conversion operator (would be invoked in case of reading from the container)
+    operator mapped_type() const BOOST_NOEXCEPT;
+    //! Assignment operator (would be invoked in case of writing to the container)
+    mapped_type& operator= (mapped_type const& val) const;
+};
+
+} // namespace aux
 
 /*!
  * \brief An attribute set class.
@@ -49,6 +81,7 @@ class attribute_set
     BOOST_COPYABLE_AND_MOVABLE_ALT(attribute_set)
 
     friend class attribute_value_set;
+    friend class aux::attribute_set_reference_proxy;
 
 public:
     //! Key type
@@ -77,41 +110,6 @@ private:
     //! Implementation
     struct implementation;
     friend struct implementation;
-
-    //! Reference proxy object to implement \c operator[]
-    class reference_proxy;
-    friend class reference_proxy;
-    class reference_proxy
-    {
-        attribute_set* const m_pContainer;
-        const key_type m_key;
-
-    public:
-        //! Constructor
-        explicit reference_proxy(attribute_set* pContainer, key_type const& key) BOOST_NOEXCEPT :
-            m_pContainer(pContainer),
-            m_key(key)
-        {
-        }
-
-        //! Conversion operator (would be invoked in case of reading from the container)
-        operator mapped_type() const
-        {
-            iterator it = m_pContainer->find(m_key);
-            if (it != m_pContainer->end())
-                return it->second;
-            else
-                return mapped_type();
-        }
-        //! Assignment operator (would be invoked in case of writing to the container)
-        mapped_type& operator= (mapped_type const& val) const
-        {
-            std::pair< iterator, bool > res = m_pContainer->insert(m_key, val);
-            if (!res.second)
-                res.first->second = val;
-            return res.first->second;
-        }
-    };
 
     //! A base class for the container nodes
     struct node_base
@@ -294,28 +292,28 @@ public:
     /*!
      * \return Iterator to the first element of the container.
      */
-    BOOST_LOG_API iterator begin();
+    BOOST_LOG_API iterator begin() BOOST_NOEXCEPT;
     /*!
      * \return Iterator to the after-the-last element of the container.
      */
-    BOOST_LOG_API iterator end();
+    BOOST_LOG_API iterator end() BOOST_NOEXCEPT;
     /*!
      * \return Constant iterator to the first element of the container.
      */
-    BOOST_LOG_API const_iterator begin() const;
+    BOOST_LOG_API const_iterator begin() const BOOST_NOEXCEPT;
     /*!
      * \return Constant iterator to the after-the-last element of the container.
      */
-    BOOST_LOG_API const_iterator end() const;
+    BOOST_LOG_API const_iterator end() const BOOST_NOEXCEPT;
 
     /*!
      * \return Number of elements in the container.
      */
-    BOOST_LOG_API size_type size() const;
+    BOOST_LOG_API size_type size() const BOOST_NOEXCEPT;
     /*!
      * \return true if there are no elements in the container, false otherwise.
      */
-    bool empty() const { return (this->size() == 0); }
+    bool empty() const BOOST_NOEXCEPT { return (this->size() == 0); }
 
     /*!
      * The method finds the attribute by name.
@@ -323,14 +321,14 @@ public:
      * \param key Attribute name.
      * \return Iterator to the found element or end() if the attribute with such name is not found.
      */
-    BOOST_LOG_API iterator find(key_type key);
+    BOOST_LOG_API iterator find(key_type key) BOOST_NOEXCEPT;
     /*!
      * The method finds the attribute by name.
      *
      * \param key Attribute name.
      * \return Iterator to the found element or \c end() if the attribute with such name is not found.
      */
-    const_iterator find(key_type key) const
+    const_iterator find(key_type key) const BOOST_NOEXCEPT
     {
         return const_iterator(const_cast< attribute_set* >(this)->find(key));
     }
@@ -341,7 +339,7 @@ public:
      * \param key Attribute name.
      * \return The number of times the attribute is found in the container.
      */
-    size_type count(key_type key) const { return size_type(this->find(key) != this->end()); }
+    size_type count(key_type key) const BOOST_NOEXCEPT { return size_type(this->find(key) != this->end()); }
 
     /*!
      * Combined lookup/insertion operator. The operator semantics depends on the further usage of the returned reference.
@@ -356,9 +354,9 @@ public:
      * \param key Attribute name.
      * \return A smart reference object of unspecified type.
      */
-    reference_proxy operator[] (key_type key)
+    aux::attribute_set_reference_proxy operator[] (key_type key) BOOST_NOEXCEPT
     {
-        return reference_proxy(this, key);
+        return aux::attribute_set_reference_proxy(this, key);
     }
     /*!
      * Lookup operator
@@ -367,7 +365,7 @@ public:
      * \return If an element with the corresponding attribute name is found in the container, its mapped value
      *         is returned. Otherwise a default-constructed mapped value is returned.
      */
-    mapped_type operator[] (key_type key) const
+    mapped_type operator[] (key_type key) const BOOST_NOEXCEPT
     {
         const_iterator it = this->find(key);
         if (it != end())
@@ -432,7 +430,7 @@ public:
      * \param key Attribute name.
      * \return Tne number of erased elements
      */
-    BOOST_LOG_API size_type erase(key_type key);
+    BOOST_LOG_API size_type erase(key_type key) BOOST_NOEXCEPT;
     /*!
      * The method erases the specified attribute
      *
@@ -440,7 +438,7 @@ public:
      * \param it A valid iterator to the element to be erased.
      * \return Tne number of erased elements
      */
-    BOOST_LOG_API void erase(iterator it);
+    BOOST_LOG_API void erase(iterator it) BOOST_NOEXCEPT;
     /*!
      * The method erases all attributes within the specified range
      *
@@ -449,14 +447,14 @@ public:
      * \param begin An iterator that points to the first element to be erased.
      * \param end An iterator that points to the after-the-last element to be erased.
      */
-    BOOST_LOG_API void erase(iterator begin, iterator end);
+    BOOST_LOG_API void erase(iterator begin, iterator end) BOOST_NOEXCEPT;
 
     /*!
      * The method removes all elements from the container
      *
      * \post <tt>empty() == true</tt>
      */
-    BOOST_LOG_API void clear();
+    BOOST_LOG_API void clear() BOOST_NOEXCEPT;
 };
 
 /*!
@@ -466,6 +464,38 @@ inline void swap(attribute_set& left, attribute_set& right) BOOST_NOEXCEPT
 {
     left.swap(right);
 }
+
+namespace aux {
+
+//! Conversion operator (would be invoked in case of reading from the container)
+inline attribute_set_reference_proxy::operator mapped_type() const BOOST_NOEXCEPT
+{
+    attribute_set::iterator it = m_pContainer->find(m_key);
+    if (it != m_pContainer->end())
+        return it->second;
+    else
+        return mapped_type();
+}
+
+//! Assignment operator (would be invoked in case of writing to the container)
+inline attribute_set_reference_proxy::mapped_type& attribute_set_reference_proxy::operator= (mapped_type const& val) const
+{
+    std::pair< attribute_set::iterator, bool > res = m_pContainer->insert(m_key, val);
+    if (!res.second)
+        res.first->second = val;
+    return res.first->second;
+}
+
+} // namespace aux
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+inline attribute& attribute::operator= (aux::attribute_set_reference_proxy const& that) BOOST_NOEXCEPT
+{
+    attribute attr = that;
+    this->swap(attr);
+    return *this;
+}
+#endif
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 

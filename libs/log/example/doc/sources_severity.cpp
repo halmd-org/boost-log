@@ -12,8 +12,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
@@ -22,8 +21,7 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace fmt = boost::log::formatters;
-namespace flt = boost::log::filters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
 namespace keywords = boost::log::keywords;
@@ -72,7 +70,9 @@ void manual_logging()
     logging::record rec = slg.open_record(keywords::severity = normal);
     if (rec)
     {
-        rec.message() = "A regular message";
+        logging::record_ostream strm(rec);
+        strm << "A regular message";
+        strm.flush();
         slg.push_record(rec);
     }
 }
@@ -108,11 +108,11 @@ void init()
 
     pSink->set_formatter
     (
-        fmt::stream
-            << fmt::attr< unsigned int >("LineID")
-            << ": <" << fmt::attr< severity_level >("Severity")
+        expr::stream
+            << expr::attr< unsigned int >("LineID")
+            << ": <" << expr::attr< severity_level >("Severity")
             << ">\t"
-            << fmt::message()
+            << expr::smessage
     );
 
     logging::core::get()->add_sink(pSink);

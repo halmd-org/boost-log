@@ -21,7 +21,7 @@ void init()
     logging::add_file_log
     (
         keywords::file_name = "sample_%N.log",
-        keywords::format = "[%TimeStamp%]: %_%"
+        keywords::format = "[%TimeStamp%]: %Message%"
     );
 }
 //]

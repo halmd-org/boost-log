@@ -68,8 +68,8 @@ struct deduce_char_type< T* > :
 {
 };
 
-template< typename T, unsigned int CountV >
-struct deduce_char_type< T(&)[CountV] > :
+template< typename T >
+struct deduce_char_type< T* const > :
     public deduced_char_type< T >
 {
 };
@@ -79,6 +79,22 @@ struct deduce_char_type< T[CountV] > :
     public deduced_char_type< T >
 {
 };
+
+template< typename T >
+struct deduce_char_type< T& > :
+    public deduce_char_type< T >
+{
+};
+
+#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
+template< typename T >
+struct deduce_char_type< T&& > :
+    public deduce_char_type< T >
+{
+};
+
+#endif
 
 } // namespace aux
 

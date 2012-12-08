@@ -219,7 +219,7 @@ private:
         result_type operator() (stream_type& strm, value_type const& value) const
         {
             string_type& str = *strm.rdbuf()->storage();
-            (put_integer)(str, static_cast< decomposed_time const& >(value).year % 100u, 2, '0');
+            (put_integer)(str, static_cast< decomposed_time const& >(value).year % 100u, 2, static_cast< char_type >('0'));
         }
     };
 
@@ -245,7 +245,7 @@ private:
         result_type operator() (stream_type& strm, value_type const& value) const
         {
             string_type& str = *strm.rdbuf()->storage();
-            (put_integer)(str, static_cast< decomposed_time const& >(value).week_day(), 1, '0');
+            (put_integer)(str, static_cast< decomposed_time const& >(value).week_day(), 1, static_cast< char_type >('0'));
         }
     };
 

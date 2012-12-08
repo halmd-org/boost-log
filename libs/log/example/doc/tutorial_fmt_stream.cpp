@@ -6,7 +6,7 @@
  */
 
 #include <boost/log/trivial.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/utility/setup/file.hpp>
@@ -14,7 +14,7 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace keywords = boost::log::keywords;
 
 //[ example_tutorial_formatters_stream
@@ -28,10 +28,10 @@ void init()
         // 2: <error> An error severity message
         keywords::format =
         (
-            fmt::stream
-                << fmt::attr< unsigned int >("LineID")
-                << ": <" << fmt::attr< logging::trivial::severity_level >("Severity")
-                << "> " << fmt::message()
+            expr::stream
+                << expr::attr< unsigned int >("LineID")
+                << ": <" << logging::trivial::severity
+                << "> " << expr::smessage
         )
     );
 }

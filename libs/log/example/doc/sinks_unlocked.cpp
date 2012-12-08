@@ -25,14 +25,14 @@ namespace keywords = boost::log::keywords;
 //[ example_sinks_unlocked
 // A trivial sink backend that requires no thread synchronization
 class my_backend :
-    public sinks::basic_sink_backend< char, sinks::concurrent_feeding >
+    public sinks::basic_sink_backend< sinks::concurrent_feeding >
 {
 public:
     // The function is called for every log record to be written to log
-    void consume(record_type const& record)
+    void consume(logging::record const& rec)
     {
         // We skip the actual synchronization code for brevity
-        std::cout << record.message() << std::endl;
+        std::cout << rec[expr::smessage] << std::endl;
     }
 };
 

@@ -12,7 +12,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
@@ -22,7 +22,7 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
 namespace keywords = boost::log::keywords;
@@ -87,12 +87,12 @@ void init()
 
     pSink->set_formatter
     (
-        fmt::stream
-            << fmt::attr< unsigned int >("LineID")
-            << ": <" << fmt::attr< severity_level >("Severity")
+        expr::stream
+            << expr::attr< unsigned int >("LineID")
+            << ": <" << expr::attr< severity_level >("Severity")
             << ">\t"
-            << "[" << fmt::attr< std::string >("Channel") << "] "
-            << fmt::message()
+            << "[" << expr::attr< std::string >("Channel") << "] "
+            << expr::smessage
     );
 
     logging::core::get()->add_sink(pSink);

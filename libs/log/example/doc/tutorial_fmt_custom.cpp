@@ -12,30 +12,32 @@
 #include <boost/optional.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
+#include <boost/log/utility/formatting_stream.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 
 //[ example_tutorial_formatters_custom
-void my_formatter(std::ostream& strm, logging::record const& rec)
+void my_formatter(logging::record const& rec, logging::formatting_ostream& strm)
 {
     // Get the LineID attribute value and put it into the stream
-    strm << logging::extract< unsigned int >("LineID", rec).get() << ": ";
+    strm << logging::extract< unsigned int >("LineID", rec) << ": ";
 
-    // The same for the severity level
-    strm << "<"
-        << logging::extract< logging::trivial::severity_level >("Severity", rec).get()
-        << "> ";
+    // The same for the severity level.
+    // The simplified syntax is possible if attribute keywords are used.
+    strm << "<" << rec[logging::trivial::severity] << "> ";
 
     // Finally, put the record message to the stream
-    strm << rec.message();
+    strm << rec[expr::smessage];
 }
 
 void init()

@@ -11,8 +11,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/sources/channel_logger.hpp>
@@ -20,21 +19,26 @@
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/utility/manipulators/add_attr.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace flt = boost::log::filters;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
 namespace keywords = boost::log::keywords;
+
+BOOST_LOG_ATTRIBUTE_KEYWORD("LineID", line_id, unsigned int)
+BOOST_LOG_ATTRIBUTE_KEYWORD("Channel", channel, std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD("RemoteAddress", remote_address, std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD("ReceivedSize", received_size, std::size_t)
+BOOST_LOG_ATTRIBUTE_KEYWORD("SentSize", sent_size, std::size_t)
 
 //[ example_sources_network_connection_channels
 class network_connection
 {
     src::channel_logger< > m_net, m_stat;
-    src::channel_logger< >::attribute_set_type::iterator
-        m_net_remote_addr, m_stat_remote_addr;
+    logging::attribute_set::iterator m_net_remote_addr, m_stat_remote_addr;
 
 public:
     network_connection() :
@@ -68,13 +72,11 @@ public:
     }
     void on_data_received(std::size_t size)
     {
-        BOOST_LOG_SCOPED_LOGGER_TAG(m_stat, "ReceivedSize", std::size_t, size);
-        BOOST_LOG(m_stat) << "Some data received";
+        BOOST_LOG(m_stat) << logging::add_attr("ReceivedSize", size) << "Some data received";
     }
     void on_data_sent(std::size_t size)
     {
-        BOOST_LOG_SCOPED_LOGGER_TAG(m_stat, "SentSize", std::size_t, size);
-        BOOST_LOG(m_stat) << "Some data sent";
+        BOOST_LOG(m_stat) << logging::add_attr("SentSize", size) << "Some data sent";
     }
 };
 //]
@@ -90,13 +92,10 @@ int main(int, char*[])
 
     pSink->set_formatter
     (
-        fmt::stream
-            << fmt::attr< unsigned int >("LineID")
-            << ": [" << fmt::attr< std::string >("RemoteAddress") << "] "
-            << fmt::message()
+        expr::stream << line_id << ": [" << remote_address << "] " << expr::smessage
     );
 
-    pSink->set_filter(flt::attr< std::string >("Channel") == "net");
+    pSink->set_filter(channel == "net");
 
     logging::core::get()->add_sink(pSink);
 
@@ -108,20 +107,20 @@ int main(int, char*[])
 
     pSink->set_formatter
     (
-        fmt::stream
-            << fmt::attr< std::string >("RemoteAddress")
-            << fmt::if_(flt::has_attr("ReceivedSize"))
+        expr::stream
+            << remote_address
+            << expr::if_(expr::has_attr(received_size))
                [
-                    fmt::stream << " -> " << fmt::attr< std::size_t >("ReceivedSize") << " bytes: "
+                    expr::stream << " -> " << received_size << " bytes: "
                ]
-            << fmt::if_(flt::has_attr("SentSize"))
+            << expr::if_(expr::has_attr(sent_size))
                [
-                    fmt::stream << " <- " << fmt::attr< std::size_t >("SentSize") << " bytes: "
+                    expr::stream << " <- " << sent_size << " bytes: "
                ]
-            << fmt::message()
+            << expr::smessage
     );
 
-    pSink->set_filter(flt::attr< std::string >("Channel") == "stat");
+    pSink->set_filter(channel == "stat");
 
     logging::core::get()->add_sink(pSink);
 

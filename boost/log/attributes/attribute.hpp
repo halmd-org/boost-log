@@ -31,7 +31,16 @@ namespace boost {
 BOOST_LOG_OPEN_NAMESPACE
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
+
 class attribute_value;
+
+namespace aux {
+
+//! Reference proxy object to implement \c operator[]
+class attribute_set_reference_proxy;
+
+} // namespace aux
+
 #endif // BOOST_LOG_DOXYGEN_PASS
 
 /*!
@@ -114,6 +123,10 @@ public:
         m_pImpl.swap(that.m_pImpl);
         return *this;
     }
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
+    attribute& operator= (aux::attribute_set_reference_proxy const& that) BOOST_NOEXCEPT;
+#endif
 
     /*!
      * Verifies that the factory is not in empty state

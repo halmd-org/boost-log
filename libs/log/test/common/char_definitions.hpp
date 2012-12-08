@@ -90,10 +90,10 @@ struct test_data< wchar_t >
     static const wchar_t* zz() { return L"zz"; }
     static const wchar_t* abcdefg0123456789() { return L"abcdefg0123456789"; }
 
-    static const wchar_t* attr1() { return L"attr1"; }
-    static const wchar_t* attr2() { return L"attr2"; }
-    static const wchar_t* attr3() { return L"attr3"; }
-    static const wchar_t* attr4() { return L"attr4"; }
+    static const char* attr1() { return "attr1"; }
+    static const char* attr2() { return "attr2"; }
+    static const char* attr3() { return "attr3"; }
+    static const char* attr4() { return "attr4"; }
 
     static const wchar_t* int_format1() { return L"%08d"; }
     static const wchar_t* fp_format1() { return L"%06.3f"; }

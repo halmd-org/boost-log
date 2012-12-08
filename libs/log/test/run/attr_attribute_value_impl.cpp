@@ -5,24 +5,24 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   attr_basic_attribute_value.cpp
+ * \file   attr_attribute_value_impl.cpp
  * \author Andrey Semashev
  * \date   25.01.2009
  *
  * \brief  This header contains tests for the basic attribute value class.
  */
 
-#define BOOST_TEST_MODULE attr_basic_attribute_value
+#define BOOST_TEST_MODULE attr_attribute_value_impl
 
 #include <string>
-#include <boost/none.hpp>
-#include <boost/optional.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute_value_impl.hpp>
+#include <boost/log/attributes/value_extraction.hpp>
+#include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 #include <boost/log/utility/functional/bind_assign.hpp>
 
@@ -107,10 +107,10 @@ namespace {
 BOOST_AUTO_TEST_CASE(type_dispatching)
 {
     my_dispatcher disp;
-    logging::attribute_value p1(new attrs::attribute_value_impl< int >(10));
-    logging::attribute_value p2(new attrs::attribute_value_impl< double > (5.5));
-    logging::attribute_value p3(new attrs::attribute_value_impl< std::string >("Hello, world!"));
-    logging::attribute_value p4(new attrs::attribute_value_impl< float >(static_cast< float >(-7.2)));
+    logging::attribute_value p1(attrs::make_attribute_value< int >(10));
+    logging::attribute_value p2(attrs::make_attribute_value< double > (5.5));
+    logging::attribute_value p3(attrs::make_attribute_value< std::string >("Hello, world!"));
+    logging::attribute_value p4(attrs::make_attribute_value< float >(static_cast< float >(-7.2)));
 
     disp.set_expected(10);
     BOOST_CHECK(p1.dispatch(disp));
@@ -129,19 +129,19 @@ BOOST_AUTO_TEST_CASE(type_dispatching)
 // The test verifies that value extracition works
 BOOST_AUTO_TEST_CASE(value_extraction)
 {
-    logging::attribute_value p1(new attrs::attribute_value_impl< int >(10));
-    logging::attribute_value p2(new attrs::attribute_value_impl< double >(5.5));
+    logging::attribute_value p1(attrs::make_attribute_value< int >(10));
+    logging::attribute_value p2(attrs::make_attribute_value< double >(5.5));
 
-    boost::optional< int > val1 = p1.extract< int >();
+    logging::value_ref< int > val1 = p1.extract< int >();
     BOOST_CHECK(!!val1);
     BOOST_CHECK_EQUAL(val1.get(), 10);
 
-    boost::optional< double > val2 = p1.extract< double >();
+    logging::value_ref< double > val2 = p1.extract< double >();
     BOOST_CHECK(!val2);
 
-    BOOST_CHECK(p2.visit< double >(logging::bind_assign(val2)));
-    BOOST_CHECK(!!val2);
-    BOOST_CHECK_CLOSE(val2.get(), 5.5, 0.001);
+    double val3 = 0.0;
+    BOOST_CHECK(p2.visit< double >(logging::bind_assign(val3)));
+    BOOST_CHECK_CLOSE(val3, 5.5, 0.001);
 }
 
 // The test verifies that the detach_from_thread returns a valid pointer

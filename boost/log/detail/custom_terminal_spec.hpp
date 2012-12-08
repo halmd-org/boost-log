@@ -18,6 +18,7 @@
 #include <boost/mpl/bool.hpp>
 #include <boost/phoenix/core/terminal_fwd.hpp>
 #include <boost/phoenix/core/is_nullary.hpp>
+#include <boost/phoenix/core/terminal.hpp> // needed for terminal-related part of the grammar
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/utility/result_of.hpp>

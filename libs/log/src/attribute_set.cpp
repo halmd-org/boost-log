@@ -71,25 +71,25 @@ BOOST_LOG_API attribute_set::~attribute_set() BOOST_NOEXCEPT
 }
 
 //  Iterator generators
-BOOST_LOG_API attribute_set::iterator attribute_set::begin()
+BOOST_LOG_API attribute_set::iterator attribute_set::begin() BOOST_NOEXCEPT
 {
     return m_pImpl->begin();
 }
-BOOST_LOG_API attribute_set::iterator attribute_set::end()
+BOOST_LOG_API attribute_set::iterator attribute_set::end() BOOST_NOEXCEPT
 {
     return m_pImpl->end();
 }
-BOOST_LOG_API attribute_set::const_iterator attribute_set::begin() const
+BOOST_LOG_API attribute_set::const_iterator attribute_set::begin() const BOOST_NOEXCEPT
 {
     return const_iterator(m_pImpl->begin());
 }
-BOOST_LOG_API attribute_set::const_iterator attribute_set::end() const
+BOOST_LOG_API attribute_set::const_iterator attribute_set::end() const BOOST_NOEXCEPT
 {
     return const_iterator(m_pImpl->end());
 }
 
 //! The method returns number of elements in the container
-BOOST_LOG_API attribute_set::size_type attribute_set::size() const
+BOOST_LOG_API attribute_set::size_type attribute_set::size() const BOOST_NOEXCEPT
 {
     return m_pImpl->size();
 }
@@ -102,7 +102,7 @@ attribute_set::insert(key_type key, mapped_type const& data)
 }
 
 //! The method erases all attributes with the specified name
-BOOST_LOG_API attribute_set::size_type attribute_set::erase(key_type key)
+BOOST_LOG_API attribute_set::size_type attribute_set::erase(key_type key) BOOST_NOEXCEPT
 {
     iterator it = m_pImpl->find(key);
     if (it != end())
@@ -115,12 +115,13 @@ BOOST_LOG_API attribute_set::size_type attribute_set::erase(key_type key)
 }
 
 //! The method erases the specified attribute
-BOOST_LOG_API void attribute_set::erase(iterator it)
+BOOST_LOG_API void attribute_set::erase(iterator it) BOOST_NOEXCEPT
 {
     m_pImpl->erase(it);
 }
+
 //! The method erases all attributes within the specified range
-BOOST_LOG_API void attribute_set::erase(iterator begin, iterator end)
+BOOST_LOG_API void attribute_set::erase(iterator begin, iterator end) BOOST_NOEXCEPT
 {
     while (begin != end)
     {
@@ -129,13 +130,13 @@ BOOST_LOG_API void attribute_set::erase(iterator begin, iterator end)
 }
 
 //! The method clears the container
-BOOST_LOG_API void attribute_set::clear()
+BOOST_LOG_API void attribute_set::clear() BOOST_NOEXCEPT
 {
     m_pImpl->clear();
 }
 
 //! Internal lookup implementation
-BOOST_LOG_API attribute_set::iterator attribute_set::find(key_type key)
+BOOST_LOG_API attribute_set::iterator attribute_set::find(key_type key) BOOST_NOEXCEPT
 {
     return m_pImpl->find(key);
 }

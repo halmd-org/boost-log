@@ -127,8 +127,8 @@ namespace phoenix {
 
 namespace result_of {
 
-template< typename BaseT >
-struct is_nullary< custom_terminal< boost::log::expressions::unary_function_terminal< BaseT > > > :
+template< typename FunT >
+struct is_nullary< custom_terminal< boost::log::expressions::unary_function_terminal< FunT > > > :
     public mpl::false_
 {
 };

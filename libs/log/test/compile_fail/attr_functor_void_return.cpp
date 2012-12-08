@@ -17,7 +17,7 @@
 
 #include <boost/utility/result_of.hpp>
 #include <boost/log/attributes/attribute.hpp>
-#include <boost/log/attributes/functor.hpp>
+#include <boost/log/attributes/function.hpp>
 
 namespace logging = boost::log;
 namespace attrs = logging::attributes;
@@ -33,9 +33,9 @@ int main(int, char*[])
 {
     logging::attribute attr1 =
 #ifndef BOOST_NO_RESULT_OF
-        attrs::make_functor_attr(&get_attr_value);
+        attrs::make_function_attr(&get_attr_value);
 #else
-        attrs::make_functor_attr< void >(&get_attr_value);
+        attrs::make_function_attr< void >(&get_attr_value);
 #endif
 
     return 0;

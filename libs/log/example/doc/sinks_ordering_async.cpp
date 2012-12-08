@@ -34,7 +34,6 @@ typedef sinks::asynchronous_sink<
     sinks::text_ostream_backend,
     sinks::unbounded_ordering_queue<                                             /*< log record queueing strategy >*/
         logging::attribute_value_ordering<                                       /*< log record ordering predicate type >*/
-            char,                                                                /*< log record character type >*/
             unsigned int,                                                        /*< attribute value type >*/
             std::less< unsigned int >                                            /*< optional, attribute value comparison predicate; `std::less` equivalent is used by default >*/
         >
