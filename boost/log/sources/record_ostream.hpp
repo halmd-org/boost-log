@@ -20,7 +20,7 @@
 #include <ostream>
 #include <boost/move/move.hpp>
 #include <boost/utility/addressof.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/native_typeof.hpp>
 #include <boost/log/detail/unhandled_exception_count.hpp>
 #include <boost/log/core/record.hpp>

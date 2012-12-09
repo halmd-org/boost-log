@@ -17,7 +17,7 @@
 
 #include <boost/move/move.hpp>
 #include <boost/utility/enable_if.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/detail/light_function.hpp>
 

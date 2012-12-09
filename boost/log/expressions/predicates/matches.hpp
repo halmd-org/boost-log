@@ -16,7 +16,7 @@
 #define BOOST_LOG_EXPRESSIONS_PREDICATES_MATCHES_HPP_INCLUDED_
 
 #include <boost/phoenix/core/actor.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/expressions/unary_function_terminal.hpp>
 #include <boost/log/expressions/attr_fwd.hpp>

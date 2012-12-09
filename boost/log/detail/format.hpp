@@ -21,7 +21,7 @@
 #include <iosfwd>
 #include <boost/assert.hpp>
 #include <boost/move/move.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/unhandled_exception_count.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/utility/formatting_stream.hpp>

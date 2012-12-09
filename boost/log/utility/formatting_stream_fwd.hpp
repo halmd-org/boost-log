@@ -17,7 +17,7 @@
 
 #include <string>
 #include <memory>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

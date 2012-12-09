@@ -15,7 +15,7 @@
 #ifndef BOOST_LOG_CORE_HPP_INCLUDED_
 #define BOOST_LOG_CORE_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #include <boost/log/core/core.hpp>
 #include <boost/log/core/record.hpp>

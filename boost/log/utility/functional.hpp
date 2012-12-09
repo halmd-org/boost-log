@@ -15,7 +15,7 @@
 #ifndef BOOST_LOG_UTILITY_FUNCTIONAL_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_FUNCTIONAL_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #include <boost/log/utility/functional/logical.hpp>
 #include <boost/log/utility/functional/in_range.hpp>

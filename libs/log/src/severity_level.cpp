@@ -14,7 +14,7 @@
  */
 
 #include <boost/cstdint.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/sources/severity_feature.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_LOG_USE_COMPILER_TLS)

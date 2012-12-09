@@ -15,7 +15,7 @@
 #ifndef BOOST_LOG_SUPPORT_SPIRIT_QI_HPP_INCLUDED_
 #define BOOST_LOG_SUPPORT_SPIRIT_QI_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/utility/functional/matches.hpp>
 #include <boost/spirit/include/qi_parse.hpp>
 #include <boost/spirit/include/qi_domain.hpp>

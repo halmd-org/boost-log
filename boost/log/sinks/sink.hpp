@@ -17,7 +17,7 @@
 #define BOOST_LOG_SINKS_SINK_HPP_INCLUDED_
 
 #include <string>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>

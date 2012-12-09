@@ -20,7 +20,7 @@
 #include <boost/move/move.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/core/core.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/attributes/attribute.hpp>

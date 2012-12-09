@@ -18,7 +18,7 @@
 
 #include <boost/mpl/is_sequence.hpp>
 #include <boost/phoenix/core/actor.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/expressions/attr.hpp>
 #include <boost/log/utility/functional/bind_to_log.hpp>
 #include <boost/log/detail/attr_output_terminal.hpp>

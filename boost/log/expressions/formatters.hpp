@@ -15,7 +15,7 @@
 #ifndef BOOST_LOG_EXPRESSIONS_FORMATTERS_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_FORMATTERS_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #include <boost/log/expressions/formatters/format.hpp>
 

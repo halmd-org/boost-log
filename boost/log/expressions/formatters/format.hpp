@@ -22,7 +22,7 @@
 #include <boost/phoenix/core/is_nullary.hpp>
 #include <boost/phoenix/core/environment.hpp>
 #include <boost/fusion/sequence/intrinsic/at_c.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/format.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
 

@@ -21,7 +21,7 @@
 #include <boost/mpl/if.hpp>
 #include <boost/move/move.hpp>
 #include <boost/type_traits/is_void.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>

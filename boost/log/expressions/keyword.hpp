@@ -23,7 +23,7 @@
 #include <boost/phoenix/core/environment.hpp>
 #include <boost/fusion/sequence/intrinsic/at.hpp>
 #include <boost/preprocessor/cat.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/expressions/is_keyword_descriptor.hpp>

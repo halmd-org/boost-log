@@ -19,7 +19,7 @@
 #include <boost/xpressive/basic_regex.hpp>
 #include <boost/xpressive/regex_constants.hpp>
 #include <boost/xpressive/regex_algorithms.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/utility/functional/matches.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

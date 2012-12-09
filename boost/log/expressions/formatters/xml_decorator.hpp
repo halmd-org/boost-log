@@ -16,7 +16,7 @@
 #define BOOST_LOG_EXPRESSIONS_FORMATTERS_XML_DECORATOR_HPP_INCLUDED_
 
 #include <boost/range/iterator_range_core.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/expressions/formatters/char_decorator.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

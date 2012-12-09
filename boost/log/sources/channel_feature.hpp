@@ -17,7 +17,7 @@
 
 #include <string>
 #include <boost/move/move.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
 #include <boost/log/keywords/channel.hpp>

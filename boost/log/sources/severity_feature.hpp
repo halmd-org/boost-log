@@ -19,7 +19,7 @@
 #include <boost/intrusive_ptr.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/move/move.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
 #include <boost/log/attributes/attribute.hpp>

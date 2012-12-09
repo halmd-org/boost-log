@@ -24,7 +24,7 @@
 #include <boost/throw_exception.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/utility/enable_if.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

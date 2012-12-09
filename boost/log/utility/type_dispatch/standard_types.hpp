@@ -19,7 +19,7 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/copy.hpp>
 #include <boost/mpl/back_inserter.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

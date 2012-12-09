@@ -16,7 +16,7 @@
 #ifndef BOOST_LOG_DEFAULT_SINK_HPP_INCLUDED_
 #define BOOST_LOG_DEFAULT_SINK_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/value_extraction.hpp>

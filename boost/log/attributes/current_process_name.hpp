@@ -16,7 +16,7 @@
 #define BOOST_LOG_ATTRIBUTES_CURRENT_PROCESS_NAME_HPP_INCLUDED_
 
 #include <string>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 

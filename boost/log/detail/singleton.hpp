@@ -16,7 +16,7 @@
 #ifndef BOOST_LOG_DETAIL_SINGLETON_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_SINGLETON_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/utility/once_block.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

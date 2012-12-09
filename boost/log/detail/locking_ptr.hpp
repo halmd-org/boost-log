@@ -17,7 +17,7 @@
 #define BOOST_LOG_DETAIL_LOCKING_PTR_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

@@ -34,7 +34,7 @@
 #include <boost/optional/optional_fwd.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_void.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/detail/value_ref_visitation.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>

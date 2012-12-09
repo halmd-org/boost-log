@@ -21,7 +21,7 @@
 #include <boost/spirit/include/support_standard.hpp>
 #include <boost/spirit/include/support_standard_wide.hpp>
 #include <boost/spirit/home/support/common_terminals.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

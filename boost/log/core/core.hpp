@@ -18,7 +18,7 @@
 #include <utility>
 #include <boost/shared_ptr.hpp>
 #include <boost/move/move.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_set.hpp>

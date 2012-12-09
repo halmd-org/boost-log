@@ -15,7 +15,7 @@
 #ifndef BOOST_LOG_EXPRESSIONS_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #include <boost/log/expressions/attr.hpp>
 #include <boost/log/expressions/keyword.hpp>

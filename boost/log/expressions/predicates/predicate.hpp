@@ -17,7 +17,7 @@
 
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/utility/result_of.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>

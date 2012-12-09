@@ -18,7 +18,7 @@
 
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_pod.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

@@ -16,7 +16,7 @@
 #define BOOST_LOG_UTILITY_MANIPULATORS_TO_LOG_HPP_INCLUDED_
 
 #include <iosfwd>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/utility/formatting_stream_fwd.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

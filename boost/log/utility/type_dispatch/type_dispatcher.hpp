@@ -17,7 +17,7 @@
 
 #include <typeinfo>
 #include <boost/static_assert.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/visible_type.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 

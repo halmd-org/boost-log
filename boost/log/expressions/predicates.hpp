@@ -15,7 +15,7 @@
 #ifndef BOOST_LOG_EXPRESSIONS_PREDICATES_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_PREDICATES_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #include <boost/log/expressions/predicates/has_attr.hpp>
 #include <boost/log/expressions/predicates/begins_with.hpp>

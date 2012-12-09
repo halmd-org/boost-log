@@ -17,7 +17,7 @@
 
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/type_traits/remove_reference.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/attributes/fallback_policy_fwd.hpp>

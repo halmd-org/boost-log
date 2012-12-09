@@ -17,7 +17,7 @@
 
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_integral.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/attribute_value_impl.hpp>

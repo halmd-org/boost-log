@@ -16,7 +16,7 @@
 #define BOOST_LOG_EXPRESSIONS_STREAM_HPP_INCLUDED_
 
 #include <boost/phoenix/core/argument.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

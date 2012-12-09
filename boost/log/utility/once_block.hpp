@@ -15,7 +15,7 @@
 #ifndef BOOST_LOG_UTILITY_ONCE_BLOCK_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_ONCE_BLOCK_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

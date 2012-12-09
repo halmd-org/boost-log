@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   prologue.hpp
+ * \file   config.hpp
  * \author Andrey Semashev
  * \date   08.03.2007
  *
@@ -14,8 +14,8 @@
  *         internal configuration macros are defined.
  */
 
-#ifndef BOOST_LOG_DETAIL_PROLOGUE_HPP_INCLUDED_
-#define BOOST_LOG_DETAIL_PROLOGUE_HPP_INCLUDED_
+#ifndef BOOST_LOG_DETAIL_CONFIG_HPP_INCLUDED_
+#define BOOST_LOG_DETAIL_CONFIG_HPP_INCLUDED_
 
 // This check must be before any system headers are included, or __MSVCRT_VERSION__ may get defined to 0x0600
 #if defined(__MINGW32__) && !defined(__MSVCRT_VERSION__)
@@ -372,4 +372,4 @@ namespace log {}
 
 } // namespace boost
 
-#endif // BOOST_LOG_DETAIL_PROLOGUE_HPP_INCLUDED_
+#endif // BOOST_LOG_DETAIL_CONFIG_HPP_INCLUDED_

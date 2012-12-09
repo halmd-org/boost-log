@@ -16,7 +16,7 @@
 #define BOOST_LOG_EXPRESSIONS_PREDICATES_ENDS_WITH_HPP_INCLUDED_
 
 #include <boost/phoenix/core/actor.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/embedded_string_type.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/expressions/unary_function_terminal.hpp>

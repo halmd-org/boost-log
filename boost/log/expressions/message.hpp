@@ -17,7 +17,7 @@
 
 #include <string>
 #include <boost/mpl/vector.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
 #include <boost/log/expressions/keyword.hpp>
 #include <boost/log/expressions/is_keyword_descriptor.hpp>

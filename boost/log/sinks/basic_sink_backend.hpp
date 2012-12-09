@@ -17,7 +17,7 @@
 
 #include <string>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>

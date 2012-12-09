@@ -18,7 +18,7 @@
 
 #include <iosfwd>
 #include <boost/cstdint.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/id.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

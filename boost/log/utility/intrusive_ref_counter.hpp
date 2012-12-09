@@ -16,7 +16,7 @@
 #define BOOST_LOG_UTILITY_INTRUSIVE_REF_COUNTER_HPP_INCLUDED_
 
 #include <boost/intrusive_ptr.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/detail/atomic_count.hpp>
 #endif // BOOST_LOG_NO_THREADS

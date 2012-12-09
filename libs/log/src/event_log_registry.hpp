@@ -23,7 +23,7 @@
 #include <stdexcept>
 #include <boost/version.hpp>
 #include <boost/optional.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/exceptions.hpp>
 #include "windows_version.hpp"

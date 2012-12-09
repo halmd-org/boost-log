@@ -17,7 +17,7 @@
 #ifndef BOOST_LOG_SOURCES_THREADING_MODELS_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_THREADING_MODELS_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/locks.hpp> // is_mutex_type
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/mpl/bool.hpp>

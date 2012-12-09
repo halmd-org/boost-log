@@ -19,7 +19,7 @@
 #include <new>
 #include <memory>
 #include <utility>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 // Detect if atomic CAS is supported
 #if defined(__GNUC__)

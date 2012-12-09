@@ -15,7 +15,7 @@
 #ifndef BOOST_LOG_SOURCES_LOGGER_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_LOGGER_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/features.hpp>
 #include <boost/log/sources/threading_models.hpp>

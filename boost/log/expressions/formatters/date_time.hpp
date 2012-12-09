@@ -22,7 +22,7 @@
 #include <boost/phoenix/core/is_nullary.hpp>
 #include <boost/phoenix/core/environment.hpp>
 #include <boost/fusion/sequence/intrinsic/at_c.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/attributes/value_visitation.hpp>

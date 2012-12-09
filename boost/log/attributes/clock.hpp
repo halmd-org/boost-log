@@ -15,7 +15,7 @@
 #ifndef BOOST_LOG_ATTRIBUTES_CLOCK_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_CLOCK_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>

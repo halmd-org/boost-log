@@ -19,7 +19,7 @@
 #include <string>
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

@@ -22,7 +22,7 @@
 #include <boost/phoenix/core/environment.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/type_traits/remove_reference.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

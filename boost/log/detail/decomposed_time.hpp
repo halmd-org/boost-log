@@ -23,7 +23,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/move/move.hpp>
 #include <boost/range/iterator_range_core.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/date_time_format_parser.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/utility/formatting_stream.hpp>

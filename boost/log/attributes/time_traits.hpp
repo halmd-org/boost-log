@@ -17,7 +17,7 @@
 #define BOOST_LOG_ATTRIBUTES_TIME_TRAITS_HPP_INCLUDED_
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

@@ -16,7 +16,7 @@
 #ifndef BOOST_LOG_WINDOWS_VERSION_HPP_INCLUDED_
 #define BOOST_LOG_WINDOWS_VERSION_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #if defined(BOOST_WINDOWS) || defined(__CYGWIN__)
 

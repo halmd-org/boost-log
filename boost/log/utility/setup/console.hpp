@@ -18,7 +18,7 @@
 #include <iostream>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/sink_init_helpers.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/log/sinks/sync_frontend.hpp>

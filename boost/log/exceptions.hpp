@@ -19,7 +19,7 @@
 #include <string>
 #include <stdexcept>
 #include <boost/preprocessor/seq/enum.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 

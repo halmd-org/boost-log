@@ -18,7 +18,7 @@
 #include <boost/mpl/if.hpp>
 #include <boost/move/move.hpp>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/sources/threading_models.hpp>

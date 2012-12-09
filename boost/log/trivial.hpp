@@ -16,7 +16,7 @@
 #define BOOST_LOG_TRIVIAL_HPP_INCLUDED_
 
 #include <ostream>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/keywords/severity.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>

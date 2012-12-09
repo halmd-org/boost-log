@@ -20,7 +20,7 @@
 #include <memory>
 #include <iterator>
 #include <cstddef>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/current_function.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/log/utility/string_literal.hpp>

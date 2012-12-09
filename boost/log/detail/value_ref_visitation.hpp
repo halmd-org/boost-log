@@ -26,7 +26,7 @@
 #include <boost/preprocessor/arithmetic/inc.hpp>
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
 #include <boost/preprocessor/iteration/iterate.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #ifndef BOOST_LOG_VALUE_REF_VISITATION_UNROLL_COUNT
 #define BOOST_LOG_VALUE_REF_VISITATION_UNROLL_COUNT 8

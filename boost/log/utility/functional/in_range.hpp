@@ -16,7 +16,7 @@
 #define BOOST_LOG_UTILITY_FUNCTIONAL_IN_RANGE_HPP_INCLUDED_
 
 #include <utility>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/utility/functional/logical.hpp> // make_common_integral_type
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

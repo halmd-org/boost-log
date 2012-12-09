@@ -16,7 +16,7 @@
 #define BOOST_LOG_SUPPORT_EXCEPTION_HPP_INCLUDED_
 
 #include <boost/exception/info.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>

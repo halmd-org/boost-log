@@ -27,7 +27,7 @@
 #include <boost/utility/addressof.hpp>
 #include <boost/utility/base_from_member.hpp>
 #include <boost/optional/optional_fwd.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/parameter_tools.hpp>

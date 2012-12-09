@@ -18,7 +18,7 @@
 
 #include <cstdio>
 #include <cstdarg>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #ifdef BOOST_LOG_USE_WCHAR_T
 #include <cwchar>
 #endif // BOOST_LOG_USE_WCHAR_T

@@ -17,7 +17,7 @@
 #define BOOST_LOG_UTILITY_FUNCTIONAL_BIND_HPP_INCLUDED_
 
 #include <boost/type_traits/remove_cv.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

@@ -17,7 +17,7 @@
 #define BOOST_LOG_DETAIL_FUNCTION_TRAITS_HPP_INCLUDED_
 
 #include <boost/mpl/has_xxx.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #if defined(BOOST_NO_SFINAE) || defined(BOOST_MPL_CFG_NO_HAS_XXX)
 #   if !defined(BOOST_LOG_NO_FUNCTION_TRAITS)

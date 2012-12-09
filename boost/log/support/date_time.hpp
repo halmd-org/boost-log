@@ -27,7 +27,7 @@
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include <boost/date_time/local_time/local_time_types.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/date_time_format_parser.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/decomposed_time.hpp>

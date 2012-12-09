@@ -17,7 +17,7 @@
 #define BOOST_LOG_ALIGNMENT_GAP_BETWEEN_HPP_INCLUDED_
 
 #include <boost/type_traits/alignment_of.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 namespace boost {
 

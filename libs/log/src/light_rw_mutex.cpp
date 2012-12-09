@@ -14,7 +14,7 @@
  */
 
 // This first include is to ensure that __MSVCRT_VERSION__ is defined properly
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS)

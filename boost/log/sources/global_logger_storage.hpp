@@ -20,7 +20,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/visible_type.hpp>
 

@@ -25,7 +25,7 @@
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/fusion/sequence/intrinsic/at_c.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
 #include <boost/log/detail/function_traits.hpp>
 #include <boost/log/utility/formatting_stream.hpp>

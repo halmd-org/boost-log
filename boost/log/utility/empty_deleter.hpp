@@ -19,7 +19,7 @@
 #ifndef BOOST_LOG_UTILITY_EMPTY_DELETER_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_EMPTY_DELETER_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
