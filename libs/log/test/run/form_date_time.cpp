@@ -192,7 +192,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(time_duration, CharT, char_types)
         osstream strm1(str1), strm2(str2);
         formatter f = expr::stream << expr::format_date_time< duration >(data::attr1(), formats::default_time_duration_format().c_str());
         f(rec, strm1);
-        strm2.imbue(std::locale(strm2.getloc(), new facet(formats::default_time_duration_format().c_str())));
+        facet* fac = new facet();
+        fac->time_duration_format(formats::default_time_duration_format().c_str());
+        strm2.imbue(std::locale(strm2.getloc(), fac));
         strm2 << t1;
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
     }
@@ -201,7 +203,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(time_duration, CharT, char_types)
         osstream strm1(str1), strm2(str2);
         formatter f = expr::stream << expr::format_date_time< duration >(data::attr1(), formats::time_duration_format().c_str());
         f(rec, strm1);
-        strm2.imbue(std::locale(strm2.getloc(), new facet(formats::time_duration_format().c_str())));
+        facet* fac = new facet();
+        fac->time_duration_format(formats::time_duration_format().c_str());
+        strm2.imbue(std::locale(strm2.getloc(), fac));
         strm2 << t1;
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
     }

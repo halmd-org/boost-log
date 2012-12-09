@@ -521,7 +521,7 @@ inline bool operator!= (value_ref< T1, TagT1 > const& left, value_ref< T2, TagT2
 template< typename T, typename TagT, typename U >
 inline bool operator< (value_ref< T, TagT > const& left, U const& right)
 {
-    return left.apply_visitor_or_default(binder2nd< less, U const& >(less(), right), true);
+    return left.apply_visitor_or_default(binder2nd< less, U const& >(less(), right), false);
 }
 
 template< typename U, typename T, typename TagT >
@@ -533,7 +533,7 @@ inline bool operator< (U const& left, value_ref< T, TagT > const& right)
 template< typename T1, typename TagT1, typename T2, typename TagT2 >
 inline bool operator< (value_ref< T1, TagT1 > const& left, value_ref< T2, TagT2 > const& right)
 {
-    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, less >(right, false), true);
+    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, less >(right, false), false);
 }
 
 // Greater than ordering
@@ -546,20 +546,20 @@ inline bool operator> (value_ref< T, TagT > const& left, U const& right)
 template< typename U, typename T, typename TagT >
 inline bool operator> (U const& left, value_ref< T, TagT > const& right)
 {
-    return right.apply_visitor_or_default(binder1st< greater, U const& >(greater(), left), true);
+    return right.apply_visitor_or_default(binder1st< greater, U const& >(greater(), left), false);
 }
 
 template< typename T1, typename TagT1, typename T2, typename TagT2 >
 inline bool operator> (value_ref< T1, TagT1 > const& left, value_ref< T2, TagT2 > const& right)
 {
-    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, greater >(right, true), false);
+    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, greater >(right, false), false);
 }
 
 // Less or equal ordering
 template< typename T, typename TagT, typename U >
 inline bool operator<= (value_ref< T, TagT > const& left, U const& right)
 {
-    return left.apply_visitor_or_default(binder2nd< less_equal, U const& >(less_equal(), right), true);
+    return left.apply_visitor_or_default(binder2nd< less_equal, U const& >(less_equal(), right), false);
 }
 
 template< typename U, typename T, typename TagT >
@@ -571,7 +571,9 @@ inline bool operator<= (U const& left, value_ref< T, TagT > const& right)
 template< typename T1, typename TagT1, typename T2, typename TagT2 >
 inline bool operator<= (value_ref< T1, TagT1 > const& left, value_ref< T2, TagT2 > const& right)
 {
-    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, less_equal >(right, false), true);
+    if (!left && !right)
+        return true;
+    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, less_equal >(right, false), false);
 }
 
 // Greater or equal ordering
@@ -584,13 +586,15 @@ inline bool operator>= (value_ref< T, TagT > const& left, U const& right)
 template< typename U, typename T, typename TagT >
 inline bool operator>= (U const& left, value_ref< T, TagT > const& right)
 {
-    return right.apply_visitor_or_default(binder1st< greater_equal, U const& >(greater_equal(), left), true);
+    return right.apply_visitor_or_default(binder1st< greater_equal, U const& >(greater_equal(), left), false);
 }
 
 template< typename T1, typename TagT1, typename T2, typename TagT2 >
 inline bool operator>= (value_ref< T1, TagT1 > const& left, value_ref< T2, TagT2 > const& right)
 {
-    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, greater_equal >(right, true), false);
+    if (!left && !right)
+        return true;
+    return left.apply_visitor_or_default(aux::vistation_invoker< value_ref< T2, TagT2 >, greater_equal >(right, false), false);
 }
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log

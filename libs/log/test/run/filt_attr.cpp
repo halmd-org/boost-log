@@ -82,18 +82,6 @@ BOOST_AUTO_TEST_CASE(general_conditions)
 
     f = expr::attr< std::string >(data::attr3()) > "AAA";
     BOOST_CHECK(f(values1));
-
-    // Check that strings are saved into the filter by value
-    char buf[128];
-    std::strcpy(buf, "Hello, world!");
-    f = expr::attr< std::string >(data::attr3()) == buf;
-    std::fill_n(buf, sizeof(buf), static_cast< char >(0));
-    BOOST_CHECK(f(values1));
-
-    std::strcpy(buf, "Hello, world!");
-    f = expr::attr< std::string >(data::attr3()) == static_cast< const char* >(buf);
-    std::fill_n(buf, sizeof(buf), static_cast< char >(0));
-    BOOST_CHECK(f(values1));
 }
 
 // The test checks that is_in_range condition works

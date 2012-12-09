@@ -129,12 +129,12 @@ struct date_flags :
                 this->flush(callback);
 
                 std::size_t len = end - begin;
-                if (len >= 8 && std::memcmp(begin, constants::extended_iso_date_format(), 8) == 0)
+                if (len >= 8 && std::memcmp(begin, constants::extended_iso_date_format(), 8 * sizeof(char_type)) == 0)
                 {
                     callback.on_extended_iso_date();
                     return begin + 8;
                 }
-                else if (len >= 6 && std::memcmp(begin, constants::iso_date_format(), 6) == 0)
+                else if (len >= 6 && std::memcmp(begin, constants::iso_date_format(), 6 * sizeof(char_type)) == 0)
                 {
                     callback.on_iso_date();
                     return begin + 6;
@@ -218,17 +218,17 @@ struct time_flags :
                 this->flush(callback);
 
                 std::size_t len = end - begin;
-                if (len >= 11 && std::memcmp(begin, constants::default_time_format(), 11) == 0)
+                if (len >= 11 && std::memcmp(begin, constants::default_time_format(), 11 * sizeof(char_type)) == 0)
                 {
                     callback.on_default_time();
                     return begin + 11;
                 }
-                else if (len >= 8 && std::memcmp(begin, constants::extended_iso_time_format(), 8) == 0)
+                else if (len >= 8 && std::memcmp(begin, constants::extended_iso_time_format(), 8 * sizeof(char_type)) == 0)
                 {
                     callback.on_extended_iso_time();
                     return begin + 8;
                 }
-                else if (len >= 6 && std::memcmp(begin, constants::iso_time_format(), 6) == 0)
+                else if (len >= 6 && std::memcmp(begin, constants::iso_time_format(), 6 * sizeof(char_type)) == 0)
                 {
                     callback.on_iso_time();
                     return begin + 6;
@@ -267,7 +267,7 @@ struct time_flags :
 
         case 'S':
             this->flush(callback);
-            callback.on_minutes();
+            callback.on_seconds();
             break;
 
         case 'f':
