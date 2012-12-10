@@ -23,6 +23,7 @@
 
 #if defined(BOOST_WINDOWS)
 
+#include <boost/phoenix/core/terminal.hpp> // this is needed to be able to include this header alone, Boost.Phoenix blows up without it
 #include <boost/phoenix/function/adapt_callable.hpp>
 
 #if defined(BOOST_USE_WINDOWS_H)

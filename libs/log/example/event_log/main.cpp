@@ -161,7 +161,7 @@ struct activity_guard
     }
 
 private:
-    event_logger::logger_type::attribute_set_type::iterator m_it;
+    logging::attribute_set::iterator m_it;
 };
 //]
 

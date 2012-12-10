@@ -18,7 +18,7 @@
 #include <boost/log/core.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 
-inline typename boost::log::record make_record(boost::log::attribute_set const& src_attrs)
+inline boost::log::record make_record(boost::log::attribute_set const& src_attrs)
 {
     return boost::log::core::get()->open_record(src_attrs);
 }

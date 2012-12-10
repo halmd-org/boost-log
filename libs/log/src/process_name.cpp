@@ -45,7 +45,7 @@ BOOST_LOG_API std::string get_process_name()
     buf.resize(PATH_MAX);
     do
     {
-        unsigned int len = GetModuleFileNameW(NULL, &buf[0], buf.size());
+        unsigned int len = GetModuleFileNameW(NULL, &buf[0], static_cast< unsigned int >(buf.size()));
         if (len < buf.size())
         {
             buf.resize(len);

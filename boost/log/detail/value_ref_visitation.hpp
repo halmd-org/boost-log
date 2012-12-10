@@ -62,6 +62,12 @@ struct apply_visitor_dispatch
     }
 };
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// switch statement contains 'default' but no 'case' labels
+#pragma warning(disable: 4065)
+#endif
+
 #define BOOST_LOG_AUX_CASE_ENTRY(z, i, data)\
     case i: return visitor(*static_cast< typename mpl::at_c< SequenceT, i >::type const* >(p));
 
@@ -70,6 +76,10 @@ struct apply_visitor_dispatch
 #include BOOST_PP_ITERATE()
 
 #undef BOOST_LOG_AUX_CASE_ENTRY
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 } // namespace aux
 

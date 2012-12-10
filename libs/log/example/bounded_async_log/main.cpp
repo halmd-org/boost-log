@@ -14,7 +14,6 @@
 
 // #define BOOST_LOG_DYN_LINK 1
 
-#include <unistd.h>
 #include <stdexcept>
 #include <string>
 #include <iostream>

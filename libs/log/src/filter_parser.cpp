@@ -433,7 +433,7 @@ filter parse_filter(const CharT* begin, const CharT* end)
 #ifdef BOOST_LOG_USE_CHAR
 
 template BOOST_LOG_SETUP_API
-void register_filter_factory(attribute_name const& name, shared_ptr< filter_factory< char > > const& factory);
+void register_filter_factory< char >(attribute_name const& name, shared_ptr< filter_factory< char > > const& factory);
 template BOOST_LOG_SETUP_API
 filter parse_filter< char >(const char* begin, const char* end);
 
@@ -442,7 +442,7 @@ filter parse_filter< char >(const char* begin, const char* end);
 #ifdef BOOST_LOG_USE_WCHAR_T
 
 template BOOST_LOG_SETUP_API
-void register_filter_factory(attribute_name const& name, shared_ptr< filter_factory< wchar_t > > const& factory);
+void register_filter_factory< wchar_t >(attribute_name const& name, shared_ptr< filter_factory< wchar_t > > const& factory);
 template BOOST_LOG_SETUP_API
 filter parse_filter< wchar_t >(const wchar_t* begin, const wchar_t* end);
 

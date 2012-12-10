@@ -19,6 +19,13 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/support/exception.hpp>
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// conversion from 'size_t' to 'boost::error_info<boost::throw_line_,int>::value_type', possible loss of data
+// No idea why line number is stored as a signed integer in the error info...
+#pragma warning(disable: 4267)
+#endif
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
@@ -409,3 +416,7 @@ void limitation_error::throw_(const char* file, std::size_t line, std::string co
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

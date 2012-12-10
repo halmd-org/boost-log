@@ -230,7 +230,7 @@ private:
             {
                 if (static_cast< unsigned int >(it->arg_number) >= m_formatting_params.size())
                     m_formatting_params.resize(it->arg_number + 1);
-                m_formatting_params[it->arg_number].element_idx = it - m_format.format_elements.begin();
+                m_formatting_params[it->arg_number].element_idx = static_cast< unsigned int >(it - m_format.format_elements.begin());
             }
         }
     }

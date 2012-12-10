@@ -62,7 +62,7 @@ format_description< CharT > parse_format(const CharT* begin, const CharT* end)
 
             // From here on, no more literals are possible. Append the literal element.
             {
-                const unsigned int literal_chars_size = descr.literal_chars.size();
+                const unsigned int literal_chars_size = static_cast< unsigned int >(descr.literal_chars.size());
                 if (literal_start_pos < literal_chars_size)
                 {
                     descr.format_elements.push_back(format_element::literal(literal_start_pos, literal_chars_size - literal_start_pos));
@@ -82,7 +82,7 @@ format_description< CharT > parse_format(const CharT* begin, const CharT* end)
                     if (n == 0 || pp == end || *pp != static_cast< char_type >('%'))
                     {
                         boost::throw_exception(boost::enable_error_info(parse_error("Invalid positional format placeholder")) << boost::throw_file(__FILE__) << boost::throw_line(__LINE__)
-                            << boost::log::position_info(p - original_begin)
+                            << boost::log::position_info(static_cast< unsigned int >(p - original_begin))
                         );
                     }
 
@@ -91,7 +91,7 @@ format_description< CharT > parse_format(const CharT* begin, const CharT* end)
                     if (n > 1000)
                     {
                         boost::throw_exception(boost::enable_error_info(limitation_error("Positional format placeholder too big")) << boost::throw_file(__FILE__) << boost::throw_line(__LINE__)
-                            << boost::log::position_info(p - original_begin)
+                            << boost::log::position_info(static_cast< unsigned int >(p - original_begin))
                         );
                     }
 
@@ -109,7 +109,7 @@ format_description< CharT > parse_format(const CharT* begin, const CharT* end)
 
             // This must be something else, not supported yet
             boost::throw_exception(boost::enable_error_info(parse_error("Unsupported format placeholder")) << boost::throw_file(__FILE__) << boost::throw_line(__LINE__)
-                << boost::log::position_info(p - original_begin)
+                << boost::log::position_info(static_cast< unsigned int >(p - original_begin))
             );
         }
         else
@@ -120,7 +120,7 @@ format_description< CharT > parse_format(const CharT* begin, const CharT* end)
         }
     }
 
-    const unsigned int literal_chars_size = descr.literal_chars.size();
+    const unsigned int literal_chars_size = static_cast< unsigned int >(descr.literal_chars.size());
     if (literal_start_pos < literal_chars_size)
         descr.format_elements.push_back(format_element::literal(literal_start_pos, literal_chars_size - literal_start_pos));
 

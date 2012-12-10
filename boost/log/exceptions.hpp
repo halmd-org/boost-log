@@ -50,7 +50,7 @@ class exception;
 #   endif
 #else
 
-class BOOS_LOG_VISIBLE exception;
+class BOOST_LOG_VISIBLE exception;
 
 #endif
 

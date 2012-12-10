@@ -63,7 +63,7 @@ private:
 private:
     //! Initializing constructor
     private_data(BOOST_RV_REF(attribute_value_set) values, uint32_t capacity) :
-        public_data(values),
+        public_data(boost::move(values)),
         m_accepting_sink_count(0),
         m_accepting_sink_capacity(capacity)
     {
@@ -80,7 +80,7 @@ public:
             boost::log::aux::alignment_gap_between< private_data, sink_ptr >::value +
             capacity * sizeof(sink_ptr)
         ));
-        new (p) private_data(values, capacity);
+        new (p) private_data(boost::move(values), capacity);
         return p;
     }
 
@@ -294,7 +294,7 @@ public:
 
                     if (!m_sinks.empty())
                     {
-                        uint32_t remaining_capacity = m_sinks.size();
+                        uint32_t remaining_capacity = static_cast< uint32_t >(m_sinks.size());
                         sink_list::iterator it = m_sinks.begin(), end = m_sinks.end();
                         for (; it != end; ++it, --remaining_capacity)
                         {
