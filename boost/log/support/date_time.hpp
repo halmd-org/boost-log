@@ -73,7 +73,7 @@ inline void decompose_time_of_day(TimeDurationT const& tod, boost::log::aux::dec
             boost::log::aux::decomposed_time::subseconds_per_second / traits_type::ticks_per_second)
     };
     uint64_t frac = tod.fractional_seconds();
-    v.subseconds = (traits_type::ticks_per_second > boost::log::aux::decomposed_time::subseconds_per_second ? frac / adjustment_ratio : frac * adjustment_ratio);
+    v.subseconds = static_cast< uint32_t >(traits_type::ticks_per_second > boost::log::aux::decomposed_time::subseconds_per_second ? frac / adjustment_ratio : frac * adjustment_ratio);
 }
 
 template< typename TimeDurationT, typename ValueT >
@@ -131,10 +131,13 @@ struct date_time_formatter_generator_traits_impl
         BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
 
     private:
-        typedef boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type > base_type;
+        // Do not change this typedef, copy-pasting the inherited class from above will break compilation with MSVC 2012 because it incorrectly binds value_type.
+        typedef typename formatter::date_time_formatter_ base_type;
 
     public:
         typedef typename base_type::result_type result_type;
+        // This typedef is needed to work around MSVC 2012 crappy name lookup. Otherwise base_type::value_type is bound instead.
+        typedef typename date_time_formatter_generator_traits_impl< TimeT, CharT >::value_type value_type;
 
     public:
         BOOST_LOG_DEFAULTED_FUNCTION(formatter(), {})
@@ -199,13 +202,17 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
     class formatter :
         public boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type >
     {
-        typedef boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type > base_type;
-
         BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
+
+    private:
+        // Do not change this typedef, copy-pasting the inherited class from above will break compilation with MSVC 2012 because it incorrectly binds value_type.
+        typedef typename formatter::date_time_formatter_ base_type;
 
     public:
         typedef typename base_type::result_type result_type;
         typedef typename base_type::context context;
+        // This typedef is needed to work around MSVC 2012 crappy name lookup. Otherwise base_type::value_type is bound instead.
+        typedef typename date_time_formatter_generator_traits< local_time::local_date_time_base< TimeT, TimeZoneT >, CharT, VoidT >::value_type value_type;
 
     public:
         BOOST_LOG_DEFAULTED_FUNCTION(formatter(), {})
@@ -302,10 +309,13 @@ struct date_formatter_generator_traits_impl
         BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
 
     private:
-        typedef boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type > base_type;
+        // Do not change this typedef, copy-pasting the inherited class from above will break compilation with MSVC 2012 because it incorrectly binds value_type.
+        typedef typename formatter::date_time_formatter_ base_type;
 
     public:
         typedef typename base_type::result_type result_type;
+        // This typedef is needed to work around MSVC 2012 crappy name lookup. Otherwise base_type::value_type is bound instead.
+        typedef typename date_formatter_generator_traits_impl< DateT, CharT >::value_type value_type;
 
     public:
         BOOST_LOG_DEFAULTED_FUNCTION(formatter(), {})
@@ -373,10 +383,13 @@ struct time_duration_formatter_generator_traits_impl
         BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
 
     private:
-        typedef boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type > base_type;
+        // Do not change this typedef, copy-pasting the inherited class from above will break compilation with MSVC 2012 because it incorrectly binds value_type.
+        typedef typename formatter::date_time_formatter_ base_type;
 
     public:
         typedef typename base_type::result_type result_type;
+        // This typedef is needed to work around MSVC 2012 crappy name lookup. Otherwise base_type::value_type is bound instead.
+        typedef typename time_duration_formatter_generator_traits_impl< TimeDurationT, CharT >::value_type value_type;
 
     public:
         BOOST_LOG_DEFAULTED_FUNCTION(formatter(), {})
@@ -468,10 +481,13 @@ struct date_duration_formatter_generator_traits_impl
         BOOST_COPYABLE_AND_MOVABLE_ALT(formatter)
 
     private:
-        typedef boost::log::aux::date_time_formatter< boost::log::aux::decomposed_time_wrapper< value_type >, char_type > base_type;
+        // Do not change this typedef, copy-pasting the inherited class from above will break compilation with MSVC 2012 because it incorrectly binds value_type.
+        typedef typename formatter::date_time_formatter_ base_type;
 
     public:
         typedef typename base_type::result_type result_type;
+        // This typedef is needed to work around MSVC 2012 crappy name lookup. Otherwise base_type::value_type is bound instead.
+        typedef typename date_duration_formatter_generator_traits_impl< DateDurationT, CharT >::value_type value_type;
 
     public:
         BOOST_LOG_DEFAULTED_FUNCTION(formatter(), {})

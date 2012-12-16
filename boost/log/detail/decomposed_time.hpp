@@ -114,8 +114,9 @@ class date_time_formatter
 {
     BOOST_COPYABLE_AND_MOVABLE_ALT(date_time_formatter)
 
-private:
-    typedef date_time_formatter self_type;
+protected:
+    // Note: This typedef is needed to work around MSVC 2012 crappy name lookup in the derived classes
+    typedef date_time_formatter date_time_formatter_;
 
 public:
     typedef void result_type;
@@ -195,7 +196,7 @@ public:
     {
         m_literal_chars.append(lit.begin(), lit.end());
         m_literal_lens.push_back(static_cast< unsigned int >(lit.size()));
-        m_formatters.push_back(&self_type::format_literal);
+        m_formatters.push_back(&date_time_formatter_::format_literal);
     }
 
     void swap(date_time_formatter& that)
