@@ -25,7 +25,6 @@
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/date_time_format_parser.hpp>
-#include <boost/log/detail/light_function.hpp>
 #include <boost/log/utility/formatting_stream.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
@@ -107,28 +106,68 @@ struct decomposed_time_wrapper :
     }
 };
 
+template< typename CharT >
+BOOST_LOG_API void put_integer(std::basic_string< CharT >& str, uint32_t value, unsigned int width, CharT fill_char);
+
 template< typename T, typename CharT >
 class date_time_formatter
 {
     BOOST_COPYABLE_AND_MOVABLE_ALT(date_time_formatter)
 
+private:
+    typedef date_time_formatter self_type;
+
 public:
     typedef void result_type;
     typedef T value_type;
     typedef CharT char_type;
+    typedef std::basic_string< char_type > string_type;
     typedef basic_formatting_ostream< char_type > stream_type;
 
-private:
-    typedef light_function2< void, stream_type&, value_type const& > formatter_type;
-    typedef std::vector< formatter_type > formatters;
+    struct context
+    {
+        date_time_formatter const& self;
+        stream_type& strm;
+        string_type& str;
+        value_type const& value;
+        unsigned int literal_index, literal_pos;
+
+        context(date_time_formatter const& self_, stream_type& strm_, value_type const& value_) :
+            self(self_),
+            strm(strm_),
+            str(*strm_.rdbuf()->storage()),
+            value(value_),
+            literal_index(0),
+            literal_pos(0)
+        {
+        }
+
+        BOOST_LOG_DELETED_FUNCTION(context(context const&))
+        BOOST_LOG_DELETED_FUNCTION(context& operator=(context const&))
+    };
 
 private:
+    typedef void (*formatter_type)(context&);
+    typedef std::vector< formatter_type > formatters;
+    typedef std::vector< unsigned int > literal_lens;
+
+protected:
     formatters m_formatters;
+    literal_lens m_literal_lens;
+    string_type m_literal_chars;
 
 public:
     BOOST_LOG_DEFAULTED_FUNCTION(date_time_formatter(), {})
-    date_time_formatter(date_time_formatter const& that) : m_formatters(that.m_formatters) {}
-    date_time_formatter(BOOST_RV_REF(date_time_formatter) that) { m_formatters.swap(that.m_formatters); }
+    date_time_formatter(date_time_formatter const& that) :
+        m_formatters(that.m_formatters),
+        m_literal_lens(that.m_literal_lens),
+        m_literal_chars(that.m_literal_chars)
+    {
+    }
+    date_time_formatter(BOOST_RV_REF(date_time_formatter) that)
+    {
+        this->swap(static_cast< date_time_formatter& >(that));
+    }
 
     date_time_formatter& operator= (date_time_formatter that)
     {
@@ -140,34 +179,124 @@ public:
     {
         // Some formatters will put characters directly to the underlying string, so we have to flush stream buffers before formatting
         strm.flush();
+        context ctx(*this, strm, value);
         for (typename formatters::const_iterator it = m_formatters.begin(), end = m_formatters.end(); strm.good() && it != end; ++it)
         {
-            (*it)(strm, value);
+            (*it)(ctx);
         }
     }
 
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-    template< typename FunT >
-    void add_formatter(FunT&& fun)
+    void add_formatter(formatter_type fun)
     {
-        m_formatters.emplace_back(boost::forward< FunT >(fun));
+        m_formatters.push_back(fun);
     }
-#else
-    template< typename FunT >
-    void add_formatter(FunT const& fun)
+
+    void add_literal(iterator_range< const char_type* > const& lit)
     {
-        m_formatters.push_back(formatter_type(fun));
+        m_literal_chars.append(lit.begin(), lit.end());
+        m_literal_lens.push_back(static_cast< unsigned int >(lit.size()));
+        m_formatters.push_back(&self_type::format_literal);
     }
-#endif
 
     void swap(date_time_formatter& that)
     {
         m_formatters.swap(that.m_formatters);
+        m_literal_lens.swap(that.m_literals);
+        m_literal_chars.swap(that.m_literal_chars);
+    }
+
+public:
+    template< char FormatCharV >
+    static void format_through_locale(context& ctx)
+    {
+        typedef std::time_put< char_type > facet_type;
+        typedef typename facet_type::iter_type iter_type;
+        std::tm t = to_tm(static_cast< decomposed_time const& >(ctx.value));
+        std::use_facet< facet_type >(ctx.strm.getloc()).put(iter_type(ctx.strm), ctx.strm, ' ', &t, FormatCharV);
+        ctx.strm.flush();
+    }
+
+    static void format_full_year(context& ctx)
+    {
+        (put_integer)(ctx.str, ctx.value.year, 4, static_cast< char_type >('0'));
+    }
+
+    static void format_short_year(context& ctx)
+    {
+        (put_integer)(ctx.str, ctx.value.year % 100u, 2, static_cast< char_type >('0'));
+    }
+
+    static void format_numeric_month(context& ctx)
+    {
+        (put_integer)(ctx.str, ctx.value.month, 2, static_cast< char_type >('0'));
+    }
+
+    template< char_type FillCharV >
+    static void format_month_day(context& ctx)
+    {
+        (put_integer)(ctx.str, ctx.value.day, 2, static_cast< char_type >(FillCharV));
+    }
+
+    static void format_week_day(context& ctx)
+    {
+        (put_integer)(ctx.str, static_cast< decomposed_time const& >(ctx.value).week_day(), 1, static_cast< char_type >('0'));
+    }
+
+    template< char_type FillCharV >
+    static void format_hours(context& ctx)
+    {
+        (put_integer)(ctx.str, ctx.value.hours, 2, static_cast< char_type >(FillCharV));
+    }
+
+    template< char_type FillCharV >
+    static void format_hours_12(context& ctx)
+    {
+        (put_integer)(ctx.str, ctx.value.hours % 12u + 1u, 2, static_cast< char_type >(FillCharV));
+    }
+
+    static void format_minutes(context& ctx)
+    {
+        (put_integer)(ctx.str, ctx.value.minutes, 2, static_cast< char_type >('0'));
+    }
+
+    static void format_seconds(context& ctx)
+    {
+        (put_integer)(ctx.str, ctx.value.seconds, 2, static_cast< char_type >('0'));
+    }
+
+    static void format_fractional_seconds(context& ctx)
+    {
+        (put_integer)(ctx.str, ctx.value.subseconds, decomposed_time::subseconds_digits10, static_cast< char_type >('0'));
+    }
+
+    template< bool UpperCaseV >
+    static void format_am_pm(context& ctx)
+    {
+        static const char_type am[] = { static_cast< char_type >(UpperCaseV ? 'A' : 'a'), static_cast< char_type >(UpperCaseV ? 'M' : 'm'), static_cast< char_type >(0) };
+        static const char_type pm[] = { static_cast< char_type >(UpperCaseV ? 'P' : 'p'), static_cast< char_type >(UpperCaseV ? 'M' : 'm'), static_cast< char_type >(0) };
+
+        ctx.str.append(((static_cast< decomposed_time const& >(ctx.value).hours > 11) ? pm : am), 2u);
+    }
+
+    template< bool DisplayPositiveV >
+    static void format_sign(context& ctx)
+    {
+        if (static_cast< decomposed_time const& >(ctx.value).negative)
+            ctx.str.push_back('-');
+        else if (DisplayPositiveV)
+            ctx.str.push_back('+');
+    }
+
+private:
+    static void format_literal(context& ctx)
+    {
+        unsigned int len = ctx.self.m_literal_lens[ctx.literal_index], pos = ctx.literal_pos;
+        ++ctx.literal_index;
+        ctx.literal_pos += len;
+        const char_type* lit = ctx.self.m_literal_chars.c_str();
+        ctx.str.append(lit + pos, len);
     }
 };
-
-template< typename CharT >
-BOOST_LOG_API void put_integer(std::basic_string< CharT >& str, uint32_t value, unsigned int width, CharT fill_char);
 
 template< typename FormatterT, typename CharT >
 class decomposed_time_formatter_builder :
@@ -181,116 +310,6 @@ public:
     typedef typename formatter_type::stream_type stream_type;
     typedef typename stream_type::string_type string_type;
 
-private:
-    struct literal_formatter
-    {
-        typedef void result_type;
-
-        explicit literal_formatter(iterator_range< const char_type* > const& lit) : m_literal(lit.begin(), lit.end())
-        {
-        }
-
-        result_type operator() (stream_type& strm, value_type const&) const
-        {
-            string_type& str = *strm.rdbuf()->storage();
-            str.append(m_literal);
-        }
-
-    private:
-        string_type m_literal;
-    };
-
-    template< uint32_t decomposed_time::*MemberV, unsigned int WidthV, char_type FillCharV >
-    struct integer_formatter
-    {
-        typedef void result_type;
-
-        result_type operator() (stream_type& strm, value_type const& value) const
-        {
-            string_type& str = *strm.rdbuf()->storage();
-            (put_integer)(str, static_cast< decomposed_time const& >(value).*MemberV, WidthV, FillCharV);
-        }
-    };
-
-    struct short_year_formatter
-    {
-        typedef void result_type;
-
-        result_type operator() (stream_type& strm, value_type const& value) const
-        {
-            string_type& str = *strm.rdbuf()->storage();
-            (put_integer)(str, static_cast< decomposed_time const& >(value).year % 100u, 2, static_cast< char_type >('0'));
-        }
-    };
-
-    template< char FormatV >
-    struct locale_formatter
-    {
-        typedef void result_type;
-
-        result_type operator() (stream_type& strm, value_type const& value) const
-        {
-            typedef std::time_put< char_type > facet_type;
-            typedef typename facet_type::iter_type iter_type;
-            std::tm t = to_tm(static_cast< decomposed_time const& >(value));
-            std::use_facet< facet_type >(strm.getloc()).put(iter_type(strm), strm, ' ', &t, FormatV);
-            strm.flush();
-        }
-    };
-
-    struct numeric_week_day_formatter
-    {
-        typedef void result_type;
-
-        result_type operator() (stream_type& strm, value_type const& value) const
-        {
-            string_type& str = *strm.rdbuf()->storage();
-            (put_integer)(str, static_cast< decomposed_time const& >(value).week_day(), 1, static_cast< char_type >('0'));
-        }
-    };
-
-    template< char_type FillCharV >
-    struct hours_12_formatter
-    {
-        typedef void result_type;
-
-        result_type operator() (stream_type& strm, value_type const& value) const
-        {
-            string_type& str = *strm.rdbuf()->storage();
-            (put_integer)(str, (static_cast< decomposed_time const& >(value).hours % 12u) + 1u, 2, FillCharV);
-        }
-    };
-
-    template< bool UpperCaseV >
-    struct am_pm_formatter
-    {
-        typedef void result_type;
-
-        result_type operator() (stream_type& strm, value_type const& value) const
-        {
-            static const char_type am[] = { static_cast< char_type >(UpperCaseV ? 'A' : 'a'), static_cast< char_type >(UpperCaseV ? 'M' : 'm'), static_cast< char_type >(0) };
-            static const char_type pm[] = { static_cast< char_type >(UpperCaseV ? 'P' : 'p'), static_cast< char_type >(UpperCaseV ? 'M' : 'm'), static_cast< char_type >(0) };
-
-            string_type& str = *strm.rdbuf()->storage();
-            str.append(((static_cast< decomposed_time const& >(value).hours > 11) ? pm : am), 2u);
-        }
-    };
-
-    template< bool DisplayPositiveV >
-    struct sign_formatter
-    {
-        typedef void result_type;
-
-        result_type operator() (stream_type& strm, value_type const& value) const
-        {
-            string_type& str = *strm.rdbuf()->storage();
-            if (static_cast< decomposed_time const& >(value).negative)
-                str.push_back('-');
-            else if (DisplayPositiveV)
-                str.push_back('+');
-        }
-    };
-
 protected:
     formatter_type& m_formatter;
 
@@ -301,102 +320,102 @@ public:
 
     void on_literal(iterator_range< const char_type* > const& lit)
     {
-        m_formatter.add_formatter(literal_formatter(lit));
+        m_formatter.add_literal(lit);
     }
 
     void on_short_year()
     {
-        m_formatter.add_formatter(short_year_formatter());
+        m_formatter.add_formatter(&formatter_type::format_short_year);
     }
 
     void on_full_year()
     {
-        m_formatter.add_formatter(integer_formatter< &decomposed_time::year, 4, '0' >());
+        m_formatter.add_formatter(&formatter_type::format_full_year);
     }
 
     void on_numeric_month()
     {
-        m_formatter.add_formatter(integer_formatter< &decomposed_time::month, 2, '0' >());
+        m_formatter.add_formatter(&formatter_type::format_numeric_month);
     }
 
     void on_short_month()
     {
-        m_formatter.add_formatter(locale_formatter< 'b' >());
+        m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_through_locale< 'b' >);
     }
 
     void on_full_month()
     {
-        m_formatter.add_formatter(locale_formatter< 'B' >());
+        m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_through_locale< 'B' >);
     }
 
     void on_month_day(bool leading_zero)
     {
         if (leading_zero)
-            m_formatter.add_formatter(integer_formatter< &decomposed_time::day, 2, '0' >());
+            m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_month_day< '0' >);
         else
-            m_formatter.add_formatter(integer_formatter< &decomposed_time::day, 2, ' ' >());
+            m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_month_day< ' ' >);
     }
 
     void on_numeric_week_day()
     {
-        m_formatter.add_formatter(numeric_week_day_formatter());
+        m_formatter.add_formatter(&formatter_type::format_week_day);
     }
 
     void on_short_week_day()
     {
-        m_formatter.add_formatter(locale_formatter< 'a' >());
+        m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_through_locale< 'a' >);
     }
 
     void on_full_week_day()
     {
-        m_formatter.add_formatter(locale_formatter< 'A' >());
+        m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_through_locale< 'A' >);
     }
 
     void on_hours(bool leading_zero)
     {
         if (leading_zero)
-            m_formatter.add_formatter(integer_formatter< &decomposed_time::hours, 2, '0' >());
+            m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_hours< '0' >);
         else
-            m_formatter.add_formatter(integer_formatter< &decomposed_time::hours, 2, ' ' >());
+            m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_hours< ' ' >);
     }
 
     void on_hours_12(bool leading_zero)
     {
         if (leading_zero)
-            m_formatter.add_formatter(hours_12_formatter< '0' >());
+            m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_hours_12< '0' >);
         else
-            m_formatter.add_formatter(hours_12_formatter< ' ' >());
+            m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_hours_12< ' ' >);
     }
 
     void on_minutes()
     {
-        m_formatter.add_formatter(integer_formatter< &decomposed_time::minutes, 2, '0' >());
+        m_formatter.add_formatter(&formatter_type::format_minutes);
     }
 
     void on_seconds()
     {
-        m_formatter.add_formatter(integer_formatter< &decomposed_time::seconds, 2, '0' >());
+        m_formatter.add_formatter(&formatter_type::format_seconds);
     }
 
     void on_fractional_seconds()
     {
-        m_formatter.add_formatter(integer_formatter< &decomposed_time::subseconds, decomposed_time::subseconds_digits10, '0' >());
+        m_formatter.add_formatter(&formatter_type::format_fractional_seconds);
     }
 
     void on_am_pm(bool upper_case)
     {
         if (upper_case)
-            m_formatter.add_formatter(am_pm_formatter< true >());
+            m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_am_pm< true >);
         else
-            m_formatter.add_formatter(am_pm_formatter< false >());
+            m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_am_pm< false >);
     }
 
     void on_duration_sign(bool display_positive)
     {
         if (display_positive)
-            m_formatter.add_formatter(sign_formatter< true >());
+            m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_sign< true >);
         else
-            m_formatter.add_formatter(sign_formatter< false >());
+            m_formatter.add_formatter(&formatter_type::BOOST_NESTED_TEMPLATE format_sign< false >);
     }
 
     void on_iso_time_zone()

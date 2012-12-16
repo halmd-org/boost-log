@@ -205,6 +205,7 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
 
     public:
         typedef typename base_type::result_type result_type;
+        typedef typename base_type::context context;
 
     public:
         BOOST_LOG_DEFAULTED_FUNCTION(formatter(), {})
@@ -232,6 +233,19 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
                 base_type::operator() (strm, val);
             }
         }
+
+    public:
+        static void format_iso_time_zone(context& ctx)
+        {
+            ctx.strm << ctx.value.m_time.zone_abbrev(true);
+            ctx.strm.flush();
+        }
+
+        static void format_extended_iso_time_zone(context& ctx)
+        {
+            ctx.strm << ctx.value.m_time.zone_name(true);
+            ctx.strm.flush();
+        }
     };
 
     class formatter_builder :
@@ -240,28 +254,6 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
     private:
         typedef boost::log::aux::decomposed_time_formatter_builder< formatter, char_type > base_type;
 
-        struct iso_time_zone_formatter
-        {
-            typedef void result_type;
-
-            result_type operator() (stream_type& strm, boost::log::aux::decomposed_time_wrapper< value_type > const& value) const
-            {
-                strm << value.m_time.zone_abbrev(true);
-                strm.flush();
-            }
-        };
-
-        struct extended_iso_time_zone_formatter
-        {
-            typedef void result_type;
-
-            result_type operator() (stream_type& strm, boost::log::aux::decomposed_time_wrapper< value_type > const& value) const
-            {
-                strm << value.m_time.zone_name(true);
-                strm.flush();
-            }
-        };
-
     public:
         explicit formatter_builder(formatter& fmt) : base_type(fmt)
         {
@@ -269,12 +261,12 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
 
         void on_iso_time_zone()
         {
-            this->m_formatter.add_formatter(iso_time_zone_formatter());
+            this->m_formatter.add_formatter(&formatter::format_iso_time_zone);
         }
 
         void on_extended_iso_time_zone()
         {
-            this->m_formatter.add_formatter(extended_iso_time_zone_formatter());
+            this->m_formatter.add_formatter(&formatter::format_extended_iso_time_zone);
         }
     };
 
