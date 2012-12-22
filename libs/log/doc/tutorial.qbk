@@ -9,7 +9,7 @@
 
 [section:tutorial Tutorial]
 
-In this section we shall walk through the essential steps to get started with the library. After reading it you should be able to initialize the library and add logging to your application. The code of this tutorial is also available in examples residing in the `libs/log/examples` directory. Feel free to play around with them, compile and see the result.
+In this section we shall walk through the essential steps to get started with the library. After reading it you should be able to initialize the library and add logging to your application. The code of this tutorial is also available in examples residing in the `libs/log/examples` directory. Feel free to play with them, compile and see the result.
 
 [section:trivial Trivial logging]
 
