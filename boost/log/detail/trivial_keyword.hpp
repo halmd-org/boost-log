@@ -29,7 +29,7 @@ BOOST_LOG_OPEN_NAMESPACE
 namespace trivial {
 
 //! Trivial severity keyword
-BOOST_LOG_ATTRIBUTE_KEYWORD("Severity", severity, severity_level)
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", severity_level)
 
 } // namespace trivial
 

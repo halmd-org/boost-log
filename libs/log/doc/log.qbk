@@ -243,6 +243,7 @@ Here are definitions of some terms that will be used widely throughout the docum
 [include:log sources.qbk]
 [include:log sink_frontends.qbk]
 [include:log sink_backends.qbk]
+[include:log expressions.qbk]
 [include:log filters.qbk]
 [include:log formatters.qbk]
 [include:log attributes.qbk]

@@ -28,11 +28,11 @@ namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
 namespace keywords = boost::log::keywords;
 
-BOOST_LOG_ATTRIBUTE_KEYWORD("LineID", line_id, unsigned int)
-BOOST_LOG_ATTRIBUTE_KEYWORD("Channel", channel, std::string)
-BOOST_LOG_ATTRIBUTE_KEYWORD("RemoteAddress", remote_address, std::string)
-BOOST_LOG_ATTRIBUTE_KEYWORD("ReceivedSize", received_size, std::size_t)
-BOOST_LOG_ATTRIBUTE_KEYWORD("SentSize", sent_size, std::size_t)
+BOOST_LOG_ATTRIBUTE_KEYWORD(line_id, "LineID", unsigned int)
+BOOST_LOG_ATTRIBUTE_KEYWORD(channel, "Channel", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(remote_address, "RemoteAddress", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(received_size, "ReceivedSize", std::size_t)
+BOOST_LOG_ATTRIBUTE_KEYWORD(sent_size, "SentSize", std::size_t)
 
 //[ example_sources_network_connection_channels
 class network_connection

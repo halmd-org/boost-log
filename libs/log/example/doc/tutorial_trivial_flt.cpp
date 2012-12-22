@@ -10,7 +10,6 @@
 #include <boost/log/expressions.hpp>
 
 namespace logging = boost::log;
-namespace expr = boost::log::expressions;
 
 //[ example_tutorial_trivial_with_filtering
 void init()

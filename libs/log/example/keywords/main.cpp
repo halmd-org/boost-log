@@ -72,10 +72,10 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (
 }
 
 // Declare attribute keywords
-BOOST_LOG_ATTRIBUTE_KEYWORD("Severity", _severity, severity_level)
-BOOST_LOG_ATTRIBUTE_KEYWORD("TimeStamp", _timestamp, boost::posix_time::ptime)
-BOOST_LOG_ATTRIBUTE_KEYWORD("Uptime", _uptime, attrs::timer::value_type)
-BOOST_LOG_ATTRIBUTE_KEYWORD("Scope", _scope, attrs::named_scope::value_type)
+BOOST_LOG_ATTRIBUTE_KEYWORD(_severity, "Severity", severity_level)
+BOOST_LOG_ATTRIBUTE_KEYWORD(_timestamp, "TimeStamp", boost::posix_time::ptime)
+BOOST_LOG_ATTRIBUTE_KEYWORD(_uptime, "Uptime", attrs::timer::value_type)
+BOOST_LOG_ATTRIBUTE_KEYWORD(_scope, "Scope", attrs::named_scope::value_type)
 
 int main(int argc, char* argv[])
 {

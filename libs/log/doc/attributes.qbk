@@ -321,22 +321,20 @@ Multithreaded builds of the library also support the [class_attributes_current_t
 
 [endsect]
 
-[section:functor Function objects as attributes]
+[section:function Function objects as attributes]
 
-    #include <``[boost_log_attributes_functor_hpp]``>
+    #include <``[boost_log_attributes_function_hpp]``>
 
-This attribute is a simple wrapper around a user-defined function object. Each attempt to acquire the attribute value results in the function object call. The result of the call is returned as the attribute value (this implies that the function must not return `void`). The functor attribute can be constructed with the `make_functor_attr` helper function, like this:
+This attribute is a simple wrapper around a user-defined function object. Each attempt to acquire the attribute value results in the function object call. The result of the call is returned as the attribute value (this implies that the function must not return `void`). The function object attribute can be constructed with the `make_function` helper function, like this:
 
     void foo()
     {
-        logging::core::get()->add_global_attribute(
-            "MyRandomAttr",
-            attrs::make_functor_attr(&std::rand));
+        logging::core::get()->add_global_attribute("MyRandomAttr", attrs::make_function(&std::rand));
     }
 
 Auto-generated function objects, like the ones defined in __boost_bind__ or STL, are also supported.
 
-[note Some deficient compilers may not support `result_of` construct properly. This metafunction is used in the `make_functor_attr` function to automatically detect the return type of the function object. If `result_of` breaks, one can try to explicitly specify the return type of the function object as a template argument to the `make_functor_attr` function.]
+[note Some deficient compilers may not support `result_of` construct properly. This metafunction is used in the `make_function` function to automatically detect the return type of the function object. If `result_of` breaks, one can try to explicitly specify the return type of the function object as a template argument to the `make_function` function.]
 
 [endsect]
 

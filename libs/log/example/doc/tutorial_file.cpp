@@ -16,7 +16,6 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 
@@ -26,6 +25,7 @@ namespace keywords = boost::log::keywords;
 void init()
 {
     logging::add_file_log("sample.log");
+
     logging::core::get()->set_filter
     (
         logging::trivial::severity >= logging::trivial::info
@@ -67,7 +67,7 @@ void init()
 
     logging::core::get()->set_filter
     (
-        expr::attr< logging::trivial::severity_level >("Severity") >= logging::trivial::info
+        logging::trivial::severity >= logging::trivial::info
     );
 }
 //]

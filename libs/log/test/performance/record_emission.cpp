@@ -59,7 +59,7 @@ enum severity_level
     error
 };
 
-BOOST_LOG_ATTRIBUTE_KEYWORD("Severity", severity, severity_level)
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", severity_level)
 
 namespace {
 

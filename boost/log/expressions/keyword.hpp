@@ -185,7 +185,7 @@ struct protoify< boost::reference_wrapper< const boost::log::expressions::attrib
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
-#define BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag_ns_, name_, keyword_, value_type_)\
+#define BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE_IMPL(keyword_, name_, value_type_, tag_ns_)\
     namespace tag_ns_\
     {\
         struct keyword_ :\
@@ -197,8 +197,8 @@ struct protoify< boost::reference_wrapper< const boost::log::expressions::attrib
     }\
     typedef ::boost::log::expressions::attribute_keyword< tag_ns_::keyword_ > BOOST_PP_CAT(keyword_, _type);
 
-#define BOOST_LOG_ATTRIBUTE_KEYWORD_IMPL(tag_ns_, name_, keyword_, value_type_)\
-    BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag_ns_, name_, keyword_, value_type_)\
+#define BOOST_LOG_ATTRIBUTE_KEYWORD_IMPL(keyword_, name_, value_type_, tag_ns_)\
+    BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE_IMPL(keyword_, name_, value_type_, tag_ns_)\
     const BOOST_PP_CAT(keyword_, _type) keyword_ = {};
 
 #endif // BOOST_LOG_DOXYGEN_PASS
@@ -228,12 +228,12 @@ struct protoify< boost::reference_wrapper< const boost::log::expressions::attrib
  * \note This macro only defines the type of the keyword. To also define the keyword object, use
  *       the \c BOOST_LOG_ATTRIBUTE_KEYWORD macro instead.
  *
- * \param name_ Attribute name string
  * \param keyword_ Keyword name
+ * \param name_ Attribute name string
  * \param value_type_ Attribute value type
  */
-#define BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE(name_, keyword_, value_type_)\
-    BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE_IMPL(tag, name_, keyword_, value_type_)
+#define BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE(keyword_, name_, value_type_)\
+    BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE_IMPL(keyword_, name_, value_type_, tag)
 
 /*!
  * \brief The macro declares an attribute keyword
@@ -241,12 +241,12 @@ struct protoify< boost::reference_wrapper< const boost::log::expressions::attrib
  * The macro provides definitions similar to \c BOOST_LOG_ATTRIBUTE_KEYWORD_TYPE and addidionally
  * defines the keyword object.
  *
- * \param name_ Attribute name string
  * \param keyword_ Keyword name
+ * \param name_ Attribute name string
  * \param value_type_ Attribute value type
  */
-#define BOOST_LOG_ATTRIBUTE_KEYWORD(name_, keyword_, value_type_)\
-    BOOST_LOG_ATTRIBUTE_KEYWORD_IMPL(tag, name_, keyword_, value_type_)
+#define BOOST_LOG_ATTRIBUTE_KEYWORD(keyword_, name_, value_type_)\
+    BOOST_LOG_ATTRIBUTE_KEYWORD_IMPL(keyword_, name_, value_type_, tag)
 
 #if defined(BOOST_LOG_TRIVIAL_HPP_INCLUDED_)
 #include <boost/log/detail/trivial_keyword.hpp>

@@ -41,11 +41,11 @@ enum severity_level
     critical
 };
 
-BOOST_LOG_ATTRIBUTE_KEYWORD("LineID", line_id, unsigned int)
-BOOST_LOG_ATTRIBUTE_KEYWORD("Severity", severity, severity_level)
-BOOST_LOG_ATTRIBUTE_KEYWORD("Tag", tag_attr, std::string)
-BOOST_LOG_ATTRIBUTE_KEYWORD("Scope", scope, attrs::named_scope::value_type)
-BOOST_LOG_ATTRIBUTE_KEYWORD("Timeline", timeline, attrs::timer::value_type)
+BOOST_LOG_ATTRIBUTE_KEYWORD(line_id, "LineID", unsigned int)
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", severity_level)
+BOOST_LOG_ATTRIBUTE_KEYWORD(tag_attr, "Tag", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(scope, "Scope", attrs::named_scope::value_type)
+BOOST_LOG_ATTRIBUTE_KEYWORD(timeline, "Timeline", attrs::timer::value_type)
 
 void logging_function()
 {
