@@ -66,6 +66,7 @@
 [import ../example/doc/tutorial_fmt_custom.cpp]
 [import ../example/doc/tutorial_logging.cpp]
 [import ../example/doc/tutorial_attributes.cpp]
+[import ../example/doc/tutorial_filtering.cpp]
 [import ../example/doc/sources_net_connection.cpp]
 [import ../example/doc/sources_net_connection_chan.cpp]
 [import ../example/doc/sources_severity.cpp]
@@ -139,7 +140,7 @@ The library should build and work with a reasonably compliant compiler. The libr
 
 The following compilers/platforms are not supported and will likely fail to compile the library:
 
-* MSVC 7.1 will probably have problems compiling the library. Older versions will not work.
+* MSVC 7.1 and older.
 * Borland C++ 5.5.1 (free version). Newer versions might or might not work.
 * GCC 4.0 and older.
 * Windows 9x, ME, NT4 and older are not supported.
@@ -244,8 +245,6 @@ Here are definitions of some terms that will be used widely throughout the docum
 [include:log sink_frontends.qbk]
 [include:log sink_backends.qbk]
 [include:log expressions.qbk]
-[include:log filters.qbk]
-[include:log formatters.qbk]
 [include:log attributes.qbk]
 [include:log utilities.qbk]
 

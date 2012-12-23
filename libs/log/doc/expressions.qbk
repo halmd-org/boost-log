@@ -9,17 +9,84 @@
 
 [section:expressions Lambda expressions]
 
-As it was pointed out in [link log.tutorial.trivial_filtering tutorial], filters are implemented as Lambda-like expressions with placeholders for attribute values. This section will describe the placeholders that can be used to build more complex Lambda expressions.
+As it was pointed out in [link log.tutorial tutorial], filters and formatters are implemented as Lambda expressions with placeholders for attribute values. This section will describe the placeholders that can be used to build more complex Lambda expressions.
 
 There is also a way to specify the filter in the form of a string template. This can be useful for initialization from the application settings. This part of the library is described [link log.detailed.utilities.init.filter_formatter here].
 
+[section:attr Generic attribute placeholder]
+
+    #include <``[boost_log_expressions_attr_hpp]``>
+
+Unlike `has_attr`, the `attr` construct is not a complete filter by itself. Instead, it is a placeholder that can take part in a complete filter expressions like this:
+
+    sink->set_filter
+    (
+        expr::attr< int >("Severity") >= 5 &&
+        expr::attr< std::string >("Channel") == "net"
+    );
+
+The line above registers a composite filter that consists of two elementary subfilters: the first one checks the severity level, and the second checks the channel name. Like `has_attr`, the `attr` placeholder accepts an expected attribute value type or set of types in a MPL-compatible type sequence. However, attribute value type is not optional with `attr`, like it is with `has_attr`.
+
+Besides generating lambda expressions, the `attr` placeholder allows constructing filters with its member functions. There are currently two such members that can be used with any type:
+
+* `is_in_range(T const& lower, T const& upper)` generates a filter that returns `true` if the attribute value `x` of type `T` satisfies condition `lower <= x < upper`. For example:
+
+    sink->set_filter
+    (
+        // drops all records that have level below 3 or greater than 4
+        expr::attr< int >("Severity").is_in_range(3, 5)
+    );
+
+* `satisfies(FunT const& fun)` allows injection of a user-defined unary predicate `fun` into the filter. The predicate should accept an attribute value as an argument and return a value, convertible to `bool`. The result of the filter will be equivalent to the result of the predicate. For example:
+
+    bool check_severity_level(int level);
+
+    sink->set_filter
+    (
+        expr::attr< int >("Severity").satisfies(&check_severity_level)
+    );
+
+The `attr` placeholder has advanced support for string-typed attribute values (that have type `std::string` or `std::wstring`, that is). For string attribute values there are also available the following member functions:
+
+* `begins_with(T const& s)`, `ends_with(T const& s)` and `contains(T const& s)`. As follows from their names, the functions construct filters that return `true` if an attribute value begins with, ends with or contains the specified substring `s`, respectively. The string comparison is case sensitive.
+
+    sink->set_filter
+    (
+        // selects only records that are related to Russian web domains
+        expr::attr< std::string >("Domain").ends_with(".ru")
+    );
+
+* `matches(T const& regex)` allows to set up a filter based on __boost_regex__ or __boost_xpressive__ regular expressions matching mechanism (note that you also have to include the appropriate header from the `boost/log/support` folder). The filter returns `true` if the attribute value matches the `regex` expression.
+
+    sink->set_filter
+    (
+        expr::attr< std::string >("Domain").matches(boost::regex("www\\..*\\.ru"))
+    );
+
+It is possible that the filter doesn't find the required attribute value in the given log record. By default, the filter will throw an exception in this case. If this behavior is not desired, there are two ways to change it:
+
+# Use the [link log.detailed.expressions.predicates.has_attr `has_attr`] filter to first verify that the required attribute value is present.
+# Use an additional second `std::nothrow` argument to the `attr` placeholder. In this case the filter will silently return `false` as the result of such unsuccessful filtering.
+
+[endsect]
+
+[section:attr_keywords Defining attribute placeholders]
+
+    #include <``[boost_log_expressions_keyword_hpp]``>
+
+[endsect]
+
+[section:predicates Predicate expressions]
+
+This section describes several expressions that can be used as predicates in the filtering expressions.
+
 [section:has_attr Attribute presence filter]
 
-    #include <``[boost_log_filters_has_attr_hpp]``>
+    #include <``[boost_log_expressions_predicates_has_attr_hpp]``>
 
 The filter `has_attr` checks if an attribute value with the specified name and, optionally, type is attached to a log record. If no type specified to the filter, the filter returns `true` if any value with the specified name is found. If an MPL-compatible type sequence in specified as a value type, the filter returns `true` if a value with the specified name and one of the specified types is found.
 
-This filter is usually used in conjunction with [link log.detailed.formatters.conditional conditional formatters], but it also can be used as a quick filter based on the log record structure. For example, one can use this filter to extract statistic records and route them to a specific sink.
+This filter is usually used in conjunction with [link log.detailed.expressions.formatters.conditional conditional formatters], but it also can be used as a quick filter based on the log record structure. For example, one can use this filter to extract statistic records and route them to a specific sink.
 
     // A simple sink backend to accumulate statistic information
     class my_stat_accumulator :
@@ -89,7 +156,7 @@ This filter is usually used in conjunction with [link log.detailed.formatters.co
         boost::shared_ptr< LogSink_t > sink(new LogSink_t(backend));
         // All records that don't have a "StatisticStream" attribute attached
         // will go to the "test.log" file
-        sink->set_filter(!flt::has_attr("StatisticStream"));
+        sink->set_filter(!expr::has_attr("StatisticStream"));
 
         core->add_sink(sink);
 
@@ -98,7 +165,7 @@ This filter is usually used in conjunction with [link log.detailed.formatters.co
         boost::shared_ptr< StatSink_t > stat_sink(new StatSink_t);
         // All records with a "StatisticStream" string attribute attached
         // will go to the my_stat_accumulator sink
-        sink->set_filter(flt::has_attr< std::string >("StatisticStream"));
+        sink->set_filter(expr::has_attr< std::string >("StatisticStream"));
 
         core->add_sink(stat_sink);
     }
@@ -128,64 +195,323 @@ Please note that in the example above we extended the library in two ways: we de
 
 [endsect]
 
-[section:attr Generic attribute placeholder]
+[endsect]
 
-    #include <``[boost_log_filters_attr_hpp]``>
+[section:formatters Formatting expressions]
 
-Unlike `has_attr`, the `attr` construct is not a complete filter by itself. Instead, it is a placeholder that can take part in a complete filter expressions like this:
+As was noted in the [link log.tutorial.formatters tutorial], the library provides several ways of expressing formatters, most notable being with a stream-style syntax and __boost_format__-style expression. Which of the two formats is chosen is determined by the appropriate anchor expression. To use stream-style syntax one should begin the formatter definition with a `stream` or `wstream` keyword, like that:
 
-    sink->set_filter
-    (
-        flt::attr< int >("Severity") >= 5 &&
-        flt::attr< std::string >("Channel") == "net"
-    );
+    #include <``[boost_log_formatters_stream_hpp]``>
 
-The line above registers a composite filter that consists of two elementary subfilters: the first one checks the severity level, and the second checks the channel name. Like `has_attr`, the `attr` placeholder accepts an expected attribute value type or set of types in a MPL-compatible type sequence. However, attribute value type is not optional with `attr`, like it is with `has_attr`.
+    backend->set_formatter(expr::stream << expr1 << expr2 << ... << exprN);
 
-Besides generating lambda expressions, the `attr` placeholder allows constructing filters with its member functions. There are currently two such members that can be used with any type:
+Here expressions `expr1` through `exprN` may be either manipulators, described in this section, or other expressions resulting in an object that supports putting into an STL-stream. Note that `boost::ref` is also supported, which allows injecting references into the formatter object.
 
-* `is_in_range(T const& lower, T const& upper)` generates a filter that returns `true` if the attribute value `x` of type `T` satisfies condition `lower <= x < upper`. For example:
+To use __boost_format__-style syntax one should use `format` construct:
 
-    sink->set_filter
-    (
-        // drops all records that have level below 3 or greater than 4
-        flt::attr< int >("Severity").is_in_range(3, 5)
-    );
+    #include <``[boost_log_formatters_format_hpp]``>
 
-* `satisfies(FunT const& fun)` allows injection of a user-defined unary predicate `fun` into the filter. The predicate should accept an attribute value as an argument and return a value, convertible to `bool`. The result of the filter will be equivalent to the result of the predicate. For example:
+    backend->set_formatter(expr::format("format string") % expr1 % expr2 % ... % exprN);
 
-    bool check_severity_level(int level);
+The format string passed to the `format` keyword should contain positional placeholders for the appropriate expressions. In the case of wide-character logging the format string should be wide. Expressions `expr1` through `exprN` have the same meaning as in stream-like variant. It should be noted though that using stream-like syntax usually results in a faster formatter than one is constructed with the `format` keyword.
 
-    sink->set_filter
-    (
-        flt::attr< int >("Severity").satisfies(&check_severity_level)
-    );
+Another useful way of expressing formatters is by using string templates. This part of the library is described in [link log.detailed.utilities.init.filter_formatter this] section and is mostly intended to support initialization from the application settings.
 
-The `attr` placeholder has advanced support for string-typed attribute values (that have type `std::string` or `std::wstring`, that is). For string attribute values there are also available the following member functions:
+[section:attr Generic attribute formatter]
 
-* `begins_with(T const& s)`, `ends_with(T const& s)` and `contains(T const& s)`. As follows from their names, the functions construct filters that return `true` if an attribute value begins with, ends with or contains the specified substring `s`, respectively. The string comparison is case sensitive.
+    #include <``[boost_log_formatters_attr_hpp]``>
 
-    sink->set_filter
-    (
-        // selects only records that are related to Russian web domains
-        flt::attr< std::string >("Domain").ends_with(".ru")
-    );
+The `attr` formatter is the most generic and simple way to format an attribute value. In the simplest form it is equivalent to putting the specified attribute value into an STL stream with an `operator <<` associated with the attribute value type. For example:
 
-* `matches(T const& regex)` allows to set up a filter based on __boost_regex__ or __boost_xpressive__ regular expressions matching mechanism (note that you also have to include the appropriate header from the `boost/log/support` folder). The filter returns `true` if the attribute value matches the `regex` expression.
+    // A custom attribute value type
+    struct A
+    {
+        int n;
+        std::string s;
+    };
 
-    sink->set_filter
-    (
-        flt::attr< std::string >("Domain").matches(boost::regex("www\\..*\\.ru"))
-    );
+    // This operator will be called by the formatter
+    std::ostream& operator<< (std::ostream& strm, A const& val)
+    {
+        strm << "[n = " << val.n << ", s = " << val.s << "]";
+        return strm;
+    }
 
-It is possible that the filter doesn't find the required attribute value in the given log record. By default, the filter will throw an exception in this case. If this behavior is not desired, there are two ways to change it:
+    // Sets the formatter to a sink backend
+    backend->set_formatter(expr::stream << expr::attr< A >("MyAttribute"));
 
-# Use the [link log.detailed.filters.has_attr `has_attr`] filter to first verify that the required attribute value is present.
-# Use an additional second `std::nothrow` argument to the `attr` placeholder. In this case the filter will silently return `false` as the result of such unsuccessful filtering.
+This will also work with __boost_format__-style syntax since it falls back to streams internally:
+
+    // Sets the formatter to a sink backend
+    backend->set_formatter(expr::format("%1%") % expr::attr< A >("MyAttribute"));
+
+Like filters, formatters also support specifying a set of possible types of the attribute values in MPL-compatible sequences. For example, you can format an attribute that may have some integral type like this:
+
+    typedef boost::mpl::vector< short, int, long >::type types;
+    backend->set_formatter(expr::stream << expr::attr< types >("MyInteger"));
+
+The `attr` formatter also supports an additional argument with a __boost_format__ format string. This feature can be used to specify formatting rules for numbers and/or decorate the formatted attribute somehow. For example:
+
+    typedef boost::mpl::vector< short, int, long >::type types;
+    // will print the "MyInteger" attribute value as 8-digit hex in square brackets
+    backend->set_formatter(expr::stream << expr::attr< types >("MyInteger", "[%08x]"));
+
+Please note, though, that the format string should be valid for all attribute value types that are specified as the template argument for the `attr` formatter. If this is not possible, one should consider using [link log.detailed.expressions.formatters.conditional conditional formatters] to split types into several groups and specify a valid format string for each group.
+
+It is possible that at run time the attribute value requested by the formatter is not present in the formatted log record. In this case the formatter by default will throw an exception. If this behavior is not desired, one can change it in one of the following ways:
+
+# Use the [link log.detailed.expressions.formatters.conditional conditional formatter] with the [link log.detailed.expressions.predicates.has_attr `has_attr`] filter to first verify that the required attribute value is present and apply formatting then.
+# Use an additional last `std::nothrow` argument to the `attr` placeholder. In this case the formatter will produce no output for the missing attribute value, without throwing the exception.
 
 [endsect]
 
-[section:attr_keywords Defining attribute placeholders]
+[section:date_time Date and time formatter]
+
+    #include <``[boost_log_formatters_date_time_hpp]``>
+
+The library provides several formatters dedicated to date and time-related attribute value types. These are `date`, `time`, `date_time`, `time_duration` and `time_period`. The `date` and `time` formatters are mostly included by `date_time`.
+
+As comes from its name, `date_time` is responsible for formatting time points. The supported attribute value types are: `std::tm`, `std::time_t`, `boost::posix_time::ptime` and `boost::local_time::local_date_time` from __boost_date_time__. Additionally, the `date` formatter supports the `boost::gregorian::date` type. As with other formatters and filters, you can also explicitly specify the attribute type or set of types that you want to format.
+
+The date and time format can be customized by the user. The format should be passed as a named argument `format` to the appropriate formatter. This argument should be a format string, containing placeholders described in the __boost_date_time__ documentation. Some usage examples are as follows:
+
+    // Puts a date of any of the supported types into log.
+    // The default format is "%Y-%b-%d".
+    backend->set_formatter(expr::stream << expr::date("Date"));
+
+    // Puts a time point of any of the supported types into log.
+    // The default format is "%H:%M:%S.%f".
+    backend->set_formatter(expr::stream << expr::time("Time"));
+
+    // Puts a date and time of the specified type into log.
+    // The default format is "%Y-%b-%d %H:%M:%S.%f".
+    backend->set_formatter(expr::stream << expr::date_time< std::tm >("DateTime"));
+
+    // Puts a date and time of one of the specified types into log.
+    typedef boost::mpl::vector<
+        std::time_t,
+        std::tm,
+        boost::posix_time::ptime
+    >::type types;
+    backend->set_formatter
+    (
+        expr::stream
+            << expr::date_time< types >("DateTime", keywords::format = "%d.%m.%y %H:%M:%S")
+    );
+
+The `time_duration` formatter is responsible for formatting time periods that are not bound to a specific time point. It supports types `double` (interpreted as a result of the `difftime` standard function), `boost::posix_time::time_duration` and `boost::gregorian::date_duration`. The formatter also supports the `format` argument. The usage is straightforward:
+
+    // Puts a time duration of any of the supported types into log.
+    // The default format is "%-%H:%M:%S.%f".
+    backend->set_formatter(expr::stream << expr::time_duration("Duration"));
+
+    // Puts a time duration of the specified type into log.
+    typedef boost::posix_time::time_duration duration_t;
+    backend->set_formatter
+    (
+        expr::stream
+            << expr::time_duration< duration_t >("Duration", keywords::format = "%H:%M:%S")
+    );
+
+The `time_period` formatter composes two time points that denote a time period. It supports the following types: `boost::posix_time::time_period`, `boost::local_time::local_time_period` and `boost::gregorian::date_period`. The formatter is a bit more special since it supports two kinds of format strings, the one that describes the date format, and the one that describes the dates composition. The former can be specified with the named argument `unit_format` and the latter - with named argument `format`. The time period composition format string may contain either of the three placeholders:
+
+* `%begin%` - the placeholder will be substituted with the starting time point of the period.
+* `%last%` - the placeholder will be substituted with the last time point of the period.
+* `%end%` - the placeholder will be substituted with the time point that is immediately after the time period.
+
+Here are some usage examples:
+
+    // Puts a time period of any of the supported types into log.
+    // The default composition format is [%begin% - %last%].
+    backend->set_formatter(expr::stream << expr::time_period("Period"));
+
+    // Puts a time period of the specified type into log.
+    typedef boost::posix_time::time_period period_t;
+    backend->set_formatter
+    (
+        expr::stream
+            << expr::time_period< period_t >(
+                "Period",
+                keywords::format = "[%begin%; %end%)",
+                keywords::unit_format = "%d.%m.%y %H:%M:%S")
+    );
+
+Like the `attr` formatter, all date and time formatters throw exceptions when there is no requested attribute value in the log record. The `std::nothrow` argument may be used to suppress exceptions.
+
+[endsect]
+
+[section:named_scope Named scope formatter]
+
+    #include <``[boost_log_formatters_named_scope_hpp]``>
+
+The formatter `named_scope` is intended to add support for flexible formatting of the [link log.detailed.attributes.named_scope named scope] attribute. The basic usage is quite straightforward and its result is similar to what [link log.detailed.expressions.attr `attr`] provides:
+
+    // Puts the scope stack from outer ones towards inner ones: outer scope -> inner scope
+    backend->set_formatter(expr::stream << expr::named_scope("Scopes"));
+
+The formatter supports customization with the following named arguments:
+
+* `iteration`. The argument describes the direction of iteration through scopes. Can have values `forward` (default) or `reverse`.
+* `delimiter`. The argument can be used to specify the delimiters between scopes. The default delimiter depends on the `iteration` argument. If `iteration == forward` the default `delimiter` will be "->", otherwise it will be "<-".
+* `depth`. The argument can be used to limit the number of scopes to put to log. The formatter will print `depth` innermost scopes and, if there are more scopes left, append an ellipsis to the written sequence. By default the formatter will write all scope names.
+
+Here are a few usage examples:
+
+    // Puts the scope stack in reverse order:
+    // inner scope <- outer scope
+    backend->set_formatter
+    (
+        expr::stream
+            << expr::named_scope("Scopes", keywords::iteration = expr::reverse)
+    );
+
+    // Puts the scope stack in reverse order with a custom delimiter:
+    // inner scope | outer scope
+    backend->set_formatter
+    (
+        expr::stream
+            << expr::named_scope(
+                "Scopes",
+                keywords::iteration = expr::reverse,
+                keywords::delimiter = " | ")
+    );
+
+    // Puts the scope stack in forward order, no more than 2 inner scopes:
+    // ... -> outer scope -> inner scope
+    backend->set_formatter
+    (
+        expr::stream
+            << expr::named_scope(
+                "Scopes",
+                keywords::iteration = expr::forward,
+                keywords::depth = 2)
+    );
+
+    // Puts the scope stack in reverse order, no more than 2 inner scopes:
+    // inner scope <- outer scope <- ...
+    backend->set_formatter
+    (
+        expr::stream
+            << expr::named_scope(
+                "Scopes",
+                keywords::iteration = expr::reverse,
+                keywords::depth = 2)
+    );
+
+Like the `attr` formatter, the named scope formatter throws an exception if there is no requested attribute value in the log record. The `std::nothrow` argument may be used to suppress exceptions.
+
+[endsect]
+
+[section:conditional Conditional formatters]
+
+    #include <``[boost_log_formatters_if_hpp]``>
+
+There are cases when one would want to check some condition about the log record and format it depending on that condition. One example of such a need is formatting an attribute value depending on its runtime type. The general syntax of the conditional formatter is as follows:
+
+    if_ (filter)
+    [
+        true_formatter
+    ]
+    .else_
+    [
+        false_formatter
+    ]
+
+Those familiar with __boost_phoenix__ lambda expressions will find this syntax quite familiar. The `filter` argument is a filter that is applied to the record being formatted. If it returns `true`, the `true_formatter` is executed, otherwise `false_formatter` is executed. The `else_` section with `false_formatter` is optional. If it is omitted and `filter` yields `false`, no formatter is executed. Here is an example:
+
+    backend->set_formatter
+    (
+        expr::stream
+            // First, put the current time
+            << expr::date_time("TimeStamp") << " "
+            << expr::if_ (expr::has_attr< int >("ID"))
+               [
+                   // if "ID" is integral then format it as a hex number
+                   expr::stream << expr::attr< int >("ID", "[0x%08x]")
+               ]
+               .else_
+               [
+                   // otherwise put it as it is
+                   expr::stream << "[" << expr::attr("ID") << "]"
+               ]
+            // and after that goes the log record text
+            << " " << expr::message
+    );
+
+[endsect]
+
+[section:message Message placeholder]
+
+    #include <``[boost_log_formatters_message_hpp]``>
+
+With all these attributes we shouldn't forget the log message itself, should we? There is a `message` placeholder that represents the text of logging records being formatted. The usage is quite simple:
+
+    // Sets up a formatter that will ignore all attributes and only print log record text
+    backend->set_formatter(expr::stream << expr::message);
+
+Please note, that for wide character logging there is a similar `wmessage` placeholder.
+
+[endsect]
+
+[section:decorators Character decorators]
+
+There are times when one would want to additionally post-process the composed string before passing it to the sink backend. For example, in order to store a log into an XML file the formatted log record should be checked for special characters that have a special meaning in XML documents. This is where decorators step in.
+
+[heading XML character decorator]
+
+    #include <``[boost_log_formatters_xml_decorator_hpp]``>
+
+This decorator replaces XML special characters (&, <, > and \') with the corresponding tokens (`&apos;`, `&lt;`, `&gt;` and `&apos;`, correspondingly). The usage is as follows:
+
+    xml_backend->set_formatter
+    (
+        // Apply the decoration to the whole formatted record
+        expr::xml_dec
+        [
+            expr::stream << expr::date_time("TimeStamp") << " " << expr::message()
+        ]
+    );
+
+Since character decorators are yet another kind of formatters, it's fine to use them in other contexts where formatters are appropriate. For example, this is also a valid example:
+
+    xml_backend->set_formatter
+    (
+        expr::format("<message>%1%: %2%</message>")
+            % expr::attr< unsigned int >("LineID")
+            % expr::xml_dec[ expr::message() ]; // Only decorate the message text
+    );
+
+There is an example of the library set up for logging into an XML file, see `libs/log/example/xml_file`.
+
+[heading CSV character decorator]
+
+    #include <``[boost_log_formatters_csv_decorator_hpp]``>
+
+This decorator allows to ensure that the resulting string conforms to the [@http://en.wikipedia.org/wiki/Comma-separated_values CSV] format requirements. In particular, it duplicates the quote characters in the formatted string.
+
+    csv_backend->set_formatter
+    (
+        expr::stream
+            << expr::attr< unsigned int >("LineID") << ","
+            << expr::csv_dec[ expr::attr< std::string >("Tag") ] << ","
+            << expr::csv_dec[ expr::message() ]
+    );
+
+[heading C-style character decorators]
+
+    #include <``[boost_log_formatters_c_decorator_hpp]``>
+
+The file defines two character decorators: `c_dec` and `c_ascii_dec`. The first replaces the following characters with their escaped counerparts: \\ (backslash, 0x5c), \\a (bell character, 0x07), \\b (backspace, 0x08), \\f (formfeed, 0x0c), \\n (newline, 0x0a), \\r (carriage return, 0x0d), \\t (horizontal tabulation, 0x09), \\v (vertical tabulation, 0x0b), \' (apostroph, 0x27), \" (quote, 0x22), ? (question mark, 0x3f). The `c_ascii_dec` decorator does the same but also replaces all other non-printable and non-ASCII characters with escaped hexadecimal character codes in C notation (e.g. "\\x8c"). The usage is similar to other character decorators:
+
+    backend->set_formatter
+    (
+        expr::stream
+            << expr::attr< unsigned int >("LineID") << ": ["
+            << expr::c_dec[ expr::attr< std::string >("Tag") ] << "] "
+            << expr::c_ascii_dec[ expr::message() ]
+    );
+
+[endsect]
 
 [endsect]
 

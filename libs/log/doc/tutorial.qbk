@@ -320,7 +320,19 @@ See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_custom.cpp].
 
 [section:advanced_filtering Filtering revisited]
 
-We've already touched filtering in the previous sections but we barely scratched the surface. Now that we are able to add attributes to log records and set up sinks, we can build however complex filtering we need.
+We've already touched filtering in the previous sections but we barely scratched the surface. Now that we are able to add attributes to log records and set up sinks, we can build however complex filtering we need. Let's consider this example:
+
+[example_tutorial_filtering]
+
+See the full code in [@boost:/libs/log/example/doc/tutorial_filtering.cpp].
+
+In this sample we initialize two sinks - one for the complete log file and the other for important messages only. Both sinks will be writing to text files with the same log record format, which we initialize first and save to the `fmt` variable. The [classref boost::log::basic_formatter formatter] type is a type-erased function object with the formatter calling signature; in many respects it can be viewed similar to `boost::function` or `std::function` except that it is never empty. There is also [classref boost::log::filter a similar function object] for filters.
+
+Notably, the formatter itself contains a filter here. As you can see, the format contains a conditional part that is only present when log records contain the "Tag" attribute. The [link log.detailed.expressions.predicates.has_attr `has_attr`] predicate checks whether the record containts the "Tag" attribute value and conrtols whether it is put into the file or not. We used the attribute keyword to specify the name and type of the attribute for the predicate, but it is also possible to specify them in the [link log.detailed.expressions.predicates.has_attr `has_attr`] call site. Conditional formatters are explained in more details [link log.detailed.expressions.formatters.conditional here].
+
+Further goes the initialization of the two sinks. The first sink does not have any filter, which means it will save every log record to the file. We call `set_filter` on the second sink to only save log records with severity no less than `warning` or having a "Tag" attribute with value "IMPORTANT_MESSAGE". As you can see, the filter syntax resembles usual C++ very much, especially when attribute keywords are used.
+
+You can try how this works by compiling and running the [@boost:/libs/log/example/doc/tutorial_filtering.cpp test].
 
 [endsect]
 
