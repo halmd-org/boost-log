@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -19,7 +19,7 @@
 #include <string>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/light_function.hpp>
-#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
@@ -47,11 +47,17 @@ public:
     //! An exception handler type
     typedef boost::log::aux::light_function0< void > exception_handler_type;
 
+private:
+    //! The flag indicates that the sink passes log records across thread boundaries
+    const bool m_cross_thread;
+
 public:
     /*!
      * Default constructor
      */
-    BOOST_LOG_DEFAULTED_FUNCTION(sink(), {})
+    explicit sink(bool cross_thread) : m_cross_thread(cross_thread)
+    {
+    }
 
     /*!
      * Virtual destructor
@@ -68,9 +74,9 @@ public:
     /*!
      * The method puts logging record to the sink
      *
-     * \param record Logging record to consume
+     * \param rec Logging record to consume
      */
-    virtual void consume(record const& record) = 0;
+    virtual void consume(record_view const& rec) = 0;
 
     /*!
      * The method attempts to put logging record to the sink. The method may be used by the
@@ -78,12 +84,12 @@ public:
      * case of heavy contention. Sink implementations may implement try/backoff logic in
      * order to improve overall logging throughput.
      *
-     * \param record Logging record to consume
+     * \param rec Logging record to consume
      * \return \c true, if the record was consumed, \c false, if not.
      */
-    virtual bool try_consume(record const& record)
+    virtual bool try_consume(record_view const& rec)
     {
-        consume(record);
+        consume(rec);
         return true;
     }
 
@@ -93,6 +99,13 @@ public:
      * attempting to put new records into the sink while this call is in progress.
      */
     virtual void flush() = 0;
+
+    /*!
+     * The method indicates that the sink passes log records between different threads. This information is
+     * needed by the logging core to detach log records from all thread-specific resources before passing it
+     * to the sink.
+     */
+    bool is_cross_thread() const BOOST_NOEXCEPT { return m_cross_thread; }
 
     BOOST_LOG_DELETED_FUNCTION(sink(sink const&))
     BOOST_LOG_DELETED_FUNCTION(sink& operator= (sink const&))

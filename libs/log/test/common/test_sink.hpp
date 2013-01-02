@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,7 @@
 
 #include <cstddef>
 #include <map>
-#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/sinks/sink.hpp>
@@ -29,7 +29,7 @@ struct test_sink :
 {
 public:
     typedef boost::log::attribute_value_set attribute_values;
-    typedef boost::log::record record_type;
+    typedef boost::log::record_view record_type;
     typedef boost::log::filter filter_type;
     typedef attribute_values::key_type key_type;
 
@@ -51,7 +51,7 @@ public:
     std::size_t m_RecordCounter;
 
 public:
-    test_sink() : m_RecordCounter(0) {}
+    test_sink() : boost::log::sinks::sink(false), m_RecordCounter(0) {}
 
     void set_filter(filter_type const& f)
     {

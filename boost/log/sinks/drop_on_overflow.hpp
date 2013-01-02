@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,7 @@
 #define BOOST_LOG_SINKS_DROP_ON_OVERFLOW_HPP_INCLUDED_
 
 #include <boost/log/detail/config.hpp>
-#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -47,7 +47,7 @@ public:
      * \retval false Discard the record.
      */
     template< typename LockT >
-    static bool on_overflow(record const&, LockT&)
+    static bool on_overflow(record_view const&, LockT&)
     {
         return false;
     }

@@ -1,5 +1,5 @@
 [/
-              Copyright Andrey Semashev 2007 - 2012.
+              Copyright Andrey Semashev 2007 - 2013.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -13,9 +13,9 @@
 
     #include <``[boost_log_core_record_hpp]``>
 
-All the information that the logging library processes is packed into a single object of type `record` (or `wrecord`, in the case of wide character logging), which is a typedef of the [class_log_basic_record] class template. Namely, log records provide access to attribute values and log message strings.
+All the information that the logging library processes is packed into a single object of type `record`. All attached data, including the message text, is represented as named attribute value that can be fetched and processed by filters, formatters and sinks.
 
-The record stores all the associated data in a shared object internally, so record copying and assignment does not involve deep copying attribute values and the message string. It is possible to default-construct a log record, but the constructed record will be in an empty state. In this state the record is mostly unusable, except that it can be compared to other records for equality. Non-empty log records can only be created by the [link log.detailed.core.core logging core] as a result of successful filtering. An empty log record will never compare equal to a non-empty one.
+The record stores all the associated data in a shared object internally, so record copying and assignment does not involve deep copying of attribute values. It is possible to default-construct a log record, but the constructed record will be in an empty state. In this state the record is mostly unusable, except that it can be compared to other records for equality. Non-empty log records can only be created by the [link log.detailed.core.core logging core] as a result of successful filtering. An empty log record will never compare equal to a non-empty one.
 
 In multithreaded environments, after being constructed a non-empty log record is considered to be tied to the current thread as it may refer to some thread-specific resources. In order to pass the record to another thread the user has to make it thread-independent by calling the `detach_from_thread` method. Calling this method more than once is safe, but subsequent calls will have no effect. The components of the library are aware of this feature and will call this method as needed.
 

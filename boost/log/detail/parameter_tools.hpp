@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -70,7 +70,7 @@ namespace aux {
 // Yeah, not too cute. The empty_arg_list class should really be public.
 typedef boost::parameter::aux::empty_arg_list empty_arg_list;
 
-#if !(defined(BOOST_NO_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES))
+#if !(defined(BOOST_NO_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_LOG_NO_CXX11_ARG_PACKS_TO_NON_VARIADIC_ARGS_EXPANSION))
 
 //! The metafunction generates argument pack
 template< typename ArgT0, typename... ArgsT >

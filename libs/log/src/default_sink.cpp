@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -167,6 +167,7 @@ private:
 } // namespace
 
 default_sink::default_sink() :
+    sink(false),
     m_severity_name(boost::log::aux::default_attribute_names::severity()),
     m_message_name(boost::log::aux::default_attribute_names::message()),
     m_severity_extractor(boost::log::trivial::info)
@@ -182,7 +183,7 @@ bool default_sink::will_consume(attribute_value_set const&)
     return true;
 }
 
-void default_sink::consume(record const& rec)
+void default_sink::consume(record_view const& rec)
 {
     BOOST_LOG_EXPR_IF_MT(lock_guard< mutex_type > lock(m_mutex);)
     m_message_visitor(m_message_name, rec.attribute_values(), message_printer(m_severity_extractor(m_severity_name, rec).get()));

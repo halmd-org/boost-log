@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -26,6 +26,8 @@
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/move/move.hpp>
 #include <boost/log/core/core.hpp>
+#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/detail/singleton.hpp>
@@ -44,7 +46,7 @@ namespace boost {
 BOOST_LOG_OPEN_NAMESPACE
 
 //! Private record data information, with core-specific structures
-struct record::private_data :
+struct record_view::private_data :
     public public_data
 {
     //! Underlying memory allocator
@@ -59,13 +61,16 @@ private:
     uint32_t m_accepting_sink_count;
     //! Maximum number of sinks accepting the record
     const uint32_t m_accepting_sink_capacity;
+    //! The flag indicates that the record has to be detached from the current thread
+    bool m_detach_from_thread_needed;
 
 private:
     //! Initializing constructor
     private_data(BOOST_RV_REF(attribute_value_set) values, uint32_t capacity) :
         public_data(boost::move(values)),
         m_accepting_sink_count(0),
-        m_accepting_sink_capacity(capacity)
+        m_accepting_sink_capacity(capacity),
+        m_detach_from_thread_needed(false)
     {
     }
 
@@ -120,10 +125,14 @@ public:
         sink_ptr* p = begin() + m_accepting_sink_count;
         new (p) sink_ptr(sink);
         ++m_accepting_sink_count;
+        m_detach_from_thread_needed |= sink->is_cross_thread();
     }
 
     //! Returns the number of accepting sinks
     uint32_t accepting_sink_count() const BOOST_NOEXCEPT { return m_accepting_sink_count; }
+
+    //! Returns the flag indicating whether it is needed to detach the record from the current thread
+    bool is_detach_from_thread_needed() const BOOST_NOEXCEPT { return m_detach_from_thread_needed; }
 
     BOOST_LOG_DELETED_FUNCTION(private_data(private_data const&))
     BOOST_LOG_DELETED_FUNCTION(private_data& operator= (private_data const&))
@@ -142,27 +151,32 @@ private:
 };
 
 //! Destructor
-BOOST_LOG_API void record::public_data::destroy(const public_data* p) BOOST_NOEXCEPT
+BOOST_LOG_API void record_view::public_data::destroy(const public_data* p) BOOST_NOEXCEPT
 {
     const_cast< private_data* >(static_cast< const private_data* >(p))->destroy();
 }
 
 //! The function ensures that the log record does not depend on any thread-specific data.
-BOOST_LOG_API void record::detach_from_thread()
+BOOST_LOG_API record_view record::lock()
 {
-    if (!m_impl->m_detached)
+    BOOST_ASSERT(m_impl != NULL);
+
+    record_view::private_data* const impl = static_cast< record_view::private_data* >(m_impl);
+    if (impl->is_detach_from_thread_needed())
     {
         attribute_value_set::const_iterator
-            it = m_impl->m_attribute_values.begin(),
-            end = m_impl->m_attribute_values.end();
+            it = impl->m_attribute_values.begin(),
+            end = impl->m_attribute_values.end();
         for (; it != end; ++it)
         {
             // Yep, a bit hackish. I'll need a better backdoor to do it gracefully.
             const_cast< attribute_value_set::mapped_type& >(it->second).detach_from_thread();
         }
-
-        m_impl->m_detached = true;
     }
+
+    // Move the implementation to the view
+    m_impl = NULL;
+    return record_view(impl);
 }
 
 //! Logging system implementation
@@ -249,11 +263,11 @@ public:
                 // If at least one sink accepts the record, it's time to create it
                 if (!rec.m_impl)
                 {
-                    rec.m_impl = record::private_data::create(boost::move(*attr_values), remaining_capacity);
+                    rec.m_impl = record_view::private_data::create(boost::move(*attr_values), remaining_capacity);
                     attr_values = &rec.m_impl->m_attribute_values;
                 }
 
-                static_cast< record::private_data* >(rec.m_impl.get())->push_back_accepting_sink(sink);
+                static_cast< record_view::private_data* >(rec.m_impl)->push_back_accepting_sink(sink);
             }
         }
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -307,7 +321,7 @@ public:
                         apply_sink_filter(m_default_sink, rec, values, 1);
                     }
 
-                    record::private_data* rec_impl = static_cast< record::private_data* >(rec.m_impl.get());
+                    record_view::private_data* rec_impl = static_cast< record_view::private_data* >(rec.m_impl);
                     if (rec_impl && rec_impl->accepting_sink_count() == 0)
                     {
                         // No sinks accepted the record
@@ -577,12 +591,12 @@ BOOST_LOG_API record core::open_record_move(attribute_value_set& source_attribut
 }
 
 //! The method pushes the record
-BOOST_LOG_API void core::push_record(record const& rec)
+BOOST_LOG_API void core::push_record_move(record& rec)
 {
     try
     {
-        BOOST_ASSERT(!!rec);
-        record::private_data* data = static_cast< record::private_data* >(rec.m_impl.get());
+        record_view rec_view(rec.lock());
+        record_view::private_data* data = static_cast< record_view::private_data* >(rec_view.m_impl.get());
 
         typedef std::vector< shared_ptr< sinks::sink > > accepting_sinks_t;
         accepting_sinks_t accepting_sinks(data->accepting_sink_count());
@@ -590,8 +604,8 @@ BOOST_LOG_API void core::push_record(record const& rec)
         register shared_ptr< sinks::sink >* end = begin;
 
         // Lock sinks that are willing to consume the record
-        record::private_data::sink_list weak_sinks = data->get_accepting_sinks();
-        record::private_data::sink_list::iterator
+        record_view::private_data::sink_list weak_sinks = data->get_accepting_sinks();
+        record_view::private_data::sink_list::iterator
             weak_it = weak_sinks.begin(),
             weak_end = weak_sinks.end();
         for (; weak_it != weak_end; ++weak_it)
@@ -610,7 +624,7 @@ BOOST_LOG_API void core::push_record(record const& rec)
             register bool all_locked = true;
             while (it != end)
             {
-                if (it->get()->try_consume(rec))
+                if (it->get()->try_consume(rec_view))
                 {
                     --end;
                     end->swap(*it);
@@ -632,7 +646,7 @@ BOOST_LOG_API void core::push_record(record const& rec)
                         shuffled = true;
                     }
 
-                    it->get()->consume(rec);
+                    it->get()->consume(rec_view);
                     --end;
                     end->swap(*it);
                 }

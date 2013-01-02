@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -29,7 +29,7 @@ class my_backend :
 {
 public:
     // The function is called for every log record to be written to log
-    void consume(logging::record const& rec)
+    void consume(logging::record_view const& rec)
     {
         // We skip the actual synchronization code for brevity
         std::cout << rec[expr::smessage] << std::endl;

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -21,7 +21,7 @@
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
-#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/utility/formatting_stream.hpp>
 #include <boost/log/utility/functional/bind_output.hpp>
 #include <boost/log/expressions/message.hpp>
@@ -54,7 +54,7 @@ public:
 
 private:
     //! Filter function type
-    typedef boost::log::aux::light_function2< void, record const&, stream_type& > formatter_type;
+    typedef boost::log::aux::light_function2< void, record_view const&, stream_type& > formatter_type;
 
     //! Default formatter, always returns \c true
     struct default_formatter
@@ -65,7 +65,7 @@ private:
         {
         }
 
-        result_type operator() (record const& rec, stream_type& strm) const
+        result_type operator() (record_view const& rec, stream_type& strm) const
         {
             boost::log::visit< expressions::tag::message::value_type >(m_MessageName, rec, boost::log::bind_output(strm));
         }
@@ -150,7 +150,7 @@ public:
      * \param rec A log record to format.
      * \param strm A stream to put the formatted characters to.
      */
-    result_type operator() (record const& rec, stream_type& strm) const
+    result_type operator() (record_view const& rec, stream_type& strm) const
     {
         m_Formatter(rec, strm);
     }

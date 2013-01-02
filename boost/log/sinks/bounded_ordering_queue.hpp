@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -39,7 +39,7 @@
 #include <boost/log/detail/timestamp.hpp>
 #include <boost/log/keywords/order.hpp>
 #include <boost/log/keywords/ordering_window.hpp>
-#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 
 namespace boost {
 
@@ -98,7 +98,7 @@ private:
         };
 
         boost::log::aux::timestamp m_timestamp;
-        record m_record;
+        record_view m_record;
 
         enqueued_record(enqueued_record const& that) : m_timestamp(that.m_timestamp), m_record(that.m_record)
         {
@@ -108,7 +108,7 @@ private:
             m_record(boost::move(that.m_record))
         {
         }
-        explicit enqueued_record(record const& rec) :
+        explicit enqueued_record(record_view const& rec) :
             m_timestamp(boost::log::aux::get_timestamp()),
             m_record(rec)
         {
@@ -181,7 +181,7 @@ protected:
     }
 
     //! Enqueues log record to the queue
-    void enqueue(record const& rec)
+    void enqueue(record_view const& rec)
     {
         unique_lock< mutex_type > lock(m_mutex);
         std::size_t size = m_queue.size();
@@ -197,7 +197,7 @@ protected:
     }
 
     //! Attempts to enqueue log record to the queue
-    bool try_enqueue(record const& rec)
+    bool try_enqueue(record_view const& rec)
     {
         unique_lock< mutex_type > lock(m_mutex, try_to_lock);
         if (lock.owns_lock())
@@ -218,7 +218,7 @@ protected:
     }
 
     //! Attempts to dequeue a log record ready for processing from the queue, does not block if the queue is empty
-    bool try_dequeue_ready(record& rec)
+    bool try_dequeue_ready(record_view& rec)
     {
         lock_guard< mutex_type > lock(m_mutex);
         const std::size_t size = m_queue.size();
@@ -241,7 +241,7 @@ protected:
     }
 
     //! Attempts to dequeue log record from the queue, does not block if the queue is empty
-    bool try_dequeue(record& rec)
+    bool try_dequeue(record_view& rec)
     {
         lock_guard< mutex_type > lock(m_mutex);
         const std::size_t size = m_queue.size();
@@ -259,7 +259,7 @@ protected:
     }
 
     //! Dequeues log record from the queue, blocks if the queue is empty
-    bool dequeue_ready(record& rec)
+    bool dequeue_ready(record_view& rec)
     {
         unique_lock< mutex_type > lock(m_mutex);
 

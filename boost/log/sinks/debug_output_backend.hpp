@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -27,7 +27,7 @@
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
-#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -77,7 +77,7 @@ public:
     /*!
      * The method passes the formatted message to debugger
      */
-    BOOST_LOG_API void consume(record const& rec, string_type const& formatted_message);
+    BOOST_LOG_API void consume(record_view const& rec, string_type const& formatted_message);
 };
 
 #ifdef BOOST_LOG_USE_CHAR

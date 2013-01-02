@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -106,7 +106,7 @@ namespace file {
         /*!
          * The operator generates a file name based on the log record
          */
-        result_type operator() (record const& rec) const
+        result_type operator() (record_view const& rec) const
         {
             boost::log::aux::cleanup_guard< stream_type > cleanup1(m_FormattingStream);
             boost::log::aux::cleanup_guard< result_type::string_type > cleanup2(m_FileName);
@@ -152,7 +152,7 @@ public:
     typedef base_type::string_type string_type;
 
     //! File name composer functor type
-    typedef boost::log::aux::light_function1< filesystem::path, record const& > file_name_composer_type;
+    typedef boost::log::aux::light_function1< filesystem::path, record_view const& > file_name_composer_type;
 
 private:
     //! \cond
@@ -188,7 +188,7 @@ public:
     /*!
      * The method writes the message to the sink
      */
-    BOOST_LOG_API void consume(record const& rec, string_type const& formatted_message);
+    BOOST_LOG_API void consume(record_view const& rec, string_type const& formatted_message);
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS

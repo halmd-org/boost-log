@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -463,7 +463,7 @@ BOOST_LOG_API void syslog_backend::set_severity_mapper(severity_mapper_type cons
 }
 
 //! The method writes the message to the sink
-BOOST_LOG_API void syslog_backend::consume(record const& rec, string_type const& formatted_message)
+BOOST_LOG_API void syslog_backend::consume(record_view const& rec, string_type const& formatted_message)
 {
     m_pImpl->send(
         m_pImpl->m_LevelMapper.empty() ? syslog::info : m_pImpl->m_LevelMapper(rec),

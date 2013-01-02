@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -28,7 +28,7 @@
 
 #include <boost/log/detail/event.hpp>
 #include <boost/log/detail/threadsafe_queue.hpp>
-#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 
 namespace boost {
 
@@ -53,7 +53,7 @@ namespace sinks {
 class unbounded_fifo_queue
 {
 private:
-    typedef boost::log::aux::threadsafe_queue< record > queue_type;
+    typedef boost::log::aux::threadsafe_queue< record_view > queue_type;
 
 private:
     //! Thread-safe queue
@@ -75,14 +75,14 @@ protected:
     }
 
     //! Enqueues log record to the queue
-    void enqueue(record const& rec)
+    void enqueue(record_view const& rec)
     {
         m_queue.push(rec);
         m_event.set_signalled();
     }
 
     //! Attempts to enqueue log record to the queue
-    bool try_enqueue(record const& rec)
+    bool try_enqueue(record_view const& rec)
     {
         // Assume the call never blocks
         enqueue(rec);
@@ -90,19 +90,19 @@ protected:
     }
 
     //! Attempts to dequeue a log record ready for processing from the queue, does not block if the queue is empty
-    bool try_dequeue_ready(record& rec)
+    bool try_dequeue_ready(record_view& rec)
     {
         return m_queue.try_pop(rec);
     }
 
     //! Attempts to dequeue log record from the queue, does not block if the queue is empty
-    bool try_dequeue(record& rec)
+    bool try_dequeue(record_view& rec)
     {
         return m_queue.try_pop(rec);
     }
 
     //! Dequeues log record from the queue, blocks if the queue is empty
-    bool dequeue_ready(record& rec)
+    bool dequeue_ready(record_view& rec)
     {
         // Try the fast way first
         if (m_queue.try_pop(rec))

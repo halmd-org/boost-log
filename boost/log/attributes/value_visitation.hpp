@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -380,6 +380,23 @@ public:
     }
 
     /*!
+     * Visitation operator. Looks for an attribute value with the specified name
+     * and tries to acquire the stored value of one of the supported types. If acquisition succeeds,
+     * the value is passed to \a visitor.
+     *
+     * \param name Attribute value name.
+     * \param rec A log record view. The attribute value will be sought among those associated with the record.
+     * \param visitor A receiving function object to pass the attribute value to.
+     * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
+     */
+    template< typename VisitorT >
+    typename result_of::visit< value_type, VisitorT >::type
+    operator() (attribute_name const& name, record_view const& rec, VisitorT visitor) const
+    {
+        return operator() (name, rec.attribute_values(), visitor);
+    }
+
+    /*!
      * \returns Fallback policy
      */
     fallback_policy const& get_fallback_policy() const
@@ -417,6 +434,19 @@ typename result_of::visit< T, VisitorT >::type
 visit(attribute_name const& name, record const& rec, VisitorT visitor);
 
 /*!
+ * The function applies a visitor to an attribute value from the view. The user has to explicitly specify the
+ * type or set of possible types of the attribute value to be visited.
+ *
+ * \param name The name of the attribute value to visit.
+ * \param rec A log record view. The attribute value will be sought among those associated with the record.
+ * \param visitor A receiving function object to pass the attribute value to.
+ * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
+ */
+template< typename T, typename VisitorT >
+typename result_of::visit< T, VisitorT >::type
+visit(attribute_name const& name, record_view const& rec, VisitorT visitor);
+
+/*!
  * The function applies a visitor to an attribute value. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be visited.
  *
@@ -441,6 +471,14 @@ visit(attribute_name const& name, attribute_value_set const& attrs, VisitorT vis
 template< typename T, typename VisitorT >
 inline typename result_of::visit< T, VisitorT >::type
 visit(attribute_name const& name, record const& rec, VisitorT visitor)
+{
+    value_visitor_invoker< T > invoker;
+    return invoker(name, rec, visitor);
+}
+
+template< typename T, typename VisitorT >
+inline typename result_of::visit< T, VisitorT >::type
+visit(attribute_name const& name, record_view const& rec, VisitorT visitor)
 {
     value_visitor_invoker< T > invoker;
     return invoker(name, rec, visitor);

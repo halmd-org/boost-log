@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -128,7 +128,7 @@ private:
         node,
         intrusive::base_hook< node_by_name_hook >,
         intrusive::constant_time_size< false >,
-        intrusive::compare< typename node::order_by_name >
+        intrusive::compare< node::order_by_name >
     > node_set;
 
 private:

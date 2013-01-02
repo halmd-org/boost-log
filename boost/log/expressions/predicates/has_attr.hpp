@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,7 @@
 
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/log/detail/config.hpp>
-#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
@@ -119,7 +119,7 @@ public:
      * \param rec A log record
      * \return \c true if the log record contains the sought attribute value, \c false otherwise
      */
-    result_type operator() (boost::log::record const& rec) const
+    result_type operator() (boost::log::record_view const& rec) const
     {
         return operator()(rec.attribute_values());
     }

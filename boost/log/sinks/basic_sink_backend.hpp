@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -19,7 +19,7 @@
 #include <boost/type_traits/is_same.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
-#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

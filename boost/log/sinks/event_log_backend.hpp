@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -41,7 +41,7 @@
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/sinks/attribute_mapping.hpp>
 #include <boost/log/sinks/event_log_constants.hpp>
-#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/expressions/formatter.hpp>
 
 #ifdef _MSC_VER
@@ -260,7 +260,7 @@ namespace event_log {
         typedef std::basic_string< char_type > string_type;
 
         //! Event identifier mapper type
-        typedef boost::log::aux::light_function1< event_id, record const& > event_id_mapper_type;
+        typedef boost::log::aux::light_function1< event_id, record_view const& > event_id_mapper_type;
 
         //! Type of an insertion composer (a formatter)
         typedef basic_formatter< char_type > formatter_type;
@@ -357,11 +357,11 @@ namespace event_log {
          * Then runs all formatters that were registered for the event with the extracted ID. The results of formatting
          * are returned in the \a insertions parameter.
          *
-         * \param rec Log record
+         * \param rec Log record view
          * \param insertions A sequence of formatted insertion strings
          * \return An event identifier that was extracted from \c attributes
          */
-        event_id operator() (record const& rec, insertion_list& insertions) const;
+        event_id operator() (record_view const& rec, insertion_list& insertions) const;
 
     private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -421,7 +421,7 @@ public:
     //! Mapper type for the event type
     typedef boost::log::aux::light_function1<
         event_log::event_type,
-        record const&
+        record_view const&
     > event_type_mapper_type;
 
 private:
@@ -479,7 +479,7 @@ public:
     /*!
      * The method puts the formatted message to the event log
      */
-    BOOST_LOG_API void consume(record const& rec, string_type const& formatted_message);
+    BOOST_LOG_API void consume(record_view const& rec, string_type const& formatted_message);
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
@@ -539,17 +539,17 @@ public:
     //! Mapper type for the event type
     typedef boost::log::aux::light_function1<
         event_log::event_type,
-        record const&
+        record_view const&
     > event_type_mapper_type;
     //! Mapper type for the event category
     typedef boost::log::aux::light_function1<
         event_log::event_category,
-        record const&
+        record_view const&
     > event_category_mapper_type;
     //! Event composer type
     typedef boost::log::aux::light_function2<
         event_log::event_id,
-        record const&,
+        record_view const&,
         insertion_list&
     > event_composer_type;
 
@@ -611,7 +611,7 @@ public:
      *
      * \param rec Log record to consume
      */
-    BOOST_LOG_API void consume(record const& rec);
+    BOOST_LOG_API void consume(record_view const& rec);
 
     /*!
      * The method installs the function object that maps application severity levels to WinAPI event types

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -113,7 +113,9 @@ struct formatters_repository :
     factories_map m_Map;
 
 private:
-    BOOST_LOG_DEFAULTED_FUNCTION(formatters_repository(), {})
+    formatters_repository()
+    {
+    }
 };
 
 //! Function object for formatter chaining
@@ -134,7 +136,7 @@ struct chained_formatter
     {
     }
 
-    result_type operator() (record const& rec, stream_type& strm) const
+    result_type operator() (record_view const& rec, stream_type& strm) const
     {
         m_first(rec, strm);
         m_second(rec, strm);

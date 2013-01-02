@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -299,15 +299,19 @@ public:
     }
 
     /*!
-     * The method pushes the record to sinks.
+     * The method pushes the record to sinks. The record is moved from in the process.
      *
      * \pre <tt>!!rec == true</tt>
+     * \post <tt>!rec == true</tt>
      * \param rec A previously successfully opened log record.
      *
      * \b Throws: If an exception handler is installed, only throws if the handler throws. Otherwise may
      *            throw if one of the sinks throws.
      */
-    BOOST_LOG_API void push_record(record const& rec);
+    BOOST_LOG_FORCEINLINE void push_record(BOOST_RV_REF(record) rec)
+    {
+        push_record_move(static_cast< record& >(rec));
+    }
 
     BOOST_LOG_DELETED_FUNCTION(core(core const&))
     BOOST_LOG_DELETED_FUNCTION(core& operator= (core const&))
@@ -316,6 +320,8 @@ public:
 private:
     //! Opens log record. This function is mostly needed to maintain ABI stable between C++03 and C++11.
     BOOST_LOG_API record open_record_move(attribute_value_set& source_attributes);
+    //! The method pushes the record to sinks.
+    BOOST_LOG_API void push_record_move(record& rec);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -22,6 +22,7 @@
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/fake_mutex.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/expressions/filter.hpp>
@@ -81,6 +82,15 @@ private:
     exception_handler_type m_ExceptionHandler;
 
 public:
+    /*!
+     * \brief Initializing constructor
+     *
+     * \param cross_thread The flag indicates whether the sink passes log records between different threads
+     */
+    explicit basic_sink_frontend(bool cross_thread) : sink(cross_thread)
+    {
+    }
+
     /*!
      * The method sets sink-specific filter functional object
      */
@@ -158,7 +168,7 @@ protected:
 
     //! Feeds log record to the backend
     template< typename BackendMutexT, typename BackendT >
-    void feed_record(record const& rec, BackendMutexT& backend_mutex, BackendT& backend)
+    void feed_record(record_view const& rec, BackendMutexT& backend_mutex, BackendT& backend)
     {
         try
         {
@@ -182,7 +192,7 @@ protected:
 
     //! Attempts to feeds log record to the backend, does not block if \a backend_mutex is locked
     template< typename BackendMutexT, typename BackendT >
-    bool try_feed_record(record const& rec, BackendMutexT& backend_mutex, BackendT& backend)
+    bool try_feed_record(record_view const& rec, BackendMutexT& backend_mutex, BackendT& backend)
     {
 #if !defined(BOOST_LOG_NO_THREADS)
         unique_lock< BackendMutexT > lock;
@@ -331,11 +341,18 @@ private:
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
 public:
+    /*!
+     * \brief Initializing constructor
+     *
+     * \param cross_thread The flag indicates whether the sink passes log records between different threads
+     */
+    explicit basic_formatting_sink_frontend(bool cross_thread) :
+        basic_sink_frontend(cross_thread)
 #if !defined(BOOST_LOG_NO_THREADS)
-    basic_formatting_sink_frontend() : m_Version(0)
+        , m_Version(0)
+#endif
     {
     }
-#endif
 
     /*!
      * The method sets sink-specific formatter function object
@@ -404,7 +421,7 @@ protected:
 
     //! Feeds log record to the backend
     template< typename BackendMutexT, typename BackendT >
-    void feed_record(record const& rec, BackendMutexT& backend_mutex, BackendT& backend)
+    void feed_record(record_view const& rec, BackendMutexT& backend_mutex, BackendT& backend)
     {
         formatting_context* context;
 
@@ -452,7 +469,7 @@ protected:
 
     //! Attempts to feeds log record to the backend, does not block if \a backend_mutex is locked
     template< typename BackendMutexT, typename BackendT >
-    bool try_feed_record(record const& rec, BackendMutexT& backend_mutex, BackendT& backend)
+    bool try_feed_record(record_view const& rec, BackendMutexT& backend_mutex, BackendT& backend)
     {
 #if !defined(BOOST_LOG_NO_THREADS)
         unique_lock< BackendMutexT > lock;

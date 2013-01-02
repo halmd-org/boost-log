@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -298,7 +298,7 @@ BOOST_LOG_API void basic_simple_event_log_backend< CharT >::set_event_type_mappe
 
 //! The method puts the formatted message to the event log
 template< typename CharT >
-BOOST_LOG_API void basic_simple_event_log_backend< CharT >::consume(record const& rec, string_type const& formatted_message)
+BOOST_LOG_API void basic_simple_event_log_backend< CharT >::consume(record_view const& rec, string_type const& formatted_message)
 {
     const char_type* message = formatted_message.c_str();
     event_log::event_type evt_type = event_log::info;
@@ -354,7 +354,7 @@ namespace event_log {
         //! Default constructor
         insertion_composer() {}
         //! Composition operator
-        void operator() (record const& rec, insertion_list& insertions) const
+        void operator() (record_view const& rec, insertion_list& insertions) const
         {
             std::size_t size = m_Formatters.size();
             insertions.resize(size);
@@ -422,7 +422,7 @@ namespace event_log {
 
     //! Event composition operator
     template< typename CharT >
-    event_id basic_event_composer< CharT >::operator() (record const& rec, insertion_list& insertions) const
+    event_id basic_event_composer< CharT >::operator() (record_view const& rec, insertion_list& insertions) const
     {
         event_id id = m_EventIDMapper(rec);
         typename event_map::const_iterator it = m_EventMap.find(id);
@@ -524,7 +524,7 @@ BOOST_LOG_API void basic_event_log_backend< CharT >::construct(
 
 //! The method puts the formatted message to the event log
 template< typename CharT >
-BOOST_LOG_API void basic_event_log_backend< CharT >::consume(record const& rec)
+BOOST_LOG_API void basic_event_log_backend< CharT >::consume(record_view const& rec)
 {
     if (!m_pImpl->m_EventComposer.empty())
     {

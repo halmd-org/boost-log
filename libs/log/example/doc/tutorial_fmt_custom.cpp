@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -27,7 +27,7 @@ namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 
 //[ example_tutorial_formatters_custom
-void my_formatter(logging::record const& rec, logging::formatting_ostream& strm)
+void my_formatter(logging::record_view const& rec, logging::formatting_ostream& strm)
 {
     // Get the LineID attribute value and put it into the stream
     strm << logging::extract< unsigned int >("LineID", rec) << ": ";

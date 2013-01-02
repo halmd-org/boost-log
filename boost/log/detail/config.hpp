@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -119,6 +119,11 @@
 #       undef BOOST_LOG_NO_TRAILING_RESULT_TYPE
 #       undef BOOST_LOG_NO_INLINE_NAMESPACES
 #   endif
+#endif
+
+#if defined(BOOST_NO_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || (defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ <= 5))
+// GCC up to 4.5 (inclusively) did not support expanding template argument packs into non-variadic template arguments
+#define BOOST_LOG_NO_CXX11_ARG_PACKS_TO_NON_VARIADIC_ARGS_EXPANSION
 #endif
 
 // Extended declaration macros. Used to implement compiler-specific optimizations.

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -57,7 +57,7 @@ public:
     default_sink();
     ~default_sink();
     bool will_consume(attribute_value_set const&);
-    void consume(record const& rec);
+    void consume(record_view const& rec);
     void flush();
 };
 

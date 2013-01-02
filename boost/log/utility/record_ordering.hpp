@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -19,7 +19,7 @@
 #include <boost/type_traits/is_same.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/function_traits.hpp>
-#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
@@ -70,7 +70,7 @@ public:
     /*!
      * Ordering operator
      */
-    result_type operator() (record const& left, record const& right) const
+    result_type operator() (record_view const& left, record_view const& right) const
     {
         // We rely on the fact that the attribute_values() method returns a reference to the object in the record implementation,
         // so we can comare pointers.
@@ -126,7 +126,7 @@ private:
     {
         typedef void result_type;
 
-        l1_visitor(attribute_value_ordering const& owner, record const& right, bool& result) :
+        l1_visitor(attribute_value_ordering const& owner, record_view const& right, bool& result) :
             m_owner(owner), m_right(right), m_result(result)
         {
         }
@@ -139,7 +139,7 @@ private:
 
     private:
         attribute_value_ordering const& m_owner;
-        record const& m_right;
+        record_view const& m_right;
         bool& m_result;
     };
 
@@ -163,7 +163,7 @@ public:
     /*!
      * Ordering operator
      */
-    result_type operator() (record const& left, record const& right) const
+    result_type operator() (record_view const& left, record_view const& right) const
     {
         bool result = false;
         if (!boost::log::visit< value_type >(m_name, left, l1_visitor(*this, right, result)))

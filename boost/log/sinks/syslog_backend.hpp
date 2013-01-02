@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -172,7 +172,7 @@ public:
     //! Syslog severity level mapper type
     typedef boost::log::aux::light_function1<
         syslog::level,
-        record const&
+        record_view const&
     > severity_mapper_type;
 
 private:
@@ -263,7 +263,7 @@ public:
     /*!
      * The method passes the formatted message to the syslog API or sends to a syslog server
      */
-    BOOST_LOG_API void consume(record const& rec, string_type const& formatted_message);
+    BOOST_LOG_API void consume(record_view const& rec, string_type const& formatted_message);
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS

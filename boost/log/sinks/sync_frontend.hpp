@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -31,6 +31,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/log/detail/locking_ptr.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/sinks/basic_sink_frontend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
 
@@ -52,6 +53,7 @@ namespace sinks {
 #define BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL(z, n, data)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit synchronous_sink(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
+        base_type(false),\
         m_pBackend(boost::make_shared< sink_backend_type >(BOOST_PP_ENUM_PARAMS(n, arg))) {}
 //! \endcond
 
@@ -102,6 +104,7 @@ public:
      * Requires the backend to be default-constructible.
      */
     synchronous_sink() :
+        base_type(false),
         m_pBackend(boost::make_shared< sink_backend_type >())
     {
     }
@@ -113,6 +116,7 @@ public:
      * \pre \a backend is not \c NULL.
      */
     explicit synchronous_sink(shared_ptr< sink_backend_type > const& backend) :
+        base_type(false),
         m_pBackend(backend)
     {
     }
@@ -133,7 +137,7 @@ public:
     /*!
      * Passes the log record to the backend
      */
-    void consume(record const& rec)
+    void consume(record_view const& rec)
     {
         base_type::feed_record(rec, m_BackendMutex, *m_pBackend);
     }
@@ -141,7 +145,7 @@ public:
     /*!
      * The method attempts to pass logging record to the backend
      */
-    bool try_consume(record const& rec)
+    bool try_consume(record_view const& rec)
     {
         return base_type::try_feed_record(rec, m_BackendMutex, *m_pBackend);
     }

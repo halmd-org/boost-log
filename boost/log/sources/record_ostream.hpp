@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -18,6 +18,7 @@
 
 #include <string>
 #include <ostream>
+#include <boost/assert.hpp>
 #include <boost/move/move.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/log/detail/config.hpp>
@@ -69,7 +70,7 @@ public:
 
 private:
     //! Log record
-    record m_Record;
+    record* m_record;
 
 public:
     /*!
@@ -78,18 +79,19 @@ public:
      *
      * \post <tt>!*this == true</tt>
      */
-    BOOST_LOG_DEFAULTED_FUNCTION(basic_record_ostream(), {})
+    basic_record_ostream() BOOST_NOEXCEPT : m_record(NULL) {}
 
     /*!
-     * Constructor from a record object. Adopts the record referenced by the object.
+     * Constructor from a record object. Attaches to the provided record.
      *
-     * \pre The handle, if valid, have been issued by the logging core with the same character type as the record being constructed.
-     * \post <tt>this->handle() == rec</tt>
-     * \param rec The record handle being adopted
+     * \pre <tt>!!rec == true</tt>
+     * \post <tt>&this->get_record() == &rec</tt>
+     * \param rec The record handle being attached to
      */
-    explicit basic_record_ostream(record const& rec) :
-        m_Record(rec)
+    explicit basic_record_ostream(record& rec)
     {
+        BOOST_ASSERT_MSG(!!rec, "Boost.Log: basic_record_ostream should only be attached to a valid record");
+        m_record = &rec;
         init_stream();
     }
 
@@ -117,7 +119,7 @@ public:
      */
     bool operator! () const BOOST_NOEXCEPT
     {
-        return (!m_Record || base_type::fail());
+        return (!m_record || base_type::fail());
     }
 
     /*!
@@ -127,8 +129,9 @@ public:
      */
     record& get_record()
     {
+        BOOST_ASSERT(m_record != NULL);
         this->flush();
-        return m_Record;
+        return *m_record;
     }
 
     /*!
@@ -138,8 +141,9 @@ public:
      */
     record const& get_record() const
     {
+        BOOST_ASSERT(m_record != NULL);
         const_cast< this_type* >(this)->flush();
-        return m_Record;
+        return *m_record;
     }
 
     /*!
@@ -148,10 +152,11 @@ public:
      *
      * \param rec New log record to attach to
      */
-    void set_record(record rec)
+    void attach_record(record& rec)
     {
+        BOOST_ASSERT_MSG(!!rec, "Boost.Log: basic_record_ostream should only be attached to a valid record");
         detach_from_record();
-        m_Record.swap(rec);
+        m_record = &rec;
         init_stream();
     }
 
@@ -193,11 +198,11 @@ struct stream_provider
         basic_record_ostream< char_type > stream;
 
         //! Initializing constructor
-        explicit stream_compound(record const& rec) : next(NULL), stream(rec) {}
+        explicit stream_compound(record& rec) : next(NULL), stream(rec) {}
     };
 
     //! The method returns an allocated stream compound
-    BOOST_LOG_API static stream_compound* allocate_compound(record const& rec);
+    BOOST_LOG_API static stream_compound* allocate_compound(record& rec);
     //! The method releases a compound
     BOOST_LOG_API static void release_compound(stream_compound* compound) BOOST_NOEXCEPT;
 
@@ -254,7 +259,7 @@ protected:
 
 public:
     //! Constructor
-    explicit record_pump(logger_type& lg, record const& rec) :
+    explicit record_pump(logger_type& lg, record& rec) :
         m_pLogger(boost::addressof(lg)),
         m_pStreamCompound(stream_provider_type::allocate_compound(rec)),
         m_ExceptionCount(unhandled_exception_count())
@@ -277,7 +282,7 @@ public:
             auto_release cleanup(m_pStreamCompound); // destructor doesn't throw
             // Only push the record if no exception has been thrown in the streaming expression (if possible)
             if (m_ExceptionCount >= unhandled_exception_count())
-                m_pLogger->push_record(m_pStreamCompound->stream.get_record());
+                m_pLogger->push_record(boost::move(m_pStreamCompound->stream.get_record()));
         }
     }
 
@@ -290,7 +295,7 @@ public:
 };
 
 template< typename LoggerT >
-BOOST_LOG_FORCEINLINE record_pump< LoggerT > make_pump_stream(LoggerT& lg, record const& rec)
+BOOST_LOG_FORCEINLINE record_pump< LoggerT > make_record_pump(LoggerT& lg, record& rec)
 {
     return record_pump< LoggerT >(lg, rec);
 }
@@ -300,12 +305,12 @@ BOOST_LOG_FORCEINLINE record_pump< LoggerT > make_pump_stream(LoggerT& lg, recor
 //! \cond
 
 #define BOOST_LOG_STREAM_INTERNAL(logger, rec_var)\
-    for (::boost::log::record rec_var = (logger).open_record(); !!rec_var; rec_var.reset())\
-        ::boost::log::aux::make_pump_stream((logger), rec_var).stream()
+    for (::boost::log::record rec_var = (logger).open_record(); !!rec_var;)\
+        ::boost::log::aux::make_record_pump((logger), rec_var).stream()
 
 #define BOOST_LOG_STREAM_WITH_PARAMS_INTERNAL(logger, rec_var, params_seq)\
-    for (::boost::log::record rec_var = (logger).open_record((BOOST_PP_SEQ_ENUM(params_seq))); !!rec_var; rec_var.reset())\
-        ::boost::log::aux::make_pump_stream((logger), rec_var).stream()
+    for (::boost::log::record rec_var = (logger).open_record((BOOST_PP_SEQ_ENUM(params_seq))); !!rec_var;)\
+        ::boost::log::aux::make_record_pump((logger), rec_var).stream()
 
 //! \endcond
 

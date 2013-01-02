@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -173,11 +173,11 @@ protected:
     /*!
      * Unlocked \c push_record
      */
-    void push_record_unlocked(record const& record)
+    void push_record_unlocked(BOOST_RV_REF(record) rec)
     {
         try
         {
-            base_type::push_record_unlocked(record);
+            base_type::push_record_unlocked(boost::move(rec));
         }
 #ifndef BOOST_LOG_NO_THREADS
         catch (thread_interrupted&)

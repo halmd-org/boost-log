@@ -1,5 +1,5 @@
 [/
-              Copyright Andrey Semashev 2007 - 2012.
+              Copyright Andrey Semashev 2007 - 2013.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -22,6 +22,7 @@
 * Added a concept of a default sink. The default sink is used when there are no sinks configured in the logging core. The sink is synchronous and thread-safe, it requires no configuration and is overridden by any sinks configured in the core by user. The default sink will write log messages to the console, prepending with a timestamp, thread id and severity level.
 * Trivial logging no longer implicitly initializes the library. Instead, the default sink is used to display log messages, unless the library is configured otherwise. It is now possible to use both trivial and advanced logging.
 * Attribute values can now be added to log records after filtering. Such values do not participate in filtering but can be used by formatters and sinks. Log record message is now one of such attribute values, it is no longer directly accessible from the log record interface.
+* Formatters and sinks no longer operate on log records but rather on [class_log_record_view]s. Records are now moved from when pushed to the core for further processing. This is done in order to eliminate the possibility of unsafe record modification after pushing to the core. As a consequence, log records can no longer be copied, only moving is allowed. Record views can be copied and moved; copying is a shallow operation.
 * The implementation now provides several stream manipulators. Notably, the `to_log` manipulator allows to customize formatting for particular types and attributes without changing the regular streaming operator. Also, the `add_attr` manipulator can be used in logging expressions to attach attribute values to the record.
 * Made a lot of improvements to speedup code compilation.
 

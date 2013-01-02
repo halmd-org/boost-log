@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -10,6 +10,7 @@
 #include <fstream>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/move/move.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/attributes/constant.hpp>
@@ -52,7 +53,7 @@ public:
         {
             rec.attribute_values().insert("Message",
                 attrs::make_attribute_value(std::string("Connection established")));
-            m_logger.push_record(rec);
+            m_logger.push_record(boost::move(rec));
         }
     }
     void on_disconnected()

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -30,6 +30,9 @@
 #if !defined(BOOST_LOG_TYPEOF)
 #include <boost/utility/enable_if.hpp>
 #endif
+#if defined(BOOST_LOG_TYPEOF) && defined(BOOST_LOG_NO_TRAILING_RESULT_TYPE)
+#include <boost/utility/declval.hpp>
+#endif
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -48,14 +51,6 @@ namespace boost {
 BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
-
-#if defined(BOOST_LOG_TYPEOF) && defined(BOOST_LOG_NO_TRAILING_RESULT_TYPE)
-template< typename T >
-struct make_value
-{
-    static T const& get();
-};
-#endif
 
 // This workaround is needed for MSVC 10 to work around ICE caused by stack overflow
 template< typename SectionT, bool IsConstV >
@@ -165,7 +160,7 @@ private:
         template< bool V >
         ref& operator= (ref< V > const& value)
         {
-            BOOST_ASSERT(m_ptree != NULL);
+            BOOST_ASSERT(m_section.m_ptree != NULL);
             optional< string_type > val = value.get();
             if (!!val)
             {
@@ -234,7 +229,7 @@ private:
                 return section_type();
         }
 
-#if defined(BOOST_LOG_TYPEOF)
+#if defined(BOOST_LOG_TYPEOF) && !(defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__) && !defined(__PATHSCALE__) && !defined(__GXX_EXPERIMENTAL_CXX0X__) && (__GNUC__ == 4 && __GNUC_MINOR__ <= 5))
 #if !defined(BOOST_LOG_NO_TRAILING_RESULT_TYPE)
         template< typename T >
         auto or_default(T const& def_value) const -> BOOST_LOG_TYPEOF(property_tree_type().get(typename property_tree_type::path_type(), def_value))
@@ -245,8 +240,9 @@ private:
                 return def_value;
         }
 #else
+        // GCC up to 4.5 (inclusively) segfaults on the following code, if C++11 mode is not enabled
         template< typename T >
-        BOOST_LOG_TYPEOF(property_tree_type().get(typename property_tree_type::path_type(), aux::make_value< T >::get())) or_default(T const& def_value) const
+        BOOST_LOG_TYPEOF(property_tree_type().get(typename property_tree_type::path_type(), boost::declval< T >())) or_default(T const& def_value) const
         {
             if (m_section.m_ptree)
                 return m_section.m_ptree->get(m_path, def_value);

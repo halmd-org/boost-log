@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     typedef logging::attribute_set attr_set;
     typedef std::basic_string< CharT > string;
     typedef logging::basic_formatting_ostream< CharT > osstream;
-    typedef logging::record record;
+    typedef logging::record_view record_view;
     typedef logging::basic_formatter< CharT > formatter;
     typedef named_scope_test_data< CharT > data;
 
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scopes_formatting, CharT, char_types)
     attr_set set1;
     set1[data::attr1()] = attr;
 
-    record rec = make_record(set1);
+    record_view rec = make_record_view(set1);
 
     // Default format
     {

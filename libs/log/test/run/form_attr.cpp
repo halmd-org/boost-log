@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -55,7 +55,7 @@ namespace {
 // The test checks that default formatting work
 BOOST_AUTO_TEST_CASE_TEMPLATE(default_formatting, CharT, char_types)
 {
-    typedef logging::record record;
+    typedef logging::record_view record_view;
     typedef logging::attribute_set attr_set;
     typedef std::basic_string< CharT > string;
     typedef logging::basic_formatting_ostream< CharT > osstream;
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(default_formatting, CharT, char_types)
     set1[data::attr2()] = attr2;
     set1[data::attr3()] = attr3;
 
-    record rec = make_record(set1);
+    record_view rec = make_record_view(set1);
 
     // Check for various modes of attribute value type specification
     {

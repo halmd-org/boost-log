@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -267,9 +267,9 @@ protected:
     /*!
      * Unlocked \c push_record
      */
-    void push_record_unlocked(record const& rec)
+    void push_record_unlocked(BOOST_RV_REF(record) rec)
     {
-        m_pCore->push_record(rec);
+        m_pCore->push_record(boost::move(rec));
     }
 
     /*!
@@ -471,10 +471,10 @@ public:
      *
      * \param rec The log record with the formatted message
      */
-    void push_record(record const& rec)
+    void push_record(BOOST_RV_REF(record) rec)
     {
         typename base_type::push_record_lock lock(base_type::get_threading_model());
-        base_type::push_record_unlocked(rec);
+        base_type::push_record_unlocked(boost::move(rec));
     }
     /*!
      * Thread-safe implementation of swap
@@ -581,9 +581,9 @@ public:
         else
             return record();
     }
-    void push_record(record const& rec)
+    void push_record(BOOST_RV_REF(record) rec)
     {
-        base_type::push_record_unlocked(rec);
+        base_type::push_record_unlocked(boost::move(rec));
     }
     void swap(basic_composite_logger& that)
     {

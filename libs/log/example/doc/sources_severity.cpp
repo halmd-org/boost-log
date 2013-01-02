@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -9,6 +9,7 @@
 #include <string>
 #include <ostream>
 #include <fstream>
+#include <boost/move/move.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/log/core.hpp>
@@ -73,7 +74,7 @@ void manual_logging()
         logging::record_ostream strm(rec);
         strm << "A regular message";
         strm.flush();
-        slg.push_record(rec);
+        slg.push_record(boost::move(rec));
     }
 }
 //]

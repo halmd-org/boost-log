@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -1119,7 +1119,7 @@ BOOST_LOG_API void text_file_backend::auto_flush(bool f)
 }
 
 //! The method writes the message to the sink
-BOOST_LOG_API void text_file_backend::consume(record const& rec, string_type const& formatted_message)
+BOOST_LOG_API void text_file_backend::consume(record_view const& rec, string_type const& formatted_message)
 {
     typedef file_char_traits< string_type::value_type > traits_t;
     if
@@ -1345,7 +1345,7 @@ BOOST_LOG_API void text_multifile_backend::set_file_name_composer_internal(file_
 }
 
 //! The method writes the message to the sink
-BOOST_LOG_API void text_multifile_backend::consume(record const& rec, string_type const& formatted_message)
+BOOST_LOG_API void text_multifile_backend::consume(record_view const& rec, string_type const& formatted_message)
 {
     typedef file_char_traits< string_type::value_type > traits_t;
     if (!m_pImpl->m_FileNameComposer.empty())

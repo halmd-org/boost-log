@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -32,7 +32,7 @@ template< typename CharT >
 BOOST_LOG_API void basic_record_ostream< CharT >::init_stream()
 {
     base_type::imbue(std::locale());
-    if (!!m_Record)
+    if (m_record)
     {
         typedef attributes::attribute_value_impl< string_type > message_impl_type;
         intrusive_ptr< message_impl_type > p = new message_impl_type(string_type());
@@ -40,7 +40,7 @@ BOOST_LOG_API void basic_record_ostream< CharT >::init_stream()
 
         // This may fail if the record already has Message attribute
         std::pair< attribute_value_set::const_iterator, bool > res =
-            m_Record.attribute_values().insert(expressions::tag::message::get_name(), value);
+            m_record->attribute_values().insert(expressions::tag::message::get_name(), value);
         if (!res.second)
             const_cast< attribute_value& >(res.first->second).swap(value);
 
@@ -51,10 +51,10 @@ BOOST_LOG_API void basic_record_ostream< CharT >::init_stream()
 template< typename CharT >
 BOOST_LOG_API void basic_record_ostream< CharT >::detach_from_record() BOOST_NOEXCEPT
 {
-    if (!!m_Record)
+    if (m_record)
     {
         base_type::detach();
-        m_Record.reset();
+        m_record = NULL;
         base_type::exceptions(stream_type::goodbit);
     }
 }
@@ -129,7 +129,7 @@ private:
 //! The method returns an allocated stream compound
 template< typename CharT >
 BOOST_LOG_API typename stream_provider< CharT >::stream_compound*
-stream_provider< CharT >::allocate_compound(record const& rec)
+stream_provider< CharT >::allocate_compound(record& rec)
 {
     stream_compound_pool< char_type >& pool = stream_compound_pool< char_type >::get();
     if (pool.m_Top)
@@ -137,7 +137,7 @@ stream_provider< CharT >::allocate_compound(record const& rec)
         register stream_compound* p = pool.m_Top;
         pool.m_Top = p->next;
         p->next = NULL;
-        p->stream.set_record(rec);
+        p->stream.attach_record(rec);
         return p;
     }
     else

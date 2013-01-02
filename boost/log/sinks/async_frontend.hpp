@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -36,6 +36,7 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/detail/locking_ptr.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/sinks/basic_sink_frontend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/sinks/unbounded_fifo_queue.hpp>
@@ -59,6 +60,7 @@ namespace sinks {
 #define BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL(z, n, types)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit asynchronous_sink(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
+        base_type(true),\
         queue_base_type((BOOST_PP_ENUM_PARAMS(n, arg))),\
         m_pBackend(boost::make_shared< sink_backend_type >(BOOST_PP_ENUM_PARAMS(n, arg))),\
         m_StopRequested(false),\
@@ -69,6 +71,7 @@ namespace sinks {
     }\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit asynchronous_sink(shared_ptr< sink_backend_type > const& backend, BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
+        base_type(true),\
         queue_base_type((BOOST_PP_ENUM_PARAMS(n, arg))),\
         m_pBackend(backend),\
         m_StopRequested(false),\
@@ -228,6 +231,7 @@ public:
      *                     either \c run or \c feed_records himself.
      */
     asynchronous_sink(bool start_thread = true) :
+        base_type(true),
         m_pBackend(boost::make_shared< sink_backend_type >()),
         m_StopRequested(false),
         m_FlushRequested(false)
@@ -247,6 +251,7 @@ public:
      * \pre \a backend is not \c NULL.
      */
     explicit asynchronous_sink(shared_ptr< sink_backend_type > const& backend, bool start_thread = true) :
+        base_type(true),
         m_pBackend(backend),
         m_StopRequested(false),
         m_FlushRequested(false)
@@ -280,10 +285,8 @@ public:
     /*!
      * Enqueues the log record to the backend
      */
-    void consume(record const& rec)
+    void consume(record_view const& rec)
     {
-        const_cast< record& >(rec).detach_from_thread();
-
         if (m_FlushRequested)
         {
             unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
@@ -297,11 +300,10 @@ public:
     /*!
      * The method attempts to pass logging record to the backend
      */
-    bool try_consume(record const& rec)
+    bool try_consume(record_view const& rec)
     {
         if (!m_FlushRequested)
         {
-            const_cast< record& >(rec).detach_from_thread();
             return queue_base_type::try_enqueue(rec);
         }
         else
@@ -329,7 +331,7 @@ public:
             if (!m_StopRequested)
             {
                 // Block until new record is available
-                record rec;
+                record_view rec;
                 if (queue_base_type::dequeue_ready(rec))
                     base_type::feed_record(rec, m_BackendMutex, *m_pBackend);
             }
@@ -439,7 +441,7 @@ private:
     {
         while (!m_StopRequested)
         {
-            record rec;
+            record_view rec;
             register bool dequeued = false;
             if (!m_FlushRequested)
                 dequeued = queue_base_type::try_dequeue_ready(rec);
