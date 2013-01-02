@@ -158,7 +158,9 @@
 #       define BOOST_LOG_UNREACHABLE() __builtin_unreachable()
 #   endif
 #elif defined(__GNUC__)
-#   define BOOST_LOG_UNREACHABLE() __builtin_unreachable()
+#   if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#       define BOOST_LOG_UNREACHABLE() __builtin_unreachable()
+#   endif
 #elif defined(_MSC_VER)
 #   define BOOST_LOG_UNREACHABLE() __assume(0)
 #endif
