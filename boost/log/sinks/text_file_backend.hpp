@@ -341,12 +341,12 @@ public:
     typedef std::basic_ostream< char_type > stream_type;
 
     //! File open handler
-    typedef boost::log::aux::light_function1< void, stream_type& > open_handler_type;
+    typedef boost::log::aux::light_function< void (stream_type&) > open_handler_type;
     //! File close handler
-    typedef boost::log::aux::light_function1< void, stream_type& > close_handler_type;
+    typedef boost::log::aux::light_function< void (stream_type&) > close_handler_type;
 
     //! Predicate that defines the time-based condition for file rotation
-    typedef boost::log::aux::light_function0< bool > time_based_rotation_predicate;
+    typedef boost::log::aux::light_function< bool () > time_based_rotation_predicate;
 
 private:
     //! \cond

@@ -42,7 +42,7 @@ public:
 
 private:
     //! Filter function type
-    typedef boost::log::aux::light_function1< bool, attribute_value_set const& > filter_type;
+    typedef boost::log::aux::light_function< bool (attribute_value_set const&) > filter_type;
 
     //! Default filter, always returns \c true
     struct default_filter

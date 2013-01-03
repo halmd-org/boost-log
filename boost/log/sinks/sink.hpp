@@ -45,7 +45,7 @@ class BOOST_LOG_NO_VTABLE sink
 {
 public:
     //! An exception handler type
-    typedef boost::log::aux::light_function0< void > exception_handler_type;
+    typedef boost::log::aux::light_function< void () > exception_handler_type;
 
 private:
     //! The flag indicates that the sink passes log records across thread boundaries

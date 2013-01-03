@@ -1028,7 +1028,7 @@ struct text_file_backend::implementation
     //! Directory to store files in
     filesystem::path m_StorageDir;
     //! File name generator (according to m_FileNamePattern)
-    log::aux::light_function1< path_string_type, unsigned int > m_FileNameGenerator;
+    boost::log::aux::light_function< path_string_type (unsigned int) > m_FileNameGenerator;
 
     //! Stored files counter
     unsigned int m_FileCounter;

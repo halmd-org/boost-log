@@ -170,10 +170,7 @@ public:
     typedef base_type::string_type string_type;
 
     //! Syslog severity level mapper type
-    typedef boost::log::aux::light_function1<
-        syslog::level,
-        record_view const&
-    > severity_mapper_type;
+    typedef boost::log::aux::light_function< syslog::level (record_view const&) > severity_mapper_type;
 
 private:
     //! Pointer to the implementation

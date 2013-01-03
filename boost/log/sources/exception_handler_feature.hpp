@@ -61,7 +61,7 @@ public:
     //! Final logger type
     typedef typename base_type::final_type final_type;
     //! Exception handler function type
-    typedef boost::log::aux::light_function0< void > exception_handler_type;
+    typedef boost::log::aux::light_function< void () > exception_handler_type;
 
 #if defined(BOOST_LOG_DOXYGEN_PASS)
     //! Lock requirement for the open_record_unlocked method

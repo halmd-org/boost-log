@@ -213,10 +213,7 @@ struct sinks_repository :
     typedef basic_settings_section< char_type > section;
     typedef typename section::const_reference param_const_reference;
     typedef typename section::reference param_reference;
-    typedef boost::log::aux::light_function1<
-        shared_ptr< sinks::sink >,
-        section const&
-    > sink_factory;
+    typedef boost::log::aux::light_function< shared_ptr< sinks::sink > (section const&) > sink_factory;
     typedef std::map< std::string, sink_factory > sink_factories;
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -651,10 +648,7 @@ void init_from_settings(basic_settings_section< CharT > const& setts)
 template< typename CharT >
 void register_sink_factory(
     const char* sink_name,
-    boost::log::aux::light_function1<
-        shared_ptr< sinks::sink >,
-        basic_settings_section< CharT > const&
-    > const& factory)
+    boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< CharT > const&) > const& factory)
 {
     sinks_repository< CharT >& repo = sinks_repository< CharT >::get();
     BOOST_LOG_EXPR_IF_MT(lock_guard< log::aux::light_rw_mutex > lock(repo.m_Mutex);)
@@ -665,10 +659,7 @@ void register_sink_factory(
 template BOOST_LOG_SETUP_API
 void register_sink_factory< char >(
     const char* sink_name,
-    boost::log::aux::light_function1<
-        shared_ptr< sinks::sink >,
-        basic_settings_section< char > const&
-    > const& factory);
+    boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< char > const&) > const& factory);
 template BOOST_LOG_SETUP_API void init_from_settings< char >(basic_settings_section< char > const& setts);
 #endif
 
@@ -676,10 +667,7 @@ template BOOST_LOG_SETUP_API void init_from_settings< char >(basic_settings_sect
 template BOOST_LOG_SETUP_API
 void register_sink_factory< wchar_t >(
     const char* sink_name,
-    boost::log::aux::light_function1<
-        shared_ptr< sinks::sink >,
-        basic_settings_section< wchar_t > const&
-    > const& factory);
+    boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< wchar_t > const&) > const& factory);
 template BOOST_LOG_SETUP_API void init_from_settings< wchar_t >(basic_settings_section< wchar_t > const& setts);
 #endif
 

@@ -67,7 +67,7 @@ class core
 {
 public:
     //! Exception handler function type
-    typedef boost::log::aux::light_function0< void > exception_handler_type;
+    typedef boost::log::aux::light_function< void () > exception_handler_type;
 
 private:
     //! Implementation type

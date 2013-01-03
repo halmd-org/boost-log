@@ -54,7 +54,7 @@ public:
 
 private:
     //! Filter function type
-    typedef boost::log::aux::light_function2< void, record_view const&, stream_type& > formatter_type;
+    typedef boost::log::aux::light_function< void (record_view const&, stream_type&) > formatter_type;
 
     //! Default formatter, always returns \c true
     struct default_formatter

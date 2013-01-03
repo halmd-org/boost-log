@@ -152,7 +152,7 @@ public:
     typedef base_type::string_type string_type;
 
     //! File name composer functor type
-    typedef boost::log::aux::light_function1< filesystem::path, record_view const& > file_name_composer_type;
+    typedef boost::log::aux::light_function< filesystem::path (record_view const&) > file_name_composer_type;
 
 private:
     //! \cond

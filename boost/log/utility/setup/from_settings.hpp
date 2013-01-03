@@ -52,15 +52,15 @@ BOOST_LOG_SETUP_API void init_from_settings(basic_settings_section< CharT > cons
 #if !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 template< typename CharT >
-using basic_sink_factory = boost::log::aux::light_function1< shared_ptr< sinks::sink >, basic_settings_section< CharT > const& >;
+using basic_sink_factory = boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< CharT > const&) >;
 
 typedef basic_sink_factory< char > sink_factory;
 typedef basic_sink_factory< wchar_t > wsink_factory;
 
 #else
 
-typedef boost::log::aux::light_function1< shared_ptr< sinks::sink >, basic_settings_section< char > const& > sink_factory;
-typedef boost::log::aux::light_function1< shared_ptr< sinks::sink >, basic_settings_section< wchar_t > const& > wsink_factory;
+typedef boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< char > const&) > sink_factory;
+typedef boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< wchar_t > const&) > wsink_factory;
 
 #endif
 
@@ -81,7 +81,7 @@ typedef boost::log::aux::light_function1< shared_ptr< sinks::sink >, basic_setti
 template< typename CharT >
 BOOST_LOG_SETUP_API void register_sink_factory(
     const char* sink_name,
-    boost::log::aux::light_function1< shared_ptr< sinks::sink >, basic_settings_section< CharT > const& > const& factory);
+    boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< CharT > const&) > const& factory);
 
 /*!
  * \brief The function registers a factory for a custom sink
@@ -98,7 +98,7 @@ BOOST_LOG_SETUP_API void register_sink_factory(
 template< typename CharT >
 inline void register_sink_factory(
     std::string const& sink_name,
-    boost::log::aux::light_function1< shared_ptr< sinks::sink >, basic_settings_section< CharT > const& > const& factory)
+    boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< CharT > const&) > const& factory)
 {
     register_sink_factory(sink_name.c_str(), factory);
 }

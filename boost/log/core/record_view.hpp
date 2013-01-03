@@ -79,7 +79,7 @@ private:
 
         //! Constructor from the attribute sets
         explicit public_data(BOOST_RV_REF(attribute_value_set) values) :
-            m_ref_counter(0),
+            m_ref_counter(1),
             m_attribute_values(values)
         {
         }
@@ -103,7 +103,7 @@ private:
 
 private:
     //  A private constructor, accessible from record
-    explicit record_view(public_data* impl) : m_impl(impl) {}
+    explicit record_view(public_data* impl) : m_impl(impl, false) {}
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 

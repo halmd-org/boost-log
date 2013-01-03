@@ -67,7 +67,7 @@ public:
     typedef basic_formatting_ostream< char_type > stream_type;
 
     //! Formatter function
-    typedef boost::log::aux::light_function2< void, stream_type&, value_type const& > formatter_function_type;
+    typedef boost::log::aux::light_function< void (stream_type&, value_type const&) > formatter_function_type;
 
     //! Function result type
     typedef string_type result_type;

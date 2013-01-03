@@ -260,7 +260,7 @@ namespace event_log {
         typedef std::basic_string< char_type > string_type;
 
         //! Event identifier mapper type
-        typedef boost::log::aux::light_function1< event_id, record_view const& > event_id_mapper_type;
+        typedef boost::log::aux::light_function< event_id (record_view const&) > event_id_mapper_type;
 
         //! Type of an insertion composer (a formatter)
         typedef basic_formatter< char_type > formatter_type;
@@ -419,10 +419,7 @@ public:
     typedef typename base_type::string_type string_type;
 
     //! Mapper type for the event type
-    typedef boost::log::aux::light_function1<
-        event_log::event_type,
-        record_view const&
-    > event_type_mapper_type;
+    typedef boost::log::aux::light_function< event_log::event_type (record_view const&) > event_type_mapper_type;
 
 private:
     //! Pointer to the backend implementation that hides various types from windows.h
@@ -537,21 +534,11 @@ public:
     typedef std::vector< string_type > insertion_list;
 
     //! Mapper type for the event type
-    typedef boost::log::aux::light_function1<
-        event_log::event_type,
-        record_view const&
-    > event_type_mapper_type;
+    typedef boost::log::aux::light_function< event_log::event_type (record_view const&) > event_type_mapper_type;
     //! Mapper type for the event category
-    typedef boost::log::aux::light_function1<
-        event_log::event_category,
-        record_view const&
-    > event_category_mapper_type;
+    typedef boost::log::aux::light_function< event_log::event_category (record_view const&) > event_category_mapper_type;
     //! Event composer type
-    typedef boost::log::aux::light_function2<
-        event_log::event_id,
-        record_view const&,
-        insertion_list&
-    > event_composer_type;
+    typedef boost::log::aux::light_function< event_log::event_id (record_view const&, insertion_list&) > event_composer_type;
 
 private:
     //! Pointer to the backend implementation that hides various types from windows.h

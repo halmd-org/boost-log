@@ -122,7 +122,7 @@ struct date_time_formatter_generator_traits_impl
     typedef TimeT value_type;
 
     //! Formatter function
-    typedef boost::log::aux::light_function2< void, stream_type&, value_type const& > formatter_function_type;
+    typedef boost::log::aux::light_function< void (stream_type&, value_type const&) > formatter_function_type;
 
     //! Formatter implementation
     class formatter :
@@ -196,7 +196,7 @@ struct date_time_formatter_generator_traits< local_time::local_date_time_base< T
     typedef local_time::local_date_time_base< TimeT, TimeZoneT > value_type;
 
     //! Formatter function
-    typedef boost::log::aux::light_function2< void, stream_type&, value_type const& > formatter_function_type;
+    typedef boost::log::aux::light_function< void (stream_type&, value_type const&) > formatter_function_type;
 
     //! Formatter implementation
     class formatter :
@@ -300,7 +300,7 @@ struct date_formatter_generator_traits_impl
     typedef DateT value_type;
 
     //! Formatter function
-    typedef boost::log::aux::light_function2< void, stream_type&, value_type const& > formatter_function_type;
+    typedef boost::log::aux::light_function< void (stream_type&, value_type const&) > formatter_function_type;
 
     //! Formatter implementation
     class formatter :
@@ -374,7 +374,7 @@ struct time_duration_formatter_generator_traits_impl
     typedef TimeDurationT value_type;
 
     //! Formatter function
-    typedef boost::log::aux::light_function2< void, stream_type&, value_type const& > formatter_function_type;
+    typedef boost::log::aux::light_function< void (stream_type&, value_type const&) > formatter_function_type;
 
     //! Formatter implementation
     class formatter :
@@ -472,7 +472,7 @@ struct date_duration_formatter_generator_traits_impl
     typedef DateDurationT value_type;
 
     //! Formatter function
-    typedef boost::log::aux::light_function2< void, stream_type&, value_type const& > formatter_function_type;
+    typedef boost::log::aux::light_function< void (stream_type&, value_type const&) > formatter_function_type;
 
     //! Formatter implementation
     class formatter :

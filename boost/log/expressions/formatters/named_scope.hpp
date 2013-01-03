@@ -71,12 +71,12 @@ namespace aux {
 
 //! Parses the named scope format string and constructs the formatter function
 template< typename CharT >
-BOOST_LOG_API boost::log::aux::light_function2< void, basic_formatting_ostream< CharT >&, attributes::named_scope::value_type::value_type const& >
+BOOST_LOG_API boost::log::aux::light_function< void (basic_formatting_ostream< CharT >&, attributes::named_scope::value_type::value_type const&) >
 parse_named_scope_format(const CharT* begin, const CharT* end);
 
 //! Parses the named scope format string and constructs the formatter function
 template< typename CharT >
-inline boost::log::aux::light_function2< void, basic_formatting_ostream< CharT >&, attributes::named_scope::value_type::value_type const& >
+inline boost::log::aux::light_function< void (basic_formatting_ostream< CharT >&, attributes::named_scope::value_type::value_type const&) >
 parse_named_scope_format(const CharT* format)
 {
     return parse_named_scope_format(format, format + std::char_traits< CharT >::length(format));
@@ -84,7 +84,7 @@ parse_named_scope_format(const CharT* format)
 
 //! Parses the named scope format string and constructs the formatter function
 template< typename CharT, typename TraitsT, typename AllocatorT >
-inline boost::log::aux::light_function2< void, basic_formatting_ostream< CharT >&, attributes::named_scope::value_type::value_type const& >
+inline boost::log::aux::light_function< void (basic_formatting_ostream< CharT >&, attributes::named_scope::value_type::value_type const&) >
 parse_named_scope_format(std::basic_string< CharT, TraitsT, AllocatorT > const& format)
 {
     const CharT* p = format.c_str();
@@ -93,7 +93,7 @@ parse_named_scope_format(std::basic_string< CharT, TraitsT, AllocatorT > const& 
 
 //! Parses the named scope format string and constructs the formatter function
 template< typename CharT, typename TraitsT >
-inline boost::log::aux::light_function2< void, basic_formatting_ostream< CharT >&, attributes::named_scope::value_type::value_type const& >
+inline boost::log::aux::light_function< void (basic_formatting_ostream< CharT >&, attributes::named_scope::value_type::value_type const&) >
 parse_named_scope_format(basic_string_literal< CharT, TraitsT > const& format)
 {
     const CharT* p = format.c_str();
@@ -116,7 +116,7 @@ public:
     //! Attribute value type
     typedef attributes::named_scope::value_type value_type;
     //! Named scope formatter
-    typedef boost::log::aux::light_function2< void, stream_type&, value_type::value_type const& > element_formatter_type;
+    typedef boost::log::aux::light_function< void (stream_type&, value_type::value_type const&) > element_formatter_type;
 
 private:
     //! Element formatting function
