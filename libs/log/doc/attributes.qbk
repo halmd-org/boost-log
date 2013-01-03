@@ -356,9 +356,9 @@ TODO
 
 [endsect]
 
-[section:attribute_values_view Attribute values view]
+[section:attribute_value_set Attribute value set]
 
-    #include <``[boost_log_attributes_attribute_values_view_hpp]``>
+    #include <``[boost_log_attributes_attribute_value_set_hpp]``>
 
 TODO
 

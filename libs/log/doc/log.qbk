@@ -67,6 +67,8 @@
 [import ../example/doc/tutorial_logging.cpp]
 [import ../example/doc/tutorial_attributes.cpp]
 [import ../example/doc/tutorial_filtering.cpp]
+[import ../example/doc/core_record.cpp]
+[import ../example/doc/core_core_manual.cpp]
 [import ../example/doc/sources_net_connection.cpp]
 [import ../example/doc/sources_net_connection_chan.cpp]
 [import ../example/doc/sources_severity.cpp]
@@ -135,8 +137,9 @@ The library should build and work with a reasonably compliant compiler. The libr
 
 * Windows XP, Windows Vista, Windows 7. MSVC 8.0 and newer.
 * Windows Vista. Intel C++ Compiler 10.1.022, 11.1.048.
-* Linux. GCC 4.2 and newer. GCC 4.1 may work too, but it was not tested.
+* Linux. GCC 4.5 and newer. Older versions may work too, but it was not tested.
 * Linux. Intel C++ 11.1.056.
+* Linux. Clang 3.2.
 
 The following compilers/platforms are not supported and will likely fail to compile the library:
 

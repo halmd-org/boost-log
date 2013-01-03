@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/phoenix/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
@@ -23,6 +24,7 @@
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
+#include <boost/log/utility/value_ref.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 
 namespace logging = boost::log;
@@ -105,6 +107,66 @@ void init()
     logging::add_common_attributes();
 }
 //]
+
+#if 0
+
+//[ example_tutorial_filtering_bind
+bool my_filter(logging::value_ref< severity_level > const& level, logging::value_ref< std::string > const& tag)
+{
+    return level >= warning || tag == "IMPORTANT_MESSAGE";
+}
+
+void init()
+{
+    //<-
+
+    // Setup the common formatter for all sinks
+    logging::formatter fmt = expr::stream
+        << std::setw(6) << std::setfill('0') << line_id << std::setfill(' ')
+        << ": <" << severity << ">\t"
+        << expr::if_(expr::has_attr(tag_attr))
+           [
+               expr::stream << "[" << tag_attr << "] "
+           ]
+        << expr::smessage;
+
+    // Initialize sinks
+    typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
+    boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+
+    pSink->locked_backend()->add_stream(
+        boost::make_shared< std::ofstream >("full.log"));
+
+    pSink->set_formatter(fmt);
+
+    logging::core::get()->add_sink(pSink);
+
+    pSink = boost::make_shared< text_sink >();
+
+    pSink->locked_backend()->add_stream(
+        boost::make_shared< std::ofstream >("important.log"));
+
+    pSink->set_formatter(fmt);
+
+    //->
+    // ...
+
+    namespace phoenix = boost::phoenix;
+    pSink->set_filter(phoenix::bind(&my_filter, severity, tag_attr));
+
+    // ...
+    //<-
+
+    logging::core::get()->add_sink(pSink);
+
+    // Add attributes
+    logging::add_common_attributes();
+
+    //->
+}
+//]
+
+#endif
 
 void logging_function()
 {

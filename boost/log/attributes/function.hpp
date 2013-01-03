@@ -82,7 +82,7 @@ protected:
 
         attribute_value get_value()
         {
-            return make_attribute_value(m_Functor());
+            return attributes::make_attribute_value(m_Functor());
         }
     };
 
@@ -126,8 +126,8 @@ inline function<
         >::type
     >::type result_type;
 
-    typedef function< result_type > function_t;
-    return function_t(fun);
+    typedef function< result_type > function_type;
+    return function_type(fun);
 }
 
 #endif // BOOST_NO_RESULT_OF
@@ -152,8 +152,8 @@ inline function<
         typename remove_reference< R >::type
     >::type result_type;
 
-    typedef function< result_type > function_t;
-    return function_t(fun);
+    typedef function< result_type > function_type;
+    return function_type(fun);
 }
 
 #endif // BOOST_LOG_DOXYGEN_PASS

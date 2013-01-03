@@ -308,9 +308,13 @@ Here, the `format` parameter accepts such a format template. The template may co
 
 You can add a custom formatter to a sink backend that supports formatting. The formatter is actually a function object that supports the following signature:
 
-    void (logging::record const& rec, logging::basic_formatting_ostream< CharT >& strm);
+    void (logging::record_view const& rec, logging::basic_formatting_ostream< CharT >& strm);
 
-Here `CharT` is the target character type. The formatter will be invoked whenever a log record `rec` passes filtering and is to be stored in log. The formatted record should be composed by insertion into STL-compatible output stream `strm`. Here's an example of a custom formatter function usage:
+Here `CharT` is the target character type. The formatter will be invoked whenever a log record view `rec` passes filtering and is to be stored in log.
+
+[tip Record views are very similar to records. The notable distinction is that the view is immutable and implements shallow copy. Formatters and sinks only operate on record views, which prevents them from modifying the record while it can be still in use by other sinks in other threads.]
+
+The formatted record should be composed by insertion into STL-compatible output stream `strm`. Here's an example of a custom formatter function usage:
 
 [example_tutorial_formatters_custom]
 
@@ -331,6 +335,12 @@ In this sample we initialize two sinks - one for the complete log file and the o
 Notably, the formatter itself contains a filter here. As you can see, the format contains a conditional part that is only present when log records contain the "Tag" attribute. The [link log.detailed.expressions.predicates.has_attr `has_attr`] predicate checks whether the record containts the "Tag" attribute value and conrtols whether it is put into the file or not. We used the attribute keyword to specify the name and type of the attribute for the predicate, but it is also possible to specify them in the [link log.detailed.expressions.predicates.has_attr `has_attr`] call site. Conditional formatters are explained in more details [link log.detailed.expressions.formatters.conditional here].
 
 Further goes the initialization of the two sinks. The first sink does not have any filter, which means it will save every log record to the file. We call `set_filter` on the second sink to only save log records with severity no less than `warning` or having a "Tag" attribute with value "IMPORTANT_MESSAGE". As you can see, the filter syntax resembles usual C++ very much, especially when attribute keywords are used.
+
+Like with formatters, it is also possible to use custom functions as filters. __boost_phoenix__ can be very helpful in this case as its `bind` implementation is compatible with attribute placeholders. The previous example can be modified in the following way:
+
+[example_tutorial_filtering_bind]
+
+As you can see, the custom formatter receives attribute values wrapped into the [class_log_value_ref] template. This wrapper contains an optional reference to the attribute value of the specified type; the reference is valid if the log record contains the attribute value of the required type. The relational operators used in `my_filter` can be applied unconditionally because they will automatically return `false` if the reference is not valid. The rest is done with the `bind` expression which will recognize the `severity` and `tag_attr` keywords and extract the corresponding values before passing them to `my_filter`.
 
 You can try how this works by compiling and running the [@boost:/libs/log/example/doc/tutorial_filtering.cpp test].
 
