@@ -4,65 +4,12 @@
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
-/*!
- * \file   light_function.hpp
- * \author Andrey Semashev
- * \date   20.06.2010
- *
- * \brief  This header is the Boost.Log library impl, see the library documentation
- *         at http://www.boost.org/libs/log/doc/log.html.
- *
- * The file contains a lightweight alternative of Boost.Function. It does not provide all
- * features of Boost.Function but doesn't introduce dependency on Boost.Bind.
- */
 
-#ifndef BOOST_LOG_DETAIL_LIGHT_FUNCTION_HPP_INCLUDED_
-#define BOOST_LOG_DETAIL_LIGHT_FUNCTION_HPP_INCLUDED_
-
-#include <cstddef>
-#include <boost/move/move.hpp>
-#include <boost/log/detail/config.hpp>
-#include <boost/log/utility/explicit_operator_bool.hpp>
-#include <boost/type_traits/remove_cv.hpp>
-#if defined(BOOST_NO_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-#include <boost/preprocessor/iteration/iterate.hpp>
-#include <boost/preprocessor/repetition/enum_params.hpp>
-#include <boost/preprocessor/repetition/enum_binary_params.hpp>
-#include <boost/preprocessor/repetition/enum_trailing_params.hpp>
-#include <boost/preprocessor/repetition/enum_trailing_binary_params.hpp>
-#endif
-#if defined(BOOST_NO_RVALUE_REFERENCES) || defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-#include <boost/utility/enable_if.hpp>
-#include <boost/type_traits/is_same.hpp>
-#include <boost/mpl/or.hpp>
-#else
-#include <boost/type_traits/remove_reference.hpp>
-#endif
-#if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
-#include <boost/assert.hpp>
-#endif
-
-#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
-#pragma once
-#endif
-
-#ifndef BOOST_LOG_LIGHT_FUNCTION_LIMIT
-#define BOOST_LOG_LIGHT_FUNCTION_LIMIT 2
-#endif
-
-namespace boost {
-
-BOOST_LOG_OPEN_NAMESPACE
-
-namespace aux {
-
-template< typename SignatureT >
-class light_function;
-
-#if !defined(BOOST_NO_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-
-template< typename ResultT, typename... ArgsT >
-class light_function< ResultT (ArgsT...) >
+template<
+    typename ResultT
+    BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_ITERATION(), typename ArgT)
+>
+class light_function< ResultT (BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), ArgT)) >
 {
     typedef light_function this_type;
     BOOST_COPYABLE_AND_MOVABLE(this_type)
@@ -73,7 +20,7 @@ public:
 private:
     struct impl_base
     {
-        typedef result_type (*invoke_type)(impl_base*, ArgsT...);
+        typedef result_type (*invoke_type)(impl_base* BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_ITERATION(), ArgT));
         const invoke_type invoke;
 
         typedef impl_base* (*clone_type)(const impl_base*);
@@ -125,9 +72,9 @@ private:
         {
             return new impl(static_cast< const impl* >(self)->m_Function);
         }
-        static result_type invoke_impl(impl_base* self, ArgsT... args)
+        static result_type invoke_impl(impl_base* self BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, arg))
         {
-            return static_cast< impl* >(self)->m_Function(args...);
+            return static_cast< impl* >(self)->m_Function(BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg));
         }
     };
 
@@ -201,7 +148,7 @@ public:
     }
     light_function& operator= (BOOST_COPY_ASSIGN_REF(this_type) that)
     {
-        light_function tmp(that);
+        light_function tmp = that;
         this->swap(tmp);
         return *this;
     }
@@ -237,9 +184,9 @@ public:
     }
 #endif
 
-    result_type operator() (ArgsT... args) const
+    result_type operator() (BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, arg)) const
     {
-        return m_pImpl->invoke(m_pImpl, args...);
+        return m_pImpl->invoke(m_pImpl BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_ITERATION(), arg));
     }
 
     BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
@@ -262,8 +209,10 @@ public:
     }
 };
 
-template< typename... ArgsT >
-class light_function< void (ArgsT...) >
+template<
+    BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), typename ArgT)
+>
+class light_function< void (BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), ArgT)) >
 {
     typedef light_function this_type;
     BOOST_COPYABLE_AND_MOVABLE(this_type)
@@ -274,7 +223,7 @@ public:
 private:
     struct impl_base
     {
-        typedef void (*invoke_type)(impl_base*, ArgsT...);
+        typedef void (*invoke_type)(impl_base* BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_ITERATION(), ArgT));
         const invoke_type invoke;
 
         typedef impl_base* (*clone_type)(const impl_base*);
@@ -326,9 +275,9 @@ private:
         {
             return new impl(static_cast< const impl* >(self)->m_Function);
         }
-        static result_type invoke_impl(impl_base* self, ArgsT... args)
+        static result_type invoke_impl(impl_base* self BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, arg))
         {
-            static_cast< impl* >(self)->m_Function(args...);
+            static_cast< impl* >(self)->m_Function(BOOST_PP_ENUM_PARAMS(BOOST_PP_ITERATION(), arg));
         }
     };
 
@@ -437,9 +386,9 @@ public:
     }
 #endif
 
-    result_type operator() (ArgsT... args) const
+    result_type operator() (BOOST_PP_ENUM_BINARY_PARAMS(BOOST_PP_ITERATION(), ArgT, arg)) const
     {
-        m_pImpl->invoke(m_pImpl, args...);
+        m_pImpl->invoke(m_pImpl BOOST_PP_ENUM_TRAILING_PARAMS(BOOST_PP_ITERATION(), arg));
     }
 
     BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
@@ -461,25 +410,3 @@ public:
         that.m_pImpl = p;
     }
 };
-
-#else // !defined(BOOST_NO_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-
-#define BOOST_PP_FILENAME_1 <boost/log/detail/light_function_pp.hpp>
-#define BOOST_PP_ITERATION_LIMITS (0, BOOST_LOG_LIGHT_FUNCTION_LIMIT)
-#include BOOST_PP_ITERATE()
-
-#endif // !defined(BOOST_NO_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-
-template< typename SignatureT >
-inline void swap(light_function< SignatureT >& left, light_function< SignatureT >& right)
-{
-    left.swap(right);
-}
-
-} // namespace aux
-
-BOOST_LOG_CLOSE_NAMESPACE // namespace log
-
-} // namespace boost
-
-#endif // BOOST_LOG_DETAIL_LIGHT_FUNCTION_HPP_INCLUDED_

@@ -74,7 +74,7 @@ public:
     {
         // We rely on the fact that the attribute_values() method returns a reference to the object in the record implementation,
         // so we can comare pointers.
-        return FunT::operator() (static_cast< const void* >(&left.attribute_values()), static_cast< const void* >(right.attribute_values()));
+        return FunT::operator() (static_cast< const void* >(&left.attribute_values()), static_cast< const void* >(&right.attribute_values()));
     }
 };
 
