@@ -19,9 +19,9 @@ There is also a way to specify the filter in the form of a string template. This
 
 The [funcref boost::log::expressions::attr attr] placeholder represents an attribute value in template expressions. Given the record view or a set of attribute values, the placeholder will attempt to extract the specified attribute value from the argument upon invokation. This can be roughly described with the following pseudo-code:
 
-    logging::value_ref< T > val = expr::attr< T >(name)(rec);
+    logging::value_ref< T, TagT > val = expr::attr< T, TagT >(name)(rec);
 
-where `val` is the [link log.detailed.utilities.value_ref reference] to the extracted value, `name` and `T` are the attribute value [link lod.detailed.attributes.related_components.attribute_name name] and type and `rec` is the log [link log.detailed.core.record record view] or [link lod.detailed.attributes.related_components.attribute_value_set attribute value set]. `T` can be a __boost_mpl__ type sequence with possible expected types of the value; the extraction will succeed if the type of the value matches one of the types in the sequence.
+where `val` is the [link log.detailed.utilities.value_ref reference] to the extracted value, `name` and `T` are the attribute value [link lod.detailed.attributes.related_components.attribute_name name] and type, `TagT` is an optional tag (we'll return to it in a moment) and `rec` is the log [link log.detailed.core.record record view] or [link lod.detailed.attributes.related_components.attribute_value_set attribute value set]. `T` can be a __boost_mpl__ type sequence with possible expected types of the value; the extraction will succeed if the type of the value matches one of the types in the sequence.
 
 The `attr` placeholder can be used in __boost_phoenix__ expressions, including the `bind` expression.
 
@@ -65,57 +65,27 @@ By default, when the requested attribute value is not found in the record, `attr
         expr::attr< std::string >("Channel").or_default(std::string("general")) == "net"
     );
 
+[tip You can also use the [link log.detailed.expressions.predicates.has_attr `has_attr`] predicate to implement filters and formatters conditional on the attribute value presence.]
+
 The default behavior is also accessible through the `or_none` modifier. The modified placeholders can be used in filters and formatters just the same way as the unmodified ones.
 
-[tip In `bind` expressions, the bound function object will still receive the [link log.detailed.utilities.value_ref `value_ref`]-wrapped values in place of the modified `attr` placeholder. Even though both `or_throw` and `or_default` modifiers guarantee that the bound function will receive a filled reference, [link log.detailed.utilities.value_ref `value_ref`] is still needed if the value type is specified as a type sequence. Also, the reference wrapper may contain a tag type which may be useful for further customization.]
+In `bind` expressions, the bound function object will still receive the [link log.detailed.utilities.value_ref `value_ref`]-wrapped values in place of the modified `attr` placeholder. Even though both `or_throw` and `or_default` modifiers guarantee that the bound function will receive a filled reference, [link log.detailed.utilities.value_ref `value_ref`] is still needed if the value type is specified as a type sequence. Also, the reference wrapper may contain a tag type which may be useful for formatting customization.
 
+[heading Attribute tags and custom formatting operators]
 
-Besides generating lambda expressions, the `attr` placeholder allows constructing filters with its member functions. There are currently two such members that can be used with any type:
+The `TagT` type in the [link log.detailed.expressions.attr abstract description] of `attr` above is optional and by default is `void`. This is an attribute tag which can be used to customize the output formatters produce for different attributes. This tag is forwarded to the [link log.detailed.utilities.manipulators.to_log `to_log`] manipulator when the extracted attribute value is put to a stream (this behavior is warranted by [link log.detailed.utilities.value_ref `value_ref`] implementation). Here's a quick example:
 
-* `is_in_range(T const& lower, T const& upper)` generates a filter that returns `true` if the attribute value `x` of type `T` satisfies condition `lower <= x < upper`. For example:
+[example_expressions_attr_formatter_stream_tag]
 
-    sink->set_filter
-    (
-        // drops all records that have level below 3 or greater than 4
-        expr::attr< int >("Severity").is_in_range(3, 5)
-    );
-
-* `satisfies(FunT const& fun)` allows injection of a user-defined unary predicate `fun` into the filter. The predicate should accept an attribute value as an argument and return a value, convertible to `bool`. The result of the filter will be equivalent to the result of the predicate. For example:
-
-    bool check_severity_level(int level);
-
-    sink->set_filter
-    (
-        expr::attr< int >("Severity").satisfies(&check_severity_level)
-    );
-
-The `attr` placeholder has advanced support for string-typed attribute values (that have type `std::string` or `std::wstring`, that is). For string attribute values there are also available the following member functions:
-
-* `begins_with(T const& s)`, `ends_with(T const& s)` and `contains(T const& s)`. As follows from their names, the functions construct filters that return `true` if an attribute value begins with, ends with or contains the specified substring `s`, respectively. The string comparison is case sensitive.
-
-    sink->set_filter
-    (
-        // selects only records that are related to Russian web domains
-        expr::attr< std::string >("Domain").ends_with(".ru")
-    );
-
-* `matches(T const& regex)` allows to set up a filter based on __boost_regex__ or __boost_xpressive__ regular expressions matching mechanism (note that you also have to include the appropriate header from the `boost/log/support` folder). The filter returns `true` if the attribute value matches the `regex` expression.
-
-    sink->set_filter
-    (
-        expr::attr< std::string >("Domain").matches(boost::regex("www\\..*\\.ru"))
-    );
-
-It is possible that the filter doesn't find the required attribute value in the given log record. By default, the filter will throw an exception in this case. If this behavior is not desired, there are two ways to change it:
-
-# Use the [link log.detailed.expressions.predicates.has_attr `has_attr`] filter to first verify that the required attribute value is present.
-# Use an additional second `std::nothrow` argument to the `attr` placeholder. In this case the filter will silently return `false` as the result of such unsuccessful filtering.
+Here we specify a different formatting operator for the severity level wrapped in the [link log.detailed.utilities.manipulators.to_log `to_log_manip`] manipulator marked with the tag `severity_tag`. This operator will be called when log records are formatted while the regular `operator<<` will be used in other contexts. You can compile and run the complete example in [@boost:/libs/log/example/doc/expressions_attr_fmt_tag.cpp]
 
 [endsect]
 
-[section:attr_keywords Defining attribute placeholders]
+[section:attr_keywords Defining attribute keywords]
 
     #include <``[boost_log_expressions_keyword_hpp]``>
+
+Attribute keywords can be used as replacements for the [link log.detailed.expressions.attr `attr`] placeholders in filters and formatters while providing a more concise and less error prone syntax.
 
 [endsect]
 
@@ -127,7 +97,7 @@ This section describes several expressions that can be used as predicates in the
 
     #include <``[boost_log_expressions_predicates_has_attr_hpp]``>
 
-The filter `has_attr` checks if an attribute value with the specified name and, optionally, type is attached to a log record. If no type specified to the filter, the filter returns `true` if any value with the specified name is found. If an MPL-compatible type sequence in specified as a value type, the filter returns `true` if a value with the specified name and one of the specified types is found.
+The filter [funcref boost::log::expressions::has_attr `has_attr`] checks if an attribute value with the specified name and, optionally, type is attached to a log record. If no type specified to the filter, the filter returns `true` if any value with the specified name is found. If an MPL-compatible type sequence in specified as a value type, the filter returns `true` if a value with the specified name and one of the specified types is found.
 
 This filter is usually used in conjunction with [link log.detailed.expressions.formatters.conditional conditional formatters], but it also can be used as a quick filter based on the log record structure. For example, one can use this filter to extract statistic records and route them to a specific sink.
 
@@ -235,6 +205,72 @@ This filter is usually used in conjunction with [link log.detailed.expressions.f
     }
 
 Please note that in the example above we extended the library in two ways: we defined a new sink backend `my_stat_accumulator` and a new macro `PUT_STAT`. Also note the technique of extracting the attribute value from the view - we need to both check that the needed attribute value is found in the view and that it has the required type. There is also a mechanism of [link log.detailed.attributes.related_components.extractors attribute value extractors] that can simplify this, especially when an attribute can have a number of types.
+
+[endsect]
+
+[section:is_in_range Range checking filter]
+
+    #include <``[boost_log_expressions_predicates_is_in_range_hpp]``>
+
+
+* `is_in_range(T const& lower, T const& upper)` generates a filter that returns `true` if the attribute value `x` of type `T` satisfies condition `lower <= x < upper`. For example:
+
+    sink->set_filter
+    (
+        // drops all records that have level below 3 or greater than 4
+        expr::attr< int >("Severity").is_in_range(3, 5)
+    );
+
+[endsect]
+
+[section:simple_string_matching Simple string matching filters]
+
+    #include <``[boost_log_expressions_predicates_begins_with_hpp]``>
+    #include <``[boost_log_expressions_predicates_ends_with_hpp]``>
+    #include <``[boost_log_expressions_predicates_contains_hpp]``>
+
+* `begins_with(T const& s)`, `ends_with(T const& s)` and `contains(T const& s)`. As follows from their names, the functions construct filters that return `true` if an attribute value begins with, ends with or contains the specified substring `s`, respectively. The string comparison is case sensitive.
+
+    sink->set_filter
+    (
+        // selects only records that are related to Russian web domains
+        expr::attr< std::string >("Domain").ends_with(".ru")
+    );
+
+
+[endsect]
+
+[section:advanced_string_matching Advanced string matching filter]
+
+    #include <``[boost_log_expressions_predicates_matches_hpp]``>
+
+    // Supporting headers
+    #include <``[boost_log_support_regex_hpp]``>
+    #include <``[boost_log_support_xpressive_hpp]``>
+    #include <``[boost_log_support_spirit_qi_hpp]``>
+    #include <``[boost_log_support_spirit_classic_hpp]``>
+
+* `matches(T const& regex)` allows to set up a filter based on __boost_regex__ or __boost_xpressive__ regular expressions matching mechanism (note that you also have to include the appropriate header from the `boost/log/support` folder). The filter returns `true` if the attribute value matches the `regex` expression.
+
+    sink->set_filter
+    (
+        expr::attr< std::string >("Domain").matches(boost::regex("www\\..*\\.ru"))
+    );
+
+[endsect]
+
+[section:channel_severity_filter Severity threshold per channel filter]
+
+    #include <``[boost_log_expressions_predicates_severity_channel_filter_hpp]``>
+
+
+[endsect]
+
+[section:is_debugger_present Debugger presence filter]
+
+    #include <``[boost_log_expressions_predicates_is_debugger_present_hpp]``>
+
+This filter is implemented for Windows only.
 
 [endsect]
 

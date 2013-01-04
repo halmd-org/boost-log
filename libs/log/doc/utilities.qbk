@@ -249,12 +249,14 @@ TODO
 
 There are cases when log records need to be ordered. One possible use case is storing records in a container or a priority queue. The library provides two types of record ordering predicates out of the box:
 
-[heading Opaque handle ordering]
+[heading Abstract record ordering]
 
-The [class_log_handle_ordering] class allows application of a quick opaque ordering. The result of this ordering is not stable between different runs of the application, however it provides the best performance. The [class_log_handle_ordering] class is a template that is specialized with an optional predicate function that will be able to compare `void*` pointers. By default a `std::less` equivalent is used.
+The [class_log_abstract_ordering] class allows application of a quick opaque ordering. The result of this ordering is not stable between different runs of the application and in generag cannot be predicted before the predicate is applied, however it provides the best performance. The [class_log_abstract_ordering] class is a template that is specialized with an optional predicate function that will be able to compare `const void*` pointers. By default an `std::less` equivalent is used.
 
     // A set of unique records
-    std::set< logging::record, logging::handle_ordering< > > m_Records;
+    std::set< logging::record_view, logging::abstract_ordering< > > m_Records;
+
+This kind of ordering can be useful if the particular order of log records is not important but nevertheless some order is required.
 
 [heading Attribute value based ordering]
 
@@ -268,12 +270,12 @@ This kind of ordering is implemented with the [class_log_attribute_value_orderin
 
     // Records organized into a queue based on the "Severity" attribute value
     std::priority_queue<
-        logging::record,
-        std::vector< logging::record >,
+        logging::record_view,
+        std::vector< logging::record_view >,
         ordering
     > m_Records(ordering("Severity"));
 
-Like the [class_log_handle_ordering], [class_log_attribute_value_ordering] also accepts the third optional template parameter, which should be the predicate to compare attribute values (`int`s in the example above). By default, a `std::less` equivalent is used.
+Like the [class_log_abstract_ordering], [class_log_attribute_value_ordering] also accepts the third optional template parameter, which should be the predicate to compare attribute values (`int`s in the example above). By default, a `std::less` equivalent is used.
 
 You can also use the `make_attr_ordering` generator function to automatically generate the [class_log_attribute_value_ordering] instance based on the attribute value name and the ordering function. This might be useful if the ordering function has a non-trivial type, like the ones __boost_bind__ provides.
 
@@ -302,6 +304,26 @@ It is sometimes convenient to completely suppress all exceptions at a certain li
         // Disable all exceptions
         core->set_exception_handler(logging::make_exception_suppressor());
     }
+
+[endsect]
+
+[section:manipulators Output manipulators]
+
+[section:to_log Customized logging manipulator]
+
+    #include <``[boost_log_utility_manipulators_to_log_hpp]``>
+
+TODO
+
+[endsect]
+
+[section:add_attr Attribute value attaching manipulator]
+
+    #include <``[boost_log_utility_manipulators_add_attr_hpp]``>
+
+TODO
+
+[endsect]
 
 [endsect]
 

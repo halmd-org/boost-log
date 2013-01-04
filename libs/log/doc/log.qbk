@@ -70,6 +70,7 @@
 [import ../example/doc/tutorial_filtering.cpp]
 [import ../example/doc/core_record.cpp]
 [import ../example/doc/core_core_manual.cpp]
+[import ../example/doc/expressions_attr_fmt_tag.cpp]
 [import ../example/doc/sources_net_connection.cpp]
 [import ../example/doc/sources_net_connection_chan.cpp]
 [import ../example/doc/sources_severity.cpp]

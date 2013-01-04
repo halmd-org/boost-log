@@ -35,18 +35,22 @@ namespace boost {
 BOOST_LOG_OPEN_NAMESPACE
 
 /*!
- * \brief Ordering predicate, based on log record handle comparison
+ * \brief Ordering predicate, based on opaque pointers to the record view implementation data
  *
- * This predicate offers a quick log record ordering based on the log record handles.
- * It is not specified whether one record is less than another, in terms of the
- * predicate, until the actual comparison is performed. Moreover, the ordering may
- * change every time the application runs.
+ * Since record views only refer to a shared implementation data, this predicate is able to order the views
+ * by comparing the pointers to the data. Therefore two views are considered to be equivalent if they
+ * refer to the same implementation data. Otherwise it is not specified whether one record is ordered before
+ * the other until the predicate is applied. Note that the ordering may change every time the application runs.
  *
  * This kind of ordering may be useful if log records are to be stored in an associative
- * container with as least performance overhead as possible.
+ * container with as least performance overhead as possible, when the particular order is not important.
+ *
+ * The \c FunT template argument is the predicate that is used to actually compare pointers. It should be
+ * able to compare <tt>const void*</tt> pointers. The compared pointers may refer to distinct memory regions,
+ * the pointers must not be interpreted in any way.
  */
 template< typename FunT = less >
-class handle_ordering :
+class abstract_ordering :
     private FunT
 {
 public:
@@ -57,13 +61,13 @@ public:
     /*!
      * Default constructor. Requires \c FunT to be default constructible.
      */
-    handle_ordering() : FunT()
+    abstract_ordering() : FunT()
     {
     }
     /*!
      * Initializing constructor. Constructs \c FunT instance as a copy of the \a fun argument.
      */
-    explicit handle_ordering(FunT const& fun) : FunT(fun)
+    explicit abstract_ordering(FunT const& fun) : FunT(fun)
     {
     }
 
