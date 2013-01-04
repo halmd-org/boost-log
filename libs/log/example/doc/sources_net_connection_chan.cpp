@@ -85,27 +85,27 @@ int main(int, char*[])
 {
     // Construct the sink for the "net" channel
     typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-    boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+    boost::shared_ptr< text_sink > sink = boost::make_shared< text_sink >();
 
-    pSink->locked_backend()->add_stream(
+    sink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("net.log"));
 
-    pSink->set_formatter
+    sink->set_formatter
     (
         expr::stream << line_id << ": [" << remote_address << "] " << expr::smessage
     );
 
-    pSink->set_filter(channel == "net");
+    sink->set_filter(channel == "net");
 
-    logging::core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(sink);
 
     // Construct the sink for the "stat" channel
-    pSink = boost::make_shared< text_sink >();
+    sink = boost::make_shared< text_sink >();
 
-    pSink->locked_backend()->add_stream(
+    sink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("stat.log"));
 
-    pSink->set_formatter
+    sink->set_formatter
     (
         expr::stream
             << remote_address
@@ -120,9 +120,9 @@ int main(int, char*[])
             << expr::smessage
     );
 
-    pSink->set_filter(channel == "stat");
+    sink->set_filter(channel == "stat");
 
-    logging::core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(sink);
 
     // Register other common attributes, such as time stamp and record counter
     logging::add_common_attributes();

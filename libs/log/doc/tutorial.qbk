@@ -61,13 +61,13 @@ As a starting point, here is how you would initialize logginig to a file:
 
 [example_tutorial_file_simple]
 
-The added piece is the call to the [link log.detailed.utilities.init.convenience `add_file_log`] function. As the name implies, the function initializes a logging sink that stores log records into a text file. The function also accepts a number of customization options, such as the file rotation interval and size limits. For instance:
+The added piece is the call to the [link log.detailed.utilities.setup.convenience `add_file_log`] function. As the name implies, the function initializes a logging sink that stores log records into a text file. The function also accepts a number of customization options, such as the file rotation interval and size limits. For instance:
 
 [example_tutorial_file_advanced]
 
 See the full code in [@boost:/libs/log/example/doc/tutorial_file.cpp].
 
-You can see that the options are passed to the function in the named form. This approach is also taken in many other places of the library. You'll get used to it. The meaning of the parameters is mostly self-explaining and is documented in this manual (see [link log.detailed.sink_backends.text_file here] for what regards the text file sink). This and other convenience initialization functions are described in [link log.detailed.utilities.init.convenience this] section.
+You can see that the options are passed to the function in the named form. This approach is also taken in many other places of the library. You'll get used to it. The meaning of the parameters is mostly self-explaining and is documented in this manual (see [link log.detailed.sink_backends.text_file here] for what regards the text file sink). This and other convenience initialization functions are described in [link log.detailed.utilities.setup.convenience this] section.
 
 [note You can register more than one sink. Each sink will receive and process log records as you emit them independently from others.]
 
@@ -173,7 +173,7 @@ With this call attributes "LineID", "TimeStamp", "ProcessID" and "ThreadID" are 
 
 [tip By default, when application starts, no attributes are registered in the library. The application has to register all the necessary attributes in the library before it starts writing logs. This can be done as a part of the library initialization. A curious reader could have wondered how trivial logging works then. The answer is that the default sink doesn't really use any attribute values, except for the severity level, to compose its output. This is done to avoid the need for any initialization for trivial logging. Once you use filters or formatters and non-default sinks you will have to register the attributes you need.]
 
-The `add_common_attributes` function is one of the several convenience helpers described [link log.detailed.utilities.init.convenience here].
+The `add_common_attributes` function is one of the several convenience helpers described [link log.detailed.utilities.setup.convenience here].
 
 Some attrubutes are registered automatically on loggers construction. For example, [link log.detailed.sources.severity_level_logger `severity_logger`] registers a source-specific attribute "Severity" which can be used to add a level of emphasis for different log records. For example:
 
@@ -189,7 +189,7 @@ You can see here that the `open_record` can take named arguments. Some logger ty
 
 [heading More attributes]
 
-Let's see what's under the hood of that [link log.detailed.utilities.init.convenience `add_common_attributes`] function we used in the simple form section. It might look something like this:
+Let's see what's under the hood of that [link log.detailed.utilities.setup.convenience `add_common_attributes`] function we used in the simple form section. It might look something like this:
 
     void add_common_attributes()
     {
@@ -302,7 +302,7 @@ See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_string.cpp].
 
 Here, the `format` parameter accepts such a format template. The template may contain a number of placeholders enclosed with percent signs (`%`). Each placeholder must contain an attribute value name to insert instead of the placeholder. The `%Message%` placeholder will be replaced with the logging record message.
 
-[note Textual format templates are not accepted by sink backends in the `set_formatter` method. In order to parse textual template into a formatter function one has to call `parse_formatter` function. See [link log.detailed.utilities.init.filter_formatter here] for more details.]
+[note Textual format templates are not accepted by sink backends in the `set_formatter` method. In order to parse textual template into a formatter function one has to call `parse_formatter` function. See [link log.detailed.utilities.setup.filter_formatter here] for more details.]
 
 [heading Custom formatting functons]
 
@@ -340,7 +340,7 @@ Like with formatters, it is also possible to use custom functions as filters. __
 
 [example_tutorial_filtering_bind]
 
-As you can see, the custom formatter receives attribute values wrapped into the [class_log_value_ref] template. This wrapper contains an optional reference to the attribute value of the specified type; the reference is valid if the log record contains the attribute value of the required type. The relational operators used in `my_filter` can be applied unconditionally because they will automatically return `false` if the reference is not valid. The rest is done with the `bind` expression which will recognize the `severity` and `tag_attr` keywords and extract the corresponding values before passing them to `my_filter`.
+As you can see, the custom formatter receives attribute values wrapped into the [link log.detailed.utilities.value_ref `value_ref`] template. This wrapper contains an optional reference to the attribute value of the specified type; the reference is valid if the log record contains the attribute value of the required type. The relational operators used in `my_filter` can be applied unconditionally because they will automatically return `false` if the reference is not valid. The rest is done with the `bind` expression which will recognize the `severity` and `tag_attr` keywords and extract the corresponding values before passing them to `my_filter`.
 
 You can try how this works by compiling and running the [@boost:/libs/log/example/doc/tutorial_filtering.cpp test].
 

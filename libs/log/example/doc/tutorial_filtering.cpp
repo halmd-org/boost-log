@@ -83,25 +83,25 @@ void init()
 
     // Initialize sinks
     typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-    boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+    boost::shared_ptr< text_sink > sink = boost::make_shared< text_sink >();
 
-    pSink->locked_backend()->add_stream(
+    sink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("full.log"));
 
-    pSink->set_formatter(fmt);
+    sink->set_formatter(fmt);
 
-    logging::core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(sink);
 
-    pSink = boost::make_shared< text_sink >();
+    sink = boost::make_shared< text_sink >();
 
-    pSink->locked_backend()->add_stream(
+    sink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("important.log"));
 
-    pSink->set_formatter(fmt);
+    sink->set_formatter(fmt);
 
-    pSink->set_filter(severity >= warning || (expr::has_attr(tag_attr) && tag_attr == "IMPORTANT_MESSAGE"));
+    sink->set_filter(severity >= warning || (expr::has_attr(tag_attr) && tag_attr == "IMPORTANT_MESSAGE"));
 
-    logging::core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(sink);
 
     // Add attributes
     logging::add_common_attributes();
@@ -132,32 +132,32 @@ void init()
 
     // Initialize sinks
     typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-    boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+    boost::shared_ptr< text_sink > sink = boost::make_shared< text_sink >();
 
-    pSink->locked_backend()->add_stream(
+    sink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("full.log"));
 
-    pSink->set_formatter(fmt);
+    sink->set_formatter(fmt);
 
-    logging::core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(sink);
 
-    pSink = boost::make_shared< text_sink >();
+    sink = boost::make_shared< text_sink >();
 
-    pSink->locked_backend()->add_stream(
+    sink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("important.log"));
 
-    pSink->set_formatter(fmt);
+    sink->set_formatter(fmt);
 
     //->
     // ...
 
     namespace phoenix = boost::phoenix;
-    pSink->set_filter(phoenix::bind(&my_filter, severity, tag_attr));
+    sink->set_filter(phoenix::bind(&my_filter, severity, tag_attr));
 
     // ...
     //<-
 
-    logging::core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(sink);
 
     // Add attributes
     logging::add_common_attributes();

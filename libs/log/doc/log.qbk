@@ -43,6 +43,7 @@
 [def __boost_asio__ [@http://www.boost.org/doc/libs/release/doc/html/boost_asio.html Boost.ASIO]]
 [def __boost_move__ [@http://www.boost.org/doc/libs/release/doc/html/move.html Boost.Move]]
 [def __boost_locale__ [@http://www.boost.org/doc/libs/release/libs/locale/doc/html/index.html Boost.Locale]]
+[def __boost_quickbook__ [@http://www.boost.org/doc/libs/release/doc/html/quickbook.html Boost.Quickbook]]
 
 [/ Auto-generated macros that refer to Reference sections /]
 [include top_level_reference.qbk]
@@ -225,14 +226,17 @@ Here are definitions of some terms that will be used widely throughout the docum
 [variablelist
     [[Log record][A single bundle of information, collected from the user's application, that is a candidate to be put into the log. In a simple case the log record will be represented as a line of text in the log file after being processed by the logging library.]]
     [[Attribute][An "attribute" is a piece of meta-information that can be used to specialize a log record. In Boost.Log attributes are represented by function objects with a specific interface, which return the actual attribute value when invoked.]]
-    [[Attribute value][Attribute values are the actual data acquired from attributes. This data is attached to the specific log record and processed by the library. Values can have different types (integers, strings and more complex, including user defined types). Some examples of attribute values: current time stamp value, file name, line number, current scope name, etc..]]
-    [[Log sink][A target, to which all log records are fed after being collected from the user's application. The sink defines where and how the log records are going to be stored.]]
-    [[Log source][An entry point for the user's application to put log records to. In a simple case it is an object (logger) which maintains a set of attributes that will be used to form a log record upon the user's request. However, one can surely create a source that would emit log records on some third-party events (for example, by intercepting another application's console output).]]
+    [[Attribute value][Attribute values are the actual data acquired from attributes. This data is attached to the specific log record and processed by the library. Values can have different types (integers, strings and more complex, including user defined types). Some examples of attribute values: current time stamp value, file name, line number, current scope name, etc.. Attribute values are enveloped in a type erasing wrapper, so the actual type of the attribute is not visible in the interface. The actual (erased) type of the value is sometimes called the stored type.]]
+    [[(Attribute) value visitation][A way of processing the attribute value. This approach involves a function object (a visitor) which is applied to the attribute value. The visitor should know the stored type of the attribute value in order to process it.]]
+    [[(Attribute) value extraction][A way of processing the attribute value when the caller attempts to obtain a reference to the stored value. The caller should know the stored type of the attribute value in order to be able to extract it.]]
+    [[Log sink][A target, to which all log records are fed after being collected from the user's application. The sink defines where and how the log records are going to be stored or processed.]]
+    [[Log source][An entry point for the user's application to put log records to. In a simple case it is an object (logger) which maintains a set of attributes that will be used to form a log record upon the user's request. However, one can surely create a source that would emit log records on some side events (for example, by intercepting and parsing console output of another application).]]
     [[Log filter][A predicate that takes a log record and tells whether this record should be passed through or discarded. The predicate typically forms its decision based on the attribute values attached to the record.]]
     [[Log formatter][A function object that generates the final textual output from a log record. Some sinks, e.g. a binary logging sink, may not need it, although almost any text-based sink would use a formatter to compose its output.]]
     [[Logging core][The global entity that maintains connections between sources and sinks and applies filters to records. It is mainly used when the logging library is initialized.]]
     [[i18n][Internationalization. The ability to manipulate wide characters.]]
     [[TLS][Thread-local storage. The concept of having a variable that has independent values for each thread that attempts to access it.]]
+    [[RTTI][Run-time type information. This is the C++ language support data structures required for `dynamic_cast` and `typeid` operators to function properly.]]
 ]
 
 [endsect]
@@ -275,10 +279,10 @@ Here are definitions of some terms that will be used widely throughout the docum
 [section:acknowledgments Acknowledgments]
 
 * Vladimir Prus managed the library review in Boost and actually reviewed it in the process.
-* Luca Rigini wrote the initial implementation of the NT event log sink and made a lot of suggestions on how to improve the library in regard of writing user-defined sinks.
+* Luca Rigini wrote the initial implementation of the NT event log sink and made a lot of suggestions on how to improve the library with regard to writing user-defined sinks.
 * Jean-Daniel Michaud, Michael Lacher and all others who took part in the discussion of the requirements to the library on [@http://www.crystalclearsoftware.com/cgi-bin/boost_wiki/wiki.pl?Boost.Logging Wiki].
 * John Torjo, Gennadiy Rozental and others for their discussion on John's logging library on the Boost developers list. It helped a lot to learn the requirements and possible solutions for the library.
-* All authors of the great Boost libraries that were involved in this library (notably, __boost_smart_ptr__, __boost_thread__, __boost_function__, __boost_optional__, __boost_date_time__, __boost_filesystem__, __boost_intrusive__ and others).
+* All authors of the great Boost libraries that were involved in this library (notably, __boost_smart_ptr__, __boost_thread__, __boost_date_time__, __boost_filesystem__, __boost_intrusive__, __boost_spirit2__ and others) and __boost_quickbook__ authors for a simple yet powerful documenting tool.
 * All the reviewers and the users who made suggestions and offered their feedback on the library. Most notably, Steven Watanabe for his in-depth studying the docs and the code, with a lot of fruitful comments on both.
 
 [endsect]

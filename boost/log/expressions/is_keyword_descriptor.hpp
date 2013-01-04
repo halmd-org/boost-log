@@ -33,7 +33,9 @@ namespace expressions {
  */
 struct keyword_descriptor
 {
+#ifndef BOOST_LOG_DOXYGEN_PASS
     typedef void _is_boost_log_keyword_descriptor;
+#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 /*!
@@ -45,11 +47,13 @@ struct is_keyword_descriptor :
 {
 };
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
 template< typename T >
 struct is_keyword_descriptor< T, typename T::_is_boost_log_keyword_descriptor > :
     public mpl::true_
 {
 };
+#endif
 
 } // namespace expressions
 

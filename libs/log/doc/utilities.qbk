@@ -235,6 +235,14 @@ There are also a number of time-related type sequences available:
 
 [endsect]
 
+[section:value_ref Value reference wrapper]
+
+    #include <``[boost_log_utility_value_ref_hpp]``>
+
+TODO
+
+[endsect]
+
 [section:record_ordering Log record ordering]
 
     #include <``[boost_log_utility_record_ordering_hpp]``>
@@ -297,7 +305,7 @@ It is sometimes convenient to completely suppress all exceptions at a certain li
 
 [endsect]
 
-[section:init Simplified library initialization tools]
+[section:setup Simplified library initialization tools]
 
 This part of the library is provided in order to simplify logging initialization and provide basic tools to develop user-specific initialization mechanisms. It is known that setup capabilities and preferences may vary widely from application to application, therefore the library does not attempt to provide a universal solution for this task. The provided tools are mostly intended to serve as a quick drop-in support for logging setup and a set of instruments to implement something more elaborate and more fitting users' needs.
 
@@ -305,9 +313,9 @@ Some of the features described in this section will require the separate library
 
 [section:convenience Convenience functions]
 
-    #include <``[boost_log_utility_init_to_console_hpp]``>
-    #include <``[boost_log_utility_init_to_file_hpp]``>
-    #include <``[boost_log_utility_init_common_attributes_hpp]``>
+    #include <``[boost_log_utility_setup_console_hpp]``>
+    #include <``[boost_log_utility_setup_file_hpp]``>
+    #include <``[boost_log_utility_setup_common_attributes_hpp]``>
 
 The library provides a number of functions that simplify some common initialization procedures, like sink and commonly used attributes registration. This is not much functionality. However, it saves a couple of minutes of learning the library for a newcomer.
 
@@ -316,7 +324,7 @@ Logging to the application console is the simplest way to see the logging librar
     int main(int, char*[])
     {
         // Initialize logging to std::clog
-        logging::init_log_to_console();
+        logging::add_console_log();
 
         // Here we go, we can write logs right away
         src::logger lg;
@@ -325,9 +333,9 @@ Logging to the application console is the simplest way to see the logging librar
         return 0;
     }
 
-Pretty easy, isn't it? There is `winit_log_to_console` function for wide-character logging. If you want to put logs to some other standard stream, you can pass the stream to the `init_log_to_console` function as an argument. E.g. enabling logging to `std::cout` instead of `std::clog` would look like this:
+Pretty easy, isn't it? There is `wadd_console_log` function for wide-character logging. If you want to put logs to some other standard stream, you can pass the stream to the `add_console_log` function as an argument. E.g. enabling logging to `std::cout` instead of `std::clog` would look like this:
 
-    logging::init_log_to_console(std::cout);
+    logging::add_console_log(std::cout);
 
 What's important, is that you can further manage the console sink if you save the `shared_ptr` to the sink that this function returns. This allows you to set up things like filter, formatter and auto-flush flag.
 
@@ -336,7 +344,7 @@ What's important, is that you can further manage the console sink if you save th
         // Initialize logging to std::clog
         boost::shared_ptr<
             sinks::synchronous_sink< sinks::text_ostream_backend >
-        > sink = logging::init_log_to_console();
+        > sink = logging::add_console_log();
 
         sink->set_filter(flt::attr< int >("Severity") >= 3);
         sink->locked_backend()->auto_flush(true);
@@ -353,7 +361,7 @@ Similarly to console, one can use a single function call to enable logging to a 
     int main(int, char*[])
     {
         // Initialize logging to the "test.log" file
-        logging::init_log_to_file("test.log");
+        logging::add_file_log("test.log");
 
         // Here we go, we can write logs right away
         src::logger lg;
@@ -362,7 +370,7 @@ Similarly to console, one can use a single function call to enable logging to a 
         return 0;
     }
 
-Like with `init_log_to_console`, the `init_log_to_file` function has its wide-character counterpart `winit_log_to_file` and returns the `shared_ptr` to the registered sink. The functions do not conflict and may be combined freely, so it is possible to set up logging to the console and a couple of files, including filtering and formatting, in about 10 lines of code.
+The `add_console_log` and `add_file_log` functions do not conflict and may be combined freely, so it is possible to set up logging to the console and a couple of files, including filtering and formatting, in about 10 lines of code.
 
 Lastly, there is an `add_common_attributes` function that registers two frequently used attributes: "LineID" and "TimeStamp". The former counts log record being made and has attribute value `unsigned int`. The latter, as its name implies, provides the current time for each log record, in the form of `boost::posix_time::ptime` (see __boost_date_time__). These two attributes are registered globally, so they will remain available in all threads and loggers. This makes the final version of our code sample look something like this:
 
@@ -474,7 +482,7 @@ So basically, settings container is a two-layer associative container, with two 
 [table Section "Core". Logging core settings.
 [[Parameter]             [Type]                                                               [Description]]
 [[Filter]                [`std::basic_string< CharT >` or [class_log_filter]]
-    [Global filter to be installed to the core. If specified in string form, it should conform to the rules described [link log.detailed.utilities.init.filter_formatter here]. If not specified, the global filter is not set.]
+    [Global filter to be installed to the core. If specified in string form, it should conform to the rules described [link log.detailed.utilities.setup.filter_formatter here]. If not specified, the global filter is not set.]
 ]
 [[DisableLogging]        [`bool`]
     [If `true`, results in calling `set_logging_enabled(false)` on the core. By default, value `false` is assumed.]
@@ -489,7 +497,7 @@ Sink settings are divided into separate sections - one section for each sink. Th
     [Sink backend type. Mandatory parameter. May have one of these values: [link log.detailed.sink_backends.text_ostream Console], [link log.detailed.sink_backends.text_file TextFile], [link log.detailed.sink_backends.syslog Syslog]. On Windows the following values are additionally supported: [link log.detailed.sink_backends.event_log SimpleEventLog], [link log.detailed.sink_backends.debugger Debugger]. Also, user-defined sink names may also be supported if registered by calling `register_sink_factory`.]
 ]
 [[Filter]                [`std::basic_string< CharT >` or [class_log_filter]]
-    [Sink-specific filter. If specified in string form, it should conform to the rules described [link log.detailed.utilities.init.filter_formatter here]. If not specified, the filter is not set.]
+    [Sink-specific filter. If specified in string form, it should conform to the rules described [link log.detailed.utilities.setup.filter_formatter here]. If not specified, the filter is not set.]
 ]
 [[Asynchronous]          [`bool`]
     [If `true`, the [link log.detailed.sink_frontends.async asynchronous sink frontend] will be used. Otherwise the [link log.detailed.sink_frontends.sync synchronous sink frontend] will be used. By default, value `false` is assumed. In single-threaded builds this parameter is not used, as [link log.detailed.sink_frontends.unlocked unlocked sink frontend] is always used.]
@@ -501,7 +509,7 @@ Besides the common settings that all sinks support, some sink backends also acce
 [table "Console" sink settings
 [[Parameter]             [Type]                                                               [Description]]
 [[Formatter]             [`std::basic_string< CharT >` or [class_sinks_basic_text_ostream_backend]`< CharT >::formatter_type`]
-    [Log record formatter to be used by the sink. If specified in string form, it should conform to the rules described [link log.detailed.utilities.init.filter_formatter here]. If not specified, the default formatter is used.]
+    [Log record formatter to be used by the sink. If specified in string form, it should conform to the rules described [link log.detailed.utilities.setup.filter_formatter here]. If not specified, the default formatter is used.]
 ]
 [[AutoFlush]             [`bool`]
     [Enables or disables the auto-flush feature of the backend. If not specified, the default value `false` is assumed.]
@@ -514,7 +522,7 @@ Besides the common settings that all sinks support, some sink backends also acce
     [The file name pattern for the sink backend. This parameter is mandatory.]
 ]
 [[Formatter]             [`std::basic_string< CharT >` or [class_sinks_text_file_backend]`::formatter_type`]
-    [Log record formatter to be used by the sink. If specified in string form, it should conform to the rules described [link log.detailed.utilities.init.filter_formatter here]. If not specified, the default formatter is used.]
+    [Log record formatter to be used by the sink. If specified in string form, it should conform to the rules described [link log.detailed.utilities.setup.filter_formatter here]. If not specified, the default formatter is used.]
 ]
 [[AutoFlush]             [`bool`]
     [Enables or disables the auto-flush feature of the backend. If not specified, the default value `false` is assumed.]
@@ -552,7 +560,7 @@ If the parameter is supplied in the string form, it should have one of the follo
 * "%a %H:%M:%S" or "%A %H:%M:%S". File rotation takes place every week, on the weekday specified in the long or short form, at the specified time. For example, "Saturday 09:00:00".
 * "%d %H:%M:%S". File rotation takes place every month, on the specified day of month, at the specified time. For example, "01 23:30:00".
 
-In case if the settings are loaded from a [link log.detailed.utilities.init.settings_file settings file], the string form is the only way to set up the file rotation at a certain time point.
+In case if the settings are loaded from a [link log.detailed.utilities.setup.settings_file settings file], the string form is the only way to set up the file rotation at a certain time point.
 
 [table "Syslog" sink settings
 [[Parameter]             [Type]                                                               [Description]]
@@ -606,7 +614,7 @@ The settings reader also allows to be extended to support custom sink types. See
 
     #include <``[boost_log_utility_init_from_stream_hpp]``>
 
-Support for configuration files is a frequently requested feature of the library. And despite the fact there is no ultimately convenient and flexible format of the library settings, the library provides preliminary support for this feature. The functionality is implemented with a simple function `init_from_stream`, which accepts an STL input stream and reads the library settings from it. The function then passes on the read settings to the `init_from_settings` function, described [link log.detailed.utilities.init.settings above]. Therefore the parameter names and their meaning is the same as for the `init_from_settings` function.
+Support for configuration files is a frequently requested feature of the library. And despite the fact there is no ultimately convenient and flexible format of the library settings, the library provides preliminary support for this feature. The functionality is implemented with a simple function `init_from_stream`, which accepts an STL input stream and reads the library settings from it. The function then passes on the read settings to the `init_from_settings` function, described [link log.detailed.utilities.setup.settings above]. Therefore the parameter names and their meaning is the same as for the `init_from_settings` function.
 
 The settings format is quite simple and widely used. Below is the description of syntax and parameters.
 

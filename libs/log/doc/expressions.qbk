@@ -9,15 +9,25 @@
 
 [section:expressions Lambda expressions]
 
-As it was pointed out in [link log.tutorial tutorial], filters and formatters are implemented as Lambda expressions with placeholders for attribute values. This section will describe the placeholders that can be used to build more complex Lambda expressions.
+As it was pointed out in [link log.tutorial tutorial], filters and formatters can be specified as Lambda expressions with placeholders for attribute values. This section will describe the placeholders that can be used to build more complex Lambda expressions.
 
-There is also a way to specify the filter in the form of a string template. This can be useful for initialization from the application settings. This part of the library is described [link log.detailed.utilities.init.filter_formatter here].
+There is also a way to specify the filter in the form of a string template. This can be useful for initialization from the application settings. This part of the library is described [link log.detailed.utilities.setup.filter_formatter here].
 
 [section:attr Generic attribute placeholder]
 
     #include <``[boost_log_expressions_attr_hpp]``>
 
-Unlike `has_attr`, the `attr` construct is not a complete filter by itself. Instead, it is a placeholder that can take part in a complete filter expressions like this:
+The [funcref boost::log::expressions::attr attr] placeholder represents an attribute value in template expressions. Given the record view or a set of attribute values, the placeholder will attempt to extract the specified attribute value from the argument upon invokation. This can be roughly described with the following pseudo-code:
+
+    logging::value_ref< T > val = expr::attr< T >(name)(rec);
+
+where `val` is the [link log.detailed.utilities.value_ref reference] to the extracted value, `name` and `T` are the attribute value [link lod.detailed.attributes.related_components.attribute_name name] and type and `rec` is the log [link log.detailed.core.record record view] or [link lod.detailed.attributes.related_components.attribute_value_set attribute value set]. `T` can be a __boost_mpl__ type sequence with possible expected types of the value; the extraction will succeed if the type of the value matches one of the types in the sequence.
+
+The `attr` placeholder can be used in __boost_phoenix__ expressions, including the `bind` expression.
+
+[example_tutorial_filtering_bind]
+
+The placeholder can be used both in filters and formatters:
 
     sink->set_filter
     (
@@ -25,7 +35,40 @@ Unlike `has_attr`, the `attr` construct is not a complete filter by itself. Inst
         expr::attr< std::string >("Channel") == "net"
     );
 
-The line above registers a composite filter that consists of two elementary subfilters: the first one checks the severity level, and the second checks the channel name. Like `has_attr`, the `attr` placeholder accepts an expected attribute value type or set of types in a MPL-compatible type sequence. However, attribute value type is not optional with `attr`, like it is with `has_attr`.
+    sink->set_formatter
+    (
+        expr::stream
+            << expr::attr< int >("Severity")
+            << " [" << expr::attr< std::string >("Channel") << "] "
+            << expr::smessage
+    );
+
+The call to `set_filter` registers a composite filter that consists of two elementary subfilters: the first one checks the severity level, and the second checks the channel name. The call to `set_formatter` composes a string that contains the severity level and the channel name along with the message text.
+
+[heading Customizing fallback policy]
+
+By default, when the requested attribute value is not found in the record, `attr` will return an empty reference. In case of filters, this will result in `false` in any ordering expressions, and in case of formatters the output from the placeholder will be empty. This behavior can be changed:
+
+* To throw an exception ([class_log_missing_value] or [class_log_invalid_type], depending on the reason of the failure). Add the `or_throw` modifier:
+
+    sink->set_filter
+    (
+        expr::attr< int >("Severity").or_throw() >= 5 &&
+        expr::attr< std::string >("Channel").or_throw() == "net"
+    );
+
+* To use a default value instead. Add the `or_default` modifier with the desired default value:
+
+    sink->set_filter
+    (
+        expr::attr< int >("Severity").or_default(0) >= 5 &&
+        expr::attr< std::string >("Channel").or_default(std::string("general")) == "net"
+    );
+
+The default behavior is also accessible through the `or_none` modifier. The modified placeholders can be used in filters and formatters just the same way as the unmodified ones.
+
+[tip In `bind` expressions, the bound function object will still receive the [link log.detailed.utilities.value_ref `value_ref`]-wrapped values in place of the modified `attr` placeholder. Even though both `or_throw` and `or_default` modifiers guarantee that the bound function will receive a filled reference, [link log.detailed.utilities.value_ref `value_ref`] is still needed if the value type is specified as a type sequence. Also, the reference wrapper may contain a tag type which may be useful for further customization.]
+
 
 Besides generating lambda expressions, the `attr` placeholder allows constructing filters with its member functions. There are currently two such members that can be used with any type:
 
@@ -215,7 +258,7 @@ To use __boost_format__-style syntax one should use `format` construct:
 
 The format string passed to the `format` keyword should contain positional placeholders for the appropriate expressions. In the case of wide-character logging the format string should be wide. Expressions `expr1` through `exprN` have the same meaning as in stream-like variant. It should be noted though that using stream-like syntax usually results in a faster formatter than one is constructed with the `format` keyword.
 
-Another useful way of expressing formatters is by using string templates. This part of the library is described in [link log.detailed.utilities.init.filter_formatter this] section and is mostly intended to support initialization from the application settings.
+Another useful way of expressing formatters is by using string templates. This part of the library is described in [link log.detailed.utilities.setup.filter_formatter this] section and is mostly intended to support initialization from the application settings.
 
 [section:attr Generic attribute formatter]
 

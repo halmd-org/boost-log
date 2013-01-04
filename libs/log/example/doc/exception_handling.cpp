@@ -136,12 +136,12 @@ void init_exception_handler_nothrow()
 void init()
 {
     typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-    boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+    boost::shared_ptr< text_sink > sink = boost::make_shared< text_sink >();
 
-    pSink->locked_backend()->add_stream(
+    sink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("sample.log"));
 
-    pSink->set_formatter
+    sink->set_formatter
     (
         expr::stream
             << expr::attr< unsigned int >("LineID")
@@ -149,7 +149,7 @@ void init()
             << "> " << expr::smessage
     );
 
-    logging::core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(sink);
 
     init_exception_handler();
 }

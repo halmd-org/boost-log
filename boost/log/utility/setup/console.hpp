@@ -223,7 +223,7 @@ inline shared_ptr<
     BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL<
         sinks::wtext_ostream_backend
     >
-> winit_log_to_console()
+> wadd_console_log()
 {
     return add_console_log(std::wclog);
 }

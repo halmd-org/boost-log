@@ -82,14 +82,14 @@ int main(int, char*[])
 {
     // Construct the sink
     typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-    boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+    boost::shared_ptr< text_sink > sink = boost::make_shared< text_sink >();
 
     // Add a stream to write log to
-    pSink->locked_backend()->add_stream(
+    sink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("sample.log"));
 
     // Set the formatter
-    pSink->set_formatter
+    sink->set_formatter
     (
         expr::stream
             << line_id
@@ -106,7 +106,7 @@ int main(int, char*[])
     );
 
     // Register the sink in the logging core
-    logging::core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(sink);
 
     // Register other common attributes, such as time stamp and record counter
     logging::add_common_attributes();
