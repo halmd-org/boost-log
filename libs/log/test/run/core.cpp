@@ -18,6 +18,7 @@
 #include <map>
 #include <string>
 #include <boost/shared_ptr.hpp>
+#include <boost/move/move.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/core/core.hpp>
 #include <boost/log/attributes/constant.hpp>
@@ -61,7 +62,7 @@ BOOST_AUTO_TEST_CASE(filtering)
     {
         record_type rec = pCore->open_record(set1);
         BOOST_REQUIRE(rec);
-        pCore->push_record(rec);
+        pCore->push_record(boost::move(rec));
         BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr2()], 1UL);
@@ -86,7 +87,7 @@ BOOST_AUTO_TEST_CASE(filtering)
         pCore->set_filter(expr::has_attr(data::attr2()));
         record_type rec = pCore->open_record(set1);
         BOOST_REQUIRE(rec);
-        pCore->push_record(rec);
+        pCore->push_record(boost::move(rec));
         BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr2()], 1UL);
@@ -101,7 +102,7 @@ BOOST_AUTO_TEST_CASE(filtering)
         pSink->set_filter(expr::has_attr(data::attr2()));
         record_type rec = pCore->open_record(set1);
         BOOST_REQUIRE(rec);
-        pCore->push_record(rec);
+        pCore->push_record(boost::move(rec));
         BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr2()], 1UL);
@@ -131,7 +132,7 @@ BOOST_AUTO_TEST_CASE(filtering)
 
         record_type rec = pCore->open_record(set1);
         BOOST_REQUIRE(rec);
-        pCore->push_record(rec);
+        pCore->push_record(boost::move(rec));
 
         BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 1UL);
@@ -172,7 +173,7 @@ namespace {
         record_type rec = pCore->open_record(set1);
         BOOST_CHECK(rec);
         if (rec)
-            pCore->push_record(rec);
+            pCore->push_record(boost::move(rec));
     }
 
 } // namespace
@@ -213,7 +214,7 @@ BOOST_AUTO_TEST_CASE(attributes)
     {
         record_type rec = pCore->open_record(set1);
         BOOST_REQUIRE(rec);
-        pCore->push_record(rec);
+        pCore->push_record(boost::move(rec));
         BOOST_CHECK_EQUAL(pSink->m_RecordCounter, 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr1()], 1UL);
         BOOST_CHECK_EQUAL(pSink->m_Consumed[data::attr2()], 1UL);
