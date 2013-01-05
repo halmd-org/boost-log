@@ -98,7 +98,7 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", severity_level)
 void print_severity_subscript(logging::record const& rec)
 {
     // Use the attribute keyword to communicate the name and type of the value
-    logging::value_ref< severity_level > level = rec[severity];
+    logging::value_ref< severity_level, tag::severity > level = rec[severity];
     std::cout << level << std::endl;
 }
 //]

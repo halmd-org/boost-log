@@ -202,6 +202,73 @@ public:
             return false;
     }
 
+#if defined(BOOST_LOG_DOXYGEN_PASS) || !(defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS))
+#define BOOST_LOG_AUX_VOID_DEFAULT = void
+#else
+#define BOOST_LOG_AUX_VOID_DEFAULT
+#endif
+
+    /*!
+     * The method attempts to extract the stored value, assuming the value has the specified type.
+     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * is checked against every type in the sequence.
+     *
+     * \note Include <tt>value_extraction.hpp</tt> prior to using this method.
+     *
+     * \return The extracted value, if the attribute value is not empty and the value is the same
+     *         as specified. Otherwise returns an empty value. See description of the \c result_of::extract
+     *         metafunction for information on the nature of the result value.
+     */
+    template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
+    typename result_of::extract< T, TagT >::type extract() const;
+
+    /*!
+     * The method attempts to extract the stored value, assuming the value has the specified type.
+     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * is checked against every type in the sequence.
+     *
+     * \note Include <tt>value_extraction.hpp</tt> prior to using this method.
+     *
+     * \return The extracted value, if the attribute value is not empty and the value is the same
+     *         as specified. Otherwise an exception is thrown. See description of the \c result_of::extract_or_throw
+     *         metafunction for information on the nature of the result value.
+     */
+    template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
+    typename result_of::extract_or_throw< T, TagT >::type extract_or_throw() const;
+
+    /*!
+     * The method attempts to extract the stored value, assuming the value has the specified type.
+     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * is checked against every type in the sequence. If extraction fails, the default value is returned.
+     *
+     * \note Include <tt>value_extraction.hpp</tt> prior to using this method.
+     *
+     * \param def_value Default value.
+     *
+     * \return The extracted value, if the attribute value is not empty and the value is the same
+     *         as specified. Otherwise returns the default value. See description of the \c result_of::extract_or_default
+     *         metafunction for information on the nature of the result value.
+     */
+    template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
+    typename result_of::extract_or_default< T, T, TagT >::type extract_or_default(T const& def_value) const;
+
+    /*!
+     * The method attempts to extract the stored value, assuming the value has the specified type.
+     * One can specify either a single type or a MPL type sequence, in which case the stored value
+     * is checked against every type in the sequence. If extraction fails, the default value is returned.
+     *
+     * \note Include <tt>value_extraction.hpp</tt> prior to using this method.
+     *
+     * \param def_value Default value.
+     *
+     * \return The extracted value, if the attribute value is not empty and the value is the same
+     *         as specified. Otherwise returns the default value. See description of the \c result_of::extract_or_default
+     *         metafunction for information on the nature of the result value.
+     */
+    template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT, typename DefaultT >
+    typename result_of::extract_or_default< T, DefaultT, TagT >::type extract_or_default(DefaultT const& def_value) const;
+
+#if defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type.
      * One can specify either a single type or a MPL type sequence, in which case the stored value
@@ -261,6 +328,9 @@ public:
      */
     template< typename T, typename DefaultT >
     typename result_of::extract_or_default< T, DefaultT >::type extract_or_default(DefaultT const& def_value) const;
+#endif // defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
+
+#undef BOOST_LOG_AUX_VOID_DEFAULT
 
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type,

@@ -115,7 +115,7 @@ The sink backend allows hooking into the file rotation process in order to perfo
 
 [example_sinks_xml_file]
 
-You can find a complete example of XML logging in the library distribution: [@boost:/libs/log/example/doc/sinks_xml_file.cpp].
+[full_code_link doc/sinks_xml_file.cpp]
 
 Finally, the sink backend also supports the auto-flush feature, like the [link log.detailed.sink_backends.text_ostream text stream backend] does.
 

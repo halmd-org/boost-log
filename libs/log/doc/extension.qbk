@@ -319,7 +319,7 @@ All this verbosity is usually not required. One can define a special macro to ma
 
 [example_extension_record_tagger_macro_logging]
 
-The complete code sample from this section is available in [@boost:/libs/log/example/doc/extension_record_tagger.cpp].
+[full_code_link doc/extension_record_tagger.cpp]
 
 [heading Guidelines for designers of standalone logging sources]
 

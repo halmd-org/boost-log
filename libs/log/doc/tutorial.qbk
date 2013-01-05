@@ -17,7 +17,7 @@ For those who don't want to read tons of clever manuals and just need a simple t
 
 [example_tutorial_trivial]
 
-See the code in [@boost:/libs/log/example/doc/tutorial_trivial.cpp].
+[full_code_link doc/tutorial_trivial.cpp]
 
 The `BOOST_LOG_TRIVIAL` macro accepts a severity level and results in a stream-like object that supports insertion operator. As a result of this code, the log messages will be printed on the console. As you can see, this library usage pattern is quite similar to what you would do with `std::cout`. However, the library offers a few advantages:
 
@@ -35,7 +35,7 @@ While severity levels can be used for informative purposes, you will normally wa
 
 [example_tutorial_trivial_with_filtering]
 
-See the code in [@boost:/libs/log/example/doc/tutorial_trivial_flt.cpp].
+[full_code_link doc/tutorial_trivial_flt.cpp]
 
 Now, if we run this code sample, the first two log records will be ignored, while the remaining four will pass on to the file.
 
@@ -65,7 +65,7 @@ The added piece is the call to the [link log.detailed.utilities.setup.convenienc
 
 [example_tutorial_file_advanced]
 
-See the full code in [@boost:/libs/log/example/doc/tutorial_file.cpp].
+[full_code_link doc/tutorial_file.cpp]
 
 You can see that the options are passed to the function in the named form. This approach is also taken in many other places of the library. You'll get used to it. The meaning of the parameters is mostly self-explaining and is documented in this manual (see [link log.detailed.sink_backends.text_file here] for what regards the text file sink). This and other convenience initialization functions are described in [link log.detailed.utilities.setup.convenience this] section.
 
@@ -79,7 +79,7 @@ In the simplest form, the call to the `add_file_log` function in the section abo
 
 [example_tutorial_file_manual]
 
-See the full code in [@boost:/libs/log/example/doc/tutorial_file_manual.cpp].
+[full_code_link doc/tutorial_file_manual.cpp]
 
 Ok, the first thing you may have noticed about sinks is that they are composed of two classes: the frontend and the backend. The frontend (which is the [link log.detailed.sink_frontends.sync `synchronous_sink`] class template in the snippet above) is responsible for various common tasks for all sinks, such as thread synchronization model, filtering and, for text-based sinks, formatting. The backend (the [link log.detailed.sink_backends.text_ostream `text_ostream_backend`] class above) implements everything specific to the sink, such as writing to a file in this case. The library provides a number of frontends and backends that can be used with each other out of the box.
 
@@ -90,8 +90,8 @@ The [link log.detailed.sink_backends.text_ostream `text_ostream_backend`] class 
     #include <``[boost_log_utility_empty_deleter_hpp]``>
 
     // We have to provide an empty deleter to avoid destroying the global stream object
-    boost::shared_ptr< std::ostream > pStream(&std::clog, logging::empty_deleter());
-    pSink->locked_backend()->add_stream(pStream);
+    boost::shared_ptr< std::ostream > stream(&std::clog, logging::empty_deleter());
+    sink->locked_backend()->add_stream(stream);
 
 The [link log.detailed.sink_backends.text_ostream `text_ostream_backend`] supports adding several streams. In that case its output will be duplicated to all added streams. It can be useful to duplicate the output to console and file since all the filtering, formatting and other overhead of the library happen only once per record for the sink.
 
@@ -147,7 +147,7 @@ Of course, the above syntax can easily be wrapped in a macro and, in fact, users
 
     BOOST_LOG(lg) << "Hello, World!";
 
-Looks a bit shorter, doesn't it? The `BOOST_LOG` macro, along with other similar ones, is defined by the library. It automatically provides an STL-like stream in order to format the message with ordinary insertion expressions. Having all that code written, compiled and executed you should be able to see the "Hello, World!" record in the "sample.log" file. You will find the full code of this section in [@boost:/libs/log/example/doc/tutorial_logging.cpp].
+Looks a bit shorter, doesn't it? The `BOOST_LOG` macro, along with other similar ones, is defined by the library. It automatically provides an STL-like stream in order to format the message with ordinary insertion expressions. Having all that code written, compiled and executed you should be able to see the "Hello, World!" record in the "sample.log" file. You will find the full code of this section [@boost:/libs/log/example/doc/tutorial_logging.cpp here].
 
 [endsect]
 
@@ -193,16 +193,16 @@ Let's see what's under the hood of that [link log.detailed.utilities.setup.conve
 
     void add_common_attributes()
     {
-        boost::shared_ptr< logging::core > pCore = logging::core::get();
-        pCore->add_global_attribute("LineID", attrs::counter< unsigned int >(1));
-        pCore->add_global_attribute("TimeStamp", attrs::local_clock());
+        boost::shared_ptr< logging::core > core = logging::core::get();
+        core->add_global_attribute("LineID", attrs::counter< unsigned int >(1));
+        core->add_global_attribute("TimeStamp", attrs::local_clock());
 
         // other attributes skipped for brevity
     }
 
 Here the [link log.detailed.attributes.counter `counter`] and [link log.detailed.attributes.clock `local_clock`] components are attribute classes, they derive from the common attribute interface [class_log_attribute]. The library provides a number of other [link log.detailed.attributes attribute classes], including the [link log.detailed.attributes.function `function`] attribute that calls some function object on value acquisition. For example, we can in a similar way register a [link log.detailed.attributes.named_scope `named_scope`] attrubute:
 
-    pCore->add_global_attribute("Scope", attrs::named_scope());
+    core->add_global_attribute("Scope", attrs::named_scope());
 
 This will give us the ability to store scope names in log for every log record the application makes. Here is how it's used:
 
@@ -220,7 +220,7 @@ Another good use of attributes is the ability to mark log records made by differ
 
 Now every log record made from the `logging_function` function, or any other function it calls, will contain the "Timeline" attribute with a high precision time duration passed since the attribute was registered. Based on these readings, one will be able to detect which parts of the code require more or less time to execute. The "Timeline" attribute will be unregistered upon leaving the scope of function `timed_logging`.
 
-See the [link log.detailed.attributes Attributes] section for detailed description of attributes provided by the library. The complete code for this section is available in [@boost:/libs/log/example/doc/tutorial_attributes.cpp].
+See the [link log.detailed.attributes Attributes] section for detailed description of attributes provided by the library. The complete code for this section is available [@boost:/libs/log/example/doc/tutorial_attributes.cpp here].
 
 [heading Defining attribute placeholders]
 
@@ -254,7 +254,7 @@ You can create a formatter with a lambda-style expression like this:
 
 [example_tutorial_formatters_stream]
 
-See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_stream.cpp].
+[full_code_link doc/tutorial_fmt_stream.cpp]
 
 Here the `stream` is a placeholder for the stream to format the record in. Other insertion arguments, such as [link log.detailed.expressions.attr `attr`] and [link log.detailed.expressions.message `message`], are manipulators that define what should be stored in the stream. We have already seen the `severity` placeholder in filtering expressions, and here it is used in a formatter. This is a nice unification: you can use the same placeholders in both filters and formatters. The [link log.detailed.expressions.attr `attr`] placeholder is similar to the `severity` placeholder as it represents the attribute value, too. The difference is that the `severity` placeholder represents the particular attribute with the name "Severity" and type `trivial::severity_level` and [link log.detailed.expressions.attr `attr`] can be used to represent any attribute. Otherwise the two placeholders are equivalent. For instance, it is possible to replace `severity` with the following:
 
@@ -268,7 +268,7 @@ For a change, let's see how it's done when manually initializing sinks:
 
 [example_tutorial_formatters_stream_manual]
 
-See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_stream_manual.cpp].
+[full_code_link doc/tutorial_fmt_stream_manual.cpp]
 
 You can see that it is possible to bind format changing manipulators in the expression; these manipulators will affect the subsequent attribute value format when log record is formatted, just like with streams. More manipulators are described in the [link log.detailed.expressions Detailed features description] section.
 
@@ -278,7 +278,7 @@ As an alternative, you can define formatters with with a syntax similar to __boo
 
 [example_tutorial_formatters_format]
 
-See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_format.cpp].
+[full_code_link doc/tutorial_fmt_format.cpp]
 
 The `format` placeholder accepts the format string with positional specification of all arguments being formatted. Note that only positional format is currently supported. The same format specification can be used with the `add_file_log` and similar functions.
 
@@ -288,7 +288,7 @@ The library provides specialized formatters for a number of types, such as date,
 
 [example_tutorial_formatters_stream_date_time]
 
-See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_stream.cpp].
+[full_code_link doc/tutorial_fmt_stream.cpp]
 
 The same formatter can also be used in the context of a __boost_format__-style formatter.
 
@@ -298,7 +298,7 @@ In some contexts textual templates are accepted as formatters. In this case libr
 
 [example_tutorial_formatters_string]
 
-See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_string.cpp].
+[full_code_link doc/tutorial_fmt_string.cpp]
 
 Here, the `format` parameter accepts such a format template. The template may contain a number of placeholders enclosed with percent signs (`%`). Each placeholder must contain an attribute value name to insert instead of the placeholder. The `%Message%` placeholder will be replaced with the logging record message.
 
@@ -318,7 +318,7 @@ The formatted record should be composed by insertion into STL-compatible output 
 
 [example_tutorial_formatters_custom]
 
-See the full code in [@boost:/libs/log/example/doc/tutorial_fmt_custom.cpp].
+[full_code_link doc/tutorial_fmt_custom.cpp]
 
 [endsect]
 
@@ -328,7 +328,7 @@ We've already touched filtering in the previous sections but we barely scratched
 
 [example_tutorial_filtering]
 
-See the full code in [@boost:/libs/log/example/doc/tutorial_filtering.cpp].
+[full_code_link doc/tutorial_filtering.cpp]
 
 In this sample we initialize two sinks - one for the complete log file and the other for important messages only. Both sinks will be writing to text files with the same log record format, which we initialize first and save to the `fmt` variable. The [classref boost::log::basic_formatter formatter] type is a type-erased function object with the formatter calling signature; in many respects it can be viewed similar to `boost::function` or `std::function` except that it is never empty. There is also [classref boost::log::filter a similar function object] for filters.
 

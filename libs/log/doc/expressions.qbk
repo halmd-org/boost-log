@@ -43,7 +43,7 @@ The placeholder can be used both in filters and formatters:
             << expr::smessage
     );
 
-The call to `set_filter` registers a composite filter that consists of two elementary subfilters: the first one checks the severity level, and the second checks the channel name. The call to `set_formatter` composes a string that contains the severity level and the channel name along with the message text.
+The call to `set_filter` registers a composite filter that consists of two elementary subfilters: the first one checks the severity level, and the second checks the channel name. The call to `set_formatter` installs a formatter that composes a string containing the severity level and the channel name along with the message text.
 
 [heading Customizing fallback policy]
 
@@ -77,7 +77,9 @@ The `TagT` type in the [link log.detailed.expressions.attr abstract description]
 
 [example_expressions_attr_formatter_stream_tag]
 
-Here we specify a different formatting operator for the severity level wrapped in the [link log.detailed.utilities.manipulators.to_log `to_log_manip`] manipulator marked with the tag `severity_tag`. This operator will be called when log records are formatted while the regular `operator<<` will be used in other contexts. You can compile and run the complete example in [@boost:/libs/log/example/doc/expressions_attr_fmt_tag.cpp]
+[full_code_link doc/expressions_attr_fmt_tag.cpp]
+
+Here we specify a different formatting operator for the severity level wrapped in the [link log.detailed.utilities.manipulators.to_log `to_log_manip`] manipulator marked with the tag `severity_tag`. This operator will be called when log records are formatted while the regular `operator<<` will be used in other contexts.
 
 [endsect]
 
@@ -85,7 +87,19 @@ Here we specify a different formatting operator for the severity level wrapped i
 
     #include <``[boost_log_expressions_keyword_hpp]``>
 
-Attribute keywords can be used as replacements for the [link log.detailed.expressions.attr `attr`] placeholders in filters and formatters while providing a more concise and less error prone syntax.
+Attribute keywords can be used as replacements for the [link log.detailed.expressions.attr `attr`] placeholders in filters and formatters while providing a more concise and less error prone syntax. An attribute keyword can be declared with the [macroref BOOST_LOG_ATTRIBUTE_KEYWORD] macro:
+
+    BOOST_LOG_ATTRIBUTE_KEYWORD(keyword, "Keyword", type)
+
+Here the macro declares a keyword `keyword` for an attribute named "Keyword" with the value type of `type`. Additionally, the macro defines an attribute tag type `keyword` within the `tag` namespace. We can rewrite the previous example in the following way:
+
+[example_expressions_keyword_formatter_stream_tag]
+
+Attribute keywords behave the same way as the [link log.detailed.expressions.attr `attr`] placeholders and can be used both in filters and formatters. The `or_throw` and `or_default` modifiers are also supported.
+
+Keywords can also be used in attribute value lookup expressions in log records and attribute value sets:
+
+[example_expressions_keyword_lookup]
 
 [endsect]
 
@@ -101,110 +115,13 @@ The filter [funcref boost::log::expressions::has_attr `has_attr`] checks if an a
 
 This filter is usually used in conjunction with [link log.detailed.expressions.formatters.conditional conditional formatters], but it also can be used as a quick filter based on the log record structure. For example, one can use this filter to extract statistic records and route them to a specific sink.
 
-    // A simple sink backend to accumulate statistic information
-    class my_stat_accumulator :
-        public sinks::basic_sink_backend< char, sinks::backend_synchronization_tag >
-    {
-        // A map of accumulated statistic values,
-        // ordered by the statistic information stream name
-        typedef std::map< std::string, int > StatInfo_t;
-        StatInfo_t m_StatInfo;
+[example_expressions_has_attr_stat_accumulator]
 
-    public:
-        // Destructor
-        ~my_stat_accumulator()
-        {
-            // Display the accumulated data
-            for (StatInfo_t::const_iterator it = m_StatInfo.begin();
-                it != m_StatInfo.end();
-                ++it)
-            {
-                std::cout << "Statistic stream: " << it->first
-                    << ", accumulated value: " << it->second << "\n";
-            }
-            std::cout.flush();
-        }
+[full_code_link doc/expressions_has_attr_stat_accum.cpp]
 
-        // The method is called for every log record being put into the sink backend
-        void consume(values_view_type const& attributes, string_type const& message)
-        {
-            // First, acquire statistic information stream name
-            values_view_type::const_iterator itName = attributes.find("StatisticStream");
-            if (itName != attributes.end())
-            {
-                boost::optional< std::string const& > name =
-                    itName->second.get< std::string >();
-                if (name)
-                {
-                    // Next, get the statistic value change
-                    values_view_type::const_iterator itChange = attributes.find("Change");
-                    if (itChange != attributes.end())
-                    {
-                        boost::optional< int const& > change = itChange->second.get< int >();
-                        if (change)
-                        {
-                            // Accumulate the statistic data
-                            m_StatInfo[name.get()] += change.get();
-                        }
-                    }
-                }
-            }
-        }
-    };
+In this example, log records emitted with the `PUT_STAT` macto will be directed to the `my_stat_accumulator` sink backend, which will accumulate the changes passed in the "Change" attribute values. All other records (even those made through the same logger) will be passed to the filte sink. This is achieved with the mutually exclusive filters set for the two sinks.
 
-    // The function registers two sinks - one for statistic information,
-    // and another one for other records
-    void foo()
-    {
-        boost::shared_ptr< logging::core > core = logging::core::get();
-
-        // Create a backend and attach a stream to it
-        boost::shared_ptr< sinks::text_ostream_backend > backend =
-            boost::make_shared< sinks::text_ostream_backend >();
-        backend->add_stream(
-            boost::shared_ptr< std::ostream >(new std::ofstream("test.log")));
-
-        // Create a frontend and setup filtering
-        typedef sinks::synchronous_sink< sinks::text_ostream_backend > LogSink_t;
-        boost::shared_ptr< LogSink_t > sink(new LogSink_t(backend));
-        // All records that don't have a "StatisticStream" attribute attached
-        // will go to the "test.log" file
-        sink->set_filter(!expr::has_attr("StatisticStream"));
-
-        core->add_sink(sink);
-
-        // Create another sink that will receive all statistic data
-        typedef sinks::synchronous_sink< my_stat_accumulator > StatSink_t;
-        boost::shared_ptr< StatSink_t > stat_sink(new StatSink_t);
-        // All records with a "StatisticStream" string attribute attached
-        // will go to the my_stat_accumulator sink
-        sink->set_filter(expr::has_attr< std::string >("StatisticStream"));
-
-        core->add_sink(stat_sink);
-    }
-
-    // This simple macro will simplify putting statistic data into a logger
-    #define PUT_STAT(lg, stat_stream, change)\
-        if (true) {\
-            BOOST_LOG_SCOPED_LOGGER_TAG(lg, "StatisticStream", std::string, stat_stream);\
-            BOOST_LOG_SCOPED_LOGGER_TAG(lg, "Change", int, change);\
-            BOOST_LOG(lg);\
-        } else ((void)0)
-
-    void bar()
-    {
-        src::logger lg;
-
-        // Put a regular log record, it will go to the "test.log" file
-        BOOST_LOG(lg) << "A regular log record";
-
-        // Put some statistic data
-        PUT_STAT(lg, "StreamOne", 10);
-        PUT_STAT(lg, "StreamTwo", 20);
-        PUT_STAT(lg, "StreamOne", -5);
-    }
-
-Please note that in the example above we extended the library in two ways: we defined a new sink backend `my_stat_accumulator` and a new macro `PUT_STAT`. Also note the technique of extracting the attribute value from the view - we need to both check that the needed attribute value is found in the view and that it has the required type. There is also a mechanism of [link log.detailed.attributes.related_components.extractors attribute value extractors] that can simplify this, especially when an attribute can have a number of types.
+Please note that in the example above we extended the library in two ways: we defined a new sink backend `my_stat_accumulator` and a new macro `PUT_STAT`. Also note that `has_attr` can accept attribute keywords to identify the attribute to check.
 
 [endsect]
 
@@ -212,13 +129,24 @@ Please note that in the example above we extended the library in two ways: we de
 
     #include <``[boost_log_expressions_predicates_is_in_range_hpp]``>
 
-
-* `is_in_range(T const& lower, T const& upper)` generates a filter that returns `true` if the attribute value `x` of type `T` satisfies condition `lower <= x < upper`. For example:
+The [funcref boost::log::expressions::is_in_range `is_in_range`] predicate checks that the attribute value fits in the half-open range (i.e. it returns `true` if the attribute value `x` satisfies the following condition: `left <= x < right`). For example:
 
     sink->set_filter
     (
         // drops all records that have level below 3 or greater than 4
-        expr::attr< int >("Severity").is_in_range(3, 5)
+        expr::is_in_range(expr::attr< int >("Severity"), 3, 5)
+    );
+
+The attribute can also be identified by an attribute keyword or name and type:
+
+    sink->set_filter
+    (
+        expr::is_in_range(severity, 3, 5)
+    );
+
+    sink->set_filter
+    (
+        expr::is_in_range< int >("Severity", 3, 5)
     );
 
 [endsect]
@@ -229,14 +157,15 @@ Please note that in the example above we extended the library in two ways: we de
     #include <``[boost_log_expressions_predicates_ends_with_hpp]``>
     #include <``[boost_log_expressions_predicates_contains_hpp]``>
 
-* `begins_with(T const& s)`, `ends_with(T const& s)` and `contains(T const& s)`. As follows from their names, the functions construct filters that return `true` if an attribute value begins with, ends with or contains the specified substring `s`, respectively. The string comparison is case sensitive.
+Predicates [funcref boost::log::expressions::begins_with `begins_with`], [funcref boost::log::expressions::ends_with `ends_with`] and [funcref boost::log::expressions::contains `contains`] provide an easy way of matching string attribute values. As follows from their names, the functions construct filters that return `true` if an attribute value begins with, ends with or contains the specified substring, respectively. The string comparison is case sensitive.
 
     sink->set_filter
     (
         // selects only records that are related to Russian web domains
-        expr::attr< std::string >("Domain").ends_with(".ru")
+        expr::ends_with(expr::attr< std::string >("Domain"), ".ru")
     );
 
+The attribute can also be identified by an attribute keyword or name and type.
 
 [endsect]
 
@@ -250,12 +179,16 @@ Please note that in the example above we extended the library in two ways: we de
     #include <``[boost_log_support_spirit_qi_hpp]``>
     #include <``[boost_log_support_spirit_classic_hpp]``>
 
-* `matches(T const& regex)` allows to set up a filter based on __boost_regex__ or __boost_xpressive__ regular expressions matching mechanism (note that you also have to include the appropriate header from the `boost/log/support` folder). The filter returns `true` if the attribute value matches the `regex` expression.
+The [funcref boost::log::expressions::matches `matches`] function creates a filter that apples a regular expression or a parser to a string attribute value. The regular expression can be provided by __boost_regex__ or __boost_xpressive__. Parsers from __boost_spirit__ and __boost_spirit2__ are also supported. The filter returns `true` if the regular expression matches or the parser successfully parses the attribute value.
+
+[note In order to use this predicate, a corresponding supporting header should also be included.]
 
     sink->set_filter
     (
-        expr::attr< std::string >("Domain").matches(boost::regex("www\\..*\\.ru"))
+        expr::matches(expr::attr< std::string >("Domain"), boost::regex("www\\..*\\.ru"))
     );
+
+The attribute can also be identified by an attribute keyword or name and type.
 
 [endsect]
 
@@ -263,6 +196,15 @@ Please note that in the example above we extended the library in two ways: we de
 
     #include <``[boost_log_expressions_predicates_severity_channel_filter_hpp]``>
 
+This filter is aimed for a specific but commonly encountered use case. The [funcref boost::log::expressions::channel_severity_filter `channel_severity_filter`] function creates a predicate that will check log record severity levels against a threshold. The predicate allows setting different thresholds for different channels. The mapping between channel names and severity thresholds can be filled in `std::map` style by using the subscript operator or by calling `add` method on the filter itself (the [class_expressions_channel_severity_filter_actor] instance). Let's see an example:
+
+[example_expressions_channel_severity_filter]
+
+[full_code_link doc/expressions_channel_severity_filter.cpp]
+
+The filter for the console sink is composed from the [class_expressions_channel_severity_filter_actor] filter and a general severity level check. This general check will be used when log records do not have a channel attribute or the channel name is not one of those specified in [class_expressions_channel_severity_filter_actor] initialization. It should be noted that it is possible to set the default result of the threshold filter that will be used in this case; the default result can be set by the `set_default` method. The [class_expressions_channel_severity_filter_actor] filter is set up to limit record severity levels for channels "general", "network" and "gui" - all records in these channels with levels below the specified thresholds will not pass the filter and will be ignored.
+
+The threshold filter is implemented as an equivalent to `std::map` over the channels, which means that the channel value type must support partial ordering. Obviously, the severity level type must also support ordering to be able to be compared against thresholds. By default the predicate will use `std::less` equivalent for channel name ordering and `std::greater_equal` equivalent to compare severity levels. It is possible to customize the ordering predicates. Consult the reference of the [class_expressions_channel_severity_filter_actor] class and [funcref boost::log::expressions::channel_severity_filter `channel_severity_filter`] generator to see the relevant template parameters.
 
 [endsect]
 
@@ -270,7 +212,11 @@ Please note that in the example above we extended the library in two ways: we de
 
     #include <``[boost_log_expressions_predicates_is_debugger_present_hpp]``>
 
-This filter is implemented for Windows only.
+This filter is implemented for Windows only. The `is_debugger_present` filter returns `true` if the application is run under a debugger and `false` otherwise. It does not use any attribute values from the log record. This predicate is typically used with the [link log.detailed.sink_backends.debugger debugger output] sink.
+
+[example_sinks_debugger]
+
+[full_code_link doc/sinks_debugger.cpp]
 
 [endsect]
 
@@ -278,75 +224,30 @@ This filter is implemented for Windows only.
 
 [section:formatters Formatting expressions]
 
-As was noted in the [link log.tutorial.formatters tutorial], the library provides several ways of expressing formatters, most notable being with a stream-style syntax and __boost_format__-style expression. Which of the two formats is chosen is determined by the appropriate anchor expression. To use stream-style syntax one should begin the formatter definition with a `stream` or `wstream` keyword, like that:
+As was noted in the [link log.tutorial.formatters tutorial], the library provides several ways of expressing formatters, most notable being with a stream-style syntax and __boost_format__-style expression. Which of the two formats is chosen is determined by the appropriate anchor expression. To use stream-style syntax one should begin the formatter definition with the `stream` keyword, like that:
 
-    #include <``[boost_log_formatters_stream_hpp]``>
+    #include <``[boost_log_expressions_stream_hpp]``>
 
     backend->set_formatter(expr::stream << expr1 << expr2 << ... << exprN);
 
-Here expressions `expr1` through `exprN` may be either manipulators, described in this section, or other expressions resulting in an object that supports putting into an STL-stream. Note that `boost::ref` is also supported, which allows injecting references into the formatter object.
+Here expressions `expr1` through `exprN` may be either manipulators, described in this section, or other expressions resulting in an object that supports putting into an STL-stream.
 
 To use __boost_format__-style syntax one should use `format` construct:
 
-    #include <``[boost_log_formatters_format_hpp]``>
+    #include <``[boost_log_expressions_format_hpp]``>
 
     backend->set_formatter(expr::format("format string") % expr1 % expr2 % ... % exprN);
 
-The format string passed to the `format` keyword should contain positional placeholders for the appropriate expressions. In the case of wide-character logging the format string should be wide. Expressions `expr1` through `exprN` have the same meaning as in stream-like variant. It should be noted though that using stream-like syntax usually results in a faster formatter than one is constructed with the `format` keyword.
+The format string passed to the `format` keyword should contain positional placeholders for the appropriate expressions. In the case of wide-character logging the format string should be wide. Expressions `expr1` through `exprN` have the same meaning as in stream-like variant. It should be noted though that using stream-like syntax usually results in a faster formatter than the one constructed with the `format` keyword.
 
 Another useful way of expressing formatters is by using string templates. This part of the library is described in [link log.detailed.utilities.setup.filter_formatter this] section and is mostly intended to support initialization from the application settings.
 
-[section:attr Generic attribute formatter]
-
-    #include <``[boost_log_formatters_attr_hpp]``>
-
-The `attr` formatter is the most generic and simple way to format an attribute value. In the simplest form it is equivalent to putting the specified attribute value into an STL stream with an `operator <<` associated with the attribute value type. For example:
-
-    // A custom attribute value type
-    struct A
-    {
-        int n;
-        std::string s;
-    };
-
-    // This operator will be called by the formatter
-    std::ostream& operator<< (std::ostream& strm, A const& val)
-    {
-        strm << "[n = " << val.n << ", s = " << val.s << "]";
-        return strm;
-    }
-
-    // Sets the formatter to a sink backend
-    backend->set_formatter(expr::stream << expr::attr< A >("MyAttribute"));
-
-This will also work with __boost_format__-style syntax since it falls back to streams internally:
-
-    // Sets the formatter to a sink backend
-    backend->set_formatter(expr::format("%1%") % expr::attr< A >("MyAttribute"));
-
-Like filters, formatters also support specifying a set of possible types of the attribute values in MPL-compatible sequences. For example, you can format an attribute that may have some integral type like this:
-
-    typedef boost::mpl::vector< short, int, long >::type types;
-    backend->set_formatter(expr::stream << expr::attr< types >("MyInteger"));
-
-The `attr` formatter also supports an additional argument with a __boost_format__ format string. This feature can be used to specify formatting rules for numbers and/or decorate the formatted attribute somehow. For example:
-
-    typedef boost::mpl::vector< short, int, long >::type types;
-    // will print the "MyInteger" attribute value as 8-digit hex in square brackets
-    backend->set_formatter(expr::stream << expr::attr< types >("MyInteger", "[%08x]"));
-
-Please note, though, that the format string should be valid for all attribute value types that are specified as the template argument for the `attr` formatter. If this is not possible, one should consider using [link log.detailed.expressions.formatters.conditional conditional formatters] to split types into several groups and specify a valid format string for each group.
-
-It is possible that at run time the attribute value requested by the formatter is not present in the formatted log record. In this case the formatter by default will throw an exception. If this behavior is not desired, one can change it in one of the following ways:
-
-# Use the [link log.detailed.expressions.formatters.conditional conditional formatter] with the [link log.detailed.expressions.predicates.has_attr `has_attr`] filter to first verify that the required attribute value is present and apply formatting then.
-# Use an additional last `std::nothrow` argument to the `attr` placeholder. In this case the formatter will produce no output for the missing attribute value, without throwing the exception.
-
-[endsect]
-
 [section:date_time Date and time formatter]
 
-    #include <``[boost_log_formatters_date_time_hpp]``>
+    #include <``[boost_log_expressions_formatters_date_time_hpp]``>
+
+    // Supporting headers
+    #include <``[boost_log_support_date_time_hpp]``>
 
 The library provides several formatters dedicated to date and time-related attribute value types. These are `date`, `time`, `date_time`, `time_duration` and `time_period`. The `date` and `time` formatters are mostly included by `date_time`.
 

@@ -362,14 +362,14 @@ public:
      * \return A \c value_ref with extracted attribute value if it is found, empty \c value_ref otherwise.
      */
     template< typename DescriptorT, template< typename > class ActorT >
-    typename result_of::extract< typename expressions::attribute_keyword< DescriptorT, ActorT >::value_type >::type
+    typename result_of::extract< typename expressions::attribute_keyword< DescriptorT, ActorT >::value_type, DescriptorT >::type
     operator[] (expressions::attribute_keyword< DescriptorT, ActorT > const& keyword) const
     {
         typedef typename expressions::attribute_keyword< DescriptorT, ActorT >::value_type attr_value_type;
-        typedef typename result_of::extract< attr_value_type >::type result_type;
+        typedef typename result_of::extract< attr_value_type, DescriptorT >::type result_type;
         const_iterator it = this->find(keyword.get_name());
         if (it != this->end())
-            return it->second.extract< attr_value_type >();
+            return it->second.extract< attr_value_type, DescriptorT >();
         else
             return result_type();
     }

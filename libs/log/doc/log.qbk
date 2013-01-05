@@ -71,6 +71,9 @@
 [import ../example/doc/core_record.cpp]
 [import ../example/doc/core_core_manual.cpp]
 [import ../example/doc/expressions_attr_fmt_tag.cpp]
+[import ../example/doc/expressions_keyword_fmt_tag.cpp]
+[import ../example/doc/expressions_has_attr_stat_accum.cpp]
+[import ../example/doc/expressions_channel_severity_filter.cpp]
 [import ../example/doc/sources_net_connection.cpp]
 [import ../example/doc/sources_net_connection_chan.cpp]
 [import ../example/doc/sources_severity.cpp]
@@ -87,8 +90,10 @@
 [import ../example/doc/sinks_syslog.cpp]
 [import ../example/doc/sinks_debugger.cpp]
 [import ../example/doc/sinks_simple_event_log.cpp]
-[import ../example/event_log/main.cpp]
 [import ../example/doc/extension_record_tagger.cpp]
+[import ../example/event_log/main.cpp]
+
+[template full_code_link[path] [@boost:/libs/log/example/[path] See the complete code].]
 
 [section Disclaimer]
 

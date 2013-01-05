@@ -488,8 +488,6 @@ inline typename result_of::extract_or_default< T, DefaultT, TagT >::type extract
     return aux::unwrap_value_ref(extractor(value));
 }
 
-#undef BOOST_LOG_AUX_VOID_DEFAULT
-
 #if defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
 
 template< typename T >
@@ -587,6 +585,32 @@ inline typename result_of::extract_or_default< T, DefaultT >::type extract_or_de
 
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
 
+template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
+inline typename result_of::extract< T, TagT >::type attribute_value::extract() const
+{
+    return boost::log::extract< T, TagT >(*this);
+}
+
+template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
+inline typename result_of::extract_or_throw< T, TagT >::type attribute_value::extract_or_throw() const
+{
+    return boost::log::extract_or_throw< T, TagT >(*this);
+}
+
+template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT >
+inline typename result_of::extract_or_default< T, T, TagT >::type attribute_value::extract_or_default(T const& def_value) const
+{
+    return boost::log::extract_or_default< T, TagT >(*this, def_value);
+}
+
+template< typename T, typename TagT BOOST_LOG_AUX_VOID_DEFAULT, typename DefaultT >
+inline typename result_of::extract_or_default< T, DefaultT, TagT >::type attribute_value::extract_or_default(DefaultT const& def_value) const
+{
+    return boost::log::extract_or_default< T, TagT >(*this, def_value);
+}
+
+#if defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
+
 template< typename T >
 inline typename result_of::extract< T >::type attribute_value::extract() const
 {
@@ -611,7 +635,11 @@ inline typename result_of::extract_or_default< T, DefaultT >::type attribute_val
     return boost::log::extract_or_default< T >(*this, def_value);
 }
 
+#endif // defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
+
 #endif // !defined(BOOST_LOG_DOXYGEN_PASS)
+
+#undef BOOST_LOG_AUX_VOID_DEFAULT
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 

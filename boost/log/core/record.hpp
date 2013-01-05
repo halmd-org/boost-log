@@ -167,7 +167,7 @@ public:
      * \return A \c value_ref with extracted attribute value if it is found, empty \c value_ref otherwise.
      */
     template< typename DescriptorT, template< typename > class ActorT >
-    typename result_of::extract< typename expressions::attribute_keyword< DescriptorT, ActorT >::value_type >::type
+    typename result_of::extract< typename expressions::attribute_keyword< DescriptorT, ActorT >::value_type, DescriptorT >::type
     operator[] (expressions::attribute_keyword< DescriptorT, ActorT > const& keyword) const
     {
         return m_impl->m_attribute_values[keyword];
