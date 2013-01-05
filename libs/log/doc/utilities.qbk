@@ -429,8 +429,8 @@ Lastly, there is an `add_common_attributes` function that registers two frequent
 
 [section:filter_formatter Filter and formatter parsers]
 
-    #include <``[boost_log_utility_init_filter_parser_hpp]``>
-    #include <``[boost_log_utility_init_formatter_parser_hpp]``>
+    #include <``[boost_log_utility_setup_filter_parser_hpp]``>
+    #include <``[boost_log_utility_setup_formatter_parser_hpp]``>
 
 Filter and formatter parsers allow constructing filters and formatters from a descriptive string. The function `parse_filter` is responsible for recognizing filters and `parse_formatter` - for recognizing formatters.
 
@@ -488,7 +488,8 @@ It must be noted, though, that by default the library only supports those attrib
 
 [section:settings Library initialization from a settings container]
 
-    #include <``[boost_log_utility_init_from_settings_hpp]``>
+    #include <``[boost_log_utility_setup_settings_hpp]``>
+    #include <``[boost_log_utility_setup_from_settings_hpp]``>
 
 The header defines components for library initialization from settings container. The settings container is basically a set of named parameters divided into sections. The container is implemented with the [class_log_basic_settings] class template. There are several constraints on how parameters are stored in the container:
 
@@ -634,7 +635,7 @@ The settings reader also allows to be extended to support custom sink types. See
 
 [section:settings_file Library initialization from a settings file]
 
-    #include <``[boost_log_utility_init_from_stream_hpp]``>
+    #include <``[boost_log_utility_setup_from_stream_hpp]``>
 
 Support for configuration files is a frequently requested feature of the library. And despite the fact there is no ultimately convenient and flexible format of the library settings, the library provides preliminary support for this feature. The functionality is implemented with a simple function `init_from_stream`, which accepts an STL input stream and reads the library settings from it. The function then passes on the read settings to the `init_from_settings` function, described [link log.detailed.utilities.setup.settings above]. Therefore the parameter names and their meaning is the same as for the `init_from_settings` function.
 

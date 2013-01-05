@@ -103,6 +103,25 @@ Keywords can also be used in attribute value lookup expressions in log records a
 
 [endsect]
 
+[section:record Record placeholder]
+
+    #include <``[boost_log_expressions_record_hpp]``>
+
+[endsect]
+
+[section:message Message placeholders]
+
+    #include <``[boost_log_expressions_message_hpp]``>
+
+With all these attributes we shouldn't forget the log message itself, should we? There is a `message` placeholder that represents the text of logging records being formatted. The usage is quite simple:
+
+    // Sets up a formatter that will ignore all attributes and only print log record text
+    backend->set_formatter(expr::stream << expr::message);
+
+Please note, that for wide character logging there is a similar `wmessage` placeholder.
+
+[endsect]
+
 [section:predicates Predicate expressions]
 
 This section describes several expressions that can be used as predicates in the filtering expressions.
@@ -228,15 +247,15 @@ As was noted in the [link log.tutorial.formatters tutorial], the library provide
 
     #include <``[boost_log_expressions_stream_hpp]``>
 
-    backend->set_formatter(expr::stream << expr1 << expr2 << ... << exprN);
+    sink->set_formatter(expr::stream << expr1 << expr2 << ... << exprN);
 
 Here expressions `expr1` through `exprN` may be either manipulators, described in this section, or other expressions resulting in an object that supports putting into an STL-stream.
 
 To use __boost_format__-style syntax one should use `format` construct:
 
-    #include <``[boost_log_expressions_format_hpp]``>
+    #include <``[boost_log_expressions_formatters_format_hpp]``>
 
-    backend->set_formatter(expr::format("format string") % expr1 % expr2 % ... % exprN);
+    sink->set_formatter(expr::format("format string") % expr1 % expr2 % ... % exprN);
 
 The format string passed to the `format` keyword should contain positional placeholders for the appropriate expressions. In the case of wide-character logging the format string should be wide. Expressions `expr1` through `exprN` have the same meaning as in stream-like variant. It should be noted though that using stream-like syntax usually results in a faster formatter than the one constructed with the `format` keyword.
 
@@ -249,88 +268,86 @@ Another useful way of expressing formatters is by using string templates. This p
     // Supporting headers
     #include <``[boost_log_support_date_time_hpp]``>
 
-The library provides several formatters dedicated to date and time-related attribute value types. These are `date`, `time`, `date_time`, `time_duration` and `time_period`. The `date` and `time` formatters are mostly included by `date_time`.
+The library provides the [funcref boost::log::expressions::format_date_time `format_date_time`] formatter dedicated to date and time-related attribute value types. The function accepts the attribute value name and the format string compatible with __boost_date_time__.
 
-As comes from its name, `date_time` is responsible for formatting time points. The supported attribute value types are: `std::tm`, `std::time_t`, `boost::posix_time::ptime` and `boost::local_time::local_date_time` from __boost_date_time__. Additionally, the `date` formatter supports the `boost::gregorian::date` type. As with other formatters and filters, you can also explicitly specify the attribute type or set of types that you want to format.
-
-The date and time format can be customized by the user. The format should be passed as a named argument `format` to the appropriate formatter. This argument should be a format string, containing placeholders described in the __boost_date_time__ documentation. Some usage examples are as follows:
-
-    // Puts a date of any of the supported types into log.
-    // The default format is "%Y-%b-%d".
-    backend->set_formatter(expr::stream << expr::date("Date"));
-
-    // Puts a time point of any of the supported types into log.
-    // The default format is "%H:%M:%S.%f".
-    backend->set_formatter(expr::stream << expr::time("Time"));
-
-    // Puts a date and time of the specified type into log.
-    // The default format is "%Y-%b-%d %H:%M:%S.%f".
-    backend->set_formatter(expr::stream << expr::date_time< std::tm >("DateTime"));
-
-    // Puts a date and time of one of the specified types into log.
-    typedef boost::mpl::vector<
-        std::time_t,
-        std::tm,
-        boost::posix_time::ptime
-    >::type types;
-    backend->set_formatter
+    sink->set_formatter
     (
-        expr::stream
-            << expr::date_time< types >("DateTime", keywords::format = "%d.%m.%y %H:%M:%S")
+        expr::stream << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d %H:%M:%S")
     );
 
-The `time_duration` formatter is responsible for formatting time periods that are not bound to a specific time point. It supports types `double` (interpreted as a result of the `difftime` standard function), `boost::posix_time::time_duration` and `boost::gregorian::date_duration`. The formatter also supports the `format` argument. The usage is straightforward:
+The attribute value can alternatively be identified with the [link log.detailed.expressions.attr `attr`] placeholder or the [link log.detailed.expressions.attr_keywords attribute keyword].
 
-    // Puts a time duration of any of the supported types into log.
-    // The default format is "%-%H:%M:%S.%f".
-    backend->set_formatter(expr::stream << expr::time_duration("Duration"));
+The following placeholders are supported in the format string:
 
-    // Puts a time duration of the specified type into log.
-    typedef boost::posix_time::time_duration duration_t;
-    backend->set_formatter
-    (
-        expr::stream
-            << expr::time_duration< duration_t >("Duration", keywords::format = "%H:%M:%S")
-    );
+[table Date format placeholders
+    [[Placeholder][Meaning][Example]]
+    [[%a]         [Abbreviated weekday name]["Mon" => Monday]]
+    [[%A]         [Long weekday name]["Monday"]]
+    [[%b]         [Abbreviated month name]["Feb" => February]]
+    [[%B]         [Long month name]["February"]]
+    [[%d]         [Numeric day of month with leading zero]["01"]]
+    [[%e]         [Numeric day of month with leading space][" 1"]]
+    [[%m]         [Numeric month, 01-12]["01"]]
+    [[%w]         [Numeric day of week, 1-7]["1"]]
+    [[%y]         [Short year]["12" => 2012]]
+    [[%Y]         [Long year]["2012"]]
+]
 
-The `time_period` formatter composes two time points that denote a time period. It supports the following types: `boost::posix_time::time_period`, `boost::local_time::local_time_period` and `boost::gregorian::date_period`. The formatter is a bit more special since it supports two kinds of format strings, the one that describes the date format, and the one that describes the dates composition. The former can be specified with the named argument `unit_format` and the latter - with named argument `format`. The time period composition format string may contain either of the three placeholders:
+[table Time format placeholders
+    [[Placeholder][Meaning][Example]]
+    [[%f]         [Fractional seconds with leading zeros]["000231"]]
+    [[%H, %O]     [Hours in 24 hour clock or hours in time duration types with leading zero if less than 10]["07"]]
+    [[%I]         [Hours in 12 hour clock with leading zero if less than 10]["07"]]
+    [[%k]         [Hours in 24 hour clock or hours in time duration types with leading space if less than 10][" 7"]]
+    [[%l]         [Hours in 12 hour clock with leading space if less than 10][" 7"]]
+    [[%M]         [Minutes]["32"]]
+    [[%p]         [AM/PM mark, uppercase]["AM"]]
+    [[%P]         [AM/PM mark, lowercase]["am"]]
+    [[%q]         [ISO time zone]["-0700" => Mountain Standard Time]]
+    [[%Q]         [Extended ISO time zone]["-05:00" => Eastern Standard Time]]
+    [[%S]         [Seconds]["26"]]
+]
 
-* `%begin%` - the placeholder will be substituted with the starting time point of the period.
-* `%last%` - the placeholder will be substituted with the last time point of the period.
-* `%end%` - the placeholder will be substituted with the time point that is immediately after the time period.
+[table Miscellaneous placeholders
+    [[Placeholder][Meaning][Example]]
+    [[%-]         [Negative sign in case of time duration, if the duration is less than zero]["-"]]
+    [[%+]         [Sign of time duration, even if positive]["+"]]
+    [[%%]         [An escaped percent sign]["%"]]
+    [[%T]         [Extended ISO time, equivalent to "%H:%M:%S"]["07:32:26"]]
+]
 
-Here are some usage examples:
+Note that in order to use this formatter you will also have to include a supporting header. When [boost_log_support_date_time_hpp] is included, the formatter supports the following types of __boost_date_time__:
 
-    // Puts a time period of any of the supported types into log.
-    // The default composition format is [%begin% - %last%].
-    backend->set_formatter(expr::stream << expr::time_period("Period"));
+* Date and time types: `boost::posix_time::ptime` and `boost::local_time::local_date_time`.
+* Gregorian date type: `boost::gregorian::date`.
+* Time duration types: `boost::posix_time::time_duration` as well as all the specialized time units such as `boost::posix_time::seconds`, including subsecond units.
+* Date duration types: `boost::gregorian::date_duration`.
 
-    // Puts a time period of the specified type into log.
-    typedef boost::posix_time::time_period period_t;
-    backend->set_formatter
-    (
-        expr::stream
-            << expr::time_period< period_t >(
-                "Period",
-                keywords::format = "[%begin%; %end%)",
-                keywords::unit_format = "%d.%m.%y %H:%M:%S")
-    );
-
-Like the `attr` formatter, all date and time formatters throw exceptions when there is no requested attribute value in the log record. The `std::nothrow` argument may be used to suppress exceptions.
+[tip __boost_date_time__ already provides formatting functionality implemented as a number of locale facets. This functionality can be used instead of this formatter, although the formatter is expected to provide better performance.]
 
 [endsect]
 
 [section:named_scope Named scope formatter]
 
-    #include <``[boost_log_formatters_named_scope_hpp]``>
+    #include <``[boost_log_expressions_formatters_named_scope_hpp]``>
 
-The formatter `named_scope` is intended to add support for flexible formatting of the [link log.detailed.attributes.named_scope named scope] attribute. The basic usage is quite straightforward and its result is similar to what [link log.detailed.expressions.attr `attr`] provides:
+The formatter [funcref boost::log::expressions::format_named_scope `format_named_scope`] is intended to add support for flexible formatting of the [link log.detailed.attributes.named_scope named scope] attribute values. The basic usage is quite straightforward and its result is similar to what [link log.detailed.expressions.attr `attr`] provides:
 
     // Puts the scope stack from outer ones towards inner ones: outer scope -> inner scope
-    backend->set_formatter(expr::stream << expr::named_scope("Scopes"));
+    sink->set_formatter(expr::stream << expr::format_named_scope("Scopes", "%n"));
 
-The formatter supports customization with the following named arguments:
+The first argument names the attribute and the second is the format string. The string can contain the following placeholders:
 
+[table Named scope format placeholders
+    [[Placeholder][Meaning][Example]]
+    [[%n]         [Scope name]["void foo()"]]
+    [[%f]         [Source file name of the scope]["foo.cpp"]]
+    [[%l]         [Line number in the source file]["45"]]
+]
+
+While the format string describes the presentation of each named scope in the list, the following named arguments allow to customize the list traversal and formatting:
+
+* `format`. The named scope format string, as described above. This parameter is used to specify the format when other named parameters are used.
 * `iteration`. The argument describes the direction of iteration through scopes. Can have values `forward` (default) or `reverse`.
 * `delimiter`. The argument can be used to specify the delimiters between scopes. The default delimiter depends on the `iteration` argument. If `iteration == forward` the default `delimiter` will be "->", otherwise it will be "<-".
 * `depth`. The argument can be used to limit the number of scopes to put to log. The formatter will print `depth` innermost scopes and, if there are more scopes left, append an ellipsis to the written sequence. By default the formatter will write all scope names.
@@ -338,57 +355,61 @@ The formatter supports customization with the following named arguments:
 Here are a few usage examples:
 
     // Puts the scope stack in reverse order:
-    // inner scope <- outer scope
-    backend->set_formatter
+    // inner scope (file:line) <- outer scope (file:line)
+    sink->set_formatter
     (
         expr::stream
-            << expr::named_scope("Scopes", keywords::iteration = expr::reverse)
+            << expr::format_named_scope(
+                "Scopes",
+                keywords::format = "%n (%f:%l)",
+                keywords::iteration = expr::reverse)
     );
 
     // Puts the scope stack in reverse order with a custom delimiter:
     // inner scope | outer scope
-    backend->set_formatter
+    sink->set_formatter
     (
         expr::stream
             << expr::named_scope(
                 "Scopes",
+                keywords::format = "%n",
                 keywords::iteration = expr::reverse,
                 keywords::delimiter = " | ")
     );
 
     // Puts the scope stack in forward order, no more than 2 inner scopes:
     // ... -> outer scope -> inner scope
-    backend->set_formatter
+    sink->set_formatter
     (
         expr::stream
             << expr::named_scope(
                 "Scopes",
+                keywords::format = "%n",
                 keywords::iteration = expr::forward,
                 keywords::depth = 2)
     );
 
     // Puts the scope stack in reverse order, no more than 2 inner scopes:
     // inner scope <- outer scope <- ...
-    backend->set_formatter
+    sink->set_formatter
     (
         expr::stream
             << expr::named_scope(
                 "Scopes",
+                keywords::format = "%n",
                 keywords::iteration = expr::reverse,
                 keywords::depth = 2)
     );
-
-Like the `attr` formatter, the named scope formatter throws an exception if there is no requested attribute value in the log record. The `std::nothrow` argument may be used to suppress exceptions.
 
 [endsect]
 
 [section:conditional Conditional formatters]
 
-    #include <``[boost_log_formatters_if_hpp]``>
+    #include <``[boost_log_expressions_formatters_if_hpp]``>
 
 There are cases when one would want to check some condition about the log record and format it depending on that condition. One example of such a need is formatting an attribute value depending on its runtime type. The general syntax of the conditional formatter is as follows:
 
-    if_ (filter)
+    expr::if_ (filter)
     [
         true_formatter
     ]
@@ -399,37 +420,24 @@ There are cases when one would want to check some condition about the log record
 
 Those familiar with __boost_phoenix__ lambda expressions will find this syntax quite familiar. The `filter` argument is a filter that is applied to the record being formatted. If it returns `true`, the `true_formatter` is executed, otherwise `false_formatter` is executed. The `else_` section with `false_formatter` is optional. If it is omitted and `filter` yields `false`, no formatter is executed. Here is an example:
 
-    backend->set_formatter
+    sink->set_formatter
     (
         expr::stream
             // First, put the current time
-            << expr::date_time("TimeStamp") << " "
+            << expr::format_date_time("TimeStamp", "%Y-%m-%d %H:%M:%S.%f") << " "
             << expr::if_ (expr::has_attr< int >("ID"))
                [
-                   // if "ID" is integral then format it as a hex number
-                   expr::stream << expr::attr< int >("ID", "[0x%08x]")
+                   // if "ID" is present then put it to the record
+                   expr::stream << expr::attr< int >("ID")
                ]
                .else_
                [
-                   // otherwise put it as it is
-                   expr::stream << "[" << expr::attr("ID") << "]"
+                   // otherwise put a missing marker
+                   expr::stream << "--"
                ]
             // and after that goes the log record text
             << " " << expr::message
     );
-
-[endsect]
-
-[section:message Message placeholder]
-
-    #include <``[boost_log_formatters_message_hpp]``>
-
-With all these attributes we shouldn't forget the log message itself, should we? There is a `message` placeholder that represents the text of logging records being formatted. The usage is quite simple:
-
-    // Sets up a formatter that will ignore all attributes and only print log record text
-    backend->set_formatter(expr::stream << expr::message);
-
-Please note, that for wide character logging there is a similar `wmessage` placeholder.
 
 [endsect]
 
