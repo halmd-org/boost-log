@@ -15,17 +15,18 @@
 #ifndef BOOST_LOG_STATIC_TYPE_DISPATCHER_HPP_INCLUDED_
 #define BOOST_LOG_STATIC_TYPE_DISPATCHER_HPP_INCLUDED_
 
+#include <cstddef>
 #include <utility>
 #include <iterator>
 #include <algorithm>
 #include <boost/array.hpp>
 #include <boost/static_assert.hpp>
-#include <cstddef>
 #include <boost/mpl/if.hpp>
-#include <boost/mpl/assert.hpp>
 #include <boost/mpl/size.hpp>
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/quote.hpp>
+#include <boost/mpl/begin.hpp>
+#include <boost/mpl/end.hpp>
+#include <boost/mpl/deref.hpp>
+#include <boost/mpl/next.hpp>
 #include <boost/mpl/is_sequence.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/log/detail/config.hpp>
@@ -49,7 +50,7 @@ struct dispatching_map_order
 {
     typedef bool result_type;
     typedef std::pair< type_info_wrapper, void* > first_argument_type, second_argument_type;
-    bool operator() (first_argument_type const& left, second_argument_type const& right) const
+    result_type operator() (first_argument_type const& left, second_argument_type const& right) const
     {
         return (left.first < right.first);
     }
@@ -59,16 +60,26 @@ struct dispatching_map_order
 template< typename VisitorT >
 struct dispatching_map_initializer
 {
-    typedef void result_type;
-
-    explicit dispatching_map_initializer(std::pair< type_info_wrapper, void* >*& p) : m_p(p)
+    template< typename IteratorT >
+    static BOOST_LOG_FORCEINLINE void init(IteratorT*, IteratorT*, std::pair< type_info_wrapper, void* >*)
     {
     }
 
-    template< typename T >
-    void operator() (visible_type< T >) const
+    template< typename BeginIteratorT, typename EndIteratorT >
+    static BOOST_LOG_FORCEINLINE void init(BeginIteratorT*, EndIteratorT* end, std::pair< type_info_wrapper, void* >* p)
     {
-        m_p->first = typeid(visible_type< T >);
+        typedef typename mpl::deref< BeginIteratorT >::type type;
+        do_init(static_cast< visible_type< type >* >(0), p);
+
+        typedef typename mpl::next< BeginIteratorT >::type next_iterator_type;
+        init(static_cast< next_iterator_type* >(0), end, p + 1);
+    }
+
+private:
+    template< typename T >
+    static BOOST_LOG_FORCEINLINE void do_init(visible_type< T >*, std::pair< type_info_wrapper, void* >* p)
+    {
+        p->first = typeid(visible_type< T >);
 
         typedef void (*trampoline_t)(void*, T const&);
         BOOST_STATIC_ASSERT_MSG(sizeof(trampoline_t) == sizeof(void*), "Boost.Log: Unsupported platform, the size of a function pointer differs from the size of a pointer");
@@ -79,13 +90,8 @@ struct dispatching_map_initializer
         }
         caster;
         caster.as_trampoline = &type_dispatcher::callback_base::trampoline< VisitorT, T >;
-        m_p->second = caster.as_pvoid;
-
-        ++m_p;
+        p->second = caster.as_pvoid;
     }
-
-private:
-    std::pair< type_info_wrapper, void* >*& m_p;
 };
 
 //! A dispatcher that supports a sequence of types
@@ -153,8 +159,10 @@ private:
             static dispatching_map instance;
             typename dispatching_map::value_type* p = &*instance.begin();
 
-            mpl::for_each< supported_types, mpl::quote1< visible_type > >(
-                dispatching_map_initializer< VisitorT >(p));
+            typedef typename mpl::begin< supported_types >::type begin_iterator_type;
+            typedef typename mpl::end< supported_types >::type end_iterator_type;
+            typedef dispatching_map_initializer< VisitorT > initializer;
+            initializer::init(static_cast< begin_iterator_type* >(0), static_cast< end_iterator_type* >(0), p);
 
             std::sort(instance.begin(), instance.end(), dispatching_map_order());
 
@@ -164,10 +172,9 @@ private:
         return *pinstance;
     }
 
-private:
     //  Copying and assignment closed
-    type_sequence_dispatcher(type_sequence_dispatcher const&);
-    type_sequence_dispatcher& operator= (type_sequence_dispatcher const&);
+    BOOST_LOG_DELETED_FUNCTION(type_sequence_dispatcher(type_sequence_dispatcher const&))
+    BOOST_LOG_DELETED_FUNCTION(type_sequence_dispatcher& operator= (type_sequence_dispatcher const&))
 };
 
 //! A simple dispatcher that only supports one type
@@ -198,10 +205,9 @@ public:
             return callback_base();
     }
 
-private:
     //  Copying and assignment closed
-    single_type_dispatcher(single_type_dispatcher const&);
-    single_type_dispatcher& operator= (single_type_dispatcher const&);
+    BOOST_LOG_DELETED_FUNCTION(single_type_dispatcher(single_type_dispatcher const&))
+    BOOST_LOG_DELETED_FUNCTION(single_type_dispatcher& operator= (single_type_dispatcher const&))
 };
 
 } // namespace aux

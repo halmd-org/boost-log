@@ -149,7 +149,7 @@ The static type dispatcher also supports another way of use which allows avoidan
 
 This dispatcher can be used in precisely the same way as the previously defined one. Note also that __boost_mpl__ lambda expressions are supported as visitor generators.
 
-[tip See also [link log.detailed.attributes.related_components.extractors attribute value extractors] for an even simpler solution if all you want is to get an attribute value.]
+[tip See also [link log.detailed.attributes.related_components.value_processing this section] for a more conventional solution if all you want is to get an attribute value.]
 
 [heading Dynamic type dispatcher]
 

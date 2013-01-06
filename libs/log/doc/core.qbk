@@ -15,7 +15,7 @@
 
 All the information that the logging library processes is packed into a single object of type [class_log_record]. All attached data, including the message text, is represented as named attribute values that can be fetched and processed by filters, formatters and sinks. Particular attribute values can be accessed in different ways, here are a few quick examples:
 
-* Through [link log.detailed.attributes.related_components.extractors value visitation and extraction].
+* Through [link log.detailed.attributes.related_components.value_processing value visitation and extraction].
 
 [example_core_record_visitation_extraction]
 

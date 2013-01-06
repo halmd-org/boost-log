@@ -89,7 +89,7 @@ struct default_filter_factory< CharT >::on_integral_argument
     result_type operator() (long val) const
     {
         typedef binder2nd< RelationT, long > predicate;
-        m_filter = predicate_wrapper< log::integral_types, predicate >(m_name, predicate(RelationT(), val));
+        m_filter = predicate_wrapper< log::integral_types::type, predicate >(m_name, predicate(RelationT(), val));
     }
 
 private:
@@ -110,7 +110,7 @@ struct default_filter_factory< CharT >::on_fp_argument
     result_type operator() (double val) const
     {
         typedef binder2nd< RelationT, double > predicate;
-        m_filter = predicate_wrapper< log::floating_point_types, predicate >(m_name, predicate(RelationT(), val));
+        m_filter = predicate_wrapper< log::floating_point_types::type, predicate >(m_name, predicate(RelationT(), val));
     }
 
 private:
@@ -181,7 +181,7 @@ struct default_filter_factory< CharT >::on_string_argument
 
     result_type operator() (string_type const& val) const
     {
-        m_filter = predicate_wrapper< log::string_types, predicate >(m_name, predicate(RelationT(), val));
+        m_filter = predicate_wrapper< log::string_types::type, predicate >(m_name, predicate(RelationT(), val));
     }
 
 private:
@@ -276,7 +276,7 @@ struct default_filter_factory< CharT >::on_regex_argument
 
     result_type operator() (string_type const& val) const
     {
-        m_filter = predicate_wrapper< log::string_types, predicate >(m_name, predicate(RelationT(), val));
+        m_filter = predicate_wrapper< log::string_types::type, predicate >(m_name, predicate(RelationT(), val));
     }
 
 private:

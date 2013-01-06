@@ -359,7 +359,7 @@ private:
                     mpl::back_inserter< default_attribute_types >
                 >::type supported_types;
 
-                append_formatter(expressions::stream << expressions::attr< supported_types >(m_AttrName));
+                append_formatter(expressions::stream << expressions::attr< supported_types::type >(m_AttrName));
             }
         }
 

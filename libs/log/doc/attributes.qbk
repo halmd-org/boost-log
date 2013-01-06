@@ -406,10 +406,47 @@ For futher details on the container interface please consult the [class_log_attr
 
 [endsect]
 
-[section:extractors Attribute value extraction and visitation]
+[section:value_processing Attribute value extraction and visitation]
 
-    #include <``[boost_log_attributes_value_extraction_hpp]``>
+Since attribute values do not expose the stored value in the interface, an API is needed to acquire the stored value. The library provides two APIs for this purpose: value visitation and extraction.
+
+[section:visitation Value visitation]
+
+    #include <``[boost_log_attributes_value_visitation_fwd_hpp]``>
     #include <``[boost_log_attributes_value_visitation_hpp]``>
+
+Attribute value visitation implements the visitor design pattern, hence the naming. The user has to provide an unary function object (a visitor) which will be invoked on the stored attribute value. The caller also has to provide the expected type or set of possible types of the stored value. Obviously, the visitor must be capable of receiving an argument of the expected type. Visitation will only succeed if the stored type matches the expectation.
+
+In order to apply the visitor, one should call the [funcref boost::log::visit `visit`] function on the attribute value. Let's see an example:
+
+[example_attr_value_visitation]
+
+[full_code_link doc/attr_value_visitation.cpp]
+
+In this example we print the stored attribute value in our `print_visitor`. We expect the attribute value to have either `int` or `std::string` stored type; only in this case the visitor will be invoked and the visitation result will be positive. In case of failure the [class_log_visitation_result] class provides additional information on the failure reason. The class has the method named `code` which returns visitation error code. The following error codes are possible:
+
+* `ok` - visitation succeeded, the visitor has been invoked; visitation result is positive when this code is used
+* `value_not_found` - visitation failed because the requested value was not found; this code is used when visitation is applied to a log record or a set of attrinute values rather than a single value
+* `value_has_invalid_type` - visitation failed because the value has type differing from any of the expected types
+
+It is possible to return values from the visitor. In this case the result of visitation includes both the returned value and [class_log_visitation_result]. See the following example where we compute the hash value on the stored value.
+
+[example_attr_value_visitation_retval]
+
+[full_code_link doc/attr_value_visitation.cpp]
+
+As it has been mentioned, visitation can also be applied to log records and attribute value sets. The syntax is the same, except that the attribute name also has to be specified. The [funcref boost::log::visit `visit`] algorithm will try to find the attribute value by name and then apply the visitor to the found element.
+
+[example_attr_value_visitation_with_retval_rec]
+
+Also, for convenience [class_log_attribute_value] has the convenience member `visit` with the same meaning as the free function applied to the attribute value.
+
+[endsect]
+
+[section:extraction Value extraction]
+
+    #include <``[boost_log_attributes_value_extraction_fwd_hpp]``>
+    #include <``[boost_log_attributes_value_extraction_hpp]``>
 
 TODO: Need to update with respect to the separated API for visitation and extraction.
 
@@ -450,6 +487,8 @@ The library also provides an `extract` convenience function that automatically c
         assert(logging::extract< logging::numeric_types >("MyAttr", attrs, print_attribute_value()));
         assert(!logging::extract< std::complex< double > >("MyAttr", attrs, print_attribute_value()));
     }
+
+[endsect]
 
 [endsect]
 
