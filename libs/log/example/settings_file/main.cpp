@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
         try_logging();
 
         // Now enable tagging and try again
-        BOOST_LOG_SCOPED_THREAD_TAG("Tag", std::string, "TAGGED");
+        BOOST_LOG_SCOPED_THREAD_TAG("Tag", "TAGGED");
         try_logging();
 
         return 0;

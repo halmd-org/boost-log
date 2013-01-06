@@ -27,7 +27,7 @@
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
-#include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

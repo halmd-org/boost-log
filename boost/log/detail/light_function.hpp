@@ -245,7 +245,7 @@ public:
     BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
     bool operator! () const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
     bool empty() const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
-    void clear()
+    void clear() BOOST_NOEXCEPT
     {
         if (m_pImpl)
         {
@@ -445,7 +445,7 @@ public:
     BOOST_LOG_EXPLICIT_OPERATOR_BOOL()
     bool operator! () const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
     bool empty() const BOOST_NOEXCEPT { return (m_pImpl == NULL); }
-    void clear()
+    void clear() BOOST_NOEXCEPT
     {
         if (m_pImpl)
         {

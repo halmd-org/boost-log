@@ -58,7 +58,7 @@ void thread_fun(boost::barrier& bar)
     bar.wait();
 
     // Here we go. First, identfy the thread.
-    BOOST_LOG_SCOPED_THREAD_TAG("ThreadID", boost::thread::id, boost::this_thread::get_id());
+    BOOST_LOG_SCOPED_THREAD_TAG("ThreadID", boost::this_thread::get_id());
 
     // Now, do some logging
     for (unsigned int i = 0; i < LOG_RECORDS_TO_WRITE; ++i)

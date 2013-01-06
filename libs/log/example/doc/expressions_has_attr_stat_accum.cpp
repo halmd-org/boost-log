@@ -106,7 +106,7 @@ void init()
 // This simple macro will simplify putting statistic data into a logger
 #define PUT_STAT(lg, stat_stream_name, change)\
     if (true) {\
-        BOOST_LOG_SCOPED_LOGGER_TAG(lg, "StatisticStream", std::string, stat_stream_name);\
+        BOOST_LOG_SCOPED_LOGGER_TAG(lg, "StatisticStream", stat_stream_name);\
         BOOST_LOG(lg) << logging::add_attr("Change", (int)(change));\
     } else ((void)0)
 

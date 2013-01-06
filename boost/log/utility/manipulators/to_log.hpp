@@ -17,7 +17,7 @@
 
 #include <iosfwd>
 #include <boost/log/detail/config.hpp>
-#include <boost/log/utility/formatting_stream_fwd.hpp>
+#include <boost/log/utility/formatting_ostream_fwd.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

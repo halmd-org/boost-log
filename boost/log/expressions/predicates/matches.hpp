@@ -17,11 +17,11 @@
 
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/log/detail/config.hpp>
-#include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/expressions/unary_function_terminal.hpp>
+#include <boost/log/detail/unary_function_terminal.hpp>
+#include <boost/log/detail/attribute_predicate.hpp>
 #include <boost/log/expressions/attr_fwd.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
-#include <boost/log/expressions/predicates/predicate.hpp>
+#include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/utility/functional/matches.hpp>
 
@@ -41,15 +41,15 @@ namespace expressions {
 #if !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 template< typename T, typename RegexT, typename FallbackPolicyT = fallback_to_none >
-using attribute_matches = attribute_predicate< T, RegexT, matches_fun, FallbackPolicyT >;
+using attribute_matches = aux::attribute_predicate< T, RegexT, matches_fun, FallbackPolicyT >;
 
 #else // !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
 template< typename T, typename RegexT, typename FallbackPolicyT = fallback_to_none >
 class attribute_matches :
-    public attribute_predicate< T, RegexT, matches_fun, FallbackPolicyT >
+    public aux::attribute_predicate< T, RegexT, matches_fun, FallbackPolicyT >
 {
-    typedef attribute_predicate< T, RegexT, matches_fun, FallbackPolicyT > base_type;
+    typedef aux::attribute_predicate< T, RegexT, matches_fun, FallbackPolicyT > base_type;
 
 public:
     /*!
@@ -82,10 +82,10 @@ public:
  * which is assumed to be a string, matches the specified regular expression.
  */
 template< typename T, typename FallbackPolicyT, typename TagT, template< typename > class ActorT, typename RegexT >
-BOOST_LOG_FORCEINLINE ActorT< unary_function_terminal< attribute_matches< T, RegexT, FallbackPolicyT > > >
+BOOST_LOG_FORCEINLINE ActorT< aux::unary_function_terminal< attribute_matches< T, RegexT, FallbackPolicyT > > >
 matches(attribute_actor< T, FallbackPolicyT, TagT, ActorT > const& attr, RegexT const& rex)
 {
-    typedef unary_function_terminal< attribute_matches< T, RegexT, FallbackPolicyT > > terminal_type;
+    typedef aux::unary_function_terminal< attribute_matches< T, RegexT, FallbackPolicyT > > terminal_type;
     ActorT< terminal_type > act = {{ terminal_type(attr.get_name(), rex, attr.get_fallback_policy()) }};
     return act;
 }
@@ -95,10 +95,10 @@ matches(attribute_actor< T, FallbackPolicyT, TagT, ActorT > const& attr, RegexT 
  * which is assumed to be a string, matches the specified regular expression.
  */
 template< typename DescriptorT, template< typename > class ActorT, typename RegexT >
-BOOST_LOG_FORCEINLINE ActorT< unary_function_terminal< attribute_matches< typename DescriptorT::value_type, RegexT > > >
+BOOST_LOG_FORCEINLINE ActorT< aux::unary_function_terminal< attribute_matches< typename DescriptorT::value_type, RegexT > > >
 matches(attribute_keyword< DescriptorT, ActorT > const&, RegexT const& rex)
 {
-    typedef unary_function_terminal< attribute_matches< typename DescriptorT::value_type, RegexT > > terminal_type;
+    typedef aux::unary_function_terminal< attribute_matches< typename DescriptorT::value_type, RegexT > > terminal_type;
     ActorT< terminal_type > act = {{ terminal_type(DescriptorT::get_name(), rex) }};
     return act;
 }
@@ -108,10 +108,10 @@ matches(attribute_keyword< DescriptorT, ActorT > const&, RegexT const& rex)
  * which is assumed to be a string, matches the specified regular expression.
  */
 template< typename T, typename RegexT >
-BOOST_LOG_FORCEINLINE phoenix::actor< unary_function_terminal< attribute_matches< T, RegexT > > >
+BOOST_LOG_FORCEINLINE phoenix::actor< aux::unary_function_terminal< attribute_matches< T, RegexT > > >
 matches(attribute_name const& name, RegexT const& rex)
 {
-    typedef unary_function_terminal< attribute_matches< T, RegexT > > terminal_type;
+    typedef aux::unary_function_terminal< attribute_matches< T, RegexT > > terminal_type;
     phoenix::actor< terminal_type > act = {{ terminal_type(name, rex) }};
     return act;
 }

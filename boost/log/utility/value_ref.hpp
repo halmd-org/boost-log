@@ -38,7 +38,7 @@
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/detail/value_ref_visitation.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
-#include <boost/log/utility/formatting_stream_fwd.hpp>
+#include <boost/log/utility/formatting_ostream_fwd.hpp>
 #include <boost/log/utility/functional/logical.hpp>
 #include <boost/log/utility/functional/bind.hpp>
 #include <boost/log/utility/functional/bind_output.hpp>

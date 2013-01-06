@@ -128,9 +128,9 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(event_logger, src::severity_logger_mt< se
 // The function raises an event of the disk space depletion
 void announce_low_disk_space(std::string const& drive, boost::uintmax_t size)
 {
-    BOOST_LOG_SCOPED_THREAD_TAG("EventID", int, LOW_DISK_SPACE_MSG);
-    BOOST_LOG_SCOPED_THREAD_TAG("Drive", std::string, drive);
-    BOOST_LOG_SCOPED_THREAD_TAG("Size", boost::uintmax_t, size);
+    BOOST_LOG_SCOPED_THREAD_TAG("EventID", (int)LOW_DISK_SPACE_MSG);
+    BOOST_LOG_SCOPED_THREAD_TAG("Drive", drive);
+    BOOST_LOG_SCOPED_THREAD_TAG("Size", size);
     // Since this record may get accepted by other sinks,
     // this message is not completely useless
     BOOST_LOG_SEV(event_logger::get(), warning) << "Low disk " << drive
@@ -140,8 +140,8 @@ void announce_low_disk_space(std::string const& drive, boost::uintmax_t size)
 // The function raises an event of inaccessible disk drive
 void announce_device_inaccessible(std::string const& drive)
 {
-    BOOST_LOG_SCOPED_THREAD_TAG("EventID", int, DEVICE_INACCESSIBLE_MSG);
-    BOOST_LOG_SCOPED_THREAD_TAG("Drive", std::string, drive);
+    BOOST_LOG_SCOPED_THREAD_TAG("EventID", (int)DEVICE_INACCESSIBLE_MSG);
+    BOOST_LOG_SCOPED_THREAD_TAG("Drive", drive);
     BOOST_LOG_SEV(event_logger::get(), error) << "Cannot access drive " << drive;
 }
 
@@ -155,7 +155,7 @@ struct activity_guard
     }
     ~activity_guard()
     {
-        BOOST_LOG_SCOPED_THREAD_TAG("EventID", int, SUCCEEDED_MSG);
+        BOOST_LOG_SCOPED_THREAD_TAG("EventID", (int)SUCCEEDED_MSG);
         BOOST_LOG_SEV(event_logger::get(), normal) << "Activity ended";
         event_logger::get().remove_attribute(m_it);
     }

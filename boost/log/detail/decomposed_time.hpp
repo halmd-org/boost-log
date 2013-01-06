@@ -25,7 +25,7 @@
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/date_time_format_parser.hpp>
-#include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

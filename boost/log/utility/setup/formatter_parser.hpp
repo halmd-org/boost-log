@@ -28,7 +28,7 @@
 #include <boost/log/core/record.hpp>
 #include <boost/log/expressions/formatter.hpp>
 #include <boost/log/expressions/attr.hpp>
-#include <boost/log/expressions/stream.hpp>
+#include <boost/log/expressions/formatters/stream.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

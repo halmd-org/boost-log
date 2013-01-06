@@ -5,15 +5,15 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   predicate.hpp
+ * \file   attribute_predicate.hpp
  * \author Andrey Semashev
  * \date   02.09.2012
  *
  * The header contains implementation of a generic predicate in template expressions.
  */
 
-#ifndef BOOST_LOG_EXPRESSIONS_PREDICATES_PREDICATE_HPP_INCLUDED_
-#define BOOST_LOG_EXPRESSIONS_PREDICATES_PREDICATE_HPP_INCLUDED_
+#ifndef BOOST_LOG_DETAIL_ATTRIBUTE_PREDICATE_HPP_INCLUDED_
+#define BOOST_LOG_DETAIL_ATTRIBUTE_PREDICATE_HPP_INCLUDED_
 
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/utility/result_of.hpp>
@@ -32,6 +32,8 @@ namespace boost {
 BOOST_LOG_OPEN_NAMESPACE
 
 namespace expressions {
+
+namespace aux {
 
 /*!
  * The predicate checks if the attribute value satisfies a predicate.
@@ -102,10 +104,12 @@ public:
     }
 };
 
+} // namespace aux
+
 } // namespace expressions
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_EXPRESSIONS_PREDICATES_PREDICATE_HPP_INCLUDED_
+#endif // BOOST_LOG_DETAIL_ATTRIBUTE_PREDICATE_HPP_INCLUDED_

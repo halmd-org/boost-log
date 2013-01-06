@@ -88,7 +88,7 @@ int main(int, char*[])
     init_builtin_syslog();
 #endif
 
-    BOOST_LOG_SCOPED_THREAD_TAG("MyLevel", std::string, "warning");
+    BOOST_LOG_SCOPED_THREAD_TAG("MyLevel", "warning");
     src::severity_logger< > lg;
     BOOST_LOG_SEV(lg, 3) << "Hello world!";
 

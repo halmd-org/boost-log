@@ -18,7 +18,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/core/record.hpp>
 #include "char_definitions.hpp"

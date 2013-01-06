@@ -80,7 +80,7 @@ void tagged_logging()
 //[ example_tutorial_attributes_timed_logging
 void timed_logging()
 {
-    BOOST_LOG_SCOPED_THREAD_ATTR("Timeline", attrs::timer);
+    BOOST_LOG_SCOPED_THREAD_ATTR("Timeline", attrs::timer());
 
     src::severity_logger< severity_level > slg;
     BOOST_LOG_SEV(slg, normal) << "Starting to time nested functions";

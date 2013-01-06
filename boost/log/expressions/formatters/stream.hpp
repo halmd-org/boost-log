@@ -12,8 +12,8 @@
  * The header contains implementation of a stream placeholder in template expressions.
  */
 
-#ifndef BOOST_LOG_EXPRESSIONS_STREAM_HPP_INCLUDED_
-#define BOOST_LOG_EXPRESSIONS_STREAM_HPP_INCLUDED_
+#ifndef BOOST_LOG_EXPRESSIONS_FORMATTERS_STREAM_HPP_INCLUDED_
+#define BOOST_LOG_EXPRESSIONS_FORMATTERS_STREAM_HPP_INCLUDED_
 
 #include <boost/phoenix/core/argument.hpp>
 #include <boost/log/detail/config.hpp>
@@ -48,4 +48,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #include <boost/log/detail/attr_output_impl.hpp>
 #endif
 
-#endif // BOOST_LOG_EXPRESSIONS_STREAM_HPP_INCLUDED_
+#endif // BOOST_LOG_EXPRESSIONS_FORMATTERS_STREAM_HPP_INCLUDED_

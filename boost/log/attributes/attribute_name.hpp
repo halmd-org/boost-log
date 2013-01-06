@@ -58,7 +58,7 @@ public:
     typedef unspecified id_type;
 #else
     typedef uint32_t id_type;
-    enum { uninitialized = 0xFFFFFFFF };
+    enum { uninitialized = 0xFFFFFFFFu };
 #endif
 
 private:

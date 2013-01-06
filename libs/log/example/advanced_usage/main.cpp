@@ -200,7 +200,7 @@ int main(int argc, char* argv[])
     logging::core::get()->add_global_attribute("TimeStamp", TimeStamp);
 
     // And an up time stopwatch
-    BOOST_LOG_SCOPED_THREAD_ATTR("Uptime", attrs::timer);
+    BOOST_LOG_SCOPED_THREAD_ATTR("Uptime", attrs::timer());
 
     // Attributes may have two other scopes: thread scope and source scope. Attributes of thread
     // scope are output with each record made by the thread (regardless of the logger object), and
@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
         // Here we add a temporary attribute to the logger lg.
         // Every log record being written in the current scope with logger lg
         // will have a string attribute "Tag" with value "Tagged line" attached.
-        BOOST_LOG_SCOPED_LOGGER_TAG(lg, "Tag", std::string, "Tagged line");
+        BOOST_LOG_SCOPED_LOGGER_TAG(lg, "Tag", "Tagged line");
 
         // The above line is roughly equivalent to the following:
         // attrs::constant< std::string > TagAttr("Tagged line");
@@ -281,7 +281,7 @@ int main(int argc, char* argv[])
     {
         // Next we try if the second condition of the filter works
         // We mark following lines with a tag
-        BOOST_LOG_SCOPED_THREAD_TAG("Tag", std::string, "IMPORTANT MESSAGES");
+        BOOST_LOG_SCOPED_THREAD_TAG("Tag", "IMPORTANT MESSAGES");
 
         // We may omit the severity and use the shorter BOOST_LOG macro. The logger "slg"
         // has the default severity that may be specified on its construction. We didn't

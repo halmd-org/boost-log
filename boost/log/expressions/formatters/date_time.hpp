@@ -32,7 +32,7 @@
 #include <boost/log/detail/attr_output_terminal.hpp>
 #include <boost/log/expressions/attr_fwd.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
-#include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/utility/functional/bind.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE

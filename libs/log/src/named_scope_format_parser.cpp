@@ -22,7 +22,7 @@
 #include <boost/spirit/include/karma_generate.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/expressions/formatters/named_scope.hpp>
-#include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 
 namespace karma = boost::spirit::karma;
 

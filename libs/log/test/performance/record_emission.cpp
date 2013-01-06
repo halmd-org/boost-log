@@ -77,7 +77,7 @@ namespace {
 
 void test(unsigned int record_count, boost::barrier& bar)
 {
-    BOOST_LOG_SCOPED_THREAD_TAG("ThreadID", boost::thread::id, boost::this_thread::get_id());
+    BOOST_LOG_SCOPED_THREAD_TAG("ThreadID", boost::this_thread::get_id());
     bar.wait();
 
     src::severity_logger< severity_level > slg;

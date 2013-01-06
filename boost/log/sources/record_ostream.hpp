@@ -27,7 +27,7 @@
 #include <boost/log/core/record.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
-#include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

@@ -274,7 +274,7 @@ struct is_nullary< custom_terminal< boost::log::expressions::attribute_terminal<
 
 } // namespace boost
 
-#if defined(BOOST_LOG_EXPRESSIONS_STREAM_HPP_INCLUDED_)
+#if defined(BOOST_LOG_EXPRESSIONS_FORMATTERS_STREAM_HPP_INCLUDED_)
 #include <boost/log/detail/attr_output_impl.hpp>
 #endif
 

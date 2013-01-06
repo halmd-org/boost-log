@@ -16,10 +16,8 @@
 #define BOOST_LOG_ATTRIBUTES_SCOPED_ATTRIBUTE_HPP_INCLUDED_
 
 #include <utility>
-#include <boost/shared_ptr.hpp>
 #include <boost/move/move.hpp>
 #include <boost/utility/addressof.hpp>
-#include <boost/preprocessor/seq/enum.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/core/core.hpp>
 #include <boost/log/sources/basic_logger.hpp>
@@ -118,40 +116,23 @@ BOOST_LOG_FORCEINLINE aux::scoped_logger_attribute< LoggerT > add_scoped_logger_
 
 //! \cond
 
-#define BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR_INTERNAL(logger, attr_name, attr_type, attr_ctor_args, attr_var_name, sentry_var_name)\
-    attr_type attr_var_name(BOOST_PP_SEQ_ENUM(attr_ctor_args));\
+#define BOOST_LOG_SCOPED_LOGGER_ATTR_INTERNAL(logger, attr_name, attr, sentry_var_name)\
     BOOST_LOG_UNUSED_VARIABLE(::boost::log::scoped_attribute, sentry_var_name,\
-        = ::boost::log::add_scoped_logger_attribute(logger, attr_name, attr_var_name));
-
-#define BOOST_LOG_SCOPED_LOGGER_ATTR_INTERNAL(logger, attr_name, attr_type, attr_var_name, sentry_var_name)\
-    attr_type attr_var_name;\
-    BOOST_LOG_UNUSED_VARIABLE(::boost::log::scoped_attribute, sentry_var_name,\
-        = ::boost::log::add_scoped_logger_attribute(logger, attr_name, attr_var_name));
+        = ::boost::log::add_scoped_logger_attribute(logger, attr_name, (attr)));
 
 //! \endcond
 
-//! The macro sets a scoped logger-wide attribute with constructor arguments in a more compact way
-#define BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR(logger, attr_name, attr_type, attr_ctor_args)\
-    BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR_INTERNAL(\
-        logger,\
-        attr_name,\
-        attr_type,\
-        attr_ctor_args,\
-        BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_scoped_logger_attr_),\
-        BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_scoped_logger_attr_sentry_))
-
 //! The macro sets a scoped logger-wide attribute in a more compact way
-#define BOOST_LOG_SCOPED_LOGGER_ATTR(logger, attr_name, attr_type)\
+#define BOOST_LOG_SCOPED_LOGGER_ATTR(logger, attr_name, attr)\
     BOOST_LOG_SCOPED_LOGGER_ATTR_INTERNAL(\
         logger,\
         attr_name,\
-        attr_type,\
-        BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_scoped_logger_attr_),\
+        attr,\
         BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_scoped_logger_attr_sentry_))
 
 //! The macro sets a scoped logger-wide tag in a more compact way
-#define BOOST_LOG_SCOPED_LOGGER_TAG(logger, attr_name, attr_type, attr_value)\
-    BOOST_LOG_SCOPED_LOGGER_ATTR_CTOR(logger, attr_name, ::boost::log::attributes::constant< attr_type >, (attr_value))
+#define BOOST_LOG_SCOPED_LOGGER_TAG(logger, attr_name, attr_value)\
+    BOOST_LOG_SCOPED_LOGGER_ATTR(logger, attr_name, ::boost::log::attributes::make_constant(attr_value))
 
 namespace aux {
 
@@ -212,38 +193,22 @@ BOOST_LOG_FORCEINLINE aux::scoped_thread_attribute add_scoped_thread_attribute(a
 
 //! \cond
 
-#define BOOST_LOG_SCOPED_THREAD_ATTR_CTOR_INTERNAL(attr_name, attr_type, attr_ctor_args, attr_var_name, sentry_var_name)\
-    attr_type attr_var_name(BOOST_PP_SEQ_ENUM(attr_ctor_args));\
+#define BOOST_LOG_SCOPED_THREAD_ATTR_INTERNAL(attr_name, attr, sentry_var_name)\
     BOOST_LOG_UNUSED_VARIABLE(::boost::log::scoped_attribute, sentry_var_name,\
-        = ::boost::log::add_scoped_thread_attribute(attr_name, attr_var_name));
-
-#define BOOST_LOG_SCOPED_THREAD_ATTR_INTERNAL(attr_name, attr_type, attr_var_name, sentry_var_name)\
-    attr_type attr_var_name;\
-    BOOST_LOG_UNUSED_VARIABLE(::boost::log::scoped_attribute, sentry_var_name,\
-        = ::boost::log::add_scoped_thread_attribute(attr_name, attr_var_name));
+        = ::boost::log::add_scoped_thread_attribute(attr_name, (attr)));
 
 //! \endcond
 
-//! The macro sets a scoped thread-wide attribute with constructor arguments in a more compact way
-#define BOOST_LOG_SCOPED_THREAD_ATTR_CTOR(attr_name, attr_type, attr_ctor_args)\
-    BOOST_LOG_SCOPED_THREAD_ATTR_CTOR_INTERNAL(\
-        attr_name,\
-        attr_type,\
-        attr_ctor_args,\
-        BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_scoped_thread_attr_),\
-        BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_scoped_thread_attr_sentry_))
-
 //! The macro sets a scoped thread-wide attribute in a more compact way
-#define BOOST_LOG_SCOPED_THREAD_ATTR(attr_name, attr_type)\
+#define BOOST_LOG_SCOPED_THREAD_ATTR(attr_name, attr)\
     BOOST_LOG_SCOPED_THREAD_ATTR_INTERNAL(\
         attr_name,\
-        attr_type,\
-        BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_scoped_thread_attr_),\
+        attr,\
         BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_scoped_thread_attr_sentry_))
 
 //! The macro sets a scoped thread-wide tag in a more compact way
-#define BOOST_LOG_SCOPED_THREAD_TAG(attr_name, attr_type, attr_value)\
-    BOOST_LOG_SCOPED_THREAD_ATTR_CTOR(attr_name, ::boost::log::attributes::constant< attr_type >, (attr_value))
+#define BOOST_LOG_SCOPED_THREAD_TAG(attr_name, attr_value)\
+    BOOST_LOG_SCOPED_THREAD_ATTR(attr_name, ::boost::log::attributes::make_constant(attr_value))
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 

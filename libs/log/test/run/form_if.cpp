@@ -21,7 +21,7 @@
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/core/record.hpp>
-#include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 #include "char_definitions.hpp"
 #include "make_record.hpp"
 

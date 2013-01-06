@@ -5,15 +5,15 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   formatting_stream.hpp
+ * \file   formatting_ostream.hpp
  * \author Andrey Semashev
  * \date   11.07.2012
  *
  * The header contains implementation of a string stream used for log record formatting.
  */
 
-#ifndef BOOST_LOG_UTILITY_FORMATTING_STREAM_HPP_INCLUDED_
-#define BOOST_LOG_UTILITY_FORMATTING_STREAM_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_FORMATTING_OSTREAM_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_FORMATTING_OSTREAM_HPP_INCLUDED_
 
 #include <ostream>
 #include <string>
@@ -32,7 +32,7 @@
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
-#include <boost/log/utility/formatting_stream_fwd.hpp>
+#include <boost/log/utility/formatting_ostream_fwd.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -324,4 +324,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #pragma warning(pop)
 #endif // _MSC_VER
 
-#endif // BOOST_LOG_UTILITY_FORMATTING_STREAM_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_FORMATTING_OSTREAM_HPP_INCLUDED_

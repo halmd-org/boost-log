@@ -65,11 +65,11 @@ int main(int, char*[])
     init_logging();
 
     {
-        BOOST_LOG_SCOPED_THREAD_TAG("RequestID", std::string, "Request1");
+        BOOST_LOG_SCOPED_THREAD_TAG("RequestID", "Request1");
         logging_function();
     }
     {
-        BOOST_LOG_SCOPED_THREAD_TAG("RequestID", std::string, "Request2");
+        BOOST_LOG_SCOPED_THREAD_TAG("RequestID", "Request2");
         logging_function();
     }
 

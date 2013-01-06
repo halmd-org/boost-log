@@ -21,7 +21,6 @@
 #include <boost/log/expressions/keyword.hpp>
 #include <boost/log/expressions/message.hpp>
 #include <boost/log/expressions/record.hpp>
-#include <boost/log/expressions/stream.hpp>
 
 #include <boost/log/expressions/predicates.hpp>
 #include <boost/log/expressions/formatters.hpp>

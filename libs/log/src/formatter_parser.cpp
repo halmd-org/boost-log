@@ -47,7 +47,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/expressions/attr.hpp>
 #include <boost/log/expressions/message.hpp>
-#include <boost/log/expressions/stream.hpp>
+#include <boost/log/expressions/formatters/stream.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/exceptions.hpp>

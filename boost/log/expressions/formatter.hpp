@@ -22,7 +22,7 @@
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/core/record_view.hpp>
-#include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/utility/functional/bind_output.hpp>
 #include <boost/log/expressions/message.hpp>
 

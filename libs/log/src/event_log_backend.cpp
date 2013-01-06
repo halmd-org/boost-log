@@ -29,7 +29,7 @@
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/code_conversion.hpp>
-#include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 #include "event_log_registry.hpp"
 #include <windows.h>
 #include <psapi.h>

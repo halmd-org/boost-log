@@ -5,15 +5,15 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   formatting_stream_fwd.hpp
+ * \file   formatting_ostream_fwd.hpp
  * \author Andrey Semashev
  * \date   11.07.2012
  *
  * The header contains forward declaration of a string stream used for log record formatting.
  */
 
-#ifndef BOOST_LOG_UTILITY_FORMATTING_STREAM_FWD_HPP_INCLUDED_
-#define BOOST_LOG_UTILITY_FORMATTING_STREAM_FWD_HPP_INCLUDED_
+#ifndef BOOST_LOG_UTILITY_FORMATTING_OSTREAM_FWD_HPP_INCLUDED_
+#define BOOST_LOG_UTILITY_FORMATTING_OSTREAM_FWD_HPP_INCLUDED_
 
 #include <string>
 #include <memory>
@@ -48,4 +48,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_UTILITY_FORMATTING_STREAM_FWD_HPP_INCLUDED_
+#endif // BOOST_LOG_UTILITY_FORMATTING_OSTREAM_FWD_HPP_INCLUDED_

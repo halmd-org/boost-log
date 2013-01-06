@@ -24,7 +24,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/unhandled_exception_count.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
-#include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

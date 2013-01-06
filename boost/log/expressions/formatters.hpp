@@ -17,6 +17,7 @@
 
 #include <boost/log/detail/config.hpp>
 
+#include <boost/log/expressions/formatters/stream.hpp>
 #include <boost/log/expressions/formatters/format.hpp>
 
 #include <boost/log/expressions/formatters/date_time.hpp>

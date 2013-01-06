@@ -32,7 +32,7 @@
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/decomposed_time.hpp>
 #include <boost/log/detail/date_time_fmt_gen_traits_fwd.hpp>
-#include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

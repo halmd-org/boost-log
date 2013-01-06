@@ -28,7 +28,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
 #include <boost/log/detail/function_traits.hpp>
-#include <boost/log/utility/formatting_stream.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once

@@ -12,8 +12,8 @@
  * The header contains attribute value extractor adapter for constructing expression template terminals.
  */
 
-#ifndef BOOST_LOG_EXPRESSIONS_UNARY_FUNCTION_TERMINAL_HPP_INCLUDED_
-#define BOOST_LOG_EXPRESSIONS_UNARY_FUNCTION_TERMINAL_HPP_INCLUDED_
+#ifndef BOOST_LOG_DETAIL_UNARY_FUNCTION_TERMINAL_HPP_INCLUDED_
+#define BOOST_LOG_DETAIL_UNARY_FUNCTION_TERMINAL_HPP_INCLUDED_
 
 #include <boost/mpl/bool.hpp>
 #include <boost/utility/result_of.hpp>
@@ -34,6 +34,8 @@ namespace boost {
 BOOST_LOG_OPEN_NAMESPACE
 
 namespace expressions {
+
+namespace aux {
 
 /*!
  * \brief An adapter for an unary function to be used as a terminal in a Boost.Phoenix expression
@@ -117,6 +119,8 @@ public:
     }
 };
 
+} // namespace aux
+
 } // namespace expressions
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
@@ -128,7 +132,7 @@ namespace phoenix {
 namespace result_of {
 
 template< typename FunT >
-struct is_nullary< custom_terminal< boost::log::expressions::unary_function_terminal< FunT > > > :
+struct is_nullary< custom_terminal< boost::log::expressions::aux::unary_function_terminal< FunT > > > :
     public mpl::false_
 {
 };
@@ -141,4 +145,4 @@ struct is_nullary< custom_terminal< boost::log::expressions::unary_function_term
 
 } // namespace boost
 
-#endif // BOOST_LOG_EXPRESSIONS_UNARY_FUNCTION_TERMINAL_HPP_INCLUDED_
+#endif // BOOST_LOG_DETAIL_UNARY_FUNCTION_TERMINAL_HPP_INCLUDED_
