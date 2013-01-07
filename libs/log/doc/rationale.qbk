@@ -99,7 +99,7 @@ There are few possible ways to cope with the problem:
 * Attempt to maintain log record ordering on the sink level. This solution is more or less viable. On the downside, it would introduce log record buffering, which in turn would compromise logs reliability. In the case of application crash all buffered records would be lost.
 * Bear with the problem and let mis-ordered records appear in log files occasionally. Order log records upon reading the files, if needed.
 
-The second solution was implemented as a special sink frontend described [link log.detailed.sink_frontends.ordering_async here].
+The second solution was implemented as a special policy for the [link log.detailed.sink_frontends.async asynchronous sink frontend].
 
 [endsect]
 

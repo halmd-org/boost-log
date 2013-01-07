@@ -16,6 +16,7 @@
 #include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/sources/channel_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
+#include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
@@ -34,52 +35,49 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(remote_address, "RemoteAddress", std::string)
 BOOST_LOG_ATTRIBUTE_KEYWORD(received_size, "ReceivedSize", std::size_t)
 BOOST_LOG_ATTRIBUTE_KEYWORD(sent_size, "SentSize", std::size_t)
 
-//[ example_sources_network_connection_channels
+//[ example_sources_network_connection_dynamic_channels
+// Define a global logger
+BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(my_logger, src::channel_logger_mt< >, (keywords::channel = "general"))
+
 class network_connection
 {
-    src::channel_logger< > m_net, m_stat;
-    logging::attribute_set::iterator m_net_remote_addr, m_stat_remote_addr;
+    std::string m_remote_addr;
 
 public:
-    network_connection() :
-        // We can dump network-related messages through this logger
-        // and be able to filter them later
-        m_net(keywords::channel = "net"),
-        // We also can separate statistic records in a different channel
-        // in order to route them to a different sink
-        m_stat(keywords::channel = "stat")
-    {
-    }
-
     void on_connected(std::string const& remote_addr)
     {
-        // Add the remote address to both channels
-        attrs::constant< std::string > addr(remote_addr);
-        m_net_remote_addr = m_net.add_attribute("RemoteAddress", addr).first;
-        m_stat_remote_addr = m_stat.add_attribute("RemoteAddress", addr).first;
+        m_remote_addr = remote_addr;
 
         // Put message to the "net" channel
-        BOOST_LOG(m_net) << "Connection established";
+        BOOST_LOG_CHANNEL(my_logger::get(), "net")
+            << logging::add_attr("RemoteAddress", m_remote_addr)
+            << "Connection established";
     }
 
     void on_disconnected()
     {
         // Put message to the "net" channel
-        BOOST_LOG(m_net) << "Connection shut down";
+        BOOST_LOG_CHANNEL(my_logger::get(), "net")
+            << logging::add_attr("RemoteAddress", m_remote_addr)
+            << "Connection shut down";
 
-        // Remove the attribute with the remote address
-        m_net.remove_attribute(m_net_remote_addr);
-        m_stat.remove_attribute(m_stat_remote_addr);
+        m_remote_addr.clear();
     }
 
     void on_data_received(std::size_t size)
     {
-        BOOST_LOG(m_stat) << logging::add_attr("ReceivedSize", size) << "Some data received";
+        BOOST_LOG_CHANNEL(my_logger::get(), "stat")
+            << logging::add_attr("RemoteAddress", m_remote_addr)
+            << logging::add_attr("ReceivedSize", size)
+            << "Some data received";
     }
 
     void on_data_sent(std::size_t size)
     {
-        BOOST_LOG(m_stat) << logging::add_attr("SentSize", size) << "Some data sent";
+        BOOST_LOG_CHANNEL(my_logger::get(), "stat")
+            << logging::add_attr("RemoteAddress", m_remote_addr)
+            << logging::add_attr("SentSize", size)
+            << "Some data sent";
     }
 };
 //]

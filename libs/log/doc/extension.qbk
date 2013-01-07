@@ -275,7 +275,7 @@ In order to illustrate all these lengthy recommendations, let's implement a simp
 
     // We want something equivalent to this
     {
-        BOOST_LOG_SCOPED_LOGGER_TAG(logger, "Tag", std::string, "[GUI]");
+        BOOST_LOG_SCOPED_LOGGER_TAG(logger, "Tag", "[GUI]");
         BOOST_LOG(logger) << "The user has confirmed his choice";
     }
 
