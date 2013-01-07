@@ -181,7 +181,15 @@ public:
 
     //! Applies a visitor function object to the referred value
     template< typename VisitorT >
-    typename enable_if< is_void< typename VisitorT::result_type >, bool >::type apply_visitor(VisitorT visitor) const
+    typename VisitorT::result_type apply_visitor(VisitorT visitor) const
+    {
+        BOOST_ASSERT(m_ptr != NULL);
+        return visitor(*m_ptr);
+    }
+
+    //! Applies a visitor function object to the referred value
+    template< typename VisitorT >
+    typename enable_if< is_void< typename VisitorT::result_type >, bool >::type apply_visitor_optional(VisitorT visitor) const
     {
         if (m_ptr)
         {
@@ -194,7 +202,7 @@ public:
 
     //! Applies a visitor function object to the referred value
     template< typename VisitorT >
-    typename disable_if< is_void< typename VisitorT::result_type >, optional< typename VisitorT::result_type > >::type apply_visitor(VisitorT visitor) const
+    typename disable_if< is_void< typename VisitorT::result_type >, optional< typename VisitorT::result_type > >::type apply_visitor_optional(VisitorT visitor) const
     {
         typedef optional< typename VisitorT::result_type > result_type;
         if (m_ptr)
@@ -277,7 +285,7 @@ public:
     template< typename U >
     typename enable_if< is_compatible< U >, const U* >::type get_ptr() const BOOST_NOEXCEPT
     {
-        if (m_type_idx == mpl::index_of< value_type, U >::value)
+        if (m_type_idx == static_cast< unsigned int >(mpl::index_of< value_type, U >::type::value))
             return static_cast< const U* >(m_ptr);
         else
             return NULL;
@@ -311,7 +319,15 @@ public:
 
     //! Applies a visitor function object to the referred value
     template< typename VisitorT >
-    typename enable_if< is_void< typename VisitorT::result_type >, bool >::type apply_visitor(VisitorT visitor) const
+    typename VisitorT::result_type apply_visitor(VisitorT visitor) const
+    {
+        BOOST_ASSERT(m_ptr != NULL);
+        return do_apply_visitor(visitor);
+    }
+
+    //! Applies a visitor function object to the referred value
+    template< typename VisitorT >
+    typename enable_if< is_void< typename VisitorT::result_type >, bool >::type apply_visitor_optional(VisitorT visitor) const
     {
         if (m_ptr)
         {
@@ -324,7 +340,7 @@ public:
 
     //! Applies a visitor function object to the referred value
     template< typename VisitorT >
-    typename disable_if< is_void< typename VisitorT::result_type >, optional< typename VisitorT::result_type > >::type apply_visitor(VisitorT visitor) const
+    typename disable_if< is_void< typename VisitorT::result_type >, optional< typename VisitorT::result_type > >::type apply_visitor_optional(VisitorT visitor) const
     {
         typedef optional< typename VisitorT::result_type > result_type;
         if (m_ptr)
@@ -463,7 +479,8 @@ inline void swap(value_ref< T, TagT >& left, value_ref< T, TagT >& right)
 template< typename CharT, typename TraitsT, typename T, typename TagT >
 inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< CharT, TraitsT >& strm, value_ref< T, TagT > const& val)
 {
-    val.apply_visitor(boost::log::bind_output(strm));
+    if (!!val)
+        val.apply_visitor(boost::log::bind_output(strm));
     return strm;
 }
 
@@ -471,7 +488,8 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< Cha
 template< typename CharT, typename TraitsT, typename AllocatorT, typename T, typename TagT >
 inline basic_formatting_ostream< CharT, TraitsT, AllocatorT >& operator<< (basic_formatting_ostream< CharT, TraitsT, AllocatorT >& strm, value_ref< T, TagT > const& val)
 {
-    val.apply_visitor(boost::log::bind_to_log< TagT >(strm));
+    if (!!val)
+        val.apply_visitor(boost::log::bind_to_log< TagT >(strm));
     return strm;
 }
 

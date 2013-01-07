@@ -439,7 +439,7 @@ As it has been mentioned, visitation can also be applied to log records and attr
 
 [example_attr_value_visitation_with_retval_rec]
 
-Also, for convenience [class_log_attribute_value] has the convenience member `visit` with the same meaning as the free function applied to the attribute value.
+Also, for convenience [class_log_attribute_value] has the method named `visit` with the same meaning as the free function applied to the attribute value.
 
 [endsect]
 
@@ -448,45 +448,29 @@ Also, for convenience [class_log_attribute_value] has the convenience member `vi
     #include <``[boost_log_attributes_value_extraction_fwd_hpp]``>
     #include <``[boost_log_attributes_value_extraction_hpp]``>
 
-TODO: Need to update with respect to the separated API for visitation and extraction.
+Attribute value extraction API allows to acquire a reference to the stored value. It does not require a visitor function object, but the user still has to provide the expected type or a set of types the stored value may have.
 
-Attribute value extractors serve as a helper tool on top of [link log.detailed.utilities.type_dispatch type dispatchers] in order to simplify extracting attribute values in generic code. The functionality is implemented in the `attribute_value_extractor` class template, parametrized on character type and type or MPL sequence of types that have to be supported for dispatch. The `attribute_value_extractor` instance is a binary function object that accepts a set of attribute values and another function object that will receive the extracted attribute value. The name of the attribute to be extracted is given as the constructor argument to the extractor. The key advantage of using extractors instead of raw dispatchers is that the receiving function object can have a template `operator ()`. Obviously, this allows reducing the amount of code when similar processing is needed for attributes of different types. For example:
+[example_attr_value_extraction]
 
-    // A generic function object that outputs attribute value
-    struct print_attribute_value
-    {
-        typedef void result_type;
+[full_code_link doc/attr_value_extraction.cpp]
 
-        // This operator will be instantiated for all possible types of the attribute value
-        template< typename T >
-        void operator() (T const& value) const
-        {
-            std::cout << "Received " << logging::type_info_wrapper(typeid(T)).pretty_name()
-                << " attribute value: " << value << std::endl;
-        }
-    };
+In this example we expect the attribute value to have the stored type `int`. The [funcref boost::log::extract `extract`] function attempts to extract a reference to the stored value and returns the filled [link log.detailed.utilities.value_ref `value_ref`] object if succeeded.
 
-    void foo(attribute_values_view const& attrs)
-    {
-        // Let's assume we want to output the value of the
-        // attribute "MyAttr" that may have any numeric type
-        logging::attribute_value_extractor< char, logging::numeric_types > extractor1("MyAttr");
-        assert(extractor1(attrs, print_attribute_value()));
+Value extraction can also be used with a set of expected stored types. The follwoing code snippet demonstrates this:
 
-        // The extractor returns false if it is unable to extract the value
-        logging::attribute_value_extractor< char, std::complex< double > > extractor2("MyAttr");
-        assert(!extractor2(attrs, print_attribute_value()));
-    }
+[example_attr_value_extraction_multiple_types]
 
-Note that the predefined type sequences provided by the library can be used freely with extractors just as well as with filters and formatters. Also note that specifying a single type of the attribute value instead of type sequence is also perfectly valid.
+Notice that we used `which` method of the returned reference to dispatch between possible types. The method returns the index of the type in the `types` sequence. Also note that the `get` method now accepts an explicit template parameter to select the reference type to acquire; naturally, this type must correspond to the actual referred type, which is warranted by the switch/case statement in our case.
 
-The library also provides an `extract` convenience function that automatically creates extractor object. The `foo` function from the example above can be rewritten like this:
+Value visitation is also supported by the [link log.detailed.utilities.value_ref `value_ref`] object. Here is how we compute a hash value from the extracted value:
 
-    void foo(logging::attribute_values_set const& attrs)
-    {
-        assert(logging::extract< logging::numeric_types >("MyAttr", attrs, print_attribute_value()));
-        assert(!logging::extract< std::complex< double > >("MyAttr", attrs, print_attribute_value()));
-    }
+[example_attr_value_extraction_visitor]
+
+Lastly, like with value visitation, value extraction can also be applied to log records and attribute value sets.
+
+[example_attr_value_extraction_visitor_rec]
+
+Also, for convenience [class_log_attribute_value] has the method named `extract` with the same meaning as the free function applied to the attribute value.
 
 [endsect]
 

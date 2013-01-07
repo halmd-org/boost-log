@@ -71,6 +71,7 @@
 [import ../example/doc/core_record.cpp]
 [import ../example/doc/core_core_manual.cpp]
 [import ../example/doc/attr_value_visitation.cpp]
+[import ../example/doc/attr_value_extraction.cpp]
 [import ../example/doc/expressions_attr_fmt_tag.cpp]
 [import ../example/doc/expressions_keyword_fmt_tag.cpp]
 [import ../example/doc/expressions_has_attr_stat_accum.cpp]
