@@ -22,7 +22,7 @@ The [funcref boost::log::expressions::attr attr] placeholder represents an attri
 
     logging::value_ref< T, TagT > val = expr::attr< T, TagT >(name)(rec);
 
-where `val` is the [link log.detailed.utilities.value_ref reference] to the extracted value, `name` and `T` are the attribute value [link lod.detailed.attributes.related_components.attribute_name name] and type, `TagT` is an optional tag (we'll return to it in a moment) and `rec` is the log [link log.detailed.core.record record view] or [link lod.detailed.attributes.related_components.attribute_value_set attribute value set]. `T` can be a __boost_mpl__ type sequence with possible expected types of the value; the extraction will succeed if the type of the value matches one of the types in the sequence.
+where `val` is the [link log.detailed.utilities.value_ref reference] to the extracted value, `name` and `T` are the attribute value [link log.detailed.attributes.related_components.attribute_name name] and type, `TagT` is an optional tag (we'll return to it in a moment) and `rec` is the log [link log.detailed.core.record record view] or [link log.detailed.attributes.related_components.attribute_value_set attribute value set]. `T` can be a __boost_mpl__ type sequence with possible expected types of the value; the extraction will succeed if the type of the value matches one of the types in the sequence.
 
 The `attr` placeholder can be used in __boost_phoenix__ expressions, including the `bind` expression.
 
@@ -78,7 +78,7 @@ The `TagT` type in the [link log.detailed.expressions.attr abstract description]
 
 [example_expressions_attr_formatter_stream_tag]
 
-[full_code_link doc/expressions_attr_fmt_tag.cpp]
+[@boost:/libs/log/example/doc/expressions_attr_fmt_tag.cpp See the complete code].
 
 Here we specify a different formatting operator for the severity level wrapped in the [link log.detailed.utilities.manipulators.to_log `to_log_manip`] manipulator marked with the tag `severity_tag`. This operator will be called when log records are formatted while the regular `operator<<` will be used in other contexts.
 
@@ -154,7 +154,7 @@ This filter is usually used in conjunction with [link log.detailed.expressions.f
 
 [example_expressions_has_attr_stat_accumulator]
 
-[full_code_link doc/expressions_has_attr_stat_accum.cpp]
+[@boost:/libs/log/example/doc/expressions_has_attr_stat_accum.cpp See the complete code].
 
 In this example, log records emitted with the `PUT_STAT` macto will be directed to the `my_stat_accumulator` sink backend, which will accumulate the changes passed in the "Change" attribute values. All other records (even those made through the same logger) will be passed to the filte sink. This is achieved with the mutually exclusive filters set for the two sinks.
 
@@ -237,7 +237,7 @@ This filter is aimed for a specific but commonly encountered use case. The [func
 
 [example_expressions_channel_severity_filter]
 
-[full_code_link doc/expressions_channel_severity_filter.cpp]
+[@boost:/libs/log/example/doc/expressions_channel_severity_filter.cpp See the complete code].
 
 The filter for the console sink is composed from the [class_expressions_channel_severity_filter_actor] filter and a general severity level check. This general check will be used when log records do not have a channel attribute or the channel name is not one of those specified in [class_expressions_channel_severity_filter_actor] initialization. It should be noted that it is possible to set the default result of the threshold filter that will be used in this case; the default result can be set by the `set_default` method. The [class_expressions_channel_severity_filter_actor] filter is set up to limit record severity levels for channels "general", "network" and "gui" - all records in these channels with levels below the specified thresholds will not pass the filter and will be ignored.
 
@@ -253,7 +253,7 @@ This filter is implemented for Windows only. The `is_debugger_present` filter re
 
 [example_sinks_debugger]
 
-[full_code_link doc/sinks_debugger.cpp]
+[@boost:/libs/log/example/doc/sinks_debugger.cpp See the complete code].
 
 [endsect]
 

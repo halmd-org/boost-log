@@ -155,6 +155,8 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #endif // BOOST_LOG_NO_THREADS
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 #define BOOST_LOG_ONCE_BLOCK_FLAG_INTERNAL(flag_var, sentry_var)\
     for (boost::log::aux::once_block_sentry sentry_var((flag_var));\
         !sentry_var.executed(); sentry_var.commit())
@@ -162,6 +164,8 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #define BOOST_LOG_ONCE_BLOCK_INTERNAL(flag_var, sentry_var)\
     static boost::log::once_block_flag flag_var = BOOST_LOG_ONCE_BLOCK_INIT;\
     BOOST_LOG_ONCE_BLOCK_FLAG_INTERNAL(flag_var, sentry_var)
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 /*!
  * \def BOOST_LOG_ONCE_BLOCK_FLAG(flag_var)

@@ -56,7 +56,8 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
-//! \cond
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 #define BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL(z, n, types)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit asynchronous_sink(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
@@ -81,7 +82,7 @@ namespace sinks {
             start_feeding_thread();\
     }
 
-//! \endcond
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 /*!
  * \brief Asynchronous logging sink frontend

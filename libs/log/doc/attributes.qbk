@@ -13,7 +13,7 @@
     #include <``[boost_log_attributes_attribute_cast_hpp]``>
     #include <``[boost_log_attributes_attribute_value_hpp]``>
 
-All attributes in the library are implemented using the [link http://c2.com/cgi/wiki?PimplIdiom pimpl idiom], or more specifically - shared pimpl idiom. Every attribute provides an interface class which derives from the [class_log_attribute] class and an implementation class that derives from [class_log_attribute_impl]. The interface class only holds a reference counted pointer to the actual implementation of the attribute; this pointer is a member of the [class_log_attribute] class, so derived interface classes don't have any data members. When the interface class is default constructed, it creates the corresponding implementation object and initializes the [class_log_attribute] base class with a pointer to the implementation. Therefore the pimpl nature of attributes is transparent for users in a typical workflow.
+All attributes in the library are implemented using the [@http://c2.com/cgi/wiki?PimplIdiom pimpl idiom], or more specifically - shared pimpl idiom. Every attribute provides an interface class which derives from the [class_log_attribute] class and an implementation class that derives from [class_log_attribute_impl]. The interface class only holds a reference counted pointer to the actual implementation of the attribute; this pointer is a member of the [class_log_attribute] class, so derived interface classes don't have any data members. When the interface class is default constructed, it creates the corresponding implementation object and initializes the [class_log_attribute] base class with a pointer to the implementation. Therefore the pimpl nature of attributes is transparent for users in a typical workflow.
 
 The shared pimpl design comes significant in a few cases though. One such case is copying the attribute. The copy operation is shallow, so multiple interface objects may refer to a single implementation object. There is no way to deep copy an attribute. Another case is default construction of [class_log_attribute] which creates an empty object that does not refer to an implementation. Attributes in such empty state should not be passed to the library but can be useful in some cases, e.g. when a delayed variable initialization is needed.
 
@@ -98,7 +98,7 @@ In multithreaded applications the `set` method calls must be serialized with the
     > shared_mc;
     shared_mc my_int2(20);
 
-    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, src::logger_mt)
+    BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT(my_logger, src::logger_mt)
     {
         src::logger_mt lg;
         lg.add_attribute("MyInteger1", my_int1);
@@ -129,7 +129,7 @@ Mutable constants are often used as auxiliary attributes inside loggers to store
 
 Counters are one of the simplest attributes that generate a new value each time requested. Counters are often used to identify log records or to count some events, e.g. accepted network connections. The class template [class_attributes_counter] provides such functionality. This template is parametrized with the counter value type, which should support arithmetic operations, such as `operator +` and `operator -`. The counter attribute allows specification of the initial value and step (which can be negative) on construction.
 
-    BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT(my_logger, src::logger_mt)
+    BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT(my_logger, src::logger_mt)
     {
         src::logger_mt lg;
 
@@ -421,7 +421,7 @@ In order to apply the visitor, one should call the [funcref boost::log::visit `v
 
 [example_attr_value_visitation]
 
-[full_code_link doc/attr_value_visitation.cpp]
+[@boost:/libs/log/example/doc/attr_value_visitation.cpp See the complete code].
 
 In this example we print the stored attribute value in our `print_visitor`. We expect the attribute value to have either `int` or `std::string` stored type; only in this case the visitor will be invoked and the visitation result will be positive. In case of failure the [class_log_visitation_result] class provides additional information on the failure reason. The class has the method named `code` which returns visitation error code. The following error codes are possible:
 
@@ -431,9 +431,9 @@ In this example we print the stored attribute value in our `print_visitor`. We e
 
 It is possible to return values from the visitor. In this case the result of visitation includes both the returned value and [class_log_visitation_result]. See the following example where we compute the hash value on the stored value.
 
-[example_attr_value_visitation_retval]
+[example_attr_value_visitation_with_retval]
 
-[full_code_link doc/attr_value_visitation.cpp]
+[@boost:/libs/log/example/doc/attr_value_visitation.cpp See the complete code].
 
 As it has been mentioned, visitation can also be applied to log records and attribute value sets. The syntax is the same, except that the attribute name also has to be specified. The [funcref boost::log::visit `visit`] algorithm will try to find the attribute value by name and then apply the visitor to the found element.
 
@@ -452,7 +452,7 @@ Attribute value extraction API allows to acquire a reference to the stored value
 
 [example_attr_value_extraction]
 
-[full_code_link doc/attr_value_extraction.cpp]
+[@boost:/libs/log/example/doc/attr_value_extraction.cpp See the complete code].
 
 In this example we expect the attribute value to have the stored type `int`. The [funcref boost::log::extract `extract`] function attempts to extract a reference to the stored value and returns the filled [link log.detailed.utilities.value_ref `value_ref`] object if succeeded.
 

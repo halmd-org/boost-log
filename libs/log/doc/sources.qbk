@@ -130,7 +130,7 @@ The third macro of this section provides maximum initialization flexibility, all
 
 Like the [macroref BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS] macro, the initialization code is called only once, on the first request of the logger.
 
-[important Beware of One Definition Rule (ODR) issues. Regardless of the way of logger declaration you choose, you should ensure that [_the logger is declared in exactly the same way at all occurrences] and [_all symbol names involved in the declaration resolve to the same entities]. The latter includes the names used within the initialization routine of the [macroref BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT] macro, such as references to external variables, functions and types. The library tries to protect itself from ODR violations to a certain degree, but in general the behavior is undefined if the rule is violated.]
+[important Beware of One Definition Rule (ODR) issues. Regardless of the way of logger declaration you choose, you should ensure that [_the logger is declared in exactly the same way at all occurrences] and [_all symbol names involved in the declaration resolve to the same entities]. The latter includes the names used within the initialization routine of the [macroref BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT] macro, such as references to external variables, functions and types. The library tries to protect itself from ODR violations to a certain degree, but in general the behavior is undefined if the rule is violated.]
 
 In order to alleviate ODR problems, it is possible to separate the logger declaration and its initialization routine. The library provides the following macros to achieve this:
 

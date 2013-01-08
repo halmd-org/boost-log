@@ -34,12 +34,14 @@
 [def __boost_spirit__ [@http://www.boost.org/doc/libs/release/libs/spirit/classic/index.html Boost.Spirit]]
 [def __boost_spirit2__ [@http://www.boost.org/doc/libs/release/libs/spirit/doc/html/index.html Boost.Spirit2]]
 [def __boost_optional__ [@http://www.boost.org/doc/libs/release/libs/optional/index.html Boost.Optional]]
+[def __boost_variant__ [@http://www.boost.org/doc/libs/release/doc/html/variant.html Boost.Variant]]
 [def __boost_intrusive__ [@http://www.boost.org/doc/libs/release/doc/html/intrusive.html Boost.Intrusive]]
 [def __boost_iostreams__ [@http://www.boost.org/doc/libs/release/libs/iostreams/doc/index.html Boost.IOStreams]]
 [def __boost_mpl__ [@http://www.boost.org/doc/libs/release/libs/mpl/doc/index.html Boost.MPL]]
 [def __boost_exception__ [@http://www.boost.org/doc/libs/release/libs/exception/doc/boost-exception.html Boost.Exception]]
 [def __boost_scope_exit__ [@http://www.boost.org/doc/libs/release/libs/scope_exit/doc/html/index.html Boost.ScopeExit]]
 [def __boost_any__ [@http://www.boost.org/doc/libs/release/doc/html/any.html Boost.Any]]
+[def __boost_property_tree__ [@http://www.boost.org/doc/libs/release/doc/html/property_tree.html Boost.PropertyTree]]
 [def __boost_asio__ [@http://www.boost.org/doc/libs/release/doc/html/boost_asio.html Boost.ASIO]]
 [def __boost_move__ [@http://www.boost.org/doc/libs/release/doc/html/move.html Boost.Move]]
 [def __boost_locale__ [@http://www.boost.org/doc/libs/release/libs/locale/doc/html/index.html Boost.Locale]]
@@ -94,10 +96,11 @@
 [import ../example/doc/sinks_syslog.cpp]
 [import ../example/doc/sinks_debugger.cpp]
 [import ../example/doc/sinks_simple_event_log.cpp]
+[import ../example/doc/util_static_type_disp.cpp]
+[import ../example/doc/util_dynamic_type_disp.cpp]
+[import ../example/doc/util_manip_to_log.cpp]
 [import ../example/doc/extension_record_tagger.cpp]
 [import ../example/event_log/main.cpp]
-
-[template full_code_link[path] [@boost:/libs/log/example/[path] See the complete code].]
 
 [section Disclaimer]
 
@@ -167,7 +170,7 @@ Second, at some point the library will require a Message Compiler tool (`mc.exe`
 
 Another way is to attempt to use the `windmc.exe` tool distributed with MinGW and Cygwin, which is the analogue of the original `mc.exe`. In order to do that you will have to patch Boost.Build files (in particular, the `tools/build/v2/tools/mc.jam` file) as described in [@https://svn.boost.org/trac/boost/ticket/4111 this] ticket. After that you will be able to specify the `mc-compiler=windmc` option to bjam to build the library.
 
-Lastly, you can disable support for event log backend by defining the `BOOST_LOG_WITHOUT_EVENT_LOG` configuration macro when building the library. This will remove the need for the message compiler. See [link log.config this section] for more configuration options.
+Lastly, you can disable support for event log backend by defining the `BOOST_LOG_WITHOUT_EVENT_LOG` configuration macro when building the library. This will remove the need for the message compiler. See [link log.installation.config this section] for more configuration options.
 
 [heading Additional notes for Cygwin users]
 

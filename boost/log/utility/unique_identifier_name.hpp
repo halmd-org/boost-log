@@ -23,14 +23,14 @@
 #pragma once
 #endif
 
-//! \cond
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 #define BOOST_LOG_UNIQUE_IDENTIFIER_NAME_INTERNAL_(prefix, postfix)\
     BOOST_PP_CAT(prefix, postfix)
 #define BOOST_LOG_UNIQUE_IDENTIFIER_NAME_INTERNAL(prefix, postfix)\
     BOOST_LOG_UNIQUE_IDENTIFIER_NAME_INTERNAL_(prefix, postfix)
 
-//! \endcond
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 /*!
  * \def BOOST_LOG_UNIQUE_IDENTIFIER_NAME(prefix)

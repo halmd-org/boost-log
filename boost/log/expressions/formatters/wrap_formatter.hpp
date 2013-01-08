@@ -254,6 +254,8 @@ public:
     }
 };
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 #define BOOST_LOG_AUX_OVERLOAD(left_ref, right_ref)\
     template< typename LeftExprT, typename FunT, typename CharT >\
     BOOST_LOG_FORCEINLINE phoenix::actor< aux::wrapped_formatter_output_terminal< phoenix::actor< LeftExprT >, FunT > >\
@@ -267,6 +269,8 @@ public:
 #include <boost/log/detail/generate_overloads.hpp>
 
 #undef BOOST_LOG_AUX_OVERLOAD
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 /*!
  * The function wraps a function object in order it to be able to participate in formatting expressions. The wrapped

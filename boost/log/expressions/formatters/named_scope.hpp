@@ -361,6 +361,8 @@ public:
     }
 };
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 #define BOOST_LOG_AUX_OVERLOAD(left_ref, right_ref)\
     template< typename LeftExprT, typename FallbackPolicyT, typename CharT >\
     BOOST_LOG_FORCEINLINE phoenix::actor< aux::attribute_output_terminal< phoenix::actor< LeftExprT >, attributes::named_scope::value_type, FallbackPolicyT, typename format_named_scope_actor< FallbackPolicyT, CharT >::formatter_function_type > >\
@@ -374,6 +376,8 @@ public:
 #include <boost/log/detail/generate_overloads.hpp>
 
 #undef BOOST_LOG_AUX_OVERLOAD
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 namespace aux {
 

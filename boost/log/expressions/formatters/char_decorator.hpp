@@ -509,6 +509,8 @@ public:
     }
 };
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 #define BOOST_LOG_AUX_OVERLOAD(left_ref, right_ref)\
     template< typename LeftExprT, typename SubactorT, typename ImplT, template< typename > class ActorT >\
     BOOST_LOG_FORCEINLINE phoenix::actor< aux::char_decorator_output_terminal< phoenix::actor< LeftExprT >, SubactorT, ImplT > >\
@@ -522,6 +524,8 @@ public:
 #include <boost/log/detail/generate_overloads.hpp>
 
 #undef BOOST_LOG_AUX_OVERLOAD
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 namespace aux {
 

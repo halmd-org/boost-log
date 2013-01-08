@@ -49,13 +49,15 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
-//! \cond
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 #define BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL(z, n, data)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit synchronous_sink(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
         base_type(false),\
         m_pBackend(boost::make_shared< sink_backend_type >(BOOST_PP_ENUM_PARAMS(n, arg))) {}
-//! \endcond
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 /*!
  * \brief Synchronous logging sink frontend

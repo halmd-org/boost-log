@@ -82,6 +82,31 @@ private:
 
 public:
     /*!
+     * Default constructor
+     */
+    dynamic_type_dispatcher() : type_dispatcher(&dynamic_type_dispatcher::get_callback)
+    {
+    }
+
+    /*!
+     * Copy constructor
+     */
+    dynamic_type_dispatcher(dynamic_type_dispatcher const& that) :
+        type_dispatcher(static_cast< type_dispatcher const& >(that)),
+        m_DispatchingMap(that.m_DispatchingMap)
+    {
+    }
+
+    /*!
+     * Copy assignment
+     */
+    dynamic_type_dispatcher& operator= (dynamic_type_dispatcher const& that)
+    {
+        m_DispatchingMap = that.m_DispatchingMap;
+        return *this;
+    }
+
+    /*!
      * The method registers a new type
      *
      * \param visitor Function object that will be associated with the type \c T
@@ -106,11 +131,12 @@ public:
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    callback_base get_callback(std::type_info const& type)
+    static callback_base get_callback(type_dispatcher* p, std::type_info const& type)
     {
+        dynamic_type_dispatcher* const self = static_cast< dynamic_type_dispatcher* >(p);
         type_info_wrapper wrapper(type);
-        dispatching_map::iterator it = m_DispatchingMap.find(wrapper);
-        if (it != m_DispatchingMap.end())
+        dispatching_map::iterator it = self->m_DispatchingMap.find(wrapper);
+        if (it != self->m_DispatchingMap.end())
             return *it->second;
         else
             return callback_base();

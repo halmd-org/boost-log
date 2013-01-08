@@ -302,7 +302,7 @@ BOOST_LOG_FORCEINLINE record_pump< LoggerT > make_record_pump(LoggerT& lg, recor
 
 } // namespace aux
 
-//! \cond
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 #define BOOST_LOG_STREAM_INTERNAL(logger, rec_var)\
     for (::boost::log::record rec_var = (logger).open_record(); !!rec_var;)\
@@ -312,7 +312,7 @@ BOOST_LOG_FORCEINLINE record_pump< LoggerT > make_record_pump(LoggerT& lg, recor
     for (::boost::log::record rec_var = (logger).open_record((BOOST_PP_SEQ_ENUM(params_seq))); !!rec_var;)\
         ::boost::log::aux::make_record_pump((logger), rec_var).stream()
 
-//! \endcond
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 //! The macro writes a record to the log
 #define BOOST_LOG_STREAM(logger)\

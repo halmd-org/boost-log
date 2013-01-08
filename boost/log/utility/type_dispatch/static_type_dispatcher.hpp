@@ -122,6 +122,7 @@ public:
      */
     template< typename VisitorT >
     explicit type_sequence_dispatcher(VisitorT& visitor) :
+        type_dispatcher(&type_sequence_dispatcher< supported_types >::get_callback),
         m_pVisitor((void*)boost::addressof(visitor)),
         m_DispatchingMap(get_dispatching_map< VisitorT >())
     {
@@ -129,10 +130,11 @@ public:
 
 private:
     //! The get_callback method implementation
-    callback_base get_callback(std::type_info const& type)
+    static callback_base get_callback(type_dispatcher* p, std::type_info const& type)
     {
+        type_sequence_dispatcher* const self = static_cast< type_sequence_dispatcher* >(p);
         type_info_wrapper wrapper(type);
-        typename dispatching_map::value_type const* begin = &*m_DispatchingMap.begin();
+        typename dispatching_map::value_type const* begin = &*self->m_DispatchingMap.begin();
         typename dispatching_map::value_type const* end = begin + dispatching_map::static_size;
         typename dispatching_map::value_type const* it =
             std::lower_bound(
@@ -143,7 +145,7 @@ private:
             );
 
         if (it != end && it->first == wrapper)
-            return callback_base(m_pVisitor, it->second);
+            return callback_base(self->m_pVisitor, it->second);
         else
             return callback_base();
     }
@@ -190,6 +192,7 @@ public:
     //! Constructor
     template< typename VisitorT >
     explicit single_type_dispatcher(VisitorT& visitor) :
+        type_dispatcher(&single_type_dispatcher< T >::get_callback),
         m_Callback(
             (void*)boost::addressof(visitor),
             &callback_base::trampoline< VisitorT, T >
@@ -197,10 +200,13 @@ public:
     {
     }
     //! The get_callback method implementation
-    callback_base get_callback(std::type_info const& type)
+    static callback_base get_callback(type_dispatcher* p, std::type_info const& type)
     {
         if (type == typeid(visible_type< T >))
-            return m_Callback;
+        {
+            single_type_dispatcher* const self = static_cast< single_type_dispatcher* >(p);
+            return self->m_Callback;
+        }
         else
             return callback_base();
     }
@@ -250,6 +256,10 @@ public:
         base_type(receiver)
     {
     }
+
+    //  Copying and assignment prohibited
+    BOOST_LOG_DELETED_FUNCTION(static_type_dispatcher(static_type_dispatcher const&))
+    BOOST_LOG_DELETED_FUNCTION(static_type_dispatcher& operator= (static_type_dispatcher const&))
 };
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log

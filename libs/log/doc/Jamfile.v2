@@ -37,14 +37,17 @@ local doxygen_params =
 #        <doxygen:param>EXCLUDE_SYMBOLS="aux aux::*"
         <doxygen:param>"PREDEFINED=BOOST_LOG_DOXYGEN_PASS \\
                         BOOST_LOG_NO_VTABLE= \\
+                        BOOST_LOG_VISIBLE= \\
                         BOOST_LOG_FORCEINLINE=inline \\
                         BOOST_STATIC_ASSERT(x)= \\
+                        BOOST_STATIC_ASSERT_MSG(x,y)= \\
                         BOOST_RV_REF(x)=\"x&&\" \\
                         BOOST_COPY_ASSIGN_REF(x)=\"x const&\" \\
                         BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(x)= \\
                         BOOST_LOG_UNIQUE_IDENTIFIER_NAME(x)=anonymous \\
                         BOOST_LOG_USE_NATIVE_SYSLOG=1 \\
                         BOOST_PARAMETER_KEYWORD(x,y)=\"keyword y;\" \\
+                        BOOST_LOG_AUX_VOID_DEFAULT=\"= void\" \\
                         BOOST_LOG_NAMESPACE=log \\
                         BOOST_LOG_OPEN_NAMESPACE=\"namespace log {\" \\
                         BOOST_LOG_CLOSE_NAMESPACE=\"}\" \\

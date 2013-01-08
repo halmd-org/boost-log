@@ -40,13 +40,13 @@
 #pragma once
 #endif
 
-//! \cond
+#ifndef BOOST_LOG_DOXYGEN_PASS
 #ifndef BOOST_LOG_NO_THREADS
 #define BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL sinks::synchronous_sink
 #else
 #define BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL sinks::unlocked_sink
 #endif
-//! \endcond
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 namespace boost {
 

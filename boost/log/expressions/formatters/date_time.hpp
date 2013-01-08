@@ -192,6 +192,8 @@ public:
     }
 };
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 #define BOOST_LOG_AUX_OVERLOAD(left_ref, right_ref)\
     template< typename LeftExprT, typename T, typename FallbackPolicyT, typename CharT >\
     BOOST_LOG_FORCEINLINE phoenix::actor< aux::attribute_output_terminal< phoenix::actor< LeftExprT >, T, FallbackPolicyT, typename format_date_time_actor< T, FallbackPolicyT, CharT >::formatter_function_type > >\
@@ -205,6 +207,8 @@ public:
 #include <boost/log/detail/generate_overloads.hpp>
 
 #undef BOOST_LOG_AUX_OVERLOAD
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 /*!
  * The function generates a manipulator node in a template expression. The manipulator must participate in a formatting

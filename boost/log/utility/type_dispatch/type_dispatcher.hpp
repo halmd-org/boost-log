@@ -35,7 +35,7 @@ BOOST_LOG_OPEN_NAMESPACE
  * All type dispatchers support this interface. It is used to acquire the
  * visitor interface for the requested type.
  */
-class BOOST_LOG_NO_VTABLE type_dispatcher
+class type_dispatcher
 {
 public:
 
@@ -145,12 +145,27 @@ public:
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
-public:
-    /*!
-     * Virtual destructor
-     */
-    virtual ~type_dispatcher() {}
+protected:
+    //! Pointer to the callback acquisition method
+    typedef callback_base (*get_callback_impl_type)(type_dispatcher*, std::type_info const&);
 
+private:
+    //! Pointer to the callback acquisition method
+    get_callback_impl_type m_get_callback_impl;
+
+protected:
+    /*!
+     * Initializing constructor
+     */
+    explicit type_dispatcher(get_callback_impl_type get_callback_impl) : m_get_callback_impl(get_callback_impl)
+    {
+    }
+    // Destructor and copying can only be called from the derived classes
+    BOOST_LOG_DEFAULTED_FUNCTION(~type_dispatcher(), {})
+    BOOST_LOG_DEFAULTED_FUNCTION(type_dispatcher(type_dispatcher const& that), : m_get_callback_impl(that.m_get_callback_impl) {})
+    BOOST_LOG_DEFAULTED_FUNCTION(type_dispatcher& operator= (type_dispatcher const& that), { m_get_callback_impl = that.m_get_callback_impl; return *this; })
+
+public:
     /*!
      * The method requests a callback for the value of type \c T
      *
@@ -159,15 +174,8 @@ public:
     template< typename T >
     callback< T > get_callback()
     {
-        return callback< T >(this->get_callback(
-            typeid(boost::log::aux::visible_type< T >)));
+        return callback< T >((this->m_get_callback_impl)(this, typeid(boost::log::aux::visible_type< T >)));
     }
-
-private:
-#ifndef BOOST_LOG_DOXYGEN_PASS
-    //! The get_callback method implementation
-    virtual callback_base get_callback(std::type_info const& type) = 0;
-#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log

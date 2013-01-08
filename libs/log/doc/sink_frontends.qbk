@@ -91,7 +91,7 @@ In order to stop the dedicated thread feeding log records to the backend one can
 
 [example_sinks_async_stop]
 
-[full_code_link doc/sinks_async.cpp]
+[@boost:/libs/log/example/doc/sinks_async.cpp See the complete code].
 
 Spawning the dedicated thread for log record feeding can be suppressed with the optional boolean `start_thread` named parameter of the frontend. In this case the user can select either way of processing records:
 
@@ -120,7 +120,7 @@ For example, this is how we could modify the previous example to limit the recor
 
 [example_sinks_bounded_async_init]
 
-[full_code_link doc/sinks_async_bounded.cpp]
+[@boost:/libs/log/example/doc/sinks_async_bounded.cpp See the complete code].
 
 Also see the [@boost:/libs/log/example/bounded_async_log/main.cpp `bounded_async_log`] example in the library distribution.
 

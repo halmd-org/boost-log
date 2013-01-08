@@ -78,7 +78,7 @@ logging::formatting_ostream& operator<<
         strm << static_cast< int >(level);
 
     return strm;
-};
+}
 
 void init()
 {
