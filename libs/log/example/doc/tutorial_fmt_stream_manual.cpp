@@ -1,25 +1,26 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 
 #include <fstream>
+#include <iomanip>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 
@@ -27,21 +28,21 @@ namespace keywords = boost::log::keywords;
 void init()
 {
     typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-    boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+    boost::shared_ptr< text_sink > sink = boost::make_shared< text_sink >();
 
-    pSink->locked_backend()->add_stream(
+    sink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("sample.log"));
 
-    pSink->set_formatter
+    sink->set_formatter
     (
-        fmt::stream
-                // line id will be written in hex, 8-digits, zero-filled
-            << fmt::attr< unsigned int >("LineID", keywords::format = "%08x")
-            << ": <" << fmt::attr< logging::trivial::severity_level >("Severity")
-            << "> " << fmt::message()
+        expr::stream
+               // line id will be written in hex, 8-digits, zero-filled
+            << std::hex << std::setw(8) << std::setfill('0') << expr::attr< unsigned int >("LineID")
+            << ": <" << logging::trivial::severity
+            << "> " << expr::smessage
     );
 
-    logging::core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(sink);
 }
 //]
 

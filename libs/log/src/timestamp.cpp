@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -34,7 +34,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -43,7 +43,7 @@ namespace aux {
 #if _WIN32_WINNT >= 0x0600
 
 // Directly use API from Vista and later
-BOOST_LOG_EXPORT get_tick_count_t get_tick_count = &GetTickCount64;
+BOOST_LOG_API get_tick_count_t get_tick_count = &GetTickCount64;
 
 #else // _WIN32_WINNT >= 0x0600
 
@@ -154,13 +154,13 @@ uint64_t __stdcall get_tick_count_init()
 
 } // namespace
 
-BOOST_LOG_EXPORT get_tick_count_t get_tick_count = &get_tick_count_init;
+BOOST_LOG_API get_tick_count_t get_tick_count = &get_tick_count_init;
 
 #endif // _WIN32_WINNT >= 0x0600
 
 #elif defined(_POSIX_TIMERS) && _POSIX_TIMERS > 0
 
-BOOST_LOG_EXPORT int64_t duration::milliseconds() const
+BOOST_LOG_API int64_t duration::milliseconds() const
 {
     // Timestamps are always in nanoseconds
     return m_ticks / 1000000LL;
@@ -218,13 +218,13 @@ timestamp get_timestamp_monotonic_clock()
 } // namespace
 
 // Use POSIX API
-BOOST_LOG_EXPORT get_timestamp_t get_timestamp = &BOOST_LOG_DEFAULT_GET_TIMESTAMP;
+BOOST_LOG_API get_timestamp_t get_timestamp = &BOOST_LOG_DEFAULT_GET_TIMESTAMP;
 
 #   undef BOOST_LOG_DEFAULT_GET_TIMESTAMP
 
 #elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
 
-BOOST_LOG_EXPORT int64_t duration::milliseconds() const
+BOOST_LOG_API int64_t duration::milliseconds() const
 {
     static mach_timebase_info_data_t timebase_info = {};
     BOOST_LOG_ONCE_BLOCK()
@@ -260,7 +260,7 @@ timestamp get_timestamp_mach()
 } // namespace
 
 // Use MacOS X API
-BOOST_LOG_EXPORT get_timestamp_t get_timestamp = &get_timestamp_mach;
+BOOST_LOG_API get_timestamp_t get_timestamp = &get_timestamp_mach;
 
 #else
 
@@ -270,6 +270,6 @@ BOOST_LOG_EXPORT get_timestamp_t get_timestamp = &get_timestamp_mach;
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost

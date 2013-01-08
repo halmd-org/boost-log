@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -24,7 +24,7 @@
 
 #include <boost/log/common.hpp>
 #include <boost/log/attributes.hpp>
-#include <boost/log/utility/init/from_stream.hpp>
+#include <boost/log/utility/setup/from_stream.hpp>
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
         try_logging();
 
         // Now enable tagging and try again
-        BOOST_LOG_SCOPED_THREAD_TAG("Tag", std::string, "TAGGED");
+        BOOST_LOG_SCOPED_THREAD_TAG("Tag", "TAGGED");
         try_logging();
 
         return 0;

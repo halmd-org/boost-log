@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,35 +12,36 @@
  * The header contains implementation of a compile-time type dispatcher.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_STATIC_TYPE_DISPATCHER_HPP_INCLUDED_
 #define BOOST_LOG_STATIC_TYPE_DISPATCHER_HPP_INCLUDED_
 
+#include <cstddef>
 #include <utility>
 #include <iterator>
 #include <algorithm>
 #include <boost/array.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/mpl/if.hpp>
-#include <boost/mpl/assert.hpp>
 #include <boost/mpl/size.hpp>
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/quote.hpp>
+#include <boost/mpl/begin.hpp>
+#include <boost/mpl/end.hpp>
+#include <boost/mpl/deref.hpp>
+#include <boost/mpl/next.hpp>
 #include <boost/mpl/is_sequence.hpp>
 #include <boost/utility/addressof.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/visible_type.hpp>
 #include <boost/log/utility/once_block.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -49,7 +50,7 @@ struct dispatching_map_order
 {
     typedef bool result_type;
     typedef std::pair< type_info_wrapper, void* > first_argument_type, second_argument_type;
-    bool operator() (first_argument_type const& left, second_argument_type const& right) const
+    result_type operator() (first_argument_type const& left, second_argument_type const& right) const
     {
         return (left.first < right.first);
     }
@@ -59,19 +60,29 @@ struct dispatching_map_order
 template< typename VisitorT >
 struct dispatching_map_initializer
 {
-    typedef void result_type;
-
-    explicit dispatching_map_initializer(std::pair< type_info_wrapper, void* >*& p) : m_p(p)
+    template< typename IteratorT >
+    static BOOST_LOG_FORCEINLINE void init(IteratorT*, IteratorT*, std::pair< type_info_wrapper, void* >*)
     {
     }
 
-    template< typename T >
-    void operator() (visible_type< T >) const
+    template< typename BeginIteratorT, typename EndIteratorT >
+    static BOOST_LOG_FORCEINLINE void init(BeginIteratorT*, EndIteratorT* end, std::pair< type_info_wrapper, void* >* p)
     {
-        m_p->first = typeid(visible_type< T >);
+        typedef typename mpl::deref< BeginIteratorT >::type type;
+        do_init(static_cast< visible_type< type >* >(0), p);
+
+        typedef typename mpl::next< BeginIteratorT >::type next_iterator_type;
+        init(static_cast< next_iterator_type* >(0), end, p + 1);
+    }
+
+private:
+    template< typename T >
+    static BOOST_LOG_FORCEINLINE void do_init(visible_type< T >*, std::pair< type_info_wrapper, void* >* p)
+    {
+        p->first = typeid(visible_type< T >);
 
         typedef void (*trampoline_t)(void*, T const&);
-        BOOST_STATIC_ASSERT(sizeof(trampoline_t) == sizeof(void*));
+        BOOST_STATIC_ASSERT_MSG(sizeof(trampoline_t) == sizeof(void*), "Boost.Log: Unsupported platform, the size of a function pointer differs from the size of a pointer");
         union
         {
             void* as_pvoid;
@@ -79,13 +90,8 @@ struct dispatching_map_initializer
         }
         caster;
         caster.as_trampoline = &type_dispatcher::callback_base::trampoline< VisitorT, T >;
-        m_p->second = caster.as_pvoid;
-
-        ++m_p;
+        p->second = caster.as_pvoid;
     }
-
-private:
-    std::pair< type_info_wrapper, void* >*& m_p;
 };
 
 //! A dispatcher that supports a sequence of types
@@ -116,6 +122,7 @@ public:
      */
     template< typename VisitorT >
     explicit type_sequence_dispatcher(VisitorT& visitor) :
+        type_dispatcher(&type_sequence_dispatcher< supported_types >::get_callback),
         m_pVisitor((void*)boost::addressof(visitor)),
         m_DispatchingMap(get_dispatching_map< VisitorT >())
     {
@@ -123,10 +130,11 @@ public:
 
 private:
     //! The get_callback method implementation
-    callback_base get_callback(std::type_info const& type)
+    static callback_base get_callback(type_dispatcher* p, std::type_info const& type)
     {
+        type_sequence_dispatcher* const self = static_cast< type_sequence_dispatcher* >(p);
         type_info_wrapper wrapper(type);
-        typename dispatching_map::value_type const* begin = &*m_DispatchingMap.begin();
+        typename dispatching_map::value_type const* begin = &*self->m_DispatchingMap.begin();
         typename dispatching_map::value_type const* end = begin + dispatching_map::static_size;
         typename dispatching_map::value_type const* it =
             std::lower_bound(
@@ -137,7 +145,7 @@ private:
             );
 
         if (it != end && it->first == wrapper)
-            return callback_base(m_pVisitor, it->second);
+            return callback_base(self->m_pVisitor, it->second);
         else
             return callback_base();
     }
@@ -153,8 +161,10 @@ private:
             static dispatching_map instance;
             typename dispatching_map::value_type* p = &*instance.begin();
 
-            mpl::for_each< supported_types, mpl::quote1< visible_type > >(
-                dispatching_map_initializer< VisitorT >(p));
+            typedef typename mpl::begin< supported_types >::type begin_iterator_type;
+            typedef typename mpl::end< supported_types >::type end_iterator_type;
+            typedef dispatching_map_initializer< VisitorT > initializer;
+            initializer::init(static_cast< begin_iterator_type* >(0), static_cast< end_iterator_type* >(0), p);
 
             std::sort(instance.begin(), instance.end(), dispatching_map_order());
 
@@ -164,10 +174,9 @@ private:
         return *pinstance;
     }
 
-private:
     //  Copying and assignment closed
-    type_sequence_dispatcher(type_sequence_dispatcher const&);
-    type_sequence_dispatcher& operator= (type_sequence_dispatcher const&);
+    BOOST_LOG_DELETED_FUNCTION(type_sequence_dispatcher(type_sequence_dispatcher const&))
+    BOOST_LOG_DELETED_FUNCTION(type_sequence_dispatcher& operator= (type_sequence_dispatcher const&))
 };
 
 //! A simple dispatcher that only supports one type
@@ -183,6 +192,7 @@ public:
     //! Constructor
     template< typename VisitorT >
     explicit single_type_dispatcher(VisitorT& visitor) :
+        type_dispatcher(&single_type_dispatcher< T >::get_callback),
         m_Callback(
             (void*)boost::addressof(visitor),
             &callback_base::trampoline< VisitorT, T >
@@ -190,18 +200,20 @@ public:
     {
     }
     //! The get_callback method implementation
-    callback_base get_callback(std::type_info const& type)
+    static callback_base get_callback(type_dispatcher* p, std::type_info const& type)
     {
         if (type == typeid(visible_type< T >))
-            return m_Callback;
+        {
+            single_type_dispatcher* const self = static_cast< single_type_dispatcher* >(p);
+            return self->m_Callback;
+        }
         else
             return callback_base();
     }
 
-private:
     //  Copying and assignment closed
-    single_type_dispatcher(single_type_dispatcher const&);
-    single_type_dispatcher& operator= (single_type_dispatcher const&);
+    BOOST_LOG_DELETED_FUNCTION(single_type_dispatcher(single_type_dispatcher const&))
+    BOOST_LOG_DELETED_FUNCTION(single_type_dispatcher& operator= (single_type_dispatcher const&))
 };
 
 } // namespace aux
@@ -244,9 +256,13 @@ public:
         base_type(receiver)
     {
     }
+
+    //  Copying and assignment prohibited
+    BOOST_LOG_DELETED_FUNCTION(static_type_dispatcher(static_type_dispatcher const&))
+    BOOST_LOG_DELETED_FUNCTION(static_type_dispatcher& operator= (static_type_dispatcher const&))
 };
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

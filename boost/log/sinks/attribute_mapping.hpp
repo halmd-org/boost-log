@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -15,21 +15,20 @@
  * required by OS-specific sink backends.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_ATTRIBUTE_MAPPING_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_ATTRIBUTE_MAPPING_HPP_INCLUDED_
 
 #include <map>
-#include <functional>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/tagged_integer.hpp>
-#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -41,25 +40,18 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
 //! Base class for attribute mapping function objects
-template< typename CharT, typename MappedT >
-struct basic_mapping :
-    public std::unary_function< basic_attribute_values_view< CharT >, MappedT >
+template< typename MappedT >
+struct basic_mapping
 {
-    //! Char type
-    typedef CharT char_type;
-    //! Attribute name type
-    typedef basic_attribute_name< char_type > attribute_name_type;
-    //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > values_view_type;
-    //! Log record type
-    typedef basic_record< char_type > record_type;
     //! Mapped value type
     typedef MappedT mapped_type;
+    //! Result type
+    typedef mapped_type result_type;
 };
 
 namespace aux {
@@ -115,30 +107,24 @@ namespace aux {
  * provides values that map directly onto the native values. The mapping
  * simply returns the extracted attribute value converted to the native value.
  */
-template< typename CharT, typename MappedT, typename AttributeValueT = int >
+template< typename MappedT, typename AttributeValueT = int >
 class basic_direct_mapping :
-    public basic_mapping< CharT, MappedT >
+    public basic_mapping< MappedT >
 {
     //! Base type
-    typedef basic_direct_mapping< CharT, MappedT > base_type;
+    typedef basic_direct_mapping< MappedT > base_type;
 
 public:
     //! Attribute contained value type
     typedef AttributeValueT attribute_value_type;
-    //! Char type
-    typedef typename base_type::char_type char_type;
-    //! Attribute name type
-    typedef typename base_type::attribute_name_type attribute_name_type;
-    //! Attribute values view type
-    typedef typename base_type::values_view_type values_view_type;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
     //! Mapped value type
     typedef typename base_type::mapped_type mapped_type;
 
 private:
+    //! Attribute name
+    const attribute_name m_Name;
     //! Visitor invoker for the attribute value
-    value_visitor_invoker< char_type, attribute_value_type > m_Invoker;
+    value_visitor_invoker< attribute_value_type > m_Invoker;
     //! Default native value
     mapped_type m_DefaultValue;
 
@@ -149,8 +135,8 @@ public:
      * \param name Attribute name
      * \param default_value The default native value that is returned if the attribute value is not found
      */
-    explicit basic_direct_mapping(attribute_name_type const& name, mapped_type const& default_value) :
-        m_Invoker(name),
+    explicit basic_direct_mapping(attribute_name const& name, mapped_type const& default_value) :
+        m_Name(name),
         m_DefaultValue(default_value)
     {
     }
@@ -161,11 +147,11 @@ public:
      * \param rec A log record to extract value from
      * \return An extracted attribute value
      */
-    mapped_type operator() (record_type const& rec) const
+    mapped_type operator() (record_view const& rec) const
     {
         mapped_type res = m_DefaultValue;
         aux::direct_mapping_visitor< mapped_type > vis(res);
-        m_Invoker(rec.attribute_values(), vis);
+        m_Invoker(m_Name, rec.attribute_values(), vis);
         return res;
     }
 };
@@ -181,24 +167,16 @@ public:
  *       must be specified in the template parameter \c AttributeValueT. Type sequences
  *       are not supported.
  */
-template< typename CharT, typename MappedT, typename AttributeValueT = int >
+template< typename MappedT, typename AttributeValueT = int >
 class basic_custom_mapping :
-    public basic_mapping< CharT, MappedT >
+    public basic_mapping< MappedT >
 {
     //! Base type
-    typedef basic_mapping< CharT, MappedT > base_type;
+    typedef basic_mapping< MappedT > base_type;
 
 public:
     //! Attribute contained value type
     typedef AttributeValueT attribute_value_type;
-    //! Char type
-    typedef typename base_type::char_type char_type;
-    //! Attribute name type
-    typedef typename base_type::attribute_name_type attribute_name_type;
-    //! Attribute values view type
-    typedef typename base_type::values_view_type values_view_type;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
     //! Mapped value type
     typedef typename base_type::mapped_type mapped_type;
 
@@ -254,8 +232,10 @@ private:
     //! \endcond
 
 private:
+    //! Attribute name
+    const attribute_name m_Name;
     //! Visitor invoker for the attribute value
-    value_visitor_invoker< char_type, attribute_value_type > m_Invoker;
+    value_visitor_invoker< attribute_value_type > m_Invoker;
     //! Default native value
     mapped_type m_DefaultValue;
     //! Conversion mapping
@@ -268,8 +248,8 @@ public:
      * \param name Attribute name
      * \param default_value The default native value that is returned if the conversion cannot be performed
      */
-    explicit basic_custom_mapping(attribute_name_type const& name, mapped_type const& default_value) :
-        m_Invoker(name),
+    explicit basic_custom_mapping(attribute_name const& name, mapped_type const& default_value) :
+        m_Name(name),
         m_DefaultValue(default_value)
     {
     }
@@ -281,11 +261,11 @@ public:
      * \return A mapped value, if mapping was successfull, or the default value if
      *         mapping did not succeed.
      */
-    mapped_type operator() (record_type const& rec) const
+    mapped_type operator() (record_view const& rec) const
     {
         mapped_type res = m_DefaultValue;
         visitor vis(m_Mapping, res);
-        m_Invoker(rec.attribute_values(), vis);
+        m_Invoker(m_Name, rec.attribute_values(), vis);
         return res;
     }
     /*!
@@ -308,7 +288,7 @@ public:
 
 } // namespace sinks
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

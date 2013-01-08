@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,21 +12,21 @@
  * \brief  The header defines classes and macros for once-blocks.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_ONCE_BLOCK_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_ONCE_BLOCK_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifndef BOOST_LOG_NO_THREADS
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * \brief A flag to detect if a code block has already been executed.
@@ -89,20 +89,20 @@ public:
         return (m_Flag.status == once_block_flag::initialized || enter_once_block());
     }
 
-    BOOST_LOG_EXPORT void commit();
+    BOOST_LOG_API void commit();
 
 private:
     //  Non-copyable, non-assignable
     once_block_sentry(once_block_sentry const&);
     once_block_sentry& operator= (once_block_sentry const&);
 
-    BOOST_LOG_EXPORT bool enter_once_block() const;
-    BOOST_LOG_EXPORT void rollback();
+    BOOST_LOG_API bool enter_once_block() const;
+    BOOST_LOG_API void rollback();
 };
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
@@ -110,7 +110,7 @@ private:
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 struct once_block_flag
 {
@@ -149,11 +149,13 @@ private:
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
 #endif // BOOST_LOG_NO_THREADS
+
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 #define BOOST_LOG_ONCE_BLOCK_FLAG_INTERNAL(flag_var, sentry_var)\
     for (boost::log::aux::once_block_sentry sentry_var((flag_var));\
@@ -162,6 +164,8 @@ private:
 #define BOOST_LOG_ONCE_BLOCK_INTERNAL(flag_var, sentry_var)\
     static boost::log::once_block_flag flag_var = BOOST_LOG_ONCE_BLOCK_INIT;\
     BOOST_LOG_ONCE_BLOCK_FLAG_INTERNAL(flag_var, sentry_var)
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 /*!
  * \def BOOST_LOG_ONCE_BLOCK_FLAG(flag_var)

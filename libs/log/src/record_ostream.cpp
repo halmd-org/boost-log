@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -17,42 +17,45 @@
 #include <locale>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/detail/singleton.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
+#include <boost/log/expressions/message.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/tss.hpp>
 #endif
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 //! The function initializes the stream and the stream buffer
-template< typename CharT, typename TraitsT >
-BOOST_LOG_EXPORT void basic_record_ostream< CharT, TraitsT >::init_stream()
+template< typename CharT >
+BOOST_LOG_API void basic_record_ostream< CharT >::init_stream()
 {
-    if (!!m_Record)
+    base_type::imbue(std::locale());
+    if (m_record)
     {
-        ostream_buf_base_type::attach(m_Record.message());
-        ostream_type::clear(ostream_type::goodbit);
-        ostream_type::flags(
-            ostream_type::dec |
-            ostream_type::skipws |
-            ostream_type::boolalpha // this differs from the default stream flags but makes logs look better
-        );
-        ostream_type::width(0);
-        ostream_type::precision(6);
-        ostream_type::fill(static_cast< char_type >(' '));
-        ostream_type::imbue(std::locale());
+        typedef attributes::attribute_value_impl< string_type > message_impl_type;
+        intrusive_ptr< message_impl_type > p = new message_impl_type(string_type());
+        attribute_value value(p);
+
+        // This may fail if the record already has Message attribute
+        std::pair< attribute_value_set::const_iterator, bool > res =
+            m_record->attribute_values().insert(expressions::tag::message::get_name(), value);
+        if (!res.second)
+            const_cast< attribute_value& >(res.first->second).swap(value);
+
+        base_type::attach(const_cast< string_type& >(p->get()));
     }
 }
 //! The function resets the stream into a detached (default initialized) state
-template< typename CharT, typename TraitsT >
-BOOST_LOG_EXPORT void basic_record_ostream< CharT, TraitsT >::detach_from_record()
+template< typename CharT >
+BOOST_LOG_API void basic_record_ostream< CharT >::detach_from_record() BOOST_NOEXCEPT
 {
-    if (!!m_Record)
+    if (m_record)
     {
-        ostream_buf_base_type::detach();
-        ostream_type::exceptions(ostream_type::goodbit);
-        ostream_type::clear(ostream_type::badbit);
+        base_type::detach();
+        m_record = NULL;
+        base_type::exceptions(stream_type::goodbit);
     }
 }
 
@@ -125,8 +128,8 @@ private:
 
 //! The method returns an allocated stream compound
 template< typename CharT >
-BOOST_LOG_EXPORT typename stream_provider< CharT >::stream_compound*
-stream_provider< CharT >::allocate_compound(record_type const& rec)
+BOOST_LOG_API typename stream_provider< CharT >::stream_compound*
+stream_provider< CharT >::allocate_compound(record& rec)
 {
     stream_compound_pool< char_type >& pool = stream_compound_pool< char_type >::get();
     if (pool.m_Top)
@@ -134,7 +137,7 @@ stream_provider< CharT >::allocate_compound(record_type const& rec)
         register stream_compound* p = pool.m_Top;
         pool.m_Top = p->next;
         p->next = NULL;
-        p->stream.record(rec);
+        p->stream.attach_record(rec);
         return p;
     }
     else
@@ -143,12 +146,12 @@ stream_provider< CharT >::allocate_compound(record_type const& rec)
 
 //! The method releases a compound
 template< typename CharT >
-BOOST_LOG_EXPORT void stream_provider< CharT >::release_compound(stream_compound* compound) /* throw() */
+BOOST_LOG_API void stream_provider< CharT >::release_compound(stream_compound* compound) BOOST_NOEXCEPT
 {
     stream_compound_pool< char_type >& pool = stream_compound_pool< char_type >::get();
     compound->next = pool.m_Top;
     pool.m_Top = compound;
-    compound->stream.record(record_type());
+    compound->stream.detach_from_record();
 }
 
 //! Explicitly instantiate stream_provider implementation
@@ -163,12 +166,12 @@ template struct stream_provider< wchar_t >;
 
 //! Explicitly instantiate basic_record_ostream implementation
 #ifdef BOOST_LOG_USE_CHAR
-template class basic_record_ostream< char, std::char_traits< char > >;
+template class basic_record_ostream< char >;
 #endif
 #ifdef BOOST_LOG_USE_WCHAR_T
-template class basic_record_ostream< wchar_t, std::char_traits< wchar_t > >;
+template class basic_record_ostream< wchar_t >;
 #endif
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost

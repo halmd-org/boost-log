@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -13,7 +13,7 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
 #if defined(BOOST_LOG_USE_CHAR)
 
@@ -22,23 +22,23 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace trivial {
 
 //! Initialization routine
-BOOST_LOG_EXPORT logger::logger_type logger::construct_logger()
+BOOST_LOG_API logger::logger_type logger::construct_logger()
 {
     return logger_type(keywords::severity = info);
 }
 
 //! Returns a reference to the trivial logger instance
-BOOST_LOG_EXPORT logger::logger_type& logger::get()
+BOOST_LOG_API logger::logger_type& logger::get()
 {
     return log::sources::aux::logger_singleton< logger >::get();
 }
 
-BOOST_LOG_EXPORT const char* to_string(severity_level lvl)
+BOOST_LOG_API const char* to_string(severity_level lvl)
 {
     switch (lvl)
     {
@@ -61,7 +61,7 @@ BOOST_LOG_EXPORT const char* to_string(severity_level lvl)
 
 } // namespace trivial
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

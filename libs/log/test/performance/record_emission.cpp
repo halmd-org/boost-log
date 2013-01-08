@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -34,19 +34,19 @@
 #include <boost/log/sinks.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 
-#include <boost/log/filters/attr.hpp>
+#include <boost/log/expressions.hpp>
 
 #include <boost/log/attributes/scoped_attribute.hpp>
 
 enum config
 {
-    RECORD_COUNT = 5000000,
+    RECORD_COUNT = 50000000,
     THREAD_COUNT = 3,
     SINK_COUNT = 3
 };
 
 namespace logging = boost::log;
-namespace flt = boost::log::filters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
@@ -59,19 +59,16 @@ enum severity_level
     error
 };
 
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", severity_level)
+
 namespace {
 
     //! A fake sink backend that receives log records
-    template< typename CharT >
     class fake_backend :
-        public sinks::basic_sink_backend< CharT, sinks::backend_synchronization_tag >
+        public sinks::basic_sink_backend< sinks::concurrent_feeding >
     {
-        typedef sinks::basic_sink_backend< CharT, sinks::backend_synchronization_tag > base_type;
-
     public:
-        typedef typename base_type::record_type record_type;
-
-        void consume(record_type const& record)
+        void consume(logging::record const& rec)
         {
         }
     };
@@ -80,7 +77,7 @@ namespace {
 
 void test(unsigned int record_count, boost::barrier& bar)
 {
-    BOOST_LOG_SCOPED_THREAD_TAG("ThreadID", boost::thread::id, boost::this_thread::get_id());
+    BOOST_LOG_SCOPED_THREAD_TAG("ThreadID", boost::this_thread::get_id());
     bar.wait();
 
     src::severity_logger< severity_level > slg;
@@ -94,9 +91,9 @@ int main(int argc, char* argv[])
 {
     std::cout << "Test config: " << THREAD_COUNT << " threads, " << SINK_COUNT << " sinks, " << RECORD_COUNT << " records" << std::endl;
 //__debugbreak();
-//    typedef sinks::unlocked_sink< fake_backend< char > > fake_sink;
-//    typedef sinks::synchronous_sink< fake_backend< char > > fake_sink;
-    typedef sinks::asynchronous_sink< fake_backend< char > > fake_sink;
+//    typedef sinks::unlocked_sink< fake_backend > fake_sink;
+//    typedef sinks::synchronous_sink< fake_backend > fake_sink;
+    typedef sinks::asynchronous_sink< fake_backend > fake_sink;
     for (unsigned int i = 0; i < SINK_COUNT; ++i)
         logging::core::get()->add_sink(boost::make_shared< fake_sink >());
 
@@ -104,8 +101,10 @@ int main(int argc, char* argv[])
     logging::core::get()->add_global_attribute("TimeStamp", attrs::local_clock());
     logging::core::get()->add_global_attribute("Scope", attrs::named_scope());
 
-    logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > normal); // all records pass the filter
-//    logging::core::get()->set_filter(flt::attr< severity_level >("Severity") > error); // all records don't pass the filter
+//    logging::core::get()->set_filter(severity > normal); // all records pass the filter
+//    logging::core::get()->set_filter(severity > error); // all records don't pass the filter
+
+    logging::core::get()->set_filter(severity > error); // all records don't pass the filter
 
     const unsigned int record_count = RECORD_COUNT / THREAD_COUNT;
     boost::barrier bar(THREAD_COUNT);

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -16,16 +16,20 @@
 #ifndef BOOST_LOG_DETAIL_SNPRINTF_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_SNPRINTF_HPP_INCLUDED_
 
-#include <boost/compatibility/cpp_c_headers/cstdio>
-#include <boost/compatibility/cpp_c_headers/cstdarg>
-#include <boost/log/detail/prologue.hpp>
+#include <cstdio>
+#include <cstdarg>
+#include <boost/log/detail/config.hpp>
 #ifdef BOOST_LOG_USE_WCHAR_T
-#include <boost/compatibility/cpp_c_headers/cwchar>
+#include <cwchar>
 #endif // BOOST_LOG_USE_WCHAR_T
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -102,7 +106,7 @@ inline int swprintf(wchar_t* buf, std::size_t size, const wchar_t* format, ...)
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

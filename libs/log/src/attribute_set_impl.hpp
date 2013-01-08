@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -21,7 +21,7 @@
 #include <limits>
 #include <utility>
 #include <algorithm>
-#include <boost/compatibility/cpp_c_headers/cstddef>
+#include <cstddef>
 #include <boost/assert.hpp>
 #include <boost/array.hpp>
 #include <boost/intrusive/options.hpp>
@@ -42,7 +42,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 //! A simple pooling allocator
 template< typename T >
@@ -146,12 +146,11 @@ public:
 };
 
 //! Attribute set implementation
-template< typename CharT >
-struct basic_attribute_set< CharT >::implementation
+struct attribute_set::implementation
 {
 public:
     //! Attribute name identifier type
-    typedef typename key_type::id_type id_type;
+    typedef key_type::id_type id_type;
 
     //! Allocator type
     typedef pool_allocator< node > node_allocator;
@@ -194,7 +193,7 @@ public:
     };
 
     //! A list of buckets
-    typedef array< bucket, 1U << BOOST_LOG_HASH_TABLE_SIZE_LOG > buckets;
+    typedef boost::array< bucket, 1U << BOOST_LOG_HASH_TABLE_SIZE_LOG > buckets;
 
     //! Cleanup function object used to erase elements from the container
     struct disposer
@@ -229,7 +228,7 @@ public:
 
     implementation(implementation const& that) : m_Allocator(that.m_Allocator)
     {
-        typename node_list::const_iterator it = that.m_Nodes.begin(), end = that.m_Nodes.end();
+        node_list::const_iterator it = that.m_Nodes.begin(), end = that.m_Nodes.end();
         for (; it != end; ++it)
         {
             node* const n = m_Allocator.allocate(1, NULL);
@@ -285,7 +284,7 @@ public:
         else if (p == b.last && key.id() > p->m_Value.first.id())
         {
             // The new element should become the last element of the bucket
-            typename node_list::iterator it = m_Nodes.iterator_to(*p);
+            node_list::iterator it = m_Nodes.iterator_to(*p);
             ++it;
             m_Nodes.insert(it, *n);
             b.last = n;
@@ -293,7 +292,7 @@ public:
         else
         {
             // The new element should be within the bucket
-            typename node_list::iterator it = m_Nodes.iterator_to(*p);
+            node_list::iterator it = m_Nodes.iterator_to(*p);
             m_Nodes.insert(it, *n);
         }
 
@@ -302,8 +301,8 @@ public:
 
     void erase(iterator it)
     {
-        typedef typename node_list::node_traits node_traits;
-        typedef typename node_list::value_traits value_traits;
+        typedef node_list::node_traits node_traits;
+        typedef node_list::value_traits value_traits;
 
         node* p = static_cast< node* >(it.base());
 
@@ -359,8 +358,8 @@ private:
     //! Attempts to find an element with the specified key in the bucket
     node* find_in_bucket(key_type key, bucket const& b)
     {
-        typedef typename node_list::node_traits node_traits;
-        typedef typename node_list::value_traits value_traits;
+        typedef node_list::node_traits node_traits;
+        typedef node_list::value_traits value_traits;
 
         // All elements within the bucket are sorted to speedup the search.
         register node* p = b.first;
@@ -373,7 +372,7 @@ private:
     }
 };
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

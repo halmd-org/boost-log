@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -10,29 +10,35 @@
 #include <fstream>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/move/move.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/utility/manipulators/add_attr.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace flt = boost::log::filters;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
+
+BOOST_LOG_ATTRIBUTE_KEYWORD(line_id, "LineID", unsigned int)
+BOOST_LOG_ATTRIBUTE_KEYWORD(remote_address, "RemoteAddress", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(received_size, "ReceivedSize", std::size_t)
+BOOST_LOG_ATTRIBUTE_KEYWORD(sent_size, "SentSize", std::size_t)
 
 //[ example_sources_network_connection
 class network_connection
 {
     src::logger m_logger;
-    src::logger::attribute_set_type::iterator m_remote_addr;
+    logging::attribute_set::iterator m_remote_addr;
 
 public:
     void on_connected(std::string const& remote_addr)
@@ -45,8 +51,9 @@ public:
         // The straightforward way of logging
         if (logging::record rec = m_logger.open_record())
         {
-            rec.message() = "Connection established";
-            m_logger.push_record(rec);
+            rec.attribute_values().insert("Message",
+                attrs::make_attribute_value(std::string("Connection established")));
+            m_logger.push_record(boost::move(rec));
         }
     }
     void on_disconnected()
@@ -61,15 +68,12 @@ public:
     {
         // Put the size as an additional attribute
         // so it can be collected and accumulated later if needed.
-        // The attribute will be attached to the only log record
-        // that is made within the current scope.
-        BOOST_LOG_SCOPED_LOGGER_TAG(m_logger, "ReceivedSize", std::size_t, size);
-        BOOST_LOG(m_logger) << "Some data received";
+        // The attribute will be attached only to this log record.
+        BOOST_LOG(m_logger) << logging::add_attr("ReceivedSize", size) << "Some data received";
     }
     void on_data_sent(std::size_t size)
     {
-        BOOST_LOG_SCOPED_LOGGER_TAG(m_logger, "SentSize", std::size_t, size);
-        BOOST_LOG(m_logger) << "Some data sent";
+        BOOST_LOG(m_logger) << logging::add_attr("SentSize", size) << "Some data sent";
     }
 };
 //]
@@ -78,31 +82,31 @@ int main(int, char*[])
 {
     // Construct the sink
     typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-    boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+    boost::shared_ptr< text_sink > sink = boost::make_shared< text_sink >();
 
     // Add a stream to write log to
-    pSink->locked_backend()->add_stream(
+    sink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("sample.log"));
 
     // Set the formatter
-    pSink->set_formatter
+    sink->set_formatter
     (
-        fmt::stream
-            << fmt::attr< unsigned int >("LineID")
-            << ": [" << fmt::attr< std::string >("RemoteAddress") << "] "
-            << fmt::if_(flt::has_attr("ReceivedSize"))
+        expr::stream
+            << line_id
+            << ": [" << remote_address << "] "
+            << expr::if_(expr::has_attr(received_size))
                [
-                    fmt::stream << "[Received: " << fmt::attr< std::size_t >("ReceivedSize") << "] "
+                    expr::stream << "[Received: " << received_size << "] "
                ]
-            << fmt::if_(flt::has_attr("SentSize"))
+            << expr::if_(expr::has_attr(sent_size))
                [
-                    fmt::stream << "[Sent: " << fmt::attr< std::size_t >("SentSize") << "] "
+                    expr::stream << "[Sent: " << sent_size << "] "
                ]
-            << fmt::message()
+            << expr::smessage
     );
 
     // Register the sink in the logging core
-    logging::core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(sink);
 
     // Register other common attributes, such as time stamp and record counter
     logging::add_common_attributes();

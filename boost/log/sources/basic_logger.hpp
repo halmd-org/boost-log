@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -13,10 +13,6 @@
  * for defining custom loggers are also provided.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SOURCES_BASIC_LOGGER_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_BASIC_LOGGER_HPP_INCLUDED_
 
@@ -25,6 +21,7 @@
 #include <ostream>
 #include <boost/assert.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/move/move.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
 #include <boost/preprocessor/facilities/identity.hpp>
@@ -32,7 +29,7 @@
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
@@ -42,6 +39,10 @@
 #include <boost/log/sources/features.hpp>
 #include <boost/log/sources/threading_models.hpp>
 
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 #ifdef _MSC_VER
 #pragma warning(push)
 // 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
@@ -50,7 +51,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sources {
 
@@ -83,20 +84,14 @@ template< typename CharT, typename FinalT, typename ThreadingModelT >
 class basic_logger :
     public ThreadingModelT
 {
+    typedef basic_logger this_type;
+    BOOST_COPYABLE_AND_MOVABLE_ALT(this_type)
+
 public:
     //! Character type
     typedef CharT char_type;
     //! Final logger type
     typedef FinalT final_type;
-
-    //! Attribute name type
-    typedef basic_attribute_name< char_type > attribute_name_type;
-    //! Attribute set type
-    typedef basic_attribute_set< char_type > attribute_set_type;
-    //! Logging system core type
-    typedef basic_core< char_type > core_type;
-    //! Logging record type
-    typedef basic_record< char_type > record_type;
     //! Threading model type
     typedef ThreadingModelT threading_model;
 
@@ -130,10 +125,10 @@ public:
 
 private:
     //! A pointer to the logging system
-    shared_ptr< core_type > m_pCore;
+    core_ptr m_pCore;
 
     //! Logger-specific attribute set
-    attribute_set_type m_Attributes;
+    attribute_set m_Attributes;
 
 public:
     /*!
@@ -142,7 +137,7 @@ public:
      */
     basic_logger() :
         threading_model(),
-        m_pCore(core_type::get())
+        m_pCore(core::get())
     {
     }
     /*!
@@ -153,10 +148,23 @@ public:
      * \param that Source logger
      */
     basic_logger(basic_logger const& that) :
-        threading_model(),
-        m_pCore(core_type::get()),
+        threading_model(static_cast< threading_model const& >(that)),
+        m_pCore(core::get()),
         m_Attributes(that.m_Attributes)
     {
+    }
+    /*!
+     * Move constructor. Moves all attributes from the source logger.
+     *
+     * \note Not thread-safe. The source logger must be locked in the final class before copying.
+     *
+     * \param that Source logger
+     */
+    basic_logger(BOOST_RV_REF(basic_logger) that) :
+        threading_model(boost::move(static_cast< threading_model& >(that)))
+    {
+        m_pCore.swap(that.m_pCore);
+        m_Attributes.swap(that.m_Attributes);
     }
     /*!
      * Constructor with named arguments. The constructor ignores all arguments. The result of
@@ -165,7 +173,7 @@ public:
     template< typename ArgsT >
     explicit basic_logger(ArgsT const&) :
         threading_model(),
-        m_pCore(core_type::get())
+        m_pCore(core::get())
     {
     }
 
@@ -173,15 +181,15 @@ protected:
     /*!
      * An accessor to the logging system pointer
      */
-    shared_ptr< core_type > const& core() const { return m_pCore; }
+    core_ptr const& core() const { return m_pCore; }
     /*!
      * An accessor to the logger attributes
      */
-    attribute_set_type& attributes() { return m_Attributes; }
+    attribute_set& attributes() { return m_Attributes; }
     /*!
      * An accessor to the logger attributes
      */
-    attribute_set_type const& attributes() const { return m_Attributes; }
+    attribute_set const& attributes() const { return m_Attributes; }
     /*!
      * An accessor to the threading model base
      */
@@ -219,8 +227,7 @@ protected:
     /*!
      * Unlocked \c add_attribute
      */
-    std::pair< typename attribute_set_type::iterator, bool > add_attribute_unlocked(
-        attribute_name_type const& name, attribute const& attr)
+    std::pair< attribute_set::iterator, bool > add_attribute_unlocked(attribute_name const& name, attribute const& attr)
     {
         return m_Attributes.insert(name, attr);
     }
@@ -228,7 +235,7 @@ protected:
     /*!
      * Unlocked \c remove_attribute
      */
-    void remove_attribute_unlocked(typename attribute_set_type::iterator it)
+    void remove_attribute_unlocked(attribute_set::iterator it)
     {
         m_Attributes.erase(it);
     }
@@ -244,7 +251,7 @@ protected:
     /*!
      * Unlocked \c open_record
      */
-    record_type open_record_unlocked()
+    record open_record_unlocked()
     {
         return m_pCore->open_record(m_Attributes);
     }
@@ -252,7 +259,7 @@ protected:
      * Unlocked \c open_record
      */
     template< typename ArgsT >
-    record_type open_record_unlocked(ArgsT const& args)
+    record open_record_unlocked(ArgsT const&)
     {
         return m_pCore->open_record(m_Attributes);
     }
@@ -260,15 +267,15 @@ protected:
     /*!
      * Unlocked \c push_record
      */
-    void push_record_unlocked(record_type const& record)
+    void push_record_unlocked(BOOST_RV_REF(record) rec)
     {
-        m_pCore->push_record(record);
+        m_pCore->push_record(boost::move(rec));
     }
 
     /*!
      * Unlocked \c get_attributes
      */
-    attribute_set_type get_attributes_unlocked() const
+    attribute_set get_attributes_unlocked() const
     {
         return m_Attributes;
     }
@@ -276,14 +283,13 @@ protected:
     /*!
      * Unlocked \c set_attributes
      */
-    void set_attributes_unlocked(attribute_set_type const& attrs)
+    void set_attributes_unlocked(attribute_set const& attrs)
     {
         m_Attributes = attrs;
     }
 
-private:
-    //! Assignment (should be implemented through copy and swap in the final class)
-    basic_logger& operator= (basic_logger const&);
+    //! Assignment is closed (should be implemented through copy and swap in the final class)
+    BOOST_LOG_DELETED_FUNCTION(basic_logger& operator= (basic_logger const&))
 };
 
 /*!
@@ -315,6 +321,7 @@ class basic_composite_logger :
         FeaturesT
     >::type
 {
+private:
     //! Base type (the hierarchy of features)
     typedef typename boost::log::sources::aux::inherit_features<
         basic_logger< CharT, FinalT, ThreadingModelT >,
@@ -324,16 +331,11 @@ class basic_composite_logger :
 protected:
     //! The composite logger type (for use in the user's logger class)
     typedef basic_composite_logger logger_base;
+    BOOST_COPYABLE_AND_MOVABLE_ALT(logger_base)
 
 public:
     //! Threading model being used
     typedef typename base_type::threading_model threading_model;
-    //! Attribute name type
-    typedef typename base_type::attribute_name_type attribute_name_type;
-    //! Attribute set type
-    typedef typename base_type::attribute_set_type attribute_set_type;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
 
 #if !defined(BOOST_LOG_NO_THREADS)
 
@@ -346,10 +348,18 @@ public:
      * Copy constructor
      */
     basic_composite_logger(basic_composite_logger const& that) :
-        base_type((
+        base_type
+        ((
             boost::log::aux::shared_lock_guard< const threading_model >(that.get_threading_model()),
             static_cast< base_type const& >(that)
         ))
+    {
+    }
+    /*!
+     * Move constructor
+     */
+    basic_composite_logger(BOOST_RV_REF(logger_base) that) :
+        base_type(boost::move(static_cast< base_type& >(that)))
     {
     }
     /*!
@@ -370,8 +380,7 @@ public:
      *         attribute. Otherwise the attribute was not added and the first member points to the attribute that prevents
      *         addition.
      */
-    std::pair< typename attribute_set_type::iterator, bool > add_attribute(
-        attribute_name_type const& name, attribute const& attr)
+    std::pair< attribute_set::iterator, bool > add_attribute(attribute_name const& name, attribute const& attr)
     {
         typename base_type::add_attribute_lock lock(base_type::get_threading_model());
         return base_type::add_attribute_unlocked(name, attr);
@@ -384,7 +393,7 @@ public:
      *
      * \param it Iterator to the previously added attribute.
      */
-    void remove_attribute(typename attribute_set_type::iterator it)
+    void remove_attribute(attribute_set::iterator it)
     {
         typename base_type::remove_attribute_lock lock(base_type::get_threading_model());
         base_type::remove_attribute_unlocked(it);
@@ -404,7 +413,7 @@ public:
      *
      * \return The copy of the attribute set. Attributes are shallow-copied.
      */
-    attribute_set_type get_attributes() const
+    attribute_set get_attributes() const
     {
         typename base_type::get_attributes_lock lock(base_type::get_threading_model());
         return base_type::get_attributes_unlocked();
@@ -417,7 +426,7 @@ public:
      *
      * \param attrs The set of attributes to install into the logger. Attributes are shallow-copied.
      */
-    void set_attributes(attribute_set_type const& attrs)
+    void set_attributes(attribute_set const& attrs)
     {
         typename base_type::set_attributes_lock lock(base_type::get_threading_model());
         base_type::set_attributes_unlocked(attrs);
@@ -428,7 +437,7 @@ public:
      *
      * \return A valid record handle if the logging record is opened successfully, an invalid handle otherwise.
      */
-    record_type open_record()
+    record open_record()
     {
         // Perform a quick check first
         if (this->core()->get_logging_enabled())
@@ -437,7 +446,7 @@ public:
             return base_type::open_record_unlocked(boost::log::aux::empty_arg_list());
         }
         else
-            return record_type();
+            return record();
     }
     /*!
      * The method opens a new log record in the logging core.
@@ -446,7 +455,7 @@ public:
      * \return A valid record handle if the logging record is opened successfully, an invalid handle otherwise.
      */
     template< typename ArgsT >
-    record_type open_record(ArgsT const& args)
+    record open_record(ArgsT const& args)
     {
         // Perform a quick check first
         if (this->core()->get_logging_enabled())
@@ -455,17 +464,17 @@ public:
             return base_type::open_record_unlocked(args);
         }
         else
-            return record_type();
+            return record();
     }
     /*!
      * The method pushes the constructed message to the logging core
      *
-     * \param record The log record with the formatted message
+     * \param rec The log record with the formatted message
      */
-    void push_record(record_type const& record)
+    void push_record(BOOST_RV_REF(record) rec)
     {
         typename base_type::push_record_lock lock(base_type::get_threading_model());
-        base_type::push_record_unlocked(record);
+        base_type::push_record_unlocked(boost::move(rec));
     }
     /*!
      * Thread-safe implementation of swap
@@ -505,6 +514,7 @@ class basic_composite_logger< CharT, FinalT, single_thread_model, FeaturesT > :
         FeaturesT
     >::type
 {
+private:
     typedef typename boost::log::sources::aux::inherit_features<
         basic_logger< CharT, FinalT, single_thread_model >,
         FeaturesT
@@ -512,12 +522,10 @@ class basic_composite_logger< CharT, FinalT, single_thread_model, FeaturesT > :
 
 protected:
     typedef basic_composite_logger logger_base;
+    BOOST_COPYABLE_AND_MOVABLE_ALT(logger_base)
 
 public:
     typedef typename base_type::threading_model threading_model;
-    typedef typename base_type::attribute_name_type attribute_name_type;
-    typedef typename base_type::attribute_set_type attribute_set_type;
-    typedef typename base_type::record_type record_type;
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
@@ -527,17 +535,20 @@ public:
         base_type(static_cast< base_type const& >(that))
     {
     }
+    basic_composite_logger(BOOST_RV_REF(logger_base) that) :
+        base_type(boost::move(static_cast< base_type& >(that)))
+    {
+    }
     template< typename ArgsT >
     explicit basic_composite_logger(ArgsT const& args) : base_type(args)
     {
     }
 
-    std::pair< typename attribute_set_type::iterator, bool > add_attribute(
-        attribute_name_type const& name, attribute const& attr)
+    std::pair< attribute_set::iterator, bool > add_attribute(attribute_name const& name, attribute const& attr)
     {
         return base_type::add_attribute_unlocked(name, attr);
     }
-    void remove_attribute(typename attribute_set_type::iterator it)
+    void remove_attribute(attribute_set::iterator it)
     {
         base_type::remove_attribute_unlocked(it);
     }
@@ -545,34 +556,34 @@ public:
     {
         base_type::remove_all_attributes_unlocked();
     }
-    attribute_set_type get_attributes() const
+    attribute_set get_attributes() const
     {
         return base_type::get_attributes_unlocked();
     }
-    void set_attributes(attribute_set_type const& attrs)
+    void set_attributes(attribute_set const& attrs)
     {
         base_type::set_attributes_unlocked(attrs);
     }
-    record_type open_record()
+    record open_record()
     {
         // Perform a quick check first
         if (this->core()->get_logging_enabled())
             return base_type::open_record_unlocked(boost::log::aux::empty_arg_list());
         else
-            return record_type();
+            return record();
     }
     template< typename ArgsT >
-    record_type open_record(ArgsT const& args)
+    record open_record(ArgsT const& args)
     {
         // Perform a quick check first
         if (this->core()->get_logging_enabled())
             return base_type::open_record_unlocked(args);
         else
-            return record_type();
+            return record();
     }
-    void push_record(record_type const& record)
+    void push_record(BOOST_RV_REF(record) rec)
     {
-        base_type::push_record_unlocked(record);
+        base_type::push_record_unlocked(boost::move(rec));
     }
     void swap(basic_composite_logger& that)
     {
@@ -592,9 +603,11 @@ protected:
 
 #define BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_IMPL(class_type, typename_keyword)\
     public:\
-        class_type() {}\
+        BOOST_LOG_DEFAULTED_FUNCTION(class_type(), {})\
         class_type(class_type const& that) : class_type::logger_base(\
             static_cast< typename_keyword() class_type::logger_base const& >(that)) {}\
+        class_type(BOOST_RV_REF(class_type) that) : class_type::logger_base(\
+            ::boost::move(static_cast< typename_keyword() class_type::logger_base& >(that))) {}\
         BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_FORWARD(class_type, class_type::logger_base)\
 
 //! \endcond
@@ -607,23 +620,37 @@ protected:
 
 #define BOOST_LOG_FORWARD_LOGGER_ASSIGNMENT(class_type)\
     public:\
-        class_type& operator= (class_type const& that) { return class_type::logger_base::assign(that); }
+        class_type& operator= (BOOST_COPY_ASSIGN_REF(class_type) that) { return class_type::logger_base::assign(that); }\
+        class_type& operator= (BOOST_RV_REF(class_type) that)\
+        {\
+            ::boost::log::aux::exclusive_lock_guard< class_type::threading_model > lock(this->get_threading_model());\
+            this->swap_unlocked(that);\
+            return *this;\
+        }
 
 #define BOOST_LOG_FORWARD_LOGGER_ASSIGNMENT_TEMPLATE(class_type)\
     public:\
-        class_type& operator= (class_type const& that) { return class_type::logger_base::assign(that); }
+        class_type& operator= (BOOST_COPY_ASSIGN_REF(class_type) that) { return class_type::logger_base::assign(that); }\
+        class_type& operator= (BOOST_RV_REF(class_type) that)\
+        {\
+            ::boost::log::aux::exclusive_lock_guard< typename class_type::threading_model > lock(this->get_threading_model());\
+            this->swap_unlocked(that);\
+            return *this;\
+        }
 
 #define BOOST_LOG_FORWARD_LOGGER_MEMBERS(class_type)\
+    BOOST_COPYABLE_AND_MOVABLE(class_type)\
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(class_type)\
     BOOST_LOG_FORWARD_LOGGER_ASSIGNMENT(class_type)
 
 #define BOOST_LOG_FORWARD_LOGGER_MEMBERS_TEMPLATE(class_type)\
+    BOOST_COPYABLE_AND_MOVABLE(class_type)\
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_TEMPLATE(class_type)\
     BOOST_LOG_FORWARD_LOGGER_ASSIGNMENT_TEMPLATE(class_type)
 
 } // namespace sources
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

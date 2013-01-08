@@ -1,5 +1,5 @@
 [/
-              Copyright Andrey Semashev 2007 - 2012.
+              Copyright Andrey Semashev 2007 - 2013.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -48,9 +48,17 @@ And, of course, severity loggers also provide the same functionality the [link l
     #include <``[boost_log_sources_channel_feature_hpp]``>
     #include <``[boost_log_sources_channel_logger_hpp]``>
 
-Sometimes it is important to categorize log records based on some constant piece information, such as the module or class name, the relation of the logged information to some specific domain of application functionality (e.g. network or file system related messages) or some constant tag that may be used later to filter these records to a specific sink. This feature is fulfilled with loggers [class_sources_channel_logger], [class_sources_channel_logger_mt] and their wide-char counterparts [class_sources_wchannel_logger], [class_sources_wchannel_logger_mt]. These loggers automatically register an attribute named "Channel". This attribute can be set only in the logger constructor with a named argument `channel` and cannot be changed during the logger's lifetime. The type of the channel attribute value can be specified as a template argument for the logger, with `std::string` (`std::wstring` in case of wide character loggers) as a default. Aside from that, the usage is similar to the [link log.detailed.sources.basic_logger basic loggers]:
+Sometimes it is important to associate log records with some application component, such as the module or class name, the relation of the logged information to some specific domain of application functionality (e.g. network or file system related messages) or some arbitrary tag that can be used later to route these records to a specific sink. This feature is fulfilled with loggers [class_sources_channel_logger], [class_sources_channel_logger_mt] and their wide-char counterparts [class_sources_wchannel_logger], [class_sources_wchannel_logger_mt]. These loggers automatically register an attribute named "Channel". The default channel name can be set in the logger constructor with a named argument `channel`. The type of the channel attribute value can be specified as a template argument for the logger, with `std::string` (`std::wstring` in case of wide character loggers) as a default. Aside from that, the usage is similar to the [link log.detailed.sources.basic_logger basic loggers]:
 
 [example_sources_network_connection_channels]
+
+It is also possible to set the channel name of individual log records. This can be uesful when a [link log.detailed.sources.global_storage global logger] is used instead of an object-specific one. The channel name can be set by calling the `channel` modifier on the logger or by using a special macro for logging. For example:
+
+[example_sources_network_connection_dynamic_channels]
+
+Note that changing the channel name is persistent, so unless the channel name is reset, the subsequent records will also belong to the new channel.
+
+[tip For performance reasons it is advised to avoid dynamically setting the channel name individually for every log record, when possible. Changing the channel name involves dynamic memory allocation. Using distinct loggers for different channels allows to avoid this overhead.]
 
 [endsect]
 
@@ -80,7 +88,7 @@ The usage of the loggers with several features does not conceptually differ from
 
     #include <``[boost_log_sources_global_logger_storage_hpp]``>
 
-Sometimes it is inconvenient to have a logger object to be able to write logs. This issue is often present in functional-style code with no obvious places where a logger could be stored. Another domain where the problem persists is generic libraries would benefit from logging. In such cases it would be more convenient to have one or several global loggers in order to easily access them in every place when needed. In this regard `std::cout` is a good example of such a logger.
+Sometimes it is inconvenient to have a logger object to be able to write logs. This issue is often present in functional-style code with no obvious places where a logger could be stored. Another domain where the problem persists is generic libraries that would benefit from logging. In such cases it would be more convenient to have one or several global loggers in order to easily access them in every place when needed. In this regard `std::cout` is a good example of such a logger.
 
 The library provides a way to declare global loggers that can be accessed pretty much like `std::cout`. In fact, this feature can be used with any logger, including user-defined ones. Having declared a global logger, one can be sure to have a thread-safe access to this logger instance from any place of the application code. The library also guarantees that a global logger instance will be unique even across module boundaries. This allows employing logging even in header-only components that may get compiled into different modules.
 
@@ -95,13 +103,13 @@ Global logger storage is intended to eliminate all these problems.
 
 The easiest way to declare a global logger is to use the following macro:
 
-    BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(my_logger, src::severity_logger_mt< >)
+    ``[macroref BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT]``(my_logger, src::severity_logger_mt< >)
 
 The `my_logger` argument gives the logger a name that may be used to acquire the logger instance. This name acts as a tag of the declared logger. The second parameter denotes the logger type. In multithreaded applications, when the logger can be accessed from different threads, users will normally want to use the thread-safe versions of loggers.
 
 If passing arguments to the logger constructor is needed, there is another macro:
 
-    BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS(
+    ``[macroref BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS]``(
         my_logger,
         src::severity_channel_logger< >,
         (keywords::severity = error)(keywords::channel = "my_channel"))
@@ -110,7 +118,7 @@ The last macro argument is a __boost_preprocessor__ sequence of arguments passed
 
 The third macro of this section provides maximum initialization flexibility, allowing the user to actually define the logic of creating the logger.
 
-    BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT(my_logger, src::severity_logger_mt)
+    ``[macroref BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT]``(my_logger, src::severity_logger_mt)
     {
         // Do something that needs to be done on logger initialization,
         // e.g. add a stop watch attribute.
@@ -120,14 +128,14 @@ The third macro of this section provides maximum initialization flexibility, all
         return lg;
     }
 
-Like the `BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS` macro, the initialization code is called only once, on the first request of the logger.
+Like the [macroref BOOST_LOG_INLINE_GLOBAL_LOGGER_CTOR_ARGS] macro, the initialization code is called only once, on the first request of the logger.
 
-[important Beware of One Definition Rule (ODR) issues. Regardless of the way of logger declaration you choose, you should ensure that [_the logger is declared in exactly the same way at all occurrences] and [_all symbol names involved in the declaration resolve to the same entities]. The latter includes the names used within the initialization routine of the `BOOST_LOG_DECLARE_GLOBAL_LOGGER_INIT` macro, such as references to external variables, functions and types. The library tries to protect itself from ODR violations to a certain degree, but in general the behavior is undefined if the rule is violated.]
+[important Beware of One Definition Rule (ODR) issues. Regardless of the way of logger declaration you choose, you should ensure that [_the logger is declared in exactly the same way at all occurrences] and [_all symbol names involved in the declaration resolve to the same entities]. The latter includes the names used within the initialization routine of the [macroref BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT] macro, such as references to external variables, functions and types. The library tries to protect itself from ODR violations to a certain degree, but in general the behavior is undefined if the rule is violated.]
 
 In order to alleviate ODR problems, it is possible to separate the logger declaration and its initialization routine. The library provides the following macros to achieve this:
 
-* `BOOST_LOG_GLOBAL_LOGGER` provides the logger declaration. It can be used in a header, similarly to the `BOOST_LOG_INLINE_GLOBAL_LOGGER*` macros described above.
-* `BOOST_LOG_GLOBAL_LOGGER_INIT`, `BOOST_LOG_GLOBAL_LOGGER_DEFAULT` and `BOOST_LOG_GLOBAL_LOGGER_CTOR_ARGS` define the logger initialization routine. Their semantics and usage is similar to the corresponding `BOOST_LOG_INLINE_GLOBAL_LOGGER*` macros, for one exception: these macros should be used in a single .cpp file.
+* [macroref BOOST_LOG_GLOBAL_LOGGER] provides the logger declaration. It can be used in a header, similarly to the `BOOST_LOG_INLINE_GLOBAL_LOGGER*` macros described above.
+* [macroref BOOST_LOG_GLOBAL_LOGGER_INIT], [macroref BOOST_LOG_GLOBAL_LOGGER_DEFAULT] and [macroref BOOST_LOG_GLOBAL_LOGGER_CTOR_ARGS] define the logger initialization routine. Their semantics and usage is similar to the corresponding `BOOST_LOG_INLINE_GLOBAL_LOGGER*` macros, for one exception: these macros should be used in a single .cpp file.
 
 For example:
 
@@ -153,7 +161,7 @@ Regardless of the macro you used to declare the logger, you can acquire the logg
 
     src::severity_logger_mt< >& lg = my_logger::get();
 
-Further usage of the logger is the same as if it were a regular logger object of the corresponding type.
+Further usage of the logger is the same as if it was a regular logger object of the corresponding type.
 
 [warning It should be noted that it is not advised to use global loggers during the deinitialization stage of the application. Like any other global object in your application, the global logger may get destroyed before you try to use it. In such cases it's better to have a dedicated logger object that is guaranteed to be available as long as needed.]
 

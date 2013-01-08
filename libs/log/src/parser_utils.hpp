@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -13,21 +13,21 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_PARSER_UTILS_HPP_INCLUDED_
 #define BOOST_LOG_PARSER_UTILS_HPP_INCLUDED_
 
 #include <string>
 #include <iostream>
-#include <boost/compatibility/cpp_c_headers/cctype>
-#include <boost/log/detail/prologue.hpp>
+#include <cctype>
+#include <boost/log/detail/config.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -50,6 +50,7 @@ struct char_constants< char >
     static const char_type char_greater = '>';
     static const char_type char_less = '<';
     static const char_type char_underline = '_';
+    static const char_type char_backslash = '\\';
     static const char_type char_section_bracket_left = '[';
     static const char_type char_section_bracket_right = ']';
     static const char_type char_paren_bracket_left = '(';
@@ -58,6 +59,9 @@ struct char_constants< char >
     static const char_type* not_keyword() { return "not"; }
     static const char_type* and_keyword() { return "and"; }
     static const char_type* or_keyword() { return "or"; }
+    static const char_type* equal_keyword() { return "="; }
+    static const char_type* greater_keyword() { return ">"; }
+    static const char_type* less_keyword() { return "<"; }
     static const char_type* not_equal_keyword() { return "!="; }
     static const char_type* greater_or_equal_keyword() { return ">="; }
     static const char_type* less_or_equal_keyword() { return "<="; }
@@ -162,6 +166,7 @@ struct char_constants< wchar_t >
     static const char_type char_greater = L'>';
     static const char_type char_less = L'<';
     static const char_type char_underline = L'_';
+    static const char_type char_backslash = L'\\';
     static const char_type char_section_bracket_left = L'[';
     static const char_type char_section_bracket_right = L']';
     static const char_type char_paren_bracket_left = L'(';
@@ -170,6 +175,9 @@ struct char_constants< wchar_t >
     static const char_type* not_keyword() { return L"not"; }
     static const char_type* and_keyword() { return L"and"; }
     static const char_type* or_keyword() { return L"or"; }
+    static const char_type* equal_keyword() { return L"="; }
+    static const char_type* greater_keyword() { return L">"; }
+    static const char_type* less_keyword() { return L"<"; }
     static const char_type* not_equal_keyword() { return L"!="; }
     static const char_type* greater_or_equal_keyword() { return L">="; }
     static const char_type* less_or_equal_keyword() { return L"<="; }
@@ -264,7 +272,7 @@ struct char_constants< wchar_t >
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

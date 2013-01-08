@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -19,97 +19,90 @@
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/link_mode.hpp>
 #include <boost/intrusive/derivation_value_traits.hpp>
+#include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include "attribute_set_impl.hpp"
+#include "stateless_allocator.hpp"
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
-template< typename CharT >
-inline basic_attribute_set< CharT >::node_base::node_base() :
+BOOST_LOG_API void* attribute::impl::operator new (std::size_t size)
+{
+    aux::stateless_allocator< unsigned char > alloc;
+    return alloc.allocate(size);
+}
+
+BOOST_LOG_API void attribute::impl::operator delete (void* p, std::size_t size) BOOST_NOEXCEPT
+{
+    aux::stateless_allocator< unsigned char > alloc;
+    alloc.deallocate(static_cast< unsigned char* >(p), size);
+}
+
+inline attribute_set::node_base::node_base() :
     m_pPrev(NULL),
     m_pNext(NULL)
 {
 }
 
-template< typename CharT >
-inline basic_attribute_set< CharT >::node::node(key_type const& key, mapped_type const& data) :
+inline attribute_set::node::node(key_type const& key, mapped_type const& data) :
     node_base(),
     m_Value(key, data)
 {
 }
 
 //! Default constructor
-template< typename CharT >
-BOOST_LOG_EXPORT basic_attribute_set< CharT >::basic_attribute_set() :
+BOOST_LOG_API attribute_set::attribute_set() :
     m_pImpl(new implementation())
 {
 }
 
 //! Copy constructor
-template< typename CharT >
-BOOST_LOG_EXPORT basic_attribute_set< CharT >::basic_attribute_set(basic_attribute_set const& that) :
+BOOST_LOG_API attribute_set::attribute_set(attribute_set const& that) :
     m_pImpl(new implementation(*that.m_pImpl))
 {
 }
 
 //! Destructor
-template< typename CharT >
-BOOST_LOG_EXPORT basic_attribute_set< CharT >::~basic_attribute_set()
+BOOST_LOG_API attribute_set::~attribute_set() BOOST_NOEXCEPT
 {
     delete m_pImpl;
 }
 
-//! Assignment
-template< typename CharT >
-BOOST_LOG_EXPORT basic_attribute_set< CharT >& basic_attribute_set< CharT >::operator= (basic_attribute_set that)
-{
-    this->swap(that);
-    return *this;
-}
-
 //  Iterator generators
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::iterator basic_attribute_set< CharT >::begin()
+BOOST_LOG_API attribute_set::iterator attribute_set::begin() BOOST_NOEXCEPT
 {
     return m_pImpl->begin();
 }
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::iterator basic_attribute_set< CharT >::end()
+BOOST_LOG_API attribute_set::iterator attribute_set::end() BOOST_NOEXCEPT
 {
     return m_pImpl->end();
 }
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::const_iterator basic_attribute_set< CharT >::begin() const
+BOOST_LOG_API attribute_set::const_iterator attribute_set::begin() const BOOST_NOEXCEPT
 {
     return const_iterator(m_pImpl->begin());
 }
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::const_iterator basic_attribute_set< CharT >::end() const
+BOOST_LOG_API attribute_set::const_iterator attribute_set::end() const BOOST_NOEXCEPT
 {
     return const_iterator(m_pImpl->end());
 }
 
 //! The method returns number of elements in the container
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::size_type basic_attribute_set< CharT >::size() const
+BOOST_LOG_API attribute_set::size_type attribute_set::size() const BOOST_NOEXCEPT
 {
     return m_pImpl->size();
 }
 
 //! Insertion method
-template< typename CharT >
-BOOST_LOG_EXPORT std::pair< typename basic_attribute_set< CharT >::iterator, bool >
-basic_attribute_set< CharT >::insert(key_type key, mapped_type const& data)
+BOOST_LOG_API std::pair< attribute_set::iterator, bool >
+attribute_set::insert(key_type key, mapped_type const& data)
 {
     return m_pImpl->insert(key, data);
 }
 
 //! The method erases all attributes with the specified name
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::size_type
-basic_attribute_set< CharT >::erase(key_type key)
+BOOST_LOG_API attribute_set::size_type attribute_set::erase(key_type key) BOOST_NOEXCEPT
 {
     iterator it = m_pImpl->find(key);
     if (it != end())
@@ -122,14 +115,13 @@ basic_attribute_set< CharT >::erase(key_type key)
 }
 
 //! The method erases the specified attribute
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_attribute_set< CharT >::erase(iterator it)
+BOOST_LOG_API void attribute_set::erase(iterator it) BOOST_NOEXCEPT
 {
     m_pImpl->erase(it);
 }
+
 //! The method erases all attributes within the specified range
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_attribute_set< CharT >::erase(iterator begin, iterator end)
+BOOST_LOG_API void attribute_set::erase(iterator begin, iterator end) BOOST_NOEXCEPT
 {
     while (begin != end)
     {
@@ -138,27 +130,17 @@ BOOST_LOG_EXPORT void basic_attribute_set< CharT >::erase(iterator begin, iterat
 }
 
 //! The method clears the container
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_attribute_set< CharT >::clear()
+BOOST_LOG_API void attribute_set::clear() BOOST_NOEXCEPT
 {
     m_pImpl->clear();
 }
 
 //! Internal lookup implementation
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_attribute_set< CharT >::iterator
-basic_attribute_set< CharT >::find(key_type key)
+BOOST_LOG_API attribute_set::iterator attribute_set::find(key_type key) BOOST_NOEXCEPT
 {
     return m_pImpl->find(key);
 }
 
-#ifdef BOOST_LOG_USE_CHAR
-template class basic_attribute_set< char >;
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-template class basic_attribute_set< wchar_t >;
-#endif
-
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost

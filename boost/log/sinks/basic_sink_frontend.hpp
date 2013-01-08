@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,22 +12,20 @@
  * The header contains implementation of a base class for sink frontends.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_BASIC_SINK_FRONTEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_BASIC_SINK_FRONTEND_HPP_INCLUDED_
 
 #include <boost/mpl/bool.hpp>
-#include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/light_function.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/fake_mutex.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
+#include <boost/log/expressions/filter.hpp>
+#include <boost/log/expressions/formatter.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/exceptions.hpp>
 #include <boost/thread/tss.hpp>
@@ -36,6 +34,10 @@
 #include <boost/log/detail/light_rw_mutex.hpp>
 #include <boost/concept_check.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -47,31 +49,20 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
 //! A base class for a logging sink frontend
-template< typename CharT >
 class BOOST_LOG_NO_VTABLE basic_sink_frontend :
-    public sink< CharT >
+    public sink
 {
     //! Base type
-    typedef sink< CharT > base_type;
+    typedef sink base_type;
 
 public:
-    //! Character type
-    typedef typename base_type::char_type char_type;
-    //! String type to be used as a message text holder
-    typedef typename base_type::string_type string_type;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
-    //! Attribute values view type
-    typedef typename base_type::values_view_type values_view_type;
-    //! Filter function type
-    typedef boost::log::aux::light_function1< bool, values_view_type const& > filter_type;
     //! An exception handler type
-    typedef boost::log::aux::light_function0< void > exception_handler_type;
+    typedef base_type::exception_handler_type exception_handler_type;
 
 #if !defined(BOOST_LOG_NO_THREADS)
 protected:
@@ -85,11 +76,20 @@ private:
 
 private:
     //! Filter
-    filter_type m_Filter;
+    filter m_Filter;
     //! Exception handler
     exception_handler_type m_ExceptionHandler;
 
 public:
+    /*!
+     * \brief Initializing constructor
+     *
+     * \param cross_thread The flag indicates whether the sink passes log records between different threads
+     */
+    explicit basic_sink_frontend(bool cross_thread) : sink(cross_thread)
+    {
+    }
+
     /*!
      * The method sets sink-specific filter functional object
      */
@@ -105,7 +105,7 @@ public:
     void reset_filter()
     {
         BOOST_LOG_EXPR_IF_MT(boost::log::aux::exclusive_lock_guard< mutex_type > lock(m_Mutex);)
-        m_Filter.clear();
+        m_Filter.reset();
     }
 
     /*!
@@ -130,14 +130,14 @@ public:
     /*!
      * The method returns \c true if no filter is set or the attribute values pass the filter
      *
-     * \param attributes A set of attribute values of a logging record
+     * \param attrs A set of attribute values of a logging record
      */
-    bool will_consume(values_view_type const& attributes)
+    bool will_consume(attribute_value_set const& attrs)
     {
         BOOST_LOG_EXPR_IF_MT(boost::log::aux::exclusive_lock_guard< mutex_type > lock(m_Mutex);)
         try
         {
-            return (m_Filter.empty() || m_Filter(attributes));
+            return m_Filter(attrs);
         }
 #if !defined(BOOST_LOG_NO_THREADS)
         catch (thread_interrupted&)
@@ -167,7 +167,7 @@ protected:
 
     //! Feeds log record to the backend
     template< typename BackendMutexT, typename BackendT >
-    void feed_record(record_type const& rec, BackendMutexT& backend_mutex, BackendT& backend)
+    void feed_record(record_view const& rec, BackendMutexT& backend_mutex, BackendT& backend)
     {
         try
         {
@@ -191,7 +191,7 @@ protected:
 
     //! Attempts to feeds log record to the backend, does not block if \a backend_mutex is locked
     template< typename BackendMutexT, typename BackendT >
-    bool try_feed_record(record_type const& rec, BackendMutexT& backend_mutex, BackendT& backend)
+    bool try_feed_record(record_view const& rec, BackendMutexT& backend_mutex, BackendT& backend)
     {
 #if !defined(BOOST_LOG_NO_THREADS)
         unique_lock< BackendMutexT > lock;
@@ -261,31 +261,22 @@ private:
 };
 
 //! A base class for a logging sink frontend with formatting support
-template< typename CharT, typename TargetCharT = CharT >
+template< typename CharT >
 class BOOST_LOG_NO_VTABLE basic_formatting_sink_frontend :
-    public basic_sink_frontend< CharT >
+    public basic_sink_frontend
 {
-    typedef basic_sink_frontend< CharT > base_type;
+    typedef basic_sink_frontend base_type;
 
 public:
-    //  Type imports from the base class
-    typedef typename base_type::char_type char_type;
-    typedef typename base_type::string_type string_type;
-    typedef typename base_type::values_view_type values_view_type;
-    typedef typename base_type::record_type record_type;
+    //! Character type
+    typedef CharT char_type;
+    //! Formatted string type
+    typedef std::basic_string< char_type > string_type;
 
-    //! Output stream type
-    typedef std::basic_ostream< char_type > stream_type;
-    //! Target character type
-    typedef TargetCharT target_char_type;
-    //! Target string type
-    typedef std::basic_string< target_char_type > target_string_type;
     //! Formatter function object type
-    typedef boost::log::aux::light_function2<
-        void,
-        stream_type&,
-        record_type const&
-    > formatter_type;
+    typedef basic_formatter< char_type > formatter_type;
+    //! Output stream type
+    typedef typename formatter_type::stream_type stream_type;
 
 #if !defined(BOOST_LOG_NO_THREADS)
 protected:
@@ -294,13 +285,6 @@ protected:
 #endif
 
 private:
-    //! Stream buffer type
-    typedef typename mpl::if_<
-        is_same< char_type, target_char_type >,
-        boost::log::aux::basic_ostringstreambuf< char_type >,
-        boost::log::aux::converting_ostringstreambuf< char_type >
-    >::type streambuf_type;
-
     struct formatting_context
     {
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -308,9 +292,7 @@ private:
         const unsigned int m_Version;
 #endif
         //! Formatted log record storage
-        target_string_type m_FormattedRecord;
-        //! Stream buffer to fill the storage
-        streambuf_type m_StreamBuf;
+        string_type m_FormattedRecord;
         //! Formatting stream
         stream_type m_FormattingStream;
         //! Formatter functor
@@ -320,16 +302,14 @@ private:
 #if !defined(BOOST_LOG_NO_THREADS)
             m_Version(0),
 #endif
-            m_StreamBuf(m_FormattedRecord),
-            m_FormattingStream(&m_StreamBuf)
+            m_FormattingStream(m_FormattedRecord)
         {
             m_FormattingStream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
         }
 #if !defined(BOOST_LOG_NO_THREADS)
         formatting_context(unsigned int version, std::locale const& loc, formatter_type const& formatter) :
             m_Version(version),
-            m_StreamBuf(m_FormattedRecord),
-            m_FormattingStream(&m_StreamBuf),
+            m_FormattingStream(m_FormattedRecord),
             m_Formatter(formatter)
         {
             m_FormattingStream.exceptions(std::ios_base::badbit | std::ios_base::failbit);
@@ -360,11 +340,18 @@ private:
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
 public:
+    /*!
+     * \brief Initializing constructor
+     *
+     * \param cross_thread The flag indicates whether the sink passes log records between different threads
+     */
+    explicit basic_formatting_sink_frontend(bool cross_thread) :
+        basic_sink_frontend(cross_thread)
 #if !defined(BOOST_LOG_NO_THREADS)
-    basic_formatting_sink_frontend() : m_Version(0)
+        , m_Version(0)
+#endif
     {
     }
-#endif
 
     /*!
      * The method sets sink-specific formatter function object
@@ -387,10 +374,10 @@ public:
     {
 #if !defined(BOOST_LOG_NO_THREADS)
         boost::log::aux::exclusive_lock_guard< mutex_type > lock(this->frontend_mutex());
-        m_Formatter.clear();
+        m_Formatter.reset();
         ++m_Version;
 #else
-        m_Context.m_Formatter.clear();
+        m_Context.m_Formatter.reset();
 #endif
     }
 
@@ -433,7 +420,7 @@ protected:
 
     //! Feeds log record to the backend
     template< typename BackendMutexT, typename BackendT >
-    void feed_record(record_type const& rec, BackendMutexT& backend_mutex, BackendT& backend)
+    void feed_record(record_view const& rec, BackendMutexT& backend_mutex, BackendT& backend)
     {
         formatting_context* context;
 
@@ -452,17 +439,12 @@ protected:
 #endif
 
         boost::log::aux::cleanup_guard< stream_type > cleanup1(context->m_FormattingStream);
-        boost::log::aux::cleanup_guard< streambuf_type > cleanup2(context->m_StreamBuf);
-        boost::log::aux::cleanup_guard< target_string_type > cleanup3(context->m_FormattedRecord);
+        boost::log::aux::cleanup_guard< string_type > cleanup2(context->m_FormattedRecord);
 
         try
         {
             // Perform the formatting
-            if (!context->m_Formatter.empty())
-                context->m_Formatter(context->m_FormattingStream, rec);
-            else
-                context->m_FormattingStream << rec.message();
-
+            context->m_Formatter(rec, context->m_FormattingStream);
             context->m_FormattingStream.flush();
 
             // Feed the record
@@ -486,7 +468,7 @@ protected:
 
     //! Attempts to feeds log record to the backend, does not block if \a backend_mutex is locked
     template< typename BackendMutexT, typename BackendT >
-    bool try_feed_record(record_type const& rec, BackendMutexT& backend_mutex, BackendT& backend)
+    bool try_feed_record(record_view const& rec, BackendMutexT& backend_mutex, BackendT& backend)
     {
 #if !defined(BOOST_LOG_NO_THREADS)
         unique_lock< BackendMutexT > lock;
@@ -527,19 +509,19 @@ namespace aux {
     >
     struct make_sink_frontend_base
     {
-        typedef basic_sink_frontend< typename BackendT::char_type > type;
+        typedef basic_sink_frontend type;
     };
     template< typename BackendT >
     struct make_sink_frontend_base< BackendT, true >
     {
-        typedef basic_formatting_sink_frontend< typename BackendT::char_type, typename BackendT::target_char_type > type;
+        typedef basic_formatting_sink_frontend< typename BackendT::char_type > type;
     };
 
 } // namespace aux
 
 } // namespace sinks
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

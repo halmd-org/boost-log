@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -22,30 +22,32 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! The function performs character conversion with the specified facet
+    template< typename LocalCharT >
     inline std::codecvt_base::result convert(
-        std::codecvt< wchar_t, char, std::mbstate_t > const& fac,
+        std::codecvt< LocalCharT, char, std::mbstate_t > const& fac,
         std::mbstate_t& state,
         const char*& pSrcBegin,
         const char* pSrcEnd,
-        wchar_t*& pDstBegin,
-        wchar_t* pDstEnd)
+        LocalCharT*& pDstBegin,
+        LocalCharT* pDstEnd)
     {
         return fac.in(state, pSrcBegin, pSrcEnd, pSrcBegin, pDstBegin, pDstEnd, pDstBegin);
     }
 
     //! The function performs character conversion with the specified facet
+    template< typename LocalCharT >
     inline std::codecvt_base::result convert(
-        std::codecvt< wchar_t, char, std::mbstate_t > const& fac,
+        std::codecvt< LocalCharT, char, std::mbstate_t > const& fac,
         std::mbstate_t& state,
-        const wchar_t*& pSrcBegin,
-        const wchar_t* pSrcEnd,
+        const LocalCharT*& pSrcBegin,
+        const LocalCharT* pSrcEnd,
         char*& pDstBegin,
         char* pDstEnd)
     {
@@ -54,152 +56,38 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
 } // namespace
 
-//! Constructor
-template< typename CharT, typename TraitsT >
-converting_ostringstreambuf< CharT, TraitsT >::converting_ostringstreambuf(string_type& storage) :
-    m_Storage(storage),
-    m_ConversionState()
+template< typename SourceCharT, typename TargetCharT, typename FacetT >
+inline void code_convert(const SourceCharT* begin, const SourceCharT* end, std::basic_string< TargetCharT >& converted, FacetT const& fac)
 {
-    // Announce the buffer size one character less to implement overflow gracefully
-    base_type::setp(m_Buffer, m_Buffer + (sizeof(m_Buffer) / sizeof(*m_Buffer)) - 1);
-}
+    typedef typename FacetT::state_type state_type;
+    TargetCharT converted_buffer[256];
 
-//! Destructor
-template< typename CharT, typename TraitsT >
-converting_ostringstreambuf< CharT, TraitsT >::~converting_ostringstreambuf()
-{
-}
-
-//! Clears the buffer to the initial state
-template< typename CharT, typename TraitsT >
-void converting_ostringstreambuf< CharT, TraitsT >::clear()
-{
-    const char_type* pBase = this->pbase();
-    const char_type* pPtr = this->pptr();
-    if (pBase != pPtr)
-        this->pbump(static_cast< int >(pBase - pPtr));
-    m_ConversionState = std::mbstate_t();
-}
-
-//! Puts all buffered data to the string
-template< typename CharT, typename TraitsT >
-int converting_ostringstreambuf< CharT, TraitsT >::sync()
-{
-    const char_type* pBase = this->pbase();
-    const char_type* pPtr = this->pptr();
-    if (pBase != pPtr)
-    {
-        write(pBase, pPtr);
-
-        // After the data is written there could have been left
-        // an incomplete character in the end of the buffer.
-        // Move it to the beginning of the buffer.
-        traits_type::move(m_Buffer, pBase, pPtr - pBase);
-        this->pbump(static_cast< int >(this->pbase() - pBase));
-    }
-
-    return 0;
-}
-
-//! Puts an unbuffered character to the string
-template< typename CharT, typename TraitsT >
-typename converting_ostringstreambuf< CharT, TraitsT >::int_type
-converting_ostringstreambuf< CharT, TraitsT >::overflow(int_type c)
-{
-    int_type res;
-    const char_type* pBase = this->pbase();
-    char_type* pPtr = this->pptr();
-
-    if (!traits_type::eq_int_type(c, traits_type::eof()))
-    {
-        *(pPtr++) = traits_type::to_char_type(c); // safe, since we announced less buffer size than it actually is
-        res = c;
-    }
-    else
-        res = traits_type::not_eof(c);
-
-    write(pBase, pPtr);
-
-    // After the data is written there could have been left
-    // an incomplete character in the end of the buffer.
-    // Move it to the beginning of the buffer.
-    traits_type::move(m_Buffer, pBase, pPtr - pBase);
-    this->pbump(static_cast< int >(this->pbase() - pBase));
-
-    return res;
-}
-
-//! Puts a character sequence to the string
-template< typename CharT, typename TraitsT >
-std::streamsize converting_ostringstreambuf< CharT, TraitsT >::xsputn(const char_type* s, std::streamsize n)
-{
-    const char_type* pend = s + n;
-
-    // First, flush all buffered data
-    converting_ostringstreambuf::sync();
-
-    // Now, if we don't have any unfinished characters, we can go a bit faster
-    if (this->pptr() == this->pbase())
-    {
-        write(s, pend);
-        if (s != pend)
-        {
-            // An incomplete character is left at the end of the buffer
-            traits_type::copy(this->pbase(), s, pend - s);
-            this->pbump(static_cast< int >(pend - s));
-        }
-    }
-    else
-    {
-        // We'll have to put the characters piece by piece
-        while (s != pend)
-        {
-            std::size_t chunk_size = (std::min)(
-                static_cast< std::size_t >(pend - s),
-                static_cast< std::size_t >(this->epptr() - this->pptr()));
-            traits_type::copy(this->pptr(), s, chunk_size);
-            this->pbump(static_cast< int >(chunk_size));
-            converting_ostringstreambuf::sync();
-            s += chunk_size;
-        }
-    }
-
-    return n;
-}
-
-//! The function writes the specified characters to the storage
-template< typename CharT, typename TraitsT >
-void converting_ostringstreambuf< CharT, TraitsT >::write(const char_type*& pBase, const char_type* pPtr)
-{
-    std::locale loc = this->getloc();
-    facet_type const& fac = std::use_facet< facet_type >(loc);
-    target_char_type converted_buffer[buffer_size];
-
+    state_type state = state_type();
     while (true)
     {
-        target_char_type* pDest = converted_buffer;
+        TargetCharT* dest = converted_buffer;
         std::codecvt_base::result res = convert(
             fac,
-            m_ConversionState,
-            pBase,
-            pPtr,
-            pDest,
-            pDest + sizeof(converted_buffer) / sizeof(*converted_buffer));
+            state,
+            begin,
+            end,
+            dest,
+            dest + sizeof(converted_buffer) / sizeof(*converted_buffer));
 
         switch (res)
         {
         case std::codecvt_base::ok:
             // All characters were successfully converted
-            m_Storage.append(converted_buffer, pDest);
+            converted.append(converted_buffer, dest);
             return;
 
         case std::codecvt_base::partial:
             // Some characters were converted, some were not
-            if (pDest != converted_buffer)
+            if (dest != converted_buffer)
             {
                 // Some conversion took place, so it seems like
                 // the destination buffer might not have been long enough
-                m_Storage.append(converted_buffer, pDest);
+                converted.append(converted_buffer, dest);
 
                 // ...and go on for the next part
             }
@@ -212,9 +100,8 @@ void converting_ostringstreambuf< CharT, TraitsT >::write(const char_type*& pBas
             }
 
         case std::codecvt_base::noconv:
-            // Not possible, unless wchar_t is actually char
-            m_Storage.append(reinterpret_cast< const target_char_type* >(pBase), reinterpret_cast< const target_char_type* >(pPtr));
-            pBase = pPtr;
+            // Not possible, unless both character types are actually equivalent
+            converted.append(reinterpret_cast< const TargetCharT* >(begin), reinterpret_cast< const TargetCharT* >(end));
             return;
 
         default: // std::codecvt_base::error
@@ -223,13 +110,52 @@ void converting_ostringstreambuf< CharT, TraitsT >::write(const char_type*& pBas
     }
 }
 
-// We'll instantiate the buffer for all character typess regardless of the configuration macros
-// since code conversion is used in various places of code even if the library is built for only one character type.
-template class BOOST_LOG_EXPORT converting_ostringstreambuf< char, std::char_traits< char > >;
-template class BOOST_LOG_EXPORT converting_ostringstreambuf< wchar_t, std::char_traits< wchar_t > >;
+//! The function converts one string to the character type of another
+BOOST_LOG_API void code_convert(const wchar_t* str1, std::size_t len, std::string& str2, std::locale const& loc)
+{
+    code_convert(str1, str1 + len, str2, std::use_facet< std::codecvt< wchar_t, char, std::mbstate_t > >(loc));
+}
+
+//! The function converts one string to the character type of another
+BOOST_LOG_API void code_convert(const char* str1, std::size_t len, std::wstring& str2, std::locale const& loc)
+{
+    code_convert(str1, str1 + len, str2, std::use_facet< std::codecvt< wchar_t, char, std::mbstate_t > >(loc));
+}
+
+#if !defined(BOOST_NO_CHAR16_T) && !defined(BOOST_NO_CXX11_CHAR16_T)
+
+//! The function converts one string to the character type of another
+BOOST_LOG_API void code_convert(const char16_t* str1, std::size_t len, std::string& str2, std::locale const& loc)
+{
+    code_convert(str1, str1 + len, str2, std::use_facet< std::codecvt< char16_t, char, std::mbstate_t > >(loc));
+}
+
+//! The function converts one string to the character type of another
+BOOST_LOG_API void code_convert(const char* str1, std::size_t len, std::u16string& str2, std::locale const& loc)
+{
+    code_convert(str1, str1 + len, str2, std::use_facet< std::codecvt< char16_t, char, std::mbstate_t > >(loc));
+}
+
+#endif
+
+#if !defined(BOOST_NO_CHAR32_T) && !defined(BOOST_NO_CXX11_CHAR32_T)
+
+//! The function converts one string to the character type of another
+BOOST_LOG_API void code_convert(const char32_t* str1, std::size_t len, std::string& str2, std::locale const& loc)
+{
+    code_convert(str1, str1 + len, str2, std::use_facet< std::codecvt< char32_t, char, std::mbstate_t > >(loc));
+}
+
+//! The function converts one string to the character type of another
+BOOST_LOG_API void code_convert(const char* str1, std::size_t len, std::u32string& str2, std::locale const& loc)
+{
+    code_convert(str1, str1 + len, str2, std::use_facet< std::codecvt< char32_t, char, std::mbstate_t > >(loc));
+}
+
+#endif
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost

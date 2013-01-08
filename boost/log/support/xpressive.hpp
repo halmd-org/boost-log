@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,10 +12,6 @@
  * This header enables Boost.Xpressive support for Boost.Log.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SUPPORT_XPRESSIVE_HPP_INCLUDED_
 #define BOOST_LOG_SUPPORT_XPRESSIVE_HPP_INCLUDED_
 
@@ -23,12 +19,16 @@
 #include <boost/xpressive/basic_regex.hpp>
 #include <boost/xpressive/regex_constants.hpp>
 #include <boost/xpressive/regex_algorithms.hpp>
-#include <boost/log/detail/prologue.hpp>
-#include <boost/log/detail/functional.hpp>
+#include <boost/log/detail/config.hpp>
+#include <boost/log/utility/functional/matches.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -62,11 +62,29 @@ struct matches_fun_impl< boost_xpressive_expression_tag >
     {
         return xpressive::regex_match(str, expr, flags);
     }
+
+    template< typename StringT >
+    static bool matches(
+        StringT const& str,
+        xpressive::basic_regex< typename StringT::value_type* > const& expr,
+        xpressive::regex_constants::match_flag_type flags = xpressive::regex_constants::match_default)
+    {
+        return xpressive::regex_match(str.c_str(), expr, flags);
+    }
+
+    template< typename StringT >
+    static bool matches(
+        StringT const& str,
+        xpressive::basic_regex< typename StringT::value_type const* > const& expr,
+        xpressive::regex_constants::match_flag_type flags = xpressive::regex_constants::match_default)
+    {
+        return xpressive::regex_match(str.c_str(), expr, flags);
+    }
 };
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

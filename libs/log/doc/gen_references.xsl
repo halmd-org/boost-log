@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
-              Copyright Andrey Semashev 2007 - 2012.
+              Copyright Andrey Semashev 2007 - 2013.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -13,7 +13,7 @@
 <xsl:output method="text"/>
 <xsl:template match="/library-reference">
 <xsl:text disable-output-escaping="yes">[/
-              Copyright Andrey Semashev 2007 - 2012.
+              Copyright Andrey Semashev 2007 - 2013.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -66,5 +66,14 @@
 <xsl:with-param name="enclosing_namespace" select="concat($enclosing_namespace, '_', @name)"/>
 </xsl:apply-templates>
 </xsl:template>
+
+<!-- Free functions -->
+<!--
+<xsl:template match="function">
+<xsl:param name="namespace"/>
+<xsl:param name="enclosing_namespace"/>
+[template <xsl:value-of select="concat('func_', $enclosing_namespace, '_', @name)"/>[][funcref <xsl:value-of select="concat($namespace, '::', @name)"/><xsl:text> </xsl:text><xsl:value-of select="@name"/>]]
+</xsl:template>
+-->
 
 </xsl:transform>

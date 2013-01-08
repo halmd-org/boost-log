@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -13,10 +13,6 @@
  * allows to select a lock with the strictest access requirements.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_STRICTEST_LOCK_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_STRICTEST_LOCK_HPP_INCLUDED_
 
@@ -29,9 +25,13 @@
 #include <boost/preprocessor/arithmetic/dec.hpp>
 #include <boost/preprocessor/repetition/enum_trailing.hpp>
 #include <boost/preprocessor/repetition/enum_params_with_a_default.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/pp_identity.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifndef BOOST_LOG_STRICTEST_LOCK_LIMIT
 /*!
@@ -46,7 +46,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 //! Access modes for different types of locks
 enum lock_access_mode
@@ -160,7 +160,7 @@ struct strictest_lock<
 
 #endif // defined(BOOST_LOG_DOXYGEN_PASS)
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

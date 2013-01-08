@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,18 +12,18 @@
  * The header contains implementation of a text output stream sink backend.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_TEXT_OSTREAM_BACKEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_TEXT_OSTREAM_BACKEND_HPP_INCLUDED_
 
 #include <ostream>
 #include <boost/shared_ptr.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -35,7 +35,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
@@ -46,15 +46,13 @@ namespace sinks {
  */
 template< typename CharT >
 class basic_text_ostream_backend :
-    public basic_formatting_sink_backend<
-        CharT,
+    public basic_formatted_sink_backend<
         CharT,
         combine_requirements< synchronized_feeding, flushing >::type
     >
 {
     //! Base type
-    typedef basic_formatting_sink_backend<
-        CharT,
+    typedef basic_formatted_sink_backend<
         CharT,
         combine_requirements< synchronized_feeding, flushing >::type
     > base_type;
@@ -64,14 +62,8 @@ public:
     typedef typename base_type::char_type char_type;
     //! String type to be used as a message text holder
     typedef typename base_type::string_type string_type;
-    //! Target character type
-    typedef typename base_type::target_char_type target_char_type;
-    //! String type to be used as a message text holder
-    typedef typename base_type::target_string_type target_string_type;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
     //! Output stream type
-    typedef std::basic_ostream< target_char_type > stream_type;
+    typedef std::basic_ostream< char_type > stream_type;
 
 private:
     //! \cond
@@ -85,40 +77,40 @@ public:
     /*!
      * Constructor. No streams attached to the constructed backend, auto flush feature disabled.
      */
-    BOOST_LOG_EXPORT basic_text_ostream_backend();
+    BOOST_LOG_API basic_text_ostream_backend();
     /*!
      * Destructor
      */
-    BOOST_LOG_EXPORT ~basic_text_ostream_backend();
+    BOOST_LOG_API ~basic_text_ostream_backend();
 
     /*!
      * The method adds a new stream to the sink.
      *
      * \param strm Pointer to the stream. Must not be NULL.
      */
-    BOOST_LOG_EXPORT void add_stream(shared_ptr< stream_type > const& strm);
+    BOOST_LOG_API void add_stream(shared_ptr< stream_type > const& strm);
     /*!
      * The method removes a stream from the sink. If the stream is not attached to the sink,
      * the method has no effect.
      *
      * \param strm Pointer to the stream. Must not be NULL.
      */
-    BOOST_LOG_EXPORT void remove_stream(shared_ptr< stream_type > const& strm);
+    BOOST_LOG_API void remove_stream(shared_ptr< stream_type > const& strm);
 
     /*!
      * Sets the flag to automatically flush buffers of all attached streams after each log record
      */
-    BOOST_LOG_EXPORT void auto_flush(bool f = true);
+    BOOST_LOG_API void auto_flush(bool f = true);
 
     /*!
      * The method writes the message to the sink
      */
-    BOOST_LOG_EXPORT void consume(record_type const& record, target_string_type const& formatted_message);
+    BOOST_LOG_API void consume(record_view const& rec, string_type const& formatted_message);
 
     /*!
      * The method flushes the associated streams
      */
-    BOOST_LOG_EXPORT void flush();
+    BOOST_LOG_API void flush();
 };
 
 #ifdef BOOST_LOG_USE_CHAR
@@ -130,7 +122,7 @@ typedef basic_text_ostream_backend< wchar_t > wtext_ostream_backend;    //!< Con
 
 } // namespace sinks
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

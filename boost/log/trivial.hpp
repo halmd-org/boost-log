@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,18 +12,18 @@
  * This header defines tools for trivial logging support
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_TRIVIAL_HPP_INCLUDED_
 #define BOOST_LOG_TRIVIAL_HPP_INCLUDED_
 
 #include <ostream>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/keywords/severity.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -39,7 +39,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace trivial {
 
@@ -55,7 +55,7 @@ enum severity_level
 };
 
 //! Returns stringified enumeration value or \c NULL, if the value is not valid
-BOOST_LOG_EXPORT const char* to_string(severity_level lvl);
+BOOST_LOG_API const char* to_string(severity_level lvl);
 
 template< typename CharT, typename TraitsT >
 inline std::basic_ostream< CharT, TraitsT >& operator<< (
@@ -85,13 +85,13 @@ struct logger
     /*!
      * Returns a reference to the trivial logger instance
      */
-    static BOOST_LOG_EXPORT logger_type& get();
+    static BOOST_LOG_API logger_type& get();
 
     // Implementation details - never use these
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
     enum registration_line_t { registration_line = __LINE__ };
     static const char* registration_file() { return __FILE__; }
-    static BOOST_LOG_EXPORT logger_type construct_logger();
+    static BOOST_LOG_API logger_type construct_logger();
 #endif
 };
 
@@ -102,12 +102,16 @@ struct logger
 
 } // namespace trivial
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif // _MSC_VER
+
+#if defined(BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_)
+#include <boost/log/detail/trivial_keyword.hpp>
+#endif
 
 #endif // BOOST_LOG_TRIVIAL_HPP_INCLUDED_

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,10 +12,6 @@
  * The header contains implementation of facilities to declare global loggers.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SOURCES_GLOBAL_LOGGER_STORAGE_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_GLOBAL_LOGGER_STORAGE_HPP_INCLUDED_
 
@@ -24,9 +20,13 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/visible_type.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -36,7 +36,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sources {
 
@@ -76,25 +76,21 @@ struct BOOST_LOG_VISIBLE logger_holder :
 };
 
 //! The class implements a global repository of tagged loggers
-template< typename CharT >
 struct global_storage
 {
     typedef shared_ptr< logger_holder_base >(*initializer_t)();
 
     //! Finds or creates the logger and returns its holder
-    BOOST_LOG_EXPORT static shared_ptr< logger_holder_base > get_or_init(
-        std::type_info const& key,
-        initializer_t initializer);
+    BOOST_LOG_API static shared_ptr< logger_holder_base > get_or_init(std::type_info const& key, initializer_t initializer);
 
-private:
     //  Non-constructible, non-copyable, non-assignable
-    global_storage();
-    global_storage(global_storage const&);
-    global_storage& operator= (global_storage const&);
+    BOOST_LOG_DELETED_FUNCTION(global_storage())
+    BOOST_LOG_DELETED_FUNCTION(global_storage(global_storage const&))
+    BOOST_LOG_DELETED_FUNCTION(global_storage& operator= (global_storage const&))
 };
 
 //! Throws the \c odr_violation exception
-BOOST_LOG_EXPORT BOOST_LOG_NORETURN void throw_odr_violation(
+BOOST_LOG_API BOOST_LOG_NORETURN void throw_odr_violation(
     std::type_info const& tag_type,
     std::type_info const& logger_type,
     logger_holder_base const& registered);
@@ -124,12 +120,10 @@ struct logger_singleton :
     //! Initializes the logger instance (called only once)
     static void init_instance()
     {
-        typedef global_storage< typename logger_type::char_type > global_storage_t;
         shared_ptr< logger_holder< logger_type > >& instance = base_type::get_instance();
-        shared_ptr< logger_holder_base > holder =
-            global_storage_t::get_or_init(
-                typeid(boost::log::aux::visible_type< TagT >),
-                &logger_singleton::construct_logger);
+        shared_ptr< logger_holder_base > holder = global_storage::get_or_init(
+            typeid(boost::log::aux::visible_type< TagT >),
+            &logger_singleton::construct_logger);
         instance = boost::dynamic_pointer_cast< logger_holder< logger_type > >(holder);
         if (!instance)
         {
@@ -208,7 +202,7 @@ private:
 
 } // namespace sources
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

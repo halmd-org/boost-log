@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -26,8 +26,7 @@
 
 #include <boost/log/common.hpp>
 #include <boost/log/attributes.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/event_log_backend.hpp>
 
@@ -42,8 +41,7 @@ namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
 namespace sinks = boost::log::sinks;
-namespace flt = boost::log::filters;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace keywords = boost::log::keywords;
 
 //[ example_sinks_event_log_severity
@@ -78,16 +76,16 @@ void init_logging()
     composer[LOW_DISK_SPACE_MSG]
         // the first placeholder in the message
         // will be replaced with contents of the "Drive" attribute
-        % fmt::attr< std::string >("Drive")
+        % expr::attr< std::string >("Drive")
         // the second placeholder in the message
         // will be replaced with contents of the "Size" attribute
-        % fmt::attr< boost::uintmax_t >("Size");
+        % expr::attr< boost::uintmax_t >("Size");
 
     composer[DEVICE_INACCESSIBLE_MSG]
-        % fmt::attr< std::string >("Drive");
+        % expr::attr< std::string >("Drive");
 
     composer[SUCCEEDED_MSG]
-        % fmt::attr< unsigned int >("Duration");
+        % expr::attr< unsigned int >("Duration");
 
     // Then put the composer to the backend
     backend->set_event_composer(composer);
@@ -118,7 +116,7 @@ void init_logging()
         new sinks::synchronous_sink< sinks::event_log_backend >(backend));
 
     // Set up filter to pass only records that have the necessary attribute
-    sink->set_filter(flt::has_attr< int >("EventID"));
+    sink->set_filter(expr::has_attr< int >("EventID"));
 
     logging::core::get()->add_sink(sink);
     //]
@@ -130,9 +128,9 @@ BOOST_LOG_INLINE_GLOBAL_LOGGER_DEFAULT(event_logger, src::severity_logger_mt< se
 // The function raises an event of the disk space depletion
 void announce_low_disk_space(std::string const& drive, boost::uintmax_t size)
 {
-    BOOST_LOG_SCOPED_THREAD_TAG("EventID", int, LOW_DISK_SPACE_MSG);
-    BOOST_LOG_SCOPED_THREAD_TAG("Drive", std::string, drive);
-    BOOST_LOG_SCOPED_THREAD_TAG("Size", boost::uintmax_t, size);
+    BOOST_LOG_SCOPED_THREAD_TAG("EventID", (int)LOW_DISK_SPACE_MSG);
+    BOOST_LOG_SCOPED_THREAD_TAG("Drive", drive);
+    BOOST_LOG_SCOPED_THREAD_TAG("Size", size);
     // Since this record may get accepted by other sinks,
     // this message is not completely useless
     BOOST_LOG_SEV(event_logger::get(), warning) << "Low disk " << drive
@@ -142,8 +140,8 @@ void announce_low_disk_space(std::string const& drive, boost::uintmax_t size)
 // The function raises an event of inaccessible disk drive
 void announce_device_inaccessible(std::string const& drive)
 {
-    BOOST_LOG_SCOPED_THREAD_TAG("EventID", int, DEVICE_INACCESSIBLE_MSG);
-    BOOST_LOG_SCOPED_THREAD_TAG("Drive", std::string, drive);
+    BOOST_LOG_SCOPED_THREAD_TAG("EventID", (int)DEVICE_INACCESSIBLE_MSG);
+    BOOST_LOG_SCOPED_THREAD_TAG("Drive", drive);
     BOOST_LOG_SEV(event_logger::get(), error) << "Cannot access drive " << drive;
 }
 
@@ -157,13 +155,13 @@ struct activity_guard
     }
     ~activity_guard()
     {
-        BOOST_LOG_SCOPED_THREAD_TAG("EventID", int, SUCCEEDED_MSG);
+        BOOST_LOG_SCOPED_THREAD_TAG("EventID", (int)SUCCEEDED_MSG);
         BOOST_LOG_SEV(event_logger::get(), normal) << "Activity ended";
         event_logger::get().remove_attribute(m_it);
     }
 
 private:
-    event_logger::logger_type::attribute_set_type::iterator m_it;
+    logging::attribute_set::iterator m_it;
 };
 //]
 

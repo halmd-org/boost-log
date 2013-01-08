@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,30 +12,26 @@
  * The header contains implementation of a type information wrapper.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_TYPE_INFO_WRAPPER_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_TYPE_INFO_WRAPPER_HPP_INCLUDED_
 
 #include <typeinfo>
 #include <string>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 
-#if defined(__GNUC__) && !defined(__QNX__)
-#define BOOST_LOG_HAS_CXXABI
-#endif // defined(__GNUC__) && !defined(__QNX__)
-
-#ifdef BOOST_LOG_HAS_CXXABI
+#ifdef BOOST_LOG_HAS_CXXABI_H
 #include <cxxabi.h>
 #include <stdlib.h>
-#endif // BOOST_LOG_HAS_CXXABI
+#endif // BOOST_LOG_HAS_CXXABI_H
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * \brief A simple <tt>std::type_info</tt> wrapper that implements value semantic for type information objects
@@ -52,7 +48,7 @@ private:
     //! An inaccessible type to indicate an uninitialized state of the wrapper
     struct BOOST_LOG_VISIBLE uninitialized {};
 
-#ifdef BOOST_LOG_HAS_CXXABI
+#ifdef BOOST_LOG_HAS_CXXABI_H
     //! A simple scope guard for automatic memory free
     struct auto_free
     {
@@ -61,7 +57,7 @@ private:
     private:
         void* p_;
     };
-#endif // BOOST_LOG_HAS_CXXABI
+#endif // BOOST_LOG_HAS_CXXABI_H
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
@@ -123,9 +119,9 @@ public:
      */
     std::string pretty_name() const
     {
-        if (*info != typeid(uninitialized))
+        if (!this->operator!())
         {
-#ifdef BOOST_LOG_HAS_CXXABI
+#ifdef BOOST_LOG_HAS_CXXABI_H
             // GCC returns decorated type name, will need to demangle it using ABI
             int status = 0;
             size_t size = 0;
@@ -155,7 +151,7 @@ public:
      * \return \c false if the type info wrapper was initialized with a particular type,
      *         \c true if the wrapper was default-constructed and not yet initialized
      */
-    bool operator! () const { return (*info == typeid(uninitialized)); }
+    bool operator! () const { return (info == &typeid(uninitialized) || *info == typeid(uninitialized)); }
 
     /*!
      * Equality comparison
@@ -167,7 +163,7 @@ public:
      */
     bool operator== (type_info_wrapper const& that) const
     {
-        return (*info == *that.info);
+        return (info == that.info || *info == *that.info);
     }
     /*!
      * Ordering operator
@@ -220,7 +216,13 @@ inline void swap(type_info_wrapper& left, type_info_wrapper& right)
     left.swap(right);
 }
 
-} // namespace log
+//! A The function for support of exception serialization to string
+inline std::string to_string(type_info_wrapper const& ti)
+{
+    return ti.pretty_name();
+}
+
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

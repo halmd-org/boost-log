@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -16,9 +16,12 @@
 #ifndef BOOST_LOG_ALIGNMENT_GAP_BETWEEN_HPP_INCLUDED_
 #define BOOST_LOG_ALIGNMENT_GAP_BETWEEN_HPP_INCLUDED_
 
+#include <boost/type_traits/alignment_of.hpp>
+#include <boost/log/detail/config.hpp>
+
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -27,24 +30,17 @@ namespace aux {
 template< typename T1, typename T2 >
 struct alignment_gap_between
 {
-private:
-    struct both
+    enum _
     {
-        T1 t1;
-        T2 t2;
-
-        // To avoid warnings about inability to generate the destructor
-        // if T1's or T2's destructor is inaccessible
-        ~both();
+        T2_alignment = boost::alignment_of< T2 >::value,
+        tail_size = sizeof(T1) % T2_alignment,
+        value = tail_size > 0 ? T2_alignment - tail_size : 0
     };
-
-public:
-    enum _ { value = sizeof(both) - (sizeof(T1) + sizeof(T2)) };
 };
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

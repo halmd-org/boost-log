@@ -1,26 +1,26 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 
 #include <boost/log/trivial.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/utility/init/to_file.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace keywords = boost::log::keywords;
 
 //[ example_tutorial_formatters_stream
 void init()
 {
-    logging::init_log_to_file
+    logging::add_file_log
     (
         keywords::file_name = "sample_%N.log",
         // This makes the sink to write log records that look like this:
@@ -28,14 +28,38 @@ void init()
         // 2: <error> An error severity message
         keywords::format =
         (
-            fmt::stream
-                << fmt::attr< unsigned int >("LineID")
-                << ": <" << fmt::attr< logging::trivial::severity_level >("Severity")
-                << "> " << fmt::message()
+            expr::stream
+                << expr::attr< unsigned int >("LineID")
+                << ": <" << logging::trivial::severity
+                << "> " << expr::smessage
         )
     );
 }
 //]
+
+#if 0
+
+//[ example_tutorial_formatters_stream_date_time
+void init()
+{
+    logging::add_file_log
+    (
+        keywords::file_name = "sample_%N.log",
+        // This makes the sink to write log records that look like this:
+        // YYYY-MM-DD HH:MI:SS: <normal> A normal severity message
+        // YYYY-MM-DD HH:MI:SS: <error> An error severity message
+        keywords::format =
+        (
+            expr::stream
+                << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d %H:%M:%S")
+                << ": <" << logging::trivial::severity
+                << "> " << expr::smessage
+        )
+    );
+}
+//]
+
+#endif
 
 int main(int, char*[])
 {

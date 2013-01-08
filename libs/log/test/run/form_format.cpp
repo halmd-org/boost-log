@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -15,20 +15,18 @@
 #define BOOST_TEST_MODULE form_format
 
 #include <string>
-#include <sstream>
-#include <boost/function.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
-#include <boost/log/formatters/attr.hpp>
-#include <boost/log/formatters/format.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/core/record.hpp>
+#include <boost/log/utility/formatting_ostream.hpp>
 #include "char_definitions.hpp"
 #include "make_record.hpp"
 
 namespace logging = boost::log;
 namespace attrs = logging::attributes;
-namespace fmt = logging::formatters;
+namespace expr = logging::expressions;
 
 namespace {
 
@@ -58,11 +56,11 @@ namespace {
 // The test checks that Boost.Format formatting works
 BOOST_AUTO_TEST_CASE_TEMPLATE(formatting, CharT, char_types)
 {
-    typedef logging::basic_attribute_set< CharT > attr_set;
+    typedef logging::attribute_set attr_set;
     typedef std::basic_string< CharT > string;
-    typedef std::basic_ostringstream< CharT > osstream;
-    typedef logging::basic_record< CharT > record;
-    typedef boost::function< void (osstream&, record const&) > formatter;
+    typedef logging::basic_formatting_ostream< CharT > osstream;
+    typedef logging::record_view record_view;
+    typedef logging::basic_formatter< CharT > formatter;
     typedef format_test_data< CharT > data;
 
     attrs::constant< int > attr1(10);
@@ -72,14 +70,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(formatting, CharT, char_types)
     set1[data::attr1()] = attr1;
     set1[data::attr2()] = attr2;
 
-    record rec = make_record(set1);
-    rec.message() = data::some_test_string();
+    record_view rec = make_record_view(set1);
 
     {
-        osstream strm1;
-        formatter f = fmt::format(data::format1()) % fmt::attr< int >(data::attr1()) % fmt::attr< double >(data::attr2());
-        f(strm1, rec);
-        osstream strm2;
+        string str1, str2;
+        osstream strm1(str1), strm2(str2);
+        formatter f = expr::format(data::format1()) % expr::attr< int >(data::attr1()) % expr::attr< double >(data::attr2());
+        f(rec, strm1);
         strm2 << 10 << ", " << 5.5;
         BOOST_CHECK(equal_strings(strm1.str(), strm2.str()));
     }

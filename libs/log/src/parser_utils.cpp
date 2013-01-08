@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -13,7 +13,7 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#ifndef BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
+#ifndef BOOST_LOG_WITHOUT_SETTINGS_PARSERS
 
 #include <iterator>
 #include <algorithm>
@@ -21,7 +21,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -40,6 +40,7 @@ const char_constants< char >::char_type char_constants< char >::char_equal;
 const char_constants< char >::char_type char_constants< char >::char_greater;
 const char_constants< char >::char_type char_constants< char >::char_less;
 const char_constants< char >::char_type char_constants< char >::char_underline;
+const char_constants< char >::char_type char_constants< char >::char_backslash;
 const char_constants< char >::char_type char_constants< char >::char_section_bracket_left;
 const char_constants< char >::char_type char_constants< char >::char_section_bracket_right;
 const char_constants< char >::char_type char_constants< char >::char_paren_bracket_left;
@@ -124,6 +125,7 @@ const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_equal
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_greater;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_less;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_underline;
+const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_backslash;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_section_bracket_left;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_section_bracket_right;
 const char_constants< wchar_t >::char_type char_constants< wchar_t >::char_paren_bracket_left;
@@ -235,8 +237,8 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#endif // BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT
+#endif // BOOST_LOG_WITHOUT_SETTINGS_PARSERS

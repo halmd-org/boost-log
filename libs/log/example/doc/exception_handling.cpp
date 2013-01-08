@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -14,8 +14,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/severity_feature.hpp>
 #include <boost/log/sources/exception_handler_feature.hpp>
@@ -29,8 +28,7 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace flt = boost::log::filters;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
 namespace keywords = boost::log::keywords;
@@ -138,20 +136,20 @@ void init_exception_handler_nothrow()
 void init()
 {
     typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-    boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+    boost::shared_ptr< text_sink > sink = boost::make_shared< text_sink >();
 
-    pSink->locked_backend()->add_stream(
+    sink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("sample.log"));
 
-    pSink->set_formatter
+    sink->set_formatter
     (
-        fmt::stream
-            << fmt::attr< unsigned int >("LineID")
-            << ": <" << fmt::attr< severity_level >("Severity")
-            << "> " << fmt::message()
+        expr::stream
+            << expr::attr< unsigned int >("LineID")
+            << ": <" << expr::attr< severity_level >("Severity")
+            << "> " << expr::smessage
     );
 
-    logging::core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(sink);
 
     init_exception_handler();
 }

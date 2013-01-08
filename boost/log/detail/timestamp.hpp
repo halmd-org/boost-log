@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -13,19 +13,19 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_DETAIL_TIMESTAMP_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_TIMESTAMP_HPP_INCLUDED_
 
 #include <boost/cstdint.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -42,7 +42,7 @@ public:
 #if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
     int64_t milliseconds() const { return m_ticks; }
 #else
-    BOOST_LOG_EXPORT int64_t milliseconds() const;
+    BOOST_LOG_API int64_t milliseconds() const;
 #endif
 };
 
@@ -73,7 +73,7 @@ public:
 #if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
 
 typedef uint64_t (__stdcall* get_tick_count_t)();
-extern BOOST_LOG_EXPORT get_tick_count_t get_tick_count;
+extern BOOST_LOG_API get_tick_count_t get_tick_count;
 
 inline timestamp get_timestamp()
 {
@@ -83,13 +83,13 @@ inline timestamp get_timestamp()
 #else
 
 typedef timestamp (*get_timestamp_t)();
-extern BOOST_LOG_EXPORT get_timestamp_t get_timestamp;
+extern BOOST_LOG_API get_timestamp_t get_timestamp;
 
 #endif
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

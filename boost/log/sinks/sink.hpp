@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -13,18 +13,18 @@
  * logging core to feed log records to sinks.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_SINK_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_SINK_HPP_INCLUDED_
 
 #include <string>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/light_function.hpp>
-#include <boost/log/core/record.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/core/record_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -36,33 +36,28 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
 //! A base class for a logging sink frontend
-template< typename CharT >
 class BOOST_LOG_NO_VTABLE sink
 {
 public:
-    //! Character type
-    typedef CharT char_type;
-    //! String type to be used as a message text holder
-    typedef std::basic_string< char_type > string_type;
-    //! Log record type
-    typedef basic_record< char_type > record_type;
-    //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > values_view_type;
-    //! Filter function type
-    typedef boost::log::aux::light_function1< bool, values_view_type const& > filter_type;
     //! An exception handler type
-    typedef boost::log::aux::light_function0< void > exception_handler_type;
+    typedef boost::log::aux::light_function< void () > exception_handler_type;
+
+private:
+    //! The flag indicates that the sink passes log records across thread boundaries
+    const bool m_cross_thread;
 
 public:
     /*!
      * Default constructor
      */
-    BOOST_LOG_DEFAULTED_FUNCTION(sink(), {})
+    explicit sink(bool cross_thread) : m_cross_thread(cross_thread)
+    {
+    }
 
     /*!
      * Virtual destructor
@@ -74,14 +69,14 @@ public:
      *
      * \param attributes A set of attribute values of a logging record
      */
-    virtual bool will_consume(values_view_type const& attributes) = 0;
+    virtual bool will_consume(attribute_value_set const& attributes) = 0;
 
     /*!
      * The method puts logging record to the sink
      *
-     * \param record Logging record to consume
+     * \param rec Logging record to consume
      */
-    virtual void consume(record_type const& record) = 0;
+    virtual void consume(record_view const& rec) = 0;
 
     /*!
      * The method attempts to put logging record to the sink. The method may be used by the
@@ -89,12 +84,12 @@ public:
      * case of heavy contention. Sink implementations may implement try/backoff logic in
      * order to improve overall logging throughput.
      *
-     * \param record Logging record to consume
+     * \param rec Logging record to consume
      * \return \c true, if the record was consumed, \c false, if not.
      */
-    virtual bool try_consume(record_type const& record)
+    virtual bool try_consume(record_view const& rec)
     {
-        consume(record);
+        consume(rec);
         return true;
     }
 
@@ -105,13 +100,20 @@ public:
      */
     virtual void flush() = 0;
 
+    /*!
+     * The method indicates that the sink passes log records between different threads. This information is
+     * needed by the logging core to detach log records from all thread-specific resources before passing it
+     * to the sink.
+     */
+    bool is_cross_thread() const BOOST_NOEXCEPT { return m_cross_thread; }
+
     BOOST_LOG_DELETED_FUNCTION(sink(sink const&))
     BOOST_LOG_DELETED_FUNCTION(sink& operator= (sink const&))
 };
 
 } // namespace sinks
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

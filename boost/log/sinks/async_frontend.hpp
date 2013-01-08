@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,17 +12,17 @@
  * The header contains implementation of asynchronous sink frontend.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_ASYNC_FRONTEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_ASYNC_FRONTEND_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/mpl/assert.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/static_assert.hpp>
+#include <boost/log/detail/config.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #if defined(BOOST_LOG_NO_THREADS)
 #error Boost.Log: Asynchronous sink frontend is only supported in multithreaded environment
@@ -36,6 +36,7 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/detail/locking_ptr.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/sinks/basic_sink_frontend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/sinks/unbounded_fifo_queue.hpp>
@@ -51,14 +52,16 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
-//! \cond
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 #define BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL(z, n, types)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit asynchronous_sink(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
+        base_type(true),\
         queue_base_type((BOOST_PP_ENUM_PARAMS(n, arg))),\
         m_pBackend(boost::make_shared< sink_backend_type >(BOOST_PP_ENUM_PARAMS(n, arg))),\
         m_StopRequested(false),\
@@ -69,6 +72,7 @@ namespace sinks {
     }\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit asynchronous_sink(shared_ptr< sink_backend_type > const& backend, BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
+        base_type(true),\
         queue_base_type((BOOST_PP_ENUM_PARAMS(n, arg))),\
         m_pBackend(backend),\
         m_StopRequested(false),\
@@ -78,7 +82,7 @@ namespace sinks {
             start_feeding_thread();\
     }
 
-//! \endcond
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 /*!
  * \brief Asynchronous logging sink frontend
@@ -90,10 +94,10 @@ template< typename SinkBackendT, typename QueueingStrategyT = unbounded_fifo_que
 class asynchronous_sink :
     public aux::make_sink_frontend_base< SinkBackendT >::type,
     private boost::log::aux::locking_ptr_counter_base,
-    public QueueingStrategyT::template frontend_base< typename SinkBackendT::record_type >::type
+    public QueueingStrategyT
 {
     typedef typename aux::make_sink_frontend_base< SinkBackendT >::type base_type;
-    typedef typename QueueingStrategyT::template frontend_base< typename SinkBackendT::record_type >::type queue_base_type;
+    typedef QueueingStrategyT queue_base_type;
 
 private:
     //! Backend synchronization mutex type
@@ -184,12 +188,8 @@ public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
     //! \cond
-    BOOST_MPL_ASSERT((has_requirement< typename sink_backend_type::frontend_requirements, synchronized_feeding >));
+    BOOST_STATIC_ASSERT_MSG((has_requirement< typename sink_backend_type::frontend_requirements, synchronized_feeding >::value), "Asynchronous sink frontend is incompatible with the specified backend: thread synchronization requirements are not met");
     //! \endcond
-
-    typedef typename base_type::char_type char_type;
-    typedef typename base_type::record_type record_type;
-    typedef typename base_type::string_type string_type;
 
 #ifndef BOOST_LOG_DOXYGEN_PASS
 
@@ -232,6 +232,7 @@ public:
      *                     either \c run or \c feed_records himself.
      */
     asynchronous_sink(bool start_thread = true) :
+        base_type(true),
         m_pBackend(boost::make_shared< sink_backend_type >()),
         m_StopRequested(false),
         m_FlushRequested(false)
@@ -251,6 +252,7 @@ public:
      * \pre \a backend is not \c NULL.
      */
     explicit asynchronous_sink(shared_ptr< sink_backend_type > const& backend, bool start_thread = true) :
+        base_type(true),
         m_pBackend(backend),
         m_StopRequested(false),
         m_FlushRequested(false)
@@ -284,10 +286,8 @@ public:
     /*!
      * Enqueues the log record to the backend
      */
-    void consume(record_type const& record)
+    void consume(record_view const& rec)
     {
-        const_cast< record_type& >(record).detach_from_thread();
-
         if (m_FlushRequested)
         {
             unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
@@ -295,18 +295,17 @@ public:
             while (m_FlushRequested)
                 m_BlockCond.wait(lock);
         }
-        queue_base_type::enqueue(record);
+        queue_base_type::enqueue(rec);
     }
 
     /*!
      * The method attempts to pass logging record to the backend
      */
-    bool try_consume(record_type const& record)
+    bool try_consume(record_view const& rec)
     {
         if (!m_FlushRequested)
         {
-            const_cast< record_type& >(record).detach_from_thread();
-            return queue_base_type::try_enqueue(record);
+            return queue_base_type::try_enqueue(rec);
         }
         else
             return false;
@@ -333,9 +332,9 @@ public:
             if (!m_StopRequested)
             {
                 // Block until new record is available
-                record_type record;
-                if (queue_base_type::dequeue_ready(record))
-                    base_type::feed_record(record, m_BackendMutex, *m_pBackend);
+                record_view rec;
+                if (queue_base_type::dequeue_ready(rec))
+                    base_type::feed_record(rec, m_BackendMutex, *m_pBackend);
             }
             else
                 break;
@@ -443,15 +442,15 @@ private:
     {
         while (!m_StopRequested)
         {
-            record_type record;
+            record_view rec;
             register bool dequeued = false;
             if (!m_FlushRequested)
-                dequeued = queue_base_type::try_dequeue_ready(record);
+                dequeued = queue_base_type::try_dequeue_ready(rec);
             else
-                dequeued = queue_base_type::try_dequeue(record);
+                dequeued = queue_base_type::try_dequeue(rec);
 
             if (dequeued)
-                base_type::feed_record(record, m_BackendMutex, *m_pBackend);
+                base_type::feed_record(rec, m_BackendMutex, *m_pBackend);
             else
                 break;
         }
@@ -469,7 +468,7 @@ private:
 
 } // namespace sinks
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

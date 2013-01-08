@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -62,7 +62,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -78,7 +78,7 @@ private:
      * A structure that contains a pointer to the node and the associated mutex.
      * The alignment below allows to eliminate false sharing, it should be not less than CPU cache line size (which is assumed to be 64 bytes in most cases).
      */
-    BOOST_LOG_ALIGNAS(64) struct pointer
+    struct BOOST_LOG_ALIGNAS(64) pointer
     {
         //! Pointer to the either end of the queue
         node_base* node;
@@ -156,12 +156,12 @@ private:
     }
 };
 
-BOOST_LOG_EXPORT threadsafe_queue_impl* threadsafe_queue_impl::create(node_base* first_node)
+BOOST_LOG_API threadsafe_queue_impl* threadsafe_queue_impl::create(node_base* first_node)
 {
     return new threadsafe_queue_impl_generic(first_node);
 }
 
-BOOST_LOG_EXPORT void* threadsafe_queue_impl::operator new (std::size_t size)
+BOOST_LOG_API void* threadsafe_queue_impl::operator new (std::size_t size)
 {
     void* p = NULL;
 
@@ -187,7 +187,7 @@ BOOST_LOG_EXPORT void* threadsafe_queue_impl::operator new (std::size_t size)
     return p;
 }
 
-BOOST_LOG_EXPORT void threadsafe_queue_impl::operator delete (void* p, std::size_t)
+BOOST_LOG_API void threadsafe_queue_impl::operator delete (void* p, std::size_t)
 {
 #if defined(BOOST_LOG_HAS_POSIX_MEMALIGN)
     free(p);
@@ -202,7 +202,7 @@ BOOST_LOG_EXPORT void threadsafe_queue_impl::operator delete (void* p, std::size
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

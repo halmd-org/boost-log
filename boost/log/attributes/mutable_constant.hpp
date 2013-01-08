@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,10 +12,6 @@
  * The header contains implementation of a mutable constant attribute.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_ATTRIBUTES_MUTABLE_CONSTANT_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_MUTABLE_CONSTANT_HPP_INCLUDED_
 
@@ -23,16 +19,21 @@
 #include <boost/make_shared.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/mpl/if.hpp>
+#include <boost/move/move.hpp>
 #include <boost/type_traits/is_void.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace attributes {
 
@@ -91,9 +92,9 @@ protected:
         typedef ScopedReadLockT scoped_read_lock;
         //! Exclusive lock type
         typedef ScopedWriteLockT scoped_write_lock;
-        BOOST_STATIC_ASSERT(!(is_void< mutex_type >::value || is_void< scoped_read_lock >::value || is_void< scoped_write_lock >::value));
+        BOOST_STATIC_ASSERT_MSG(!(is_void< mutex_type >::value || is_void< scoped_read_lock >::value || is_void< scoped_write_lock >::value), "Boost.Log: Mutex and both lock types either must not be void or must all be void");
         //! Attribute value wrapper
-        typedef basic_attribute_value< value_type > attr_value;
+        typedef attribute_value_impl< value_type > attr_value;
 
     private:
         //! Thread protection mutex
@@ -108,6 +109,12 @@ protected:
         explicit impl(value_type const& value) : m_Value(new attr_value(value))
         {
         }
+        /*!
+         * Initializing constructor
+         */
+        explicit impl(BOOST_RV_REF(value_type) value) : m_Value(new attr_value(boost::move(value)))
+        {
+        }
 
         attribute_value get_value()
         {
@@ -118,6 +125,13 @@ protected:
         void set(value_type const& value)
         {
             intrusive_ptr< attr_value > p = new attr_value(value);
+            scoped_write_lock lock(m_Mutex);
+            m_Value.swap(p);
+        }
+
+        void set(BOOST_RV_REF(value_type) value)
+        {
+            intrusive_ptr< attr_value > p = new attr_value(boost::move(value));
             scoped_write_lock lock(m_Mutex);
             m_Value.swap(p);
         }
@@ -137,6 +151,12 @@ public:
     {
     }
     /*!
+     * Constructor with the stored value initialization
+     */
+    explicit mutable_constant(BOOST_RV_REF(value_type) value) : attribute(new impl(boost::move(value)))
+    {
+    }
+    /*!
      * Constructor for casting support
      */
     explicit mutable_constant(cast_source const& source) : attribute(source.as< impl >())
@@ -150,6 +170,14 @@ public:
     void set(value_type const& value)
     {
         get_impl()->set(value);
+    }
+
+    /*!
+     * The method sets a new attribute value.
+     */
+    void set(BOOST_RV_REF(value_type) value)
+    {
+        get_impl()->set(boost::move(value));
     }
 
     /*!
@@ -192,7 +220,7 @@ protected:
     {
     private:
         //! Attribute value wrapper
-        typedef basic_attribute_value< value_type > attr_value;
+        typedef attribute_value_impl< value_type > attr_value;
 
     private:
         //! The actual value
@@ -205,6 +233,12 @@ protected:
         explicit impl(value_type const& value) : m_Value(new attr_value(value))
         {
         }
+        /*!
+         * Initializing constructor
+         */
+        explicit impl(BOOST_RV_REF(value_type) value) : m_Value(new attr_value(boost::move(value)))
+        {
+        }
 
         attribute_value get_value()
         {
@@ -214,6 +248,10 @@ protected:
         void set(value_type const& value)
         {
             m_Value = new attr_value(value);
+        }
+        void set(BOOST_RV_REF(value_type) value)
+        {
+            m_Value = new attr_value(boost::move(value));
         }
 
         value_type get() const
@@ -230,6 +268,12 @@ public:
     {
     }
     /*!
+     * Constructor with the stored value initialization
+     */
+    explicit mutable_constant(BOOST_RV_REF(value_type) value) : attribute(new impl(boost::move(value)))
+    {
+    }
+    /*!
      * Constructor for casting support
      */
     explicit mutable_constant(cast_source const& source) : attribute(source.as< impl >())
@@ -242,6 +286,14 @@ public:
     void set(value_type const& value)
     {
         get_impl()->set(value);
+    }
+
+    /*!
+     * The method sets a new attribute value.
+     */
+    void set(BOOST_RV_REF(value_type) value)
+    {
+        get_impl()->set(boost::move(value));
     }
 
     /*!
@@ -264,7 +316,7 @@ protected:
 
 } // namespace attributes
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

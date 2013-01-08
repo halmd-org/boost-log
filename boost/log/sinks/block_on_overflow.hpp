@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -13,14 +13,14 @@
  * queue overflows in bounded queues for the asynchronous sink frontend.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_BLOCK_ON_OVERFLOW_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_BLOCK_ON_OVERFLOW_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #if defined(BOOST_LOG_NO_THREADS)
 #error Boost.Log: This header content is only supported in multithreaded environment
@@ -30,10 +30,11 @@
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/list_hook.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <boost/log/core/record_view.hpp>
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
@@ -91,8 +92,8 @@ public:
      * \retval true Attempt to enqueue the record again.
      * \retval false Discard the record.
      */
-    template< typename RecordT, typename LockT >
-    bool on_overflow(RecordT const&, LockT& lock)
+    template< typename LockT >
+    bool on_overflow(record_view const&, LockT& lock)
     {
         thread_context context;
         m_thread_contexts.push_back(context);
@@ -137,7 +138,7 @@ public:
 
 } // namespace sinks
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

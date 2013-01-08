@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -24,13 +24,12 @@
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/barrier.hpp>
 
 #include <boost/log/common.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/sinks.hpp>
 #include <boost/log/sources/logger.hpp>
@@ -40,7 +39,7 @@ namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
 namespace sinks = boost::log::sinks;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace keywords = boost::log::keywords;
 
 using boost::shared_ptr;
@@ -60,7 +59,7 @@ void thread_fun(boost::barrier& bar)
     bar.wait();
 
     // Here we go. First, identfy the thread.
-    BOOST_LOG_SCOPED_THREAD_TAG("ThreadID", boost::thread::id, boost::this_thread::get_id());
+    BOOST_LOG_SCOPED_THREAD_TAG("ThreadID", boost::this_thread::get_id());
 
     // Now, do some logging
     for (unsigned int i = 0; i < LOG_RECORDS_TO_WRITE; ++i)
@@ -84,13 +83,14 @@ int main(int argc, char* argv[])
 
         sink->locked_backend()->add_stream(strm);
 
-        sink->set_formatter(
-            fmt::format("%1%: [%2%] [%3%] - %4%")
-                % fmt::attr< unsigned int >("RecordID")
-                % fmt::date_time< boost::posix_time::ptime >("TimeStamp")
-                % fmt::attr< boost::thread::id >("ThreadID")
-                % fmt::message()
-            );
+        sink->set_formatter
+        (
+            expr::format("%1%: [%2%] [%3%] - %4%")
+                % expr::attr< unsigned int >("RecordID")
+                % expr::attr< boost::posix_time::ptime >("TimeStamp")
+                % expr::attr< boost::thread::id >("ThreadID")
+                % expr::smessage
+        );
 
         // Add it to the core
         logging::core::get()->add_sink(sink);

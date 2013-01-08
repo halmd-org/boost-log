@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -16,7 +16,11 @@
 #ifndef BOOST_LOG_DETAIL_LOCKS_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_LOCKS_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
@@ -38,7 +42,7 @@ struct is_mutex_type;
 
 #endif // BOOST_LOG_NO_THREADS
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 //! An auxiliary pseudo-lock to express no locking requirements in logger features
 template< typename MutexT >
@@ -166,7 +170,7 @@ private:
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -13,14 +13,14 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_DETAIL_LIGHT_RW_MUTEX_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_LIGHT_RW_MUTEX_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifndef BOOST_LOG_NO_THREADS
 
@@ -46,7 +46,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -63,7 +63,7 @@ __declspec(dllimport) void __stdcall AcquireSRWLockShared(SRWLOCK*);
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
@@ -71,46 +71,45 @@ __declspec(dllimport) void __stdcall AcquireSRWLockShared(SRWLOCK*);
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-    //! A light read/write mutex that uses WinNT 6 and later APIs
-    class light_rw_mutex
+//! A light read/write mutex that uses WinNT 6 and later APIs
+class light_rw_mutex
+{
+    SRWLOCK m_Mutex;
+
+public:
+    light_rw_mutex()
     {
-        SRWLOCK m_Mutex;
+        InitializeSRWLock(&m_Mutex);
+    }
+    void lock_shared()
+    {
+        AcquireSRWLockShared(&m_Mutex);
+    }
+    void unlock_shared()
+    {
+        ReleaseSRWLockShared(&m_Mutex);
+    }
+    void lock()
+    {
+        AcquireSRWLockExclusive(&m_Mutex);
+    }
+    void unlock()
+    {
+        ReleaseSRWLockExclusive(&m_Mutex);
+    }
 
-    public:
-        light_rw_mutex()
-        {
-            InitializeSRWLock(&m_Mutex);
-        }
-        void lock_shared()
-        {
-            AcquireSRWLockShared(&m_Mutex);
-        }
-        void unlock_shared()
-        {
-            ReleaseSRWLockShared(&m_Mutex);
-        }
-        void lock()
-        {
-            AcquireSRWLockExclusive(&m_Mutex);
-        }
-        void unlock()
-        {
-            ReleaseSRWLockExclusive(&m_Mutex);
-        }
-
-    private:
-        // Noncopyable
-        light_rw_mutex(light_rw_mutex const&);
-        light_rw_mutex& operator= (light_rw_mutex const&);
-    };
+    // Noncopyable
+    BOOST_LOG_DELETED_FUNCTION(light_rw_mutex(light_rw_mutex const&))
+    BOOST_LOG_DELETED_FUNCTION(light_rw_mutex& operator= (light_rw_mutex const&))
+};
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
@@ -120,50 +119,49 @@ namespace aux {
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-    //! A light read/write mutex that maps directly onto POSIX threading library
-    class light_rw_mutex
+//! A light read/write mutex that maps directly onto POSIX threading library
+class light_rw_mutex
+{
+    pthread_rwlock_t m_Mutex;
+
+public:
+    light_rw_mutex()
     {
-        pthread_rwlock_t m_Mutex;
+        pthread_rwlock_init(&m_Mutex, NULL);
+    }
+    ~light_rw_mutex()
+    {
+        pthread_rwlock_destroy(&m_Mutex);
+    }
+    void lock_shared()
+    {
+        pthread_rwlock_rdlock(&m_Mutex);
+    }
+    void unlock_shared()
+    {
+        pthread_rwlock_unlock(&m_Mutex);
+    }
+    void lock()
+    {
+        pthread_rwlock_wrlock(&m_Mutex);
+    }
+    void unlock()
+    {
+        pthread_rwlock_unlock(&m_Mutex);
+    }
 
-    public:
-        light_rw_mutex()
-        {
-            pthread_rwlock_init(&m_Mutex, NULL);
-        }
-        ~light_rw_mutex()
-        {
-            pthread_rwlock_destroy(&m_Mutex);
-        }
-        void lock_shared()
-        {
-            pthread_rwlock_rdlock(&m_Mutex);
-        }
-        void unlock_shared()
-        {
-            pthread_rwlock_unlock(&m_Mutex);
-        }
-        void lock()
-        {
-            pthread_rwlock_wrlock(&m_Mutex);
-        }
-        void unlock()
-        {
-            pthread_rwlock_unlock(&m_Mutex);
-        }
-
-    private:
-        // Noncopyable
-        light_rw_mutex(light_rw_mutex const&);
-        light_rw_mutex& operator= (light_rw_mutex const&);
-    };
+    // Noncopyable
+    BOOST_LOG_DELETED_FUNCTION(light_rw_mutex(light_rw_mutex const&))
+    BOOST_LOG_DELETED_FUNCTION(light_rw_mutex& operator= (light_rw_mutex const&))
+};
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
@@ -171,32 +169,31 @@ namespace aux {
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-    //! A light read/write mutex
-    class light_rw_mutex
-    {
-        struct { void* p; } m_Mutex;
+//! A light read/write mutex
+class light_rw_mutex
+{
+    struct { void* p; } m_Mutex;
 
-    public:
-        BOOST_LOG_EXPORT light_rw_mutex();
-        BOOST_LOG_EXPORT ~light_rw_mutex();
-        BOOST_LOG_EXPORT void lock_shared();
-        BOOST_LOG_EXPORT void unlock_shared();
-        BOOST_LOG_EXPORT void lock();
-        BOOST_LOG_EXPORT void unlock();
+public:
+    BOOST_LOG_API light_rw_mutex();
+    BOOST_LOG_API ~light_rw_mutex();
+    BOOST_LOG_API void lock_shared();
+    BOOST_LOG_API void unlock_shared();
+    BOOST_LOG_API void lock();
+    BOOST_LOG_API void unlock();
 
-    private:
-        // Noncopyable
-        light_rw_mutex(light_rw_mutex const&);
-        light_rw_mutex& operator= (light_rw_mutex const&);
-    };
+    // Noncopyable
+    BOOST_LOG_DELETED_FUNCTION(light_rw_mutex(light_rw_mutex const&))
+    BOOST_LOG_DELETED_FUNCTION(light_rw_mutex& operator= (light_rw_mutex const&))
+};
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

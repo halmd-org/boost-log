@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -13,14 +13,14 @@
  * the asynchronous sink frontend.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_UNBOUNDED_ORDERING_QUEUE_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_UNBOUNDED_ORDERING_QUEUE_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #if defined(BOOST_LOG_NO_THREADS)
 #error Boost.Log: This header content is only supported in multithreaded environment
@@ -38,21 +38,36 @@
 #include <boost/log/detail/timestamp.hpp>
 #include <boost/log/keywords/order.hpp>
 #include <boost/log/keywords/ordering_window.hpp>
+#include <boost/log/core/record_view.hpp>
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
-namespace aux {
-
-//! Unbounded ordering log record strategy implementation
-template< typename RecordT, typename OrderT >
+/*!
+ * \brief Unbounded ordering log record queueing strategy
+ *
+ * The \c unbounded_ordering_queue class is intended to be used with
+ * the \c asynchronous_sink frontend as a log record queueing strategy.
+ *
+ * This strategy provides the following properties to the record queueing mechanism:
+ *
+ * \li The queue has no size limits.
+ * \li The queue has a fixed latency window. This means that each log record put
+ *     into the queue will normally not be dequeued for a certain period of time.
+ * \li The queue performs stable record ordering within the latency window.
+ *     The ordering predicate can be specified in the \c OrderT template parameter.
+ *
+ * Since this queue has no size limits, it may grow uncontrollably if sink backends
+ * dequeue log records not fast enough. When this is an issue, it is recommended to
+ * use one of the bounded strategies.
+ */
+template< typename OrderT >
 class unbounded_ordering_queue
 {
 private:
-    typedef RecordT record_type;
     typedef boost::mutex mutex_type;
 
     //! Log record with enqueueing timestamp
@@ -79,7 +94,7 @@ private:
         };
 
         boost::log::aux::timestamp m_timestamp;
-        record_type m_record;
+        record_view m_record;
 
         enqueued_record(enqueued_record const& that) : m_timestamp(that.m_timestamp), m_record(that.m_record)
         {
@@ -89,7 +104,7 @@ private:
             m_record(boost::move(that.m_record))
         {
         }
-        explicit enqueued_record(record_type const& rec) :
+        explicit enqueued_record(record_view const& rec) :
             m_timestamp(boost::log::aux::get_timestamp()),
             m_record(rec)
         {
@@ -162,14 +177,14 @@ protected:
     }
 
     //! Enqueues log record to the queue
-    void enqueue(record_type const& rec)
+    void enqueue(record_view const& rec)
     {
         lock_guard< mutex_type > lock(m_mutex);
         enqueue_unlocked(rec);
     }
 
     //! Attempts to enqueue log record to the queue
-    bool try_enqueue(record_type const& rec)
+    bool try_enqueue(record_view const& rec)
     {
         unique_lock< mutex_type > lock(m_mutex, try_to_lock);
         if (lock.owns_lock())
@@ -182,14 +197,14 @@ protected:
     }
 
     //! Attempts to dequeue a log record ready for processing from the queue, does not block if no log records are ready to be processed
-    bool try_dequeue_ready(record_type& rec)
+    bool try_dequeue_ready(record_view& rec)
     {
         lock_guard< mutex_type > lock(m_mutex);
         if (!m_queue.empty())
         {
             const boost::log::aux::timestamp now = boost::log::aux::get_timestamp();
             enqueued_record const& elem = m_queue.top();
-            if ((now - elem.m_timestamp).milliseconds() >= m_ordering_window)
+            if (static_cast< uint64_t >((now - elem.m_timestamp).milliseconds()) >= m_ordering_window)
             {
                 // We got a new element
                 rec = elem.m_record;
@@ -202,7 +217,7 @@ protected:
     }
 
     //! Attempts to dequeue log record from the queue, does not block.
-    bool try_dequeue(record_type& rec)
+    bool try_dequeue(record_view& rec)
     {
         lock_guard< mutex_type > lock(m_mutex);
         if (!m_queue.empty())
@@ -217,7 +232,7 @@ protected:
     }
 
     //! Dequeues log record from the queue, blocks if no log records are ready to be processed
-    bool dequeue_ready(record_type& rec)
+    bool dequeue_ready(record_view& rec)
     {
         unique_lock< mutex_type > lock(m_mutex);
         while (!m_interruption_requested)
@@ -261,7 +276,7 @@ protected:
 
 private:
     //! Enqueues a log record
-    void enqueue_unlocked(record_type const& rec)
+    void enqueue_unlocked(record_view const& rec)
     {
         const bool was_empty = m_queue.empty();
         m_queue.push(enqueued_record(rec));
@@ -270,39 +285,9 @@ private:
     }
 };
 
-} // namespace aux
-
-/*!
- * \brief Unbounded ordering log record queueing strategy
- *
- * The \c unbounded_ordering_queue class is intended to be used with
- * the \c asynchronous_sink frontend as a log record queueing strategy.
- *
- * This strategy provides the following properties to the record queueing mechanism:
- *
- * \li The queue has no size limits.
- * \li The queue has a fixed latency window. This means that each log record put
- *     into the queue will normally not be dequeued for a certain period of time.
- * \li The queue performs stable record ordering within the latency window.
- *     The ordering predicate can be specified in the \c OrderT template parameter.
- *
- * Since this queue has no size limits, it may grow uncontrollably if sink backends
- * dequeue log records not fast enough. When this is an issue, it is recommended to
- * use one of the bounded strategies.
- */
-template< typename OrderT >
-struct unbounded_ordering_queue
-{
-    template< typename RecordT >
-    struct frontend_base
-    {
-        typedef sinks::aux::unbounded_ordering_queue< RecordT, OrderT > type;
-    };
-};
-
 } // namespace sinks
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

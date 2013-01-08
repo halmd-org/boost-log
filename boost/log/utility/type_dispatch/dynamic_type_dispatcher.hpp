@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,10 +12,6 @@
  * The header contains implementation of the run-time type dispatcher.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_DYNAMIC_TYPE_DISPATCHER_HPP_INCLUDED_
 #define BOOST_LOG_DYNAMIC_TYPE_DISPATCHER_HPP_INCLUDED_
 
@@ -25,14 +21,18 @@
 #include <boost/ref.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/visible_type.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * \brief A dynamic type dispatcher
@@ -63,7 +63,7 @@ private:
         {
             this->m_pVisitor = (void*)boost::addressof(m_Visitor);
             typedef void (*trampoline_t)(void*, T const&);
-            BOOST_STATIC_ASSERT(sizeof(trampoline_t) == sizeof(void*));
+            BOOST_STATIC_ASSERT_MSG(sizeof(trampoline_t) == sizeof(void*), "Boost.Log: Unsupported platform, the size of a function pointer differs from the size of a pointer");
             union
             {
                 void* as_pvoid;
@@ -81,6 +81,31 @@ private:
     dispatching_map m_DispatchingMap;
 
 public:
+    /*!
+     * Default constructor
+     */
+    dynamic_type_dispatcher() : type_dispatcher(&dynamic_type_dispatcher::get_callback)
+    {
+    }
+
+    /*!
+     * Copy constructor
+     */
+    dynamic_type_dispatcher(dynamic_type_dispatcher const& that) :
+        type_dispatcher(static_cast< type_dispatcher const& >(that)),
+        m_DispatchingMap(that.m_DispatchingMap)
+    {
+    }
+
+    /*!
+     * Copy assignment
+     */
+    dynamic_type_dispatcher& operator= (dynamic_type_dispatcher const& that)
+    {
+        m_DispatchingMap = that.m_DispatchingMap;
+        return *this;
+    }
+
     /*!
      * The method registers a new type
      *
@@ -106,11 +131,12 @@ public:
 
 private:
 #ifndef BOOST_LOG_DOXYGEN_PASS
-    callback_base get_callback(std::type_info const& type)
+    static callback_base get_callback(type_dispatcher* p, std::type_info const& type)
     {
+        dynamic_type_dispatcher* const self = static_cast< dynamic_type_dispatcher* >(p);
         type_info_wrapper wrapper(type);
-        dispatching_map::iterator it = m_DispatchingMap.find(wrapper);
-        if (it != m_DispatchingMap.end())
+        dispatching_map::iterator it = self->m_DispatchingMap.find(wrapper);
+        if (it != self->m_DispatchingMap.end())
             return *it->second;
         else
             return callback_base();
@@ -118,7 +144,7 @@ private:
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

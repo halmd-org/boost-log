@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -10,14 +10,14 @@
  * \date   24.07.2011
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_DETAIL_EVENT_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_EVENT_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #if defined(BOOST_THREAD_PLATFORM_PTHREAD)
 #   if defined(_POSIX_SEMAPHORES) && (_POSIX_SEMAPHORES + 0) > 0
@@ -40,7 +40,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -54,14 +54,14 @@ private:
 
 public:
     //! Default constructor
-    BOOST_LOG_EXPORT sem_based_event();
+    BOOST_LOG_API sem_based_event();
     //! Destructor
-    BOOST_LOG_EXPORT ~sem_based_event();
+    BOOST_LOG_API ~sem_based_event();
 
     //! Waits for the object to become signalled
-    BOOST_LOG_EXPORT void wait();
+    BOOST_LOG_API void wait();
     //! Sets the object to a signalled state
-    BOOST_LOG_EXPORT void set_signalled();
+    BOOST_LOG_API void set_signalled();
 
 private:
     //  Copying prohibited
@@ -81,14 +81,14 @@ private:
 
 public:
     //! Default constructor
-    BOOST_LOG_EXPORT winapi_based_event();
+    BOOST_LOG_API winapi_based_event();
     //! Destructor
-    BOOST_LOG_EXPORT ~winapi_based_event();
+    BOOST_LOG_API ~winapi_based_event();
 
     //! Waits for the object to become signalled
-    BOOST_LOG_EXPORT void wait();
+    BOOST_LOG_API void wait();
     //! Sets the object to a signalled state
-    BOOST_LOG_EXPORT void set_signalled();
+    BOOST_LOG_API void set_signalled();
 
 private:
     //  Copying prohibited
@@ -109,14 +109,14 @@ private:
 
 public:
     //! Default constructor
-    BOOST_LOG_EXPORT generic_event();
+    BOOST_LOG_API generic_event();
     //! Destructor
-    BOOST_LOG_EXPORT ~generic_event();
+    BOOST_LOG_API ~generic_event();
 
     //! Waits for the object to become signalled
-    BOOST_LOG_EXPORT void wait();
+    BOOST_LOG_API void wait();
     //! Sets the object to a signalled state
-    BOOST_LOG_EXPORT void set_signalled();
+    BOOST_LOG_API void set_signalled();
 
 private:
     //  Copying prohibited
@@ -130,7 +130,7 @@ typedef generic_event event;
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

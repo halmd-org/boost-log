@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -15,14 +15,15 @@
 #define BOOST_TEST_MODULE attr_named_scope
 
 #include <sstream>
-#include <boost/optional.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/test/included/unit_test.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
+#include <boost/log/attributes/value_extraction.hpp>
 #include <boost/log/utility/string_literal.hpp>
+#include <boost/log/utility/value_ref.hpp>
 #include "char_definitions.hpp"
 
 namespace logging = boost::log;
@@ -33,7 +34,6 @@ namespace {
     template< typename >
     struct scope_test_data;
 
-#ifdef BOOST_LOG_USE_CHAR
     template< >
     struct scope_test_data< char >
     {
@@ -41,17 +41,6 @@ namespace {
         static logging::string_literal scope2() { return logging::str_literal("scope2"); }
         static logging::string_literal file() { return logging::str_literal(__FILE__); }
     };
-#endif // BOOST_LOG_USE_CHAR
-
-#ifdef BOOST_LOG_USE_WCHAR_T
-    template< >
-    struct scope_test_data< wchar_t >
-    {
-        static logging::wstring_literal scope1() { return logging::str_literal(L"scope1"); }
-        static logging::wstring_literal scope2() { return logging::str_literal(L"scope2"); }
-        static logging::wstring_literal file() { return logging::str_literal(BOOST_PP_CAT(L, __FILE__)); }
-    };
-#endif // BOOST_LOG_USE_WCHAR_T
 
 } // namespace
 
@@ -62,20 +51,16 @@ BOOST_AUTO_TEST_CASE(macros)
     BOOST_CHECK(BOOST_IS_DEFINED(BOOST_LOG_NAMED_SCOPE(name)));
     BOOST_CHECK(BOOST_IS_DEFINED(BOOST_LOG_FUNCTION()));
 #endif // BOOST_LOG_USE_CHAR
-#ifdef BOOST_LOG_USE_WCHAR_T
-    BOOST_CHECK(BOOST_IS_DEFINED(BOOST_LOG_WNAMED_SCOPE(name)));
-    BOOST_CHECK(BOOST_IS_DEFINED(BOOST_LOG_WFUNCTION()));
-#endif // BOOST_LOG_USE_WCHAR_T
 }
 
 // The test checks that scope tracking works correctly
-BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
+BOOST_AUTO_TEST_CASE(scope_tracking)
 {
-    typedef attrs::basic_named_scope< CharT > named_scope;
-    typedef typename named_scope::sentry sentry;
-    typedef attrs::basic_named_scope_list< CharT > scopes;
-    typedef attrs::basic_named_scope_entry< CharT > scope;
-    typedef scope_test_data< CharT > scope_data;
+    typedef attrs::named_scope named_scope;
+    typedef named_scope::sentry sentry;
+    typedef attrs::named_scope_list scopes;
+    typedef attrs::named_scope_entry scope;
+    typedef scope_test_data< char > scope_data;
 
     named_scope attr;
 
@@ -89,7 +74,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
     logging::attribute_value val = attr.get_value();
     BOOST_REQUIRE(!!val);
 
-    boost::optional< scopes > sc = val.extract< scopes >();
+    logging::value_ref< scopes > sc = val.extract< scopes >();
     BOOST_REQUIRE(!!sc);
     BOOST_REQUIRE(!sc->empty());
     BOOST_CHECK_EQUAL(sc->size(), 1UL);
@@ -115,7 +100,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
     BOOST_REQUIRE(!sc->empty());
     BOOST_CHECK_EQUAL(sc->size(), 2UL);
 
-    typename scopes::const_iterator it = sc->begin();
+    scopes::const_iterator it = sc->begin();
     scope const& s2 = *(it++);
     BOOST_CHECK(s2.scope_name == scope_data::scope1());
     BOOST_CHECK(s2.file_name == scope_data::file());
@@ -149,13 +134,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(scope_tracking, CharT, char_types)
 }
 
 // The test checks that detaching from thread works correctly
-BOOST_AUTO_TEST_CASE_TEMPLATE(detaching_from_thread, CharT, char_types)
+BOOST_AUTO_TEST_CASE(detaching_from_thread)
 {
-    typedef attrs::basic_named_scope< CharT > named_scope;
-    typedef typename named_scope::sentry sentry;
-    typedef attrs::basic_named_scope_list< CharT > scopes;
-    typedef attrs::basic_named_scope_entry< CharT > scope;
-    typedef scope_test_data< CharT > scope_data;
+    typedef attrs::named_scope named_scope;
+    typedef named_scope::sentry sentry;
+    typedef attrs::named_scope_list scopes;
+    typedef attrs::named_scope_entry scope;
+    typedef scope_test_data< char > scope_data;
 
     named_scope attr;
 
@@ -167,7 +152,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(detaching_from_thread, CharT, char_types)
     logging::attribute_value val2 = attr.get_value();
     val2.detach_from_thread();
 
-    boost::optional< scopes > sc1 = val1.extract< scopes >(), sc2 = val2.extract< scopes >();
+    logging::value_ref< scopes > sc1 = val1.extract< scopes >(), sc2 = val2.extract< scopes >();
     BOOST_REQUIRE(!!sc1);
     BOOST_REQUIRE(!!sc2);
     BOOST_CHECK_EQUAL(sc1->size(), 1UL);
@@ -175,29 +160,29 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(detaching_from_thread, CharT, char_types)
 }
 
 // The test checks that output streaming is possible
-BOOST_AUTO_TEST_CASE_TEMPLATE(ostreaming, CharT, char_types)
+BOOST_AUTO_TEST_CASE(ostreaming)
 {
-    typedef attrs::basic_named_scope< CharT > named_scope;
-    typedef typename named_scope::sentry sentry;
-    typedef scope_test_data< CharT > scope_data;
+    typedef attrs::named_scope named_scope;
+    typedef named_scope::sentry sentry;
+    typedef scope_test_data< char > scope_data;
 
     sentry scope1(scope_data::scope1(), scope_data::file(), __LINE__);
     sentry scope2(scope_data::scope2(), scope_data::file(), __LINE__);
 
-    std::basic_ostringstream< CharT > strm;
+    std::basic_ostringstream< char > strm;
     strm << named_scope::get_scopes();
 
     BOOST_CHECK(!strm.str().empty());
 }
 
 // The test checks that the scope list becomes thread-independent after copying
-BOOST_AUTO_TEST_CASE_TEMPLATE(copying, CharT, char_types)
+BOOST_AUTO_TEST_CASE(copying)
 {
-    typedef attrs::basic_named_scope< CharT > named_scope;
-    typedef typename named_scope::sentry sentry;
-    typedef attrs::basic_named_scope_list< CharT > scopes;
-    typedef attrs::basic_named_scope_entry< CharT > scope;
-    typedef scope_test_data< CharT > scope_data;
+    typedef attrs::named_scope named_scope;
+    typedef named_scope::sentry sentry;
+    typedef attrs::named_scope_list scopes;
+    typedef attrs::named_scope_entry scope;
+    typedef scope_test_data< char > scope_data;
 
     sentry scope1(scope_data::scope1(), scope_data::file(), __LINE__);
     scopes sc = named_scope::get_scopes();

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,20 +12,20 @@
  * The header contains implementation of a simplistic logger with no features.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SOURCES_LOGGER_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_LOGGER_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/features.hpp>
 #include <boost/log/sources/threading_models.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/log/detail/light_rw_mutex.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -35,7 +35,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sources {
 
@@ -99,7 +99,7 @@ class wlogger_mt :
 
 } // namespace sources
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

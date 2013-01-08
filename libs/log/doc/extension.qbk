@@ -1,5 +1,5 @@
 [/
-              Copyright Andrey Semashev 2007 - 2012.
+              Copyright Andrey Semashev 2007 - 2013.
      Distributed under the Boost Software License, Version 1.0.
         (See accompanying file LICENSE_1_0.txt or copy at
               http://www.boost.org/LICENSE_1_0.txt)
@@ -275,7 +275,7 @@ In order to illustrate all these lengthy recommendations, let's implement a simp
 
     // We want something equivalent to this
     {
-        BOOST_LOG_SCOPED_LOGGER_TAG(logger, "Tag", std::string, "[GUI]");
+        BOOST_LOG_SCOPED_LOGGER_TAG(logger, "Tag", "[GUI]");
         BOOST_LOG(logger) << "The user has confirmed his choice";
     }
 
@@ -319,7 +319,7 @@ All this verbosity is usually not required. One can define a special macro to ma
 
 [example_extension_record_tagger_macro_logging]
 
-The complete code sample from this section is available in [@boost:/libs/log/example/doc/extension_record_tagger.cpp].
+[@boost:/libs/log/example/doc/extension_record_tagger.cpp See the complete code].
 
 [heading Guidelines for designers of standalone logging sources]
 
@@ -387,7 +387,7 @@ If you write your own logging sinks or use your own types in attributes, you may
 
 [heading Adding support for user-defined types to the formatter parser]
 
-    #include <``[boost_log_utility_init_formatter_parser_hpp]``>
+    #include <``[boost_log_utility_setup_formatter_parser_hpp]``>
 
 In order to add support for user-defined types to the formatter parser, one has to register a formatter factory. The factory is basically a function object that, when called, will construct a formatter for the particular attribute. Factories are registered with the `register_formatter_factory` function, that besides the factory functor accepts the attribute name that will trigger this factory usage. This way the application can expose the knowledge of the particular attribute to the library. Here's a quick example:
 
@@ -479,7 +479,7 @@ to achieve the same effect that the first version of the `point_formatter_factor
 
 [heading Adding support for user-defined types to the filter parser]
 
-    #include <``[boost_log_utility_init_filter_parser_hpp]``>
+    #include <``[boost_log_utility_setup_filter_parser_hpp]``>
 
 You can extend filter parser the similar way you can extend the formatter parser - by registering your types into the library. However, since it takes a considerably more complex syntax to describe filters, a filter factory is more than a mere function.
 
@@ -612,9 +612,9 @@ In this case, however, the `Point` class has to support all the standard relatio
 
 [heading Adding support for user-defined sinks]
 
-    #include <``[boost_log_utility_init_from_stream_hpp]``>
+    #include <``[boost_log_utility_setup_from_stream_hpp]``>
 
-The library provides mechanism of extending support for sinks similar to the formatter and filter parsers. In order to be able to mention user-defined sinks in a settings file, the user has to register a sink factory, which is essentially a function object that receives a number of named parameters and returns a pointer to the initialized sink. The factory is registered for a specific destination (see the [link log.detailed.utilities.init.settings settings file description]), so whenever a sink with the specified destination is mentioned in the settings file, the factory gets called. For instance, if we have a sink that emits SNMP traps as a result of processing log records, we can register it the following way:
+The library provides mechanism of extending support for sinks similar to the formatter and filter parsers. In order to be able to mention user-defined sinks in a settings file, the user has to register a sink factory, which is essentially a function object that receives a number of named parameters and returns a pointer to the initialized sink. The factory is registered for a specific destination (see the [link log.detailed.utilities.setup.settings settings file description]), so whenever a sink with the specified destination is mentioned in the settings file, the factory gets called. For instance, if we have a sink that emits SNMP traps as a result of processing log records, we can register it the following way:
 
     class snmp_backend :
         public sinks::basic_sink_backend< char, sinks::frontend_synchronization_tag >

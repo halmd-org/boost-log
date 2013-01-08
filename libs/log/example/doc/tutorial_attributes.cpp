@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -9,11 +9,12 @@
 #include <string>
 #include <ostream>
 #include <fstream>
+#include <iomanip>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/severity_logger.hpp>
@@ -21,12 +22,11 @@
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/attributes/scoped_attribute.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace fmt = boost::log::formatters;
-namespace flt = boost::log::filters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
 namespace keywords = boost::log::keywords;
@@ -40,6 +40,12 @@ enum severity_level
     error,
     critical
 };
+
+BOOST_LOG_ATTRIBUTE_KEYWORD(line_id, "LineID", unsigned int)
+BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", severity_level)
+BOOST_LOG_ATTRIBUTE_KEYWORD(tag_attr, "Tag", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(scope, "Scope", attrs::named_scope::value_type)
+BOOST_LOG_ATTRIBUTE_KEYWORD(timeline, "Timeline", attrs::timer::value_type)
 
 void logging_function()
 {
@@ -74,7 +80,7 @@ void tagged_logging()
 //[ example_tutorial_attributes_timed_logging
 void timed_logging()
 {
-    BOOST_LOG_SCOPED_THREAD_ATTR("Timeline", attrs::timer);
+    BOOST_LOG_SCOPED_THREAD_ATTR("Timeline", attrs::timer());
 
     src::severity_logger< severity_level > slg;
     BOOST_LOG_SEV(slg, normal) << "Starting to time nested functions";
@@ -108,30 +114,29 @@ std::ostream& operator<< (std::ostream& strm, severity_level level)
 void init()
 {
     typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-    boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+    boost::shared_ptr< text_sink > sink = boost::make_shared< text_sink >();
 
-    pSink->locked_backend()->add_stream(
+    sink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("sample.log"));
 
-    pSink->set_formatter
+    sink->set_formatter
     (
-        fmt::stream
-            << fmt::attr< unsigned int >("LineID", keywords::format = "%08x")
-            << ": <" << fmt::attr< severity_level >("Severity")
-            << ">\t"
-            << "(" << fmt::named_scope("Scope") << ") "
-            << fmt::if_(flt::has_attr< std::string >("Tag"))
+        expr::stream
+            << std::hex << std::setw(8) << std::setfill('0') << line_id << std::dec << std::setfill(' ')
+            << ": <" << severity << ">\t"
+            << "(" << scope << ") "
+            << expr::if_(expr::has_attr(tag_attr))
                [
-                    fmt::stream << "[" << fmt::attr< std::string >("Tag") << "] "
+                    expr::stream << "[" << tag_attr << "] "
                ]
-            << fmt::if_(flt::has_attr("Timeline"))
+            << expr::if_(expr::has_attr(timeline))
                [
-                    fmt::stream << "[" << fmt::time_duration("Timeline") << "] "
+                    expr::stream << "[" << timeline << "] "
                ]
-            << fmt::message()
+            << expr::smessage
     );
 
-    logging::core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(sink);
 
     // Add attributes
     logging::add_common_attributes();

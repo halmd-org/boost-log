@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -23,8 +23,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include <boost/log/common.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/syslog_backend.hpp>
@@ -35,7 +34,7 @@ namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
 namespace sinks = boost::log::sinks;
-namespace fmt = boost::log::formatters;
+namespace expr = boost::log::expressions;
 namespace keywords = boost::log::keywords;
 
 using boost::shared_ptr;
@@ -58,11 +57,12 @@ int main(int argc, char* argv[])
                 keywords::use_impl = sinks::syslog::native,
                 keywords::facility = sinks::syslog::local7));
 
-        sink->set_formatter(
-            fmt::format("native_syslog: %1%: %2%")
-                % fmt::attr< unsigned int >("RecordID")
-                % fmt::message()
-            );
+        sink->set_formatter
+        (
+            expr::format("native_syslog: %1%: %2%")
+                % expr::attr< unsigned int >("RecordID")
+                % expr::smessage
+        );
 
         // We'll have to map our custom levels to the syslog levels
         sinks::syslog::custom_severity_mapping< severity_levels > mapping("Severity");

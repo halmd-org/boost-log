@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -15,25 +15,23 @@
 #ifndef BOOST_LOG_TESTS_TEST_SINK_HPP_INCLUDED_
 #define BOOST_LOG_TESTS_TEST_SINK_HPP_INCLUDED_
 
+#include <cstddef>
 #include <map>
-#include <boost/compatibility/cpp_c_headers/cstddef>
+#include <boost/log/core/record_view.hpp>
+#include <boost/log/attributes/attribute_name.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/sinks/sink.hpp>
+#include <boost/log/expressions/filter.hpp>
 
 //! A sink implementation for testing purpose
-template< typename CharT >
 struct test_sink :
-    public boost::log::sinks::sink< CharT >
+    public boost::log::sinks::sink
 {
-private:
-    typedef boost::log::sinks::sink< CharT > base_type;
-
 public:
-    typedef typename base_type::char_type char_type;
-    typedef typename base_type::string_type string_type;
-    typedef typename base_type::values_view_type values_view_type;
-    typedef typename base_type::record_type record_type;
-    typedef typename base_type::filter_type filter_type;
-    typedef typename values_view_type::key_type key_type;
+    typedef boost::log::attribute_value_set attribute_values;
+    typedef boost::log::record_view record_type;
+    typedef boost::log::filter filter_type;
+    typedef attribute_values::key_type key_type;
 
     struct key_type_order
     {
@@ -53,7 +51,7 @@ public:
     std::size_t m_RecordCounter;
 
 public:
-    test_sink() : m_RecordCounter(0) {}
+    test_sink() : boost::log::sinks::sink(false), m_RecordCounter(0) {}
 
     void set_filter(filter_type const& f)
     {
@@ -62,18 +60,18 @@ public:
 
     void reset_filter()
     {
-        m_Filter.clear();
+        m_Filter.reset();
     }
 
-    bool will_consume(values_view_type const& attributes)
+    bool will_consume(attribute_values const& attributes)
     {
-        return (m_Filter.empty() || m_Filter(attributes));
+        return m_Filter(attributes);
     }
 
     void consume(record_type const& record)
     {
         ++m_RecordCounter;
-        typename values_view_type::const_iterator
+        attribute_values::const_iterator
             it = record.attribute_values().begin(),
             end = record.attribute_values().end();
         for (; it != end; ++it)

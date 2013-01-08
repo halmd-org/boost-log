@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -21,23 +21,24 @@
 #include <iostream>
 
 #include <boost/log/common.hpp>
-#include <boost/log/formatters.hpp>
-#include <boost/log/filters.hpp>
+#include <boost/log/expressions.hpp>
 
-#include <boost/log/utility/init/to_file.hpp>
-#include <boost/log/utility/init/to_console.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
+#include <boost/log/utility/setup/file.hpp>
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 
 #include <boost/log/attributes/timer.hpp>
+#include <boost/log/attributes/named_scope.hpp>
 
 #include <boost/log/sources/logger.hpp>
 
+#include <boost/log/support/date_time.hpp>
+
 namespace logging = boost::log;
-namespace fmt = boost::log::formatters;
-namespace flt = boost::log::filters;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
+namespace expr = boost::log::expressions;
 namespace keywords = boost::log::keywords;
 
 using boost::shared_ptr;
@@ -78,22 +79,34 @@ int main(int argc, char* argv[])
 
     // The first thing we have to do to get using the library is
     // to set up the logging sinks - i.e. where the logs will be written to.
-    logging::init_log_to_console(std::clog, keywords::format = "%TimeStamp%: %_%");
+    logging::add_console_log(std::clog, keywords::format = "%TimeStamp%: %_%");
 
     // One can also use lambda expressions to setup filters and formatters
-    logging::init_log_to_file
+    logging::add_file_log
     (
         "sample.log",
-        keywords::filter = flt::attr< severity_level >("Severity", std::nothrow) >= warning,
-        keywords::format = fmt::format("%1% [%2%] <%3%> %4%")
-            % fmt::date_time("TimeStamp", std::nothrow)
-            % fmt::time_duration("Uptime", std::nothrow)
-            % fmt::attr< severity_level >("Severity", std::nothrow)
-            % fmt::message()
+        keywords::filter = expr::attr< severity_level >("Severity") >= warning,
+        keywords::format = expr::stream
+            << expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d, %H:%M:%S.%f")
+            << " [" << expr::format_date_time< attrs::timer::value_type >("Uptime", "%O:%M:%S")
+            << "] [" << expr::format_named_scope("Scope", keywords::format = "%n (%f:%l)")
+            << "] <" << expr::attr< severity_level >("Severity")
+            << "> " << expr::message
+/*
+        keywords::format = expr::format("%1% [%2%] [%3%] <%4%> %5%")
+            % expr::format_date_time< boost::posix_time::ptime >("TimeStamp", "%Y-%m-%d, %H:%M:%S.%f")
+            % expr::format_date_time< attrs::timer::value_type >("Uptime", "%O:%M:%S")
+            % expr::format_named_scope("Scope", keywords::format = "%n (%f:%l)")
+            % expr::attr< severity_level >("Severity")
+            % expr::message
+*/
     );
 
     // Also let's add some commonly used attributes, like timestamp and record counter.
     logging::add_common_attributes();
+    logging::core::get()->add_thread_attribute("Scope", attrs::named_scope());
+
+    BOOST_LOG_FUNCTION();
 
     // Now our logs will be written both to the console and to the file.
     // Let's do a quick test and output something. We have to create a logger for this.

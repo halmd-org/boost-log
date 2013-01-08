@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -7,17 +7,16 @@
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
-#include <boost/log/filters.hpp>
+#include <boost/log/expressions.hpp>
 
 namespace logging = boost::log;
-namespace flt = boost::log::filters;
 
 //[ example_tutorial_trivial_with_filtering
 void init()
 {
     logging::core::get()->set_filter
     (
-        flt::attr< logging::trivial::severity_level >("Severity") >= logging::trivial::info
+        logging::trivial::severity >= logging::trivial::info
     );
 }
 

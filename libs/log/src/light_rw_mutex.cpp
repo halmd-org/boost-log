@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -14,7 +14,7 @@
  */
 
 // This first include is to ensure that __MSVCRT_VERSION__ is defined properly
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -39,7 +39,7 @@ inline void _aligned_free(void* p) { free(p); }
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -161,7 +161,7 @@ void init_light_rw_mutex_impl()
 
 } // namespace
 
-BOOST_LOG_EXPORT light_rw_mutex::light_rw_mutex()
+BOOST_LOG_API light_rw_mutex::light_rw_mutex()
 {
     BOOST_LOG_ONCE_BLOCK()
     {
@@ -170,34 +170,34 @@ BOOST_LOG_EXPORT light_rw_mutex::light_rw_mutex()
     g_pInitializeLWRWMutex((mutex_impl*)&m_Mutex);
 }
 
-BOOST_LOG_EXPORT light_rw_mutex::~light_rw_mutex()
+BOOST_LOG_API light_rw_mutex::~light_rw_mutex()
 {
     g_pDestroyLWRWMutex((mutex_impl*)&m_Mutex);
 }
 
-BOOST_LOG_EXPORT void light_rw_mutex::lock_shared()
+BOOST_LOG_API void light_rw_mutex::lock_shared()
 {
     g_pLockSharedLWRWMutex((mutex_impl*)&m_Mutex);
 }
 
-BOOST_LOG_EXPORT void light_rw_mutex::unlock_shared()
+BOOST_LOG_API void light_rw_mutex::unlock_shared()
 {
     g_pUnlockSharedLWRWMutex((mutex_impl*)&m_Mutex);
 }
 
-BOOST_LOG_EXPORT void light_rw_mutex::lock()
+BOOST_LOG_API void light_rw_mutex::lock()
 {
     g_pLockExclusiveLWRWMutex((mutex_impl*)&m_Mutex);
 }
 
-BOOST_LOG_EXPORT void light_rw_mutex::unlock()
+BOOST_LOG_API void light_rw_mutex::unlock()
 {
     g_pUnlockExclusiveLWRWMutex((mutex_impl*)&m_Mutex);
 }
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,26 +12,26 @@
  * The header contains implementation of the counter attribute.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_ATTRIBUTES_COUNTER_HPP_INCLUDED_
 #define BOOST_LOG_ATTRIBUTES_COUNTER_HPP_INCLUDED_
 
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_integral.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/detail/atomic_count.hpp>
 #endif // BOOST_LOG_NO_THREADS
 
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace attributes {
 
@@ -48,8 +48,7 @@ class counter :
     public attribute
 {
     //  For now only integral types up to long are supported
-    BOOST_STATIC_ASSERT(is_integral< T >::value);
-    BOOST_STATIC_ASSERT(sizeof(T) <= sizeof(long));
+    BOOST_STATIC_ASSERT_MSG(is_integral< T >::value && sizeof(T) <= sizeof(long), "Boost.Log: Only integral types up to long are supported by counter attribute");
 
 public:
     //! A counter value type
@@ -128,10 +127,9 @@ public:
 
     attribute_value get_value()
     {
-        typedef basic_attribute_value< value_type > attr_value;
         register unsigned long next_counter = static_cast< unsigned long >(++m_Counter);
         register value_type next = static_cast< value_type >(m_Initial + (next_counter * m_Step));
-        return attribute_value(new attr_value(next));
+        return make_attribute_value(next);
     }
 };
 
@@ -153,8 +151,7 @@ public:
 
     attribute_value get_value()
     {
-        typedef basic_attribute_value< value_type > attr_value;
-        return attribute_value(new attr_value(static_cast< value_type >(++m_Counter)));
+        return make_attribute_value(static_cast< value_type >(++m_Counter));
     }
 };
 
@@ -176,8 +173,7 @@ public:
 
     attribute_value get_value()
     {
-        typedef basic_attribute_value< value_type > attr_value;
-        return attribute_value(new attr_value(static_cast< value_type >(--m_Counter)));
+        return make_attribute_value(static_cast< value_type >(--m_Counter));
     }
 };
 
@@ -203,9 +199,8 @@ public:
 
     attribute_value get_value()
     {
-        typedef basic_attribute_value< value_type > attr_value;
         m_Counter += m_Step;
-        return attribute_value(new attr_value(m_Counter));
+        return make_attribute_value(m_Counter);
     }
 };
 
@@ -213,7 +208,7 @@ public:
 
 } // namespace attributes
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

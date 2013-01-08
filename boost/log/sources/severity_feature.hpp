@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,23 +12,27 @@
  * The header contains implementation of a severity level support feature.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SOURCES_SEVERITY_FEATURE_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_SEVERITY_FEATURE_HPP_INCLUDED_
 
+#include <boost/cstdint.hpp>
 #include <boost/intrusive_ptr.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/static_assert.hpp>
+#include <boost/move/move.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
 #include <boost/log/utility/strictest_lock.hpp>
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 #include <boost/log/keywords/severity.hpp>
+#include <boost/log/core/record.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -40,25 +44,27 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sources {
 
 namespace aux {
 
-    //! The method returns the severity level for the current thread
-    BOOST_LOG_EXPORT int get_severity_level();
-    //! The method sets the severity level for the current thread
-    BOOST_LOG_EXPORT void set_severity_level(int level);
+    //! The method returns the storage for severity level for the current thread
+    BOOST_LOG_API uintmax_t& get_severity_level();
 
     //! Severity level attribute implementation
     template< typename LevelT >
     class severity_level :
         public attribute
     {
+        typedef severity_level this_type;
+        BOOST_COPYABLE_AND_MOVABLE(this_type)
+
     public:
         //! Stored level type
         typedef LevelT value_type;
+        BOOST_STATIC_ASSERT_MSG(sizeof(value_type) <= sizeof(uintmax_t), "Boost.Log: Unsupported severity level type, the severity level must fit into uintmax_t");
 
     protected:
         //! Factory implementation
@@ -69,11 +75,10 @@ namespace aux {
             //! The method dispatches the value to the given object
             bool dispatch(type_dispatcher& dispatcher)
             {
-                type_dispatcher::callback< value_type > callback =
-                    dispatcher.get_callback< value_type >();
+                type_dispatcher::callback< value_type > callback = dispatcher.get_callback< value_type >();
                 if (callback)
                 {
-                    callback(static_cast< value_type >(get_severity_level()));
+                    callback(reinterpret_cast< value_type const& >(get_severity_level()));
                     return true;
                 }
                 else
@@ -84,8 +89,8 @@ namespace aux {
             intrusive_ptr< attribute_value::impl > detach_from_thread()
             {
     #if !defined(BOOST_LOG_NO_THREADS)
-                return new attributes::basic_attribute_value< value_type >(
-                    static_cast< value_type >(get_severity_level()));
+                return new attributes::attribute_value_impl< value_type >(
+                    reinterpret_cast< value_type const& >(get_severity_level()));
     #else
                 // With multithreading disabled we may safely return this here. This method will not be called anyway.
                 return this;
@@ -98,15 +103,42 @@ namespace aux {
         severity_level() : attribute(new impl())
         {
         }
+        //! Copy constructor
+        severity_level(severity_level const& that) : attribute(static_cast< attribute const& >(that))
+        {
+        }
+        //! Move constructor
+        severity_level(BOOST_RV_REF(severity_level) that) : attribute(boost::move(static_cast< attribute& >(that)))
+        {
+        }
         //! Constructor for casting support
         explicit severity_level(attributes::cast_source const& source) :
             attribute(source.as< impl >())
         {
         }
+
+        /*!
+         * Copy assignment
+         */
+        severity_level& operator= (BOOST_COPY_ASSIGN_REF(severity_level) that)
+        {
+            attribute::operator= (that);
+            return *this;
+        }
+
+        /*!
+         * Move assignment
+         */
+        severity_level& operator= (BOOST_RV_REF(severity_level) that)
+        {
+            this->swap(that);
+            return *this;
+        }
+
         //! The method sets the actual level
         void set_value(value_type level)
         {
-            set_severity_level(static_cast< int >(level));
+            reinterpret_cast< value_type& >(get_severity_level()) = level;
         }
     };
 
@@ -121,18 +153,16 @@ class basic_severity_logger :
 {
     //! Base type
     typedef BaseT base_type;
+    typedef basic_severity_logger this_type;
+    BOOST_COPYABLE_AND_MOVABLE_ALT(this_type)
 
 public:
     //! Character type
     typedef typename base_type::char_type char_type;
     //! Final type
     typedef typename base_type::final_type final_type;
-    //! Attribute set type
-    typedef typename base_type::attribute_set_type attribute_set_type;
     //! Threading model being used
     typedef typename base_type::threading_model threading_model;
-    //! Log record type
-    typedef typename base_type::record_type record_type;
 
     //! Severity level type
     typedef LevelT severity_level;
@@ -172,9 +202,7 @@ public:
         base_type(),
         m_DefaultSeverity(static_cast< severity_level >(0))
     {
-        base_type::add_attribute_unlocked(
-            boost::log::aux::default_attribute_names< char_type >::severity(),
-            m_SeverityAttr);
+        base_type::add_attribute_unlocked(boost::log::aux::default_attribute_names::severity(), m_SeverityAttr);
     }
     /*!
      * Copy constructor
@@ -184,7 +212,17 @@ public:
         m_DefaultSeverity(that.m_DefaultSeverity),
         m_SeverityAttr(that.m_SeverityAttr)
     {
-        base_type::attributes()[boost::log::aux::default_attribute_names< char_type >::severity()] = m_SeverityAttr;
+        base_type::attributes()[boost::log::aux::default_attribute_names::severity()] = m_SeverityAttr;
+    }
+    /*!
+     * Move constructor
+     */
+    basic_severity_logger(BOOST_RV_REF(basic_severity_logger) that) :
+        base_type(boost::move(static_cast< base_type& >(that))),
+        m_DefaultSeverity(boost::move(that.m_DefaultSeverity)),
+        m_SeverityAttr(boost::move(that.m_SeverityAttr))
+    {
+        base_type::attributes()[boost::log::aux::default_attribute_names::severity()] = m_SeverityAttr;
     }
     /*!
      * Constructor with named arguments. Allows to setup the default level for log records.
@@ -197,9 +235,7 @@ public:
         base_type(args),
         m_DefaultSeverity(args[keywords::severity | severity_level()])
     {
-        base_type::add_attribute_unlocked(
-            boost::log::aux::default_attribute_names< char_type >::severity(),
-            m_SeverityAttr);
+        base_type::add_attribute_unlocked(boost::log::aux::default_attribute_names::severity(), m_SeverityAttr);
     }
 
     /*!
@@ -217,7 +253,7 @@ protected:
      * Unlocked \c open_record
      */
     template< typename ArgsT >
-    record_type open_record_unlocked(ArgsT const& args)
+    record open_record_unlocked(ArgsT const& args)
     {
         m_SeverityAttr.set_value(args[keywords::severity | m_DefaultSeverity]);
         return base_type::open_record_unlocked(args);
@@ -260,7 +296,7 @@ struct severity
 
 } // namespace sources
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

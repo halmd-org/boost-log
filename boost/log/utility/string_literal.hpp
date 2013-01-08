@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,27 +12,28 @@
  * The header contains implementation of a constant string literal wrapper.
  */
 
-#if defined(_MSC_VER) && _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_STRING_LITERAL_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_STRING_LITERAL_HPP_INCLUDED_
 
+#include <cstddef>
 #include <stdexcept>
 #include <iosfwd>
 #include <string>
 #include <iterator>
 #include <boost/operators.hpp>
 #include <boost/throw_exception.hpp>
-#include <boost/compatibility/cpp_c_headers/cstddef>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/utility/enable_if.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
+#include <boost/log/utility/string_literal_fwd.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * \brief String literal wrapper
@@ -45,7 +46,7 @@ namespace BOOST_LOG_NAMESPACE {
  * The main advantage of this class comparing to other string classes is that
  * it doesn't dynamically allocate memory and therefore is fast, thin and exception safe.
  */
-template< typename CharT, typename TraitsT = std::char_traits< CharT > >
+template< typename CharT, typename TraitsT >
 class basic_string_literal
     //! \cond
     : public totally_ordered1< basic_string_literal< CharT, TraitsT >,
@@ -528,14 +529,6 @@ inline void swap(
     left.swap(right);
 }
 
-//  Convenience typedefs
-#ifdef BOOST_LOG_USE_CHAR
-typedef basic_string_literal< char > string_literal;        //!< String literal type for narrow characters
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-typedef basic_string_literal< wchar_t > wstring_literal;    //!< String literal type for wide characters
-#endif
-
 //! Creates a string literal wrapper from a constant string literal
 #ifdef BOOST_LOG_USE_CHAR
 template< typename T, std::size_t LenV >
@@ -570,7 +563,7 @@ str_literal(T(&p)[LenV])
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

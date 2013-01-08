@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -14,9 +14,9 @@
 #include <boost/mpl/quote.hpp>
 #include <boost/parameter/keyword.hpp>
 #include <boost/thread/locks.hpp>
+#include <boost/move/move.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
-#include <boost/log/formatters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/sources/features.hpp>
 #include <boost/log/sources/basic_logger.hpp>
@@ -25,12 +25,11 @@
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/strictest_lock.hpp>
-#include <boost/log/utility/init/common_attributes.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace fmt = boost::log::formatters;
-namespace flt = boost::log::filters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace attrs = boost::log::attributes;
 namespace keywords = boost::log::keywords;
@@ -52,9 +51,7 @@ public:
     // Let's import some types that we will need. These imports should be public,
     // in order to allow other features that may derive from record_tagger to do the same.
     typedef typename BaseT::char_type char_type;
-    typedef typename BaseT::attribute_set_type attribute_set_type;
     typedef typename BaseT::threading_model threading_model;
-    typedef typename BaseT::record_type record_type;
 
 public:
     // Default constructor. Initializes m_Tag to an invalid value.
@@ -77,7 +74,7 @@ public:
 protected:
     // Lock-less implementation of operations
     template< typename ArgsT >
-    record_type open_record_unlocked(ArgsT const& args);
+    logging::record open_record_unlocked(ArgsT const& args);
 };
 
 // A convenience metafunction to specify the feature
@@ -110,23 +107,21 @@ record_tagger_feature< BaseT >::record_tagger_feature(ArgsT const& args) : BaseT
 //[ example_extension_record_tagger_open_record
 template< typename BaseT >
 template< typename ArgsT >
-typename record_tagger_feature< BaseT >::record_type
-record_tagger_feature< BaseT >::open_record_unlocked(ArgsT const& args)
+logging::record record_tagger_feature< BaseT >::open_record_unlocked(ArgsT const& args)
 {
     // Extract the named argument from the parameters pack
-    typedef std::basic_string< char_type > string_type;
-    string_type tag_value = args[my_keywords::tag | string_type()];
+    std::string tag_value = args[my_keywords::tag | std::string()];
 
-    attribute_set_type& attrs = BaseT::attributes();
-    typename attribute_set_type::iterator tag = attrs.end();
+    logging::attribute_set& attrs = BaseT::attributes();
+    logging::attribute_set::iterator tag = attrs.end();
     if (!tag_value.empty())
     {
         // Add the tag as a new attribute
         std::pair<
-            typename attribute_set_type::iterator,
+            logging::attribute_set::iterator,
             bool
         > res = BaseT::add_attribute_unlocked("Tag",
-            attrs::constant< string_type >(tag_value));
+            attrs::constant< std::string >(tag_value));
         if (res.second)
             tag = res.first;
     }
@@ -197,8 +192,10 @@ void manual_logging()
     logging::record rec = logger.open_record((keywords::severity = normal, my_keywords::tag = "GUI"));
     if (rec)
     {
-        rec.message() = "The user has confirmed his choice";
-        logger.push_record(rec);
+        logging::record_ostream strm(rec);
+        strm << "The user has confirmed his choice";
+        strm.flush();
+        logger.push_record(boost::move(rec));
     }
 }
 //]
@@ -218,21 +215,21 @@ void logging_function()
 void init()
 {
     typedef sinks::synchronous_sink< sinks::text_ostream_backend > text_sink;
-    boost::shared_ptr< text_sink > pSink = boost::make_shared< text_sink >();
+    boost::shared_ptr< text_sink > sink = boost::make_shared< text_sink >();
 
-    pSink->locked_backend()->add_stream(
+    sink->locked_backend()->add_stream(
         boost::make_shared< std::ofstream >("sample.log"));
 
-    pSink->set_formatter
+    sink->set_formatter
     (
-        fmt::stream
-            << fmt::attr< unsigned int >("LineID")
-            << ": <" << fmt::attr< severity_level >("Severity")
-            << "> [" << fmt::attr< std::string >("Tag") << "]\t"
-            << fmt::message()
+        expr::stream
+            << expr::attr< unsigned int >("LineID")
+            << ": <" << expr::attr< severity_level >("Severity")
+            << "> [" << expr::attr< std::string >("Tag") << "]\t"
+            << expr::smessage
     );
 
-    logging::core::get()->add_sink(pSink);
+    logging::core::get()->add_sink(sink);
 
     // Add attributes
     logging::add_common_attributes();

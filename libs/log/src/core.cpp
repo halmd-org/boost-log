@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -13,17 +13,23 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#include <cstddef>
+#include <new>
 #include <memory>
-#include <deque>
 #include <vector>
 #include <algorithm>
+#include <boost/cstdint.hpp>
+#include <boost/assert.hpp>
 #include <boost/weak_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/compatibility/cpp_c_headers/cstddef>
+#include <boost/range/iterator_range_core.hpp>
+#include <boost/move/move.hpp>
 #include <boost/log/core/core.hpp>
+#include <boost/log/core/record.hpp>
+#include <boost/log/core/record_view.hpp>
 #include <boost/log/sinks/sink.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/detail/singleton.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/tss.hpp>
@@ -32,47 +38,161 @@
 #include <boost/log/detail/light_rw_mutex.hpp>
 #endif
 #include "default_sink.hpp"
+#include "stateless_allocator.hpp"
+#include "alignment_gap_between.hpp"
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 //! Private record data information, with core-specific structures
-template< typename CharT >
-struct basic_record< CharT >::private_data :
+struct record_view::private_data :
     public public_data
 {
-    //! Sink interface type
-    typedef sinks::sink< CharT > sink_type;
-    //! Sinks container type
-    typedef std::deque< weak_ptr< sink_type > > sink_list;
+    //! Underlying memory allocator
+    typedef boost::log::aux::stateless_allocator< char > stateless_allocator;
+    //! Sink pointer type
+    typedef weak_ptr< sinks::sink > sink_ptr;
+    //! Iterator range with pointers to the accepting sinks
+    typedef iterator_range< sink_ptr* > sink_list;
 
-    //! A list of sinks that will accept the record
-    sink_list m_AcceptingSinks;
+private:
+    //! Number of sinks accepting the record
+    uint32_t m_accepting_sink_count;
+    //! Maximum number of sinks accepting the record
+    const uint32_t m_accepting_sink_capacity;
+    //! The flag indicates that the record has to be detached from the current thread
+    bool m_detach_from_thread_needed;
 
-    template< typename SourceT >
-    explicit private_data(SourceT const& values) : public_data(values)
+private:
+    //! Initializing constructor
+    private_data(BOOST_RV_REF(attribute_value_set) values, uint32_t capacity) :
+        public_data(boost::move(values)),
+        m_accepting_sink_count(0),
+        m_accepting_sink_capacity(capacity),
+        m_detach_from_thread_needed(false)
     {
+    }
+
+public:
+    //! Creates the object with the specified capacity
+    static private_data* create(BOOST_RV_REF(attribute_value_set) values, uint32_t capacity)
+    {
+        stateless_allocator alloc;
+        private_data* p = reinterpret_cast< private_data* >(alloc.allocate
+        (
+            sizeof(private_data) +
+            boost::log::aux::alignment_gap_between< private_data, sink_ptr >::value +
+            capacity * sizeof(sink_ptr)
+        ));
+        new (p) private_data(boost::move(values), capacity);
+        return p;
+    }
+
+    //! Destroys the object and frees the underlying storage
+    void destroy() BOOST_NOEXCEPT
+    {
+        sink_list s = get_accepting_sinks();
+        for (sink_list::iterator it = s.begin(), end = s.end(); it != end; ++it)
+        {
+            it->~sink_ptr();
+        }
+
+        const uint32_t capacity = m_accepting_sink_capacity;
+        this->~private_data();
+
+        stateless_allocator alloc;
+        alloc.deallocate
+        (
+            reinterpret_cast< stateless_allocator::pointer >(this),
+            sizeof(private_data) +
+                boost::log::aux::alignment_gap_between< private_data, sink_ptr >::value +
+                capacity * sizeof(sink_ptr)
+        );
+    }
+
+    //! Returns iterator range with the pointers to the accepting sinks
+    sink_list get_accepting_sinks() BOOST_NOEXCEPT
+    {
+        sink_ptr* p = begin();
+        return sink_list(p, p + m_accepting_sink_count);
+    }
+
+    //! Adds an accepting sink
+    void push_back_accepting_sink(shared_ptr< sinks::sink > const& sink)
+    {
+        BOOST_ASSERT(m_accepting_sink_count < m_accepting_sink_capacity);
+        sink_ptr* p = begin() + m_accepting_sink_count;
+        new (p) sink_ptr(sink);
+        ++m_accepting_sink_count;
+        m_detach_from_thread_needed |= sink->is_cross_thread();
+    }
+
+    //! Returns the number of accepting sinks
+    uint32_t accepting_sink_count() const BOOST_NOEXCEPT { return m_accepting_sink_count; }
+
+    //! Returns the flag indicating whether it is needed to detach the record from the current thread
+    bool is_detach_from_thread_needed() const BOOST_NOEXCEPT { return m_detach_from_thread_needed; }
+
+    BOOST_LOG_DELETED_FUNCTION(private_data(private_data const&))
+    BOOST_LOG_DELETED_FUNCTION(private_data& operator= (private_data const&))
+
+private:
+    //! Returns a pointer to the first accepting sink
+    sink_ptr* begin() BOOST_NOEXCEPT
+    {
+        return reinterpret_cast< sink_ptr* >
+        (
+            reinterpret_cast< char* >(this) +
+                sizeof(private_data) +
+                boost::log::aux::alignment_gap_between< private_data, sink_ptr >::value
+        );
     }
 };
 
+//! Destructor
+BOOST_LOG_API void record_view::public_data::destroy(const public_data* p) BOOST_NOEXCEPT
+{
+    const_cast< private_data* >(static_cast< const private_data* >(p))->destroy();
+}
+
+//! The function ensures that the log record does not depend on any thread-specific data.
+BOOST_LOG_API record_view record::lock()
+{
+    BOOST_ASSERT(m_impl != NULL);
+
+    record_view::private_data* const impl = static_cast< record_view::private_data* >(m_impl);
+    if (impl->is_detach_from_thread_needed())
+    {
+        attribute_value_set::const_iterator
+            it = impl->m_attribute_values.begin(),
+            end = impl->m_attribute_values.end();
+        for (; it != end; ++it)
+        {
+            // Yep, a bit hackish. I'll need a better backdoor to do it gracefully.
+            const_cast< attribute_value_set::mapped_type& >(it->second).detach_from_thread();
+        }
+    }
+
+    // Move the implementation to the view
+    m_impl = NULL;
+    return record_view(impl);
+}
+
 //! Logging system implementation
-template< typename CharT >
-struct basic_core< CharT >::implementation :
+struct core::implementation :
     public log::aux::lazy_singleton<
         implementation,
-        shared_ptr< basic_core< CharT > >
+        core_ptr
     >
 {
 public:
     //! Base type of singleton holder
     typedef log::aux::lazy_singleton<
         implementation,
-        shared_ptr< basic_core< CharT > >
+        core_ptr
     > base_type;
 
-    //! Front-end class type
-    typedef basic_core< char_type > core_type;
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Read lock type
     typedef log::aux::shared_lock_guard< log::aux::light_rw_mutex > scoped_read_lock;
@@ -81,76 +201,73 @@ public:
 #endif
 
     //! Sinks container type
-    typedef std::vector< shared_ptr< sink_type > > sink_list;
+    typedef std::vector< shared_ptr< sinks::sink > > sink_list;
 
     //! Thread-specific data
     struct thread_data
     {
         //! Thread-specific attribute set
-        attribute_set_type ThreadAttributes;
+        attribute_set m_thread_attributes;
     };
-
-    //! Log record implementation type
-    typedef typename record_type::private_data record_private_data;
 
 public:
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Synchronization mutex
-    log::aux::light_rw_mutex Mutex;
+    log::aux::light_rw_mutex m_mutex;
 #endif
 
     //! List of sinks involved into output
-    sink_list Sinks;
+    sink_list m_sinks;
     //! Default sink
-    const shared_ptr< sink_type > DefaultSink;
+    const shared_ptr< sinks::sink > m_default_sink;
 
     //! Global attribute set
-    attribute_set_type GlobalAttributes;
+    attribute_set m_global_attributes;
 #if !defined(BOOST_LOG_NO_THREADS)
     //! Thread-specific data
-    thread_specific_ptr< thread_data > pThreadData;
+    thread_specific_ptr< thread_data > m_thread_data;
 
 #if defined(BOOST_LOG_USE_COMPILER_TLS)
     //! Cached pointer to the thread-specific data
-    static BOOST_LOG_TLS thread_data* pThreadDataCache;
+    static BOOST_LOG_TLS thread_data* m_thread_data_cache;
 #endif
 
 #else
     //! Thread-specific data
-    std::auto_ptr< thread_data > pThreadData;
+    std::auto_ptr< thread_data > m_thread_data;
 #endif
 
     //! The global state of logging
-    volatile bool Enabled;
+    volatile bool m_enabled;
     //! Global filter
-    filter_type Filter;
+    filter m_filter;
 
     //! Exception handler
-    exception_handler_type ExceptionHandler;
+    exception_handler_type m_exception_handler;
 
 public:
     //! Constructor
     implementation() :
-        DefaultSink(boost::make_shared< sinks::aux::basic_default_sink< char_type > >()),
-        Enabled(true)
+        m_default_sink(boost::make_shared< sinks::aux::default_sink >()),
+        m_enabled(true)
     {
     }
 
     //! Invokes sink-specific filter and adds the sink to the record if the filter passes the log record
-    void apply_sink_filter(shared_ptr< sink_type > const& sink, record_type& rec, record_private_data*& rec_impl, values_view_type*& attr_values)
+    void apply_sink_filter(shared_ptr< sinks::sink > const& sink, record& rec, attribute_value_set*& attr_values, uint32_t remaining_capacity)
     {
         try
         {
             if (sink->will_consume(*attr_values))
             {
                 // If at least one sink accepts the record, it's time to create it
-                if (!rec_impl)
+                if (!rec.m_impl)
                 {
-                    attr_values->freeze();
-                    rec.m_pData = rec_impl = new record_private_data(move(*attr_values));
-                    attr_values = &rec.m_pData->m_AttributeValues;
+                    rec.m_impl = record_view::private_data::create(boost::move(*attr_values), remaining_capacity);
+                    attr_values = &rec.m_impl->m_attribute_values;
                 }
-                rec_impl->m_AcceptingSinks.push_back(sink);
+
+                static_cast< record_view::private_data* >(rec.m_impl)->push_back_accepting_sink(sink);
             }
         }
 #if !defined(BOOST_LOG_NO_THREADS)
@@ -161,35 +278,97 @@ public:
 #endif // !defined(BOOST_LOG_NO_THREADS)
         catch (...)
         {
-            if (this->ExceptionHandler.empty())
+            if (m_exception_handler.empty())
                 throw;
+            m_exception_handler();
+        }
+    }
 
-            // Assume that the sink is incapable to receive messages now
-            this->ExceptionHandler();
+    //! Opens a record
+    template< typename SourceAttributesT >
+    BOOST_LOG_FORCEINLINE record open_record(BOOST_FWD_REF(SourceAttributesT) source_attributes)
+    {
+        // Try a quick win first
+        if (m_enabled) try
+        {
+            thread_data* tsd = get_thread_data();
 
-            if (rec_impl && rec_impl->m_AcceptingSinks.empty())
+            // Lock the core to be safe against any attribute or sink set modifications
+            BOOST_LOG_EXPR_IF_MT(scoped_read_lock lock(m_mutex);)
+
+            if (m_enabled)
             {
-                rec_impl = NULL;
-                rec.m_pData = NULL; // destroy record implementation
+                // Compose a view of attribute values (unfrozen, yet)
+                attribute_value_set attr_values(boost::forward< SourceAttributesT >(source_attributes), tsd->m_thread_attributes, m_global_attributes);
+                if (m_filter(attr_values))
+                {
+                    // The global filter passed, trying the sinks
+                    record rec;
+                    attribute_value_set* values = &attr_values;
+
+                    if (!m_sinks.empty())
+                    {
+                        uint32_t remaining_capacity = static_cast< uint32_t >(m_sinks.size());
+                        sink_list::iterator it = m_sinks.begin(), end = m_sinks.end();
+                        for (; it != end; ++it, --remaining_capacity)
+                        {
+                            apply_sink_filter(*it, rec, values, remaining_capacity);
+                        }
+                    }
+                    else
+                    {
+                        // Use the default sink
+                        apply_sink_filter(m_default_sink, rec, values, 1);
+                    }
+
+                    record_view::private_data* rec_impl = static_cast< record_view::private_data* >(rec.m_impl);
+                    if (rec_impl && rec_impl->accepting_sink_count() == 0)
+                    {
+                        // No sinks accepted the record
+                        return record();
+                    }
+
+                    // Some sinks have accepted the record
+                    values->freeze();
+
+                    return boost::move(rec);
+                }
             }
         }
+    #if !defined(BOOST_LOG_NO_THREADS)
+        catch (thread_interrupted&)
+        {
+            throw;
+        }
+    #endif // !defined(BOOST_LOG_NO_THREADS)
+        catch (...)
+        {
+            // Lock the core to be safe against any attribute or sink set modifications
+            BOOST_LOG_EXPR_IF_MT(scoped_read_lock lock(m_mutex);)
+            if (m_exception_handler.empty())
+                throw;
+
+            m_exception_handler();
+        }
+
+        return record();
     }
 
     //! The method returns the current thread-specific data
     thread_data* get_thread_data()
     {
 #if defined(BOOST_LOG_USE_COMPILER_TLS)
-        thread_data* p = pThreadDataCache;
+        thread_data* p = m_thread_data_cache;
 #else
-        thread_data* p = pThreadData.get();
+        thread_data* p = m_thread_data.get();
 #endif
         if (!p)
         {
             init_thread_data();
 #if defined(BOOST_LOG_USE_COMPILER_TLS)
-            p = pThreadDataCache;
+            p = m_thread_data_cache;
 #else
-            p = pThreadData.get();
+            p = m_thread_data.get();
 #endif
         }
         return p;
@@ -198,20 +377,20 @@ public:
     //! The function initializes the logging system
     static void init_instance()
     {
-        base_type::get_instance().reset(new core_type());
+        base_type::get_instance().reset(new core());
     }
 
 private:
     //! The method initializes thread-specific data
     void init_thread_data()
     {
-        BOOST_LOG_EXPR_IF_MT(scoped_write_lock lock(Mutex);)
-        if (!pThreadData.get())
+        BOOST_LOG_EXPR_IF_MT(scoped_write_lock lock(m_mutex);)
+        if (!m_thread_data.get())
         {
             std::auto_ptr< thread_data > p(new thread_data());
-            pThreadData.reset(p.get());
+            m_thread_data.reset(p.get());
 #if defined(BOOST_LOG_USE_COMPILER_TLS)
-            pThreadDataCache = p.release();
+            m_thread_data_cache = p.release();
 #else
             p.release();
 #endif
@@ -221,178 +400,157 @@ private:
 
 #if defined(BOOST_LOG_USE_COMPILER_TLS)
 //! Cached pointer to the thread-specific data
-template< typename CharT >
-BOOST_LOG_TLS typename basic_core< CharT >::implementation::thread_data*
-basic_core< CharT >::implementation::pThreadDataCache = NULL;
+BOOST_LOG_TLS core::implementation::thread_data* core::implementation::m_thread_data_cache = NULL;
 #endif // defined(BOOST_LOG_USE_COMPILER_TLS)
 
 //! Logging system constructor
-template< typename CharT >
-basic_core< CharT >::basic_core() :
-    pImpl(new implementation())
+core::core() :
+    m_impl(new implementation())
 {
 }
 
 //! Logging system destructor
-template< typename CharT >
-basic_core< CharT >::~basic_core()
+core::~core()
 {
-    delete pImpl;
+    delete m_impl;
+    m_impl = NULL;
 }
 
 //! The method returns a pointer to the logging system instance
-template< typename CharT >
-shared_ptr< basic_core< CharT > > basic_core< CharT >::get()
+BOOST_LOG_API core_ptr core::get()
 {
     return implementation::get();
 }
 
 //! The method enables or disables logging and returns the previous state of logging flag
-template< typename CharT >
-bool basic_core< CharT >::set_logging_enabled(bool enabled)
+BOOST_LOG_API bool core::set_logging_enabled(bool enabled)
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
-    const bool old_value = pImpl->Enabled;
-    pImpl->Enabled = enabled;
+    BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
+    const bool old_value = m_impl->m_enabled;
+    m_impl->m_enabled = enabled;
     return old_value;
 }
 
 //! The method allows to detect if logging is enabled
-template< typename CharT >
-bool basic_core< CharT >::get_logging_enabled() const
+BOOST_LOG_API bool core::get_logging_enabled() const
 {
     // Should have a read barrier here, but for performance reasons it is omitted.
     // The function should be used as a quick check and doesn't need to be reliable.
-    return pImpl->Enabled;
+    return m_impl->m_enabled;
 }
 
 //! The method adds a new sink
-template< typename CharT >
-void basic_core< CharT >::add_sink(shared_ptr< sink_type > const& s)
+BOOST_LOG_API void core::add_sink(shared_ptr< sinks::sink > const& s)
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
-    typename implementation::sink_list::iterator it =
-        std::find(pImpl->Sinks.begin(), pImpl->Sinks.end(), s);
-    if (it == pImpl->Sinks.end())
-        pImpl->Sinks.push_back(s);
+    BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
+    implementation::sink_list::iterator it =
+        std::find(m_impl->m_sinks.begin(), m_impl->m_sinks.end(), s);
+    if (it == m_impl->m_sinks.end())
+        m_impl->m_sinks.push_back(s);
 }
 
 //! The method removes the sink from the output
-template< typename CharT >
-void basic_core< CharT >::remove_sink(shared_ptr< sink_type > const& s)
+BOOST_LOG_API void core::remove_sink(shared_ptr< sinks::sink > const& s)
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
-    typename implementation::sink_list::iterator it =
-        std::find(pImpl->Sinks.begin(), pImpl->Sinks.end(), s);
-    if (it != pImpl->Sinks.end())
-        pImpl->Sinks.erase(it);
+    BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
+    implementation::sink_list::iterator it =
+        std::find(m_impl->m_sinks.begin(), m_impl->m_sinks.end(), s);
+    if (it != m_impl->m_sinks.end())
+        m_impl->m_sinks.erase(it);
 }
 
 //! The method removes all registered sinks from the output
-template< typename CharT >
-void basic_core< CharT >::remove_all_sinks()
+BOOST_LOG_API void core::remove_all_sinks()
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
-    pImpl->Sinks.clear();
+    BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
+    m_impl->m_sinks.clear();
 }
 
 
 //! The method adds an attribute to the global attribute set
-template< typename CharT >
-std::pair< typename basic_core< CharT >::attribute_set_type::iterator, bool >
-basic_core< CharT >::add_global_attribute(attribute_name_type const& name, attribute const& attr)
+BOOST_LOG_API std::pair< attribute_set::iterator, bool >
+core::add_global_attribute(attribute_name const& name, attribute const& attr)
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
-    return pImpl->GlobalAttributes.insert(name, attr);
+    BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
+    return m_impl->m_global_attributes.insert(name, attr);
 }
 
 //! The method removes an attribute from the global attribute set
-template< typename CharT >
-void basic_core< CharT >::remove_global_attribute(typename attribute_set_type::iterator it)
+BOOST_LOG_API void core::remove_global_attribute(attribute_set::iterator it)
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
-    pImpl->GlobalAttributes.erase(it);
+    BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
+    m_impl->m_global_attributes.erase(it);
 }
 
 //! The method returns the complete set of currently registered global attributes
-template< typename CharT >
-typename basic_core< CharT >::attribute_set_type basic_core< CharT >::get_global_attributes() const
+BOOST_LOG_API attribute_set core::get_global_attributes() const
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock lock(pImpl->Mutex);)
-    return pImpl->GlobalAttributes;
+    BOOST_LOG_EXPR_IF_MT(implementation::scoped_read_lock lock(m_impl->m_mutex);)
+    return m_impl->m_global_attributes;
 }
+
 //! The method replaces the complete set of currently registered global attributes with the provided set
-template< typename CharT >
-void basic_core< CharT >::set_global_attributes(attribute_set_type const& attrs)
+BOOST_LOG_API void core::set_global_attributes(attribute_set const& attrs)
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
-    pImpl->GlobalAttributes = attrs;
+    BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
+    m_impl->m_global_attributes = attrs;
 }
 
 //! The method adds an attribute to the thread-specific attribute set
-template< typename CharT >
-std::pair< typename basic_core< CharT >::attribute_set_type::iterator, bool >
-basic_core< CharT >::add_thread_attribute(attribute_name_type const& name, attribute const& attr)
+BOOST_LOG_API std::pair< attribute_set::iterator, bool >
+core::add_thread_attribute(attribute_name const& name, attribute const& attr)
 {
-    typename implementation::thread_data* p = pImpl->get_thread_data();
-    return p->ThreadAttributes.insert(name, attr);
+    implementation::thread_data* p = m_impl->get_thread_data();
+    return p->m_thread_attributes.insert(name, attr);
 }
 
 //! The method removes an attribute from the thread-specific attribute set
-template< typename CharT >
-void basic_core< CharT >::remove_thread_attribute(typename attribute_set_type::iterator it)
+BOOST_LOG_API void core::remove_thread_attribute(attribute_set::iterator it)
 {
-    typename implementation::thread_data* p = pImpl->pThreadData.get();
-    if (p)
-        p->ThreadAttributes.erase(it);
+    implementation::thread_data* p = m_impl->get_thread_data();
+    p->m_thread_attributes.erase(it);
 }
 
 //! The method returns the complete set of currently registered thread-specific attributes
-template< typename CharT >
-typename basic_core< CharT >::attribute_set_type basic_core< CharT >::get_thread_attributes() const
+BOOST_LOG_API attribute_set core::get_thread_attributes() const
 {
-    typename implementation::thread_data* p = pImpl->get_thread_data();
-    return p->ThreadAttributes;
+    implementation::thread_data* p = m_impl->get_thread_data();
+    return p->m_thread_attributes;
 }
 //! The method replaces the complete set of currently registered thread-specific attributes with the provided set
-template< typename CharT >
-void basic_core< CharT >::set_thread_attributes(attribute_set_type const& attrs)
+BOOST_LOG_API void core::set_thread_attributes(attribute_set const& attrs)
 {
-    typename implementation::thread_data* p = pImpl->get_thread_data();
-    p->ThreadAttributes = attrs;
+    implementation::thread_data* p = m_impl->get_thread_data();
+    p->m_thread_attributes = attrs;
 }
 
 //! An internal method to set the global filter
-template< typename CharT >
-void basic_core< CharT >::set_filter(filter_type const& filter)
+BOOST_LOG_API void core::set_filter(filter const& filter)
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
-    pImpl->Filter = filter;
+    BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
+    m_impl->m_filter = filter;
 }
 
 //! The method removes the global logging filter
-template< typename CharT >
-void basic_core< CharT >::reset_filter()
+BOOST_LOG_API void core::reset_filter()
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
-    pImpl->Filter.clear();
+    BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
+    m_impl->m_filter.reset();
 }
 
 //! The method sets exception handler function
-template< typename CharT >
-void basic_core< CharT >::set_exception_handler(exception_handler_type const& handler)
+BOOST_LOG_API void core::set_exception_handler(exception_handler_type const& handler)
 {
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
-    pImpl->ExceptionHandler = handler;
+    BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
+    m_impl->m_exception_handler = handler;
 }
 
 //! The method performs flush on all registered sinks.
-template< typename CharT >
-void basic_core< CharT >::flush()
+BOOST_LOG_API void core::flush()
 {
     // Acquire exclusive lock to prevent any logging attempts while flushing
-    BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_write_lock lock(pImpl->Mutex);)
-    typename implementation::sink_list::iterator it = pImpl->Sinks.begin(), end = pImpl->Sinks.end();
+    BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
+    implementation::sink_list::iterator it = m_impl->m_sinks.begin(), end = m_impl->m_sinks.end();
     for (; it != end; ++it)
     {
         try
@@ -407,107 +565,66 @@ void basic_core< CharT >::flush()
 #endif // !defined(BOOST_LOG_NO_THREADS)
         catch (...)
         {
-            if (pImpl->ExceptionHandler.empty())
+            if (m_impl->m_exception_handler.empty())
                 throw;
-            pImpl->ExceptionHandler();
+            m_impl->m_exception_handler();
         }
     }
 }
 
-//! The method opens a new record to be written and returns true if the record was opened
-template< typename CharT >
-typename basic_core< CharT >::record_type basic_core< CharT >::open_record(attribute_set_type const& source_attributes)
+//! The method attempts to open a new record to be written
+BOOST_LOG_API record core::open_record(attribute_set const& source_attributes)
 {
-    record_type rec;
+    return m_impl->open_record(source_attributes);
+}
 
-    // Try a quick win first
-    if (pImpl->Enabled) try
-    {
-        typename implementation::thread_data* tsd = pImpl->get_thread_data();
+//! The method attempts to open a new record to be written
+BOOST_LOG_API record core::open_record(attribute_value_set const& source_attributes)
+{
+    return m_impl->open_record(source_attributes);
+}
 
-        // Lock the core to be safe against any attribute or sink set modifications
-        BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock lock(pImpl->Mutex);)
-
-        if (pImpl->Enabled)
-        {
-            // Compose a view of attribute values (unfrozen, yet)
-            values_view_type temp_attr_values(source_attributes, tsd->ThreadAttributes, pImpl->GlobalAttributes);
-            register values_view_type* attr_values = &temp_attr_values;
-
-            if (pImpl->Filter.empty() || pImpl->Filter(*attr_values))
-            {
-                // The global filter passed, trying the sinks
-                typename implementation::record_private_data* rec_impl = NULL;
-                if (!pImpl->Sinks.empty())
-                {
-                    typename implementation::sink_list::iterator it = pImpl->Sinks.begin(), end = pImpl->Sinks.end();
-                    for (; it != end; ++it)
-                    {
-                        pImpl->apply_sink_filter(*it, rec, rec_impl, attr_values);
-                    }
-                }
-                else
-                {
-                    // Use the default sink
-                    pImpl->apply_sink_filter(pImpl->DefaultSink, rec, rec_impl, attr_values);
-                }
-            }
-        }
-    }
-#if !defined(BOOST_LOG_NO_THREADS)
-    catch (thread_interrupted&)
-    {
-        throw;
-    }
-#endif // !defined(BOOST_LOG_NO_THREADS)
-    catch (...)
-    {
-        // Lock the core to be safe against any attribute or sink set modifications
-        BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock lock(pImpl->Mutex);)
-        if (pImpl->ExceptionHandler.empty())
-            throw;
-
-        pImpl->ExceptionHandler();
-    }
-
-    return rec;
+//! The method attempts to open a new record to be written.
+BOOST_LOG_API record core::open_record_move(attribute_value_set& source_attributes)
+{
+    return m_impl->open_record(boost::move(source_attributes));
 }
 
 //! The method pushes the record
-template< typename CharT >
-void basic_core< CharT >::push_record(record_type const& rec)
+BOOST_LOG_API void core::push_record_move(record& rec)
 {
     try
     {
-        typedef typename record_type::private_data record_private_data;
-        record_private_data* pData = static_cast< record_private_data* >(rec.m_pData.get());
+        record_view rec_view(rec.lock());
+        record_view::private_data* data = static_cast< record_view::private_data* >(rec_view.m_impl.get());
 
-        typedef std::vector< shared_ptr< sink_type > > accepting_sinks_t;
-        accepting_sinks_t accepting_sinks(pData->m_AcceptingSinks.size());
-        shared_ptr< sink_type >* const begin = &*accepting_sinks.begin();
-        register shared_ptr< sink_type >* end = begin;
+        typedef std::vector< shared_ptr< sinks::sink > > accepting_sinks_t;
+        accepting_sinks_t accepting_sinks(data->accepting_sink_count());
+        shared_ptr< sinks::sink >* const begin = &*accepting_sinks.begin();
+        register shared_ptr< sinks::sink >* end = begin;
 
         // Lock sinks that are willing to consume the record
-        typename record_private_data::sink_list::iterator
-            weak_it = pData->m_AcceptingSinks.begin(),
-            weak_end = pData->m_AcceptingSinks.end();
+        record_view::private_data::sink_list weak_sinks = data->get_accepting_sinks();
+        record_view::private_data::sink_list::iterator
+            weak_it = weak_sinks.begin(),
+            weak_end = weak_sinks.end();
         for (; weak_it != weak_end; ++weak_it)
         {
-            shared_ptr< sink_type >& last = *end;
+            shared_ptr< sinks::sink >& last = *end;
             weak_it->lock().swap(last);
-            if (last)
+            if (last.get())
                 ++end;
         }
 
         bool shuffled = (end - begin) <= 1;
-        register shared_ptr< sink_type >* it = begin;
+        register shared_ptr< sinks::sink >* it = begin;
         while (true) try
         {
             // First try to distribute load between different sinks
             register bool all_locked = true;
             while (it != end)
             {
-                if (it->get()->try_consume(rec))
+                if (it->get()->try_consume(rec_view))
                 {
                     --end;
                     end->swap(*it);
@@ -529,7 +646,7 @@ void basic_core< CharT >::push_record(record_type const& rec)
                         shuffled = true;
                     }
 
-                    it->get()->consume(rec);
+                    it->get()->consume(rec_view);
                     --end;
                     end->swap(*it);
                 }
@@ -546,11 +663,11 @@ void basic_core< CharT >::push_record(record_type const& rec)
         catch (...)
         {
             // Lock the core to be safe against any attribute or sink set modifications
-            BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock lock(pImpl->Mutex);)
-            if (pImpl->ExceptionHandler.empty())
+            BOOST_LOG_EXPR_IF_MT(implementation::scoped_read_lock lock(m_impl->m_mutex);)
+            if (m_impl->m_exception_handler.empty())
                 throw;
 
-            pImpl->ExceptionHandler();
+            m_impl->m_exception_handler();
 
             // Skip the sink that failed to consume the record
             --end;
@@ -566,22 +683,14 @@ void basic_core< CharT >::push_record(record_type const& rec)
     catch (...)
     {
         // Lock the core to be safe against any attribute or sink set modifications
-        BOOST_LOG_EXPR_IF_MT(typename implementation::scoped_read_lock lock(pImpl->Mutex);)
-        if (pImpl->ExceptionHandler.empty())
+        BOOST_LOG_EXPR_IF_MT(implementation::scoped_read_lock lock(m_impl->m_mutex);)
+        if (m_impl->m_exception_handler.empty())
             throw;
 
-        pImpl->ExceptionHandler();
+        m_impl->m_exception_handler();
     }
 }
 
-//  Explicitly instantiate core implementation
-#ifdef BOOST_LOG_USE_CHAR
-template class BOOST_LOG_EXPORT basic_core< char >;
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-template class BOOST_LOG_EXPORT basic_core< wchar_t >;
-#endif
-
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -19,9 +19,26 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/support/exception.hpp>
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// conversion from 'size_t' to 'boost::error_info<boost::throw_line_,int>::value_type', possible loss of data
+// No idea why line number is stored as a signed integer in the error info...
+#pragma warning(disable: 4267)
+#endif
+
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
+
+namespace aux {
+
+//! Attaches attribute name exception information
+BOOST_LOG_API void attach_attribute_name_info(exception& e, attribute_name const& name)
+{
+    e << attribute_name_info(name);
+}
+
+} // namespace aux
 
 runtime_error::runtime_error(std::string const& descr) :
     std::runtime_error(descr)
@@ -62,6 +79,15 @@ void missing_value::throw_(const char* file, std::size_t line, std::string const
     );
 }
 
+void missing_value::throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name)
+{
+    boost::throw_exception(boost::enable_error_info(missing_value(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << attribute_name_info(name)
+    );
+}
+
 invalid_type::invalid_type() :
     runtime_error("Requested value has invalid type")
 {
@@ -89,6 +115,34 @@ void invalid_type::throw_(const char* file, std::size_t line, std::string const&
     boost::throw_exception(boost::enable_error_info(invalid_type(descr))
         << boost::throw_file(file)
         << boost::throw_line(line)
+    );
+}
+
+void invalid_type::throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name)
+{
+    boost::throw_exception(boost::enable_error_info(invalid_type(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << attribute_name_info(name)
+    );
+}
+
+void invalid_type::throw_(const char* file, std::size_t line, std::string const& descr, type_info_wrapper const& type)
+{
+    boost::throw_exception(boost::enable_error_info(invalid_type(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << type_info_info(type)
+    );
+}
+
+void invalid_type::throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name, type_info_wrapper const& type)
+{
+    boost::throw_exception(boost::enable_error_info(invalid_type(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << attribute_name_info(name)
+        << type_info_info(type)
     );
 }
 
@@ -158,6 +212,15 @@ void parse_error::throw_(const char* file, std::size_t line, std::string const& 
         << boost::throw_file(file)
         << boost::throw_line(line)
         << boost::errinfo_at_line(content_line)
+    );
+}
+
+void parse_error::throw_(const char* file, std::size_t line, std::string const& descr, attribute_name const& name)
+{
+    boost::throw_exception(boost::enable_error_info(parse_error(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+        << attribute_name_info(name)
     );
 }
 
@@ -320,6 +383,40 @@ void setup_error::throw_(const char* file, std::size_t line, std::string const& 
     );
 }
 
-} // namespace log
+limitation_error::limitation_error() :
+    logic_error("Boost.Log library limit reached")
+{
+}
+
+limitation_error::limitation_error(std::string const& descr) :
+    logic_error(descr)
+{
+}
+
+limitation_error::~limitation_error() throw()
+{
+}
+
+void limitation_error::throw_(const char* file, std::size_t line)
+{
+    boost::throw_exception(boost::enable_error_info(limitation_error())
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
+void limitation_error::throw_(const char* file, std::size_t line, std::string const& descr)
+{
+    boost::throw_exception(boost::enable_error_info(limitation_error(descr))
+        << boost::throw_file(file)
+        << boost::throw_line(line)
+    );
+}
+
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

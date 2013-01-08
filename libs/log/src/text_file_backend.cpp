@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -13,6 +13,13 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#include <ctime>
+#include <cctype>
+#include <cwctype>
+#include <ctime>
+#include <cstdio>
+#include <cstdlib>
+#include <cstddef>
 #include <list>
 #include <memory>
 #include <string>
@@ -22,11 +29,6 @@
 #include <iterator>
 #include <algorithm>
 #include <stdexcept>
-
-#if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
-#define BOOST_SPIRIT_THREADSAFE
-#endif // !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
-
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
 #include <boost/make_shared.hpp>
@@ -45,18 +47,13 @@
 #include <boost/intrusive/options.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
-#include <ctime>
-#include <cctype>
-#include <cwctype>
-#include <ctime>
-#include <cstdio>
-#include <cstdlib>
-#include <cstddef>
-#include <boost/spirit/include/classic_core.hpp>
-#include <boost/spirit/include/classic_assign_actor.hpp>
+#include <boost/spirit/include/qi_core.hpp>
+#include <boost/spirit/include/qi_lit.hpp>
 #include <boost/log/detail/snprintf.hpp>
 #include <boost/log/detail/singleton.hpp>
 #include <boost/log/detail/light_function.hpp>
+#include <boost/log/utility/functional/bind_assign.hpp>
+#include <boost/log/utility/functional/as_action.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/attributes/time_traits.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
@@ -67,9 +64,11 @@
 #include <boost/thread/mutex.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
+namespace qi = boost::spirit::qi;
+
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
@@ -77,8 +76,8 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! A possible Boost.Filesystem extension - renames or moves the file to the target storage
     inline void move_file(
-        boost::log::aux::universal_path const& from,
-        boost::log::aux::universal_path const& to)
+        filesystem::path const& from,
+        filesystem::path const& to)
     {
 #if defined(BOOST_WINDOWS_API)
         // On Windows MoveFile already does what we need
@@ -103,14 +102,10 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 #endif
     }
 
-    typedef boost::log::aux::universal_path::string_type path_string_type;
+    typedef filesystem::path::string_type path_string_type;
     typedef path_string_type::value_type path_char_type;
 
-#if BOOST_FILESYSTEM_VERSION >= 3
     typedef filesystem::filesystem_error filesystem_error;
-#else
-    typedef filesystem::basic_filesystem_error< boost::log::aux::universal_path > filesystem_error;
-#endif
 
     //! An auxiliary traits that contain various constants and functions regarding string and character operations
     template< typename CharT >
@@ -325,35 +320,24 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     };
 
     //! The function parses the format placeholder for file counter
-    bool parse_counter_placeholder(
-        path_string_type::const_iterator& it,
-        path_string_type::const_iterator end,
-        unsigned int& width)
+    bool parse_counter_placeholder(path_string_type::const_iterator& it, path_string_type::const_iterator end, unsigned int& width)
     {
         typedef file_char_traits< path_char_type > traits_t;
-        spirit::classic::parse_info< path_string_type::const_iterator > result = spirit::classic::parse(it, end,
+        return qi::parse
         (
-            !(
-                spirit::classic::ch_p(traits_t::zero) |
-                spirit::classic::ch_p(traits_t::plus) |
-                spirit::classic::ch_p(traits_t::minus) |
-                spirit::classic::ch_p(traits_t::space)
-            ) >>
-            !spirit::classic::uint_p[spirit::classic::assign_a(width)] >>
-            !(
-                spirit::classic::ch_p(traits_t::dot) >>
-                spirit::classic::uint_p
-            ) >>
-            spirit::classic::ch_p(traits_t::number_placeholder)
-        ));
-
-        if (result.hit)
-        {
-            it = result.stop;
-            return true;
-        }
-        else
-            return false;
+            it, end,
+            (
+                -(
+                    qi::lit(traits_t::zero) |
+                    qi::lit(traits_t::plus) |
+                    qi::lit(traits_t::minus) |
+                    qi::lit(traits_t::space)
+                ) >>
+                -(qi::uint_[boost::log::as_action(boost::log::bind_assign(width))]) >>
+                -(qi::lit(traits_t::dot) >> qi::uint_) >>
+                qi::lit(traits_t::number_placeholder)
+            )
+        );
     }
 
     //! The function matches the file name and the pattern
@@ -364,10 +348,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         struct local
         {
             // Verifies that the string contains exactly n digits
-            static bool scan_digits(
-                path_string_type::const_iterator& it,
-                path_string_type::const_iterator end,
-                std::ptrdiff_t n)
+            static bool scan_digits(path_string_type::const_iterator& it, path_string_type::const_iterator end, std::ptrdiff_t n)
             {
                 for (; n > 0; --n)
                 {
@@ -458,9 +439,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                             return false;
                         for (; f != f_end && traits_t::is_digit(*f); ++f);
 
-                        spirit::classic::parse(f_it, f, spirit::classic::uint_p[spirit::classic::assign_a(file_counter)]);
+                        if (!qi::parse(f_it, f, qi::uint_, file_counter))
+                            return false;
 
-                        f_it = f;
                         p_it = p;
                     }
                     break;
@@ -505,12 +486,12 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         {
             uintmax_t m_Size;
             std::time_t m_TimeStamp;
-            path_type m_Path;
+            filesystem::path m_Path;
         };
         //! A list of the stored files
         typedef std::list< file_info > file_list;
         //! The string type compatible with the universal path type
-        typedef path_type::string_type path_string_type;
+        typedef filesystem::path::string_type path_string_type;
 
     private:
         //! A reference to the repository this collector belongs to
@@ -530,9 +511,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
          * The special member is required to calculate absolute paths with no
          * dependency on the current path for the application, which may change
          */
-        const path_type m_BasePath;
+        const filesystem::path m_BasePath;
         //! Target directory to store files to
-        path_type m_StorageDir;
+        filesystem::path m_StorageDir;
 
         //! The list of stored files
         file_list m_Files;
@@ -543,7 +524,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         //! Constructor
         file_collector(
             shared_ptr< file_collector_repository > const& repo,
-            path_type const& target_dir,
+            filesystem::path const& target_dir,
             uintmax_t max_size,
             uintmax_t min_free_space);
 
@@ -551,39 +532,31 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         ~file_collector();
 
         //! The function stores the specified file in the storage
-        void store_file(path_type const& file_name);
+        void store_file(filesystem::path const& file_name);
 
         //! Scans the target directory for the files that have already been stored
         uintmax_t scan_for_files(
-            file::scan_method method, path_type const& pattern, unsigned int* counter);
+            file::scan_method method, filesystem::path const& pattern, unsigned int* counter);
 
         //! The function updates storage restrictions
         void update(uintmax_t max_size, uintmax_t min_free_space);
 
         //! The function checks if the directory is governed by this collector
-        bool is_governed(path_type const& dir) const
+        bool is_governed(filesystem::path const& dir) const
         {
             return filesystem::equivalent(m_StorageDir, dir);
         }
 
     private:
         //! Makes relative path absolute with respect to the base path
-        path_type make_absolute(path_type const& p)
+        filesystem::path make_absolute(filesystem::path const& p)
         {
-#if BOOST_FILESYSTEM_VERSION >= 3
             return filesystem::absolute(p, m_BasePath);
-#else
-            return filesystem::complete(p, m_BasePath);
-#endif
         }
         //! Acquires file name string from the path
-        static path_string_type filename_string(path_type const& p)
+        static path_string_type filename_string(filesystem::path const& p)
         {
-#if BOOST_FILESYSTEM_VERSION >= 3
             return p.filename().string< path_string_type >();
-#else
-            return p.filename();
-#endif
         }
     };
 
@@ -602,8 +575,6 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         friend class base_type;
 #endif
 
-        //! Path type
-        typedef file_collector::path_type path_type;
         //! The type of the list of collectors
         typedef intrusive::list<
             file_collector,
@@ -621,7 +592,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     public:
         //! Finds or creates a file collector
         shared_ptr< file::collector > get_collector(
-            path_type const& target_dir, uintmax_t max_size, uintmax_t min_free_space);
+            filesystem::path const& target_dir, uintmax_t max_size, uintmax_t min_free_space);
 
         //! Removes the file collector from the list
         void remove_collector(file_collector* p);
@@ -637,20 +608,14 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     //! Constructor
     file_collector::file_collector(
         shared_ptr< file_collector_repository > const& repo,
-        path_type const& target_dir,
+        filesystem::path const& target_dir,
         uintmax_t max_size,
         uintmax_t min_free_space
     ) :
         m_pRepository(repo),
         m_MaxSize(max_size),
         m_MinFreeSpace(min_free_space),
-        m_BasePath(
-#if BOOST_FILESYSTEM_VERSION >= 3
-            filesystem::current_path()
-#else
-            filesystem::current_path< path_type >()
-#endif
-        ),
+        m_BasePath(filesystem::current_path()),
         m_TotalSize(0)
     {
         m_StorageDir = make_absolute(target_dir);
@@ -664,7 +629,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     }
 
     //! The function stores the specified file in the storage
-    void file_collector::store_file(path_type const& src_path)
+    void file_collector::store_file(filesystem::path const& src_path)
     {
         // Let's construct the new file name
         file_info info;
@@ -675,7 +640,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
         info.m_Path = m_StorageDir / file_name;
 
         // Check if the file is already in the target directory
-        path_type src_dir = src_path.has_parent_path() ?
+        filesystem::path src_dir = src_path.has_parent_path() ?
                             filesystem::system_complete(src_path.parent_path()) :
                             m_BasePath;
         const bool is_in_target_dir = filesystem::equivalent(src_dir, m_StorageDir);
@@ -699,7 +664,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
             filesystem::create_directories(m_StorageDir);
         }
 
-        BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
+        BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > lock(m_Mutex);)
 
         // Check if an old file should be erased
         uintmax_t free_space = m_MinFreeSpace ? filesystem::space(m_StorageDir).available : static_cast< uintmax_t >(0);
@@ -746,12 +711,12 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! Scans the target directory for the files that have already been stored
     uintmax_t file_collector::scan_for_files(
-        file::scan_method method, path_type const& pattern, unsigned int* counter)
+        file::scan_method method, filesystem::path const& pattern, unsigned int* counter)
     {
         uintmax_t file_count = 0;
         if (method != file::no_scan)
         {
-            path_type dir = m_StorageDir;
+            filesystem::path dir = m_StorageDir;
             path_string_type mask;
             if (method == file::scan_matching)
             {
@@ -766,18 +731,13 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
             if (filesystem::exists(dir) && filesystem::is_directory(dir))
             {
-                BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
+                BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > lock(m_Mutex);)
 
                 if (counter)
                     *counter = 0;
 
-#if BOOST_FILESYSTEM_VERSION >= 3
-                typedef filesystem::directory_iterator dir_iterator;
-#else
-                typedef filesystem::basic_directory_iterator< path_type > dir_iterator;
-#endif
                 file_list files;
-                dir_iterator it(dir), end;
+                filesystem::directory_iterator it(dir), end;
                 uintmax_t total_size = 0;
                 for (; it != end; ++it)
                 {
@@ -788,7 +748,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
                         // Check that there are no duplicates in the resulting list
                         struct local
                         {
-                            static bool equivalent(path_type const& left, file_info const& right)
+                            static bool equivalent(filesystem::path const& left, file_info const& right)
                             {
                                 return filesystem::equivalent(left, right.m_Path);
                             }
@@ -827,7 +787,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     //! The function updates storage restrictions
     void file_collector::update(uintmax_t max_size, uintmax_t min_free_space)
     {
-        BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
+        BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > lock(m_Mutex);)
 
         m_MaxSize = (std::min)(m_MaxSize, max_size);
         m_MinFreeSpace = (std::max)(m_MinFreeSpace, min_free_space);
@@ -836,9 +796,9 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 
     //! Finds or creates a file collector
     shared_ptr< file::collector > file_collector_repository::get_collector(
-        path_type const& target_dir, uintmax_t max_size, uintmax_t min_free_space)
+        filesystem::path const& target_dir, uintmax_t max_size, uintmax_t min_free_space)
     {
-        BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
+        BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > lock(m_Mutex);)
 
         file_collectors::iterator it = std::find_if(m_Collectors.begin(), m_Collectors.end(),
             boost::bind(&file_collector::is_governed, _1, boost::cref(target_dir)));
@@ -866,7 +826,7 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
     //! Removes the file collector from the list
     void file_collector_repository::remove_collector(file_collector* p)
     {
-        BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > _(m_Mutex);)
+        BOOST_LOG_EXPR_IF_MT(lock_guard< mutex > lock(m_Mutex);)
         m_Collectors.erase(m_Collectors.iterator_to(*p));
     }
 
@@ -900,8 +860,8 @@ namespace file {
 namespace aux {
 
     //! Creates and returns a file collector with the specified parameters
-    BOOST_LOG_EXPORT shared_ptr< collector > make_collector(
-        collector::path_type const& target_dir,
+    BOOST_LOG_API shared_ptr< collector > make_collector(
+        filesystem::path const& target_dir,
         uintmax_t max_size,
         uintmax_t min_free_space)
     {
@@ -911,7 +871,7 @@ namespace aux {
 } // namespace aux
 
 //! Creates a rotation time point of every day at the specified time
-BOOST_LOG_EXPORT rotation_at_time_point::rotation_at_time_point(
+BOOST_LOG_API rotation_at_time_point::rotation_at_time_point(
     unsigned char hour,
     unsigned char minute,
     unsigned char second
@@ -927,7 +887,7 @@ BOOST_LOG_EXPORT rotation_at_time_point::rotation_at_time_point(
 }
 
 //! Creates a rotation time point of each specified weekday at the specified time
-BOOST_LOG_EXPORT rotation_at_time_point::rotation_at_time_point(
+BOOST_LOG_API rotation_at_time_point::rotation_at_time_point(
     date_time::weekdays wday,
     unsigned char hour,
     unsigned char minute,
@@ -944,7 +904,7 @@ BOOST_LOG_EXPORT rotation_at_time_point::rotation_at_time_point(
 }
 
 //! Creates a rotation time point of each specified day of month at the specified time
-BOOST_LOG_EXPORT rotation_at_time_point::rotation_at_time_point(
+BOOST_LOG_API rotation_at_time_point::rotation_at_time_point(
     gregorian::greg_day mday,
     unsigned char hour,
     unsigned char minute,
@@ -961,7 +921,7 @@ BOOST_LOG_EXPORT rotation_at_time_point::rotation_at_time_point(
 }
 
 //! Checks if it's time to rotate the file
-BOOST_LOG_EXPORT bool rotation_at_time_point::operator()() const
+BOOST_LOG_API bool rotation_at_time_point::operator()() const
 {
     bool result = false;
     posix_time::time_duration rotation_time(
@@ -1034,7 +994,7 @@ BOOST_LOG_EXPORT bool rotation_at_time_point::operator()() const
 }
 
 //! Checks if it's time to rotate the file
-BOOST_LOG_EXPORT bool rotation_at_time_interval::operator()() const
+BOOST_LOG_API bool rotation_at_time_interval::operator()() const
 {
     bool result = false;
     posix_time::ptime now = posix_time::second_clock::universal_time();
@@ -1058,26 +1018,25 @@ BOOST_LOG_EXPORT bool rotation_at_time_interval::operator()() const
 //  File sink backend implementation
 ////////////////////////////////////////////////////////////////////////////////
 //! Sink implementation data
-template< typename CharT >
-struct basic_text_file_backend< CharT >::implementation
+struct text_file_backend::implementation
 {
     //! File open mode
     std::ios_base::openmode m_FileOpenMode;
 
     //! File name pattern
-    path_type m_FileNamePattern;
+    filesystem::path m_FileNamePattern;
     //! Directory to store files in
-    path_type m_StorageDir;
+    filesystem::path m_StorageDir;
     //! File name generator (according to m_FileNamePattern)
-    log::aux::light_function1< path_string_type, unsigned int > m_FileNameGenerator;
+    boost::log::aux::light_function< path_string_type (unsigned int) > m_FileNameGenerator;
 
     //! Stored files counter
     unsigned int m_FileCounter;
 
     //! Current file name
-    path_type m_FileName;
+    filesystem::path m_FileName;
     //! File stream
-    filesystem::basic_ofstream< CharT > m_File;
+    filesystem::ofstream m_File;
     //! Characters written
     uintmax_t m_CharactersWritten;
 
@@ -1106,15 +1065,13 @@ struct basic_text_file_backend< CharT >::implementation
 };
 
 //! Constructor. No streams attached to the constructed backend, auto flush feature disabled.
-template< typename CharT >
-BOOST_LOG_EXPORT basic_text_file_backend< CharT >::basic_text_file_backend()
+BOOST_LOG_API text_file_backend::text_file_backend()
 {
     construct(log::aux::empty_arg_list());
 }
 
 //! Destructor
-template< typename CharT >
-BOOST_LOG_EXPORT basic_text_file_backend< CharT >::~basic_text_file_backend()
+BOOST_LOG_API text_file_backend::~text_file_backend()
 {
     try
     {
@@ -1130,9 +1087,8 @@ BOOST_LOG_EXPORT basic_text_file_backend< CharT >::~basic_text_file_backend()
 }
 
 //! Constructor implementation
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::construct(
-    path_type const& pattern,
+BOOST_LOG_API void text_file_backend::construct(
+    filesystem::path const& pattern,
     std::ios_base::openmode mode,
     uintmax_t rotation_size,
     time_based_rotation_predicate const& time_based_rotation,
@@ -1145,32 +1101,27 @@ BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::construct(
 }
 
 //! The method sets maximum file size.
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_rotation_size(uintmax_t size)
+BOOST_LOG_API void text_file_backend::set_rotation_size(uintmax_t size)
 {
     m_pImpl->m_FileRotationSize = size;
 }
 
 //! The method sets the maximum time interval between file rotations.
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_time_based_rotation(time_based_rotation_predicate const& predicate)
+BOOST_LOG_API void text_file_backend::set_time_based_rotation(time_based_rotation_predicate const& predicate)
 {
     m_pImpl->m_TimeBasedRotation = predicate;
 }
 
 //! Sets the flag to automatically flush buffers of all attached streams after each log record
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::auto_flush(bool f)
+BOOST_LOG_API void text_file_backend::auto_flush(bool f)
 {
     m_pImpl->m_AutoFlush = f;
 }
 
 //! The method writes the message to the sink
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::consume(
-    record_type const& record, target_string_type const& formatted_message)
+BOOST_LOG_API void text_file_backend::consume(record_view const& rec, string_type const& formatted_message)
 {
-    typedef file_char_traits< typename target_string_type::value_type > traits_t;
+    typedef file_char_traits< string_type::value_type > traits_t;
     if
     (
         (
@@ -1217,35 +1168,23 @@ BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::consume(
 }
 
 //! The method flushes the currently open log file
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::flush()
+BOOST_LOG_API void text_file_backend::flush()
 {
     if (m_pImpl->m_File.is_open())
         m_pImpl->m_File.flush();
 }
 
 //! The method sets file name mask
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_file_name_pattern_internal(path_type const& pattern)
+BOOST_LOG_API void text_file_backend::set_file_name_pattern_internal(filesystem::path const& pattern)
 {
     typedef file_char_traits< path_char_type > traits_t;
-    path_type p = pattern;
+    filesystem::path p = pattern;
     if (p.empty())
         p = traits_t::default_file_name_pattern();
 
-    path_string_type name_pattern =
-#if BOOST_FILESYSTEM_VERSION >= 3
-        p.filename().string< path_string_type >();
-#else
-        p.filename();
-#endif
+    path_string_type name_pattern = p.filename().string< path_string_type >();
     m_pImpl->m_FileNamePattern = name_pattern;
-    m_pImpl->m_StorageDir =
-#if BOOST_FILESYSTEM_VERSION >= 3
-        filesystem::absolute(p.parent_path());
-#else
-        filesystem::complete(p.parent_path(), filesystem::current_path< path_type >());
-#endif
+    m_pImpl->m_StorageDir = filesystem::absolute(p.parent_path());
 
     // Let's try to find the file counter placeholder
     unsigned int placeholder_count = 0;
@@ -1309,8 +1248,7 @@ BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_file_name_pattern_in
 }
 
 //! The method rotates the file
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::rotate_file()
+BOOST_LOG_API void text_file_backend::rotate_file()
 {
     if (!m_pImpl->m_CloseHandler.empty())
         m_pImpl->m_CloseHandler(m_pImpl->m_File);
@@ -1322,8 +1260,7 @@ BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::rotate_file()
 }
 
 //! The method sets the file open mode
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_open_mode(std::ios_base::openmode mode)
+BOOST_LOG_API void text_file_backend::set_open_mode(std::ios_base::openmode mode)
 {
     mode |= std::ios_base::out;
     mode &= ~std::ios_base::in;
@@ -1333,29 +1270,25 @@ BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_open_mode(std::ios_b
 }
 
 //! The method sets file collector
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_file_collector(shared_ptr< file::collector > const& collector)
+BOOST_LOG_API void text_file_backend::set_file_collector(shared_ptr< file::collector > const& collector)
 {
     m_pImpl->m_pFileCollector = collector;
 }
 
 //! The method sets file open handler
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_open_handler(open_handler_type const& handler)
+BOOST_LOG_API void text_file_backend::set_open_handler(open_handler_type const& handler)
 {
     m_pImpl->m_OpenHandler = handler;
 }
 
 //! The method sets file close handler
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_file_backend< CharT >::set_close_handler(close_handler_type const& handler)
+BOOST_LOG_API void text_file_backend::set_close_handler(close_handler_type const& handler)
 {
     m_pImpl->m_CloseHandler = handler;
 }
 
 //! Performs scanning of the target directory for log files
-template< typename CharT >
-BOOST_LOG_EXPORT uintmax_t basic_text_file_backend< CharT >::scan_for_files(file::scan_method method, bool update_counter)
+BOOST_LOG_API uintmax_t text_file_backend::scan_for_files(file::scan_method method, bool update_counter)
 {
     if (m_pImpl->m_pFileCollector)
     {
@@ -1373,67 +1306,51 @@ BOOST_LOG_EXPORT uintmax_t basic_text_file_backend< CharT >::scan_for_files(file
 //  Multifile sink backend implementation
 ////////////////////////////////////////////////////////////////////////////////
 //! Sink implementation data
-template< typename CharT >
-struct basic_text_multifile_backend< CharT >::implementation
+struct text_multifile_backend::implementation
 {
     //! File name composer
     file_name_composer_type m_FileNameComposer;
     //! Base path for absolute path composition
-    const path_type m_BasePath;
+    const filesystem::path m_BasePath;
     //! File stream
-    filesystem::basic_ofstream< CharT > m_File;
+    filesystem::ofstream m_File;
 
     implementation() :
-        m_BasePath(
-#if BOOST_FILESYSTEM_VERSION >= 3
-            filesystem::current_path()
-#else
-            filesystem::current_path< path_type >()
-#endif
-        )
+        m_BasePath(filesystem::current_path())
     {
     }
 
     //! Makes relative path absolute with respect to the base path
-    path_type make_absolute(path_type const& p)
+    filesystem::path make_absolute(filesystem::path const& p)
     {
-#if BOOST_FILESYSTEM_VERSION >= 3
         return filesystem::absolute(p, m_BasePath);
-#else
-        return filesystem::complete(p, m_BasePath);
-#endif
     }
 };
 
 //! Default constructor
-template< typename CharT >
-BOOST_LOG_EXPORT basic_text_multifile_backend< CharT >::basic_text_multifile_backend() : m_pImpl(new implementation())
+BOOST_LOG_API text_multifile_backend::text_multifile_backend() : m_pImpl(new implementation())
 {
 }
 
 //! Destructor
-template< typename CharT >
-BOOST_LOG_EXPORT basic_text_multifile_backend< CharT >::~basic_text_multifile_backend()
+BOOST_LOG_API text_multifile_backend::~text_multifile_backend()
 {
     delete m_pImpl;
 }
 
 //! The method sets the file name composer
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_multifile_backend< CharT >::set_file_name_composer_internal(file_name_composer_type const& composer)
+BOOST_LOG_API void text_multifile_backend::set_file_name_composer_internal(file_name_composer_type const& composer)
 {
     m_pImpl->m_FileNameComposer = composer;
 }
 
 //! The method writes the message to the sink
-template< typename CharT >
-BOOST_LOG_EXPORT void basic_text_multifile_backend< CharT >::consume(
-    record_type const& record, target_string_type const& formatted_message)
+BOOST_LOG_API void text_multifile_backend::consume(record_view const& rec, string_type const& formatted_message)
 {
-    typedef file_char_traits< typename target_string_type::value_type > traits_t;
+    typedef file_char_traits< string_type::value_type > traits_t;
     if (!m_pImpl->m_FileNameComposer.empty())
     {
-        path_type file_name = m_pImpl->make_absolute(m_pImpl->m_FileNameComposer(record));
+        filesystem::path file_name = m_pImpl->make_absolute(m_pImpl->m_FileNameComposer(rec));
         filesystem::create_directories(file_name.parent_path());
         m_pImpl->m_File.open(file_name, std::ios_base::out | std::ios_base::app);
         if (m_pImpl->m_File.is_open())
@@ -1445,18 +1362,8 @@ BOOST_LOG_EXPORT void basic_text_multifile_backend< CharT >::consume(
     }
 }
 
-//! Explicitly instantiate sink backend implementations
-#ifdef BOOST_LOG_USE_CHAR
-template class basic_text_file_backend< char >;
-template class basic_text_multifile_backend< char >;
-#endif
-#ifdef BOOST_LOG_USE_WCHAR_T
-template class basic_text_file_backend< wchar_t >;
-template class basic_text_multifile_backend< wchar_t >;
-#endif
-
 } // namespace sinks
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost

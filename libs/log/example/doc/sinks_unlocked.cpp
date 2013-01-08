@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -9,7 +9,7 @@
 #include <iostream>
 #include <boost/shared_ptr.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/filters.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/sinks/unlocked_frontend.hpp>
 #include <boost/log/sinks/basic_sink_backend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
@@ -18,21 +18,21 @@
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
-namespace flt = boost::log::filters;
+namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 
 //[ example_sinks_unlocked
 // A trivial sink backend that requires no thread synchronization
 class my_backend :
-    public sinks::basic_sink_backend< char, sinks::concurrent_feeding >
+    public sinks::basic_sink_backend< sinks::concurrent_feeding >
 {
 public:
     // The function is called for every log record to be written to log
-    void consume(record_type const& record)
+    void consume(logging::record_view const& rec)
     {
         // We skip the actual synchronization code for brevity
-        std::cout << record.message() << std::endl;
+        std::cout << rec[expr::smessage] << std::endl;
     }
 };
 
@@ -53,8 +53,8 @@ void init_logging()
     core->add_sink(sink2);
 
     // You can manage filtering through the sink interface
-    sink1->set_filter(flt::attr< int >("Severity") >= 2);
-    sink2->set_filter(flt::attr< std::string >("Channel") == "net");
+    sink1->set_filter(expr::attr< int >("Severity") >= 2);
+    sink2->set_filter(expr::attr< std::string >("Channel") == "net");
 }
 //]
 

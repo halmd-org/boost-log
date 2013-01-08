@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,21 +12,21 @@
  * The header contains declaration of an unlocked sink frontend.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_UNLOCKED_FRONTEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_UNLOCKED_FRONTEND_HPP_INCLUDED_
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/mpl/assert.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/static_assert.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/detail/fake_mutex.hpp>
 #include <boost/log/sinks/basic_sink_frontend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -38,16 +38,19 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
-//! \cond
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 #define BOOST_LOG_SINK_CTOR_FORWARD_INTERNAL(z, n, types)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit unlocked_sink(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg)) :\
+        base_type(false),\
         m_pBackend(boost::make_shared< sink_backend_type >(BOOST_PP_ENUM_PARAMS(n, arg))) {}
-//! \endcond
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 /*!
  * \brief Non-blocking logging sink frontend
@@ -65,11 +68,8 @@ public:
     //! Sink implementation type
     typedef SinkBackendT sink_backend_type;
     //! \cond
-    BOOST_MPL_ASSERT((has_requirement< typename sink_backend_type::frontend_requirements, concurrent_feeding >));
+    BOOST_STATIC_ASSERT_MSG((has_requirement< typename sink_backend_type::frontend_requirements, concurrent_feeding >::value), "Unlocked sink frontend is incompatible with the specified backend: thread synchronization requirements are not met");
     //! \endcond
-
-    typedef typename base_type::record_type record_type;
-    typedef typename base_type::string_type string_type;
 
     //! Type of pointer to the backend
     typedef shared_ptr< sink_backend_type > locked_backend_ptr;
@@ -84,6 +84,7 @@ public:
      * Requires the backend to be default-constructible.
      */
     unlocked_sink() :
+        base_type(false),
         m_pBackend(boost::make_shared< sink_backend_type >())
     {
     }
@@ -95,6 +96,7 @@ public:
      * \pre \a backend is not \c NULL.
      */
     explicit unlocked_sink(shared_ptr< sink_backend_type > const& backend) :
+        base_type(false),
         m_pBackend(backend)
     {
     }
@@ -116,10 +118,10 @@ public:
     /*!
      * Passes the log record to the backend
      */
-    void consume(record_type const& record)
+    void consume(record_view const& rec)
     {
         boost::log::aux::fake_mutex m;
-        base_type::feed_record(record, m, *m_pBackend);
+        base_type::feed_record(rec, m, *m_pBackend);
     }
 
     /*!
@@ -138,7 +140,7 @@ public:
 
 } // namespace sinks
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

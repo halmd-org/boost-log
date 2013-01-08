@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,22 +12,23 @@
  * The header contains implementation of an exception handler support feature.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SOURCES_EXCEPTION_HANDLER_FEATURE_HPP_INCLUDED_
 #define BOOST_LOG_SOURCES_EXCEPTION_HANDLER_FEATURE_HPP_INCLUDED_
 
 #include <boost/mpl/if.hpp>
+#include <boost/move/move.hpp>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/sources/threading_models.hpp>
 #include <boost/log/utility/strictest_lock.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/exceptions.hpp>
+#endif
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
 #endif
 
 #ifdef _MSC_VER
@@ -38,7 +39,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sources {
 
@@ -51,16 +52,16 @@ class basic_exception_handler_logger :
 {
     //! Base type
     typedef BaseT base_type;
+    typedef basic_exception_handler_logger this_type;
+    BOOST_COPYABLE_AND_MOVABLE_ALT(this_type)
 
 public:
-    //! Log record type
-    typedef typename base_type::record_type record_type;
     //! Threading model being used
     typedef typename base_type::threading_model threading_model;
     //! Final logger type
     typedef typename base_type::final_type final_type;
     //! Exception handler function type
-    typedef boost::log::aux::light_function0< void > exception_handler_type;
+    typedef boost::log::aux::light_function< void () > exception_handler_type;
 
 #if defined(BOOST_LOG_DOXYGEN_PASS)
     //! Lock requirement for the open_record_unlocked method
@@ -105,6 +106,14 @@ public:
     {
     }
     /*!
+     * Move constructor
+     */
+    basic_exception_handler_logger(BOOST_RV_REF(basic_exception_handler_logger) that) :
+        base_type(boost::move(static_cast< base_type& >(that))),
+        m_ExceptionHandler(boost::move(that.m_ExceptionHandler))
+    {
+    }
+    /*!
      * Constructor with arguments. Passes arguments to other features.
      */
     template< typename ArgsT >
@@ -142,7 +151,7 @@ protected:
      * Unlocked \c open_record
      */
     template< typename ArgsT >
-    record_type open_record_unlocked(ArgsT const& args)
+    record open_record_unlocked(ArgsT const& args)
     {
         try
         {
@@ -157,18 +166,18 @@ protected:
         catch (...)
         {
             handle_exception();
-            return record_type();
+            return record();
         }
     }
 
     /*!
      * Unlocked \c push_record
      */
-    void push_record_unlocked(record_type const& record)
+    void push_record_unlocked(BOOST_RV_REF(record) rec)
     {
         try
         {
-            base_type::push_record_unlocked(record);
+            base_type::push_record_unlocked(boost::move(rec));
         }
 #ifndef BOOST_LOG_NO_THREADS
         catch (thread_interrupted&)
@@ -238,7 +247,7 @@ struct exception_handler
 
 } // namespace sources
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

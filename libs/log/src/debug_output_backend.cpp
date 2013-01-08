@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,6 +12,8 @@
  * \brief  A logging sink backend that uses debugger output
  */
 
+#ifndef BOOST_LOG_WITHOUT_DEBUG_OUTPUT
+
 #include "windows_version.hpp"
 #include <string>
 #include <boost/log/sinks/debug_output_backend.hpp>
@@ -19,7 +21,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
@@ -41,32 +43,18 @@ BOOST_LOG_ANONYMOUS_NAMESPACE {
 } // namespace
 
 template< typename CharT >
-BOOST_LOG_EXPORT bool basic_debug_output_backend< CharT >::debugger_presence_filter::operator() (values_view_type const&) const
-{
-    return (IsDebuggerPresent() != FALSE);
-}
-
-template< typename CharT >
-BOOST_LOG_EXPORT basic_debug_output_backend< CharT >::basic_debug_output_backend()
+BOOST_LOG_API basic_debug_output_backend< CharT >::basic_debug_output_backend()
 {
 }
 
 template< typename CharT >
-BOOST_LOG_EXPORT basic_debug_output_backend< CharT >::~basic_debug_output_backend()
+BOOST_LOG_API basic_debug_output_backend< CharT >::~basic_debug_output_backend()
 {
-}
-
-template< typename CharT >
-BOOST_LOG_EXPORT typename basic_debug_output_backend< CharT >::debugger_presence_filter
-basic_debug_output_backend< CharT >::get_debugger_presence_filter() const
-{
-    return debugger_presence_filter();
 }
 
 //! The method puts the formatted message to the event log
 template< typename CharT >
-BOOST_LOG_EXPORT void basic_debug_output_backend< CharT >::consume(
-    record_type const&, target_string_type const& formatted_message)
+BOOST_LOG_API void basic_debug_output_backend< CharT >::consume(record_view const&, string_type const& formatted_message)
 {
     output_debug_string(formatted_message.c_str());
 }
@@ -80,6 +68,8 @@ template class basic_debug_output_backend< wchar_t >;
 
 } // namespace sinks
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#endif // !defined(BOOST_LOG_WITHOUT_DEBUG_OUTPUT)

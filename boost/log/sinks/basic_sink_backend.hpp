@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,23 +12,23 @@
  * The header contains implementation of base classes for sink backends.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_SINKS_BASIC_SINK_BACKEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_BASIC_SINK_BACKEND_HPP_INCLUDED_
 
 #include <string>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
-#include <boost/log/core/record.hpp>
-#include <boost/log/attributes/attribute_values_view.hpp>
+#include <boost/log/core/record_view.hpp>
+#include <boost/log/attributes/attribute_value_set.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace sinks {
 
@@ -38,18 +38,9 @@ namespace sinks {
  * The \c basic_sink_backend class template defines a number of types that
  * all sink backends are required to define. All sink backends have to derive from the class.
  */
-template< typename CharT, typename FrontendRequirementsT >
+template< typename FrontendRequirementsT >
 struct basic_sink_backend
 {
-    //! Character type
-    typedef CharT char_type;
-    //! String type to be used as a message text holder
-    typedef std::basic_string< char_type > string_type;
-    //! Attribute values view type
-    typedef basic_attribute_values_view< char_type > values_view_type;
-    //! Log record type
-    typedef basic_record< char_type > record_type;
-
     //! Frontend requirements tag
     typedef FrontendRequirementsT frontend_requirements;
 
@@ -62,7 +53,7 @@ struct basic_sink_backend
 /*!
  * \brief A base class for a logging sink backend with message formatting support
  *
- * The \c basic_formatting_sink_backend class template indicates to the frontend that
+ * The \c basic_formatted_sink_backend class template indicates to the frontend that
  * the backend requires logging record formatting.
  *
  * The class allows to request encoding conversion in case if the sink backend
@@ -73,38 +64,30 @@ struct basic_sink_backend
  */
 template<
     typename CharT,
-    typename TargetCharT = CharT,
     typename FrontendRequirementsT = synchronized_feeding
 >
-struct basic_formatting_sink_backend :
+struct basic_formatted_sink_backend :
     public basic_sink_backend<
-        CharT,
         typename combine_requirements< FrontendRequirementsT, formatted_records >::type
     >
 {
 private:
     typedef basic_sink_backend<
-        CharT,
         typename combine_requirements< FrontendRequirementsT, formatted_records >::type
     > base_type;
 
 public:
-    //  Type imports from the base class
-    typedef typename base_type::char_type char_type;
-    typedef typename base_type::string_type string_type;
-    typedef typename base_type::values_view_type values_view_type;
+    //! Character type
+    typedef CharT char_type;
+    //! Formatted string type
+    typedef std::basic_string< char_type > string_type;
+    //! Frontend requirements
     typedef typename base_type::frontend_requirements frontend_requirements;
-    typedef typename base_type::record_type record_type;
-
-    //! Target character type
-    typedef TargetCharT target_char_type;
-    //! Target string type
-    typedef std::basic_string< target_char_type > target_string_type;
 };
 
 } // namespace sinks
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

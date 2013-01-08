@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -13,44 +13,37 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_DETAIL_DEFAULT_ATTRIBUTE_NAMES_HPP_INCLUDED_
 #define BOOST_LOG_DETAIL_DEFAULT_ATTRIBUTE_NAMES_HPP_INCLUDED_
 
+#include <boost/log/detail/config.hpp>
+#include <boost/log/attributes/attribute_name.hpp>
+
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-//! A helper traits to get default attribute names
-template< typename >
-struct default_attribute_names;
+namespace default_attribute_names {
 
-#ifdef BOOST_LOG_USE_CHAR
-template< >
-struct default_attribute_names< char >
-{
-    static const char* severity() { return "Severity"; }
-    static const char* channel() { return "Channel"; }
-};
-#endif
+BOOST_LOG_API attribute_name severity();
+BOOST_LOG_API attribute_name channel();
+BOOST_LOG_API attribute_name message();
+BOOST_LOG_API attribute_name line_id();
+BOOST_LOG_API attribute_name timestamp();
+BOOST_LOG_API attribute_name process_id();
+BOOST_LOG_API attribute_name thread_id();
 
-#ifdef BOOST_LOG_USE_WCHAR_T
-template< >
-struct default_attribute_names< wchar_t >
-{
-    static const wchar_t* severity() { return L"Severity"; }
-    static const wchar_t* channel() { return L"Channel"; }
-};
-#endif
+} // namespace default_attribute_names
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -14,16 +14,16 @@
  * C++0x.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_UTILITY_EXPLICIT_OPERATOR_BOOL_HPP_INCLUDED_
 #define BOOST_LOG_UTILITY_EXPLICIT_OPERATOR_BOOL_HPP_INCLUDED_
 
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 
-#if defined(BOOST_LOG_DOXYGEN_PASS) || !defined(BOOST_NO_EXPLICIT_CONVERSION_OPERATORS)
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
+#if defined(BOOST_LOG_DOXYGEN_PASS) || (!defined(BOOST_NO_EXPLICIT_CONVERSION_OPERATORS) && !defined(BOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS))
 
 /*!
  * \brief The macro defines an explicit operator of conversion to \c bool
@@ -33,7 +33,7 @@
  * in terms of which the conversion operator will be implemented.
  */
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
-    explicit operator bool () const\
+    BOOST_LOG_FORCEINLINE explicit operator bool () const\
     {\
         return !this->operator! ();\
     }
@@ -42,7 +42,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
@@ -58,16 +58,20 @@ namespace aux {
 
 } // namespace aux
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#if !defined(BOOST_CLANG)
 
 // These operators are not found through ADL
 template< typename T > void operator<< (T const&, boost::log::aux::unspecified_bool_type);
 template< typename T > void operator>> (T const&, boost::log::aux::unspecified_bool_type);
 
+#endif // !defined(BOOST_CLANG)
+
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
-    operator boost::log::aux::unspecified_bool_type () const\
+    BOOST_LOG_FORCEINLINE operator boost::log::aux::unspecified_bool_type () const\
     {\
         if (!this->operator!())\
             return &boost::log::aux::unspecified_bool::true_value;\
@@ -78,7 +82,7 @@ template< typename T > void operator>> (T const&, boost::log::aux::unspecified_b
 #else
 
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
-    operator bool () const\
+    BOOST_LOG_FORCEINLINE operator bool () const\
     {\
         return !this->operator! ();\
     }

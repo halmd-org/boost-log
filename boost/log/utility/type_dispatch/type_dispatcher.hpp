@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -12,22 +12,22 @@
  * The header contains definition of generic type dispatcher interfaces.
  */
 
-#if (defined(_MSC_VER) && _MSC_VER > 1000)
-#pragma once
-#endif // _MSC_VER > 1000
-
 #ifndef BOOST_LOG_TYPE_DISPATCHER_HPP_INCLUDED_
 #define BOOST_LOG_TYPE_DISPATCHER_HPP_INCLUDED_
 
 #include <typeinfo>
 #include <boost/static_assert.hpp>
-#include <boost/log/detail/prologue.hpp>
+#include <boost/log/detail/config.hpp>
 #include <boost/log/detail/visible_type.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 
+#ifdef BOOST_LOG_HAS_PRAGMA_ONCE
+#pragma once
+#endif
+
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 /*!
  * \brief A type dispatcher interface
@@ -35,7 +35,7 @@ namespace BOOST_LOG_NAMESPACE {
  * All type dispatchers support this interface. It is used to acquire the
  * visitor interface for the requested type.
  */
-class BOOST_LOG_NO_VTABLE type_dispatcher
+class type_dispatcher
 {
 public:
 
@@ -59,7 +59,7 @@ public:
             m_pVisitor(visitor)
         {
             typedef void (*trampoline_t)(void*, ValueT const&);
-            BOOST_STATIC_ASSERT(sizeof(trampoline_t) == sizeof(void*));
+            BOOST_STATIC_ASSERT_MSG(sizeof(trampoline_t) == sizeof(void*), "Boost.Log: Unsupported platform, the size of a function pointer differs from the size of a pointer");
             union
             {
                 void* as_pvoid;
@@ -100,7 +100,7 @@ public:
 
         void operator() (T const& value) const
         {
-            BOOST_STATIC_ASSERT(sizeof(trampoline_t) == sizeof(void*));
+            BOOST_STATIC_ASSERT_MSG(sizeof(trampoline_t) == sizeof(void*), "Boost.Log: Unsupported platform, the size of a function pointer differs from the size of a pointer");
             union
             {
                 void* as_pvoid;
@@ -145,12 +145,27 @@ public:
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
-public:
-    /*!
-     * Virtual destructor
-     */
-    virtual ~type_dispatcher() {}
+protected:
+    //! Pointer to the callback acquisition method
+    typedef callback_base (*get_callback_impl_type)(type_dispatcher*, std::type_info const&);
 
+private:
+    //! Pointer to the callback acquisition method
+    get_callback_impl_type m_get_callback_impl;
+
+protected:
+    /*!
+     * Initializing constructor
+     */
+    explicit type_dispatcher(get_callback_impl_type get_callback_impl) : m_get_callback_impl(get_callback_impl)
+    {
+    }
+    // Destructor and copying can only be called from the derived classes
+    BOOST_LOG_DEFAULTED_FUNCTION(~type_dispatcher(), {})
+    BOOST_LOG_DEFAULTED_FUNCTION(type_dispatcher(type_dispatcher const& that), : m_get_callback_impl(that.m_get_callback_impl) {})
+    BOOST_LOG_DEFAULTED_FUNCTION(type_dispatcher& operator= (type_dispatcher const& that), { m_get_callback_impl = that.m_get_callback_impl; return *this; })
+
+public:
     /*!
      * The method requests a callback for the value of type \c T
      *
@@ -159,18 +174,11 @@ public:
     template< typename T >
     callback< T > get_callback()
     {
-        return callback< T >(this->get_callback(
-            typeid(boost::log::aux::visible_type< T >)));
+        return callback< T >((this->m_get_callback_impl)(this, typeid(boost::log::aux::visible_type< T >)));
     }
-
-private:
-#ifndef BOOST_LOG_DOXYGEN_PASS
-    //! The get_callback method implementation
-    virtual callback_base get_callback(std::type_info const& type) = 0;
-#endif // BOOST_LOG_DOXYGEN_PASS
 };
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 

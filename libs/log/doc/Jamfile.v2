@@ -1,5 +1,5 @@
 #
-#          Copyright Andrey Semashev 2007 - 2012.
+#          Copyright Andrey Semashev 2007 - 2013.
 # Distributed under the Boost Software License, Version 1.0.
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
@@ -37,16 +37,24 @@ local doxygen_params =
 #        <doxygen:param>EXCLUDE_SYMBOLS="aux aux::*"
         <doxygen:param>"PREDEFINED=BOOST_LOG_DOXYGEN_PASS \\
                         BOOST_LOG_NO_VTABLE= \\
+                        BOOST_LOG_VISIBLE= \\
+                        BOOST_LOG_FORCEINLINE=inline \\
                         BOOST_STATIC_ASSERT(x)= \\
+                        BOOST_STATIC_ASSERT_MSG(x,y)= \\
+                        BOOST_RV_REF(x)=\"x&&\" \\
+                        BOOST_COPY_ASSIGN_REF(x)=\"x const&\" \\
                         BOOST_APPEND_EXPLICIT_TEMPLATE_TYPE(x)= \\
                         BOOST_LOG_UNIQUE_IDENTIFIER_NAME(x)=anonymous \\
                         BOOST_LOG_USE_NATIVE_SYSLOG=1 \\
                         BOOST_PARAMETER_KEYWORD(x,y)=\"keyword y;\" \\
+                        BOOST_LOG_AUX_VOID_DEFAULT=\"= void\" \\
                         BOOST_LOG_NAMESPACE=log \\
+                        BOOST_LOG_OPEN_NAMESPACE=\"namespace log {\" \\
+                        BOOST_LOG_CLOSE_NAMESPACE=\"}\" \\
                         BOOST_LOG_USE_CHAR \\
                         BOOST_LOG_USE_WCHAR_T \\
-                        BOOST_LOG_EXPORT= \\
-                        BOOST_LOG_SETUP_EXPORT="
+                        BOOST_LOG_API= \\
+                        BOOST_LOG_SETUP_API="
         <xsl:param>boost.doxygen.detailns=aux
 #        <xsl:param>boost.doxygen.detail=implementation_
     ;
@@ -67,14 +75,11 @@ local attributes_includes =
         ../../../boost/log/attributes/*.hpp
     ] ;
 
-local filters_includes =
+local expressions_includes =
     [ glob
-        ../../../boost/log/filters/*.hpp
-    ] ;
-
-local formatters_includes =
-    [ glob
-        ../../../boost/log/formatters/*.hpp
+        ../../../boost/log/expressions/*.hpp
+        ../../../boost/log/expressions/predicates/*.hpp
+        ../../../boost/log/expressions/formatters/*.hpp
     ] ;
 
 local sources_includes =
@@ -98,8 +103,10 @@ local sinks_includes =
 local utility_includes =
     [ glob
         ../../../boost/log/utility/*.hpp
-        ../../../boost/log/utility/init/*.hpp
+        ../../../boost/log/utility/setup/*.hpp
         ../../../boost/log/utility/type_dispatch/*.hpp
+        ../../../boost/log/utility/functional/*.hpp
+        ../../../boost/log/utility/manipulators/*.hpp
     ] ;
 
 local support_includes =
@@ -154,25 +161,15 @@ doxygen attributes_reference
 
 notfile attributes_refs : @gen-references : attributes_reference.xml ;
 
-doxygen filters_reference
+doxygen expressions_reference
     :
-        $(filters_includes)
-    :
-        $(doxygen_params)
-        <xsl:param>"boost.doxygen.reftitle=Filters"
-    ;
-
-notfile filters_refs : @gen-references : filters_reference.xml ;
-
-doxygen formatters_reference
-    :
-        $(formatters_includes)
+        $(expressions_includes)
     :
         $(doxygen_params)
-        <xsl:param>"boost.doxygen.reftitle=Formatters"
+        <xsl:param>"boost.doxygen.reftitle=Expressions"
     ;
 
-notfile formatters_refs : @gen-references : formatters_reference.xml ;
+notfile expressions_refs : @gen-references : expressions_reference.xml ;
 
 doxygen sources_reference
     :
@@ -222,8 +219,7 @@ xml log_doc
         <dependency>top_level_refs
         <dependency>core_refs
         <dependency>attributes_refs
-        <dependency>filters_refs
-        <dependency>formatters_refs
+        <dependency>expressions_refs
         <dependency>sources_refs
         <dependency>sinks_refs
         <dependency>utility_refs

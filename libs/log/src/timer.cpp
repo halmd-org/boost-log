@@ -1,5 +1,5 @@
 /*
- *          Copyright Andrey Semashev 2007 - 2012.
+ *          Copyright Andrey Semashev 2007 - 2013.
  * Distributed under the Boost Software License, Version 1.0.
  *    (See accompanying file LICENSE_1_0.txt or copy at
  *          http://www.boost.org/LICENSE_1_0.txt)
@@ -15,7 +15,7 @@
 
 #include <boost/config.hpp>
 #include <boost/log/attributes/timer.hpp>
-#include <boost/log/attributes/basic_attribute_value.hpp>
+#include <boost/log/attributes/attribute_value_impl.hpp>
 
 #if defined(BOOST_WINDOWS) && !defined(BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER)
 
@@ -30,7 +30,7 @@
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace attributes {
 
@@ -104,7 +104,7 @@ public:
             }
         }
 
-        return attribute_value(new basic_attribute_value< value_type >(res));
+        return attribute_value(new attribute_value_impl< value_type >(res));
     }
 };
 
@@ -120,7 +120,7 @@ timer::timer(cast_source const& source) : attribute(source.as< impl >())
 
 } // namespace attributes
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
@@ -128,7 +128,7 @@ timer::timer(cast_source const& source) : attribute(source.as< impl >())
 
 namespace boost {
 
-namespace BOOST_LOG_NAMESPACE {
+BOOST_LOG_OPEN_NAMESPACE
 
 namespace attributes {
 
@@ -152,7 +152,7 @@ public:
 
     attribute_value get_value()
     {
-        return attribute_value(new basic_attribute_value< value_type >(
+        return attribute_value(new attribute_value_impl< value_type >(
             utc_time_traits::get_clock() - m_BaseTimePoint));
     }
 };
@@ -169,7 +169,7 @@ timer::timer(cast_source const& source) : attribute(source.as< impl >())
 
 } // namespace attributes
 
-} // namespace log
+BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
