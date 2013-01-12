@@ -9,6 +9,12 @@
 
 [section:changelog Changelog]
 
+[heading 1.2]
+
+This is a bugfix release.
+
+* Corrected compilation errors with MSVC 11.
+
 [heading 1.1, 02 December 2011]
 
 This release mostly fixes bugs in the code and documentation.
