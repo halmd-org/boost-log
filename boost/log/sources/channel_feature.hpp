@@ -186,6 +186,8 @@ private:
     void init_channel_attribute(ArgsT const& args, mpl::true_ const&)
     {
     }
+    //! Assignment (should be implemented through copy and swap in the final class)
+    basic_channel_logger& operator= (basic_channel_logger const&);
 #endif // BOOST_LOG_DOXYGEN_PASS
 };
 

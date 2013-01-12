@@ -212,6 +212,8 @@ private:
             throw;
         m_ExceptionHandler();
     }
+    //! Assignment (should be implemented through copy and swap in the final class)
+    basic_exception_handler_logger& operator= (basic_exception_handler_logger const&);
 #endif // !defined(BOOST_LOG_DOXYGEN_PASS)
 };
 

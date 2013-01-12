@@ -496,7 +496,7 @@ private:
             if (result != 0)
                 return result;
         }
-        return (LeftLen - RightLen);
+        return static_cast< int >(LeftLen - RightLen);
     }
 #endif // BOOST_LOG_DOXYGEN_PASS
 };

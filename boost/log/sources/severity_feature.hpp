@@ -243,6 +243,10 @@ protected:
         swap(m_DefaultSeverity, that.m_DefaultSeverity);
         m_pSeverity.swap(that.m_pSeverity);
     }
+
+private:
+    //! Assignment (should be implemented through copy and swap in the final class)
+    basic_severity_logger& operator= (basic_severity_logger const&);
 };
 
 /*!

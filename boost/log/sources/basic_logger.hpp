@@ -398,6 +398,13 @@ public:
         }
         return static_cast< FinalT& >(*this);
     }
+    /*!
+     * Assignment for the final class. Threadsafe, provides strong exception guarantee.
+     */
+    FinalT& operator= (basic_composite_logger const& that)
+    {
+        return operator= (static_cast< FinalT const& >(that));
+    }
 
     /*!
      * The method adds an attribute to the source-specific attribute set. The attribute will be implicitly added to
@@ -547,6 +554,12 @@ public:
     FinalT& operator= (FinalT that)
     {
         base_type::swap_unlocked(that);
+        return static_cast< FinalT& >(*this);
+    }
+    FinalT& operator= (basic_composite_logger const& that)
+    {
+        FinalT that_copy(static_cast< FinalT const& >(that));
+        base_type::swap_unlocked(that_copy);
         return static_cast< FinalT& >(*this);
     }
 
