@@ -96,7 +96,11 @@ struct combine_requirements :
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
-//! A helper metafunction to check if a requirement is satisfied
+/*!
+ * A helper metafunction to check if a requirement is satisfied. The \c TestedT template argument
+ * should be the type combining one or several requirements and \c RequiredT is the requirement
+ * to test against. The metafunction will yield a positive result if \c TestedT supports \c RequiredT.
+ */
 template< typename TestedT, typename RequiredT >
 struct has_requirement :
     public is_base_of< RequiredT, TestedT >
