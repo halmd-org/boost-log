@@ -73,21 +73,23 @@ inline basic_record_ostream< CharT >& operator<< (basic_record_ostream< CharT >&
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 template< typename T >
-inline add_value_manip< T > add_value(attribute_name const& name, T&& value)
+inline add_value_manip< T&& > add_value(attribute_name const& name, T&& value)
 {
     return add_value_manip< T&& >(name, value);
 }
 
 //! \overload
 template< typename DescriptorT, template< typename > class ActorT >
-inline add_value_manip< T > add_value(expressions::attribute_keyword< DescriptorT, ActorT > const&, typename DescriptorT::value_type&& value)
+inline add_value_manip< typename DescriptorT::value_type&& >
+add_value(expressions::attribute_keyword< DescriptorT, ActorT > const&, typename DescriptorT::value_type&& value)
 {
     return add_value_manip< typename DescriptorT::value_type&& >(DescriptorT::get_name(), value);
 }
 
 //! \overload
 template< typename DescriptorT, template< typename > class ActorT >
-inline add_value_manip< T > add_value(expressions::attribute_keyword< DescriptorT, ActorT > const&, typename DescriptorT::value_type& value)
+inline add_value_manip< typename DescriptorT::value_type& >
+add_value(expressions::attribute_keyword< DescriptorT, ActorT > const&, typename DescriptorT::value_type& value)
 {
     return add_value_manip< typename DescriptorT::value_type& >(DescriptorT::get_name(), value);
 }
@@ -95,13 +97,14 @@ inline add_value_manip< T > add_value(expressions::attribute_keyword< Descriptor
 #else // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 template< typename T >
-inline add_value_manip< T > add_value(attribute_name const& name, T const& value)
+inline add_value_manip< T const& > add_value(attribute_name const& name, T const& value)
 {
     return add_value_manip< T const& >(name, value);
 }
 
-template< typename DescriptorT, template< typename > class ActorT, typename T >
-inline add_value_manip< T > add_value(expressions::attribute_keyword< DescriptorT, ActorT > const&, typename DescriptorT::value_type const& value)
+template< typename DescriptorT, template< typename > class ActorT >
+inline add_value_manip< typename DescriptorT::value_type const& >
+add_value(expressions::attribute_keyword< DescriptorT, ActorT > const&, typename DescriptorT::value_type const& value)
 {
     return add_value_manip< typename DescriptorT::value_type const& >(DescriptorT::get_name(), value);
 }
