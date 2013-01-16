@@ -79,14 +79,14 @@ public:
     };
 
 private:
-    error_code m_Code;
+    error_code m_code;
 
 public:
     /*!
      * Initializing constructor. Creates the result that is equivalent to the
      * specified error code.
      */
-    visitation_result(error_code code = ok) BOOST_NOEXCEPT : m_Code(code) {}
+    BOOST_CONSTEXPR visitation_result(error_code code = ok) BOOST_NOEXCEPT : m_code(code) {}
 
     /*!
      * Checks if the visitation was successful.
@@ -99,12 +99,12 @@ public:
      *
      * \return \c false if the value was visited successfully, \c true otherwise.
      */
-    bool operator! () const BOOST_NOEXCEPT { return (m_Code != ok); }
+    bool operator! () const BOOST_NOEXCEPT { return (m_code != ok); }
 
     /*!
      * \return The actual result code of value visitation
      */
-    error_code code() const BOOST_NOEXCEPT { return m_Code; }
+    error_code code() const BOOST_NOEXCEPT { return m_code; }
 };
 
 namespace result_of {
