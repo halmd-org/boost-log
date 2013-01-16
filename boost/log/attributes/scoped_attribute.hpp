@@ -111,7 +111,12 @@ public:
 template< typename LoggerT >
 BOOST_LOG_FORCEINLINE aux::scoped_logger_attribute< LoggerT > add_scoped_logger_attribute(LoggerT& l, attribute_name const& name, attribute const& attr)
 {
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     return aux::scoped_logger_attribute< LoggerT >(l, name, attr);
+#else
+    aux::scoped_logger_attribute< LoggerT > guard(l, name, attr);
+    return boost::move(guard);
+#endif
 }
 
 //! \cond
@@ -188,7 +193,12 @@ public:
  */
 BOOST_LOG_FORCEINLINE aux::scoped_thread_attribute add_scoped_thread_attribute(attribute_name const& name, attribute const& attr)
 {
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     return aux::scoped_thread_attribute(name, attr);
+#else
+    aux::scoped_thread_attribute guard(name, attr);
+    return boost::move(guard);
+#endif
 }
 
 //! \cond

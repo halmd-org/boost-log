@@ -470,7 +470,11 @@ Lastly, like with value visitation, value extraction can also be applied to log 
 
 [example_attr_value_extraction_visitor_rec]
 
-Also, for convenience [class_log_attribute_value] has the method named `extract` with the same meaning as the free function applied to the attribute value.
+In addition the library provides two special variants of the [funcref boost::log::extract `extract`] function: [funcref boost::log::extract_or_throw `extract_or_throw`] and [funcref boost::log::extract_or_default `extract_or_default`]. As the naming implies, the functions provide different behavior in case if the attribute value cannot be extracted. The former one throws an exception if the value cannot be extracted and the latter one returns the default value.
+
+[warning Care must be taken with the [funcref boost::log::extract_or_default `extract_or_default`] function. The function accepts the default value is accepted by constant reference, and this reference can eventually be returned from [funcref boost::log::extract_or_default `extract_or_default`]. If a temporary object as used for the default value, user must ensure that the result of [funcref boost::log::extract_or_default `extract_or_default`] is saved by value and not by reference. Otherwise the saved reference may become dangling when the temporary is destroyed.]
+
+Similarly to `visit`, the [class_log_attribute_value] class has methods named `extract`, `extract_or_throw` and `extract_or_default` with the same meaning as the corresponding free functions applied to the attribute value.
 
 [endsect]
 

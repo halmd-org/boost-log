@@ -48,6 +48,7 @@
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/attributes/value_visitation_fwd.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
+#include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
 
@@ -405,8 +406,6 @@ public:
     }
 };
 
-#ifdef BOOST_LOG_DOXYGEN_PASS
-
 /*!
  * The function applies a visitor to an attribute value from the view. The user has to explicitly specify the
  * type or set of possible types of the attribute value to be visited.
@@ -417,8 +416,12 @@ public:
  * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
  */
 template< typename T, typename VisitorT >
-typename result_of::visit< T, VisitorT >::type
-visit(attribute_name const& name, attribute_value_set const& attrs, VisitorT visitor);
+inline typename result_of::visit< T, VisitorT >::type
+visit(attribute_name const& name, attribute_value_set const& attrs, VisitorT visitor)
+{
+    value_visitor_invoker< T > invoker;
+    return invoker(name, attrs, visitor);
+}
 
 /*!
  * The function applies a visitor to an attribute value from the view. The user has to explicitly specify the
@@ -430,8 +433,12 @@ visit(attribute_name const& name, attribute_value_set const& attrs, VisitorT vis
  * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
  */
 template< typename T, typename VisitorT >
-typename result_of::visit< T, VisitorT >::type
-visit(attribute_name const& name, record const& rec, VisitorT visitor);
+inline typename result_of::visit< T, VisitorT >::type
+visit(attribute_name const& name, record const& rec, VisitorT visitor)
+{
+    value_visitor_invoker< T > invoker;
+    return invoker(name, rec, visitor);
+}
 
 /*!
  * The function applies a visitor to an attribute value from the view. The user has to explicitly specify the
@@ -443,8 +450,12 @@ visit(attribute_name const& name, record const& rec, VisitorT visitor);
  * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
  */
 template< typename T, typename VisitorT >
-typename result_of::visit< T, VisitorT >::type
-visit(attribute_name const& name, record_view const& rec, VisitorT visitor);
+inline typename result_of::visit< T, VisitorT >::type
+visit(attribute_name const& name, record_view const& rec, VisitorT visitor)
+{
+    value_visitor_invoker< T > invoker;
+    return invoker(name, rec, visitor);
+}
 
 /*!
  * The function applies a visitor to an attribute value. The user has to explicitly specify the
@@ -455,36 +466,6 @@ visit(attribute_name const& name, record_view const& rec, VisitorT visitor);
  * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
  */
 template< typename T, typename VisitorT >
-typename result_of::visit< T, VisitorT >::type
-visit(attribute_value const& value, VisitorT visitor);
-
-#else // BOOST_LOG_DOXYGEN_PASS
-
-template< typename T, typename VisitorT >
-inline typename result_of::visit< T, VisitorT >::type
-visit(attribute_name const& name, attribute_value_set const& attrs, VisitorT visitor)
-{
-    value_visitor_invoker< T > invoker;
-    return invoker(name, attrs, visitor);
-}
-
-template< typename T, typename VisitorT >
-inline typename result_of::visit< T, VisitorT >::type
-visit(attribute_name const& name, record const& rec, VisitorT visitor)
-{
-    value_visitor_invoker< T > invoker;
-    return invoker(name, rec, visitor);
-}
-
-template< typename T, typename VisitorT >
-inline typename result_of::visit< T, VisitorT >::type
-visit(attribute_name const& name, record_view const& rec, VisitorT visitor)
-{
-    value_visitor_invoker< T > invoker;
-    return invoker(name, rec, visitor);
-}
-
-template< typename T, typename VisitorT >
 inline typename result_of::visit< T, VisitorT >::type
 visit(attribute_value const& value, VisitorT visitor)
 {
@@ -492,7 +473,57 @@ visit(attribute_value const& value, VisitorT visitor)
     return invoker(value, visitor);
 }
 
-#endif // BOOST_LOG_DOXYGEN_PASS
+/*!
+ * The function applies a visitor to an attribute value from the view. The user has to explicitly specify the
+ * type or set of possible types of the attribute value to be visited.
+ *
+ * \param keyword The keyword of the attribute value to visit.
+ * \param attrs A set of attribute values in which to look for the specified attribute value.
+ * \param visitor A receiving function object to pass the attribute value to.
+ * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
+ */
+template< typename DescriptorT, template< typename > class ActorT, typename VisitorT >
+inline typename result_of::visit< typename DescriptorT::value_type, VisitorT >::type
+visit(expressions::attribute_keyword< DescriptorT, ActorT > const& keyword, attribute_value_set const& attrs, VisitorT visitor)
+{
+    value_visitor_invoker< typename DescriptorT::value_type > invoker;
+    return invoker(keyword.get_name(), attrs, visitor);
+}
+
+/*!
+ * The function applies a visitor to an attribute value from the view. The user has to explicitly specify the
+ * type or set of possible types of the attribute value to be visited.
+ *
+ * \param keyword The keyword of the attribute value to visit.
+ * \param rec A log record. The attribute value will be sought among those associated with the record.
+ * \param visitor A receiving function object to pass the attribute value to.
+ * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
+ */
+template< typename DescriptorT, template< typename > class ActorT, typename VisitorT >
+inline typename result_of::visit< typename DescriptorT::value_type, VisitorT >::type
+visit(expressions::attribute_keyword< DescriptorT, ActorT > const& keyword, record const& rec, VisitorT visitor)
+{
+    value_visitor_invoker< typename DescriptorT::value_type > invoker;
+    return invoker(keyword.get_name(), rec, visitor);
+}
+
+/*!
+ * The function applies a visitor to an attribute value from the view. The user has to explicitly specify the
+ * type or set of possible types of the attribute value to be visited.
+ *
+ * \param keyword The keyword of the attribute value to visit.
+ * \param rec A log record view. The attribute value will be sought among those associated with the record.
+ * \param visitor A receiving function object to pass the attribute value to.
+ * \return The result of visitation (<tt>result_of::visit</tt> metafunction description).
+ */
+template< typename DescriptorT, template< typename > class ActorT, typename VisitorT >
+inline typename result_of::visit< typename DescriptorT::value_type, VisitorT >::type
+visit(expressions::attribute_keyword< DescriptorT, ActorT > const& keyword, record_view const& rec, VisitorT visitor)
+{
+    value_visitor_invoker< typename DescriptorT::value_type > invoker;
+    return invoker(keyword.get_name(), rec, visitor);
+}
+
 
 #if !defined(BOOST_LOG_DOXYGEN_PASS)
 

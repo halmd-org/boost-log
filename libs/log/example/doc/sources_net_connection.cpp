@@ -21,7 +21,7 @@
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/utility/manipulators/add_attr.hpp>
+#include <boost/log/utility/manipulators/add_value.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
@@ -69,11 +69,11 @@ public:
         // Put the size as an additional attribute
         // so it can be collected and accumulated later if needed.
         // The attribute will be attached only to this log record.
-        BOOST_LOG(m_logger) << logging::add_attr("ReceivedSize", size) << "Some data received";
+        BOOST_LOG(m_logger) << logging::add_value("ReceivedSize", size) << "Some data received";
     }
     void on_data_sent(std::size_t size)
     {
-        BOOST_LOG(m_logger) << logging::add_attr("SentSize", size) << "Some data sent";
+        BOOST_LOG(m_logger) << logging::add_value("SentSize", size) << "Some data sent";
     }
 };
 //]

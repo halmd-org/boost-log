@@ -19,7 +19,7 @@
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
-#include <boost/log/utility/manipulators/add_attr.hpp>
+#include <boost/log/utility/manipulators/add_value.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
@@ -160,9 +160,9 @@ int main(int, char*[])
     init_logging();
 
     src::logger lg;
-    BOOST_LOG(lg) << logging::add_attr("Connected", true);
-    BOOST_LOG(lg) << logging::add_attr("Sent", 100u);
-    BOOST_LOG(lg) << logging::add_attr("Received", 200u);
+    BOOST_LOG(lg) << logging::add_value("Connected", true);
+    BOOST_LOG(lg) << logging::add_value("Sent", 100u);
+    BOOST_LOG(lg) << logging::add_value("Received", 200u);
 
     logging::core::get()->flush();
 

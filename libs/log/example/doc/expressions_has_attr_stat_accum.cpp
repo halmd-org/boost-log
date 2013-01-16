@@ -18,7 +18,7 @@
 #include <boost/log/sources/logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 #include <boost/log/utility/value_ref.hpp>
-#include <boost/log/utility/manipulators/add_attr.hpp>
+#include <boost/log/utility/manipulators/add_value.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
@@ -107,7 +107,7 @@ void init()
 #define PUT_STAT(lg, stat_stream_name, change)\
     if (true) {\
         BOOST_LOG_SCOPED_LOGGER_TAG(lg, "StatisticStream", stat_stream_name);\
-        BOOST_LOG(lg) << logging::add_attr("Change", (int)(change));\
+        BOOST_LOG(lg) << logging::add_value("Change", (int)(change));\
     } else ((void)0)
 
 void logging_function()

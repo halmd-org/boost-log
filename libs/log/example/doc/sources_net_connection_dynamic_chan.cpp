@@ -20,7 +20,7 @@
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/utility/manipulators/add_attr.hpp>
+#include <boost/log/utility/manipulators/add_value.hpp>
 
 namespace logging = boost::log;
 namespace src = boost::log::sources;
@@ -50,7 +50,7 @@ public:
 
         // Put message to the "net" channel
         BOOST_LOG_CHANNEL(my_logger::get(), "net")
-            << logging::add_attr("RemoteAddress", m_remote_addr)
+            << logging::add_value("RemoteAddress", m_remote_addr)
             << "Connection established";
     }
 
@@ -58,7 +58,7 @@ public:
     {
         // Put message to the "net" channel
         BOOST_LOG_CHANNEL(my_logger::get(), "net")
-            << logging::add_attr("RemoteAddress", m_remote_addr)
+            << logging::add_value("RemoteAddress", m_remote_addr)
             << "Connection shut down";
 
         m_remote_addr.clear();
@@ -67,16 +67,16 @@ public:
     void on_data_received(std::size_t size)
     {
         BOOST_LOG_CHANNEL(my_logger::get(), "stat")
-            << logging::add_attr("RemoteAddress", m_remote_addr)
-            << logging::add_attr("ReceivedSize", size)
+            << logging::add_value("RemoteAddress", m_remote_addr)
+            << logging::add_value("ReceivedSize", size)
             << "Some data received";
     }
 
     void on_data_sent(std::size_t size)
     {
         BOOST_LOG_CHANNEL(my_logger::get(), "stat")
-            << logging::add_attr("RemoteAddress", m_remote_addr)
-            << logging::add_attr("SentSize", size)
+            << logging::add_value("RemoteAddress", m_remote_addr)
+            << logging::add_value("SentSize", size)
             << "Some data sent";
     }
 };
