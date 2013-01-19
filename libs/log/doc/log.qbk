@@ -158,9 +158,10 @@ The library should build and work with a reasonably compliant compiler. The libr
 
 The following compilers/platforms are not supported and will likely fail to compile the library:
 
+* C++11 compilers with non-C++11 standard libraries (like Clang with libstdc++ from GCC 4.2). Please, use a C++11 standard library in C++11 mode.
 * MSVC 7.1 and older.
-* Borland C++ 5.5.1 (free version). Newer versions might or might not work.
 * GCC 4.0 and older.
+* Borland C++ 5.5.1 (free version). Newer versions might or might not work.
 * Windows 9x, ME, NT4 and older are not supported.
 
 [heading Notes for MinGW, Cygwin and Visual Studio Express Edition users]
