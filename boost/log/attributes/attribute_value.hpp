@@ -344,10 +344,10 @@ public:
      *                The visitor should be capable to be called with a single argument of
      *                any type of the specified types in \c T.
      *
-     * \return The returned value from the visitor and \c visitation_result. See description of \c result_of::visit metafunction for more details.
+     * \return The result of visitation.
      */
     template< typename T, typename VisitorT >
-    typename result_of::visit< T, VisitorT >::type visit(VisitorT visitor) const;
+    visitation_result visit(VisitorT visitor) const;
 
     /*!
      * The method swaps two attribute values

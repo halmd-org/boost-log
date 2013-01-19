@@ -7,11 +7,11 @@
 
 #include <cstddef>
 #include <string>
-#include <utility>
 #include <iostream>
 #include <boost/mpl/vector.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/attributes/attribute_value_impl.hpp>
+#include <boost/log/utility/functional/save_result.hpp>
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
@@ -80,11 +80,12 @@ void hash_value(logging::attribute_value const& attr)
     typedef boost::mpl::vector< int, std::string > types;
 
     // Apply our visitor
-    std::pair< std::size_t, logging::visitation_result > result = logging::visit< types >(attr, hash_visitor());
+    std::size_t h = 0;
+    logging::visitation_result result = logging::visit< types >(attr, logging::save_result(hash_visitor(), h));
 
     // Check the result
-    if (result.second)
-        std::cout << "Visitation succeeded, hash value: " << result.first << std::endl;
+    if (result)
+        std::cout << "Visitation succeeded, hash value: " << h << std::endl;
     else
         std::cout << "Visitation failed" << std::endl;
 }
@@ -98,11 +99,12 @@ void hash_value(logging::record_view const& rec, logging::attribute_name name)
     typedef boost::mpl::vector< int, std::string > types;
 
     // Apply our visitor
-    std::pair< std::size_t, logging::visitation_result > result = logging::visit< types >(name, rec, hash_visitor());
+    std::size_t h = 0;
+    logging::visitation_result result = logging::visit< types >(name, rec, logging::save_result(hash_visitor(), h));
 
     // Check the result
-    if (result.second)
-        std::cout << "Visitation succeeded, hash value: " << result.first << std::endl;
+    if (result)
+        std::cout << "Visitation succeeded, hash value: " << h << std::endl;
     else
         std::cout << "Visitation failed" << std::endl;
 }

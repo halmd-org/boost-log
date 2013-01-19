@@ -429,11 +429,13 @@ In this example we print the stored attribute value in our `print_visitor`. We e
 * `value_not_found` - visitation failed because the requested value was not found; this code is used when visitation is applied to a log record or a set of attrinute values rather than a single value
 * `value_has_invalid_type` - visitation failed because the value has type differing from any of the expected types
 
-It is possible to return values from the visitor. In this case the result of visitation includes both the returned value and [class_log_visitation_result]. See the following example where we compute the hash value on the stored value.
+By default the visitor function result is ignored but it is possible to obtain it. To do this one should use a special [funcref boost::log::save_result `save_result`] wrapper for the visitor; the wrapper will save the visitor resulting value into an external variable captured by reference. The visitor result is initialized when the returned [class_log_visitation_result] is positive. See the following example where we compute the hash value on the stored value.
 
 [example_attr_value_visitation_with_retval]
 
 [@boost:/libs/log/example/doc/attr_value_visitation.cpp See the complete code].
+
+[tip When there is no default state for the visitor result it is convenient to use __boost_optional__ to wrap the returned value. The `optional` will be initialized with the visitor result if visitation succeeded. In case if visitor is polymorphic (i.e. it has different result types depending on its argument type) __boost_variant__ can be used to receive the resulting value. It is also worthwhile to use an empty type, such as `boost::blank`, to indicate the uninitialized state of the `variant`.]
 
 As it has been mentioned, visitation can also be applied to log records and attribute value sets. The syntax is the same, except that the attribute name also has to be specified. The [funcref boost::log::visit `visit`] algorithm will try to find the attribute value by name and then apply the visitor to the found element.
 

@@ -39,7 +39,7 @@ struct function_reference_wrapper
         return m_Fun();
     }
 
-#if !defined(BOOST_NO_VARIADIC_TEMPLATES) && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
     template< typename... ArgsT >
     result_type operator() (ArgsT const&... args) const
     {

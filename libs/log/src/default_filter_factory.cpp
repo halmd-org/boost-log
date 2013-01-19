@@ -14,7 +14,6 @@
  */
 
 #include <string>
-#include <utility>
 #include <boost/move/move.hpp>
 #include <boost/spirit/include/qi_core.hpp>
 #include <boost/spirit/include/qi_eoi.hpp>
@@ -31,6 +30,7 @@
 #include <boost/log/utility/functional/matches.hpp>
 #include <boost/log/utility/functional/bind.hpp>
 #include <boost/log/utility/functional/as_action.hpp>
+#include <boost/log/utility/functional/save_result.hpp>
 #include <boost/log/detail/code_conversion.hpp>
 #include <boost/log/support/xpressive.hpp>
 #include <boost/xpressive/xpressive_dynamic.hpp>
@@ -64,11 +64,9 @@ struct default_filter_factory< CharT >::predicate_wrapper
     template< typename T >
     result_type operator() (T const& arg) const
     {
-        std::pair< result_type, visitation_result > res = boost::log::visit< ValueT >(m_name, arg, m_visitor);
-        if (res.second.code() == visitation_result::ok)
-            return res.first;
-        else
-            return false;
+        bool res = false;
+        boost::log::visit< ValueT >(m_name, arg, save_result_wrapper< PredicateT const&, bool >(m_visitor, res));
+        return res;
     }
 
 private:
