@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   add_VALUE.hpp
+ * \file   add_value.hpp
  * \author Andrey Semashev
  * \date   26.11.2012
  *
