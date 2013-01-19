@@ -55,7 +55,7 @@ template< typename LoggerT >
 class scoped_logger_attribute :
     public attribute_scope_guard
 {
-    BOOST_MOVABLE_BUT_NOT_COPYABLE(scoped_logger_attribute)
+    BOOST_COPYABLE_AND_MOVABLE_ALT(scoped_logger_attribute)
 
 private:
     //! Logger type
@@ -95,6 +95,17 @@ public:
         if (m_pLogger)
             m_pLogger->remove_attribute(m_itAttribute);
     }
+
+#ifndef BOOST_LOG_BROKEN_REFERENCE_FROM_RVALUE_INIT
+    BOOST_LOG_DELETED_FUNCTION(scoped_logger_attribute(scoped_logger_attribute const&))
+#else // BOOST_LOG_BROKEN_REFERENCE_FROM_RVALUE_INIT
+    scoped_logger_attribute(scoped_logger_attribute const& that) : m_pLogger(that.m_pLogger), m_itAttribute(that.m_itAttribute)
+    {
+        const_cast< scoped_logger_attribute& >(that).m_pLogger = 0;
+    }
+#endif // BOOST_LOG_BROKEN_REFERENCE_FROM_RVALUE_INIT
+
+    BOOST_LOG_DELETED_FUNCTION(scoped_logger_attribute& operator= (scoped_logger_attribute const&))
 };
 
 } // namespace aux
@@ -119,13 +130,13 @@ BOOST_LOG_FORCEINLINE aux::scoped_logger_attribute< LoggerT > add_scoped_logger_
 #endif
 }
 
-//! \cond
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 #define BOOST_LOG_SCOPED_LOGGER_ATTR_INTERNAL(logger, attr_name, attr, sentry_var_name)\
     BOOST_LOG_UNUSED_VARIABLE(::boost::log::scoped_attribute, sentry_var_name,\
         = ::boost::log::add_scoped_logger_attribute(logger, attr_name, (attr)));
 
-//! \endcond
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 //! The macro sets a scoped logger-wide attribute in a more compact way
 #define BOOST_LOG_SCOPED_LOGGER_ATTR(logger, attr_name, attr)\
@@ -145,7 +156,7 @@ namespace aux {
 class scoped_thread_attribute :
     public attribute_scope_guard
 {
-    BOOST_MOVABLE_BUT_NOT_COPYABLE(scoped_thread_attribute)
+    BOOST_COPYABLE_AND_MOVABLE_ALT(scoped_thread_attribute)
 
 private:
     //! A pointer to the logging core
@@ -179,6 +190,17 @@ public:
         if (!!m_pCore)
             m_pCore->remove_thread_attribute(m_itAttribute);
     }
+
+#ifndef BOOST_LOG_BROKEN_REFERENCE_FROM_RVALUE_INIT
+    BOOST_LOG_DELETED_FUNCTION(scoped_thread_attribute(scoped_thread_attribute const&))
+#else // BOOST_LOG_BROKEN_REFERENCE_FROM_RVALUE_INIT
+    scoped_thread_attribute(scoped_thread_attribute const& that) : m_itAttribute(that.m_itAttribute)
+    {
+        m_pCore.swap(const_cast< scoped_thread_attribute& >(that).m_pCore);
+    }
+#endif // BOOST_LOG_BROKEN_REFERENCE_FROM_RVALUE_INIT
+
+    BOOST_LOG_DELETED_FUNCTION(scoped_thread_attribute& operator= (scoped_thread_attribute const&))
 };
 
 } // namespace aux
@@ -201,13 +223,13 @@ BOOST_LOG_FORCEINLINE aux::scoped_thread_attribute add_scoped_thread_attribute(a
 #endif
 }
 
-//! \cond
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 #define BOOST_LOG_SCOPED_THREAD_ATTR_INTERNAL(attr_name, attr, sentry_var_name)\
     BOOST_LOG_UNUSED_VARIABLE(::boost::log::scoped_attribute, sentry_var_name,\
         = ::boost::log::add_scoped_thread_attribute(attr_name, (attr)));
 
-//! \endcond
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 //! The macro sets a scoped thread-wide attribute in a more compact way
 #define BOOST_LOG_SCOPED_THREAD_ATTR(attr_name, attr)\

@@ -28,6 +28,13 @@
 #pragma once
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+// 'boost::log::v2s_mt_nt6::add_value_manip<RefT>::m_value' : reference member is initialized to a temporary that doesn't persist after the constructor exits
+// This is intentional since the manipulator can be used with a temporary, which will be used before the streaming expression ends and it is destroyed.
+#pragma warning(disable: 4413)
+#endif
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
@@ -50,14 +57,14 @@ private:
 
 public:
     //! Initializing constructor
-    add_value_manip(attribute_name const& name, reference_type value) : m_value(value), m_name(name)
+    add_value_manip(attribute_name const& name, reference_type value) : m_value(static_cast< reference_type >(value)), m_name(name)
     {
     }
 
     //! Returns attribute name
     attribute_name get_name() const { return m_name; }
     //! Returns attribute value
-    reference_type get_value() const { return m_value; }
+    reference_type get_value() const { return static_cast< reference_type >(m_value); }
 };
 
 //! The operator attaches an attribute value to the log record
@@ -65,7 +72,8 @@ template< typename CharT, typename RefT >
 inline basic_record_ostream< CharT >& operator<< (basic_record_ostream< CharT >& strm, add_value_manip< RefT > const& manip)
 {
     typedef typename aux::make_embedded_string_type< typename add_value_manip< RefT >::value_type >::type value_type;
-    strm.get_record().attribute_values().insert(manip.get_name(), attributes::make_attribute_value< value_type >(manip.get_value()));
+    attribute_value value(new attributes::attribute_value_impl< value_type >(manip.get_value()));
+    strm.get_record().attribute_values().insert(manip.get_name(), value);
     return strm;
 }
 
@@ -75,7 +83,7 @@ inline basic_record_ostream< CharT >& operator<< (basic_record_ostream< CharT >&
 template< typename T >
 inline add_value_manip< T&& > add_value(attribute_name const& name, T&& value)
 {
-    return add_value_manip< T&& >(name, value);
+    return add_value_manip< T&& >(name, static_cast< T&& >(value));
 }
 
 //! \overload
@@ -83,7 +91,8 @@ template< typename DescriptorT, template< typename > class ActorT >
 inline add_value_manip< typename DescriptorT::value_type&& >
 add_value(expressions::attribute_keyword< DescriptorT, ActorT > const&, typename DescriptorT::value_type&& value)
 {
-    return add_value_manip< typename DescriptorT::value_type&& >(DescriptorT::get_name(), value);
+    typedef typename DescriptorT::value_type value_type;
+    return add_value_manip< value_type&& >(DescriptorT::get_name(), static_cast< value_type&& >(value));
 }
 
 //! \overload
@@ -114,5 +123,9 @@ add_value(expressions::attribute_keyword< DescriptorT, ActorT > const&, typename
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif // BOOST_LOG_UTILITY_MANIPULATORS_ADD_VALUE_HPP_INCLUDED_

@@ -599,7 +599,7 @@ protected:
 };
 
 
-//! \cond
+#ifndef BOOST_LOG_DOXYGEN_PASS
 
 #define BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_IMPL(class_type, typename_keyword)\
     public:\
@@ -610,7 +610,7 @@ protected:
             ::boost::move(static_cast< typename_keyword() class_type::logger_base& >(that))) {}\
         BOOST_LOG_PARAMETRIZED_CONSTRUCTORS_FORWARD(class_type, class_type::logger_base)\
 
-//! \endcond
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 #define BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS(class_type)\
     BOOST_LOG_FORWARD_LOGGER_CONSTRUCTORS_IMPL(class_type, BOOST_PP_EMPTY)
@@ -620,7 +620,10 @@ protected:
 
 #define BOOST_LOG_FORWARD_LOGGER_ASSIGNMENT(class_type)\
     public:\
-        class_type& operator= (BOOST_COPY_ASSIGN_REF(class_type) that) { return class_type::logger_base::assign(that); }\
+        class_type& operator= (BOOST_COPY_ASSIGN_REF(class_type) that)\
+        {\
+            return class_type::logger_base::assign(static_cast< class_type const& >(that));\
+        }\
         class_type& operator= (BOOST_RV_REF(class_type) that)\
         {\
             ::boost::log::aux::exclusive_lock_guard< class_type::threading_model > lock(this->get_threading_model());\
@@ -630,7 +633,10 @@ protected:
 
 #define BOOST_LOG_FORWARD_LOGGER_ASSIGNMENT_TEMPLATE(class_type)\
     public:\
-        class_type& operator= (BOOST_COPY_ASSIGN_REF(class_type) that) { return class_type::logger_base::assign(that); }\
+        class_type& operator= (BOOST_COPY_ASSIGN_REF(class_type) that)\
+        {\
+            return class_type::logger_base::assign(static_cast< class_type const& >(that));\
+        }\
         class_type& operator= (BOOST_RV_REF(class_type) that)\
         {\
             ::boost::log::aux::exclusive_lock_guard< typename class_type::threading_model > lock(this->get_threading_model());\

@@ -65,6 +65,16 @@
         // Older MSVC versions reject friend declarations for class template instantiations
 #       define BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS
 #   endif
+#   if _MSC_VER <= 1600
+        // MSVC up to 10.0 attempts to invoke copy constructor when initializing a const reference from rvalue returned from a function.
+        // This fails when the returned value cannot be copied (only moved):
+        //
+        // class base {};
+        // class derived : public base { BOOST_MOVABLE_BUT_NOT_COPYABLE(derived) };
+        // derived foo();
+        // base const& var = foo(); // attempts to call copy constructor of derived
+#       define BOOST_LOG_BROKEN_REFERENCE_FROM_RVALUE_INIT
+#   endif
 #   if !defined(_STLPORT_VERSION)
         // MSVC 9.0 mandates packaging of STL classes, which apparently affects alignment and
         // makes alignment_of< T >::value no longer be a power of 2 for types that derive from STL classes.

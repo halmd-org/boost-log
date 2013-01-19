@@ -150,7 +150,7 @@ To keep the code snippets in this documentation simple, the following namespace 
 
 The library should build and work with a reasonably compliant compiler. The library was successfully built and tested on the following platforms:
 
-* Windows XP, Windows Vista, Windows 7. MSVC 8.0 and newer.
+* Windows XP, Windows Vista, Windows 7. MSVC 9.0 and newer.
 * Windows Vista. Intel C++ Compiler 10.1.022, 11.1.048.
 * Linux. GCC 4.5 and newer. Older versions may work too, but it was not tested.
 * Linux. Intel C++ 11.1.056.
@@ -159,7 +159,7 @@ The library should build and work with a reasonably compliant compiler. The libr
 The following compilers/platforms are not supported and will likely fail to compile the library:
 
 * C++11 compilers with non-C++11 standard libraries (like Clang with libstdc++ from GCC 4.2). Please, use a C++11 standard library in C++11 mode.
-* MSVC 7.1 and older.
+* MSVC 8.0 and older.
 * GCC 4.0 and older.
 * Borland C++ 5.5.1 (free version). Newer versions might or might not work.
 * Windows 9x, ME, NT4 and older are not supported.
