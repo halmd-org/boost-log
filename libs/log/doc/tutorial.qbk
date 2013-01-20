@@ -21,7 +21,7 @@ For those who don't want to read tons of clever manuals and just need a simple t
 
 The `BOOST_LOG_TRIVIAL` macro accepts a severity level and results in a stream-like object that supports insertion operator. As a result of this code, the log messages will be printed on the console. As you can see, this library usage pattern is quite similar to what you would do with `std::cout`. However, the library offers a few advantages:
 
-# Besides the record message, each log record in the file contains a timestamp, the current thread identifier and severity level.
+# Besides the record message, each log record in the output contains a timestamp, the current thread identifier and severity level.
 # It is safe to write logs from different threads concurrently, log messages will not be corrupted.
 # As will be shown later, filtering can be applied.
 
@@ -43,9 +43,9 @@ Now, if we run this code sample, the first two log records will be ignored, whil
 
 A few words must be said about the filter setup expression. Since we're setting up a global filter, we have to acquire the [link log.detailed.core.core logging core] instance. This is what `logging::core::get()` does - it returns a pointer to the core singleton. The `set_filter` method of the logging core sets the global filtering function.
 
-The filter is built as a lambda expression. In our case, this expression consists of a single logical predicate, whose left argument is a placeholder that describes the attribute to be checked, and the right argument is the value to be checked against. The `severity` keyword is a placeholder provided by the library. This placeholder identifies the severity attribute value in the template expressions; this value is expected to have name "Severity" and type `severity_level`. This attribute is automatically provided by the library in case of trivial logging; the user only has to supply its value in logging statements. The placeholder along with the ordering operator creates a function object that will be called by the logging core to filter log records. As a result, only log records with severity level not less than `info` will pass the filter and end up on the console.
+The filter in this example is built as a __boost_phoenix__ lambda expression. In our case, this expression consists of a single logical predicate, whose left argument is a placeholder that describes the attribute to be checked, and the right argument is the value to be checked against. The `severity` keyword is a placeholder provided by the library. This placeholder identifies the severity attribute value in the template expressions; this value is expected to have name "Severity" and type [enumref boost::log::trivial::severity_level `severity_level`]. This attribute is automatically provided by the library in case of trivial logging; the user only has to supply its value in logging statements. The placeholder along with the ordering operator creates a function object that will be called by the logging core to filter log records. As a result, only log records with severity level not less than `info` will pass the filter and end up on the console.
 
-It is possible to build more complex filters as lambda expressions, combining logical predicates like this with each other, or even define your own function that would act as a filter. We will return to filtering in the following sections.
+It is possible to build more complex filters, combining logical predicates like this with each other, or even define your own function (including a C++11 lambda function) that would act as a filter. We will return to filtering in the following sections.
 
 [endsect]
 
@@ -173,7 +173,7 @@ With this call attributes "LineID", "TimeStamp", "ProcessID" and "ThreadID" are 
 
 [tip By default, when application starts, no attributes are registered in the library. The application has to register all the necessary attributes in the library before it starts writing logs. This can be done as a part of the library initialization. A curious reader could have wondered how trivial logging works then. The answer is that the default sink doesn't really use any attribute values, except for the severity level, to compose its output. This is done to avoid the need for any initialization for trivial logging. Once you use filters or formatters and non-default sinks you will have to register the attributes you need.]
 
-The `add_common_attributes` function is one of the several convenience helpers described [link log.detailed.utilities.setup.convenience here].
+The [funcref boost::log::add_common_attributes `add_common_attributes`] function is one of the several convenience helpers described [link log.detailed.utilities.setup.convenience here].
 
 Some attrubutes are registered automatically on loggers construction. For example, [link log.detailed.sources.severity_level_logger `severity_logger`] registers a source-specific attribute "Severity" which can be used to add a level of emphasis for different log records. For example:
 

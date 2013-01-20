@@ -54,7 +54,7 @@
 #define BOOST_LOG_CTOR_CALL(z, n, types)\
     template< BOOST_PP_ENUM_PARAMS(n, typename T) >\
     explicit BOOST_PP_TUPLE_ELEM(2, 0, types)(BOOST_PP_ENUM_BINARY_PARAMS(n, T, const& arg))\
-        { BOOST_PP_TUPLE_ELEM(2, 1, types)((BOOST_PP_ENUM_PARAMS(n, arg))); }
+    { BOOST_PP_TUPLE_ELEM(2, 1, types)((BOOST_PP_ENUM_PARAMS(n, arg))); }
 
 // The macro expands to a number of templated constructors that aggregate their named arguments
 // into an ArgumentsPack and pass it to a function call.
@@ -70,7 +70,7 @@ namespace aux {
 // Yeah, not too cute. The empty_arg_list class should really be public.
 typedef boost::parameter::aux::empty_arg_list empty_arg_list;
 
-#if !(defined(BOOST_NO_VARIADIC_TEMPLATES) || defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_LOG_NO_CXX11_ARG_PACKS_TO_NON_VARIADIC_ARGS_EXPANSION))
+#if !(defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) || defined(BOOST_LOG_NO_CXX11_ARG_PACKS_TO_NON_VARIADIC_ARGS_EXPANSION))
 
 //! The metafunction generates argument pack
 template< typename ArgT0, typename... ArgsT >

@@ -32,16 +32,6 @@ BOOST_LOG_OPEN_NAMESPACE
  */
 class visitation_result;
 
-namespace result_of {
-
-/*!
- * The metafunction defines the result type of an attribute visitation.
- */
-template< typename ValueT, typename VisitorT >
-struct visit;
-
-} // namespace result_of
-
 /*!
  * \brief Generic attribute value visitor invoker
  */

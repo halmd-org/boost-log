@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(type_dispatching)
     my_dispatcher disp;
     logging::attribute_value p1(attrs::make_attribute_value< int >(10));
     logging::attribute_value p2(attrs::make_attribute_value< double > (5.5));
-    logging::attribute_value p3(attrs::make_attribute_value< std::string >("Hello, world!"));
+    logging::attribute_value p3(attrs::make_attribute_value< std::string >(std::string("Hello, world!")));
     logging::attribute_value p4(attrs::make_attribute_value< float >(static_cast< float >(-7.2)));
 
     disp.set_expected(10);

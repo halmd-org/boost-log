@@ -13,161 +13,52 @@
 
     #include <``[boost_log_sinks_basic_sink_backend_hpp]``>
 
-As was described in the [link log.design Design overview] section, sinks consist of two parts: frontend and backend. Frontends are provided by the library and usually do not need to be reimplemented. Thanks to frontends, implementing backends is much easier than it could be: all filtering and thread synchronization is done there.
+As was described in the [link log.design Design overview] section, sinks consist of two parts: frontend and backend. Frontends are provided by the library and usually do not need to be reimplemented. Thanks to frontends, implementing backends is much easier than it could be: all filtering, formatting and thread synchronization is done there.
 
-In order to develop a sink backend, you have two options where to start:
+In order to develop a sink backend, you derive your class from either [class_sinks_basic_sink_backend] or [class_sinks_basic_formatted_sink_backend], depending on whether your backend requires formatted log records or not. Both base classes define a set of types that are required to interface with sink frontends. One of these types is `frontend_requirements`.
 
-* If you don't need any formatting, the minimalistic [class_sinks_basic_sink_backend] base class template is your choice. Actually, this class only defines types that are needed for the sink to function.
-* If you need to create a sink with formatting capabilities, you can use the [class_sinks_basic_formatting_sink_backend] class template as a base class for your backend. It extends the [class_sinks_basic_sink_backend] class and implements log record formatting and character code conversion, leaving you to develop only the record storing code.
+[heading Frontend requirements]
 
-Before we move on and see these instruments in action, one thing should be noted. As was said before, sink frontends take the thread safety burden from the backend. Also, there are [link log.detailed.sink_frontends three kinds of frontends] (not counting the ordering one). Each of them provides different guarantees regarding thread safety. The backend has no idea which sink frontend is used with it, yet it may require a certain degree of thread safety from it to function properly. In order to protect itself from misuse the backend declares the threading model it needs to operate with. There are three of them:
+    #include <``[boost_log_sinks_frontend_requirements_hpp``>
 
-# The [class_sinks_backend_synchronization_tag] means that the backend itself is responsible for thread synchronization (which may imply there is no need for synchronization at all). When a backend declares this threading model, any sink frontend can be used with it.
-# The [class_sinks_frontend_synchronization_tag] means that the frontend must serialize calls to the backend from different threads. The [class_sinks_unlocked_sink] frontend cannot fulfill this requirement, so it will not compile if instantiated with such a backend.
-# The [class_sinks_single_thread_tag] means that all log records must be passed to the backend in a single thread. Note that other methods can be called in other threads, however, these calls must be serialized. Only [class_sinks_asynchronous_sink] and [class_sinks_ordering_asynchronous_sink] frontends meet this requirement, other frontends will refuse to compile with such a backend.
+In order to work with sink backends, frontends use the `frontend_requirements` type defined by all backends. The type combines one or several requirement tags:
 
-The threading model tag is used to instantiate the backend base classes. Since [class_sinks_basic_formatting_sink_backend] base class uses internal data to implement log record formatting, it requires the threading model to be either [class_sinks_frontend_synchronization_tag] or [class_sinks_single_thread_tag]. On the other hand, [class_sinks_basic_sink_backend] doesn't have this restriction.
+* [class_sinks_synchronized_feeding]. If the backend has this requirement, it expects log records to be passed from frontend in synchronized manner (i.e. only one thread should be feeding a record at a time). Note that different threads may be feeding different records, the requirement merely states that there will be no concurrent feeds.
+* [class_sinks_concurrent_feeding]. This requirement extends [class_sinks_synchronized_feeding] by allowing different threads to feed records concurrently. The backend implements all necessary thread synchronization in this case.
+* [class_sinks_formatted_records]. The backend expects formatted log records. The frontend implements formatting to a string with character type defined by the `char_type` typedef within the backend. The formatted string will be passed along with the log record to the backend. The [class_sinks_basic_formatted_sink_backend] base class automatically adds this requirement to the `frontend_requirements` type.
+* [class_sinks_flushing]. The backend supports flushing its internal buffers. If the backend indicates this requirement it has to implement the `flush` method taking no arguments; this method will be called by the frontend when flushed.
+
+[tip By chosing either of the thread synchronization requirements you effectively allow or prohibit certain [link log.detailed.sink_frontends sink frontends] from being used with your backend.]
+
+Multiple requirements can be combined into `frontend_requirements` type with the [class_sinks_combine_requirements] metafunction:
+
+    typedef sinks::combine_requirements<
+        sinks::synchronized_feeding,
+        sinks::formatted_records,
+        sinks::flushing
+    >::type frontend_requirements;
+
+It must be noted that [class_sinks_synchronized_feeding] and [class_sinks_concurrent_feeding] should not be combined together as it would make the synchronization requirement ambiguous. The [class_sinks_synchronized_feeding] is a more strict requirement than [class_sinks_concurrent_feeding], so whenever the backend requires concurrent feeding it is also capable of synchronized feeding.
+
+The [class_sinks_has_requirement] metafunction can be used to test for a specific requirement in the `frontend_requirements` typedef.
 
 [heading Minimalistic sink backend]
 
 As an example of the [class_sinks_basic_sink_backend] class usage, let's implement a simple statistical information collector backend. Assume we have a network server and we want to monitor how many incoming connections are active and how much data was sent or received. The collected information should be written to a CSV-file every minute. The backend definition could look something like this:
 
-    // The backend collects statistical information about network activity of the application
-    class stat_collector :
-        public sinks::basic_sink_backend<
-            // Character type. We use narrow-character logging in this example.
-            char,
-            // We will have to store internal data, so let's require frontend to
-            // synchronize calls to the backend.
-            sinks::frontend_synchronization_tag
-        >
-    {
-    private:
-        // The file to write the collected information to
-        std::ofstream m_CSVFile;
+[example_extension_stat_collector_definition]
 
-        // Here goes the data collected so far:
-        // Active connections
-        unsigned int m_ActiveConnections;
-        // Sent bytes
-        unsigned int m_SentBytes;
-        // Received bytes
-        unsigned int m_ReceivedBytes;
+As you can see, the public interface of the backend is quite simple. Only the `consume` and `flush` methods are called by frontends. The `consume` function is called every time a logging record passes filtering in the frontend. The record, as was stated before, contains a set of attribute values and the message string. Since we have no need for the record message, we will ignore it for now. But from the other attributes we can extract the statistical data to accumulate and write to the file. We can use [link log.detailed.expressions.attr_keywords attribute keywords] and [link log.detailed.attributes.related_components.value_processing.visitation value visitation] to accomplish this.
 
-        // A thread that writes the statistical information to the file
-        std::auto_ptr< boost::thread > m_WriterThread;
+[example_extension_stat_collector_consume]
 
-    public:
-        // The function creates an instance of the sink
-        template< template< typename > class FrontendT >
-        static boost::shared_ptr< FrontendT< stat_collector > > create(const char* file_name);
+Note that we used __boost_phoenix__ to automatically generate visitor function objects for attribute values.
 
-        // The function consumes the log records that come from the frontend
-        void consume(record_type const& rec);
+The last bit of implementation is the `flush` method. It is used to flush all buffered data to the external storage, which is a file in our case. The method can be implemented in the following way:
 
-    private:
-        // The constructor initializes the internal data
-        explicit stat_collector(const char* file_name) :
-            m_CSVFile(file_name, std::ios::app),
-            m_ActiveConnections(0)
-        {
-            reset_accumulators();
-            if (!m_CSVFile.is_open())
-                throw std::runtime_error("could not open the CSV file");
-        }
+[example_extension_stat_collector_flush]
 
-        // The function runs in a separate thread and calls write_data periodically
-        template< template< typename > class FrontendT >
-        static void writer_thread(boost::weak_ptr< FrontendT< stat_collector > > const& sink);
-
-        // The function resets statistical accumulators to initial values
-        void reset_accumulators()
-        {
-            m_SentBytes = m_ReceivedBytes = 0;
-        }
-
-        // The function writes the collected data to the file
-        void write_data()
-        {
-            m_CSVFile << m_ActiveConnections
-                << ',' << m_SentBytes
-                << ',' << m_ReceivedBytes
-                << std::endl;
-            reset_accumulators();
-        }
-    };
-
-As you can see, the public interface of the backend is quite simple. In fact, only the `consume` function is needed by frontends, the `create` function is introduced for our own convenience. The `create` function simply creates the sink and initializes the thread that will write the collected data to the file.
-
-    // The function creates an instance of the sink
-    template< template< typename > class FrontendT >
-    boost::shared_ptr< FrontendT< stat_collector > > stat_collector::create(const char* file_name)
-    {
-        // Create the backend
-        boost::shared_ptr< stat_collector > backend(new stat_collector(file_name));
-
-        // Wrap it into the specified frontend
-        typedef FrontendT< stat_collector > sink_t;
-        boost::shared_ptr< sink_t > sink(new sink_t(backend));
-
-        // Now we can start the thread that writes the data to the file
-        backend->m_WriterThread.reset(new boost::thread(
-            &stat_collector::writer_thread< FrontendT >,
-            boost::weak_ptr< FrontendT< stat_collector > >(sink)
-        ));
-
-        return sink;
-    }
-
-Now the `writer_thread` function can look like this:
-
-    // The function runs in a separate thread and writes the collected data to the file
-    template< template< typename > class FrontendT >
-    void stat_collector::writer_thread(
-        boost::weak_ptr< FrontendT< stat_collector > > const& sink)
-    {
-        while (true)
-        {
-            // Sleep for one minute
-            boost::this_thread::sleep(boost::get_xtime(
-                boost::get_system_time() + boost::posix_time::minutes(1)));
-
-            // Get the pointer to the sink
-            boost::shared_ptr< FrontendT< stat_collector > > p = sink.lock();
-            if (p)
-                p->locked_backend()->write_data(); // write the collected data to the file
-            else
-                break; // the sink is dead, terminate the thread
-        }
-    }
-
-The `consume` function is called every time a logging record passes filtering in the frontend. The record, as was stated before, contains a set of attribute values and the message string.
-
-Since we have no need for the record message, we will ignore it for now.
-
-    // The function consumes the log records that come from the frontend
-    void stat_collector::consume(record_type const& rec)
-    {
-        namespace lambda = boost::lambda;
-
-        if (rec.attribute_values().count("Connected"))
-            ++m_ActiveConnections;
-        else if (rec.attribute_values().count("Disconnected"))
-            --m_ActiveConnections;
-        else
-        {
-            logging::extract< unsigned int >(
-                "Sent",
-                rec.attribute_values(),
-                lambda::var(m_SentBytes) += lambda::_1);
-            logging::extract< unsigned int >(
-                "Received",
-                rec.attribute_values(),
-                lambda::var(m_ReceivedBytes) += lambda::_1);
-        }
-    }
-
-The code above is quite straightforward. We can parse through attribute values like through a regular map, or use extractors with function objects to acquire individual values. __boost_lambda__ and similar libraries simplify generation of function objects that will receive the extracted value.
+You can find the complete code of this example [@boost:/libs/log/examples/doc/extension_stat_collector.cpp here].
 
 [heading Formatting sink backend]
 

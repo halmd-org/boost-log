@@ -17,7 +17,7 @@
 
 #include <boost/log/detail/config.hpp>
 
-#include <boost/log/utility/manipulators/add_attr.hpp>
+#include <boost/log/utility/manipulators/add_value.hpp>
 
 #include <boost/log/utility/manipulators/to_log.hpp>
 

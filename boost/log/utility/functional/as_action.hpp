@@ -27,25 +27,27 @@ BOOST_LOG_OPEN_NAMESPACE
 
 //! Function object adapter for Boost.Spirit actions
 template< typename FunT >
-struct action_adapter :
-    public FunT
+struct as_action_adapter
 {
     typedef typename FunT::result_type result_type;
 
-    BOOST_LOG_DEFAULTED_FUNCTION(action_adapter(), {})
-    explicit action_adapter(FunT const& fun) : FunT(fun) {}
+    BOOST_LOG_DEFAULTED_FUNCTION(as_action_adapter(), {})
+    explicit as_action_adapter(FunT const& fun) : m_fun(fun) {}
 
     template< typename AttributeT, typename ContextT >
     result_type operator() (AttributeT const& attr, ContextT const& ctx, bool& pass) const
     {
-        return FunT::operator() (attr);
+        return m_fun(attr);
     }
+
+private:
+    FunT m_fun;
 };
 
 template< typename FunT >
-BOOST_LOG_FORCEINLINE action_adapter< FunT > as_action(FunT const& fun)
+BOOST_LOG_FORCEINLINE as_action_adapter< FunT > as_action(FunT const& fun)
 {
-    return action_adapter< FunT >(fun);
+    return as_action_adapter< FunT >(fun);
 }
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log

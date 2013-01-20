@@ -228,16 +228,16 @@ It is also possible to define different formatting rules for different value con
 
 [endsect]
 
-[section:add_attr Attribute value attaching manipulator]
+[section:add_value Attribute value attaching manipulator]
 
-    #include <``[boost_log_utility_manipulators_add_attr_hpp]``>
+    #include <``[boost_log_utility_manipulators_add_value_hpp]``>
 
-The [funcref boost::log::add_attr `add_attr`] function creates a manipulator that attaches an attribute value to a log record. This manipulator can only be used in streaming expressions with the [class_log_basic_record_ostream] stream type (which is the case when log record message is formatted). Since the message text is only formatted after filtering, attribute values attached with this manipulator do not affect filtering and can only be used in formatters and sinks themselves.
+The [funcref boost::log::add_value `add_value`] function creates a manipulator that attaches an attribute value to a log record. This manipulator can only be used in streaming expressions with the [class_log_basic_record_ostream] stream type (which is the case when log record message is formatted). Since the message text is only formatted after filtering, attribute values attached with this manipulator do not affect filtering and can only be used in formatters and sinks themselves.
 
 In addition to the value itself, the manipulator also requires the attribute name to be provided. For example:
 
     // Creates a log record with attribute value "MyAttr" of type int attached
-    BOOST_LOG(lg) << logging::add_attr("MyAttr", 10) << "Hello world!";
+    BOOST_LOG(lg) << logging::add_value("MyAttr", 10) << "Hello world!";
 
 [endsect]
 

@@ -96,7 +96,7 @@ public:
 /*!
  * The function creates an attribute value from the specified object.
  */
-#if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 template< typename T >
 inline attribute_value make_attribute_value(T&& v)
@@ -121,7 +121,7 @@ inline attribute_value make_attribute_value(rv< T > const& v)
     return attribute_value(new attribute_value_impl< value_type >(v));
 }
 
-#endif // !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 } // namespace attributes
 

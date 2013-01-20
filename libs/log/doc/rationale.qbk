@@ -107,7 +107,7 @@ The second solution was implemented as a special policy for the [link log.detail
 
 One can add attributes to log records in the followinf way:
 
-    BOOST_LOG(logger) << logging::add_attr("MyInt", 10) << logging::add_attr("MyString", "string attribute value")
+    BOOST_LOG(logger) << logging::add_value("MyInt", 10) << logging::add_value("MyString", "string attribute value")
         << "Some log message";
 
 However, filters will not be able to use MyInt and MyString attributes. The reason for this behavior is quite simple. The streaming expression is executed /after/ the filtering takes place and only /if/ the filter passed the log record. At this point these attributes have not been added to the record yet. The easiest way to pass attributes to the filter is to use scoped attributes or tags (see [link log.detailed.attributes.related_components.scoped_attributes here]).

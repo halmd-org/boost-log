@@ -22,6 +22,7 @@
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/utility/functional/bind.hpp>
+#include <boost/log/utility/functional/save_result.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -94,13 +95,10 @@ public:
     result_type operator() (ArgumentT const& arg) const
     {
         typedef binder2nd< predicate_type, argument_type const& > visitor_type;
-        typedef typename boost::result_of< const value_visitor_invoker< value_type, fallback_policy >(attribute_name, ArgumentT const&, visitor_type) >::type visit_result_type;
 
-        visit_result_type res = m_visitor_invoker(m_name, arg, visitor_type(predicate_type(), m_arg));
-        if (res.second.code() == visitation_result::ok)
-            return res.first;
-        else
-            return false;
+        bool res = false;
+        m_visitor_invoker(m_name, arg, boost::log::save_result(visitor_type(predicate_type(), m_arg), res));
+        return res;
     }
 };
 
