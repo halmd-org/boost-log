@@ -626,7 +626,7 @@ protected:
         }\
         class_type& operator= (BOOST_RV_REF(class_type) that)\
         {\
-            ::boost::log::aux::exclusive_lock_guard< class_type::threading_model > lock(this->get_threading_model());\
+            BOOST_LOG_EXPR_IF_MT(::boost::log::aux::exclusive_lock_guard< class_type::threading_model > lock(this->get_threading_model());)\
             this->swap_unlocked(that);\
             return *this;\
         }
@@ -639,7 +639,7 @@ protected:
         }\
         class_type& operator= (BOOST_RV_REF(class_type) that)\
         {\
-            ::boost::log::aux::exclusive_lock_guard< typename class_type::threading_model > lock(this->get_threading_model());\
+            BOOST_LOG_EXPR_IF_MT(::boost::log::aux::exclusive_lock_guard< typename class_type::threading_model > lock(this->get_threading_model());)\
             this->swap_unlocked(that);\
             return *this;\
         }
