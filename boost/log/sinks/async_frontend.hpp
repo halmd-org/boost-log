@@ -402,7 +402,7 @@ public:
     void flush()
     {
         unique_lock< frontend_mutex_type > lock(base_type::frontend_mutex());
-        if (m_FeedingThreadID != thread::id())
+        if (m_FeedingThreadID != thread::id() || m_DedicatedFeedingThread.joinable())
         {
             // There is already a thread feeding records, let it do the job
             m_FlushRequested = true;
