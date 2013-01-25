@@ -16,6 +16,7 @@
 #define BOOST_LOG_UTILITY_MANIPULATORS_TO_LOG_HPP_INCLUDED_
 
 #include <iosfwd>
+#include <boost/mpl/bool.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/formatting_ostream_fwd.hpp>
 
@@ -33,6 +34,11 @@ BOOST_LOG_OPEN_NAMESPACE
 template< typename T, typename TagT = void >
 class to_log_manip
 {
+#ifndef BOOST_LOG_DOXYGEN_PASS
+public:
+    typedef void _has_basic_formatting_ostream_insert_operator;
+#endif
+
 public:
     //! Output value type
     typedef T value_type;

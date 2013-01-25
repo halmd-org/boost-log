@@ -414,6 +414,11 @@ template< typename T, typename TagT >
 class value_ref :
     public aux::value_ref_base< T, TagT >::type
 {
+#ifndef BOOST_LOG_DOXYGEN_PASS
+public:
+    typedef void _has_basic_formatting_ostream_insert_operator;
+#endif
+
 private:
     //! Base implementation type
     typedef typename aux::value_ref_base< T, TagT >::type base_type;

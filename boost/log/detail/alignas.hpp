@@ -25,11 +25,15 @@
 // The macro allows to specify type or variable alignment
 #if defined(_MSC_VER)
 #define BOOST_LOG_ALIGNAS(x) __declspec(align(x))
-#elif defined(__GNUC__)
-#define BOOST_LOG_ALIGNAS(x) __attribute__((__aligned__(x)))
 #elif defined(BOOST_CLANG)
-#if __has_feature(cxx_alignas)
+#if __has_feature(cxx_alignas) || __has_extension(cxx_alignas)
 #define BOOST_LOG_ALIGNAS(x) alignas(x)
+#endif
+#elif defined(__GNUC__)
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))
+#define BOOST_LOG_ALIGNAS(x) alignas(x)
+#else
+#define BOOST_LOG_ALIGNAS(x) __attribute__((__aligned__(x)))
 #endif
 #endif
 
