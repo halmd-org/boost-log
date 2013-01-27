@@ -19,6 +19,8 @@
 #pragma once
 #endif
 
+#ifndef BOOST_LOG_NO_THREADS
+
 #if defined(BOOST_THREAD_PLATFORM_PTHREAD)
 #   if defined(_POSIX_SEMAPHORES) && (_POSIX_SEMAPHORES + 0) > 0
 #       if defined(__GNUC__) && defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
@@ -133,5 +135,7 @@ typedef generic_event event;
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#endif // BOOST_LOG_NO_THREADS
 
 #endif // BOOST_LOG_DETAIL_EVENT_HPP_INCLUDED_
