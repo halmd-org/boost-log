@@ -13,6 +13,10 @@
  *         at http://www.boost.org/libs/log/doc/log.html.
  */
 
+#include <boost/log/detail/config.hpp>
+
+#ifndef BOOST_LOG_NO_THREADS
+
 #include <boost/cstdint.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/system/error_code.hpp>
@@ -189,3 +193,5 @@ BOOST_LOG_API void generic_event::set_signalled()
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#endif // BOOST_LOG_NO_THREADS
