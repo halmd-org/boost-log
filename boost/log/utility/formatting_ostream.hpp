@@ -20,13 +20,9 @@
 #include <memory>
 #include <locale>
 #include <boost/ref.hpp>
-#include <boost/mpl/vector.hpp>
-#include <boost/mpl/contains.hpp>
 #include <boost/type_traits/remove_cv.hpp>
-#include <boost/utility/enable_if.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/utility/base_from_member.hpp>
-#include <boost/optional/optional_fwd.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/attachable_sstream_buf.hpp>
 #include <boost/log/detail/code_conversion.hpp>
@@ -49,6 +45,36 @@
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
+
+namespace aux {
+
+template< typename T, typename R, typename VoidT = void >
+struct enable_basic_formatting_ostream_generic_insert_operator { typedef R type; };
+template< typename T, typename R >
+struct enable_basic_formatting_ostream_generic_insert_operator< T, R, typename T::_has_basic_formatting_ostream_insert_operator > {};
+template< typename T, typename R >
+struct enable_basic_formatting_ostream_generic_insert_operator< T*, R > {};
+template< typename CharT, typename TraitsT, typename AllocatorT, typename R >
+struct enable_basic_formatting_ostream_generic_insert_operator< std::basic_string< CharT, TraitsT, AllocatorT >, R > {};
+template< typename CharT, typename TraitsT, typename R >
+struct enable_basic_formatting_ostream_generic_insert_operator< basic_string_literal< CharT, TraitsT >, R > {};
+
+template< typename T, typename R >
+struct enable_if_char_type {};
+template< typename R >
+struct enable_if_char_type< char, R > { typedef R type; };
+template< typename R >
+struct enable_if_char_type< wchar_t, R > { typedef R type; };
+#if !defined(BOOST_NO_CXX11_CHAR16_T)
+template< typename R >
+struct enable_if_char_type< char16_t, R > { typedef R type; };
+#endif
+#if !defined(BOOST_NO_CXX11_CHAR32_T)
+template< typename R >
+struct enable_if_char_type< char32_t, R > { typedef R type; };
+#endif
+
+} // namespace aux
 
 /*!
  * \brief Stream for log records formatting.
@@ -89,18 +115,6 @@ public:
     typedef typename ostream_type::off_type off_type;
 
 private:
-    //  Supported character types
-    typedef mpl::vector<
-        char
-      , wchar_t
-#if !defined(BOOST_NO_CHAR16_T) && !defined(BOOST_NO_CXX11_CHAR16_T)
-      , char16_t
-#endif
-#if !defined(BOOST_NO_CHAR32_T) && !defined(BOOST_NO_CXX11_CHAR32_T)
-      , char32_t
-#endif
-    >::type char_types;
-
     //  Function types
     typedef std::ios_base& (*ios_base_manip)(std::ios_base&);
     typedef std::basic_ios< char_type, traits_type >& (*basic_ios_manip)(std::basic_ios< char_type, traits_type >&);
@@ -197,6 +211,39 @@ public:
         return &this->streambuf_base_type::member;
     }
 
+    basic_formatting_ostream& put(char_type c)
+    {
+        ostream_type::put(c);
+        return *this;
+    }
+
+    template< typename OtherCharT >
+    typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    put(OtherCharT c)
+    {
+        write(boost::addressof(c), 1);
+        return *this;
+    }
+
+    basic_formatting_ostream& write(const char_type* p, std::streamsize size)
+    {
+        ostream_type::write(p, size);
+        return *this;
+    }
+
+    template< typename OtherCharT >
+    typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    write(const OtherCharT* p, std::streamsize size)
+    {
+        flush();
+
+        string_type* storage = this->streambuf_base_type::member.storage();
+        BOOST_ASSERT(storage != NULL);
+        aux::code_convert(p, static_cast< std::size_t >(size), *storage, this->getloc());
+
+        return *this;
+    }
+
     basic_formatting_ostream& operator<< (ios_base_manip manip)
     {
         *static_cast< ostream_type* >(this) << manip;
@@ -212,86 +259,162 @@ public:
         *static_cast< ostream_type* >(this) << manip;
         return *this;
     }
-    template< typename OtherCharT >
-    typename enable_if< mpl::contains< char_types, OtherCharT >, basic_formatting_ostream& >::type
-    operator<< (OtherCharT c)
+
+    basic_formatting_ostream& operator<< (char c)
     {
-        put(c);
+        this->put(c);
+        return *this;
+    }
+    basic_formatting_ostream& operator<< (const char* p)
+    {
+        this->write(p, static_cast< std::streamsize >(std::char_traits< char >::length(p)));
         return *this;
     }
 
-    template< typename OtherCharT >
-    typename enable_if< mpl::contains< char_types, typename boost::remove_cv< OtherCharT >::type >, basic_formatting_ostream& >::type
-    operator<< (OtherCharT* p)
+#if !defined(BOOST_NO_INTRINSIC_WCHAR_T)
+    basic_formatting_ostream& operator<< (wchar_t c)
     {
-        typedef typename boost::remove_cv< OtherCharT >::type other_char_type;
-        write(p, static_cast< std::streamsize >(std::char_traits< other_char_type >::length(p)));
+        this->put(c);
         return *this;
     }
-
-    template< typename OtherCharT, typename OtherTraitsT, typename OtherAllocatorT >
-    typename enable_if< mpl::contains< char_types, OtherCharT >, basic_formatting_ostream& >::type
-    operator<< (std::basic_string< OtherCharT, OtherTraitsT, OtherAllocatorT > const& str)
+    basic_formatting_ostream& operator<< (const wchar_t* p)
     {
-        write(str.c_str(), static_cast< std::streamsize >(str.size()));
+        this->write(p, static_cast< std::streamsize >(std::char_traits< wchar_t >::length(p)));
         return *this;
     }
-
-    template< typename OtherCharT, typename OtherTraitsT >
-    typename enable_if< mpl::contains< char_types, OtherCharT >, basic_formatting_ostream& >::type
-    operator<< (basic_string_literal< OtherCharT, OtherTraitsT > const& str)
+#endif
+#if !defined(BOOST_NO_CXX11_CHAR16_T)
+    basic_formatting_ostream& operator<< (char16_t c)
     {
-        write(str.c_str(), static_cast< std::streamsize >(str.size()));
+        this->put(c);
         return *this;
     }
+    basic_formatting_ostream& operator<< (const char16_t* p)
+    {
+        this->write(p, static_cast< std::streamsize >(std::char_traits< char16_t >::length(p)));
+        return *this;
+    }
+#endif
+#if !defined(BOOST_NO_CXX11_CHAR32_T)
+    basic_formatting_ostream& operator<< (char32_t c)
+    {
+        this->put(c);
+        return *this;
+    }
+    basic_formatting_ostream& operator<< (const char32_t* p)
+    {
+        this->write(p, static_cast< std::streamsize >(std::char_traits< char32_t >::length(p)));
+        return *this;
+    }
+#endif
 
-    template< typename T >
-    typename disable_if< mpl::contains< char_types, T >, basic_formatting_ostream& >::type
-    operator<< (T const& value)
+    basic_formatting_ostream& operator<< (bool value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+    basic_formatting_ostream& operator<< (signed char value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+    basic_formatting_ostream& operator<< (unsigned char value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+    basic_formatting_ostream& operator<< (short value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+    basic_formatting_ostream& operator<< (unsigned short value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+    basic_formatting_ostream& operator<< (int value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+    basic_formatting_ostream& operator<< (unsigned int value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+    basic_formatting_ostream& operator<< (long value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+    basic_formatting_ostream& operator<< (unsigned long value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+#if !defined(BOOST_NO_LONG_LONG)
+    basic_formatting_ostream& operator<< (long long value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+    basic_formatting_ostream& operator<< (unsigned long long value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+#endif
+
+    basic_formatting_ostream& operator<< (float value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+    basic_formatting_ostream& operator<< (double value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+    basic_formatting_ostream& operator<< (long double value)
     {
         *static_cast< ostream_type* >(this) << value;
         return *this;
     }
 
-    //  A special formatting for optional values
+    basic_formatting_ostream& operator<< (const void* value)
+    {
+        *static_cast< ostream_type* >(this) << value;
+        return *this;
+    }
+
+    basic_formatting_ostream& operator<< (std::basic_streambuf< char_type, traits_type >* buf)
+    {
+        *static_cast< ostream_type* >(this) << buf;
+        return *this;
+    }
+
+    template< typename OtherCharT, typename OtherTraitsT, typename OtherAllocatorT >
+    typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (std::basic_string< OtherCharT, OtherTraitsT, OtherAllocatorT > const& str)
+    {
+        this->write(str.c_str(), static_cast< std::streamsize >(str.size()));
+        return *this;
+    }
+
+    template< typename OtherCharT, typename OtherTraitsT >
+    typename aux::enable_if_char_type< OtherCharT, basic_formatting_ostream& >::type
+    operator<< (basic_string_literal< OtherCharT, OtherTraitsT > const& str)
+    {
+        this->write(str.c_str(), static_cast< std::streamsize >(str.size()));
+        return *this;
+    }
+
     template< typename T >
-    basic_formatting_ostream& operator<< (boost::optional< T > const& value)
+    typename aux::enable_basic_formatting_ostream_generic_insert_operator< T, basic_formatting_ostream& >::type
+    operator<< (T const& value)
     {
-        if (!!value)
-            *this << value.get();
-        return *this;
-    }
-
-    basic_formatting_ostream& put(char_type c)
-    {
-        ostream_type::put(c);
-        return *this;
-    }
-
-    template< typename OtherCharT >
-    typename enable_if< mpl::contains< char_types, OtherCharT >, basic_formatting_ostream& >::type
-    put(OtherCharT c)
-    {
-        write(boost::addressof(c), 1);
-        return *this;
-    }
-
-    basic_formatting_ostream& write(const char_type* p, std::streamsize size)
-    {
-        ostream_type::write(p, size);
-        return *this;
-    }
-
-    template< typename OtherCharT >
-    typename enable_if< mpl::contains< char_types, OtherCharT >, basic_formatting_ostream& >::type
-    write(const OtherCharT* p, std::streamsize size)
-    {
-        flush();
-
-        string_type* storage = this->streambuf_base_type::member.storage();
-        BOOST_ASSERT(storage != NULL);
-        aux::code_convert(p, static_cast< std::size_t >(size), *storage, this->getloc());
-
+        *static_cast< ostream_type* >(this) << value;
         return *this;
     }
 

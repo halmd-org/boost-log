@@ -156,6 +156,8 @@ private:
     rule_type operand;
     //! A parser for a single relation that consists of two operands and an operation between them
     rule_type relation;
+    //! A set of comparison relation symbols with corresponding pointers to callbacks
+    qi::symbols< char_type, comparison_relation_handler_t > comparison_relation;
     //! A parser for a custom relation word
     rule_type custom_relation;
     //! A parser for a term, which can be a relation, an expression in parenthesis or a negation thereof
@@ -172,7 +174,7 @@ public:
         attr_name = qi::lexeme
         [
             // An attribute name in form %name%
-            qi::as< string_type >()[ qi::lit(constants::char_percent) >> *encoding_specific::print >> qi::lit(constants::char_percent) ]
+            qi::as< string_type >()[ qi::lit(constants::char_percent) >> +(encoding_specific::print - constants::char_percent) >> qi::lit(constants::char_percent) ]
                 [boost::bind(&filter_grammar::on_attribute_name, this, _1)]
         ];
 
@@ -203,7 +205,6 @@ public:
         custom_relation = qi::as< string_type >()[ qi::lexeme[ +(encoding_specific::alnum | qi::char_(constants::char_underline)) ] ]
             [boost::bind(&filter_grammar::set_custom_relation, this, _1)];
 
-        qi::symbols< char_type, comparison_relation_handler_t > comparison_relation;
         comparison_relation.add
             (constants::equal_keyword(), &filter_factory_type::on_equality_relation)
             (constants::not_equal_keyword(), &filter_factory_type::on_inequality_relation)
