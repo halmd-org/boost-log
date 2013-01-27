@@ -302,13 +302,18 @@
 #   endif
 #endif // defined(BOOST_LOG_USE_COMPILER_TLS)
 
-#if defined(BOOST_LOG_DOXYGEN_PASS) || (!defined(BOOST_NO_DEFAULTED_FUNCTIONS) && !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS))
+#if defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ <= 5)
+     // GCC 4.5 forbids declaration of defaulted functions in private or protected sections
+#    define BOOST_LOG_NO_CXX11_NON_PUBLIC_DEFAULTED_FUNCTIONS
+#endif
+
+#if defined(BOOST_LOG_DOXYGEN_PASS) || !(defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) || defined(BOOST_LOG_NO_CXX11_NON_PUBLIC_DEFAULTED_FUNCTIONS))
 #   define BOOST_LOG_DEFAULTED_FUNCTION(fun, body) fun = default;
 #else
 #   define BOOST_LOG_DEFAULTED_FUNCTION(fun, body) fun body
 #endif
 
-#if defined(BOOST_LOG_DOXYGEN_PASS) || (!defined(BOOST_NO_DELETED_FUNCTIONS) && !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS))
+#if defined(BOOST_LOG_DOXYGEN_PASS) || !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS)
 #   define BOOST_LOG_DELETED_FUNCTION(fun) fun = delete;
 #else
 #   define BOOST_LOG_DELETED_FUNCTION(fun) private: fun;
