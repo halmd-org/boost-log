@@ -22,6 +22,8 @@
 #include <stdexcept>
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
+#include <boost/throw_exception.hpp>
+#include <boost/io/ios_state.hpp>
 #include <boost/move/move.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/spirit/include/qi_core.hpp>
@@ -101,7 +103,7 @@ public:
         comment = qi::lit(constants::char_comment) >> *qi::char_;
 
         section_name =
-            qi::raw[ qi::lit(constants::char_section_bracket_left) >> +encoding_specific::graph >> constants::char_section_bracket_right ]
+            qi::raw[ qi::lit(constants::char_section_bracket_left) >> +(encoding_specific::graph - constants::char_section_bracket_right) >> constants::char_section_bracket_right ]
                 [boost::bind(&this_type::set_section_name, this, _1)] >>
             -comment;
 
@@ -195,6 +197,11 @@ basic_settings< CharT > parse_settings(std::basic_istream< CharT >& strm)
     typedef settings_grammar< char_type > settings_grammar_type;
     typedef basic_settings< char_type > settings_type;
     typedef log::aux::encoding_specific< typename log::aux::encoding< char_type >::type > encoding_specific;
+
+    if (!strm.good())
+        BOOST_THROW_EXCEPTION(std::invalid_argument("The input stream for parsing settings is not valid"));
+
+    io::basic_ios_exception_saver< CharT > exceptions_guard(strm, std::ios_base::badbit);
 
     // Engage parsing
     settings_type settings;

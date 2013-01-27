@@ -16,6 +16,7 @@
 #include <boost/throw_exception.hpp>
 #include <boost/exception/exception.hpp>
 #include <boost/exception/errinfo_at_line.hpp>
+#include <boost/exception/info.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/support/exception.hpp>
 
