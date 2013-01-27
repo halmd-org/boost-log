@@ -201,7 +201,7 @@ basic_settings< CharT > parse_settings(std::basic_istream< CharT >& strm)
     if (!strm.good())
         BOOST_THROW_EXCEPTION(std::invalid_argument("The input stream for parsing settings is not valid"));
 
-    io::basic_ios_exception_saver< CharT > exceptions_guard(strm, std::ios_base::badbit);
+    io::basic_ios_exception_saver< char_type > exceptions_guard(strm, std::ios_base::badbit);
 
     // Engage parsing
     settings_type settings;
