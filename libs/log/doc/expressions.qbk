@@ -231,7 +231,7 @@ The attribute can also be identified by an attribute keyword or name and type.
 
 [section:channel_severity_filter Severity threshold per channel filter]
 
-    #include <``[boost_log_expressions_predicates_severity_channel_filter_hpp]``>
+    #include <``[boost_log_expressions_predicates_channel_severity_filter_hpp]``>
 
 This filter is aimed for a specific but commonly encountered use case. The [funcref boost::log::expressions::channel_severity_filter `channel_severity_filter`] function creates a predicate that will check log record severity levels against a threshold. The predicate allows setting different thresholds for different channels. The mapping between channel names and severity thresholds can be filled in `std::map` style by using the subscript operator or by calling `add` method on the filter itself (the [class_expressions_channel_severity_filter_actor] instance). Let's see an example:
 
