@@ -19,7 +19,7 @@ In order to develop a sink backend, you derive your class from either [class_sin
 
 [heading Frontend requirements]
 
-    #include <``[boost_log_sinks_frontend_requirements_hpp``>
+    #include <``[boost_log_sinks_frontend_requirements_hpp]``>
 
 In order to work with sink backends, frontends use the `frontend_requirements` type defined by all backends. The type combines one or several requirement tags:
 
@@ -58,7 +58,7 @@ The last bit of implementation is the `flush` method. It is used to flush all bu
 
 [example_extension_stat_collector_flush]
 
-You can find the complete code of this example [@boost:/libs/log/examples/doc/extension_stat_collector.cpp here].
+You can find the complete code of this example [@boost:/libs/log/example/doc/extension_stat_collector.cpp here].
 
 [heading Formatting sink backend]
 
@@ -92,7 +92,7 @@ After all this is done, we can finally display some notifications:
 
 [example_extension_app_launcher_logging]
 
-The complete code of this example is available [@boost:/libs/log/examples/doc/extension_app_launcher.cpp here].
+The complete code of this example is available [@boost:/libs/log/example/doc/extension_app_launcher.cpp here].
 
 [endsect]
 
