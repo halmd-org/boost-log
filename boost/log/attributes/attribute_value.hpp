@@ -202,11 +202,13 @@ public:
             return false;
     }
 
-#if defined(BOOST_LOG_DOXYGEN_PASS) || !(defined(BOOST_NO_FUNCTION_TEMPLATE_DEFAULT_ARGS) || defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS))
+#if !defined(BOOST_LOG_DOXYGEN_PASS)
+#if !defined(BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS)
 #define BOOST_LOG_AUX_VOID_DEFAULT = void
 #else
 #define BOOST_LOG_AUX_VOID_DEFAULT
 #endif
+#endif // !defined(BOOST_LOG_DOXYGEN_PASS)
 
     /*!
      * The method attempts to extract the stored value, assuming the value has the specified type.

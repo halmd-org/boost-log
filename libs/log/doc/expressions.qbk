@@ -509,7 +509,7 @@ This decorator allows to ensure that the resulting string conforms to the [@http
 
     #include <``[boost_log_expressions_formatters_c_decorator_hpp]``>
 
-The file defines two character decorators: `c_decor` and `c_ascii_decor`. The first one replaces the following characters with their escaped counerparts: \\ (backslash, 0x5c), \\a (bell character, 0x07), \\b (backspace, 0x08), \\f (formfeed, 0x0c), \\n (newline, 0x0a), \\r (carriage return, 0x0d), \\t (horizontal tabulation, 0x09), \\v (vertical tabulation, 0x0b), \' (apostroph, 0x27), \" (quote, 0x22), ? (question mark, 0x3f). The `c_ascii_decor` decorator does the same but also replaces all other non-printable and non-ASCII characters with escaped hexadecimal character codes in C notation (e.g. "\\x8c"). The usage is similar to other character decorators:
+The header defines two character decorators: `c_decor` and `c_ascii_decor`. The first one replaces the following characters with their escaped counerparts: \\ (backslash, 0x5c), \\a (bell character, 0x07), \\b (backspace, 0x08), \\f (formfeed, 0x0c), \\n (newline, 0x0a), \\r (carriage return, 0x0d), \\t (horizontal tabulation, 0x09), \\v (vertical tabulation, 0x0b), \' (apostroph, 0x27), \" (quote, 0x22), ? (question mark, 0x3f). The `c_ascii_decor` decorator does the same but also replaces all other non-printable and non-ASCII characters with escaped hexadecimal character codes in C notation (e.g. "\\x8c"). The usage is similar to other character decorators:
 
     sink->set_formatter
     (
@@ -518,6 +518,48 @@ The file defines two character decorators: `c_decor` and `c_ascii_decor`. The fi
             << expr::c_decor[ expr::stream << expr::attr< std::string >("Tag") ] << "] "
             << expr::c_ascii_decor[ expr::stream << expr::message ]
     );
+
+[heading General character decorator]
+
+    #include <``[boost_log_expressions_formatters_char_decorator_hpp]``>
+
+This decorator allows the user to define his own character replacement mapping in one of the two forms. The first form is a range of `std::pair`s of strings (which can be C-style strings or ranges of characters, including `std::string`s). The strings in the `first` elements of pairs will be replaced with the `second` elements of the corresponding pair.
+
+    std::array< std::pair< const char*, const char* >, 3 > shell_escapes =
+    {
+        { "\"", "\\\"" },
+        { "'",  "\\'" },
+        { "$",  "\\$" }
+    };
+
+    sink->set_formatter
+    (
+        expr::char_decor(shell_escapes)
+        [
+            expr::stream << expr::message
+        ]
+    );
+
+The second form is two same-sized sequences of strings; the first containing the search patterns and the second - the corresponding replacements.
+
+    std::array< const char*, 3 > shell_patterns =
+    {
+        "\"", "'", "$"
+    };
+    std::array< const char*, 3 > shell_replacements =
+    {
+        "\\\"", "\\'", "\\$"
+    };
+
+    sink->set_formatter
+    (
+        expr::char_decor(shell_patterns, shell_replacements)
+        [
+            expr::stream << expr::message
+        ]
+    );
+
+In both cases the patterns are not interpreted and are sought in the formatted characters in the original form.
 
 [endsect]
 

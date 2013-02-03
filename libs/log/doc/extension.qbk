@@ -62,71 +62,37 @@ You can find the complete code of this example [@boost:/libs/log/examples/doc/ex
 
 [heading Formatting sink backend]
 
-As an example of a formatting sink backend, let's implement a sink that will emit events to a Windows event trace. Assume there's another process that will monitor these events and display them to the user as a balloon window in the notification area. The definition of such backend would look something like this:
+As an example of a formatting sink backend, let's implement a sink that will display text notifications for every log record passed to it.
 
-    class event_notifier :
-        public sinks::basic_formatting_sink_backend<
-            // the "source" character type
-            char,
-            // the "target" character type
-            // (optional, by default is the same as the source character type)
-            wchar_t
-        >
-    {
-        // A handle for the event provider
-        REGHANDLE m_ProviderHandle;
+[tip Real world applications would probably use some GUI toolkit API to display notifications but GUI programming is out of scope of this documentation. In order to display notifications we shall use an external program which does just that. In this example we shall employ `notify-send` program which is available on Linux (Ubuntu/Debian users can install it with the `libnotify-bin` package; other distros should also have it available in their package repositories). The program takes the notification parameters in the command line, displays the notification in the current desktop environment and then exits. Other platforms may also have similar tools.]
 
-    public:
-        // Constructor. Initializes the event source handle.
-        explicit event_notifier(CLSID const& provider_id)
-        {
-            if (EventRegister(&provider_id, NULL, NULL, &m_ProviderHandle) != ERROR_SUCCESS)
-                throw std::runtime_error("Could not register event provider");
-        }
-        // Destructor. Unregisters the event source.
-        ~event_notifier()
-        {
-            EventUnregister(m_ProviderHandle);
-        }
+The definition of the backend is very similar to what we have seen in the previous section:
 
-        // The method puts the formatted message to the event trace
-        void do_consume(record_type const& rec, target_string_type const& formatted_message);
-    };
+[example_extension_app_launcher_definition]
 
-The [class_sinks_basic_formatting_sink_backend] class template is instantiated on two character types: the one that is used by the rest of logging system and the one that is required by the backend for further usage. Either of these types can be `char` or `wchar_t`. These character types may be the same, in which case the formatting is done without character conversion, pretty much equivalent to streaming attribute values into a regular `std::ostringstream`. In our case the underlying API requires wide strings, so we'll have to do character conversion while formatting. The conversion will be done according to the locale that is set up in the [class_sinks_basic_formatting_sink_backend] base class (see its `imbue` and `getloc` functions).
+The first thing to notice is that the `app_launcher` backend derives from [class_sinks_basic_formatted_sink_backend] rather than [class_sinks_basic_sink_backend]. This base class accepts the character type in addition to the requirements. The specified character type defines the target string type the formatter will compose in the frontend and it typically corresponds to the underlying API the backend uses to process records. It must be mentioned that the character type the backend requires is not related to the character types of string attribute values, including the message text. The formatter will take care of character code conversion when needed.
 
-In order to differentiate the resulting string type from the string types used throughout the rest of logging library, the [class_sinks_basic_formatting_sink_backend] class defines the `target_string_type` type along with the standard `string_type`. In our case, `target_string_type` will contain wide characters, while `string_type` will be narrow.
+The second notable difference from the previous examples is that `consume` method takes an additional string parameter besides the log record. This is the result of formatting. The `string_type` type is defined by the [class_sinks_basic_formatted_sink_backend] base class and it corresponds to the requested character type.
 
-The threading model of the sink backend can be specified as the third optional parameter of the [class_sinks_basic_formatting_sink_backend] class template. The default threading model is [class_sinks_frontend_synchronization_tag], which fits us just fine.
+We don't need to flush any buffers in this example, so we didn't specify the [class_sinks_flushing] requirement and omitted the `flush` method in the backens. Although we don't need any synchronization in our backend, we specified [class_sinks_synchronized_feeding] requirement so that we don't spawn multiple instances of `notify-send` program and cause a "fork bomb".
 
-The [class_sinks_basic_formatting_sink_backend] base class implements just about everything that is required by the library from the backend. The only thing left is to implement the virtual `do_consume` method that receives the original log record and the result of formatting. In our case this method will pass the formatted message to the corresponding API:
+Now, the `consume` implementation is trivial:
 
-    // The method puts the formatted message to the event log
-    void event_notifier::do_consume(
-        record_type const& rec, target_string_type const& formatted_message)
-    {
-        EventWriteString(
-            m_ProviderHandle,
-            WINEVENT_LEVEL_LOG_ALWAYS,
-            0ULL /* keyword */,
-            formatted_message.c_str());
-    }
+[example_extension_app_launcher_consume]
 
-That's it. The example can be extended to make use of attribute values to fill other parameters, like event level and keywords mask. A more elaborate version of this example can be found in the library examples.
+So the formatted string is expected to actually be a command line to start the application. The exact application name and arguments are to be determined by the formatter. This approach adds flexibility because the backend can be used for different purposes and updating the command line is as easy as updating the formatter.
 
-The resulting sink backend can be used similarly to other formatting sinks, like [class_sinks_basic_text_ostream_backend]:
+The sink can be configured with the following code:
 
-    boost::shared_ptr< event_notifier > backend(new event_notifier(CLSID_MyNotifier));
-    backend->set_formatter
-    (
-        fmt::stream
-            << "[" << fmt::time("TimeStamp")
-            << "] " << fmt::message()
-    );
+[example_extension_app_launcher_formatting]
 
-    typedef sinks::synchronous_sink< event_notifier > sink_t;
-    boost::shared_ptr< sink_t > sink(new sink_t(backend));
-    logging::core::get()->add_sink(sink);
+The most interesting part is the sink setup. The [class_sinks_synchronous_sink] frontend (as well as any other frontend) will detect that the `app_launcher` backend requires formatting and enable the corresponding functionality. The `set_formatter` method becomes available and can be used to set the formatting expression that composes the command line to start the `notify-send` program. We used [link log.detailed.expressions.attr_keywords attribute keywords] to identify particular attribute values in the formatter. Notice that string attribute values have to be preprocessed so that special characters interpreted by the shell are escaped in the command line. We achieve that with the [funcref boost::log::expressions::char_decor `char_decor`] decorator with our custom replacement map. After the sink is configured we also add the [link log.detailed.attributes.process_name current process name] attribute to the core so that we don't have to add it to every record.
+
+After all this is done, we can finally display some notifications:
+
+[example_extension_app_launcher_logging]
+
+The complete code of this example is available [@boost:/libs/log/examples/doc/extension_app_launcher.cpp here].
 
 [endsect]
 
@@ -216,11 +182,10 @@ All this verbosity is usually not required. One can define a special macro to ma
 
 In general, you can implement new logging sources the way you like, the library does not mandate any design requirements on log sources. However, there are some notes regarding the way log sources should interact with logging core.
 
-# Whenever a logging source is ready to emit a log record, it should call the `open_record` in the corresponding core. The source-specific attributes should be passed into that call. During that call the core allocates resources for the record being made and performs filtering.
-# If the call to `open_record` returned a valid log record, then the record passed the filtering and is considered to be opened. The record may later be either confirmed by the source by subsequently calling `push_record` or withdrawn by destroying it.
+# Whenever a logging source is ready to emit a log record, it should call the `open_record` in the core. The source-specific attributes should be passed into that call. During that call the core allocates resources for the record being made and performs filtering.
+# If the call to `open_record` returned a valid log record, then the record has passed the filtering and is considered to be opened. The record may later be either confirmed by the source by subsequently calling `push_record` or withdrawn by destroying it.
 # If the call to `open_record` returned an invalid (empty) log record, it means that the record has not been opened (most likely due to filtering rejection). In that case the logging core does not hold any resources associated with the record, and thus the source must not call `push_record` for that particular logging attempt.
 # The source may subsequently open more than one record. Opened log records exist independently from each other.
-# The cores for different character types are completely independent. A log source would typically use one logging core with the appropriate character type.
 
 [endsect]
 

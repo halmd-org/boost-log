@@ -16,6 +16,10 @@ import xsltproc ;
 import notfile ;
 import path ;
 
+project boost/libs/log/doc ;
+
+path-constant images_location : html ;
+
 local doxygen_params =
         <doxygen:param>RECURSIVE=YES
         <doxygen:param>ALPHABETICAL_INDEX=YES
@@ -240,6 +244,8 @@ boostbook log
         <xsl:param>navig.graphics=1
         <xsl:param>chunk.section.depth=2
         <xsl:param>boost.compact.function=0
+        <format>pdf:<xsl:param>boost.url.prefix=http://www.boost.org/doc/libs/release/libs/log/doc/html
+        <format>pdf:<xsl:param>img.src.path=$(images_location)/
     ;
 
 # install html : ../../../doc/src/boostbook.css ;

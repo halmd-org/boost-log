@@ -30,13 +30,13 @@ namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 
 //[ example_extension_app_launcher_definition
-// The backend collects statistical information about network activity of the application
+// The backend starts an external application to display notifications
 class app_launcher :
     public sinks::basic_formatted_sink_backend<
         // Target character type
         char,
         // In order not to spawn too many application instances we require records to be processed serial
-        sinks::combine_requirements< sinks::synchronized_feeding >::type
+        sinks::synchronized_feeding
     >
 {
 public:

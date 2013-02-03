@@ -100,6 +100,7 @@
 [import ../example/doc/util_dynamic_type_disp.cpp]
 [import ../example/doc/util_manip_to_log.cpp]
 [import ../example/doc/extension_stat_collector.cpp]
+[import ../example/doc/extension_app_launcher.cpp]
 [import ../example/doc/extension_record_tagger.cpp]
 [import ../example/event_log/main.cpp]
 
@@ -151,9 +152,8 @@ To keep the code snippets in this documentation simple, the following namespace 
 The library should build and work with a reasonably compliant compiler. The library was successfully built and tested on the following platforms:
 
 * Windows XP, Windows Vista, Windows 7. MSVC 9.0 and newer.
-* Windows Vista. Intel C++ Compiler 10.1.022, 11.1.048.
 * Linux. GCC 4.5 and newer. Older versions may work too, but it was not tested.
-* Linux. Intel C++ 11.1.056.
+* Linux. Intel C++ 13.1.0.146 Build 20130121.
 * Linux. Clang 3.2.
 
 The following compilers/platforms are not supported and will likely fail to compile the library:
