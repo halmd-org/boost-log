@@ -23,6 +23,13 @@ namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 
 //[ example_sinks_unlocked
+enum severity_level
+{
+    normal,
+    warning,
+    error
+};
+
 // A trivial sink backend that requires no thread synchronization
 class my_backend :
     public sinks::basic_sink_backend< sinks::concurrent_feeding >
@@ -53,7 +60,7 @@ void init_logging()
     core->add_sink(sink2);
 
     // You can manage filtering through the sink interface
-    sink1->set_filter(expr::attr< int >("Severity") >= 2);
+    sink1->set_filter(expr::attr< severity_level >("Severity") >= warning);
     sink2->set_filter(expr::attr< std::string >("Channel") == "net");
 }
 //]
@@ -62,8 +69,8 @@ int main(int, char*[])
 {
     init_logging();
 
-    src::severity_channel_logger< > lg(keywords::channel = "net");
-    BOOST_LOG_SEV(lg, 0) << "Hello world!";
+    src::severity_channel_logger< severity_level > lg(keywords::channel = "net");
+    BOOST_LOG_SEV(lg, normal) << "Hello world!";
 
     return 0;
 }

@@ -49,6 +49,8 @@ The unlocked sink frontend is implemented with the [class_sinks_unlocked_sink] c
 
 [example_sinks_unlocked]
 
+[@boost:/libs/log/example/doc/sinks_unlocked.cpp See the complete code].
+
 All sink backends provided by the library require thread synchronization on the frontend part. If we tried to instantiate the frontend on the backend that requires more strict threading guarantees than what the frontend provides, the code wouldn't have compiled. Therefore this frontend is mostly useful in single-threaded environments and with custom backends.
 
 [endsect]
@@ -64,6 +66,8 @@ The synchronous sink also introduces the ability to acquire a pointer to the loc
 The usage is similar to the [class_sinks_unlocked_sink].
 
 [example_sinks_sync]
+
+[@boost:/libs/log/example/doc/sinks_sync.cpp See the complete code].
 
 [endsect]
 

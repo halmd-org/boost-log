@@ -192,154 +192,98 @@ In general, you can implement new logging sources the way you like, the library 
 [section:attributes Writing your own attributes]
 
     #include <``[boost_log_attributes_attribute_hpp]``>
-    #include <``[boost_log_attributes_basic_attribute_value_hpp]``>
-
-TODO: Update the description according to changes in the attribute value.
+    #include <``[boost_log_attributes_attribute_value_hpp]``>
+    #include <``[boost_log_attributes_attribute_value_impl_hpp]``>
 
 Developing your own attributes is quite simple. Generally, you need to do the following:
 
-# Define what will be the attribute value. Most likely, it will be a piece of constant data that you want to participate in filtering and formatting. Encapsulate this data into a class that derives from the [class_log_attribute_value] interface. This object will have to implement the `dispatch` method that will extract the stored data (or, in other words, the stored value) to a type dispatcher.
-# Define how attribute values are going to be produced. In a corner case the values do not need to be produced (like in the case of the [class_attributes_constant] attribute provided by the library), but often there is some logic that needs to be invoked to acquire the attribute value. This logic has to be concentrated in a class derived from the [class_log_attribute] interface, more precisely - in the `get_value` method. You can think of it as an attribute value factory.
+# Define what will be the attribute value. Most likely, it will be a piece of constant data that you want to participate in filtering and formatting. Envelop this data into a class that derives from the [class_log_attribute_value_impl] interface; this is the attribute value implementation class. This object will have to implement the `dispatch` method that will extract the stored data (or, in other words, the stored value) to a type dispatcher. In most cases the class [class_attributes_attribute_value_impl] provided by the library can be used for this.
+# Use the [class_log_attribute_value] class as the interface class that holds a reference to the attribute value implementation.
+# Define how attribute values are going to be produced. In a corner case the values do not need to be produced (like in the case of the [class_attributes_constant] attribute provided by the library), but often there is some logic that needs to be invoked to acquire the attribute value. This logic has to be concentrated in a class derived from the [class_log_attribute_impl] interface, more precisely - in the `get_value` method. This class is the attribute implementation class. You can think of it as an attribute value factory.
+# Define the attribute interface class that derives from [class_log_attribute]. By convention, the interface class should create the corresponding implementation on construction and pass the pointer to it to the [class_log_attribute] class constructor. The interface class may have interface methods but it typically should not contain any data members as the data will be lost when the attribute is added to the library. All relevant data should be placed in the implementation class instead.
 
-While designing an attribute, one has to strive to make it as independent from the values it produces, as possible. The attribute can be called from different threads concurrently to produce a value. Once produced, the attribute value can be used several times by the library (maybe even concurrently), it can outlive the attribute object where it was created, and several attribute values produced by the same attribute can exist simultaneously.
+While designing an attribute, one has to strive to make it as independent from the values it produces, as possible. The attribute can be called from different threads concurrently to produce a value. Once produced, the attribute value can be used several times by the library (maybe even concurrently), it can outlive the attribute object that created it, and several attribute values produced by the same attribute can exist simultaneously.
 
-Each attribute value is considered independent from other attribute values or the attribute itself, from the point of view of the library. That said, it is still possible to implement attributes that are also attribute values, and thus optimize performance. This is possible if it fulfils either of the following:
+From the library perspective, each attribute value is considered independent from other attribute values or the attribute itself. That said, it is still possible to implement attributes that are also attribute values, which allows to optimize performance in some cases. This is possible if the following requirements are fulfilled:
 
 * The attribute value never changes, so it's possible to store it in the attribute itself. The [class_attributes_constant] attribute is an example.
-* The attribute stores its value in a global (external with regard to the attribute) storage, that can be accessed from any attribute value. The attribute values must guarantee, though, that their stored values do not change over time.
+* The attribute stores its value in a global (external with regard to the attribute) storage, that can be accessed from any attribute value. The attribute values must guarantee, though, that their stored values do not change over time and are safely accessible concurrently from different threads.
 
-As a special case for the second point, it is possible to store attribute values (or their parts) in thread-specific storage. However, in that case the user has to implement the `detach_from_thread` method of the attribute value properly. The result of this method - another attribute value - must be independent from the thread it is being called in, but its stored value should be equivalent to the original attribute value. This method will be called by the library when the attribute value passes to a thread that is different from the thread where it was created. As of this moment, this will only happen in the case of asynchronous logging sinks.
+As a special case for the second point, it is possible to store attribute values (or their parts) in a thread-specific storage. However, in that case the user has to implement the `detach_from_thread` method of the attribute value implementation properly. The result of this method - another attribute value - must be independent from the thread it is being called in, but its stored value should be equivalent to the original attribute value. This method will be called by the library when the attribute value passes to a thread that is different from the thread where it was created. As of this moment, this will only happen in the case of [link log.detailed.sink_frontends.async asynchronous logging sinks].
 
-But in the vast majority of cases attribute values must be self-contained objects with no dependencies on other entities. In fact, this case is so common that the library provides a ready to use attribute value class template [class_attributes_basic_attribute_value]. The template has to be instantiated on the stored value type, and the stored value has to be provided to the attribute value constructor. For example, this is how to implement an attribute that will return system uptime in seconds:
+But in the vast majority of cases attribute values must be self-contained objects with no dependencies on other entities. In fact, this case is so common that the library provides a ready to use attribute value implementation class template [class_attributes_attribute_value_impl] and [funcref boost::log::attributes::make_attribute_value make_attribute_value] generator function. The class template has to be instantiated on the stored value type, and the stored value has to be provided to the class constructor. For example, let's implement an attribute that returns system uptime in seconds. This is the attribute implementation class.
 
-    class system_uptime :
-        public logging::attribute
-    {
-        typedef attrs::basic_attribute_value< unsigned int > attribute_value_type;
+[example_extension_system_uptime_attr_impl]
 
-    public:
-        boost::shared_ptr< attribute_value > get_value()
-        {
-            unsigned int up;
+Since there is no need for special attribute value classes we can use the [funcref boost::log::attributes::make_attribute_value make_attribute_value] function to create the value envelop.
 
-    #if defined(BOOST_WINDOWS)
-            up = GetTickCount() / 1000;
-    #else // assume other platforms provide sysinfo function
-            struct sysinfo info;
-            if (sysinfo(&info) != 0)
-                throw std::runtime_error("Could not acquire uptime");
-            up = info.uptime;
-    #endif
+[tip For cases like this, when the attribute value can be obtained in a single function call, it is typically more convenient to use the [link log.detailed.attributes.function `function`] attribute.]
 
-            return boost::shared_ptr< attribute_value >(new attribute_value_type(up));
-        }
-    };
+The interface class of the attribute can be defined as follows:
+
+[example_extension_system_uptime_attr]
+
+As it was mentioned before, the default constructor creates the implementation instance so that the default constructed attribute can be used by the library.
+
+The second constructor adds support for [link log.detailed.attributes attribute casting]. The constructor argument contains a reference to an attribute implementation object, and by calling `as` on it the constructor attempts to upcast it to the implementation object of our custom attribute. The `as` method will return `NULL` if the upcast fails, which will result in an empty attribute constructed in case of failure.
+
+Having defined these two classes, the attribute can be used with the library as usual:
+
+[example_extension_system_uptime_use]
+
+[@boost:/libs/log/example/doc/extension_system_uptime_attr.cpp See the complete code].
 
 [endsect]
 
 [section:settings Extending library settings support]
 
-If you write your own logging sinks or use your own types in attributes, you may want to add support for these components to the settings parser provided by the library. Without doing this, the library will not be aware of your types and thus will not work properly.
+If you write your own logging sinks or use your own types in attributes, you may want to add support for these components to the settings parser provided by the library. Without doing this, the library will not be aware of your types and thus will not be able to use them when parsing settings.
 
 [heading Adding support for user-defined types to the formatter parser]
 
     #include <``[boost_log_utility_setup_formatter_parser_hpp]``>
 
-In order to add support for user-defined types to the formatter parser, one has to register a formatter factory. The factory is basically a function object that, when called, will construct a formatter for the particular attribute. Factories are registered with the `register_formatter_factory` function, that besides the factory functor accepts the attribute name that will trigger this factory usage. This way the application can expose the knowledge of the particular attribute to the library. Here's a quick example:
+In order to add support for user-defined types to the formatter parser, one has to register a formatter factory. The factory is basically an object that derives from [class_log_formatter_factory] interface. The factory mainly implements the single `create_formatter` method which, when called, will construct a formatter for the particular attribute value.
 
-    // Suppose, this class can be used as an attribute value
-    struct Point
-    {
-        double m_X, m_Y;
+When the user-defined type supports putting to a stream with `operator<<` and this operator behavior is suitable for logging, one can use a simple generic formatter factory provided by the library out of the box. For example, let's assume we have the following user-defined type that we want to use as an attribute value:
 
-        // Streaming operator
-        template< typename CharT, typename TraitsT >
-        friend std::basic_ostream< CharT, TraitsT >& operator<< (
-            std::basic_ostream< CharT, TraitsT >& strm, Point const& point)
-        {
-            strm << "(" << point.m_X << ", " << point.m_Y << ")";
-        }
-    };
+[example_extension_formatter_parser_point_definition]
 
-    // This is a helper traits that defines most of the types used by the formatter factories
-    typedef logging::formatter_types< char > types;
+Then, in order to register this type with the simple formatter factory, a single call to [funcref boost::log::register_simple_formatter_factory `register_simple_formatter_factory`] will suffice:
 
-    // Formatter factory
-    types::formatter_type point_formatter_factory(
-        types::string_type const& attr_name,
-        types::formatter_factory_args const& args)
-    {
-        return types::formatter_type(fmt::attr< Point >(attr_name));
-    }
+[example_extension_simple_formatter_factory]
 
-    // We can associate the attribute with the name "Coordinates" with the type Point
-    logging::register_formatter_factory("Coordinates", &point_formatter_factory);
+[note The `operator<<` for the attribute value stored type must be visible from the point of this call.]
 
-Now, whenever the formatter parser (the `parse_formatter` function) encounters the "Coordinates" attribute in the format string being parsed, the `point_formatter_factory` will be called to construct the appropriate formatter. This formatter, since it is generated in the user's application, will use the custom streaming operator that is defined for the `Point` class.
+The function takes the stored attribute value type (`point`, in our case) and the target character type used by formatters as template parameters. From the point of this call, whenever the formatter parser encounters a reference to the "Coordinates" attribute in the format string, it will invoke the formatter factory, which will construct the formatter that calls our `operator<<` for class `point`.
 
-The formatter factory can additionally accept a number of parameters separated with commas that can be specified in the format string. These parameters are broken into (name, value) pairs and passed as the second argument to the factory. For example, we could allow customizing the way our coordinates are presented in log by accepting an additional parameter in the format string like this:
+[tip It is typically a good idea to register all formatter factories at an early stage of the application initialization, before any other library initialization, such as reading config files.]
 
-[pre %TimeStamp% %Coordinates(format\="{%0.3f; %0.3f}")% %\_%]
+From the [link log.detailed.utilities.setup.filter_formatter formatter parser description] it is known that the parser supports passing additional parameters from the format string to the formatter factory. We can use these parameters to customize the output generated by the formatter.
 
-Now in order to support this parameter we should rewrite our factory like this:
+For example, let's implement customizable formatting of our `point` objects, so that the following format string works as expected:
 
-    namespace lambda = boost::lambda;
+[pre %TimeStamp% %Coordinates(format\="{%0.3f; %0.3f}")% %Message%]
 
-    // This formatter will use custom format string to format the point coordinates
-    void custom_point_formatter(
-        types::string_type const& attr_name,
-        types::ostream_type& strm,
-        types::record_type const& rec,
-        types::string_type const& format)
-    {
-        Point point;
-        if (logging::extract< Point >(
-            attr_name,
-            rec.attribute_values(),
-            lambda::var(point) = lambda::_1))
-        {
-            // If the attribute set contains the needed attribute value,
-            // format it into the stream
-            strm << boost::format(format) % point.m_X % point.m_Y;
-        }
-    }
+The simple formatter factory ignores all additional parameters from the format string, so we have to implement our own factory instead. Custom factories are registered with the [funcref boost::log::register_formatter_factory `register_formatter_factory`] function, which is similar to [funcref boost::log::register_simple_formatter_factory `register_simple_formatter_factory`] but accepts a pointer to the factory instead of the explicit template parameters.
 
-    // Formatter factory
-    types::formatter_type point_formatter_factory(
-        types::string_type const& attr_name,
-        types::formatter_factory_args const& args)
-    {
-        types::formatter_factory_args::const_iterator it = args.find("format");
-        if (it != args.end())
-        {
-            // The custom format is specified, use the special formatter
-            return types::formatter_type(lambda::bind(
-                &custom_point_formatter,
-                attr_name,
-                lambda::_1,
-                lambda::_2,
-                it->second));
-        }
-        else
-        {
-            // No special format specified, do things the traditional way
-            return types::formatter_type(fmt::attr< Point >(attr_name));
-        }
-    }
+[example_extension_custom_formatter_factory]
 
-However, if you don't need this additional flexibility and all you want is to use your custom streaming operators to format the attribute value, you can omit writing the formatter factory altogether. You can use a simple call like this:
+Let's walk through this code sample. Our `point_formatter_factory` class derives from the [class_log_basic_formatter_factory] base class provided by the library. This class derives from the base [class_log_formatter_factory] interface and defines a few useful types, such as `formatter_type` and `args_map` that we use. The only thing left to do in our factory is to define the `create_formatter` method. The method analyzes the parameters from the format string which are passed as the `args` argument, which is basically `std::map` of string keys (parameter names) to string values (the parameter values). We seek for the `format` parameter and expect it to contain a __boost_format__-compatible format string for our `point` objects. If the parameter is found we create a formatter that invokes `point_formatter` for the attribute values. Otherwise we create a default formatter that simply uses the `operator<<`, like the simple formatter factory does. Note that we use the `name` argument of `create_formatter` to identify the attribute so that the same factory can be used for different attributes.
 
-    logging::register_simple_formatter_factory< Point >("Coordinates");
+The `point_formatter` is our custom formatter based on __boost_format__. With help of __boost_phoenix__ and [link log.detailed.expressions.attr expression placeholders] we can construct a formatter that will extract the attribute value and pass it along with the target stream to the `point_formatter` function object. Note that the formatter accepts the attribute value wrapped into the [link log.detailed.utilities.value_ref `value_ref`] wrapper which can be empty if the value is not present.
 
-to achieve the same effect that the first version of the `point_formatter_factory` function provides.
+Lastly, the call to [funcref boost::log::register_formatter_factory `register_formatter_factory`] creates the factory and adds it to the library.
+
+You can find the complete code of this example [@boost:/libs/log/example/doc/extension_formatter_parser.cpp here].
 
 [heading Adding support for user-defined types to the filter parser]
 
     #include <``[boost_log_utility_setup_filter_parser_hpp]``>
 
-You can extend filter parser the similar way you can extend the formatter parser - by registering your types into the library. However, since it takes a considerably more complex syntax to describe filters, a filter factory is more than a mere function.
+You can extend filter parser in the similar way you can extend the formatter parser - by registering your types into the library. However, since it takes a considerably more complex syntax to describe filters, a filter factory typically implements several generator functions.
 
-Filter factories should be objects that derive from the [class_log_filter_factory] interface. This base class declares a number of virtual functions that will be called in order to create filters, according to the filter expression. If some functions are not overriden by the factory, the corresponding operations are considered to be not supported by the attribute value. For example, we can define the filter factory for the slightly improved `Point` class defined in the previous section the following way:
+Filter factories derive from the [class_log_filter_factory] interface. This base class declares a number of virtual functions that will be called in order to create filters, according to the filter expression. If some functions are not overriden by the factory, the corresponding operations are considered to be not supported by the attribute value. For example, we can define the filter factory for a slightly improved version of the `point` class defined in the previous section:
 
     // Suppose, this class can be used as an attribute value
     struct Point

@@ -24,6 +24,13 @@ namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 
 //[ example_sinks_async_init
+enum severity_level
+{
+    normal,
+    warning,
+    error
+};
+
 // Complete sink type
 typedef sinks::asynchronous_sink< sinks::text_ostream_backend > sink_t;
 
@@ -42,11 +49,11 @@ boost::shared_ptr< sink_t > init_logging()
     core->add_sink(sink);
 
     // You can manage filtering and formatting through the sink interface
-    sink->set_filter(expr::attr< int >("Severity") >= 2);
+    sink->set_filter(expr::attr< severity_level >("Severity") >= warning);
     sink->set_formatter
     (
         expr::stream
-            << "Level: " << expr::attr< int >("Severity")
+            << "Level: " << expr::attr< severity_level >("Severity")
             << " Message: " << expr::message
     );
 
@@ -82,8 +89,8 @@ int main(int, char*[])
 {
     boost::shared_ptr< sink_t > sink = init_logging();
 
-    src::severity_channel_logger< > lg(keywords::channel = "net");
-    BOOST_LOG_SEV(lg, 3) << "Hello world!";
+    src::severity_channel_logger< severity_level > lg(keywords::channel = "net");
+    BOOST_LOG_SEV(lg, warning) << "Hello world!";
 
     stop_logging(sink);
 

@@ -102,6 +102,8 @@
 [import ../example/doc/extension_stat_collector.cpp]
 [import ../example/doc/extension_app_launcher.cpp]
 [import ../example/doc/extension_record_tagger.cpp]
+[import ../example/doc/extension_system_uptime_attr.cpp]
+[import ../example/doc/extension_formatter_parser.cpp]
 [import ../example/event_log/main.cpp]
 
 [section Disclaimer]

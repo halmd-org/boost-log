@@ -156,7 +156,7 @@ inline typename enable_if<
  *
  * The function registers a simple formatter factory. The registered factory will generate formatters
  * that will be equivalent to the <tt>log::expressions::attr</tt> formatter (i.e. that will use the
- * native \c operator<< to format the attribute value). The factory does not use any arguments,
+ * native \c operator<< to format the attribute value). The factory does not use any arguments from the format string,
  * if specified.
  *
  * \pre <tt>!!attr_name</tt>.
