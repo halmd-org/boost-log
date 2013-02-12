@@ -35,24 +35,22 @@ namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
 
-BOOST_LOG_ANONYMOUS_NAMESPACE {
-
 //! A global container of all known attribute names
-class attribute_name_repository :
+class attribute_name::repository :
     public log::aux::lazy_singleton<
-        attribute_name_repository,
-        shared_ptr< attribute_name_repository >
+        repository,
+        shared_ptr< repository >
     >
 {
     typedef log::aux::lazy_singleton<
-        attribute_name_repository,
-        shared_ptr< attribute_name_repository >
+        repository,
+        shared_ptr< repository >
     > base_type;
 
 #if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS)
     friend class log::aux::lazy_singleton<
-        attribute_name_repository,
-        shared_ptr< attribute_name_repository >
+        repository,
+        shared_ptr< repository >
     >;
 #else
     friend class base_type;
@@ -183,22 +181,20 @@ private:
     //! Initializes the singleton instance
     static void init_instance()
     {
-        base_type::get_instance() = boost::make_shared< attribute_name_repository >();
+        base_type::get_instance() = boost::make_shared< repository >();
     }
 };
-
-} // namespace
 
 BOOST_LOG_API attribute_name::id_type
 attribute_name::get_id_from_string(const char* name)
 {
-    return attribute_name_repository::get()->get_id_from_string(name);
+    return repository::get()->get_id_from_string(name);
 }
 
 BOOST_LOG_API attribute_name::string_type const&
 attribute_name::get_string_from_id(id_type id)
 {
-    return attribute_name_repository::get()->get_string_from_id(id);
+    return repository::get()->get_string_from_id(id);
 }
 
 template< typename CharT, typename TraitsT >
