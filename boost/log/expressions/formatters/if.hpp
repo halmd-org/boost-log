@@ -247,6 +247,8 @@ struct if_then_gen
     if_then_gen(CondT const& cond, ThenT const& then_) : else_(cond, then_) {}
 };
 
+#ifndef BOOST_LOG_DOXYGEN_PASS
+
 #define BOOST_LOG_AUX_OVERLOAD(left_ref, right_ref)\
     template< typename LeftExprT, typename CondT, typename ThenT >\
     BOOST_LOG_FORCEINLINE phoenix::actor< if_output_terminal< phoenix::actor< LeftExprT >, CondT, ThenT > >\
@@ -260,6 +262,8 @@ struct if_then_gen
 #include <boost/log/detail/generate_overloads.hpp>
 
 #undef BOOST_LOG_AUX_OVERLOAD
+
+#endif // BOOST_LOG_DOXYGEN_PASS
 
 template< typename CondT >
 class if_gen

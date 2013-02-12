@@ -58,12 +58,17 @@ public:
     typedef unspecified id_type;
 #else
     typedef uint32_t id_type;
+
+private:
     enum { uninitialized = 0xFFFFFFFFu };
-#endif
+
+    class repository;
+    friend class repository;
 
 private:
     //! Associated identifier
     id_type m_id;
+#endif
 
 public:
     /*!
@@ -113,7 +118,7 @@ public:
      * \return \c true if <tt>*this</tt> and \c that refer to the same attribute name,
      *         and \c false otherwise.
      */
-    bool operator== (const char* that) const { return (m_id != uninitialized) && (this->string() == that); }
+    bool operator== (const char* that) const { return (m_id != static_cast< id_type >(uninitialized)) && (this->string() == that); }
     /*!
      * Compares the attribute names
      *
@@ -128,7 +133,7 @@ public:
      * \return \c true if <tt>*this</tt> and \c that refer to the same attribute name,
      *         and \c false otherwise.
      */
-    bool operator== (string_type const& that) const { return (m_id != uninitialized) && (this->string() == that); }
+    bool operator== (string_type const& that) const { return (m_id != static_cast< id_type >(uninitialized)) && (this->string() == that); }
     /*!
      * Compares the attribute names
      *
@@ -149,7 +154,7 @@ public:
      * \return \c true if <tt>*this</tt> was default-constructed and does not refer to any attribute name,
      *         \c false otherwise
      */
-    bool operator! () const BOOST_NOEXCEPT { return (m_id == uninitialized); }
+    bool operator! () const BOOST_NOEXCEPT { return (m_id == static_cast< id_type >(uninitialized)); }
 
     /*!
      * \return The associated id value
@@ -157,7 +162,7 @@ public:
      */
     id_type id() const BOOST_NOEXCEPT
     {
-        BOOST_ASSERT(m_id != uninitialized);
+        BOOST_ASSERT(m_id != static_cast< id_type >(uninitialized));
         return m_id;
     }
     /*!

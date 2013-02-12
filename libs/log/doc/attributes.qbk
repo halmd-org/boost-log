@@ -17,7 +17,7 @@ All attributes in the library are implemented using the [@http://c2.com/cgi/wiki
 
 The shared pimpl design comes significant in a few cases though. One such case is copying the attribute. The copy operation is shallow, so multiple interface objects may refer to a single implementation object. There is no way to deep copy an attribute. Another case is default construction of [class_log_attribute] which creates an empty object that does not refer to an implementation. Attributes in such empty state should not be passed to the library but can be useful in some cases, e.g. when a delayed variable initialization is needed.
 
-It is possible to upcast the attribute interface from [class_log_attribute] to the actual interface class. To do this one has to apply `attribute_cast`:
+It is possible to upcast the attribute interface from [class_log_attribute] to the actual interface class. To do this one has to apply [funcref boost::log::attribute_cast `attribute_cast`]:
 
     logging::attribute attr = ...;
     attrs::constant< int > const_attr = logging::attribute_cast< attrs::constant< int > >(attr);

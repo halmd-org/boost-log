@@ -31,9 +31,10 @@ namespace keywords = boost::log::keywords;
 // The backend collects statistical information about network activity of the application
 class stat_collector :
     public sinks::basic_sink_backend<
-        // We will have to store internal data, so let's require frontend to
-        // synchronize feeding calls to the backend. Also enable flushing.
-        sinks::combine_requirements< sinks::synchronized_feeding, sinks::flushing >::type
+        sinks::combine_requirements<
+            sinks::synchronized_feeding,                                        /*< we will have to store internal data, so let's require frontend to synchronize feeding calls to the backend >*/
+            sinks::flushing                                                     /*< also enable flushing support >*/
+        >::type
     >
 {
 private:

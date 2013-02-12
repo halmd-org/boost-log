@@ -23,7 +23,7 @@
 #pragma once
 #endif
 
-#if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE)
+#if !defined(BOOST_LOG_NO_THREADS) && !defined(BOOST_SPIRIT_THREADSAFE) && !defined(BOOST_LOG_DOXYGEN_PASS)
 /*
  * As Boost.Log filters may be called in multiple threads concurrently,
  * this may lead to using Boost.Spirit parsers in a multithreaded context.

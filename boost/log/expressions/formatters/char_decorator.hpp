@@ -110,7 +110,7 @@ public:
     explicit pattern_replacer(RangeT const& decorations)
     {
         typedef typename range_const_iterator< RangeT >::type iterator;
-        for (iterator it = decorations.begin(), end = decorations.end(); it != end; ++it)
+        for (iterator it = begin(decorations), end_ = end(decorations); it != end_; ++it)
         {
             string_lengths lens;
             {

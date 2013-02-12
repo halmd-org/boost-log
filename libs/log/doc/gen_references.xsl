@@ -67,7 +67,7 @@
 </xsl:apply-templates>
 </xsl:template>
 
-<!-- Free functions -->
+<!-- Free functions - currently disabled because multiple overloads generate duplicate QuickBook templates -->
 <!--
 <xsl:template match="function">
 <xsl:param name="namespace"/>
