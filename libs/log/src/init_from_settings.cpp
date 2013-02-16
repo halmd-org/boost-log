@@ -105,9 +105,9 @@ inline bool param_cast_to_bool(const char* param_name, std::basic_string< CharT 
 {
     typedef boost::log::aux::encoding_specific< typename boost::log::aux::encoding< CharT >::type > encoding_specific;
 
-    bool res = false;
+    unsigned int res = 0;
     if (qi::parse(value.begin(), value.end(), encoding_specific::no_case[ qi::uint_ | qi::bool_ ] >> qi::eoi, res))
-        return res;
+        return res != 0;
     else
         throw_invalid_value(param_name);
 }
