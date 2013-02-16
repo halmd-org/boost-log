@@ -36,10 +36,9 @@ struct cleanup_guard
     explicit cleanup_guard(T& obj) : m_Obj(obj) {}
     ~cleanup_guard() { m_Obj.clear(); }
 
-private:
     // Copying prohibited
-    cleanup_guard(cleanup_guard const&);
-    cleanup_guard& operator= (cleanup_guard const&);
+    BOOST_LOG_DELETED_FUNCTION(cleanup_guard(cleanup_guard const&))
+    BOOST_LOG_DELETED_FUNCTION(cleanup_guard& operator= (cleanup_guard const&))
 
 private:
     T& m_Obj;

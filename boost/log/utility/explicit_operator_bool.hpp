@@ -63,14 +63,6 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#if !defined(BOOST_CLANG)
-
-// These operators are not found through ADL
-template< typename T > void operator<< (T const&, boost::log::aux::unspecified_bool_type);
-template< typename T > void operator>> (T const&, boost::log::aux::unspecified_bool_type);
-
-#endif // !defined(BOOST_CLANG)
-
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
     BOOST_LOG_FORCEINLINE operator boost::log::aux::unspecified_bool_type () const\
     {\
