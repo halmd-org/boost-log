@@ -18,6 +18,7 @@
 
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/functional/bind.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -48,5 +49,7 @@ BOOST_LOG_FORCEINLINE binder1st< assign_fun, AssigneeT& > bind_assign(AssigneeT&
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_FUNCTIONAL_BIND_ASSIGN_HPP_INCLUDED_

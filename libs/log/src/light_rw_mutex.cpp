@@ -30,6 +30,8 @@
 #include <windows.h>
 #include <malloc.h>
 
+#include <boost/log/detail/header.hpp>
+
 #if defined(__MINGW32__) && __MSVCRT_VERSION__ < 0x0700
 // MinGW doesn't declare aligned memory allocation routines for MSVC 6 runtime
 inline void* _aligned_malloc(size_t size, size_t) { return malloc(size); }
@@ -200,6 +202,8 @@ BOOST_LOG_API void light_rw_mutex::unlock()
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // !defined(BOOST_LOG_LWRWMUTEX_USE_PTHREAD) && !defined(BOOST_LOG_LWRWMUTEX_USE_SRWLOCK)
 

@@ -23,6 +23,7 @@
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/utility/result_of.hpp>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -63,5 +64,7 @@ struct custom_terminal< T, typename T::_is_boost_log_terminal >
 } // namespace phoenix
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_CUSTOM_TERMINAL_SPEC_HPP_INCLUDED_

@@ -24,6 +24,7 @@
 #include <boost/log/sources/threading_models.hpp>
 #include <boost/log/sources/severity_feature.hpp>
 #include <boost/log/keywords/severity.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -318,5 +319,7 @@ public:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SOURCES_SEVERITY_LOGGER_HPP_INCLUDED_

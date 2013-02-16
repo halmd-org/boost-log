@@ -30,6 +30,7 @@
 #include <boost/log/keywords/format.hpp>
 #include <boost/log/keywords/filter.hpp>
 #include <boost/log/keywords/auto_flush.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -236,5 +237,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 } // namespace boost
 
 #undef BOOST_LOG_CONSOLE_SINK_FRONTEND_INTERNAL
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_SETUP_CONSOLE_HPP_INCLUDED_

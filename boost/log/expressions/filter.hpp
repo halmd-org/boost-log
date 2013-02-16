@@ -20,6 +20,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/detail/light_function.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -157,5 +158,7 @@ inline void swap(filter& left, filter& right) BOOST_NOEXCEPT
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_FILTER_HPP_INCLUDED_

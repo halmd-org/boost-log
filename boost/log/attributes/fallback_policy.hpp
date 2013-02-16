@@ -21,6 +21,7 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
 #include <boost/log/attributes/fallback_policy_fwd.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -179,5 +180,7 @@ private:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTES_FALLBACK_POLICY_HPP_INCLUDED_

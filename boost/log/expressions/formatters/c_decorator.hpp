@@ -20,6 +20,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/snprintf.hpp>
 #include <boost/log/expressions/formatters/char_decorator.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -263,5 +264,7 @@ BOOST_LOG_FORCEINLINE aux::c_ascii_decorator_gen< CharT > make_c_ascii_decor()
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_FORMATTERS_C_DECORATOR_HPP_INCLUDED_

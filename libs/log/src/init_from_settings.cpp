@@ -15,11 +15,6 @@
 
 #ifndef BOOST_LOG_WITHOUT_SETTINGS_PARSERS
 
-#if defined(_MSC_VER)
-// 'const int' : forcing value to bool 'true' or 'false' (performance warning)
-#pragma warning(disable: 4800)
-#endif
-
 #include "windows_version.hpp"
 #include <ios>
 #include <map>
@@ -69,6 +64,7 @@
 #endif
 #include "parser_utils.hpp"
 #include "spirit_encoding.hpp"
+#include <boost/log/detail/header.hpp>
 
 namespace qi = boost::spirit::qi;
 
@@ -674,5 +670,7 @@ template BOOST_LOG_SETUP_API void init_from_settings< wchar_t >(basic_settings_s
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_WITHOUT_SETTINGS_PARSERS

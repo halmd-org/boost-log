@@ -22,6 +22,7 @@
 #include <boost/spirit/include/support_standard_wide.hpp>
 #include <boost/spirit/home/support/common_terminals.hpp>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -97,5 +98,7 @@ struct encoding_specific< spirit::char_encoding::standard_wide >
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SPIRIT_ENCODING_HPP_INCLUDED_

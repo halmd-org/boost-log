@@ -31,6 +31,7 @@
 #include <boost/intrusive/list_hook.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/log/core/record_view.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -141,5 +142,7 @@ public:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SINKS_BLOCK_ON_OVERFLOW_HPP_INCLUDED_

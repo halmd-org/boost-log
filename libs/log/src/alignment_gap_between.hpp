@@ -18,6 +18,7 @@
 
 #include <boost/type_traits/alignment_of.hpp>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -43,5 +44,7 @@ struct alignment_gap_between
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ALIGNMENT_GAP_BETWEEN_HPP_INCLUDED_

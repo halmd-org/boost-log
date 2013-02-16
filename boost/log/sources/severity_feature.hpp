@@ -29,18 +29,11 @@
 #include <boost/log/utility/type_dispatch/type_dispatcher.hpp>
 #include <boost/log/keywords/severity.hpp>
 #include <boost/log/core/record.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
 #endif
-
-#ifdef _MSC_VER
-#pragma warning(push)
-// 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
-#pragma warning(disable: 4251)
-// non dll-interface class 'A' used as base for dll-interface class 'B'
-#pragma warning(disable: 4275)
-#endif // _MSC_VER
 
 namespace boost {
 
@@ -300,10 +293,6 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
-
 //! The macro allows to put a record with a specific severity level into log
 #define BOOST_LOG_STREAM_SEV(logger, lvl)\
     BOOST_LOG_STREAM_WITH_PARAMS((logger), (::boost::log::keywords::severity = (lvl)))
@@ -314,5 +303,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #define BOOST_LOG_SEV(logger, lvl) BOOST_LOG_STREAM_SEV(logger, lvl)
 
 #endif // BOOST_LOG_NO_SHORTHAND_NAMES
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SOURCES_SEVERITY_FEATURE_HPP_INCLUDED_

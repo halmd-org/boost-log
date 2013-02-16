@@ -17,6 +17,7 @@
 
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -188,5 +189,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
     BOOST_LOG_ONCE_BLOCK_INTERNAL(\
         BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_once_block_flag_),\
         BOOST_LOG_UNIQUE_IDENTIFIER_NAME(_boost_log_once_block_sentry_))
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_ONCE_BLOCK_HPP_INCLUDED_

@@ -16,8 +16,16 @@
 #include <boost/log/detail/timestamp.hpp>
 
 #if defined(BOOST_WINDOWS) && !defined(__CYGWIN__)
+#include <boost/log/detail/alignas.hpp>
+#include <boost/detail/interlocked.hpp>
 #include "windows_version.hpp"
 #include <windows.h>
+#if (defined(_MSC_VER) && defined(_M_IX86) && defined(_M_IX86_FP) && _M_IX86_FP >= 2) || (defined(__GNUC__) && defined(__i386__) && defined(__SSE2__))
+#include <emmintrin.h>
+#if defined(_MSC_VER)
+#include <intrin.h>
+#endif
+#endif
 #else
 #include <unistd.h> // for config macros
 #if defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
@@ -31,6 +39,7 @@
 #include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
 #endif
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -49,28 +58,17 @@ BOOST_LOG_API get_tick_count_t get_tick_count = &GetTickCount64;
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
-#ifdef _MSC_VER
-__declspec(align(16))
-#elif defined(__GNUC__)
-__attribute__((aligned(16)))
-#endif
-uint64_t g_ticks = 0;
-
-union ticks_caster
-{
-    uint64_t as_uint64;
-    struct
-    {
-        uint32_t ticks;
-        uint32_t counter;
-    }
-    as_components;
-};
-
 #if defined(_MSC_VER) && !defined(_M_CEE_PURE)
 
 #   if defined(_M_IX86)
-//! Atomically loads and stores the 64-bit value
+#       if defined(_M_IX86_FP) && _M_IX86_FP >= 2
+//! Atomically loads and stores the 64-bit value through SSE2 instructions
+BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
+{
+    _mm_storel_epi64(reinterpret_cast< __m128i* >(to), _mm_loadl_epi64(reinterpret_cast< const __m128i* >(from)));
+}
+#       else // defined(_M_IX86_FP) && _M_IX86_FP >= 2
+//! Atomically loads and stores the 64-bit value through FPU instructions
 BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 {
     __asm
@@ -81,18 +79,28 @@ BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
         fistp qword ptr [edx]
     };
 }
-#   else // == if defined(_M_AMD64)
+#       endif // defined(_M_IX86_FP) && _M_IX86_FP >= 2
+#   elif defined(_M_AMD64) || defined(_M_IA64)
 //! Atomically loads and stores the 64-bit value
 BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 {
     *to = *from;
 }
+#   else
+#       define BOOST_LOG_GENERIC_MOVE64 1
 #   endif
 
 #elif defined(__GNUC__)
 
 #   if defined(__i386__)
-//! Atomically loads and stores the 64-bit value
+#       if defined(__SSE2__)
+//! Atomically loads and stores the 64-bit value through SSE2 instructions
+BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
+{
+    _mm_storel_epi64(reinterpret_cast< __m128i* >(to), _mm_loadl_epi64(reinterpret_cast< const __m128i* >(from)));
+}
+#       else // defined(__SSE2__)
+//! Atomically loads and stores the 64-bit value through FPU instructions
 BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 {
     __asm__ __volatile__
@@ -104,19 +112,49 @@ BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
             : "memory"
     );
 }
-#   else // == if defined(__x86_64__)
+#       endif // defined(__SSE2__)
+#   elif defined(__x86_64__)
 //! Atomically loads and stores the 64-bit value
 BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
 {
     *to = *from;
 }
+#   else
+#       define BOOST_LOG_GENERIC_MOVE64 1
 #   endif
 
 #else
 
-#error Boost.Log: Atomic operations are not defined for your compiler, sorry
+#   define BOOST_LOG_GENERIC_MOVE64 1
 
 #endif
+
+#if defined(BOOST_LOG_GENERIC_MOVE64)
+
+BOOST_LOG_ALIGNAS(16) long g_spin_lock = 0;
+
+//! Atomically loads and stores the 64-bit value
+BOOST_LOG_FORCEINLINE void move64(const uint64_t* from, uint64_t* to)
+{
+    while (BOOST_INTERLOCKED_COMPARE_EXCHANGE(&g_spin_lock, 1, 0) != 0);
+    *to = *from;
+    BOOST_INTERLOCKED_EXCHANGE(&g_spin_lock, 0);
+}
+
+#endif // defined(BOOST_LOG_GENERIC_MOVE64)
+
+BOOST_LOG_ALIGNAS(16) uint64_t g_ticks = 0;
+
+union ticks_caster
+{
+    uint64_t as_uint64;
+    struct
+    {
+        uint32_t ticks;
+        uint32_t counter;
+    }
+    as_components;
+};
 
 //! Artifical implementation of GetTickCount64
 uint64_t __stdcall get_tick_count64()
@@ -273,3 +311,5 @@ BOOST_LOG_API get_timestamp_t get_timestamp = &get_timestamp_mach;
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

@@ -30,6 +30,7 @@
 #include <boost/log/utility/setup/formatter_parser.hpp>
 #include <boost/log/keywords/filter.hpp>
 #include <boost/log/keywords/format.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -111,5 +112,7 @@ inline void setup_formatter(SinkT& s, ArgsT const& args, mpl::false_)
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_SINK_INIT_HELPERS_HPP_INCLUDED_

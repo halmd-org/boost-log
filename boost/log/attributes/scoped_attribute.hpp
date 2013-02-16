@@ -27,6 +27,7 @@
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/utility/unused_variable.hpp>
 #include <boost/log/utility/unique_identifier_name.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -245,5 +246,7 @@ BOOST_LOG_FORCEINLINE aux::scoped_thread_attribute add_scoped_thread_attribute(a
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTES_SCOPED_ATTRIBUTE_HPP_INCLUDED_

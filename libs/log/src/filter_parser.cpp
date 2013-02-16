@@ -49,6 +49,7 @@
 #include "parser_utils.hpp"
 #include "default_filter_factory.hpp"
 #include "spirit_encoding.hpp"
+#include <boost/log/detail/header.hpp>
 
 namespace qi = boost::spirit::qi;
 
@@ -454,5 +455,7 @@ filter parse_filter< wchar_t >(const wchar_t* begin, const wchar_t* end);
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_WITHOUT_SETTINGS_PARSERS

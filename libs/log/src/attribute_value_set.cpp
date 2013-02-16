@@ -26,6 +26,7 @@
 #include "alignment_gap_between.hpp"
 #include "attribute_set_impl.hpp"
 #include "stateless_allocator.hpp"
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -458,12 +459,6 @@ private:
     }
 };
 
-#ifdef _MSC_VER
-#pragma warning(push)
-// 'this' : used in base member initializer list
-#pragma warning(disable: 4355)
-#endif
-
 //! The constructor creates an empty set
 BOOST_LOG_API attribute_value_set::attribute_value_set(
     size_type reserve_count
@@ -513,10 +508,6 @@ BOOST_LOG_API attribute_value_set::attribute_value_set(attribute_value_set const
     else
         m_pImpl = NULL;
 }
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 //! Destructor
 BOOST_LOG_API attribute_value_set::~attribute_value_set() BOOST_NOEXCEPT
@@ -572,3 +563,5 @@ attribute_value_set::insert(key_type key, mapped_type const& mapped)
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

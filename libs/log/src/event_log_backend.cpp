@@ -34,6 +34,7 @@
 #include <windows.h>
 #include <psapi.h>
 #include "simple_event_log.h"
+#include <boost/log/detail/header.hpp>
 
 #ifdef _MSC_VER
 #pragma comment(lib, "psapi.lib")
@@ -616,5 +617,7 @@ template class basic_event_log_backend< wchar_t >;
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // !defined(BOOST_LOG_WITHOUT_EVENT_LOG)

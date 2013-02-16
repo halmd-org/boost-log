@@ -29,6 +29,7 @@
 #include <boost/log/detail/custom_terminal_spec.hpp>
 #include <boost/log/detail/function_traits.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -118,6 +119,8 @@ public:
         m_fun(fusion::at_c< 0 >(phoenix::env(ctx).args()), strm);
         return strm;
     }
+
+    BOOST_LOG_DELETED_FUNCTION(wrapped_formatter_output_terminal())
 };
 
 BOOST_MPL_HAS_XXX_TRAIT_NAMED_DEF(has_char_type, char_type, false)
@@ -339,5 +342,7 @@ struct is_nullary< custom_terminal< boost::log::expressions::wrapped_formatter_t
 #endif
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_FORMATTERS_WRAP_FORMATTER_HPP_INCLUDED_

@@ -24,6 +24,7 @@
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -144,5 +145,7 @@ struct is_nullary< custom_terminal< boost::log::expressions::aux::unary_function
 #endif // BOOST_LOG_DOXYGEN_PASS
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_UNARY_FUNCTION_TERMINAL_HPP_INCLUDED_

@@ -25,6 +25,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/log/detail/locks.hpp>
 #endif
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -104,3 +105,5 @@ BOOST_LOG_API BOOST_LOG_NORETURN void throw_odr_violation(
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

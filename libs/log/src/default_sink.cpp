@@ -25,6 +25,7 @@
 #include <boost/date_time/time_resolution_traits.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
 #include "default_sink.hpp"
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -203,3 +204,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
+#include <boost/log/detail/footer.hpp>

@@ -33,6 +33,7 @@
 #include <boost/function_types/function_arity.hpp>
 #include <boost/function_types/parameter_types.hpp>
 #include <boost/function_types/is_nonmember_callable_builtin.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -227,6 +228,8 @@ namespace aux {
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // defined(BOOST_NO_SFINAE) || defined(BOOST_MPL_CFG_NO_HAS_XXX)
 

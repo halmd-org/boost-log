@@ -49,6 +49,7 @@
 #include <boost/log/keywords/delimiter.hpp>
 #include <boost/log/keywords/depth.hpp>
 #include <boost/log/keywords/iteration.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -306,6 +307,8 @@ public:
         strm.flush();
         return boost::move(str);
     }
+
+    BOOST_LOG_DELETED_FUNCTION(format_named_scope_terminal())
 };
 
 /*!
@@ -592,5 +595,7 @@ struct is_nullary< custom_terminal< boost::log::expressions::format_named_scope_
 #endif
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_FORMATTERS_NAMED_SCOPE_HPP_INCLUDED_

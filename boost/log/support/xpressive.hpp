@@ -21,6 +21,7 @@
 #include <boost/xpressive/regex_algorithms.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/functional/matches.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -87,5 +88,7 @@ struct matches_fun_impl< boost_xpressive_expression_tag >
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SUPPORT_XPRESSIVE_HPP_INCLUDED_

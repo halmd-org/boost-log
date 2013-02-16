@@ -30,6 +30,7 @@
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 #endif
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -227,3 +228,4 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
+#include <boost/log/detail/footer.hpp>

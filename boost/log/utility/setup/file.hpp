@@ -35,6 +35,7 @@
 #endif
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/keywords/scan_method.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -159,5 +160,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 } // namespace boost
 
 #undef BOOST_LOG_FILE_SINK_FRONTEND_INTERNAL
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_SETUP_FILE_HPP_INCLUDED_

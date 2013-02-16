@@ -31,6 +31,7 @@
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/value_extraction.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -247,6 +248,8 @@ struct protoify< boost::reference_wrapper< const boost::log::expressions::attrib
  */
 #define BOOST_LOG_ATTRIBUTE_KEYWORD(keyword_, name_, value_type_)\
     BOOST_LOG_ATTRIBUTE_KEYWORD_IMPL(keyword_, name_, value_type_, tag)
+
+#include <boost/log/detail/footer.hpp>
 
 #if defined(BOOST_LOG_TRIVIAL_HPP_INCLUDED_)
 #include <boost/log/detail/trivial_keyword.hpp>

@@ -20,6 +20,7 @@
 #include <iostream>
 #include <cctype>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -275,5 +276,7 @@ struct char_constants< wchar_t >
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_PARSER_UTILS_HPP_INCLUDED_

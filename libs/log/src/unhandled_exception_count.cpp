@@ -19,6 +19,7 @@
 
 #include <exception>
 #include <boost/log/detail/unhandled_exception_count.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -57,3 +58,5 @@ BOOST_LOG_API unsigned int unhandled_exception_count() BOOST_NOEXCEPT
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

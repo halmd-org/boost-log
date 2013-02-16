@@ -26,6 +26,7 @@
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -111,6 +112,8 @@ public:
             phoenix::eval(m_then, ctx);
         return strm;
     }
+
+    BOOST_LOG_DELETED_FUNCTION(if_output_terminal())
 };
 
 template< typename LeftT, typename CondT, typename ThenT, typename ElseT >
@@ -191,6 +194,8 @@ public:
             phoenix::eval(m_else, ctx);
         return strm;
     }
+
+    BOOST_LOG_DELETED_FUNCTION(if_else_output_terminal())
 };
 
 
@@ -326,5 +331,7 @@ struct is_nullary< custom_terminal< boost::log::expressions::aux::if_else_output
 #endif
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_FORMATTERS_IF_HPP_INCLUDED_

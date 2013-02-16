@@ -40,6 +40,7 @@
 #include <boost/log/utility/setup/settings_parser.hpp>
 #include "parser_utils.hpp"
 #include "spirit_encoding.hpp"
+#include <boost/log/detail/header.hpp>
 
 namespace qi = boost::spirit::qi;
 
@@ -241,5 +242,7 @@ template BOOST_LOG_SETUP_API basic_settings< wchar_t > parse_settings< wchar_t >
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_WITHOUT_SETTINGS_PARSERS

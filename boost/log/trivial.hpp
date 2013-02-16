@@ -20,18 +20,11 @@
 #include <boost/log/keywords/severity.hpp>
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
 #endif
-
-#ifdef _MSC_VER
-#pragma warning(push)
-// 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
-#pragma warning(disable: 4251)
-// non dll-interface class 'A' used as base for dll-interface class 'B'
-#pragma warning(disable: 4275)
-#endif // _MSC_VER
 
 #if !defined(BOOST_LOG_USE_CHAR)
 #error Boost.Log: Trivial logging is available for narrow-character builds only. Use advanced initialization routines to setup wide-character logging.
@@ -106,10 +99,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
-
+#include <boost/log/detail/footer.hpp>
 #if defined(BOOST_LOG_EXPRESSIONS_KEYWORD_HPP_INCLUDED_)
 #include <boost/log/detail/trivial_keyword.hpp>
 #endif

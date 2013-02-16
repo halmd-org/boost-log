@@ -22,16 +22,11 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
 #endif
-
-#ifdef _MSC_VER
-#pragma warning(push)
- // non dll-interface class 'A' used as base for dll-interface class 'B'
-#pragma warning(disable: 4275)
-#endif // _MSC_VER
 
 namespace boost {
 
@@ -387,8 +382,6 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 #endif // BOOST_LOG_DOXYGEN_PASS
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXCEPTIONS_HPP_INCLUDED_

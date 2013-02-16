@@ -33,6 +33,7 @@
 #include <boost/log/utility/functional/logical.hpp>
 #include <boost/log/expressions/attr_fwd.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -565,5 +566,7 @@ struct is_nullary< custom_terminal< boost::log::expressions::channel_severity_fi
 #endif
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_PREDICATES_CHANNEL_SEVERITY_FILTER_HPP_INCLUDED_

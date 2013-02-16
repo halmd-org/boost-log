@@ -27,6 +27,7 @@
 #include <boost/preprocessor/repetition/repeat_from_to.hpp>
 #include <boost/preprocessor/iteration/iterate.hpp>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifndef BOOST_LOG_VALUE_REF_VISITATION_UNROLL_COUNT
 #define BOOST_LOG_VALUE_REF_VISITATION_UNROLL_COUNT 8
@@ -62,12 +63,6 @@ struct apply_visitor_dispatch
     }
 };
 
-#ifdef _MSC_VER
-#pragma warning(push)
-// switch statement contains 'default' but no 'case' labels
-#pragma warning(disable: 4065)
-#endif
-
 #define BOOST_LOG_AUX_CASE_ENTRY(z, i, data)\
     case i: return visitor(*static_cast< typename mpl::at_c< SequenceT, i >::type const* >(p));
 
@@ -77,15 +72,13 @@ struct apply_visitor_dispatch
 
 #undef BOOST_LOG_AUX_CASE_ENTRY
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 } // namespace aux
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_VALUE_REF_VISITATION_HPP_INCLUDED_
 

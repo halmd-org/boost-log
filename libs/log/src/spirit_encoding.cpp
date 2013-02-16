@@ -16,6 +16,7 @@
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
 #include "spirit_encoding.hpp"
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -42,3 +43,5 @@ BOOST_LOG_DEFINE_CHARSET_PARSERS(standard_wide)
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

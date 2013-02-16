@@ -19,6 +19,7 @@
 #include <locale>
 #include <string>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -112,5 +113,7 @@ inline std::wstring to_wide(std::string const& str, std::locale const& loc = std
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_CODE_CONVERSION_HPP_INCLUDED_

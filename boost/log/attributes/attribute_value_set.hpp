@@ -27,6 +27,7 @@
 #include <boost/log/attributes/attribute_value.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -472,5 +473,7 @@ inline void swap(attribute_value_set& left, attribute_value_set& right) BOOST_NO
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTE_VALUE_SET_HPP_INCLUDED_

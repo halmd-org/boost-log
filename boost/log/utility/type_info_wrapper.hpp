@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #endif // BOOST_LOG_HAS_CXXABI_H
 
+#include <boost/log/detail/header.hpp>
+
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
 #endif
@@ -141,12 +143,6 @@ public:
             return "[uninitialized]";
     }
 
-#ifdef _MSC_VER
-#pragma warning(push)
-// 'int' : forcing value to bool 'true' or 'false' (performance warning)
-#pragma warning(disable: 4800)
-#endif
-
     /*!
      * \return \c false if the type info wrapper was initialized with a particular type,
      *         \c true if the wrapper was default-constructed and not yet initialized
@@ -179,11 +175,6 @@ public:
     {
         return static_cast< bool >(info->before(*that.info));
     }
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
 };
 
 //! Inequality operator
@@ -225,5 +216,7 @@ inline std::string to_string(type_info_wrapper const& ti)
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_TYPE_INFO_WRAPPER_HPP_INCLUDED_

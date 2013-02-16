@@ -19,6 +19,7 @@
 #include <boost/mpl/bool.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/formatting_ostream_fwd.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -85,5 +86,7 @@ inline to_log_manip< T, TagT > to_log(T const& value)
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_MANIPULATORS_TO_LOG_HPP_INCLUDED_

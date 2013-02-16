@@ -16,6 +16,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/log/detail/default_attribute_names.hpp>
 #include <boost/log/detail/singleton.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -116,3 +117,5 @@ BOOST_LOG_API attribute_name thread_id()
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

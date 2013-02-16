@@ -75,20 +75,18 @@ extern "C" void _mm_pause(void);
 #        define BOOST_LOG_PAUSE_OP _mm_pause()
 #    endif
 #    if defined(__INTEL_COMPILER)
-#        define BOOST_LOG_WRITE_MEMORY_BARRIER __asm { nop }
-#    elif _MSC_VER >= 1400
-extern "C" void _WriteBarrier(void);
-#pragma intrinsic(_WriteBarrier)
-#        define BOOST_LOG_WRITE_MEMORY_BARRIER _WriteBarrier()
+#        define BOOST_LOG_COMPILER_BARRIER __asm { nop }
 #    elif _MSC_VER >= 1310
 extern "C" void _ReadWriteBarrier(void);
 #pragma intrinsic(_ReadWriteBarrier)
-#        define BOOST_LOG_WRITE_MEMORY_BARRIER _ReadWriteBarrier()
+#        define BOOST_LOG_COMPILER_BARRIER _ReadWriteBarrier()
 #    endif
 #elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
 #    define BOOST_LOG_PAUSE_OP __asm__ __volatile__("pause;")
-#    define BOOST_LOG_WRITE_MEMORY_BARRIER __asm__ __volatile__("" : : : "memory")
+#    define BOOST_LOG_COMPILER_BARRIER __asm__ __volatile__("" : : : "memory")
 #endif
+
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -146,9 +144,10 @@ public:
 
     void unlock()
     {
-#if defined(BOOST_LOG_WRITE_MEMORY_BARRIER)
+#if (defined(_M_IX86) || defined(_M_AMD64)) && defined(BOOST_LOG_COMPILER_BARRIER)
+        BOOST_LOG_COMPILER_BARRIER;
         m_State = 0L;
-        BOOST_LOG_WRITE_MEMORY_BARRIER;
+        BOOST_LOG_COMPILER_BARRIER;
 #else
         BOOST_INTERLOCKED_EXCHANGE(&m_State, 0L);
 #endif
@@ -160,7 +159,7 @@ public:
 };
 
 #undef BOOST_LOG_PAUSE_OP
-#undef BOOST_LOG_WRITE_MEMORY_BARRIER
+#undef BOOST_LOG_COMPILER_BARRIER
 
 } // namespace aux
 
@@ -168,10 +167,13 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
+#include <boost/log/detail/footer.hpp>
+
 #elif defined(BOOST_LOG_SPIN_MUTEX_USE_PTHREAD)
 
 #include <pthread.h>
 #include <boost/assert.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -214,7 +216,11 @@ public:
     BOOST_LOG_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
 };
 
+#include <boost/log/detail/footer.hpp>
+
 #else // defined(_POSIX_SPIN_LOCKS)
+
+#include <boost/log/detail/header.hpp>
 
 //! Backup implementation in case if pthreads don't support spin locks
 class spin_mutex
@@ -248,6 +254,8 @@ public:
     BOOST_LOG_DELETED_FUNCTION(spin_mutex(spin_mutex const&))
     BOOST_LOG_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
 };
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // defined(_POSIX_SPIN_LOCKS)
 

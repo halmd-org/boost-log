@@ -25,6 +25,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/format.hpp>
 #include <boost/log/detail/custom_terminal_spec.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -70,6 +71,8 @@ public:
     {
         return m_format.make_pump(fusion::at_c< 1 >(phoenix::env(ctx).args()));
     }
+
+    BOOST_LOG_DELETED_FUNCTION(format_terminal())
 };
 
 /*!
@@ -119,5 +122,7 @@ struct is_nullary< custom_terminal< boost::log::expressions::format_terminal< Ch
 #endif
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_FORMATTERS_FORMAT_HPP_INCLUDED_

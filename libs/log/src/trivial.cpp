@@ -19,6 +19,7 @@
 
 #include <boost/log/trivial.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -64,5 +65,7 @@ BOOST_LOG_API const char* to_string(severity_level lvl)
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // defined(BOOST_LOG_USE_CHAR)

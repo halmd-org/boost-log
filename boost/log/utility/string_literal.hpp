@@ -26,6 +26,7 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -566,5 +567,7 @@ str_literal(T(&p)[LenV])
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_STRING_LITERAL_HPP_INCLUDED_

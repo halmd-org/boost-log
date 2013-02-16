@@ -22,6 +22,7 @@
 #ifdef BOOST_LOG_USE_WCHAR_T
 #include <cwchar>
 #endif // BOOST_LOG_USE_WCHAR_T
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -109,5 +110,7 @@ inline int swprintf(wchar_t* buf, std::size_t size, const wchar_t* format, ...)
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_SNPRINTF_HPP_INCLUDED_

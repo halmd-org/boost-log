@@ -25,6 +25,7 @@
 #include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/utility/functional/bind_output.hpp>
 #include <boost/log/expressions/message.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -188,5 +189,7 @@ typedef basic_formatter< wchar_t > wformatter;
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_FORMATTER_HPP_INCLUDED_

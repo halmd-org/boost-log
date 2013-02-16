@@ -27,6 +27,7 @@
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/spin_mutex.hpp>
 #include <windows.h>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -124,7 +125,11 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
+#include <boost/log/detail/footer.hpp>
+
 #else // defined(BOOST_WINDOWS) && !defined(BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER)
+
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -172,5 +177,7 @@ timer::timer(cast_source const& source) : attribute(source.as< impl >())
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // defined(BOOST_WINDOWS) && !defined(BOOST_LOG_NO_QUERY_PERFORMANCE_COUNTER)

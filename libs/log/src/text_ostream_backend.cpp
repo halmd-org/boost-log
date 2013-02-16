@@ -16,6 +16,7 @@
 #include <vector>
 #include <algorithm>
 #include <boost/log/sinks/text_ostream_backend.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -132,3 +133,5 @@ template class basic_text_ostream_backend< wchar_t >;
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

@@ -29,18 +29,11 @@
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/utility/string_literal_fwd.hpp>
 #include <boost/log/utility/formatting_ostream_fwd.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
 #endif
-
-#ifdef _MSC_VER
-#pragma warning(push)
-// 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
-#pragma warning(disable: 4251)
-// 'this' : used in base member initializer list
-#pragma warning(disable: 4355)
-#endif // _MSC_VER
 
 namespace boost {
 
@@ -443,8 +436,6 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_FORMATTING_OSTREAM_HPP_INCLUDED_

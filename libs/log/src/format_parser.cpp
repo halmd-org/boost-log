@@ -24,6 +24,7 @@
 #include <boost/log/exceptions.hpp>
 #include <boost/log/support/exception.hpp>
 #include "spirit_encoding.hpp"
+#include <boost/log/detail/header.hpp>
 
 namespace qi = boost::spirit::qi;
 
@@ -147,3 +148,5 @@ format_description< wchar_t > parse_format(const wchar_t* begin, const wchar_t* 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

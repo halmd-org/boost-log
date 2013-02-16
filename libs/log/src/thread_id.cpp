@@ -37,6 +37,7 @@
 #if !defined(BOOST_LOG_USE_COMPILER_TLS)
 #include <boost/log/detail/singleton.hpp>
 #endif
+#include <boost/log/detail/header.hpp>
 
 #if defined(BOOST_WINDOWS)
 
@@ -231,7 +232,7 @@ operator<< (std::basic_ostream< CharT, TraitsT >& strm, thread::id const& tid)
 {
     if (strm.good())
     {
-        io::ios_flags_saver flags_saver(strm, std::ios_base::hex | std::ios_base::internal | std::ios_base::showbase);
+        io::ios_flags_saver flags_saver(strm, (strm.flags() & std::ios_base::uppercase) | std::ios_base::hex | std::ios_base::internal | std::ios_base::showbase);
         io::ios_width_saver width_saver(strm, static_cast< std::streamsize >(tid_size * 2));
         io::basic_ios_fill_saver< CharT, TraitsT > fill_saver(strm, static_cast< CharT >('0'));
         strm << static_cast< uint_t< tid_size * 8 >::least >(tid.native_id());
@@ -257,5 +258,7 @@ operator<< (std::basic_ostream< wchar_t, std::char_traits< wchar_t > >& strm, th
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // !defined(BOOST_LOG_NO_THREADS)

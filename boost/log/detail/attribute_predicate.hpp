@@ -23,6 +23,7 @@
 #include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/utility/functional/bind.hpp>
 #include <boost/log/utility/functional/save_result.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -109,5 +110,7 @@ public:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_ATTRIBUTE_PREDICATE_HPP_INCLUDED_

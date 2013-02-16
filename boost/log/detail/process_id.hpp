@@ -19,6 +19,7 @@
 #include <iosfwd>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/id.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -53,5 +54,7 @@ operator<< (std::basic_ostream< CharT, TraitsT >& strm, process::id const& pid);
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_PROCESS_ID_HPP_INCLUDED_

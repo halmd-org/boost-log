@@ -23,6 +23,7 @@
 #include <boost/log/attributes/attribute_value_impl.hpp>
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/sources/record_ostream.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -127,5 +128,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_MANIPULATORS_ADD_VALUE_HPP_INCLUDED_

@@ -40,6 +40,7 @@
 #include "default_sink.hpp"
 #include "stateless_allocator.hpp"
 #include "alignment_gap_between.hpp"
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -694,3 +695,5 @@ BOOST_LOG_API void core::push_record_move(record& rec)
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

@@ -31,6 +31,7 @@
 
 #include "windows_version.hpp"
 #include <windows.h>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -65,11 +66,14 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
+#include <boost/log/detail/footer.hpp>
+
 #elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
 
 #include <cstring>
 #include <mach-o/dyld.h>
 #include <boost/cstdint.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -103,6 +107,8 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
+#include <boost/log/detail/footer.hpp>
+
 #elif defined(__FreeBSD__)
 
 #include <stddef.h>
@@ -111,6 +117,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #include <sys/sysctl.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -141,11 +148,14 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
+#include <boost/log/detail/footer.hpp>
+
 #else
 
 #include <unistd.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -173,5 +183,7 @@ BOOST_LOG_API std::string get_process_name()
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif

@@ -27,6 +27,7 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/mutex.hpp>
 #endif
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -68,5 +69,7 @@ public:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DEFAULT_SINK_HPP_INCLUDED_

@@ -21,6 +21,7 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 
 #include <boost/thread/tss.hpp> // To hook on Boost.Thread configuration macros
+#include <boost/log/detail/header.hpp>
 
 
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
@@ -226,5 +227,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #else
 #error Boost.Log: unsupported threading API
 #endif
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // !defined(BOOST_LOG_NO_THREADS)

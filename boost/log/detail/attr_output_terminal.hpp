@@ -29,6 +29,7 @@
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/utility/functional/bind.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -137,6 +138,8 @@ public:
         m_visitor_invoker(m_name, fusion::at_c< 0 >(phoenix::env(ctx).args()), binder1st< impl_type const&, result_type >(m_impl, strm));
         return strm;
     }
+
+    BOOST_LOG_DELETED_FUNCTION(attribute_output_terminal())
 };
 
 } // namespace aux
@@ -164,5 +167,7 @@ struct is_nullary< custom_terminal< boost::log::expressions::aux::attribute_outp
 #endif // !defined(BOOST_LOG_DOXYGEN_PASS)
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_ATTR_OUTPUT_TERMINAL_HPP_INCLUDED_

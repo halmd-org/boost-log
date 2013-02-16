@@ -23,6 +23,7 @@
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/expressions/formatters/named_scope.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace karma = boost::spirit::karma;
 
@@ -239,3 +240,5 @@ parse_named_scope_format(const wchar_t* begin, const wchar_t* end);
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

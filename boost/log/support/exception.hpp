@@ -20,6 +20,7 @@
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/utility/type_info_wrapper.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -65,5 +66,7 @@ inline current_scope_info current_scope()
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SUPPORT_EXCEPTION_HPP_INCLUDED_

@@ -42,6 +42,7 @@
 #include <boost/log/detail/custom_terminal_spec.hpp>
 #include <boost/log/detail/deduce_char_type.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -339,6 +340,8 @@ public:
 
         return strm;
     }
+
+    BOOST_LOG_DELETED_FUNCTION(char_decorator_output_terminal())
 };
 
 } // namespace aux
@@ -478,6 +481,8 @@ public:
 
         return boost::move(str);
     }
+
+    BOOST_LOG_DELETED_FUNCTION(char_decorator_terminal())
 };
 
 /*!
@@ -638,5 +643,7 @@ struct is_nullary< custom_terminal< boost::log::expressions::aux::char_decorator
 #endif
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_FORMATTERS_CHAR_DECORATOR_HPP_INCLUDED_

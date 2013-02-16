@@ -18,6 +18,7 @@
 #include <utility>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/functional/logical.hpp> // make_common_integral_type
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -56,5 +57,7 @@ private:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_FUNCTIONAL_IN_RANGE_HPP_INCLUDED_

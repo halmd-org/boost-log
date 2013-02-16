@@ -28,6 +28,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/pp_identity.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -163,5 +164,7 @@ struct strictest_lock<
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_STRICTEST_LOCK_HPP_INCLUDED_

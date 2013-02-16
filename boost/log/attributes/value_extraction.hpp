@@ -38,6 +38,7 @@
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/utility/value_ref.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -809,5 +810,7 @@ inline typename result_of::extract_or_default< T, DefaultT >::type attribute_val
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTES_VALUE_EXTRACTION_HPP_INCLUDED_

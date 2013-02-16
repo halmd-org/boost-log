@@ -22,6 +22,7 @@
 #include <boost/log/expressions/keyword.hpp>
 #include <boost/log/expressions/is_keyword_descriptor.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -123,5 +124,7 @@ const wmessage_type wmessage = {};
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_MESSAGE_HPP_INCLUDED_

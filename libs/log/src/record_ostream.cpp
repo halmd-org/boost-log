@@ -22,6 +22,7 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/tss.hpp>
 #endif
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -175,3 +176,5 @@ template class basic_record_ostream< wchar_t >;
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

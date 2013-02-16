@@ -28,6 +28,7 @@
 #include <boost/log/exceptions.hpp>
 #include "windows_version.hpp"
 #include <windows.h>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -485,5 +486,7 @@ namespace aux {
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EVENT_LOG_REGISTRY_HPP_INCLUDED_
