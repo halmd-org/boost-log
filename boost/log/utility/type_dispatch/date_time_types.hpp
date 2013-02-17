@@ -24,6 +24,7 @@
 #include <boost/date_time/local_time/local_time_types.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -131,5 +132,7 @@ typedef boost_time_period_types time_period_types;
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DATE_TIME_TYPES_HPP_INCLUDED_

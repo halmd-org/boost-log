@@ -18,6 +18,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/setup/from_settings.hpp>
 #include <boost/log/utility/setup/settings_parser.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -40,5 +41,7 @@ template BOOST_LOG_SETUP_API void init_from_stream< wchar_t >(std::basic_istream
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_WITHOUT_SETTINGS_PARSERS

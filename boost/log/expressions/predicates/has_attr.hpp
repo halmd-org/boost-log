@@ -24,6 +24,7 @@
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/detail/unary_function_terminal.hpp>
 #include <boost/log/utility/functional/nop.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -165,5 +166,7 @@ BOOST_LOG_FORCEINLINE ActorT< aux::unary_function_terminal< has_attribute< typen
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_PREDICATES_HAS_ATTR_HPP_INCLUDED_

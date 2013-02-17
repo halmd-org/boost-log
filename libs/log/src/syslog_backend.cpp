@@ -50,6 +50,8 @@
 #include <syslog.h>
 #endif // BOOST_LOG_USE_NATIVE_SYSLOG
 
+#include <boost/log/detail/header.hpp>
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
@@ -583,5 +585,7 @@ BOOST_LOG_API void syslog_backend::set_target_address(boost::asio::ip::address c
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // !defined(BOOST_LOG_WITHOUT_SYSLOG)

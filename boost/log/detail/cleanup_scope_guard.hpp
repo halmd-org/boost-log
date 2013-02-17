@@ -17,6 +17,7 @@
 #define BOOST_LOG_DETAIL_CLEANUP_SCOPE_GUARD_HPP_INCLUDED_
 
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -35,10 +36,9 @@ struct cleanup_guard
     explicit cleanup_guard(T& obj) : m_Obj(obj) {}
     ~cleanup_guard() { m_Obj.clear(); }
 
-private:
     // Copying prohibited
-    cleanup_guard(cleanup_guard const&);
-    cleanup_guard& operator= (cleanup_guard const&);
+    BOOST_LOG_DELETED_FUNCTION(cleanup_guard(cleanup_guard const&))
+    BOOST_LOG_DELETED_FUNCTION(cleanup_guard& operator= (cleanup_guard const&))
 
 private:
     T& m_Obj;
@@ -49,5 +49,7 @@ private:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_CLEANUP_SCOPE_GUARD_HPP_INCLUDED_

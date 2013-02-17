@@ -23,6 +23,7 @@
 #if !defined(BOOST_NO_RVALUE_REFERENCES) && !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 #include <boost/type_traits/remove_reference.hpp>
 #endif
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -128,5 +129,7 @@ inline attribute_value make_attribute_value(rv< T > const& v)
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTES_ATTRIBUTE_VALUE_IMPL_HPP_INCLUDED_

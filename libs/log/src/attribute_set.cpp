@@ -23,6 +23,7 @@
 #include <boost/log/attributes/attribute_set.hpp>
 #include "attribute_set_impl.hpp"
 #include "stateless_allocator.hpp"
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -144,3 +145,5 @@ BOOST_LOG_API attribute_set::iterator attribute_set::find(key_type key) BOOST_NO
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

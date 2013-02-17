@@ -19,6 +19,7 @@
 #include <boost/exception/info.hpp>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/support/exception.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -421,3 +422,5 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
+
+#include <boost/log/detail/footer.hpp>

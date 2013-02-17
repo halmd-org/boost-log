@@ -42,6 +42,7 @@
 #include "default_filter_factory.hpp"
 #include "parser_utils.hpp"
 #include "spirit_encoding.hpp"
+#include <boost/log/detail/header.hpp>
 
 namespace qi = boost::spirit::qi;
 
@@ -391,3 +392,5 @@ template class default_filter_factory< wchar_t >;
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

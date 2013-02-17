@@ -18,6 +18,7 @@
 #include <string>
 #include <boost/log/sinks/debug_output_backend.hpp>
 #include <windows.h>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -71,5 +72,7 @@ template class basic_debug_output_backend< wchar_t >;
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // !defined(BOOST_LOG_WITHOUT_DEBUG_OUTPUT)

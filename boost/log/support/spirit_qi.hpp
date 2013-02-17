@@ -20,6 +20,7 @@
 #include <boost/spirit/include/qi_parse.hpp>
 #include <boost/spirit/include/qi_domain.hpp>
 #include <boost/spirit/include/support_component.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -58,5 +59,7 @@ struct matches_fun_impl< boost_spirit_qi_expression_tag >
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SUPPORT_SPIRIT_QI_HPP_INCLUDED_

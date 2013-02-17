@@ -23,6 +23,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/attribute.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -500,5 +501,7 @@ inline attribute& attribute::operator= (aux::attribute_set_reference_proxy const
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTE_SET_HPP_INCLUDED_

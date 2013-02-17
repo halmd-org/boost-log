@@ -25,6 +25,7 @@
 #include <boost/log/detail/unhandled_exception_count.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -328,5 +329,7 @@ public:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_SNPRINTF_HPP_INCLUDED_

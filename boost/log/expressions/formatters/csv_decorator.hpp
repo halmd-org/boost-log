@@ -19,6 +19,7 @@
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/expressions/formatters/char_decorator.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -133,5 +134,7 @@ BOOST_LOG_FORCEINLINE aux::csv_decorator_gen< CharT > make_csv_decor()
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_FORMATTERS_CSV_DECORATOR_HPP_INCLUDED_

@@ -17,6 +17,7 @@
 #define BOOST_LOG_DETAIL_FAKE_MUTEX_HPP_INCLUDED_
 
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -28,15 +29,20 @@ BOOST_LOG_OPEN_NAMESPACE
 
 namespace aux {
 
-//! Fake mutex that doesn't do anything
+//! Fake mutex that doesn't do anything. Note: we're not using \c null_mutex from Boost.Thread in order not to introduce false dependencies on Boost.Thread and Boost.Chrono.
 class fake_mutex
 {
 public:
+    BOOST_LOG_DEFAULTED_FUNCTION(fake_mutex(), {})
     void lock() {}
     bool try_lock() { return true; }
     template< typename T >
     bool timed_lock(T const&) { return true; }
     void unlock() {}
+
+    // Copying prohibited
+    BOOST_LOG_DELETED_FUNCTION(fake_mutex(fake_mutex const&))
+    BOOST_LOG_DELETED_FUNCTION(fake_mutex& operator=(fake_mutex const&))
 };
 
 } // namespace aux
@@ -44,5 +50,7 @@ public:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_FAKE_MUTEX_HPP_INCLUDED_

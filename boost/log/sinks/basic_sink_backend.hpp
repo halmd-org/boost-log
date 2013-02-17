@@ -21,6 +21,7 @@
 #include <boost/log/sinks/frontend_requirements.hpp>
 #include <boost/log/core/record_view.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -90,5 +91,7 @@ public:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SINKS_BASIC_SINK_BACKEND_HPP_INCLUDED_

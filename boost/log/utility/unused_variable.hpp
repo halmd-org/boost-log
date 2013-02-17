@@ -35,7 +35,7 @@ BOOST_LOG_OPEN_NAMESPACE
 namespace aux {
 
 template< typename T >
-BOOST_LOG_FORCEINLINE unsigned long no_unused_warnings(T const& val) { return sizeof(val); }
+BOOST_LOG_FORCEINLINE void no_unused_warnings(T const&) {}
 
 } // namespace aux
 

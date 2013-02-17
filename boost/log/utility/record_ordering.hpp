@@ -25,6 +25,7 @@
 #include <boost/log/attributes/value_visitation.hpp>
 #include <boost/log/utility/functional/logical.hpp>
 #include <boost/log/utility/functional/nop.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -222,5 +223,7 @@ inline typename aux::make_attr_ordering_type< FunT >::type make_attr_ordering(at
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_RECORD_ORDERING_HPP_INCLUDED_

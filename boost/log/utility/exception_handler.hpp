@@ -28,6 +28,7 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/functional/nop.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -347,5 +348,7 @@ make_exception_handler(HandlerT const& handler, std::nothrow_t const&);
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_EXCEPTION_HANDLER_HPP_INCLUDED_

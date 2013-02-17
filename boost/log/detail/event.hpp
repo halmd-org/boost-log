@@ -40,6 +40,8 @@
 #   define BOOST_LOG_EVENT_USE_BOOST_CONDITION
 #endif
 
+#include <boost/log/detail/header.hpp>
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
@@ -135,6 +137,8 @@ typedef generic_event event;
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_NO_THREADS
 

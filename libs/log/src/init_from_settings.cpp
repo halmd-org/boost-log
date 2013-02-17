@@ -15,11 +15,6 @@
 
 #ifndef BOOST_LOG_WITHOUT_SETTINGS_PARSERS
 
-#if defined(_MSC_VER)
-// 'const int' : forcing value to bool 'true' or 'false' (performance warning)
-#pragma warning(disable: 4800)
-#endif
-
 #include "windows_version.hpp"
 #include <ios>
 #include <map>
@@ -69,6 +64,7 @@
 #endif
 #include "parser_utils.hpp"
 #include "spirit_encoding.hpp"
+#include <boost/log/detail/header.hpp>
 
 namespace qi = boost::spirit::qi;
 
@@ -109,9 +105,9 @@ inline bool param_cast_to_bool(const char* param_name, std::basic_string< CharT 
 {
     typedef boost::log::aux::encoding_specific< typename boost::log::aux::encoding< CharT >::type > encoding_specific;
 
-    bool res = false;
+    unsigned int res = 0;
     if (qi::parse(value.begin(), value.end(), encoding_specific::no_case[ qi::uint_ | qi::bool_ ] >> qi::eoi, res))
-        return res;
+        return res != 0;
     else
         throw_invalid_value(param_name);
 }
@@ -674,5 +670,7 @@ template BOOST_LOG_SETUP_API void init_from_settings< wchar_t >(basic_settings_s
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_WITHOUT_SETTINGS_PARSERS

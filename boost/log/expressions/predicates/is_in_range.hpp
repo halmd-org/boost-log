@@ -26,6 +26,7 @@
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/utility/functional/in_range.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -126,5 +127,7 @@ is_in_range(attribute_name const& name, BoundaryT const& least, BoundaryT const&
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_PREDICATES_IS_IN_RANGE_HPP_INCLUDED_

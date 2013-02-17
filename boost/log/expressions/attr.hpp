@@ -30,6 +30,7 @@
 #include <boost/log/attributes/value_extraction.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/expressions/attr_fwd.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -147,6 +148,8 @@ public:
     {
         return m_value_extractor(m_name, fusion::at_c< 0 >(phoenix::env(ctx).args()));
     }
+
+    BOOST_LOG_DELETED_FUNCTION(attribute_terminal())
 };
 
 /*!
@@ -274,6 +277,7 @@ struct is_nullary< custom_terminal< boost::log::expressions::attribute_terminal<
 
 } // namespace boost
 
+#include <boost/log/detail/footer.hpp>
 #if defined(BOOST_LOG_EXPRESSIONS_FORMATTERS_STREAM_HPP_INCLUDED_)
 #include <boost/log/detail/attr_output_impl.hpp>
 #endif

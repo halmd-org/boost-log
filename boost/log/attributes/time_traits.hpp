@@ -18,6 +18,7 @@
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -74,5 +75,7 @@ struct local_time_traits :
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTES_TIME_TRAITS_HPP_INCLUDED_

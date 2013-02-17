@@ -17,6 +17,7 @@
 
 #include <boost/mpl/bool.hpp>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -60,5 +61,7 @@ struct is_keyword_descriptor< T, typename T::_is_boost_log_keyword_descriptor > 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_IS_KEYWORD_DESCRIPTOR_HPP_INCLUDED_

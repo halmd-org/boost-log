@@ -26,13 +26,7 @@
 
 #if !defined(BOOST_LOG_NO_THREADS)
 
-#ifdef _MSC_VER
-#pragma warning(push)
-// 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
-#pragma warning(disable: 4251)
-// non dll-interface class 'A' used as base for dll-interface class 'B'
-#pragma warning(disable: 4275)
-#endif // _MSC_VER
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -115,9 +109,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
+#include <boost/log/detail/footer.hpp>
 
 #endif // !defined(BOOST_LOG_NO_THREADS)
 

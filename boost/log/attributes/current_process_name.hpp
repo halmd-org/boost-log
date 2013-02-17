@@ -19,6 +19,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -64,5 +65,7 @@ public:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTES_CURRENT_PROCESS_NAME_HPP_INCLUDED_

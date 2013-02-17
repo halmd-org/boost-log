@@ -17,6 +17,7 @@
 #define BOOST_LOG_UTILITY_FUNCTIONAL_FUN_REF_HPP_INCLUDED_
 
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -72,5 +73,7 @@ BOOST_LOG_FORCEINLINE function_reference_wrapper< FunT > fun_ref(FunT& fun)
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_FUNCTIONAL_FUN_REF_HPP_INCLUDED_

@@ -20,6 +20,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/visible_type.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -181,5 +182,7 @@ public:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_TYPE_DISPATCHER_HPP_INCLUDED_

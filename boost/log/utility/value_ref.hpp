@@ -45,6 +45,7 @@
 #include <boost/log/utility/functional/bind_to_log.hpp>
 #include <boost/log/utility/manipulators/to_log.hpp>
 #include <boost/log/utility/value_ref_fwd.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -623,5 +624,7 @@ inline bool operator>= (value_ref< T1, TagT1 > const& left, value_ref< T2, TagT2
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_VALUE_REF_HPP_INCLUDED_

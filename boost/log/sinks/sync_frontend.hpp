@@ -15,9 +15,6 @@
 #ifndef BOOST_LOG_SINKS_SYNC_FRONTEND_HPP_INCLUDED_
 #define BOOST_LOG_SINKS_SYNC_FRONTEND_HPP_INCLUDED_
 
-#include <boost/shared_ptr.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/static_assert.hpp>
 #include <boost/log/detail/config.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
@@ -28,20 +25,16 @@
 #error Boost.Log: Synchronous sink frontend is only supported in multithreaded environment
 #endif
 
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/static_assert.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/log/detail/locking_ptr.hpp>
 #include <boost/log/detail/parameter_tools.hpp>
 #include <boost/log/core/record_view.hpp>
 #include <boost/log/sinks/basic_sink_frontend.hpp>
 #include <boost/log/sinks/frontend_requirements.hpp>
-
-#ifdef _MSC_VER
-#pragma warning(push)
-// 'm_A' : class 'A' needs to have dll-interface to be used by clients of class 'B'
-#pragma warning(disable: 4251)
-// non dll-interface class 'A' used as base for dll-interface class 'B'
-#pragma warning(disable: 4275)
-#endif // _MSC_VER
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -179,8 +172,6 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SINKS_SYNC_FRONTEND_HPP_INCLUDED_

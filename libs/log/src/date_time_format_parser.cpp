@@ -20,6 +20,7 @@
 #include <boost/spirit/include/karma_generate.hpp>
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/log/detail/date_time_format_parser.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace karma = boost::spirit::karma;
 
@@ -417,3 +418,5 @@ void put_integer(std::basic_string< wchar_t >& str, uint32_t value, unsigned int
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

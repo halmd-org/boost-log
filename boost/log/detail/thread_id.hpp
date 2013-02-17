@@ -20,6 +20,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/id.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -58,5 +59,7 @@ operator<< (std::basic_ostream< CharT, TraitsT >& strm, thread::id const& tid);
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_THREAD_ID_HPP_INCLUDED_

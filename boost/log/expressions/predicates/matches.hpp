@@ -24,6 +24,7 @@
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/utility/functional/matches.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -121,5 +122,7 @@ matches(attribute_name const& name, RegexT const& rex)
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_PREDICATES_MATCHES_HPP_INCLUDED_

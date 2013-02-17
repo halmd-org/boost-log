@@ -19,18 +19,11 @@
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/time_traits.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
 #endif
-
-#ifdef _MSC_VER
-#pragma warning(push)
-// non dll-interface class 'A' used as base for dll-interface class 'B'
-#pragma warning(disable: 4275)
-// class 'A' needs to have dll-interface to be used by clients of class 'B'
-#pragma warning(disable: 4251)
-#endif // _MSC_VER
 
 namespace boost {
 
@@ -85,8 +78,6 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTES_TIMER_HPP_INCLUDED_

@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <boost/log/exceptions.hpp>
 #include <boost/log/detail/code_conversion.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -159,3 +160,5 @@ BOOST_LOG_API void code_convert(const char* str1, std::size_t len, std::u32strin
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

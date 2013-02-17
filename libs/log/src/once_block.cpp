@@ -16,9 +16,9 @@
  */
 
 #include <boost/log/utility/once_block.hpp>
-
 #ifndef BOOST_LOG_NO_THREADS
 
+#include <boost/log/detail/header.hpp>
 #include <boost/assert.hpp>
 
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
@@ -448,5 +448,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 #else
 #error Boost.Log: unsupported threading API
 #endif
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_NO_THREADS

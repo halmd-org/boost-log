@@ -33,6 +33,7 @@
 #include <boost/log/detail/decomposed_time.hpp>
 #include <boost/log/detail/date_time_fmt_gen_traits_fwd.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -540,5 +541,7 @@ struct date_time_formatter_generator_traits< gregorian::date_duration, CharT, Vo
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SUPPORT_DATE_TIME_HPP_INCLUDED_

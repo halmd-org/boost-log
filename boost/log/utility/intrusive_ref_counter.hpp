@@ -20,6 +20,7 @@
 #ifndef BOOST_LOG_NO_THREADS
 #include <boost/detail/atomic_count.hpp>
 #endif // BOOST_LOG_NO_THREADS
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -115,5 +116,7 @@ inline void intrusive_ptr_release(const intrusive_ref_counter* p)
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_INTRUSIVE_REF_COUNTER_HPP_INCLUDED_

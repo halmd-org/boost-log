@@ -29,6 +29,7 @@
 #include <boost/intrusive/link_mode.hpp>
 #include <boost/intrusive/derivation_value_traits.hpp>
 #include <boost/log/attributes/attribute_set.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifndef BOOST_LOG_HASH_TABLE_SIZE_LOG
 // Hash table size will be 2 ^ this value
@@ -375,5 +376,7 @@ private:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTE_SET_IMPL_HPP_INCLUDED_

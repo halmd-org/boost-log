@@ -18,6 +18,7 @@
 #include <iterator>
 #include <algorithm>
 #include "parser_utils.hpp"
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -240,5 +241,7 @@ void char_constants< wchar_t >::translate_escape_sequences(std::basic_string< ch
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_WITHOUT_SETTINGS_PARSERS

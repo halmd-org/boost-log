@@ -17,6 +17,7 @@
 #define BOOST_DEFAULT_FILTER_FACTORY_HPP_INCLUDED_
 
 #include <boost/log/utility/setup/filter_parser.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -77,5 +78,7 @@ public:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_DEFAULT_FILTER_FACTORY_HPP_INCLUDED_

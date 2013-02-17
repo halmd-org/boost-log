@@ -41,6 +41,7 @@
 #if defined(BOOST_NO_NULLPTR) || defined(BOOST_NO_CXX11_NULLPTR)
 #include <boost/assert.hpp>
 #endif
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -481,5 +482,7 @@ inline void swap(light_function< SignatureT >& left, light_function< SignatureT 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_LIGHT_FUNCTION_HPP_INCLUDED_

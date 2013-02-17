@@ -25,6 +25,7 @@
 
 #include <boost/phoenix/core/terminal.hpp> // this is needed to be able to include this header alone, Boost.Phoenix blows up without it
 #include <boost/phoenix/function/adapt_callable.hpp>
+#include <boost/log/detail/header.hpp>
 
 #if defined(BOOST_USE_WINDOWS_H)
 
@@ -98,6 +99,8 @@ unspecified is_debugger_present();
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_WINDOWS
 

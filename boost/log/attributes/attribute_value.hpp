@@ -25,6 +25,7 @@
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/value_extraction_fwd.hpp>
 #include <boost/log/attributes/value_visitation_fwd.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -372,6 +373,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
+#include <boost/log/detail/footer.hpp>
 #if defined(BOOST_LOG_ATTRIBUTES_ATTRIBUTE_HPP_INCLUDED_)
 #include <boost/log/detail/attribute_get_value_impl.hpp>
 #endif

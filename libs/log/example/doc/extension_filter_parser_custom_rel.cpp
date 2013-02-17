@@ -32,7 +32,6 @@ namespace expr = boost::log::expressions;
 namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 
-//[ example_extension_filter_parser_point_definition
 struct point
 {
     float m_x, m_y;
@@ -48,7 +47,6 @@ template< typename CharT, typename TraitsT >
 std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< CharT, TraitsT >& strm, point const& p);
 template< typename CharT, typename TraitsT >
 std::basic_istream< CharT, TraitsT >& operator>> (std::basic_istream< CharT, TraitsT >& strm, point& p);
-//]
 
 const float epsilon = 0.0001f;
 
@@ -85,19 +83,53 @@ std::basic_istream< CharT, TraitsT >& operator>> (std::basic_istream< CharT, Tra
     return strm;
 }
 
-#if 0
-//[ example_extension_simple_filter_factory
-void init_factories()
+//[ example_extension_filter_parser_rectangle_definition
+struct rectangle
 {
-    //<-
-    logging::register_simple_formatter_factory< point, char >("Coordinates");
-    //->
-    logging::register_simple_filter_factory< point, char >("Coordinates");
-}
-//]
-#endif
+    point m_top_left, m_bottom_right;
+};
 
-//[ example_extension_custom_filter_factory
+template< typename CharT, typename TraitsT >
+std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< CharT, TraitsT >& strm, rectangle const& r);
+template< typename CharT, typename TraitsT >
+std::basic_istream< CharT, TraitsT >& operator>> (std::basic_istream< CharT, TraitsT >& strm, rectangle& r);
+//]
+
+template< typename CharT, typename TraitsT >
+std::basic_ostream< CharT, TraitsT >& operator<< (std::basic_ostream< CharT, TraitsT >& strm, rectangle const& r)
+{
+    if (strm.good())
+        strm << "{" << r.m_top_left << " - " << r.m_bottom_right << "}";
+    return strm;
+}
+
+template< typename CharT, typename TraitsT >
+std::basic_istream< CharT, TraitsT >& operator>> (std::basic_istream< CharT, TraitsT >& strm, rectangle& r)
+{
+    if (strm.good())
+    {
+        CharT left_brace = static_cast< CharT >(0), dash = static_cast< CharT >(0), right_brace = static_cast< CharT >(0);
+        strm.setf(std::ios_base::skipws);
+        strm >> left_brace >> r.m_top_left >> dash >> r.m_bottom_right >> right_brace;
+        if (left_brace != '{' || dash != '-' || right_brace != '}')
+            strm.setstate(std::ios_base::failbit);
+    }
+    return strm;
+}
+
+
+//[ example_extension_custom_filter_factory_with_custom_rel
+// The function checks if the point is inside the rectangle
+bool is_in_rect(logging::value_ref< point > const& p, rectangle const& r)
+{
+    if (p)
+    {
+        return p->m_x >= r.m_top_left.m_x && p->m_x <= r.m_bottom_right.m_x &&
+               p->m_y >= r.m_top_left.m_y && p->m_y <= r.m_bottom_right.m_y;
+    }
+    return false;
+}
+
 // Custom point filter factory
 class point_filter_factory :
     public logging::filter_factory< char >
@@ -117,6 +149,15 @@ public:
     {
         return expr::attr< point >(name) != boost::lexical_cast< point >(arg);
     }
+
+    logging::filter on_custom_relation(logging::attribute_name const& name, string_type const& rel, string_type const& arg)
+    {
+        if (rel == "is_in_rect")
+        {
+            return boost::phoenix::bind(&is_in_rect, expr::attr< point >(name), boost::lexical_cast< rectangle >(arg));
+        }
+        throw std::runtime_error("Unsupported filter relation: " + rel);
+    }
 };
 
 void init_factories()
@@ -135,7 +176,7 @@ void init_logging()
     logging::add_console_log
     (
         std::clog,
-        keywords::filter = "%Coordinates% = \"(10, 10)\"",
+        keywords::filter = "%Coordinates% is_in_rect \"{(0, 0) - (20, 20)}\"",
         keywords::format = "%TimeStamp% %Coordinates% %Message%"
     );
 
@@ -154,8 +195,8 @@ int main(int, char*[])
         BOOST_LOG(lg) << "Hello, world with coordinates (10, 10)!";
     }
     {
-        BOOST_LOG_SCOPED_LOGGER_TAG(lg, "Coordinates", point(20, 20));
-        BOOST_LOG(lg) << "Hello, world with coordinates (20, 20)!"; // this message will be suppressed by filter
+        BOOST_LOG_SCOPED_LOGGER_TAG(lg, "Coordinates", point(50, 50));
+        BOOST_LOG(lg) << "Hello, world with coordinates (50, 50)!"; // this message will be suppressed by filter
     }
 
     return 0;

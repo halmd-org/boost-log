@@ -19,6 +19,7 @@
 #include <string>
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -118,5 +119,7 @@ struct make_embedded_string_type< ArgT(&)[CountV] > :
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_EMBEDDED_STRING_TYPE_HPP_INCLUDED_

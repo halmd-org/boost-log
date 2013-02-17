@@ -17,6 +17,7 @@
 #include <boost/integer.hpp>
 #include <boost/io/ios_state.hpp>
 #include <boost/log/detail/process_id.hpp>
+#include <boost/log/detail/header.hpp>
 
 #if defined(BOOST_WINDOWS)
 
@@ -121,3 +122,5 @@ operator<< (std::basic_ostream< wchar_t, std::char_traits< wchar_t > >& strm, pr
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

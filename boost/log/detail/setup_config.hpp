@@ -5,7 +5,7 @@
  *          http://www.boost.org/LICENSE_1_0.txt)
  */
 /*!
- * \file   setup_prologue.hpp
+ * \file   setup_config.hpp
  * \author Andrey Semashev
  * \date   14.09.2009
  *
@@ -14,8 +14,8 @@
  *         internal configuration macros are defined.
  */
 
-#ifndef BOOST_LOG_DETAIL_SETUP_PROLOGUE_HPP_INCLUDED_
-#define BOOST_LOG_DETAIL_SETUP_PROLOGUE_HPP_INCLUDED_
+#ifndef BOOST_LOG_DETAIL_SETUP_CONFIG_HPP_INCLUDED_
+#define BOOST_LOG_DETAIL_SETUP_CONFIG_HPP_INCLUDED_
 
 #include <boost/log/detail/config.hpp>
 
@@ -58,4 +58,4 @@
 
 #endif // !defined(BOOST_LOG_SETUP_BUILDING_THE_LIB)
 
-#endif // BOOST_LOG_DETAIL_SETUP_PROLOGUE_HPP_INCLUDED_
+#endif // BOOST_LOG_DETAIL_SETUP_CONFIG_HPP_INCLUDED_

@@ -29,6 +29,7 @@
 #include <boost/log/detail/event.hpp>
 #include <boost/log/detail/threadsafe_queue.hpp>
 #include <boost/log/core/record_view.hpp>
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -135,5 +136,7 @@ protected:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SINKS_UNBOUNDED_FIFO_QUEUE_HPP_INCLUDED_

@@ -26,16 +26,11 @@
 #include <boost/log/attributes/attribute.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/expressions/filter.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
 #endif
-
-#ifdef _MSC_VER
-#pragma warning(push)
-// non dll-interface class 'A' used as base for dll-interface class 'B'
-#pragma warning(disable: 4275)
-#endif // _MSC_VER
 
 namespace boost {
 
@@ -329,8 +324,6 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_CORE_CORE_HPP_INCLUDED_

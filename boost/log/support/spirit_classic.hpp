@@ -43,6 +43,8 @@
 
 #include <boost/spirit/include/classic_parser.hpp>
 
+#include <boost/log/detail/header.hpp>
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
@@ -88,5 +90,7 @@ struct matches_fun_impl< boost_spirit_classic_expression_tag >
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SUPPORT_SPIRIT_CLASSIC_HPP_INCLUDED_

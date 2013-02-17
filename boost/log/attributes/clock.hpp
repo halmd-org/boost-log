@@ -21,6 +21,7 @@
 #include <boost/log/attributes/attribute_cast.hpp>
 #include <boost/log/attributes/attribute_value_impl.hpp>
 #include <boost/log/attributes/time_traits.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -88,5 +89,7 @@ typedef basic_clock< local_time_traits > local_clock;
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTES_CLOCK_HPP_INCLUDED_

@@ -19,6 +19,7 @@
 #include <boost/range/as_literal.hpp>
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -479,5 +480,7 @@ inline void parse_date_time_format(const CharT* str, date_time_format_parser_cal
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_DATE_TIME_FORMAT_PARSER_HPP_INCLUDED_

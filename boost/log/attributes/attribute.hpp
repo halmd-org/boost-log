@@ -21,6 +21,7 @@
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/intrusive_ref_counter.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -177,6 +178,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
+#include <boost/log/detail/footer.hpp>
 #if defined(BOOST_LOG_ATTRIBUTES_ATTRIBUTE_VALUE_HPP_INCLUDED_)
 #include <boost/log/detail/attribute_get_value_impl.hpp>
 #endif

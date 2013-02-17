@@ -64,6 +64,8 @@
 #include <boost/thread/mutex.hpp>
 #endif // !defined(BOOST_LOG_NO_THREADS)
 
+#include <boost/log/detail/header.hpp>
+
 namespace qi = boost::spirit::qi;
 
 namespace boost {
@@ -1367,3 +1369,5 @@ BOOST_LOG_API void text_multifile_backend::consume(record_view const& rec, strin
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

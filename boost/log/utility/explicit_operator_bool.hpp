@@ -18,6 +18,7 @@
 #define BOOST_LOG_UTILITY_EXPLICIT_OPERATOR_BOOL_HPP_INCLUDED_
 
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -62,14 +63,6 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
-#if !defined(BOOST_CLANG)
-
-// These operators are not found through ADL
-template< typename T > void operator<< (T const&, boost::log::aux::unspecified_bool_type);
-template< typename T > void operator>> (T const&, boost::log::aux::unspecified_bool_type);
-
-#endif // !defined(BOOST_CLANG)
-
 #define BOOST_LOG_EXPLICIT_OPERATOR_BOOL()\
     BOOST_LOG_FORCEINLINE operator boost::log::aux::unspecified_bool_type () const\
     {\
@@ -88,5 +81,7 @@ template< typename T > void operator>> (T const&, boost::log::aux::unspecified_b
     }
 
 #endif
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_EXPLICIT_OPERATOR_BOOL_HPP_INCLUDED_

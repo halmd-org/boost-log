@@ -36,6 +36,8 @@
 
 #endif
 
+#include <boost/log/detail/header.hpp>
+
 namespace boost {
 
 BOOST_LOG_OPEN_NAMESPACE
@@ -142,5 +144,7 @@ struct inherit_features< RootT, features< BOOST_PP_ENUM_PARAMS(BOOST_LOG_FEATURE
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SOURCES_FEATURES_HPP_INCLUDED_

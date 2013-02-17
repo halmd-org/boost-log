@@ -27,6 +27,7 @@
 #if !defined(BOOST_LOG_NO_THREADS)
 #include <boost/thread/tss.hpp>
 #endif
+#include <boost/log/detail/header.hpp>
 
 namespace boost {
 
@@ -311,3 +312,5 @@ named_scope::value_type const& named_scope::get_scopes()
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>

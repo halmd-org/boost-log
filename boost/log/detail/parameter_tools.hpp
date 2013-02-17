@@ -24,6 +24,7 @@
 #include <boost/preprocessor/arithmetic/dec.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -107,5 +108,7 @@ struct make_arg_list< ArgT0, BOOST_PP_ENUM_PARAMS(BOOST_PP_DEC(BOOST_LOG_MAX_PAR
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_PARAMETER_TOOLS_HPP_INCLUDED_

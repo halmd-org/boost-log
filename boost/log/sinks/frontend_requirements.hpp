@@ -26,6 +26,7 @@
 #include <boost/preprocessor/repetition/enum_params_with_a_default.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -112,5 +113,7 @@ struct has_requirement :
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_SINKS_FRONTEND_REQUIREMENTS_HPP_INCLUDED_

@@ -34,6 +34,7 @@
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/utility/formatting_ostream.hpp>
 #include <boost/log/utility/functional/bind.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -137,6 +138,8 @@ public:
         strm.flush();
         return boost::move(str);
     }
+
+    BOOST_LOG_DELETED_FUNCTION(format_date_time_terminal())
 };
 
 /*!
@@ -315,5 +318,7 @@ format_date_time(attribute_actor< T, FallbackPolicyT, TagT, ActorT > const& plac
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_FORMATTERS_DATE_TIME_HPP_INCLUDED_

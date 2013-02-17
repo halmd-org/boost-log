@@ -25,6 +25,7 @@
 #include <boost/log/attributes/attribute_name.hpp>
 #include <boost/log/attributes/fallback_policy.hpp>
 #include <boost/log/utility/functional/ends_with.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -122,5 +123,7 @@ ends_with(attribute_name const& name, SubstringT const& substring)
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_EXPRESSIONS_PREDICATES_ENDS_WITH_HPP_INCLUDED_

@@ -24,6 +24,8 @@
 
 #ifndef BOOST_LOG_NO_THREADS
 
+#include <boost/log/detail/header.hpp>
+
 #if defined(BOOST_THREAD_POSIX) // This one can be defined by users, so it should go first
 #define BOOST_LOG_LWRWMUTEX_USE_PTHREAD
 #elif defined(BOOST_WINDOWS) && defined(BOOST_LOG_USE_WINNT6_API)
@@ -198,6 +200,8 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 } // namespace boost
 
 #endif
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_NO_THREADS
 

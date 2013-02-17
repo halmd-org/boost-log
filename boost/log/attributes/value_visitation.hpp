@@ -28,6 +28,7 @@
 #include <boost/log/expressions/keyword_fwd.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/utility/type_dispatch/static_type_dispatcher.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -365,5 +366,7 @@ inline visitation_result attribute_value::visit(VisitorT visitor) const
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ATTRIBUTES_VALUE_VISITATION_HPP_INCLUDED_

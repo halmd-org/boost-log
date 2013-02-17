@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <memory>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -88,5 +89,7 @@ struct stateless_allocator
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_STATELESS_ALLOCATOR_HPP_INCLUDED_

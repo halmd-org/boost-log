@@ -25,6 +25,7 @@
 #include <boost/log/attributes/current_thread_id.hpp>
 #endif
 #include <boost/log/detail/default_attribute_names.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -69,5 +70,7 @@ inline void add_common_attributes()
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_UTILITY_SETUP_COMMON_ATTRIBUTES_HPP_INCLUDED_

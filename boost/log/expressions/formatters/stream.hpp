@@ -17,6 +17,7 @@
 
 #include <boost/phoenix/core/argument.hpp>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -44,6 +45,7 @@ BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
 
+#include <boost/log/detail/footer.hpp>
 #if defined(BOOST_LOG_EXPRESSIONS_ATTR_HPP_INCLUDED_)
 #include <boost/log/detail/attr_output_impl.hpp>
 #endif

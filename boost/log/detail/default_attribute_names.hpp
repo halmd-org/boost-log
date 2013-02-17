@@ -18,6 +18,7 @@
 
 #include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_name.hpp>
+#include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
 #pragma once
@@ -46,5 +47,7 @@ BOOST_LOG_API attribute_name thread_id();
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_DETAIL_DEFAULT_ATTRIBUTE_NAMES_HPP_INCLUDED_

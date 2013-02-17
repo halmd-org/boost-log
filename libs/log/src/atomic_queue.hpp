@@ -20,6 +20,7 @@
 #include <memory>
 #include <utility>
 #include <boost/log/detail/config.hpp>
+#include <boost/log/detail/header.hpp>
 
 // Detect if atomic CAS is supported
 #if defined(__GNUC__)
@@ -255,5 +256,7 @@ typename atomic_queue< T, AllocatorT >::internal_allocator atomic_queue< T, Allo
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif // BOOST_LOG_ATOMIC_QUEUE_HPP_INCLUDED_
