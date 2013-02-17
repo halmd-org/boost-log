@@ -281,134 +281,50 @@ You can find the complete code of this example [@boost:/libs/log/example/doc/ext
 
     #include <``[boost_log_utility_setup_filter_parser_hpp]``>
 
-You can extend filter parser in the similar way you can extend the formatter parser - by registering your types into the library. However, since it takes a considerably more complex syntax to describe filters, a filter factory typically implements several generator functions.
+You can extend filter parser in the similar way you can extend the formatter parser - by registering filter factories for your attribute values into the library. However, since it takes a considerably more complex syntax to describe filters, a filter factory typically implements several generator functions.
 
-Filter factories derive from the [class_log_filter_factory] interface. This base class declares a number of virtual functions that will be called in order to create filters, according to the filter expression. If some functions are not overriden by the factory, the corresponding operations are considered to be not supported by the attribute value. For example, we can define the filter factory for a slightly improved version of the `point` class defined in the previous section:
+Like with formatter parser extension, you can avoid spelling out the filter factory and register a simple factlry provided by the library:
 
-    // Suppose, this class can be used as an attribute value
-    struct Point
-    {
-        double m_X, m_Y;
+[example_extension_simple_filter_factory]
 
-        // Comparison operators
-        bool operator== (Point const& that) const;
-        bool operator!= (Point const& that) const;
+In order this to work the user's type should fullfill these requirements:
 
-        // Streaming operators
-        template< typename CharT, typename TraitsT >
-        friend std::basic_ostream< CharT, TraitsT >& operator<< (
-            std::basic_ostream< CharT, TraitsT >& strm, Point const& point);
-        template< typename CharT, typename TraitsT >
-        friend std::basic_istream< CharT, TraitsT >& operator>> (
-            std::basic_istream< CharT, TraitsT >& strm, Point& point);
-    };
+# Support reading from an input stream with `operator>>`.
+# Support the complete set of comparison and ordering operators.
 
-    struct point_filter_factory :
-        public logging::filter_factory< char >
-    {
-        // The callback for filter for the attribute existence test
-        filter_type on_exists_test(string_type const& name)
-        {
-            return filter_type(flt::has_attr< Point >(name));
-        }
+Naturally, all these operators must be visible from the point of the [funcref boost::log::register_simple_filter_factory `register_simple_filter_factory`] call. Note that unlike the simple formatter factory, the filter factory requires the user's type to support reading from a stream. This is so because the filter factory would have to parse the argument of the filter relation from a string.
 
-        // The callback for equality relation filter
-        filter_type on_equality_relation(string_type const& name, string_type const& arg)
-        {
-            return filter_type(flt::attr< Point >(name) == boost::lexical_cast< Point >(arg));
-        }
-        // The callback for inequality relation filter
-        filter_type on_inequality_relation(string_type const& name, string_type const& arg)
-        {
-            return filter_type(flt::attr< Point >(name) != boost::lexical_cast< Point >(arg));
-        }
-    };
+But we won't get away with a simple filter factory, because our `point` class doesn't have a sensible ordering semantics and thus we cannot define the complete set of operators. We'll have to implement our own filter factory instead. Filter factories derive from the [class_log_filter_factory] interface. This base class declares a number of virtual functions that will be called in order to create filters, according to the filter expression. If some functions are not overriden by the factory, the corresponding operations are considered to be not supported by the attribute value. But before we define the filter factory we have to improve our `point` class slightly:
 
-    // The factory can be registered in the following way
-    logging::register_filter_factory("Coordinates", boost::make_shared< point_filter_factory >());
+[example_extension_filter_parser_point_definition]
 
-Having done that, whenever the filter parser (the `parse_filter` function) encounters the "Coordinates" attribute mentioned in the filter, it will use the `point_filter_factory` object to construct the appropriate filter. For example, in the case of the following filter
+We have added comparison and input operators for the `point` class. The output operator is still used by formatters and not required by the filter factory. Now we can define and register the filter factory:
+
+[example_extension_custom_filter_factory]
+
+Having called the [funcref boost::log::register_filter_factory `register_filter_factory`] function, whenever the [link log.detailed.utilities.setup.filter_formatter filter parser] encounters the "Coordinates" attribute mentioned in the filter, it will use the `point_filter_factory` object to construct the appropriate filter. For example, in the case of the following filter
 
 [pre %Coordinates% \= "(10, 10)"]
 
-the `on_equality_relation` method will be called with `name` argument being "Coordinates" and `arg` being "10, 10".
+the `on_equality_relation` method will be called with `name` argument being "Coordinates" and `arg` being "(10, 10)".
 
-[note The quotes around the parenthesis are necessary because the filter parser only supports binary relations, while round brackets are already used to group subexpressions of the filter expression. Whenever there is need to pass several parameters to the relation (like in this case - a number of components of the `Point` class) the parameters should be encoded into a quoted string. The string may include C-style escape sequences that will be unfolded upon parsing.]
+[note The quotes around the parenthesis are necessary because the filter parser should interpret the point coordinates as a single string. Also, round brackets are already used to group subexpressions of the filter expression. Whenever there is need to pass several parameters to the relation (like in this case - a number of components of the `point` class) the parameters should be encoded into a quoted string. The string may include C-style escape sequences that will be unfolded upon parsing.]
 
-The constructed filter will use the corresponding comparison operators for the `Point` class. Some relation operations, like ">" or "<=", will not be supported for attributes named "Coordinates", and this is just the way we want it, because the `Point` class does not support them either.
+The constructed filter will use the corresponding comparison operators for the `point` class. Ordering operations, like ">" or "<=", will not be supported for attributes named "Coordinates", and this is exactly the way we want it, because the `point` class does not support them either. The complete example is available [@boost:/libs/log/example/doc/extension_filter_parser.cpp here].
 
 The library allows not only adding support for new types, but also associating new relations with them. For instance, we can create a new relation "is_in_rect" that will yield positive if the coordinates fit into a rectangle denoted with two points. The filter might look like this:
 
-[pre %Coordinates% is\_in\_rect "(10, 10) - (20, 20)"]
+[pre %Coordinates% is\_in\_rect "{(10, 10) - (20, 20)}"]
 
-To support it one has to define the `on_custom_relation` method in the filter factory:
+First, let's define our rectangle class:
 
-    namespace bll = boost::lambda;
+[example_extension_filter_parser_rectangle_definition]
 
-    struct Rectangle
-    {
-        Point m_TopLeft, m_BottomRight;
+As it was said, the rectangle is described by two points - the top left and the bottom right corners of the rectangle area. Now let's extend our filter factory with the `on_custom_relation` method:
 
-        // Streaming operators
-        template< typename CharT, typename TraitsT >
-        friend std::basic_ostream< CharT, TraitsT >& operator<< (
-            std::basic_ostream< CharT, TraitsT >& strm, Rectangle const& rect);
-        template< typename CharT, typename TraitsT >
-        friend std::basic_istream< CharT, TraitsT >& operator>> (
-            std::basic_istream< CharT, TraitsT >& strm, Rectangle& rect);
-    };
+[example_extension_custom_filter_factory_with_custom_rel]
 
-    // Our custom filter type
-    class is_in_rect_filter :
-        public flt::basic_filter< char, is_in_rect_filter >
-    {
-    private:
-        string_type m_Name;
-        Rectangle m_Rect;
-
-    public:
-        is_in_rect_filter(string_type const& attr_name, Rectangle const& rect) :
-            m_Name(attr_name),
-            m_Rect(rect)
-        {
-        }
-
-        bool operator() (values_view_type const& attrs) const
-        {
-            Point point;
-            if (logging::extract< Point >(m_Name, attrs, bll::var(point) = bll::_1))
-            {
-                // Check that the point fits into the rectangle region
-                return point.m_X >= m_Rect.m_TopLeft.m_X && point.m_X <= m_Rect.m_BottomRight.m_X
-                    && point.m_Y >= m_Rect.m_TopLeft.m_Y && point.m_Y <= m_Rect.m_BottomRight.m_Y;
-            }
-            else
-                return false;
-        }
-    };
-
-    struct point_filter_factory :
-        public logging::filter_factory< char >
-    {
-        // The callback for custom relation filter
-        filter_type on_custom_relation(
-            string_type const& name, string_type const& rel, string_type const& arg)
-        {
-            if (rel == "is_in_rect")
-            {
-                // Parse the coordinates of the rectangle region and construct the filter
-                return filter_type(is_in_rect_filter(name, boost::lexical_cast< Rectangle >(arg));
-            }
-            else
-                throw std::runtime_error("Relation " + rel + " is not supported");
-        }
-    };
-
-Like with formatters, if all these bells and whistles are not needed, user can register a trivial filter factory with a simple call:
-
-    logging::register_simple_filter_factory< Point >("Coordinates");
-
-In this case, however, the `Point` class has to support all the standard relational operations and have appropriate streaming operators in order to be parsed from a string.
+The `on_custom_relation` method is called with the relation name (the "is\_in\_rect" string in our case) and the right-hand argument for the relation (the rectangle description). All we have to do is to construct the filter, which is implemented by our `is_in_rect` function. We use `bind` from __boost_phoenix__ to compose the filter from the function and the [link log.detailed.expressions.attr attribute placeholder]. You can find the complete code of this example [@boost:/libs/log/example/doc/extension_filter_parser_custom_rel.cpp here].
 
 [heading Adding support for user-defined sinks]
 
