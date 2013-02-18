@@ -7,7 +7,7 @@
 
 project
     : requirements
-        <link>shared:<define>BOOST_ALL_DLL
+        <link>shared:<define>BOOST_ALL_DYN_LINK
         <logapi>unix:<define>BOOST_LOG_USE_NATIVE_SYSLOG=1
         <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
