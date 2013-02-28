@@ -14,6 +14,7 @@
 
 #define BOOST_TEST_MODULE attr_attribute_set
 
+#include <list>
 #include <vector>
 #include <string>
 #include <utility>
@@ -165,7 +166,7 @@ BOOST_AUTO_TEST_CASE(insertion)
 
     // Mass insertion
     typedef attr_set::key_type key_type;
-    std::vector< std::pair< key_type, logging::attribute > > elems;
+    std::list< std::pair< key_type, logging::attribute > > elems;
     elems.push_back(std::make_pair(key_type(data::attr2()), attr2));
     elems.push_back(std::make_pair(key_type(data::attr1()), attr1));
     elems.push_back(std::make_pair(key_type(data::attr3()), attr3));

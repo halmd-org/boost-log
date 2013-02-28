@@ -28,6 +28,9 @@
 #include <boost/preprocessor/repetition/enum_params_with_a_default.hpp>
 #include <boost/log/detail/pp_identity.hpp>
 #endif
+#if defined(BOOST_LOG_BROKEN_CONSTANT_EXPRESSIONS)
+#include <boost/mpl/less.hpp>
+#endif
 #include <boost/log/detail/header.hpp>
 
 #ifdef BOOST_LOG_HAS_PRAGMA_ONCE
@@ -105,7 +108,15 @@ struct thread_access_mode_of< boost::log::aux::shared_lock_guard< MutexT > > : m
 namespace aux {
 
 //! The metafunction selects the most strict lock type of the two
-template< typename LeftLockT, typename RightLockT, bool CondV = (thread_access_mode_of< LeftLockT >::value < thread_access_mode_of< RightLockT >::value) >
+template<
+    typename LeftLockT,
+    typename RightLockT,
+#if !defined(BOOST_LOG_BROKEN_CONSTANT_EXPRESSIONS)
+    bool CondV = (thread_access_mode_of< LeftLockT >::value < thread_access_mode_of< RightLockT >::value)
+#else
+    bool CondV = mpl::less< thread_access_mode_of< LeftLockT >, thread_access_mode_of< RightLockT > >::value
+#endif
+>
 struct strictest_lock_impl
 {
     typedef RightLockT type;
