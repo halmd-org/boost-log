@@ -92,6 +92,11 @@
 #   define BOOST_LOG_NO_MEMBER_TEMPLATE_FRIENDS
 #endif
 
+#if defined(BOOST_MSVC) && BOOST_MSVC <= 1600
+    // MSVC cannot interpret constant expressions in certain contexts, such as non-type template parameters
+#   define BOOST_LOG_BROKEN_CONSTANT_EXPRESSIONS
+#endif
+
 #if defined(__CYGWIN__)
     // Boost.ASIO is broken on Cygwin
 #   define BOOST_LOG_NO_ASIO

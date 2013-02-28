@@ -34,6 +34,9 @@
 // 'boost::log::v2s_mt_nt6::add_value_manip<RefT>::m_value' : reference member is initialized to a temporary that doesn't persist after the constructor exits
 // This is intentional since the manipulator can be used with a temporary, which will be used before the streaming expression ends and it is destroyed.
 #pragma warning(disable: 4413)
+// returning address of local variable or temporary
+// This warning refers to add_value_manip<RefT>::get_value() when RefT is an rvalue reference. We store the reference in the manipulator and we intend to return it as is.
+#pragma warning(disable: 4172)
 #endif
 
 namespace boost {
