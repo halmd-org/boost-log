@@ -452,7 +452,7 @@ Besides the common settings that all sinks support, some sink backends also acce
 
 [table "Console" sink settings
 [[Parameter]             [Format]                                                               [Description]]
-[[Formatter]             [Formatter string as described [link log.detailed.utilities.setup.filter_formatter here]]
+[[Format]                [Format string as described [link log.detailed.utilities.setup.filter_formatter here]]
     [Log record formatter to be used by the sink. If not specified, the default formatter is used.]
 ]
 [[AutoFlush]             ["true" or "false"]
@@ -465,7 +465,7 @@ Besides the common settings that all sinks support, some sink backends also acce
 [[FileName]              [File name pattern]
     [The file name pattern for the sink backend. This parameter is mandatory.]
 ]
-[[Formatter]             [Formatter string as described [link log.detailed.utilities.setup.filter_formatter here]]
+[[Format]                [Format string as described [link log.detailed.utilities.setup.filter_formatter here]]
     [Log record formatter to be used by the sink. If not specified, the default formatter is used.]
 ]
 [[AutoFlush]             ["true" or "false"]
@@ -571,7 +571,7 @@ The settings format is quite simple and widely used. Below is the description of
     Filter="%Severity% > 3"
 
     # Sink settings sections
-    [Sink:MySink1]
+    [Sinks.MySink1]
 
     # Sink destination type
     Destination=Console
@@ -580,7 +580,7 @@ The settings format is quite simple and widely used. Below is the description of
     Filter="%Target% contains \"MySink1\""
 
     # Formatter string. Optional, by default only log record message text is written.
-    Format="<%TimeStamp%> - %_%"
+    Format="<%TimeStamp%> - %Message%"
 
     # The flag shows whether the sink should be asynchronous
     Asynchronous=false

@@ -564,12 +564,12 @@ private:
     static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, section const& params, mpl::true_)
     {
         // Formatter
-        if (optional< string_type > formatter_param = params["Formatter"])
+        if (optional< string_type > format_param = params["Format"])
         {
             typedef typename SinkT::char_type sink_char_type;
-            std::basic_string< sink_char_type > formatter_str;
-            log::aux::code_convert(formatter_param.get(), formatter_str);
-            sink->set_formatter(parse_formatter(formatter_str));
+            std::basic_string< sink_char_type > format_str;
+            log::aux::code_convert(format_param.get(), format_str);
+            sink->set_formatter(parse_formatter(format_str));
         }
         return sink;
     }

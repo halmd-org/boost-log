@@ -15,6 +15,7 @@
 #ifndef BOOST_LOG_TRIVIAL_HPP_INCLUDED_
 #define BOOST_LOG_TRIVIAL_HPP_INCLUDED_
 
+#include <iosfwd>
 #include <ostream>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/keywords/severity.hpp>
@@ -61,6 +62,10 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (
         strm << static_cast< int >(lvl);
     return strm;
 }
+
+template< typename CharT, typename TraitsT >
+BOOST_LOG_API std::basic_istream< CharT, TraitsT >& operator>> (
+    std::basic_istream< CharT, TraitsT >& strm, severity_level& lvl);
 
 //! Trivial logger type
 #if !defined(BOOST_LOG_NO_THREADS)
