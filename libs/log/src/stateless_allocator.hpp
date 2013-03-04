@@ -16,8 +16,8 @@
 #ifndef BOOST_LOG_STATELESS_ALLOCATOR_HPP_INCLUDED_
 #define BOOST_LOG_STATELESS_ALLOCATOR_HPP_INCLUDED_
 
-#include <malloc.h>
 #include <cstddef>
+#include <cstdlib>
 #include <memory>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/header.hpp>
@@ -70,7 +70,7 @@ struct stateless_allocator
 
     static pointer allocate(size_type n, const void* = NULL)
     {
-        pointer p = static_cast< pointer >(malloc(n * sizeof(value_type)));
+        pointer p = static_cast< pointer >(std::malloc(n * sizeof(value_type)));
         if (p)
             return p;
         else
@@ -78,7 +78,7 @@ struct stateless_allocator
     }
     static void deallocate(pointer p, size_type)
     {
-        free(p);
+        std::free(p);
     }
 };
 
