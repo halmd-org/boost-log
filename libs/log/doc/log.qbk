@@ -106,6 +106,7 @@
 [import ../example/doc/extension_formatter_parser.cpp]
 [import ../example/doc/extension_filter_parser.cpp]
 [import ../example/doc/extension_filter_parser_custom_rel.cpp]
+[import ../example/doc/extension_stat_collector_settings.cpp]
 [import ../example/event_log/main.cpp]
 
 [section Disclaimer]
