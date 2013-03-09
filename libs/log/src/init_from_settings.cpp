@@ -493,7 +493,7 @@ private:
         typedef shared_ptr< sinks::sink > result_type;
 
         template< typename BackendCharT >
-        result_type operator() (section const& params, type< BackendCharT >) const
+        result_type operator() (settings_section const& params, type< BackendCharT >) const
         {
             // Construct the backend
             typedef sinks::basic_debug_output_backend< BackendCharT > backend_t;
@@ -535,7 +535,7 @@ private:
         typedef shared_ptr< sinks::sink > result_type;
 
         template< typename BackendCharT >
-        result_type operator() (section const& params, type< BackendCharT >) const
+        result_type operator() (settings_section const& params, type< BackendCharT >) const
         {
             typedef sinks::basic_simple_event_log_backend< BackendCharT > backend_t;
             typedef typename backend_t::string_type backend_string_type;
