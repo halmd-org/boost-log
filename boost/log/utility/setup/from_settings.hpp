@@ -18,6 +18,8 @@
 
 #include <string>
 #include <boost/shared_ptr.hpp>
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_base_and_derived.hpp>
 #include <boost/log/detail/setup_config.hpp>
 #include <boost/log/detail/light_function.hpp>
 #include <boost/log/sinks/sink.hpp>
@@ -42,21 +44,40 @@ BOOST_LOG_OPEN_NAMESPACE
 template< typename CharT >
 BOOST_LOG_SETUP_API void init_from_settings(basic_settings_section< CharT > const& setts);
 
-#if !defined(BOOST_NO_TEMPLATE_ALIASES) && !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES)
 
+/*!
+ * Sink factory base interface
+ */
 template< typename CharT >
-using basic_sink_factory = boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< CharT > const&) >;
+struct sink_factory
+{
+    //! Character type
+    typedef CharT char_type;
+    //! String type
+    typedef std::basic_string< char_type > string_type;
+    //! Settings section type
+    typedef basic_settings_section< char_type > settings_section;
 
-typedef basic_sink_factory< char > sink_factory;
-typedef basic_sink_factory< wchar_t > wsink_factory;
+    /*!
+     * Default constructor
+     */
+    BOOST_LOG_DEFAULTED_FUNCTION(sink_factory(), {})
 
-#else
+    /*!
+     * Virtual destructor
+     */
+    virtual ~sink_factory() {}
 
-typedef boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< char > const&) > sink_factory;
-typedef boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< wchar_t > const&) > wsink_factory;
+    /*!
+     * The function creates a formatter for the specified attribute.
+     *
+     * \param settings Sink parameters
+     */
+    virtual shared_ptr< sinks::sink > create_sink(settings_section const& settings) = 0;
 
-#endif
-
+    BOOST_LOG_DELETED_FUNCTION(sink_factory(sink_factory const&))
+    BOOST_LOG_DELETED_FUNCTION(sink_factory& operator= (sink_factory const&))
+};
 
 /*!
  * \brief The function registers a factory for a custom sink
@@ -69,12 +90,10 @@ typedef boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settin
  *
  * \param sink_name The custom sink name. Must point to a zero-terminated sequence of characters,
  *                  must not be NULL.
- * \param factory Custom sink factory function
+ * \param factory Pointer to the custom sink factory. Must not be NULL.
  */
 template< typename CharT >
-BOOST_LOG_SETUP_API void register_sink_factory(
-    const char* sink_name,
-    boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< CharT > const&) > const& factory);
+BOOST_LOG_SETUP_API void register_sink_factory(const char* sink_name, shared_ptr< sink_factory< CharT > > const& factory);
 
 /*!
  * \brief The function registers a factory for a custom sink
@@ -86,14 +105,55 @@ BOOST_LOG_SETUP_API void register_sink_factory(
  * constructed sink instance.
  *
  * \param sink_name The custom sink name
- * \param factory Custom sink factory function
+ * \param factory Pointer to the custom sink factory. Must not be NULL.
  */
 template< typename CharT >
-inline void register_sink_factory(
-    std::string const& sink_name,
-    boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< CharT > const&) > const& factory)
+inline void register_sink_factory(std::string const& sink_name, shared_ptr< sink_factory< CharT > > const& factory)
 {
     register_sink_factory(sink_name.c_str(), factory);
+}
+
+/*!
+ * \brief The function registers a factory for a custom sink
+ *
+ * The function registers a factory for a sink. The factory will be called to create sink
+ * instance when the parser discovers the specified sink type in the settings file. The
+ * factory must accept a map of parameters [parameter name -> parameter value] that it
+ * may use to initialize the sink. The factory must return a non-NULL pointer to the
+ * constructed sink instance.
+ *
+ * \param sink_name The custom sink name. Must point to a zero-terminated sequence of characters,
+ *                  must not be NULL.
+ * \param factory Pointer to the custom sink factory. Must not be NULL.
+ */
+template< typename FactoryT >
+inline typename enable_if<
+    is_base_and_derived< sink_factory< typename FactoryT::char_type >, FactoryT >
+>::type register_sink_factory(const char* sink_name, shared_ptr< FactoryT > const& factory)
+{
+    typedef sink_factory< typename FactoryT::char_type > factory_base;
+    register_sink_factory(sink_name, boost::static_pointer_cast< factory_base >(factory));
+}
+
+/*!
+ * \brief The function registers a factory for a custom sink
+ *
+ * The function registers a factory for a sink. The factory will be called to create sink
+ * instance when the parser discovers the specified sink type in the settings file. The
+ * factory must accept a map of parameters [parameter name -> parameter value] that it
+ * may use to initialize the sink. The factory must return a non-NULL pointer to the
+ * constructed sink instance.
+ *
+ * \param sink_name The custom sink name
+ * \param factory Pointer to the custom sink factory. Must not be NULL.
+ */
+template< typename FactoryT >
+inline typename enable_if<
+    is_base_and_derived< sink_factory< typename FactoryT::char_type >, FactoryT >
+>::type register_sink_factory(std::string const& sink_name, shared_ptr< FactoryT > const& factory)
+{
+    typedef sink_factory< typename FactoryT::char_type > factory_base;
+    register_sink_factory(sink_name.c_str(), boost::static_pointer_cast< factory_base >(factory));
 }
 
 BOOST_LOG_CLOSE_NAMESPACE // namespace log

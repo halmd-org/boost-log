@@ -216,11 +216,7 @@ public:
     BOOST_LOG_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
 };
 
-#include <boost/log/detail/footer.hpp>
-
 #else // defined(_POSIX_SPIN_LOCKS)
-
-#include <boost/log/detail/header.hpp>
 
 //! Backup implementation in case if pthreads don't support spin locks
 class spin_mutex
@@ -255,8 +251,6 @@ public:
     BOOST_LOG_DELETED_FUNCTION(spin_mutex& operator= (spin_mutex const&))
 };
 
-#include <boost/log/detail/footer.hpp>
-
 #endif // defined(_POSIX_SPIN_LOCKS)
 
 } // namespace aux
@@ -264,6 +258,8 @@ public:
 BOOST_LOG_CLOSE_NAMESPACE // namespace log
 
 } // namespace boost
+
+#include <boost/log/detail/footer.hpp>
 
 #endif
 

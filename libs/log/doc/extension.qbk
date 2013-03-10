@@ -328,59 +328,36 @@ The `on_custom_relation` method is called with the relation name (the "is\_in\_r
 
 [heading Adding support for user-defined sinks]
 
+    #include <``[boost_log_utility_setup_from_settings_hpp]``>
     #include <``[boost_log_utility_setup_from_stream_hpp]``>
 
-The library provides mechanism of extending support for sinks similar to the formatter and filter parsers. In order to be able to mention user-defined sinks in a settings file, the user has to register a sink factory, which is essentially a function object that receives a number of named parameters and returns a pointer to the initialized sink. The factory is registered for a specific destination (see the [link log.detailed.utilities.setup.settings settings file description]), so whenever a sink with the specified destination is mentioned in the settings file, the factory gets called. For instance, if we have a sink that emits SNMP traps as a result of processing log records, we can register it the following way:
+The library provides mechanism of extending support for sinks similar to the formatter and filter parsers. In order to be able to mention user-defined sinks in a settings file, the user has to register a sink factory, which essentially contains the `create_sink` method that receives a [link log.detailed.utilities.setup.settings settings subsection] and returns a pointer to the initialized sink. The factory is registered for a specific destination (see the [link log.detailed.utilities.setup.settings settings file description]), so whenever a sink with the specified destination is mentioned in the settings file, the factory gets called.
 
-    class snmp_backend :
-        public sinks::basic_sink_backend< char, sinks::frontend_synchronization_tag >
-    {
-    public:
-        // The constructor takes an address of the receiver of the traps
-        explicit snmp_backend(std::string const& trap_receiver);
+For example, let's register the `stat_collector` sink we described [link log.extension.sinks before] in the library. First, let's remember the sink definition:
 
-        // The function consumes the log records that come from the frontend and emits SNMP traps
-        void consume(record_type const& rec);
-    };
+[example_extension_stat_collector_settings_definition]
 
-    // Factory function for the SNMP sink
-    boost::shared_ptr< sinks::sink< char > > create_snmp_sink(
-        std::map< std::string, std::string > const& params)
-    {
-        // Read parameters for the backend and create it
-        std::map< std::string, std::string >::const_iterator it = params.find("TrapReceiver");
-        if (it == params.end())
-            throw std::runtime_error("TrapReceiver parameter not specified for the SNMP backend");
+Compared to the earlier definition we added the `write_interval` constructor parameter so we can set the statistical information flush interval in the settings file. The implementation of the sink stays pretty much the same as before. Now we have to define the factory:
 
-        boost::shared_ptr< snmp_backend > backend =
-            boost::make_shared< snmp_backend >(it->second);
+[example_extension_stat_collector_factory]
 
-        // Construct and initialize the final sink
-        typedef sinks::synchronous_sink< snmp_backend > sink_t;
-        boost::shared_ptr< sink_t > sink =
-            boost::make_shared< sink_t >(backend);
+As you can see, we read parameters from settings and simply create our sink with them as a result of `create_sink` method. Generally, users are free to name parameters of their sinks the way they like, as long as [link log.detailed.utilities.setup.settings_file settings file format] is adhered. However, it is a good idea to follow the pattern established by the library and reuse parameter names with the same meaning. That is, it should be obvious that the parameter "Filter" means the same for both the library-provided "TextFile" sink and out custom "StatCollector" sink.
 
-        it = params.find("Filter");
-        if (it != params.end())
-            sink->set_filter(logging::parse_filter(it->second));
-
-        return sink;
-    }
-
-    logging::register_sink_factory("SNMP", &create_snmp_sink);
-
-Now the SNMP sink can be constructed with the following settings:
-
-[pre
-\[Sink:MySNMPSink\]
-
-Destination\=SNMP
-Filter\="%Severity% > 3"
-]
-
-[tip Although users are free to name parameters of their sinks the way they like, a good choice would be to follow the naming policy established by the library. That is, it should be obvious that the parameter "Filter" means the same for both the library-provided "TextFile" sink and your custom "SNMP" sink backend.]
+After defining the factory we only have to register it with the [funcref boost::log::register_sink_factory `register_sink_factory`] call. The first argument is the new value of the "Destination" parameter in the settings. Whenever the library finds sink description with destination "StatCollector", our factory will be invoked to create the sink. It is also possible to override library-provided destination types with user-defined factories, however it is not possble to restore the default factories afterwards.
 
 [note As the "Destination" parameter is used to determine the sink factory, this parameter is reserved and cannot be used by sink factories for their own purposes.]
+
+Now that the factory is registered, we can use it when initializing from files or settings. For example, this is what the settings file could look like:
+
+[pre
+\[Sinks.MyStat\]
+
+Destination\=StatCollector
+FileName\=stat.csv
+WriteInterval\=30
+]
+
+The complete code of the example in this section can be found [@boost:/libs/log/example/doc/extension_stat_collector_settings.cpp here].
 
 [endsect]
 

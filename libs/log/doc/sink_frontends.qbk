@@ -7,7 +7,7 @@
     This document is a part of Boost.Log library documentation.
 /]
 
-[section:sink_frontends Sink Frontends]
+[section:sink_frontends Sink frontends]
 
 Sink frontends are the part of sinks provided by the library, that implements the common functionality shared between all sinks. This includes support for filtering, exception handling and thread synchronization. Also, since formatting is typical for text-based sinks, it is implemented by frontends as well. Every sink frontend receives log records from the logging core and then passes them along to the associated sink backend. The frontend does not define how to process records but rather in what way the core should interact with the backend. It is the backend that defines the processing rules of the log records. You probably won't have to write your own frontend when you need to create a new type of sink, because the library provides a number of frontends that cover most use cases.
 

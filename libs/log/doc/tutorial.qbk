@@ -346,4 +346,30 @@ You can try how this works by compiling and running the [@boost:/libs/log/exampl
 
 [endsect]
 
+[section:wide_char Wide character logging]
+
+The library supports logging strings containing national characters. There are basically two ways of doing this. On UNIX-like systems typically some multibyte character encoding (e.g. UTF-8) is used to represent national characters. In this case the library can be used just the way it is used for plain ASCII logging, no additional setup is required.
+
+On Windows the common practice is to use wide strings to represent national characters. Also, most of the system API is wide character oriented, which requires Windows-specific sinks to also support wide strings. On the other hand, generic sinks, like [link log.detailed.sink_backends.text_file text file sink, are byte-oriented (because, well, you store bytes in files, not characters). This forces the library to perform character code conversion when needed by the sink. To set up the library for this one has to imbue the sink with a locale with the appropriate `codecvt` facet. __boost_locale__ can be used to generate such a locale. Let's see an example:
+
+[example_wide_char_logging_initialization]
+
+First let's take a look at the formatter we pass in the `format` parameter. We initialize the sink with a narrow-character formatter because the text file sink processes bytes. It is possible to use wide strings in the formatter, but not in format strings, like the one we used with the [funcref boost::log::expressions::format_date_time `format_date_time`] function. Also note that we used `message` keyword to denote the log record messages. This [link log.detailed.expressions.message placeholder] supports both narrow and wide character messages, so the formatter will work with both. As part of the formatting process, the library will convert wide character messages to multibyte encoding using the imbued locale, which we set to UTF-8.
+
+[tip Attribute values can also contain wide strings. Like log record messages, these strings will be converted with the imbued locale to the target character encoding.]
+
+One thing missing here is our `severity_level` type definition. The type is just an enumeration, but if we want to support its formatting for both narrow and wide character sinks, its streaming operator has to be a template. This may be useful if we create multiple sinks with different character types.
+
+[example_wide_char_severity_level_definition]
+
+Now we can emit log records. We can use loggers with `w` prefix in their names to compose wide character messages.
+
+[example_wide_char_logging]
+
+As you can see, wide character message composition is similar to narrow logging. Note that you can use both narrow and wide character logging at the same time; all records will be processed by our file sink. The complete code of this example can be found [@boost:/libs/log/example/wide_char/main.cpp here].
+
+It must be noted that some sinks (mostly, Windows-specific ones) allow to specify the target character type. When national characters are expected in log records, one should always use `wchar_t` as the target character type in these cases because the sink will use wide character OS API to process log records. In this case all narrow character strings will be widened using the locale imbued into the sink when formatting is performed.
+
+[endsect]
+
 [endsect]

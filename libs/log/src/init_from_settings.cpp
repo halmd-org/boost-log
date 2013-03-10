@@ -190,81 +190,22 @@ sinks::file::rotation_at_time_point param_cast_to_rotation_time_point(const char
         return sinks::file::rotation_at_time_point(hour, minute, second);
 }
 
-//! The supported sinks repository
+//! Base class for default sink factories
 template< typename CharT >
-struct sinks_repository :
-    public log::aux::lazy_singleton< sinks_repository< CharT > >
+class basic_default_sink_factory :
+    public sink_factory< CharT >
 {
-    typedef log::aux::lazy_singleton< sinks_repository< CharT > > base_type;
-
-#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS)
-    friend class log::aux::lazy_singleton< sinks_repository< CharT > >;
-#else
-    friend class base_type;
-#endif
-
-    typedef CharT char_type;
-    typedef std::basic_string< char_type > string_type;
+public:
+    typedef sink_factory< CharT > base_type;
+    typedef typename base_type::char_type char_type;
+    typedef typename base_type::string_type string_type;
+    typedef typename base_type::settings_section settings_section;
     typedef boost::log::aux::char_constants< char_type > constants;
-    typedef basic_settings_section< char_type > section;
-    typedef typename section::const_reference param_const_reference;
-    typedef typename section::reference param_reference;
-    typedef boost::log::aux::light_function< shared_ptr< sinks::sink > (section const&) > sink_factory;
-    typedef std::map< std::string, sink_factory > sink_factories;
 
-#if !defined(BOOST_LOG_NO_THREADS)
-    //! Synchronization mutex
-    log::aux::light_rw_mutex m_Mutex;
-#endif
-    //! Map of the sink factories
-    sink_factories m_Factories;
-
-    //! The function constructs a sink from the settings
-    shared_ptr< sinks::sink > construct_sink_from_settings(section const& params)
-    {
-        if (param_const_reference dest_node = params["Destination"])
-        {
-            std::string dest = log::aux::to_narrow(dest_node.get().get());
-
-            BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< log::aux::light_rw_mutex > lock(m_Mutex);)
-            typename sink_factories::const_iterator it = m_Factories.find(dest);
-            if (it != m_Factories.end())
-            {
-                return it->second(params);
-            }
-            else
-            {
-                BOOST_LOG_THROW_DESCR(invalid_value, "The sink destination is not supported: " + dest);
-            }
-        }
-        else
-        {
-            BOOST_LOG_THROW_DESCR(missing_value, "The sink destination is not set");
-        }
-    }
-
-    static void init_instance()
-    {
-        sinks_repository& instance = base_type::get_instance();
-        instance.m_Factories["TextFile"] = &sinks_repository< char_type >::default_text_file_sink_factory;
-        instance.m_Factories["Console"] = &sinks_repository< char_type >::default_console_sink_factory;
-#ifndef BOOST_LOG_WITHOUT_SYSLOG
-        instance.m_Factories["Syslog"] = &sinks_repository< char_type >::default_syslog_sink_factory;
-#endif
-#ifndef BOOST_LOG_WITHOUT_DEBUG_OUTPUT
-        instance.m_Factories["Debugger"] = &sinks_repository< char_type >::default_debugger_sink_factory;
-#endif
-#ifndef BOOST_LOG_WITHOUT_EVENT_LOG
-        instance.m_Factories["SimpleEventLog"] = &sinks_repository< char_type >::default_simple_event_log_sink_factory;
-#endif
-    }
-
-private:
-    sinks_repository() {}
-
+protected:
     //! Sink backend character selection function
     template< typename InitializerT >
-    static shared_ptr< sinks::sink > select_backend_character_type(section const& params, InitializerT initializer)
+    static shared_ptr< sinks::sink > select_backend_character_type(settings_section const& params, InitializerT initializer)
     {
 #if defined(BOOST_LOG_USE_CHAR) && defined(BOOST_LOG_USE_WCHAR_T)
         if (optional< string_type > wide_param = params["Wide"])
@@ -281,8 +222,131 @@ private:
 #endif
     }
 
+    //! The function initializes common parameters of a formatting sink and returns the constructed sink
+    template< typename BackendT >
+    static shared_ptr< sinks::sink > init_sink(shared_ptr< BackendT > const& backend, settings_section const& params)
+    {
+        typedef BackendT backend_t;
+        typedef typename sinks::has_requirement<
+            typename backend_t::frontend_requirements,
+            sinks::formatted_records
+        >::type is_formatting_t;
+
+        // Filter
+        filter filt;
+        if (optional< string_type > filter_param = params["Filter"])
+        {
+            filt = parse_filter(filter_param.get());
+        }
+
+        shared_ptr< sinks::basic_sink_frontend > p;
+
+#if !defined(BOOST_LOG_NO_THREADS)
+        // Asynchronous. TODO: make it more flexible.
+        bool async = false;
+        if (optional< string_type > async_param = params["Asynchronous"])
+        {
+            async = param_cast_to_bool("Asynchronous", async_param.get());
+        }
+
+        // Construct the frontend, considering Asynchronous parameter
+        if (!async)
+            p = init_formatter(boost::make_shared< sinks::synchronous_sink< backend_t > >(backend), params, is_formatting_t());
+        else
+            p = init_formatter(boost::make_shared< sinks::asynchronous_sink< backend_t > >(backend), params, is_formatting_t());
+#else
+        // When multithreading is disabled we always use the unlocked sink frontend
+        p = init_formatter(boost::make_shared< sinks::unlocked_sink< backend_t > >(backend), params, is_formatting_t());
+#endif
+
+        p->set_filter(filt);
+
+        return p;
+    }
+
+private:
+    //! The function initializes formatter for the sinks that support formatting
+    template< typename SinkT >
+    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, settings_section const& params, mpl::true_)
+    {
+        // Formatter
+        if (optional< string_type > format_param = params["Format"])
+        {
+            typedef typename SinkT::char_type sink_char_type;
+            std::basic_string< sink_char_type > format_str;
+            log::aux::code_convert(format_param.get(), format_str);
+            sink->set_formatter(parse_formatter(format_str));
+        }
+        return sink;
+    }
+    template< typename SinkT >
+    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, settings_section const& params, mpl::false_)
+    {
+        return sink;
+    }
+};
+
+//! Default console sink factory
+template< typename CharT >
+class default_console_sink_factory :
+    public basic_default_sink_factory< CharT >
+{
+public:
+    typedef basic_default_sink_factory< CharT > base_type;
+    typedef typename base_type::char_type char_type;
+    typedef typename base_type::string_type string_type;
+    typedef typename base_type::settings_section settings_section;
+    typedef typename base_type::constants constants;
+
+private:
+    struct impl;
+    friend struct impl;
+    struct impl
+    {
+        typedef shared_ptr< sinks::sink > result_type;
+
+        template< typename BackendCharT >
+        result_type operator() (settings_section const& params, type< BackendCharT >) const
+        {
+            // Construct the backend
+            typedef boost::log::aux::char_constants< BackendCharT > constants;
+            typedef sinks::basic_text_ostream_backend< BackendCharT > backend_t;
+            shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
+            backend->add_stream(shared_ptr< typename backend_t::stream_type >(&constants::get_console_log_stream(), empty_deleter()));
+
+            // Auto flush
+            if (optional< string_type > auto_flush_param = params["AutoFlush"])
+            {
+                backend->auto_flush(param_cast_to_bool("AutoFlush", auto_flush_param.get()));
+            }
+
+            return base_type::init_sink(backend, params);
+        }
+    };
+
+public:
+    //! The function constructs a sink that writes log records to the console
+    shared_ptr< sinks::sink > create_sink(settings_section const& params)
+    {
+        return base_type::select_backend_character_type(params, impl());
+    }
+};
+
+//! Default text file sink factory
+template< typename CharT >
+class default_text_file_sink_factory :
+    public basic_default_sink_factory< CharT >
+{
+public:
+    typedef basic_default_sink_factory< CharT > base_type;
+    typedef typename base_type::char_type char_type;
+    typedef typename base_type::string_type string_type;
+    typedef typename base_type::settings_section settings_section;
+    typedef typename base_type::constants constants;
+
+public:
     //! The function constructs a sink that writes log records to a text file
-    static shared_ptr< sinks::sink > default_text_file_sink_factory(section const& params)
+    shared_ptr< sinks::sink > create_sink(settings_section const& params)
     {
         typedef sinks::text_file_backend backend_t;
         shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
@@ -363,44 +427,27 @@ private:
             }
         }
 
-        return init_sink(backend, params);
+        return base_type::init_sink(backend, params);
     }
-
-    struct default_console_sink_factory_impl;
-    friend struct default_console_sink_factory_impl;
-    struct default_console_sink_factory_impl
-    {
-        typedef shared_ptr< sinks::sink > result_type;
-
-        template< typename BackendCharT >
-        result_type operator() (section const& params, type< BackendCharT >) const
-        {
-            // Construct the backend
-            typedef boost::log::aux::char_constants< BackendCharT > constants;
-            typedef sinks::basic_text_ostream_backend< BackendCharT > backend_t;
-            shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
-            backend->add_stream(shared_ptr< typename backend_t::stream_type >(&constants::get_console_log_stream(), empty_deleter()));
-
-            // Auto flush
-            if (optional< string_type > auto_flush_param = params["AutoFlush"])
-            {
-                backend->auto_flush(param_cast_to_bool("AutoFlush", auto_flush_param.get()));
-            }
-
-            return sinks_repository::init_sink(backend, params);
-        }
-    };
-
-    //! The function constructs a sink that writes log records to the console
-    static shared_ptr< sinks::sink > default_console_sink_factory(section const& params)
-    {
-        return select_backend_character_type(params, default_console_sink_factory_impl());
-    }
+};
 
 #ifndef BOOST_LOG_WITHOUT_SYSLOG
 
-    //! The function constructs a sink that writes log records to the syslog service
-    static shared_ptr< sinks::sink > default_syslog_sink_factory(section const& params)
+//! Default syslog sink factory
+template< typename CharT >
+class default_syslog_sink_factory :
+    public basic_default_sink_factory< CharT >
+{
+public:
+    typedef basic_default_sink_factory< CharT > base_type;
+    typedef typename base_type::char_type char_type;
+    typedef typename base_type::string_type string_type;
+    typedef typename base_type::settings_section settings_section;
+    typedef typename base_type::constants constants;
+
+public:
+    //! The function constructs a sink that writes log records to syslog
+    shared_ptr< sinks::sink > create_sink(settings_section const& params)
     {
         // Construct the backend
         typedef sinks::syslog_backend backend_t;
@@ -418,48 +465,77 @@ private:
             backend->set_target_address(param_cast_to_address("TargetAddress", target_address_param.get()));
 #endif // !defined(BOOST_LOG_NO_ASIO)
 
-        return init_sink(backend, params);
+        return base_type::init_sink(backend, params);
     }
+};
 
-#endif // BOOST_LOG_WITHOUT_SYSLOG
+#endif // !defined(BOOST_LOG_WITHOUT_SYSLOG)
 
 #ifndef BOOST_LOG_WITHOUT_DEBUG_OUTPUT
 
-    struct default_debugger_sink_factory_impl;
-    friend struct default_debugger_sink_factory_impl;
-    struct default_debugger_sink_factory_impl
+//! Default debugger sink factory
+template< typename CharT >
+class default_debugger_sink_factory :
+    public basic_default_sink_factory< CharT >
+{
+public:
+    typedef basic_default_sink_factory< CharT > base_type;
+    typedef typename base_type::char_type char_type;
+    typedef typename base_type::string_type string_type;
+    typedef typename base_type::settings_section settings_section;
+    typedef typename base_type::constants constants;
+
+private:
+    struct impl;
+    friend struct impl;
+    struct impl
     {
         typedef shared_ptr< sinks::sink > result_type;
 
         template< typename BackendCharT >
-        result_type operator() (section const& params, type< BackendCharT >) const
+        result_type operator() (settings_section const& params, type< BackendCharT >) const
         {
             // Construct the backend
             typedef sinks::basic_debug_output_backend< BackendCharT > backend_t;
             shared_ptr< backend_t > backend = boost::make_shared< backend_t >();
 
-            return sinks_repository::init_sink(backend, params);
+            return base_type::init_sink(backend, params);
         }
     };
 
+public:
     //! The function constructs a sink that writes log records to the debugger
-    static shared_ptr< sinks::sink > default_debugger_sink_factory(section const& params)
+    shared_ptr< sinks::sink > create_sink(settings_section const& params)
     {
-        return select_backend_character_type(params, default_debugger_sink_factory_impl());
+        return base_type::select_backend_character_type(params, impl());
     }
+};
 
-#endif // BOOST_LOG_WITHOUT_DEBUG_OUTPUT
+#endif // !defined(BOOST_LOG_WITHOUT_DEBUG_OUTPUT)
 
 #ifndef BOOST_LOG_WITHOUT_EVENT_LOG
 
-    struct default_simple_event_log_sink_factory_impl;
-    friend struct default_simple_event_log_sink_factory_impl;
-    struct default_simple_event_log_sink_factory_impl
+//! Default simple event log sink factory
+template< typename CharT >
+class default_simple_event_log_sink_factory :
+    public basic_default_sink_factory< CharT >
+{
+public:
+    typedef basic_default_sink_factory< CharT > base_type;
+    typedef typename base_type::char_type char_type;
+    typedef typename base_type::string_type string_type;
+    typedef typename base_type::settings_section settings_section;
+    typedef typename base_type::constants constants;
+
+private:
+    struct impl;
+    friend struct impl;
+    struct impl
     {
         typedef shared_ptr< sinks::sink > result_type;
 
         template< typename BackendCharT >
-        result_type operator() (section const& params, type< BackendCharT >) const
+        result_type operator() (settings_section const& params, type< BackendCharT >) const
         {
             typedef sinks::basic_simple_event_log_backend< BackendCharT > backend_t;
             typedef typename backend_t::string_type backend_string_type;
@@ -505,79 +581,91 @@ private:
             // For now we use only the default event type mapping. Will add support for configuration later.
             backend->set_event_type_mapper(sinks::event_log::direct_event_type_mapping< >(log::aux::default_attribute_names::severity()));
 
-            return sinks_repository::init_sink(backend, params);
+            return base_type::init_sink(backend, params);
         }
     };
 
+public:
     //! The function constructs a sink that writes log records to the Windows NT Event Log
-    static shared_ptr< sinks::sink > default_simple_event_log_sink_factory(section const& params)
+    shared_ptr< sinks::sink > create_sink(settings_section const& params)
     {
-        return select_backend_character_type(params, default_simple_event_log_sink_factory_impl());
+        return base_type::select_backend_character_type(params, impl());
     }
+};
 
-#endif // BOOST_LOG_WITHOUT_EVENT_LOG
+#endif // !defined(BOOST_LOG_WITHOUT_EVENT_LOG)
 
-    //! The function initializes common parameters of a formatting sink and returns the constructed sink
-    template< typename BackendT >
-    static shared_ptr< sinks::sink > init_sink(shared_ptr< BackendT > const& backend, section const& params)
-    {
-        typedef BackendT backend_t;
-        typedef typename sinks::has_requirement<
-            typename backend_t::frontend_requirements,
-            sinks::formatted_records
-        >::type is_formatting_t;
 
-        // Filter
-        filter filt;
-        if (optional< string_type > filter_param = params["Filter"])
-        {
-            filt = parse_filter(filter_param.get());
-        }
+//! The supported sinks repository
+template< typename CharT >
+struct sinks_repository :
+    public log::aux::lazy_singleton< sinks_repository< CharT > >
+{
+    typedef log::aux::lazy_singleton< sinks_repository< CharT > > base_type;
 
-        shared_ptr< sinks::basic_sink_frontend > p;
-
-#if !defined(BOOST_LOG_NO_THREADS)
-        // Asynchronous. TODO: make it more flexible.
-        bool async = false;
-        if (optional< string_type > async_param = params["Asynchronous"])
-        {
-            async = param_cast_to_bool("Asynchronous", async_param.get());
-        }
-
-        // Construct the frontend, considering Asynchronous parameter
-        if (!async)
-            p = init_formatter(boost::make_shared< sinks::synchronous_sink< backend_t > >(backend), params, is_formatting_t());
-        else
-            p = init_formatter(boost::make_shared< sinks::asynchronous_sink< backend_t > >(backend), params, is_formatting_t());
+#if !defined(BOOST_LOG_BROKEN_FRIEND_TEMPLATE_INSTANTIATIONS)
+    friend class log::aux::lazy_singleton< sinks_repository< CharT > >;
 #else
-        // When multithreading is disabled we always use the unlocked sink frontend
-        p = init_formatter(boost::make_shared< sinks::unlocked_sink< backend_t > >(backend), params, is_formatting_t());
+    friend class base_type;
 #endif
 
-        p->set_filter(filt);
+    typedef CharT char_type;
+    typedef std::basic_string< char_type > string_type;
+    typedef basic_settings_section< char_type > settings_section;
+    typedef boost::log::aux::char_constants< char_type > constants;
+    typedef boost::shared_ptr< sink_factory< char_type > > sink_factory_ptr;
+    typedef std::map< std::string, sink_factory_ptr > sink_factories;
 
-        return p;
-    }
+#if !defined(BOOST_LOG_NO_THREADS)
+    //! Synchronization mutex
+    log::aux::light_rw_mutex m_Mutex;
+#endif
+    //! Map of the sink factories
+    sink_factories m_Factories;
 
-    //! The function initializes formatter for the sinks that support formatting
-    template< typename SinkT >
-    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, section const& params, mpl::true_)
+    //! The function constructs a sink from the settings
+    shared_ptr< sinks::sink > construct_sink_from_settings(settings_section const& params)
     {
-        // Formatter
-        if (optional< string_type > formatter_param = params["Formatter"])
+        typedef typename settings_section::const_reference param_const_reference;
+        if (param_const_reference dest_node = params["Destination"])
         {
-            typedef typename SinkT::char_type sink_char_type;
-            std::basic_string< sink_char_type > formatter_str;
-            log::aux::code_convert(formatter_param.get(), formatter_str);
-            sink->set_formatter(parse_formatter(formatter_str));
+            std::string dest = log::aux::to_narrow(dest_node.get().get());
+
+            BOOST_LOG_EXPR_IF_MT(log::aux::shared_lock_guard< log::aux::light_rw_mutex > lock(m_Mutex);)
+            typename sink_factories::const_iterator it = m_Factories.find(dest);
+            if (it != m_Factories.end())
+            {
+                return it->second->create_sink(params);
+            }
+            else
+            {
+                BOOST_LOG_THROW_DESCR(invalid_value, "The sink destination is not supported: " + dest);
+            }
         }
-        return sink;
+        else
+        {
+            BOOST_LOG_THROW_DESCR(missing_value, "The sink destination is not set");
+        }
     }
-    template< typename SinkT >
-    static shared_ptr< SinkT > init_formatter(shared_ptr< SinkT > const& sink, section const& params, mpl::false_)
+
+    static void init_instance()
     {
-        return sink;
+        sinks_repository& instance = base_type::get_instance();
+        instance.m_Factories["TextFile"] = boost::make_shared< default_text_file_sink_factory< char_type > >();
+        instance.m_Factories["Console"] = boost::make_shared< default_console_sink_factory< char_type > >();
+#ifndef BOOST_LOG_WITHOUT_SYSLOG
+        instance.m_Factories["Syslog"] = boost::make_shared< default_syslog_sink_factory< char_type > >();
+#endif
+#ifndef BOOST_LOG_WITHOUT_DEBUG_OUTPUT
+        instance.m_Factories["Debugger"] = boost::make_shared< default_debugger_sink_factory< char_type > >();
+#endif
+#ifndef BOOST_LOG_WITHOUT_EVENT_LOG
+        instance.m_Factories["SimpleEventLog"] = boost::make_shared< default_simple_event_log_sink_factory< char_type > >();
+#endif
     }
+
+private:
+    sinks_repository() {}
 };
 
 //! The function applies the settings to the logging core
@@ -642,9 +730,7 @@ void init_from_settings(basic_settings_section< CharT > const& setts)
 
 //! The function registers a factory for a sink
 template< typename CharT >
-void register_sink_factory(
-    const char* sink_name,
-    boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< CharT > const&) > const& factory)
+void register_sink_factory(const char* sink_name, shared_ptr< sink_factory< CharT > > const& factory)
 {
     sinks_repository< CharT >& repo = sinks_repository< CharT >::get();
     BOOST_LOG_EXPR_IF_MT(lock_guard< log::aux::light_rw_mutex > lock(repo.m_Mutex);)
@@ -652,18 +738,12 @@ void register_sink_factory(
 }
 
 #ifdef BOOST_LOG_USE_CHAR
-template BOOST_LOG_SETUP_API
-void register_sink_factory< char >(
-    const char* sink_name,
-    boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< char > const&) > const& factory);
+template BOOST_LOG_SETUP_API void register_sink_factory< char >(const char* sink_name, shared_ptr< sink_factory< char > > const& factory);
 template BOOST_LOG_SETUP_API void init_from_settings< char >(basic_settings_section< char > const& setts);
 #endif
 
 #ifdef BOOST_LOG_USE_WCHAR_T
-template BOOST_LOG_SETUP_API
-void register_sink_factory< wchar_t >(
-    const char* sink_name,
-    boost::log::aux::light_function< shared_ptr< sinks::sink > (basic_settings_section< wchar_t > const&) > const& factory);
+template BOOST_LOG_SETUP_API void register_sink_factory< wchar_t >(const char* sink_name, shared_ptr< sink_factory< wchar_t > > const& factory);
 template BOOST_LOG_SETUP_API void init_from_settings< wchar_t >(basic_settings_section< wchar_t > const& setts);
 #endif
 

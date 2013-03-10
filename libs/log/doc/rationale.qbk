@@ -166,4 +166,23 @@ These rules don't guarantee that the library will work in termination context bu
 
 [endsect]
 
+[section:namespace_mangling Why my application fails to link with Boost.Log? What's the fuss about library namespaces?]
+
+The library declares the `boost::log` namespace which should be used in client code to access library components. However, internally the library uses another nested namespace for actual implementation. The namespace name is configuration and platform dependent, it can change between different releases of the library, so it should never be used in the user side code. This is done in order to make the library configuration synchronized with the application as much as possible and eliminate problems caused by configuration mismatch.
+
+Most of the time users won't even notice the existence of this internal namespace, but it often appears in compiler and linker errors and in some cases it is useful to know how to decode its name. Currently, the namespace name is composed from the following elements:
+
+[pre <version><linkage>\_<threading>\_<system>]
+
+* The `<version>` component describes the library major version. It is currently `v2`.
+* The `<linkage>` component tells whether the library is linked statically or dynamically. It is `s` if the library is linked statically and empty otherwise.
+* The `<threading>` component is `st` for single-threaded builds and `mt` for multi-threaded ones.
+* The `<system>` component describes the underlying OS API used by the library. Currently, it is only specified for multi-threaded builds. Depending on the target platform and configuration, it can be `posix`, `nt5` or `nt6`.
+
+As a couple quick examples, `v2s_st` corresponds to v2 static single-threaded build of the library and `v2_mt_posix` - to v2 dynamic multi-threaded build for POSIX system API.
+
+Namespace mangling may lead to linkinkg errors if the application is misconfigured. One common mistake is to build dynamic version of the library and not define `BOOST_LOG_DYN_LINK` or `BOOST_ALL_DYN_LINK` when building the application, so that the library assumes static linking by default. Whenever such linking errors appear, one can decode the namespace name in the missing symbols and the exported symbols of Boost.Log library and adjust library or application [link log.installation.config configuration] accordingly.
+
+[endsect]
+
 [endsect]
