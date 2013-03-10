@@ -21,7 +21,6 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_base_and_derived.hpp>
 #include <boost/log/detail/setup_config.hpp>
-#include <boost/log/detail/light_function.hpp>
 #include <boost/log/sinks/sink.hpp>
 #include <boost/log/utility/setup/settings.hpp>
 #include <boost/log/detail/header.hpp>
