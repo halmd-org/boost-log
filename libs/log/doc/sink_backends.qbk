@@ -7,7 +7,7 @@
     This document is a part of Boost.Log library documentation.
 /]
 
-[section:sink_backends Sink Backends]
+[section:sink_backends Sink backends]
 
 [section:text_ostream Text stream backend]
 
