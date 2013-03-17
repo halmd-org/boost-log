@@ -91,6 +91,7 @@ inline void code_convert(const SourceCharT* begin, const SourceCharT* end, std::
                 converted.append(converted_buffer, dest);
 
                 // ...and go on for the next part
+                break;
             }
             else
             {
