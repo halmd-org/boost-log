@@ -20,7 +20,8 @@
 #include <utility>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/parameter/binding.hpp>
 #include <boost/preprocessor/iteration/iterate.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>

@@ -17,7 +17,8 @@
 #include <vector>
 #include <limits>
 #include <algorithm>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/spirit/include/karma_uint.hpp>
 #include <boost/spirit/include/karma_generate.hpp>
 #include <boost/log/attributes/named_scope.hpp>

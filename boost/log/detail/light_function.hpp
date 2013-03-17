@@ -20,7 +20,8 @@
 #define BOOST_LOG_DETAIL_LIGHT_FUNCTION_HPP_INCLUDED_
 
 #include <cstddef>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/type_traits/remove_cv.hpp>

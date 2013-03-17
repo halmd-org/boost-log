@@ -16,7 +16,8 @@
 #define BOOST_LOG_ATTRIBUTES_SCOPED_ATTRIBUTE_HPP_INCLUDED_
 
 #include <utility>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/core/core.hpp>

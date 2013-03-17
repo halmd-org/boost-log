@@ -15,7 +15,8 @@
 #ifndef BOOST_LOG_EXPRESSIONS_FORMATTER_HPP_INCLUDED_
 #define BOOST_LOG_EXPRESSIONS_FORMATTER_HPP_INCLUDED_
 
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/light_function.hpp>

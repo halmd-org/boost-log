@@ -21,7 +21,7 @@
 #include <vector>
 #include <locale>
 #include <boost/cstdint.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
 #include <boost/range/iterator_range_core.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/date_time_format_parser.hpp>

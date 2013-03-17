@@ -17,7 +17,8 @@
 #include <algorithm>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/exception.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/spirit/include/qi_uint.hpp>
 #include <boost/spirit/include/qi_parse.hpp>
 #include <boost/log/detail/format.hpp>

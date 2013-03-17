@@ -19,7 +19,7 @@
 #include <string>
 #include <iterator>
 #include <boost/assert.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/optional/optional.hpp>

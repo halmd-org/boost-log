@@ -10,7 +10,7 @@
 #include <fstream>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/attributes/constant.hpp>

@@ -20,7 +20,8 @@
 #include <vector>
 #include <iosfwd>
 #include <boost/assert.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/detail/unhandled_exception_count.hpp>
 #include <boost/log/detail/cleanup_scope_guard.hpp>
