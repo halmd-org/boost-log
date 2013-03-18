@@ -19,25 +19,33 @@ Below is a more detailed overview of the services provided by sink frontends.
 
 There are a number of basic functionalities that all sink frontends provide.
 
-[heading Filtering]
+[section:filtering Filtering]
 
 All sink frontends support filtering. The user can specify a custom filtering function object or a filter constructed with the [link log.detailed.expressions library-provided tools]. The filter can be set with the `set_filter` method or cleared with the `reset_filter` method. The filter is invoked during the call to the `will_consume` method that is issued by the logging core. If the filter is not set, it is assumed that the sink will accept any log record.
 
 [note Like the logging core, all sink frontends assume it is safe to call filters from multiple threads concurrently. This is fine with the library-provided filters.]
 
-[heading Formatting]
+[endsect]
+
+[section:formatting Formatting]
 
 For text-based sink backends, frontends implement record formatting. Like with filters, [link log.detailed.expressions lambda expressions] can be used to construct formatters. The formatter can be set for a text-based sink by calling the `set_formatter` method or cleared by calling `reset_formatter`.
 
-[heading Exception handling]
+[endsect]
+
+[section:exception_handling Exception handling]
 
 All sink frontends allow setting up exception handlers in order to customize error processing on a per-sink basis. One can install an exception handling function with the `set_exception_handler` method, this function will be called with no arguments from a `catch` block if an exception occurs during record processing in the backend or during the sink-specific filtering. The exception handler is free to rethrow an exception or to suppress it. In the former case the exception is propagated to the core, where another layer of exception handling can come into action.
+
+[tip [link log.detailed.core.core.exception_handling Logging core] and [link log.detailed.sources.exception_handling loggers] also support installing exception handlers.]
 
 The library provides a [link log.detailed.utilities.exception_handlers convenient tool] for dispatching exceptions into an unary polymorphic function object.
 
 [note An exception handler is not allowed to return a value. This means you are not able to alter the filtering result once an exception occurs, and thus filtering will always fail.]
 
 [note All sink frontends assume it is safe to call exception handlers from multiple threads concurrently. This is fine with the library-provided exception dispatchers.]
+
+[endsect]
 
 [endsect]
 
