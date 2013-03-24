@@ -16,7 +16,7 @@
 #define BOOST_LOG_CORE_RECORD_VIEW_HPP_INCLUDED_
 
 #include <boost/intrusive_ptr.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/utility/explicit_operator_bool.hpp>
 #include <boost/log/attributes/attribute_value_set.hpp>

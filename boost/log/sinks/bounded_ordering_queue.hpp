@@ -30,7 +30,8 @@
 #include <queue>
 #include <vector>
 #include <boost/cstdint.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>

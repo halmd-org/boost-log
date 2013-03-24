@@ -13,7 +13,7 @@
 
 [*General changes:]
 
-* The library is now compatible with Boost 1.48 or newer. __boost_filesystem__ v2 no longer supported.
+* The library is now compatible with Boost 1.53 or newer. __boost_filesystem__ v2 no longer supported.
 * The library now does not introduce separate logging cores for different character types. A lot of other library components also became character type agnostic. The application can now use loggers of different character types with the common logging core. The library performs character code conversion as needed. __boost_locale__ can be used to construct locale objects for proper encoding conversion.
 * The `BOOST_LOG_NO_COMPILER_TLS` configuration macro has been replaced with `BOOST_LOG_USE_COMPILER_TLS` with the opposite meaning. The support for compiler intrinsics for TLS is now disabled by default.
 * Added configuration macros `BOOST_LOG_WITHOUT_DEBUG_OUTPUT`, `BOOST_LOG_WITHOUT_EVENT_LOG` and `BOOST_LOG_WITHOUT_SYSLOG`. `BOOST_LOG_NO_SETTINGS_PARSERS_SUPPORT` macro renamed to `BOOST_LOG_WITHOUT_SETTINGS_PARSERS`. The new macros allow to selectively disable support for the corresponding sink backends.

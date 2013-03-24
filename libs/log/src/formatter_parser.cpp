@@ -25,7 +25,8 @@
 #include <stdexcept>
 #include <boost/assert.hpp>
 #include <boost/bind.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/copy.hpp>
 #include <boost/mpl/push_back.hpp>

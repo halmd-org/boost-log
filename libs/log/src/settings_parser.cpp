@@ -24,7 +24,8 @@
 #include <boost/bind.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/io/ios_state.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/spirit/include/qi_core.hpp>
 #include <boost/spirit/include/qi_char.hpp>

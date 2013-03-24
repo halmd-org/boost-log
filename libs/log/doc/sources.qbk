@@ -70,6 +70,8 @@ The library provides a logger feature that enables the user to handle and/or sup
 
 [example_sources_exception_handler]
 
+[tip [link log.detailed.core.core.exception_handling Logging core] and [link log.detailed.sink_frontends.basic_services.exception_handling sink frontends] also support installing exception handlers.]
+
 [endsect]
 
 [section:mixed_loggers Loggers with mixed features]

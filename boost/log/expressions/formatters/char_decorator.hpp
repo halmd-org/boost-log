@@ -26,7 +26,8 @@
 #include <boost/range/size.hpp>
 #include <boost/range/const_iterator.hpp>
 #include <boost/range/value_type.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/utility/addressof.hpp>
 #include <boost/phoenix/core/actor.hpp>
 #include <boost/phoenix/core/meta_grammar.hpp>

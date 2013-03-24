@@ -66,7 +66,7 @@ The logging core is an application-wide singleton, thus every logging source has
         // ...
     }
 
-[heading Attribute sets]
+[section:attribute_sets Attribute sets]
 
 In order to add or remove global or thread-specific attributes to the core there are corresponding methods: `add_global_attribute`, `remove_global_attribute`, `add_thread_attribute` and `remove_thread_attribute`. Attribute sets provide interface similar to `std::map`, so the `add_*` methods accept an attribute name string (key) and a pointer to the attribute (mapped value) and return a pair of iterator and boolean value, like `std::map< ... >::insert` does. The `remove_*` methods accept an iterator to a previously added attribute.
 
@@ -90,7 +90,9 @@ It is possible to acquire a copy of the whole attribute set (global or thread-sp
 
 [warning After installing a whole attribute set into the core, all iterators that were previously returned by the corresponding `add_*` methods are invalidated. In particular, it affects [link log.detailed.attributes.related_components.scoped_attributes scoped attributes], so the user must be careful when to switch attribute sets.]
 
-[heading Global filtering]
+[endsect]
+
+[section:filtering Global filtering]
 
 Global filtering is handled by the filter function object, which can be provided with the `set_filter` method. More on creating filters appears in [link log.detailed.expressions.predicates this section]. Here it will suffice to say that the filter accepts a set of attribute values and returns a boolean value that tells whether a log record with these attribute values passed filtering or not. The global filter is applied to every log record made throughout the application, so it can be used to wipe out excessive log records quickly.
 
@@ -116,7 +118,9 @@ The global filter can be removed by the `reset_filter` method. When there is no 
 
 The core also provides another way to disable logging. By calling the `set_logging_enabled` with a boolean argument one may completely disable or reenable logging, including applying filtering. Disabling logging with this method may be more benefical in terms of application performance than setting a global filter that always fails.
 
-[heading Sink management]
+[endsect]
+
+[section:sinks Sink management]
 
 After global filtering is applied, log sinks step into action. In order to add and remove sinks the core provides `add_sink` and `remove_sink` methods. Both these methods accept a pointer to the sink. The `add_sink` will add the sink to the core if it's not added already. The `remove_sink` method will seek for the provided sink in an internal list of previously added sinks and remove the sink if it finds it. The order in which the core processes sinks internally is unspecified.
 
@@ -142,15 +146,19 @@ After global filtering is applied, log sinks step into action. In order to add a
 
 You can read more on the design of sinks in the following sections: [link log.detailed.sink_frontends Sink Frontends] and [link log.detailed.sink_backends Sink Backends].
 
-[heading Exception handling]
+[endsect]
+
+[section:exception_handling Exception handling]
 
 The core provides a way to set up centralized exception handling. If an exception takes place during filtering or processing in one of the added sinks, the core will invoke an exception handler if one was installed with the `set_exception_handler` method. An exception handler is a nullary function object that is invoked from within a `catch` clause. The library provides [link log.detailed.utilities.exception_handlers tools] to simplify exception handlers construction.
 
-[tip The exception handler in the logging core is global and thus is intended to perform some common actions on errors. Logging sinks and sources also provide exception handling facilities (see [link log.detailed.sink_frontends.basic_services here] and [link log.detailed.sources.exception_handling here]), which can be used to do a finer grained error processing.]
+[tip The exception handler in the logging core is global and thus is intended to perform some common actions on errors. Logging sinks and sources also provide exception handling facilities (see [link log.detailed.sink_frontends.basic_services.exception_handling here] and [link log.detailed.sources.exception_handling here]), which can be used to do a finer grained error processing.]
 
 [example_utility_exception_handler]
 
-[heading Feeding log records]
+[endsect]
+
+[section:record_feeding Feeding log records]
 
 One of the most important functions of the logging core is providing an entry point for all logging sources to feed log records into. This is done with the `open_record` and `push_record` methods.
 
@@ -161,6 +169,8 @@ When the log source is ready to complete the logging procedure, it has to call t
 [example_core_core_manual_logging]
 
 All this logic is usually hidden in the loggers and macros provided by the library. However, this may be useful for those developing new log sources.
+
+[endsect]
 
 [endsect]
 

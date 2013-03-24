@@ -9,7 +9,7 @@
 #include <string>
 #include <ostream>
 #include <fstream>
-#include <boost/move/move.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/log/core.hpp>

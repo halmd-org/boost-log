@@ -64,7 +64,7 @@ inline void code_convert(const SourceCharT* begin, const SourceCharT* end, std::
     TargetCharT converted_buffer[256];
 
     state_type state = state_type();
-    while (true)
+    while (begin != end)
     {
         TargetCharT* dest = converted_buffer;
         std::codecvt_base::result res = convert(
@@ -79,8 +79,9 @@ inline void code_convert(const SourceCharT* begin, const SourceCharT* end, std::
         {
         case std::codecvt_base::ok:
             // All characters were successfully converted
+            // NOTE: MSVC 11 also returns ok when the source buffer was only partially consumed, so we also check that the begin pointer has reached the end.
             converted.append(converted_buffer, dest);
-            return;
+            break;
 
         case std::codecvt_base::partial:
             // Some characters were converted, some were not

@@ -21,7 +21,8 @@
 #include <ostream>
 #include <iterator>
 #include <boost/cstdint.hpp>
-#include <boost/move/move.hpp>
+#include <boost/move/core.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/date_time/time.hpp>
 #include <boost/date_time/date.hpp>
 #include <boost/date_time/gregorian/gregorian_types.hpp>
