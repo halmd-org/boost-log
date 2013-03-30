@@ -58,9 +58,6 @@ void thread_fun(boost::barrier& bar)
     // Wait until all threads are created
     bar.wait();
 
-    // Here we go. First, identfy the thread.
-    BOOST_LOG_SCOPED_THREAD_TAG("ThreadID", boost::this_thread::get_id());
-
     // Now, do some logging
     for (unsigned int i = 0; i < LOG_RECORDS_TO_WRITE; ++i)
     {
@@ -88,7 +85,7 @@ int main(int argc, char* argv[])
             expr::format("%1%: [%2%] [%3%] - %4%")
                 % expr::attr< unsigned int >("RecordID")
                 % expr::attr< boost::posix_time::ptime >("TimeStamp")
-                % expr::attr< boost::thread::id >("ThreadID")
+                % expr::attr< attrs::current_thread_id::value_type >("ThreadID")
                 % expr::smessage
         );
 
@@ -98,6 +95,7 @@ int main(int argc, char* argv[])
         // Add some attributes too
         logging::core::get()->add_global_attribute("TimeStamp", attrs::local_clock());
         logging::core::get()->add_global_attribute("RecordID", attrs::counter< unsigned int >());
+        logging::core::get()->add_global_attribute("ThreadID", attrs::current_thread_id());
 
         // Create logging threads
         boost::barrier bar(THREAD_COUNT);
