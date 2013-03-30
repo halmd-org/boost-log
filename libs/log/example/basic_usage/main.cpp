@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 
     // The first thing we have to do to get using the library is
     // to set up the logging sinks - i.e. where the logs will be written to.
-    logging::add_console_log(std::clog, keywords::format = "%TimeStamp%: %_%");
+    logging::add_console_log(std::clog, keywords::format = "%TimeStamp%: %Message%");
 
     // One can also use lambda expressions to setup filters and formatters
     logging::add_file_log
