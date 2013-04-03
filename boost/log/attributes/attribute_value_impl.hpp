@@ -16,6 +16,7 @@
 #define BOOST_LOG_ATTRIBUTES_ATTRIBUTE_VALUE_IMPL_HPP_INCLUDED_
 
 #include <boost/move/core.hpp>
+#include <boost/move/utility.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/log/detail/config.hpp>
 #include <boost/log/attributes/attribute_value.hpp>
