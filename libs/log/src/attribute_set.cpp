@@ -31,14 +31,12 @@ BOOST_LOG_OPEN_NAMESPACE
 
 BOOST_LOG_API void* attribute::impl::operator new (std::size_t size)
 {
-    aux::stateless_allocator< unsigned char > alloc;
-    return alloc.allocate(size);
+    return aux::stateless_allocator< unsigned char >().allocate(size);
 }
 
 BOOST_LOG_API void attribute::impl::operator delete (void* p, std::size_t size) BOOST_NOEXCEPT
 {
-    aux::stateless_allocator< unsigned char > alloc;
-    alloc.deallocate(static_cast< unsigned char* >(p), size);
+    aux::stateless_allocator< unsigned char >().deallocate(static_cast< unsigned char* >(p), size);
 }
 
 inline attribute_set::node_base::node_base() :

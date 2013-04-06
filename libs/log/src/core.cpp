@@ -80,8 +80,7 @@ public:
     //! Creates the object with the specified capacity
     static private_data* create(BOOST_RV_REF(attribute_value_set) values, uint32_t capacity)
     {
-        stateless_allocator alloc;
-        private_data* p = reinterpret_cast< private_data* >(alloc.allocate
+        private_data* p = reinterpret_cast< private_data* >(stateless_allocator().allocate
         (
             sizeof(private_data) +
             boost::log::aux::alignment_gap_between< private_data, sink_ptr >::value +
@@ -103,8 +102,7 @@ public:
         const uint32_t capacity = m_accepting_sink_capacity;
         this->~private_data();
 
-        stateless_allocator alloc;
-        alloc.deallocate
+        stateless_allocator().deallocate
         (
             reinterpret_cast< stateless_allocator::pointer >(this),
             sizeof(private_data) +

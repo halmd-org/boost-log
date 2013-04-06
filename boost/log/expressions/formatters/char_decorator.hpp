@@ -118,13 +118,13 @@ public:
             {
                 typedef typename aux::string_const_iterator< typename range_value< RangeT >::type::first_type >::type first_iterator;
                 first_iterator b = string_begin(it->first), e = string_end(it->first);
-                lens.from_len = std::distance(b, e);
+                lens.from_len = static_cast< unsigned int >(std::distance(b, e));
                 m_decoration_chars.append(b, e);
             }
             {
                 typedef typename aux::string_const_iterator< typename range_value< RangeT >::type::second_type >::type second_iterator;
                 second_iterator b = string_begin(it->second), e = string_end(it->second);
-                lens.to_len = std::distance(b, e);
+                lens.to_len = static_cast< unsigned int >(std::distance(b, e));
                 m_decoration_chars.append(b, e);
             }
             m_string_lengths.push_back(lens);

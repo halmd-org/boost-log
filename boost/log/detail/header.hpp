@@ -21,6 +21,20 @@
 #pragma warning(disable: 4355)
 // 'int' : forcing value to bool 'true' or 'false' (performance warning)
 #pragma warning(disable: 4800)
+// unreferenced formal parameter
+#pragma warning(disable: 4100)
+// conditional expression is constant
+#pragma warning(disable: 4127)
+// default constructor could not be generated
+#pragma warning(disable: 4510)
+// copy constructor could not be generated
+#pragma warning(disable: 4511)
+// assignment operator could not be generated
+#pragma warning(disable: 4512)
+// struct 'A' can never be instantiated - user defined constructor required
+#pragma warning(disable: 4610)
+// function marked as __forceinline not inlined
+#pragma warning(disable: 4714)
 #endif
 
 #endif // !defined(BOOST_LOG_ENABLE_WARNINGS)

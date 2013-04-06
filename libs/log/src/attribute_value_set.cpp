@@ -165,8 +165,7 @@ private:
             aux::alignment_gap_between< implementation, node >::value;
         const size_type buffer_size = header_size + element_count * sizeof(node);
 
-        stateless_allocator alloc;
-        implementation* p = reinterpret_cast< implementation* >(alloc.allocate(buffer_size));
+        implementation* p = reinterpret_cast< implementation* >(stateless_allocator().allocate(buffer_size));
         node* const storage = reinterpret_cast< node* >(reinterpret_cast< char* >(p) + header_size);
         new (p) implementation(storage, storage + element_count, source_attrs, thread_attrs, global_attrs);
 
@@ -241,8 +240,7 @@ public:
     {
         const size_type buffer_size = reinterpret_cast< char* >(p->m_pEOS) - reinterpret_cast< char* >(p);
         p->~implementation();
-        stateless_allocator alloc;
-        alloc.deallocate(reinterpret_cast< stateless_allocator::pointer >(p), buffer_size);
+        stateless_allocator().deallocate(reinterpret_cast< stateless_allocator::pointer >(p), buffer_size);
     }
 
     //! Returns the pointer to the first element

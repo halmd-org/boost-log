@@ -61,6 +61,7 @@ namespace event_log {
         case error: return error;
         default:
             BOOST_THROW_EXCEPTION(std::out_of_range("Windows NT event type is out of range"));
+            BOOST_LOG_UNREACHABLE();
             return info; // to get rid of warnings
         }
     }
