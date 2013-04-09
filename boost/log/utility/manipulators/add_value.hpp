@@ -54,14 +54,18 @@ public:
     typedef typename remove_cv< typename remove_reference< reference_type >::type >::type value_type;
 
 private:
+    //  The stored reference type is always an lvalue reference since apparently different compilers (GCC and MSVC) have different quirks when rvalue references are stored as members
+    typedef typename remove_reference< reference_type >::type& stored_reference_type;
+
+private:
     //! Attribute value
-    reference_type m_value;
+    stored_reference_type m_value;
     //! Attribute name
     attribute_name m_name;
 
 public:
     //! Initializing constructor
-    add_value_manip(attribute_name const& name, reference_type value) : m_value(static_cast< reference_type >(value)), m_name(name)
+    add_value_manip(attribute_name const& name, reference_type value) : m_value(static_cast< stored_reference_type >(value)), m_name(name)
     {
     }
 
