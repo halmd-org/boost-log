@@ -127,7 +127,7 @@ public:
      */
     bool will_consume(attribute_value_set const& attrs)
     {
-        BOOST_LOG_EXPR_IF_MT(boost::log::aux::exclusive_lock_guard< mutex_type > lock(m_Mutex);)
+        BOOST_LOG_EXPR_IF_MT(boost::log::aux::shared_lock_guard< mutex_type > lock(m_Mutex);)
         try
         {
             return m_Filter(attrs);
