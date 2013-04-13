@@ -110,12 +110,6 @@
 [import ../example/wide_char/main.cpp]
 [import ../example/event_log/main.cpp]
 
-[section Disclaimer]
-
-This library is not an official part of [@http://www.boost.org Boost libraries collection] although it has passed the review and is provisionally accepted. The review result is available [@http://lists.boost.org/boost-announce/2010/03/0256.php here].
-
-[endsect]
-
 [section:moti Motivation]
 
 Today applications grow rapidly, becoming complicated and difficult to test and debug. Most of the time applications run on a remote site, leaving the developer little chance to monitor their execution and figure out the reasons for their failure, once it should happen. Moreover, even the local debugging may become problematic if the application behavior depends heavily on asynchronous side events, such as a device feedback or another process activity.
