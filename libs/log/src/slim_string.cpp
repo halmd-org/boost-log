@@ -795,12 +795,12 @@ BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(basic_slim_str
     if (m_pImpl == that.m_pImpl)
         return 0;
     else
-        return traits_type::compare(m_pImpl->begin(), that.m_pImpl->begin(), m_pImpl->size() + 1);
+        return traits_type::compare(m_pImpl->begin(), that.m_pImpl->begin(), (std::min)(m_pImpl->size(), that.m_pImpl->size()) + 1);
 }
 template< typename CharT, typename TraitsT >
 BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(string_type const& s) const
 {
-    return traits_type::compare(m_pImpl->begin(), s.c_str(), m_pImpl->size() + 1);
+    return traits_type::compare(m_pImpl->begin(), s.c_str(), (std::min)(m_pImpl->size(), static_cast< size_type >(s.size())) + 1);
 }
 template< typename CharT, typename TraitsT >
 BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(size_type pos1, size_type n1, basic_slim_string const& that) const
@@ -838,7 +838,18 @@ BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(size_type pos1
 template< typename CharT, typename TraitsT >
 BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(const_pointer s) const
 {
-    return traits_type::compare(m_pImpl->begin(), s, m_pImpl->size() + 1);
+    const_pointer p = m_pImpl->begin();
+    for (size_type i = 0, n = m_pImpl->size(); i <= n; ++i)
+    {
+        if (!traits_type::eq(p[i], s[i]))
+        {
+            if (traits_type::lt(p[i], s[i]))
+                return -1;
+            else
+                return 1;
+        }
+    }
+    return 0;
 }
 template< typename CharT, typename TraitsT >
 BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(const_pointer s, size_type n2) const
@@ -855,7 +866,20 @@ BOOST_LOG_EXPORT int basic_slim_string< CharT, TraitsT >::compare(size_type pos1
         BOOST_THROW_EXCEPTION(std::out_of_range("basic_slim_string::compare: the position is out of range"));
     }
 
-    register const int res = traits_type::compare(m_pImpl->begin() + pos1, s, (std::min)(n1, size - pos1));
+    int res = 0;
+    const_pointer p = m_pImpl->begin() + pos1;
+    for (size_type i = 0, n = (std::min)(n1, size - pos1); i < n; ++i)
+    {
+        if (!traits_type::eq(p[i], s[i]))
+        {
+            if (traits_type::lt(p[i], s[i]))
+                res = -1;
+            else
+                res = 1;
+            break;
+        }
+    }
+
     if (res == 0)
         return (s[n1] == 0 ? 0 : -1);
     else
